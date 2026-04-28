@@ -12,7 +12,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
-import type { CostDistributionEntry } from '@/lib/admin/store/useHireWizard'
+import type { CostDistributionEntry, RecurringPayComponentEntry } from '@/lib/admin/store/useHireWizard'
 import { stepCompensationSchema } from '@/lib/admin/validation/hireSchema'
 import { PICKLIST_PAY_FREQUENCY, PICKLIST_PAY_COMPONENT_GROUP } from '@hrms/shared/picklists'
 
@@ -33,15 +33,9 @@ export interface StepCompensationProps {
   onValidChange?: (isValid: boolean) => void
 }
 
-// Recurring pay component line item — SF empPayCompRecurringNav shape
-// SF source: EmpCompensation.empPayCompRecurringNav (deferred nav; shape inferred from SF schema)
-interface RecurringPayComponent {
-  id: string
-  type: string      // pay component type code
-  amount: string    // numeric string
-  currency: string  // ISO currency code
-  frequency: string // pay frequency code
-}
+// Recurring pay component line item — matches RecurringPayComponentEntry in store
+// (lifted from local state to store so EmpPayCompRecurringMapper can read it)
+type RecurringPayComponent = RecurringPayComponentEntry
 
 export default function StepCompensation({ onValidChange }: StepCompensationProps) {
   const t = useTranslations('hireForm.compensation')
@@ -50,12 +44,15 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
     formData.compensation.baseSalary != null ? String(formData.compensation.baseSalary) : ''
   )
   // BRD #96: currency defaults to THB (THA country = THB currency)
-  const [currency, setCurrency] = useState<string>('THB')
+  const [currency, setCurrency] = useState<string>(formData.compensation.currency ?? 'THB')
   // BRD #27: payGroup — SF EmpCompensation.payGroup picklist (8 codes)
-  const [payGroup, setPayGroup] = useState<string>('')
-  const [payFrequency, setPayFrequency] = useState<string>('MON')
+  const [payGroup, setPayGroup] = useState<string>(formData.compensation.payGroup ?? '')
+  const [payFrequency, setPayFrequency] = useState<string>(formData.compensation.payFrequency ?? 'MON')
   // BRD #26: recurring pay components (empPayCompRecurringNav line items)
-  const [recurringComponents, setRecurringComponents] = useState<RecurringPayComponent[]>([])
+  // Lifted from local state to store so EmpPayCompRecurringMapper can read them
+  const [recurringComponents, setRecurringComponents] = useState<RecurringPayComponent[]>(
+    () => (formData.compensation.recurringComponents ?? []).map(r => ({ ...r }))
+  )
   const [costDistributionRows, setCostDistributionRows] = useState<CostSplit[]>(() =>
     (formData.compensation.costDistribution ?? []).map((row) => ({
       id: crypto.randomUUID(),
@@ -63,6 +60,14 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
       pct: String(row.percent),
     }))
   )
+
+  // Phase 5: Payment Information (PaymentInformationV3 — BA Required fields)
+  const [bankCountry, setBankCountry]       = useState<string>(formData.compensation.bankCountry ?? '')
+  const [paymentMethod, setPaymentMethod]   = useState<string>(formData.compensation.paymentMethod ?? '')
+  const [payType, setPayType]               = useState<string>(formData.compensation.payType ?? '')
+  const [bank, setBank]                     = useState<string>(formData.compensation.bank ?? '')
+  const [accountNumber, setAccountNumber]   = useState<string>(formData.compensation.accountNumber ?? '')
+  const [bankCode, setBankCode]             = useState<string>(formData.compensation.bankCode ?? '')
 
   const [touched, setTouched] = useState(false)
   const [error, setError]     = useState<string | undefined>()
@@ -110,11 +115,21 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
     setStepData('compensation', { payGroup, currency, payFrequency })
   }, [payGroup, currency, payFrequency, setStepData])
 
+  // Sync recurring components to store (Phase 5 — so mapper can read them)
+  useEffect(() => {
+    setStepData('compensation', { recurringComponents })
+  }, [recurringComponents, setStepData])
+
+  // Sync bank/payment fields to store (Phase 5 — PaymentInformationV3)
+  useEffect(() => {
+    setStepData('compensation', { bankCountry, paymentMethod, payType, bank, accountNumber, bankCode })
+  }, [bankCountry, paymentMethod, payType, bank, accountNumber, bankCode, setStepData])
+
   // Handlers for recurring pay components (BRD #26)
   const addRecurringRow = () => {
     setRecurringComponents((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), type: '', amount: '', currency, frequency: payFrequency },
+      { id: crypto.randomUUID(), payComponent: '', amount: '', currencyCode: currency, frequency: payFrequency },
     ])
   }
   const removeRecurringRow = (id: string) => {
@@ -230,8 +245,8 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
         />
       </fieldset>
 
-      {/* Recurring Pay Components — BRD #26 — SF empPayCompRecurringNav line items */}
-      {/* SF source: EmpCompensation.empPayCompRecurringNav (nav property; shape: type, amount, currency, frequency) */}
+      {/* Recurring Pay Components — BRD #26 — SF EmpPayCompRecurring (multi-record) */}
+      {/* SF fields: payComponent, paycompvalue, currencyCode, frequency */}
       <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
         <RecurringPaySection
           rows={recurringComponents}
@@ -241,6 +256,115 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
           onRemove={removeRecurringRow}
           onUpdate={updateRecurringRow}
         />
+      </fieldset>
+
+      {/* ── Payment Information (Phase 5 — PaymentInformationV3 + Detail) ──────── */}
+      {/* BA Required: Bank Country, Currency (above), Payment Method, Pay Type */}
+      {/* SF: PaymentInformationV3.paymentInformationDetailV3Nav deep-insert */}
+      <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
+        <div className="humi-eyebrow mb-3">ข้อมูลธนาคาร / Payment Information</div>
+        <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
+          {/* Bank Country/Region — BA Required — SF: bankCountry */}
+          <fieldset>
+            <label htmlFor="bank-country" className="humi-label">
+              Bank Country/Region<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            </label>
+            <select
+              id="bank-country"
+              value={bankCountry}
+              onChange={(e) => setBankCountry(e.target.value)}
+              className="humi-select w-full"
+            >
+              <option value="">เลือกประเทศ / Select Country</option>
+              <option value="THA">Thailand (THA)</option>
+              <option value="SGP">Singapore (SGP)</option>
+              <option value="USA">United States (USA)</option>
+              <option value="GBR">United Kingdom (GBR)</option>
+              <option value="JPN">Japan (JPN)</option>
+            </select>
+            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.bankCountry (BA Required)</p>
+          </fieldset>
+
+          {/* Payment Method — BA Required — SF: paymentMethod */}
+          <fieldset>
+            <label htmlFor="payment-method" className="humi-label">
+              Payment Method<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            </label>
+            <select
+              id="payment-method"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="humi-select w-full"
+            >
+              <option value="">เลือกวิธีชำระ / Select Method</option>
+              <option value="B">Bank Transfer (โอนธนาคาร)</option>
+              <option value="C">Check (เช็ค)</option>
+              <option value="M">Cash (เงินสด)</option>
+            </select>
+            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.paymentMethod (BA Required)</p>
+          </fieldset>
+
+          {/* Pay Type — BA Required — SF: payType */}
+          <fieldset>
+            <label htmlFor="pay-type" className="humi-label">
+              Pay Type<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            </label>
+            <select
+              id="pay-type"
+              value={payType}
+              onChange={(e) => setPayType(e.target.value)}
+              className="humi-select w-full"
+            >
+              <option value="">เลือก Pay Type / Select Pay Type</option>
+              <option value="P">Percentage (%)</option>
+              <option value="V">Value (Fixed Amount)</option>
+              <option value="R">Remaining Amount</option>
+            </select>
+            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.payType (BA Required)</p>
+          </fieldset>
+
+          {/* Bank Name — optional — SF: bank */}
+          <fieldset>
+            <label htmlFor="bank-name" className="humi-label">Bank Name</label>
+            <input
+              id="bank-name"
+              type="text"
+              value={bank}
+              onChange={(e) => setBank(e.target.value)}
+              placeholder="ชื่อธนาคาร / Bank name"
+              className="humi-input w-full"
+            />
+            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.bank (optional)</p>
+          </fieldset>
+
+          {/* Account Number — optional — SF: accountNumber */}
+          <fieldset>
+            <label htmlFor="account-number" className="humi-label">Account Number</label>
+            <input
+              id="account-number"
+              type="text"
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value)}
+              placeholder="เลขที่บัญชี / Account number"
+              className="humi-input w-full"
+            />
+            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.accountNumber (optional)</p>
+          </fieldset>
+
+          {/* Bank Code (BIC/SWIFT) — optional — SF: businessIdentifierCode */}
+          <fieldset>
+            <label htmlFor="bank-code" className="humi-label">Bank Code (BIC/SWIFT)</label>
+            <input
+              id="bank-code"
+              type="text"
+              value={bankCode}
+              onChange={(e) => setBankCode(e.target.value)}
+              placeholder="รหัสธนาคาร / BIC or SWIFT code"
+              className="humi-input w-full"
+            />
+            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.businessIdentifierCode (optional)</p>
+          </fieldset>
+        </div>
       </fieldset>
     </div>
   )
@@ -371,20 +495,20 @@ function CostDistributionSection({ rows, error, onAdd, onRemove, onUpdate, onCle
 }
 
 // ─── Recurring Pay Components section (BRD #26) ───────────────────────────────
-// SF source: EmpCompensation.empPayCompRecurringNav
-// shape: { type: string, amount: number, currency: string, frequency: string }
+// SF entity: EmpPayCompRecurring
+// Store shape: RecurringPayComponentEntry { id, payComponent, amount, currencyCode, frequency }
 interface RecurringSectionProps {
-  rows: { id: string; type: string; amount: string; currency: string; frequency: string }[]
+  rows: RecurringPayComponent[]
   defaultCurrency: string
   defaultFrequency: string
   onAdd: () => void
   onRemove: (id: string) => void
-  onUpdate: (id: string, field: 'type' | 'amount' | 'currency' | 'frequency', value: string) => void
+  onUpdate: (id: string, field: keyof Omit<RecurringPayComponent, 'id'>, value: string) => void
 }
 
 function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, onRemove, onUpdate }: RecurringSectionProps) {
   const t = useTranslations('hireForm.compensation')
-  const [showSection, setShowSection] = useState(false)
+  const [showSection, setShowSection] = useState(rows.length > 0)
 
   if (!showSection) {
     return (
@@ -425,13 +549,13 @@ function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, o
       <div className="space-y-3">
         {rows.map((row) => (
           <div key={row.id} className="grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr_100px_1fr_auto] md:items-end">
-            {/* ประเภทค่าตอบแทน */}
+            {/* ประเภทค่าตอบแทน — SF: payComponent */}
             <div>
               <label className="humi-label text-xs" htmlFor={`rpc-type-${row.id}`}>{t('recurringType')}</label>
               <select
                 id={`rpc-type-${row.id}`}
-                value={row.type}
-                onChange={(e) => onUpdate(row.id, 'type', e.target.value)}
+                value={row.payComponent}
+                onChange={(e) => onUpdate(row.id, 'payComponent', e.target.value)}
                 className="humi-select w-full"
               >
                 <option value="">{t('selectType')}</option>
@@ -440,7 +564,7 @@ function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, o
                 ))}
               </select>
             </div>
-            {/* จำนวนเงิน */}
+            {/* จำนวนเงิน — SF: paycompvalue */}
             <div>
               <label className="humi-label text-xs" htmlFor={`rpc-amt-${row.id}`}>{t('amount')}</label>
               <input
@@ -454,13 +578,13 @@ function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, o
                 className="humi-input w-full"
               />
             </div>
-            {/* สกุลเงิน */}
+            {/* สกุลเงิน — SF: currencyCode */}
             <div>
               <label className="humi-label text-xs" htmlFor={`rpc-cur-${row.id}`}>{t('currency')}</label>
               <select
                 id={`rpc-cur-${row.id}`}
-                value={row.currency || defaultCurrency}
-                onChange={(e) => onUpdate(row.id, 'currency', e.target.value)}
+                value={row.currencyCode || defaultCurrency}
+                onChange={(e) => onUpdate(row.id, 'currencyCode', e.target.value)}
                 className="humi-select w-full"
               >
                 <option value="THB">THB</option>
@@ -469,7 +593,7 @@ function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, o
                 <option value="JPY">JPY</option>
               </select>
             </div>
-            {/* ความถี่ */}
+            {/* ความถี่ — SF: frequency */}
             <div>
               <label className="humi-label text-xs" htmlFor={`rpc-freq-${row.id}`}>{t('frequency')}</label>
               <select

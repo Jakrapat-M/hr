@@ -14,12 +14,20 @@ export const UserMapper: PortletMapper = {
     const username = deriveUsername(primaryEmail, userId)
     const cust_workingLocation = input.job.storeBranchCode ?? input.job.branch ?? ''
 
-    const notes: string[] = [
-      'cust_religion/cust_disability deferred to Phase 5b-2 (Global Information)',
-    ]
+    // Phase 5: denormalize from globalInfo slice (now populated by StepGlobalInfo / Phase 5b-2)
+    // religion: globalInfo.religion → User.cust_religion (picklist RELIGION_THA)
+    //   normalize empty-string → null so SF picklist doesn't receive an empty string
+    const cust_religion = input.globalInfo?.religion || null
+    // disabilityStatus: globalInfo.disabilityStatus → User.cust_disability
+    //   normalize empty-string → null (SF picklist)
+    const cust_disability = input.globalInfo?.disabilityStatus || null
+
+    const notes: string[] = []
     if (!cust_workingLocation) {
       notes.push('cust_workingLocation is empty — Phase 3 wires the full 1196-option picklist (cust_WorkLocation)')
     }
+    if (!cust_religion) notes.push('cust_religion: null (globalInfo.religion not set — optional)')
+    if (!cust_disability) notes.push('cust_disability: null (globalInfo.disabilityStatus not set — optional)')
 
     return {
       verb: 'CREATE',
@@ -35,8 +43,9 @@ export const UserMapper: PortletMapper = {
         timeZone: 'Asia/Bangkok',
         loginMethod: 'PWD',
         hireDate: toSfDate(input.identity.hireDate),
-        cust_religion: null,
-        cust_disability: null,
+        // Phase 5: denormalized from globalInfo slice (errata round 3 §2.12)
+        cust_religion,
+        cust_disability,
         nickname: input.biographical.nickname || '',
         nicknamelocal: input.biographical.nickname || '',
         // Phase 4: User.ssn (sap_label="National ID", sap_creatable=true) — Thai SSN 13 digits

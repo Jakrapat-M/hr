@@ -22,6 +22,74 @@ export interface EmailEntry { type: 'personal' | 'work'; value: string; isPrimar
 export interface JobRelationship { relationshipType: string; name: string }
 export interface CostDistributionEntry { costCenter: string; percent: number }
 
+// ── Phase 5: Recurring pay component line item (EmpPayCompRecurring SF entity) ──
+// Lifted from StepCompensation local state so mapper can read it.
+// SF fields: payComponent, paycompvalue (amount), currencyCode, frequency
+export interface RecurringPayComponentEntry {
+  id: string           // UI key only (not sent to SF)
+  payComponent: string // SF: payComponent (e.g. TH_1000 = Salary-T/P/S)
+  amount: string       // SF: paycompvalue (numeric string stored as string for input compat)
+  currencyCode: string // SF: currencyCode
+  frequency: string    // SF: frequency
+}
+
+// ── Phase 5b-2: Global Information (PerGlobalInfoTHA SF entity) ──
+// 10 BA fields, all optional. Single-record per person.
+export interface GlobalInfoEntry {
+  numberOfChildren: number | null      // SF: genericNumber2
+  religion: string | null              // SF: genericString5 — ALSO denormalized to User.cust_religion
+  disabilityStatus: string             // SF: customString1 — Disability Status
+  disabilityCertStartDate: string | null  // SF: customDate1
+  disabilityCertEndDate: string | null    // SF: customDate2
+  typeOfDisability: string             // SF: genericString2
+  certificateId: string                // SF: genericString4
+  spouseFatherIdNumber: string         // SF: genericNumber4 (string OK at OData level — long IDs)
+  spouseMotherIdNumber: string         // SF: genericNumber5
+  additionalInformation: string        // SF: customString2
+}
+
+// ── Phase 5b-3: Work Permit (EmpWorkPermit SF entity) ──
+// 8 BA fields, 3 required. Conditional UI: only shown when nationality !== THA.
+export interface WorkPermitEntry {
+  documentType: string                 // SF: documentType (required)
+  country: string                      // SF: country (required, ISO3)
+  documentNumber: string               // SF: documentNumber (required)
+  issueDate: string | null             // SF: issueDate (required per BA)
+  expiryDate: string | null            // SF: expirationDate
+  arrivalDateVisa: string | null       // SF: customDate1 (Arrival date VISA)
+  ninetyDayReportVisa: string | null   // SF: customDate2 (90 days report VISA)
+  attachmentName: string               // attachment file name (UI tracks filename; actual upload deferred)
+}
+
+// ── Phase 5b-4: Dependents (PerPersonRelationship SF entity) ──
+// Multi-record per dependent. 26 BA fields per entry (all optional).
+export interface DependentEntry {
+  relationshipType: string             // SF: relationship (e.g., spouse/child/parent)
+  // Names EN
+  salutationEn: string | null
+  firstNameEn: string
+  lastNameEn: string
+  // Names Local (TH)
+  salutationLocal: string | null
+  firstNameLocal: string
+  lastNameLocal: string
+  // Personal
+  nationality: string | null           // ISO3
+  dateOfBirth: string | null
+  country: string | null               // ISO3 — typically THA
+  // National ID block (optional sub-shape)
+  nationalIdCardType: string | null
+  nationalIdCountry: string | null
+  nationalId: string
+  // Contact
+  phone: string
+  email: string
+  // Tax-related (BA flagged some)
+  isTaxDependent: boolean
+  // Address (optional, free-text)
+  addressLine1: string
+}
+
 // ── Phase 1.4: Emergency Contacts (PerEmergencyContacts SF entity) ────────────
 // 4 visible mandatory + 7 hidden mandatory (address cascade per plan v2 §2.11)
 // SF dump: PerEmergencyContacts.relationship = Edm.String maxLength=50, free-text (no picklist at OData level)
@@ -142,6 +210,15 @@ export interface FormData {
   // Optional list (≥0 entries); when entries present, each must have name + relationship + phone
   emergencyContacts: EmergencyContactEntry[]
 
+  // ── Phase 5b-2: Global Information (PerGlobalInfoTHA) ──
+  globalInfo: GlobalInfoEntry
+
+  // ── Phase 5b-3: Work Permit (EmpWorkPermit) — conditional, foreigners only ──
+  workPermit: WorkPermitEntry
+
+  // ── Phase 5b-4: Dependents (PerPersonRelationship) — multi-record ──
+  dependents: DependentEntry[]
+
   // Legacy slices — ยังคง interface เดิมเพื่อ backward compat กับ test suite
   name:         { firstNameTh: string; lastNameTh: string; firstNameEn: string; lastNameEn: string }
   employeeInfo: {
@@ -218,6 +295,17 @@ export interface FormData {
     payFrequency?: string
     // BRD #119: optional cost-center split; when present, percent total must be 100.
     costDistribution?: CostDistributionEntry[]
+    // Phase 5: recurring pay components — lifted from StepCompensation local state to store
+    // so EmpPayCompRecurringMapper can read them. Default [].
+    recurringComponents?: RecurringPayComponentEntry[]
+    // Phase 5: Payment Information (PaymentInformationV3 + PaymentInformationDetailV3)
+    // BA Required: bankCountry, paymentMethod, payType (currency already stored above)
+    bankCountry?: string        // SF: PaymentInformationDetailV3.bankCountry (BA Required)
+    paymentMethod?: string      // SF: PaymentInformationDetailV3.paymentMethod (BA Required)
+    payType?: string            // SF: PaymentInformationDetailV3.payType (BA Required)
+    bank?: string               // SF: PaymentInformationDetailV3.bank (optional)
+    accountNumber?: string      // SF: PaymentInformationDetailV3.accountNumber (optional)
+    bankCode?: string           // SF: PaymentInformationDetailV3.businessIdentifierCode (BIC/SWIFT, optional)
   }
 }
 
@@ -273,6 +361,32 @@ const initialFormData: FormData = {
   },
   // ── Phase 1.4: Emergency Contacts ──
   emergencyContacts: [],
+  // ── Phase 5b-2: Global Information ──
+  globalInfo: {
+    numberOfChildren: null,
+    religion: null,
+    disabilityStatus: '',
+    disabilityCertStartDate: null,
+    disabilityCertEndDate: null,
+    typeOfDisability: '',
+    certificateId: '',
+    spouseFatherIdNumber: '',
+    spouseMotherIdNumber: '',
+    additionalInformation: '',
+  },
+  // ── Phase 5b-3: Work Permit ──
+  workPermit: {
+    documentType: '',
+    country: '',
+    documentNumber: '',
+    issueDate: null,
+    expiryDate: null,
+    arrivalDateVisa: null,
+    ninetyDayReportVisa: null,
+    attachmentName: '',
+  },
+  // ── Phase 5b-4: Dependents ──
+  dependents: [],
   // Legacy slices
   name:         { firstNameTh: '', lastNameTh: '', firstNameEn: '', lastNameEn: '' },
   employeeInfo: {
@@ -334,7 +448,17 @@ const initialFormData: FormData = {
     event: null,
     employmentType: null,
   },
-  compensation: { baseSalary: null, costDistribution: [] },
+  compensation: {
+    baseSalary: null,
+    costDistribution: [],
+    recurringComponents: [],
+    bankCountry: '',
+    paymentMethod: '',
+    payType: '',
+    bank: '',
+    accountNumber: '',
+    bankCode: '',
+  },
 }
 
 // Per-step Zod validity flags — populated by each Step component via onValidChange
@@ -346,6 +470,9 @@ interface StepValidity {
   employeeInfo: boolean
   job: boolean
   compensation: boolean
+  globalInfo: boolean
+  workPermit: boolean
+  dependents: boolean
 }
 
 interface HireWizardState {
@@ -424,6 +551,21 @@ const sliceValid = {
       (ec) => ec.name.trim() !== '' && ec.relationship.trim() !== '' && ec.phone.trim() !== ''
     )
   },
+  // Phase 5b-2: globalInfo — all fields optional per BA
+  globalInfo: (_d: FormData) => true,
+  // Phase 5b-3: workPermit — required only when foreigner (nationality !== THA)
+  workPermit: (d: FormData) => {
+    const isForeigner = d.biographical.nationality && d.biographical.nationality.toUpperCase() !== 'THA'
+    if (!isForeigner) return true
+    return !!(d.workPermit.documentType.trim() && d.workPermit.country.trim() &&
+      d.workPermit.documentNumber.trim() && d.workPermit.issueDate)
+  },
+  // Phase 5b-4: dependents — optional list; if any entry present, require relationshipType + at least one name
+  dependents: (d: FormData) => {
+    if (d.dependents.length === 0) return true
+    return d.dependents.every((dep) => dep.relationshipType.trim() &&
+      (dep.firstNameEn.trim() || dep.firstNameLocal.trim()))
+  },
   // Legacy validators — kept for backward compat with existing tests
   name:         (d: FormData) => d.name.firstNameTh.trim() !== '' && d.name.lastNameTh.trim() !== '',
   employeeInfo: (d: FormData) => !!d.employeeInfo.employeeClass,
@@ -480,6 +622,9 @@ const initialStepValidity: StepValidity = {
   employeeInfo: true,
   job: true,
   compensation: true,
+  globalInfo: true,
+  workPermit: true,
+  dependents: true,
 }
 
 export const useHireWizard = create<HireWizardState>()(
@@ -558,7 +703,9 @@ export const useHireWizard = create<HireWizardState>()(
       // Version 3 adds: Phase 1.4 emergencyContacts[] slice.
       // Version 4 adds: Phase 3 EmpJob new fields on job slice.
       // Version 5 adds: Phase 4 employeeInfo.ssn (maps to User.ssn in User CREATE).
-      version: 5,
+      // Version 6 adds: Phase 5b-2/3/4 globalInfo, workPermit, dependents slices.
+      // Version 7 adds: Phase 5 compensation.recurringComponents + bank/payment fields.
+      version: 7,
       partialize: (state) => ({
         currentStep: state.currentStep,
         maxUnlockedStep: state.maxUnlockedStep,
@@ -623,7 +770,42 @@ export const useHireWizard = create<HireWizardState>()(
         if (!('ssn' in fd.employeeInfo)) {
           fd.employeeInfo.ssn = ''
         }
-        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v5`)
+        // v6: Phase 5b-2/3/4 — backfill new slices for v5 drafts
+        if (!fd.globalInfo) {
+          fd.globalInfo = {
+            numberOfChildren: null, religion: null, disabilityStatus: '',
+            disabilityCertStartDate: null, disabilityCertEndDate: null,
+            typeOfDisability: '', certificateId: '',
+            spouseFatherIdNumber: '', spouseMotherIdNumber: '',
+            additionalInformation: '',
+          }
+        }
+        if (!fd.workPermit) {
+          fd.workPermit = {
+            documentType: '', country: '', documentNumber: '',
+            issueDate: null, expiryDate: null,
+            arrivalDateVisa: null, ninetyDayReportVisa: null,
+            attachmentName: '',
+          }
+        }
+        if (!Array.isArray(fd.dependents)) {
+          fd.dependents = []
+        }
+        // v7: Phase 5 compensation bank/payment fields + recurringComponents
+        if (!fd.compensation || typeof fd.compensation !== 'object') {
+          fd.compensation = {}
+        }
+        if (!Array.isArray(fd.compensation.recurringComponents)) {
+          fd.compensation.recurringComponents = []
+        }
+        const compDefaults: Record<string, string> = {
+          bankCountry: '', paymentMethod: '', payType: '',
+          bank: '', accountNumber: '', bankCode: '',
+        }
+        for (const [k, v] of Object.entries(compDefaults)) {
+          if (!(k in fd.compensation)) fd.compensation[k] = v
+        }
+        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v7`)
         return p
       },
     },

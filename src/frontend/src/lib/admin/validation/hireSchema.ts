@@ -271,6 +271,75 @@ export const stepEmergencyContactsSchema = z.object({
 
 export type StepEmergencyContactsData = z.infer<typeof stepEmergencyContactsSchema>
 
+// ── Phase 5b-2: Global Information (PerGlobalInfoTHA SF entity) ──────────────
+export const globalInfoEntrySchema = z.object({
+  numberOfChildren: z.number().nullable(),
+  religion: z.string().nullable(),
+  disabilityStatus: z.string(),
+  disabilityCertStartDate: z.string().nullable(),
+  disabilityCertEndDate: z.string().nullable(),
+  typeOfDisability: z.string(),
+  certificateId: z.string(),
+  spouseFatherIdNumber: z.string(),
+  spouseMotherIdNumber: z.string(),
+  additionalInformation: z.string(),
+})
+
+export const stepGlobalInfoSchema = z.object({
+  globalInfo: globalInfoEntrySchema,
+})
+
+export type GlobalInfoEntryData = z.infer<typeof globalInfoEntrySchema>
+export type StepGlobalInfoData = z.infer<typeof stepGlobalInfoSchema>
+
+// ── Phase 5b-3: Work Permit (EmpWorkPermit SF entity) ────────────────────────
+// Required when foreigner — refine in component
+export const workPermitEntrySchema = z.object({
+  documentType: z.string(),
+  country: z.string(),
+  documentNumber: z.string(),
+  issueDate: z.string().nullable(),
+  expiryDate: z.string().nullable(),
+  arrivalDateVisa: z.string().nullable(),
+  ninetyDayReportVisa: z.string().nullable(),
+  attachmentName: z.string(),
+})
+
+export const stepWorkPermitSchema = z.object({
+  workPermit: workPermitEntrySchema,
+})
+
+export type WorkPermitEntryData = z.infer<typeof workPermitEntrySchema>
+export type StepWorkPermitData = z.infer<typeof stepWorkPermitSchema>
+
+// ── Phase 5b-4: Dependents (PerPersonRelationship SF entity) ─────────────────
+export const dependentEntrySchema = z.object({
+  relationshipType: z.string().min(1, 'Relationship required'),
+  salutationEn: z.string().nullable(),
+  firstNameEn: z.string(),
+  lastNameEn: z.string(),
+  salutationLocal: z.string().nullable(),
+  firstNameLocal: z.string(),
+  lastNameLocal: z.string(),
+  nationality: z.string().nullable(),
+  dateOfBirth: z.string().nullable(),
+  country: z.string().nullable(),
+  nationalIdCardType: z.string().nullable(),
+  nationalIdCountry: z.string().nullable(),
+  nationalId: z.string(),
+  phone: z.string(),
+  email: z.string(),
+  isTaxDependent: z.boolean(),
+  addressLine1: z.string(),
+})
+
+export const stepDependentsSchema = z.object({
+  dependents: z.array(dependentEntrySchema).optional().default([]),
+})
+
+export type DependentEntryData = z.infer<typeof dependentEntrySchema>
+export type StepDependentsData = z.infer<typeof stepDependentsSchema>
+
 // ─── Legacy schemas (unchanged — backward compat with existing tests) ─────────
 
 export const stepNameSchema = z.object({

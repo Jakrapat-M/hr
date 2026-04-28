@@ -10,8 +10,11 @@ import StepIdentity from '../steps/StepIdentity'
 import StepBiographical from '../steps/StepBiographical'
 import StepContact from '../steps/StepContact'
 import StepEmergencyContacts from '../steps/StepEmergencyContacts'
+import StepGlobalInfo from '../steps/StepGlobalInfo'
+import StepWorkPermit from '../steps/StepWorkPermit'
+import StepDependents from '../steps/StepDependents'
 import { SectionHeader } from '@/components/admin/wizard/SectionHeader'
-import { Fingerprint, User2, Phone, AlertCircle } from 'lucide-react'
+import { Fingerprint, User2, Phone, AlertCircle, Globe, FileText, Users } from 'lucide-react'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
 
 export default function ClusterWho() {
@@ -20,6 +23,9 @@ export default function ClusterWho() {
   const onIdentityValid = useCallback((v: boolean) => setStepValidity('identity', v), [setStepValidity])
   const onBiographicalValid = useCallback((v: boolean) => setStepValidity('biographical', v), [setStepValidity])
   const onEmergencyContactsValid = useCallback((v: boolean) => setStepValidity('emergencyContacts', v), [setStepValidity])
+  const onGlobalInfoValid = useCallback((v: boolean) => setStepValidity('globalInfo', v), [setStepValidity])
+  const onWorkPermitValid = useCallback((v: boolean) => setStepValidity('workPermit', v), [setStepValidity])
+  const onDependentsValid = useCallback((v: boolean) => setStepValidity('dependents', v), [setStepValidity])
 
   return (
     <div className="space-y-5">
@@ -68,6 +74,42 @@ export default function ClusterWho() {
         />
         <div className="humi-step-section">
           <StepEmergencyContacts onValidChange={onEmergencyContactsValid} />
+        </div>
+      </div>
+
+      <div className="humi-card">
+        <SectionHeader
+          icon={Globe}
+          eyebrow="ข้อมูลทั่วไป"
+          title="ข้อมูลทั่วไป / Global Information"
+          sub="ศาสนา จำนวนบุตร สถานะความพิการ เลขบัตรคู่สมรส ข้อมูลเพิ่มเติม"
+        />
+        <div className="humi-step-section">
+          <StepGlobalInfo onValidChange={onGlobalInfoValid} />
+        </div>
+      </div>
+
+      <div className="humi-card">
+        <SectionHeader
+          icon={FileText}
+          eyebrow="ใบอนุญาตทำงาน"
+          title="ใบอนุญาตทำงาน / Work Permit"
+          sub="ประเภทเอกสาร เลขที่ ประเทศ วันออก วันหมดอายุ (สำหรับชาวต่างชาติเท่านั้น)"
+        />
+        <div className="humi-step-section">
+          <StepWorkPermit onValidChange={onWorkPermitValid} />
+        </div>
+      </div>
+
+      <div className="humi-card">
+        <SectionHeader
+          icon={Users}
+          eyebrow="บุคคลในอุปการะ"
+          title="บุคคลในอุปการะ / Dependents"
+          sub="คู่สมรส บุตร บิดามารดา (ถ้ามี) — สูงสุด 10 คน"
+        />
+        <div className="humi-step-section">
+          <StepDependents onValidChange={onDependentsValid} />
         </div>
       </div>
 

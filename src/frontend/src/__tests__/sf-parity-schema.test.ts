@@ -98,6 +98,31 @@ const minimalFormData: FormData = {
     addressSubDistrict: '22173',
     addressPostalCode: '16358',
   }],
+  globalInfo: {
+    numberOfChildren: null, religion: null, disabilityStatus: '',
+    disabilityCertStartDate: null, disabilityCertEndDate: null,
+    typeOfDisability: '', certificateId: '',
+    spouseFatherIdNumber: '', spouseMotherIdNumber: '',
+    additionalInformation: '',
+  },
+  workPermit: {
+    documentType: '', country: '', documentNumber: '',
+    issueDate: null, expiryDate: null,
+    arrivalDateVisa: null, ninetyDayReportVisa: null,
+    attachmentName: '',
+  },
+  // Phase 5b-4: one populated dependent entry so PerPersonRelationship mapper emits a record
+  // (empty array → payload=[] → allKeysInPayload is empty → E1.i would flag all required fields as missing)
+  dependents: [{
+    relationshipType: 'Spouse',
+    salutationEn: null, firstNameEn: 'Jane', lastNameEn: 'Doe',
+    salutationLocal: null, firstNameLocal: '', lastNameLocal: '',
+    nationality: null, dateOfBirth: null, country: 'THA',
+    nationalIdCardType: null, nationalIdCountry: null, nationalId: '',
+    phone: '', email: '',
+    isTaxDependent: false,
+    addressLine1: '',
+  }],
   name: { firstNameTh: '', lastNameTh: '', firstNameEn: '', lastNameEn: '' },
   employeeInfo: {
     employeeClass: null,
@@ -259,13 +284,23 @@ describe('sf-parity-schema', () => {
           .filter(f => f.sap_required === 'true')
           .map(f => f.name)
 
+        // Conditional mappers (e.g., empWorkPermit) return payload=null when the
+        // record doesn't apply (THA national → no work permit). Skip the mandatory
+        // coverage check in that case — the smoke test asserts the conditional shape.
+        if (result.payload === null) {
+          return
+        }
+
         const payloadRecords = Array.isArray(result.payload)
           ? result.payload as Record<string, unknown>[]
           : [result.payload as Record<string, unknown>]
 
+        // Filter out any null/undefined entries inside the array (defensive).
+        const validRecords = payloadRecords.filter((r): r is Record<string, unknown> => r != null)
+
         // For multi-record entities, assert required fields in the first record (representative check)
         // A full payload should contain all required fields across the union of all records.
-        const allKeysInPayload = new Set(payloadRecords.flatMap(r => Object.keys(r)))
+        const allKeysInPayload = new Set(validRecords.flatMap(r => Object.keys(r)))
 
         const missing = requiredFields.filter(f => !allKeysInPayload.has(f))
 
@@ -422,6 +457,11 @@ describe('sf-parity-schema', () => {
           throw new Error(`SF entity '${entityName}' not found in dump`)
         }
 
+        // Conditional mappers (e.g., empWorkPermit for THA nationals) return null payload — skip.
+        if (result.payload === null) {
+          return
+        }
+
         const knownFields = new Set((entity.fields ?? []).map(f => f.name))
 
         const payloadRecords = Array.isArray(result.payload)
@@ -429,6 +469,7 @@ describe('sf-parity-schema', () => {
           : [result.payload as Record<string, unknown>]
 
         for (const record of payloadRecords) {
+          if (record == null) continue
           const unknownKeys = Object.keys(record).filter(k => !knownFields.has(k))
           if (unknownKeys.length > 0) {
             throw new Error(

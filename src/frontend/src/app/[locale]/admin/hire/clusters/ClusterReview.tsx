@@ -12,8 +12,9 @@ import { useHireWizard, sliceValid } from '@/lib/admin/store/useHireWizard'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
 import { nextEmployeeCode } from '@/lib/admin/utils/employeeCode'
 import { useHrbpRoster } from '@/lib/admin/store/hrbpRoster'
+import { deriveUserId, deriveUsername } from '@/lib/admin/hire/sfMapper/derivedRules'
 import { SectionHeader } from '@/components/admin/wizard/SectionHeader'
-import { ClipboardCheck, Check, AlertCircle, UserCheck, PhoneCall } from 'lucide-react'
+import { ClipboardCheck, Check, AlertCircle, UserCheck, PhoneCall, Users } from 'lucide-react'
 
 function SummaryRow({ label, value, ok }: { label: string; value: string; ok: boolean }) {
   return (
@@ -66,6 +67,11 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
   const salary = formData.compensation.baseSalary
     ? `${formData.compensation.baseSalary.toLocaleString('th-TH')} ${t('salarySuffix')}`
     : '—'
+
+  // Phase 5: derive username using same logic as User mapper (Q5 decision: from primary email)
+  const primaryEmail = formData.contact.emails.find((e) => e.isPrimary)?.value
+  const derivedUserId = deriveUserId(id.employeeId || '')
+  const derivedUsername = deriveUsername(primaryEmail, derivedUserId)
 
   return (
     <div className="space-y-5">
@@ -173,6 +179,8 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
             ok={identityOk} />
           <SummaryRow label={t('summaryDateOfBirth')}     value={id.dateOfBirth ?? '—'}         ok={identityOk} />
           <SummaryRow label={t('summaryEmployeeId')}      value={id.employeeId || nextEmployeeCode(allEmployees) || '—'} ok={true} />
+          {/* Phase 5: auto-derived username (Q5 decision: from primary email, fallback to employeeId) */}
+          <SummaryRow label="Username (SF)" value={derivedUsername || '—'} ok={!!derivedUsername} />
           <SummaryRow label={t('summaryIdCardType')}      value={id.nationalIdCardType ?? '—'}  ok={identityOk} />
           <SummaryRow label={t('summaryIdNumber')}        value={id.nationalId || '—'}          ok={identityOk} />
           <SummaryRow label={t('summaryCountry')}         value={id.country ?? '—'}             ok={identityOk} />
@@ -231,6 +239,48 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── บุคคลในอุปการะ (Phase 5b-4) — read-only mirror ──────────────── */}
+      {formData.dependents && formData.dependents.length > 0 && (
+        <div className="humi-card">
+          <SectionHeader
+            icon={Users}
+            eyebrow="บุคคลในอุปการะ"
+            title="บุคคลในอุปการะ / Dependents"
+            sub={`${formData.dependents.length} รายการ`}
+          />
+          <div className="humi-step-section space-y-3">
+            {formData.dependents.map((dep, idx) => {
+              const nameEn = [dep.salutationEn, dep.firstNameEn, dep.lastNameEn].filter(Boolean).join(' ')
+              const nameLocal = [dep.salutationLocal, dep.firstNameLocal, dep.lastNameLocal].filter(Boolean).join(' ')
+              return (
+                <div
+                  key={idx}
+                  className="rounded border border-hairline-soft bg-surface-muted px-4 py-3 text-sm space-y-1"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-ink">{nameEn || nameLocal || '—'}</span>
+                    {dep.isTaxDependent && (
+                      <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent">
+                        Tax
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-ink-soft">
+                    {dep.relationshipType || '—'}
+                    {nameLocal && nameEn && ` · ${nameLocal}`}
+                  </div>
+                  {(dep.nationality || dep.dateOfBirth) && (
+                    <div className="text-ink-muted text-xs">
+                      {[dep.nationality, dep.dateOfBirth].filter(Boolean).join(' · ')}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
