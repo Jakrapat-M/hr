@@ -3,10 +3,13 @@
 // StepContact.tsx — A2 Multi-value Contact
 // Wave 2-A: BRD #15 email (SF ecEmailType, no 5-cap), #16 phone (countryCode + extension),
 //           BRD #17 8-field Thai address (PerAddressDEFLT)
+// Phase 2: address free-text replaced by AddressPicklist cascade (zProvince→zDistrict→zSubDistrict)
+// Perf budget goal: ≤500ms first interaction on slow 3G (chunk ≤100KB; Bangkok max 33KB)
 // Picklist source: SF cite in code comments
 
 import { useTranslations } from 'next-intl'
 import { useHireWizard, type EmailEntry, type JobRelationship } from '@/lib/admin/store/useHireWizard'
+import AddressPicklist, { EMPTY_ADDRESS_PICKLIST, type AddressPicklistValue } from '@/components/AddressPicklist'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -37,20 +40,20 @@ const PHONE_TYPE_LABELS: Record<string, string> = {
 const SF_PHONE_TYPES = ['C', 'B', 'H', 'F', 'BI'] as const
 const SF_EMAIL_TYPES = ['P', 'B'] as const
 
-// BRD #17: Thai address type — inline rather than reusing Address8Editor
-// Address8 type uses postalCode + road; SF PerAddressDEFLT needs zipCode + moo (address11).
-// Field-shape mismatch prevents safe reuse without modifying the shared Address8 type,
-// which risks cross-Wave merge conflicts with the active Wave 2-D profile agent.
-// SF cite: qas-fields-2026-04-26/sf-qas-PerAddressDEFLT-2026-04-26.json#.d.results[0]
+// BRD #17: Thai address — Phase 2 replaces free-text with AddressPicklist cascade
+// SF cite: qas-fields-2026-04-26/sf-qas-PerAddressDEFLT-2026-04-26.json
+// Full address stored in contact.address; house/village/moo/soi remain free-text.
+// Non-THA country: picklist hidden, free-text fallback inputs shown instead.
 interface ThaiAddress {
   houseNo:     string  // SF address5
   village:     string  // SF address4
   moo:         string  // SF address11
   soi:         string  // SF address7
-  subdistrict: string  // SF address12
-  district:    string  // SF city
-  province:    string  // SF state
-  zipCode:     string  // SF zipCode
+  // Phase 2: picklist externalCodes (SF zProvince/zDistrict/zSubDistrict)
+  subdistrict: string  // SF customString3
+  district:    string  // SF customString2
+  province:    string  // SF customString1
+  zipCode:     string  // SF customString4
   country:     string  // SF country (default THA)
 }
 
@@ -60,56 +63,19 @@ const EMPTY_ADDRESS: ThaiAddress = {
   zipCode: '', country: 'THA',
 }
 
-type AddressLookupField = 'subdistrict' | 'district' | 'province' | 'zipCode'
-
-interface ThaiAddressSuggestion {
-  subdistrict: string
-  district: string
-  province: string
-  zipCode: string
-}
-
-// Compact seed set for the hire form autocomplete. Kept local to avoid pulling a
-// large Thai address dependency into the frontend bundle.
-const THAI_ADDRESS_SUGGESTIONS: ThaiAddressSuggestion[] = [
-  { subdistrict: 'บางกระสอ', district: 'เมืองนนทบุรี', province: 'นนทบุรี', zipCode: '11000' },
-  { subdistrict: 'ตลาดขวัญ', district: 'เมืองนนทบุรี', province: 'นนทบุรี', zipCode: '11000' },
-  { subdistrict: 'สวนใหญ่', district: 'เมืองนนทบุรี', province: 'นนทบุรี', zipCode: '11000' },
-  { subdistrict: 'คลองตัน', district: 'วัฒนา', province: 'กรุงเทพมหานคร', zipCode: '10110' },
-  { subdistrict: 'คลองเตย', district: 'คลองเตย', province: 'กรุงเทพมหานคร', zipCode: '10110' },
-  { subdistrict: 'สีลม', district: 'บางรัก', province: 'กรุงเทพมหานคร', zipCode: '10500' },
-  { subdistrict: 'ปทุมวัน', district: 'ปทุมวัน', province: 'กรุงเทพมหานคร', zipCode: '10330' },
-  { subdistrict: 'ห้วยขวาง', district: 'ห้วยขวาง', province: 'กรุงเทพมหานคร', zipCode: '10310' },
-  { subdistrict: 'ลาดยาว', district: 'จตุจักร', province: 'กรุงเทพมหานคร', zipCode: '10900' },
-  { subdistrict: 'บางนา', district: 'บางนา', province: 'กรุงเทพมหานคร', zipCode: '10260' },
-  { subdistrict: 'คูคต', district: 'ลำลูกกา', province: 'ปทุมธานี', zipCode: '12130' },
-  { subdistrict: 'บางแก้ว', district: 'บางพลี', province: 'สมุทรปราการ', zipCode: '10540' },
-]
-
-function uniqueAddressValues(field: AddressLookupField): string[] {
-  return Array.from(new Set(THAI_ADDRESS_SUGGESTIONS.map((item) => item[field]))).sort((a, b) =>
-    a.localeCompare(b, 'th')
-  )
-}
-
-function findAddressSuggestion(field: AddressLookupField, value: string): ThaiAddressSuggestion | undefined {
-  const normalized = value.trim()
-  if (!normalized) return undefined
-  const matches = THAI_ADDRESS_SUGGESTIONS.filter((item) => item[field] === normalized)
-  return matches.length === 1 ? matches[0] : undefined
-}
-
-function buildAddressAutofill(field: AddressLookupField, value: string): Partial<ThaiAddress> {
-  const suggestion = findAddressSuggestion(field, value)
-  if (!suggestion) return { [field]: value }
-
+// Derive AddressPicklistValue from ThaiAddress (province/district/subDistrict/postalCode)
+function toPicklistValue(addr: ThaiAddress): AddressPicklistValue {
   return {
-    subdistrict: suggestion.subdistrict,
-    district: suggestion.district,
-    province: suggestion.province,
-    zipCode: suggestion.zipCode,
-    country: 'THA',
+    province:    addr.province,
+    district:    addr.district,
+    subDistrict: addr.subdistrict,
+    postalCode:  addr.zipCode,
   }
+}
+
+// Merge AddressPicklistValue back into ThaiAddress
+function fromPicklistValue(addr: ThaiAddress, pv: AddressPicklistValue): ThaiAddress {
+  return { ...addr, province: pv.province, district: pv.district, subdistrict: pv.subDistrict, zipCode: pv.postalCode }
 }
 
 // Extended PhoneEntry with countryCode + extension (BRD #16)
@@ -189,8 +155,8 @@ export default function StepContact() {
     setStepData('contact', { address: next } as any)
   }
 
-  function updateAddressFromLookup(field: AddressLookupField, value: string) {
-    updateAddress(buildAddressAutofill(field, value))
+  function handlePicklistChange(pv: AddressPicklistValue) {
+    updateAddress(fromPicklistValue(address, pv))
   }
 
   // ── Job Relationship helpers ───────────────────────────────────────────────
@@ -380,16 +346,29 @@ export default function StepContact() {
         </button>
       </section>
 
-      {/* ─── ที่อยู่ที่พักอาศัย (BRD #17: PerAddressDEFLT 8-field Thai address) ─── */}
+      {/* ─── ที่อยู่ที่พักอาศัย (BRD #17: PerAddressDEFLT — Phase 2 picklist cascade) ─── */}
       <section aria-label={t('addressSection')}>
         <p className="humi-label mb-3">
           {t('addressSection')}
         </p>
-        {/* SF cite: qas-fields-2026-04-26/sf-qas-PerAddressDEFLT-2026-04-26.json#.d.results[0]
-            address5=houseNo, address4=village, address11=moo, address7=soi,
-            address12=subdistrict, city=district, state=province, zipCode, country=THA */}
+        {/* SF cite: customString1=province, customString2=district, customString3=subdistrict, customString4=postalCode
+            address5=houseNo, address4=village, address11=moo, address7=soi, country=THA */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+        {/* ประเทศ — SF country (shown first; controls THA vs non-THA path) */}
+        <div className="mb-4">
+          <fieldset>
+            <label htmlFor="addr-country" className="humi-label">
+              {t('country')}
+            </label>
+            <input id="addr-country" type="text" placeholder={t('countryPlaceholder')}
+              value={address.country}
+              onChange={(e) => updateAddress({ country: e.target.value })}
+              className="humi-input w-full md:w-48" />
+          </fieldset>
+        </div>
+
+        {/* บ้านเลขที่ / หมู่บ้าน / หมู่ที่ / ซอย — free-text for all countries */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 mb-4">
           {/* บ้านเลขที่ — SF address5 */}
           <fieldset>
             <label htmlFor="addr-house-no" className="humi-label">
@@ -402,7 +381,7 @@ export default function StepContact() {
               className="humi-input w-full" />
           </fieldset>
 
-          {/* หมู่บ้าน / ชื่อหมู่บ้าน — SF address4 */}
+          {/* หมู่บ้าน — SF address4 */}
           <fieldset>
             <label htmlFor="addr-village" className="humi-label">
               {t('village')}
@@ -437,95 +416,48 @@ export default function StepContact() {
               onChange={(e) => updateAddress({ soi: e.target.value })}
               className="humi-input w-full" />
           </fieldset>
-
-          {/* แขวง/ตำบล — SF address12 */}
-          <fieldset>
-            <label htmlFor="addr-subdistrict" className="humi-label">
-              {t('subdistrict')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <input id="addr-subdistrict" type="text" placeholder={t('subdistrictPlaceholder')}
-              autoComplete="address-level3"
-              list="hire-address-subdistricts"
-              value={address.subdistrict}
-              onChange={(e) => updateAddressFromLookup('subdistrict', e.target.value)}
-              className="humi-input w-full" />
-          </fieldset>
-
-          {/* เขต/อำเภอ — SF city */}
-          <fieldset>
-            <label htmlFor="addr-district" className="humi-label">
-              {t('district')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <input id="addr-district" type="text" placeholder={t('districtPlaceholder')}
-              autoComplete="address-level2"
-              list="hire-address-districts"
-              value={address.district}
-              onChange={(e) => updateAddressFromLookup('district', e.target.value)}
-              className="humi-input w-full" />
-          </fieldset>
-
-          {/* จังหวัด — SF state */}
-          <fieldset>
-            <label htmlFor="addr-province" className="humi-label">
-              {t('province')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <input id="addr-province" type="text" placeholder={t('provincePlaceholder')}
-              autoComplete="address-level1"
-              list="hire-address-provinces"
-              value={address.province}
-              onChange={(e) => updateAddressFromLookup('province', e.target.value)}
-              className="humi-input w-full" />
-          </fieldset>
-
-          {/* รหัสไปรษณีย์ — SF zipCode */}
-          <fieldset>
-            <label htmlFor="addr-zip" className="humi-label">
-              {t('zipCode')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <input id="addr-zip" type="text" inputMode="numeric" placeholder={t('zipCodePlaceholder')}
-              autoComplete="postal-code"
-              list="hire-address-zip-codes"
-              value={address.zipCode}
-              onChange={(e) => updateAddressFromLookup('zipCode', e.target.value)}
-              className="humi-input w-full" />
-          </fieldset>
-
-          <datalist id="hire-address-subdistricts">
-            {THAI_ADDRESS_SUGGESTIONS.map((item) => (
-              <option
-                key={`${item.subdistrict}-${item.district}-${item.zipCode}`}
-                value={item.subdistrict}
-                label={`${item.district}, ${item.province} ${item.zipCode}`}
-              />
-            ))}
-          </datalist>
-          <datalist id="hire-address-districts">
-            {uniqueAddressValues('district').map((district) => (
-              <option key={district} value={district} />
-            ))}
-          </datalist>
-          <datalist id="hire-address-provinces">
-            {uniqueAddressValues('province').map((province) => (
-              <option key={province} value={province} />
-            ))}
-          </datalist>
-          <datalist id="hire-address-zip-codes">
-            {uniqueAddressValues('zipCode').map((zipCode) => (
-              <option key={zipCode} value={zipCode} />
-            ))}
-          </datalist>
-
-          {/* ประเทศ — SF country (default THA) */}
-          <fieldset>
-            <label htmlFor="addr-country" className="humi-label">
-              {t('country')}
-            </label>
-            <input id="addr-country" type="text" placeholder={t('countryPlaceholder')}
-              value={address.country}
-              onChange={(e) => updateAddress({ country: e.target.value })}
-              className="humi-input w-full" />
-          </fieldset>
         </div>
+
+        {/* Province/District/SubDistrict/PostalCode: picklist for THA, free-text for non-THA */}
+        {address.country.toUpperCase() === 'THA' || address.country === '' ? (
+          /* THA path: cascading picklist (Phase 2) */
+          <AddressPicklist
+            value={toPicklistValue(address)}
+            onChange={handlePicklistChange}
+          />
+        ) : (
+          /* Non-THA path: free-text fallback */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+            <fieldset>
+              <label htmlFor="addr-province-text" className="humi-label">{t('province')}</label>
+              <input id="addr-province-text" type="text" placeholder={t('provincePlaceholder')}
+                value={address.province}
+                onChange={(e) => updateAddress({ province: e.target.value })}
+                className="humi-input w-full" />
+            </fieldset>
+            <fieldset>
+              <label htmlFor="addr-district-text" className="humi-label">{t('district')}</label>
+              <input id="addr-district-text" type="text" placeholder={t('districtPlaceholder')}
+                value={address.district}
+                onChange={(e) => updateAddress({ district: e.target.value })}
+                className="humi-input w-full" />
+            </fieldset>
+            <fieldset>
+              <label htmlFor="addr-subdistrict-text" className="humi-label">{t('subdistrict')}</label>
+              <input id="addr-subdistrict-text" type="text" placeholder={t('subdistrictPlaceholder')}
+                value={address.subdistrict}
+                onChange={(e) => updateAddress({ subdistrict: e.target.value })}
+                className="humi-input w-full" />
+            </fieldset>
+            <fieldset>
+              <label htmlFor="addr-zip-text" className="humi-label">{t('zipCode')}</label>
+              <input id="addr-zip-text" type="text" inputMode="numeric" placeholder={t('zipCodePlaceholder')}
+                value={address.zipCode}
+                onChange={(e) => updateAddress({ zipCode: e.target.value })}
+                className="humi-input w-full" />
+            </fieldset>
+          </div>
+        )}
       </section>
 
       {/* ─── บุคคลที่เกี่ยวข้อง ───────────────────────────────────────────── */}

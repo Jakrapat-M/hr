@@ -1,9 +1,13 @@
-// StepContact.address-autocomplete.test.tsx — hire address autocomplete/autofill
+// StepContact.address-autocomplete.test.tsx — Phase 2 address picklist cascade tests
+// Replaces old free-text autocomplete tests (pre-Phase 2).
+// The address section now uses AddressPicklist (province → district → subdistrict → postal).
+// fetch is mocked for province index + chunk loading.
 
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import StepContact from '@/app/[locale]/admin/hire/steps/StepContact'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
+import { clearAddressCache } from '@/lib/admin/hire/picklists/address'
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => {
@@ -54,65 +58,145 @@ vi.mock('next-intl', () => ({
   },
 }))
 
+// ── Minimal mock data matching the real chunk format ───────────────────────
+
+const MOCK_PROVINCES = [
+  { code: '11นนทบุรี', labelEn: 'Nonthaburi', labelTh: 'นนทบุรี' },
+  { code: '10กรุงเทพมหานคร', labelEn: 'Bangkok', labelTh: 'กรุงเทพมหานคร' },
+]
+
+const MOCK_CHUNK_11 = {
+  province: { code: '11นนทบุรี', labelEn: 'Nonthaburi', labelTh: 'นนทบุรี' },
+  districts: [
+    {
+      code: '1101เมืองนนทบุรี',
+      labelEn: 'Mueang Nonthaburi',
+      labelTh: 'เมืองนนทบุรี',
+      postalCodes: ['11000'],
+      subDistricts: [
+        { code: '110101สวนใหญ่', labelEn: 'Suan Yai', labelTh: 'สวนใหญ่' },
+        { code: '110102ตลาดขวัญ', labelEn: 'Talat Khwan', labelTh: 'ตลาดขวัญ' },
+      ],
+    },
+  ],
+}
+
+// Mock fetch to return appropriate data based on URL
+function setupFetchMock() {
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.includes('_provinces.json')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(MOCK_PROVINCES),
+      })
+    }
+    if (url.includes('/11.json')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(MOCK_CHUNK_11),
+      })
+    }
+    return Promise.resolve({ ok: false, status: 404, json: () => Promise.reject(new Error('not found')) })
+  }))
+}
+
 beforeEach(() => {
   localStorage.clear()
+  clearAddressCache()
   act(() => {
     useHireWizard.getState().reset()
   })
+  setupFetchMock()
 })
 
-describe('StepContact address autocomplete', () => {
-  it('fills district, province, zip code, and country from a known subdistrict', async () => {
+describe('StepContact address picklist (Phase 2)', () => {
+  it('renders the address section with country input and province combobox button', async () => {
     render(<StepContact />)
 
-    const subdistrict = screen.getByLabelText(/แขวง \/ ตำบล/) as HTMLInputElement
-    const district = screen.getByLabelText(/เขต \/ อำเภอ/) as HTMLInputElement
-    const province = screen.getByLabelText(/จังหวัด/) as HTMLInputElement
-    const zipCode = screen.getByLabelText(/รหัสไปรษณีย์/) as HTMLInputElement
-    const country = screen.getByLabelText(/^ประเทศ$/) as HTMLInputElement
+    // Country input should be present
+    expect(screen.getByLabelText(/^ประเทศ$/)).toBeTruthy()
 
-    expect(subdistrict).toHaveAttribute('list', 'hire-address-subdistricts')
-
-    fireEvent.change(subdistrict, { target: { value: 'บางกระสอ' } })
-
+    // Province combobox button (aria-label="จังหวัด")
     await waitFor(() => {
-      expect(subdistrict.value).toBe('บางกระสอ')
-      expect(district.value).toBe('เมืองนนทบุรี')
-      expect(province.value).toBe('นนทบุรี')
-      expect(zipCode.value).toBe('11000')
-      expect(country.value).toBe('THA')
+      expect(screen.getByRole('button', { name: /จังหวัด/ })).toBeTruthy()
     })
   })
 
-  it('keeps manually entered address text when no autocomplete record matches', async () => {
+  it('loads province list on mount and shows province options when opened', async () => {
     render(<StepContact />)
 
-    const subdistrict = screen.getByLabelText(/แขวง \/ ตำบล/) as HTMLInputElement
-    const district = screen.getByLabelText(/เขต \/ อำเภอ/) as HTMLInputElement
+    // Wait for provinces to load (fetch called on mount)
+    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('_provinces.json')
+    ))
 
-    fireEvent.change(subdistrict, { target: { value: 'ตำบลทดสอบ' } })
+    // Open province dropdown
+    const provinceBtn = screen.getByRole('button', { name: /จังหวัด/ })
+    act(() => { fireEvent.click(provinceBtn) })
 
     await waitFor(() => {
-      expect(subdistrict.value).toBe('ตำบลทดสอบ')
-      expect(district.value).toBe('')
+      expect(screen.getByText('นนทบุรี')).toBeTruthy()
+      expect(screen.getByText('กรุงเทพมหานคร')).toBeTruthy()
     })
   })
 
-  it('does not guess a subdistrict from an ambiguous district autocomplete value', async () => {
+  it('selects province, loads chunk, and then enables district dropdown', async () => {
     render(<StepContact />)
 
-    const subdistrict = screen.getByLabelText(/แขวง \/ ตำบล/) as HTMLInputElement
-    const district = screen.getByLabelText(/เขต \/ อำเภอ/) as HTMLInputElement
-    const province = screen.getByLabelText(/จังหวัด/) as HTMLInputElement
-    const zipCode = screen.getByLabelText(/รหัสไปรษณีย์/) as HTMLInputElement
+    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('_provinces.json')
+    ))
 
-    fireEvent.change(district, { target: { value: 'เมืองนนทบุรี' } })
+    // Open and select province
+    const provinceBtn = screen.getByRole('button', { name: /จังหวัด/ })
+    act(() => { fireEvent.click(provinceBtn) })
 
+    await waitFor(() => screen.getByText('นนทบุรี'))
+    act(() => { fireEvent.click(screen.getByText('นนทบุรี')) })
+
+    // Chunk should be fetched for province prefix '11'
+    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('/11.json')
+    ))
+
+    // District button should now be enabled and show district name
     await waitFor(() => {
-      expect(district.value).toBe('เมืองนนทบุรี')
-      expect(subdistrict.value).toBe('')
-      expect(province.value).toBe('')
-      expect(zipCode.value).toBe('')
+      const distBtn = screen.getByRole('button', { name: /เขต\/อำเภอ/ })
+      expect(distBtn).not.toBeDisabled()
+    })
+  })
+
+  it('auto-fills single postal code when district with 1 zip is selected', async () => {
+    render(<StepContact />)
+
+    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('_provinces.json')
+    ))
+
+    // Select province นนทบุรี
+    const provinceBtn = screen.getByRole('button', { name: /จังหวัด/ })
+    act(() => { fireEvent.click(provinceBtn) })
+    await waitFor(() => screen.getByText('นนทบุรี'))
+    act(() => { fireEvent.click(screen.getByText('นนทบุรี')) })
+
+    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      expect.stringContaining('/11.json')
+    ))
+
+    // Select district เมืองนนทบุรี
+    await waitFor(() => {
+      const distBtn = screen.getByRole('button', { name: /เขต\/อำเภอ/ })
+      expect(distBtn).not.toBeDisabled()
+      act(() => { fireEvent.click(distBtn) })
+    })
+
+    await waitFor(() => screen.getByText('เมืองนนทบุรี'))
+    act(() => { fireEvent.click(screen.getByText('เมืองนนทบุรี')) })
+
+    // Postal code auto-filled (read-only input with single zip 11000)
+    await waitFor(() => {
+      const postalInput = screen.getByLabelText(/รหัสไปรษณีย์/) as HTMLInputElement
+      expect(postalInput.value).toBe('11000')
     })
   })
 })

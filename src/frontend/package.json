@@ -11,7 +11,8 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:demo-plus": "playwright test demo-2026-04-26-plus.spec.ts --project=chromium",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:address": "bun ../../scripts/build-address-chunks.ts"
   },
   "dependencies": {
     "@keycloak/keycloak-admin-client": "^26.0.0",

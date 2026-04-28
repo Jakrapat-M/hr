@@ -52,9 +52,10 @@ const minimalFormData: FormData = {
 
 // Phase 1.3: 6 mappers return real verb+payload
 // Phase 1.4: perEmergencyContacts added (7 total implemented)
+// Phase 2:   perAddressDEFLT added (8 total implemented)
 const IMPLEMENTED_MAPPERS = new Set([
   'user', 'perPerson', 'perPersonal', 'perNationalId', 'perEmail', 'perPhone',
-  'perEmergencyContacts',
+  'perEmergencyContacts', 'perAddressDEFLT',
 ])
 
 describe('sfMapper scaffold smoke', () => {
@@ -63,7 +64,7 @@ describe('sfMapper scaffold smoke', () => {
     expect(Object.keys(result)).toHaveLength(17)
   })
 
-  it('PENDING mappers (10) return verb=PENDING and null payload', () => {
+  it('PENDING mappers (9) return verb=PENDING and null payload', () => {
     const result = buildAll(minimalFormData)
     for (const key of Object.keys(result)) {
       if (!IMPLEMENTED_MAPPERS.has(key)) {
@@ -91,6 +92,10 @@ describe('sfMapper scaffold smoke', () => {
       expect(result[key].verb).toBe('UPSERT')
       expect(Array.isArray(result[key].payload)).toBe(true)
     }
+
+    // perAddressDEFLT: Phase 2 — UPSERT single-record address
+    expect(result.perAddressDEFLT.verb).toBe('UPSERT')
+    expect(result.perAddressDEFLT.payload).not.toBeNull()
   })
 
   it('all mappers declare entity string and CREATE or UPSERT verb', () => {
