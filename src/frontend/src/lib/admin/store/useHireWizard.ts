@@ -26,7 +26,8 @@ export interface CostDistributionEntry { costCenter: string; percent: number }
 export type EmployeeClassToggle = 'PERMANENT' | 'PARTIME'
 
 // รูปแบบข้อมูลของแต่ละ slice — trace กลับ BA-EC-SUMMARY.md ทุก field
-interface FormData {
+// Exported so sfMapper can type-narrow per portlet input (Phase 1+).
+export interface FormData {
   // ── Cluster 1 "Who" (Identity) ── 20 fields
   identity: {
     // BA row 1 — Hire Date
