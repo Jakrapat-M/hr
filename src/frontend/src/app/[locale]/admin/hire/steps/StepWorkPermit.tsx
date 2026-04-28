@@ -10,6 +10,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
 import { workPermitEntrySchema } from '@/lib/admin/validation/hireSchema'
 import { PICKLIST_COUNTRY_ISO } from '@hrms/shared/picklists'
+import {
+  AttachmentDropzone,
+  type AttachedFile,
+} from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
+import {
+  attachmentNameFromFiles,
+  filesFromAttachmentName,
+} from '@/components/admin/AttachmentDropzone/attachmentFiles'
 
 // Work permit document type options (SF EmpWorkPermit.documentType picklist codes)
 const DOCUMENT_TYPE_OPTIONS = [
@@ -58,6 +66,9 @@ export default function StepWorkPermit({ onValidChange }: StepWorkPermitProps) {
   const [arrivalDateVisa,     setArrivalDateVisa]     = useState(wp.arrivalDateVisa ?? '')
   const [ninetyDayReportVisa, setNinetyDayReportVisa] = useState(wp.ninetyDayReportVisa ?? '')
   const [attachmentName,      setAttachmentName]      = useState(wp.attachmentName ?? '')
+  const [attachmentFiles,     setAttachmentFiles]     = useState<AttachedFile[]>(
+    () => filesFromAttachmentName(wp.attachmentName ?? ''),
+  )
 
   const [touched, setTouched] = useState<TouchedState>({
     documentType: false, country: false, documentNumber: false,
@@ -139,10 +150,16 @@ export default function StepWorkPermit({ onValidChange }: StepWorkPermitProps) {
 
   const errMsg = (field: keyof FieldErrors) => {
     if (!touched[field as keyof TouchedState] || !errors[field]) return null
-    return <p role="alert" className="mt-1 text-xs text-warning">{errors[field]}</p>
+    return <p role="alert" className="mt-1 text-small text-warning">{errors[field]}</p>
   }
 
   const isVisa = documentType === 'VISA' || documentType === 'PASSPORT_VISA'
+
+  function handleAttachmentFilesChange(files: AttachedFile[]) {
+    setAttachmentFiles(files)
+    setAttachmentName(attachmentNameFromFiles(files))
+    touch('attachmentName')
+  }
 
   return (
     <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
@@ -237,7 +254,6 @@ export default function StepWorkPermit({ onValidChange }: StepWorkPermitProps) {
             onChange={(e) => setArrivalDateVisa(e.target.value)}
             onBlur={() => touch('arrivalDateVisa')}
             className="humi-input w-full" />
-          <p className="mt-1 text-xs text-ink-soft">SF: customDate1 — Arrival date (VISA)</p>
         </fieldset>
       )}
 
@@ -252,24 +268,19 @@ export default function StepWorkPermit({ onValidChange }: StepWorkPermitProps) {
             onChange={(e) => setNinetyDayReportVisa(e.target.value)}
             onBlur={() => touch('ninetyDayReportVisa')}
             className="humi-input w-full" />
-          <p className="mt-1 text-xs text-ink-soft">SF: customDate2 — 90-day report (VISA)</p>
         </fieldset>
       )}
 
-      {/* ─── Attachment (filename tracking — actual upload is a separate flow) ─── */}
+      {/* ─── Attachment (mock upload; filename tracked for SF payload handoff) ─── */}
       <fieldset className="md:col-span-2">
-        <label htmlFor="wp-attachment-name" className="humi-label">
-          ไฟล์แนบ (Attachment)
-        </label>
-        <input id="wp-attachment-name" type="text"
-          placeholder="ชื่อไฟล์ เช่น work_permit_scan.pdf"
-          value={attachmentName}
-          onChange={(e) => setAttachmentName(e.target.value)}
-          onBlur={() => touch('attachmentName')}
-          className="humi-input w-full" />
-        <p className="mt-1 text-xs text-ink-soft">
-          บันทึกชื่อไฟล์ — การอัปโหลดจริงดำเนินการในขั้นตอนแยกต่างหาก
-        </p>
+        <AttachmentDropzone
+          id="wp-attachment-files"
+          files={attachmentFiles}
+          onFilesChange={handleAttachmentFilesChange}
+          label="ไฟล์แนบ (Attachment)"
+          maxFiles={5}
+          maxSizeMB={10}
+        />
       </fieldset>
 
     </div>

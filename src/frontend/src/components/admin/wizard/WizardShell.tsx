@@ -105,7 +105,7 @@ export function WizardShell({
       </div>
 
       {/* Body — stepper rail + form scroll area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
         <aside className="hidden w-64 shrink-0 overflow-y-auto border-r border-hairline bg-surface px-3 py-5 md:block">
           <Stepper
             steps={[...steps]}

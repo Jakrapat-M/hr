@@ -13,7 +13,7 @@
 import type { PortletMapper, MapperResult } from './types'
 import { toSfDate } from './derivedRules'
 
-interface EmpJobRelationshipsRecord {
+interface EmpJobRelationshipsRecord extends Record<string, unknown> {
   userId: string
   // TODO(Phase 5b-1): SF relUserId must be a real SF userId, but the form stores a free-text name.
   // For now we store the name string directly. Integration team must resolve name→userId

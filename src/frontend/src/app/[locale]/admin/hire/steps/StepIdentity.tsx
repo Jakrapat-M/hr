@@ -16,6 +16,14 @@ import { nextEmployeeCode } from '@/lib/admin/utils/employeeCode'
 import { stepIdentitySchema, calcAge } from '@/lib/admin/validation/hireSchema'
 // BRD #14: mod-11 Thai National ID checksum — validated at UI layer to avoid blocking schema parse
 import { validateThaiNationalIdMod11, requiresThaiMod11 } from '@/lib/admin/validation/thaiNationalId'
+import {
+  AttachmentDropzone,
+  type AttachedFile,
+} from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
+import {
+  attachmentNameFromFiles,
+  filesFromAttachmentName,
+} from '@/components/admin/AttachmentDropzone/attachmentFiles'
 // BRD #178-181 PILOT — self-service config bus binding.
 // Reads mandatory matrix from admin config; currently pilots `national_id` field.
 // W2-E: coordinate note — only adds hook import + single isMandatory call; no schema refactor.
@@ -89,6 +97,9 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
   const [isPrimary,         setIsPrimary]         = useState(id.isPrimary ?? '')
   const [vnIssuePlace,      setVnIssuePlace]      = useState(id.vnIssuePlace ?? '')
   const [salutationLocal,   setSalutationLocal]   = useState(id.salutationLocal ?? '')
+  const [attachmentFiles,   setAttachmentFiles]   = useState<AttachedFile[]>(
+    () => filesFromAttachmentName(id.attachmentName, 'identity-existing'),
+  )
 
   // age คำนวณอัตโนมัติจาก dateOfBirth
   const age = useMemo(() => calcAge(dateOfBirth), [dateOfBirth])
@@ -149,6 +160,7 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
         country: country || null, nationalId: cleanNationalId,
         issueDate: issueDate || null, expiryDate: expiryDate || null,
         isPrimary: isPrimary || null, vnIssuePlace,
+        attachmentName: attachmentNameFromFiles(attachmentFiles) || null,
         salutationLocal: salutationLocal || null,
       })
       onValidChange?.(true)
@@ -165,7 +177,7 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
     hireDate, companyCode, eventReason, salutationEn, firstNameEn, middleNameEn,
     lastNameEn, dateOfBirth, countryOfBirth, regionOfBirth, age, employeeId,
     nationalIdCardType, country, nationalId, issueDate, expiryDate,
-    isPrimary, vnIssuePlace, salutationLocal, setStepData, onValidChange,
+    isPrimary, vnIssuePlace, attachmentFiles, salutationLocal, setStepData, onValidChange,
   ])
 
   useEffect(() => { validate() }, [validate])
@@ -180,6 +192,13 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
     const tf = touchField ?? (field as keyof TouchedState)
     if (!touched[tf] || !errors[field]) return null
     return <p role="alert" className="mt-1 text-xs text-warning">{errors[field]}</p>
+  }
+
+  function handleAttachmentFilesChange(files: AttachedFile[]) {
+    setAttachmentFiles(files)
+    setStepData('identity', {
+      attachmentName: attachmentNameFromFiles(files) || null,
+    })
   }
 
   return (
@@ -487,6 +506,18 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
 
       {/* BA row 19 — [VN] Issue Place: UI input removed per Phase 6 (VN scope deferred).
           vnIssuePlace state + store write kept for migration compat. */}
+
+      {/* BA National ID row 31 — Attachment (conditional required by BA matrix) */}
+      <fieldset className="md:col-span-2">
+        <AttachmentDropzone
+          id="identity-national-id-attachment"
+          files={attachmentFiles}
+          onFilesChange={handleAttachmentFilesChange}
+          label="ไฟล์แนบ National ID (Attachment)"
+          maxFiles={5}
+          maxSizeMB={10}
+        />
+      </fieldset>
 
       <p className="text-xs text-ink-soft">
         <span className="humi-asterisk">*</span> {t('requiredHint')}

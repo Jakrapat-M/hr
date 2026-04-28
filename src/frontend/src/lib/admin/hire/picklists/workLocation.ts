@@ -1,10 +1,10 @@
-// workLocation.ts — cust_WorkLocation picklist (963 clean codes from 1196-option SF picklist)
+// workLocation.ts — cust_WorkLocation picklist (963 clean rows from 1196-option SF picklist)
 // Generated from sf-extract/qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json
 // Filters out ~% URL-encoded entries (233 garbage entries excluded).
 // Maps to EmpJob.customString7 (Work Location) + User.cust_workingLocation
 // Phase 3 — full 963-entry list; browser datalist handles this size fine.
 
-export const WORK_LOCATION_CODES: readonly string[] = [
+const RAW_WORK_LOCATION_CODES: readonly string[] = [
   'cust_WorkLocation_YO_9',
   'cust_WorkLocation_YO_3',
   'cust_WorkLocation_YO_2',
@@ -969,3 +969,5 @@ export const WORK_LOCATION_CODES: readonly string[] = [
   '50000002',
   '50000001',
 ] as const
+
+export const WORK_LOCATION_CODES: readonly string[] = Array.from(new Set(RAW_WORK_LOCATION_CODES))

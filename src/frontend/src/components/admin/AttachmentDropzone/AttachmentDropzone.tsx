@@ -4,7 +4,7 @@
 // Ken directive 2026-04-24: ทุก attachment field ต้องใช้ component นี้
 // Mockup level: base64 dataUrl in state, NO backend upload (Phase 2.5+)
 
-import { useRef, useState, useCallback, useId } from 'react'
+import { useRef, useState, useCallback, useId, useMemo } from 'react'
 import { Paperclip, Upload, X } from 'lucide-react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -28,6 +28,8 @@ export interface AttachmentDropzoneProps {
   required?: boolean
   id?: string
 }
+
+const DEFAULT_ACCEPT = '.pdf,.jpg,.jpeg,.png,.pptx,.xlsx'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -53,7 +55,7 @@ export function AttachmentDropzone({
   onFilesChange,
   maxFiles = 10,
   maxSizeMB = 10,
-  accept = '*/*',
+  accept = DEFAULT_ACCEPT,
   label = 'แนบไฟล์',
   disabled = false,
   required = false,
@@ -64,6 +66,19 @@ export function AttachmentDropzone({
   const [error, setError] = useState<string | null>(null)
   const generatedId = useId()
   const dropzoneId = id ?? generatedId
+  const acceptedExtensions = useMemo(
+    () => accept
+      .split(',')
+      .map((part) => part.trim().toLowerCase())
+      .filter((part) => part.startsWith('.')),
+    [accept],
+  )
+
+  function isAcceptedType(file: File): boolean {
+    if (accept === '*/*' || acceptedExtensions.length === 0) return true
+    const lowerName = file.name.toLowerCase()
+    return acceptedExtensions.some((ext) => lowerName.endsWith(ext))
+  }
 
   const addFiles = useCallback(
     async (raw: FileList | null) => {
@@ -80,6 +95,10 @@ export function AttachmentDropzone({
         }
         if (file.size > maxBytes) {
           setError(`ไฟล์ "${file.name}" เกินขนาดสูงสุด ${maxSizeMB} MB`)
+          continue
+        }
+        if (!isAcceptedType(file)) {
+          setError(`ไฟล์ "${file.name}" ไม่ใช่ประเภทที่รองรับ`)
           continue
         }
         let dataUrl: string | undefined
@@ -101,7 +120,7 @@ export function AttachmentDropzone({
         onFilesChange([...files, ...incoming])
       }
     },
-    [files, maxFiles, maxSizeMB, onFilesChange],
+    [acceptedExtensions, accept, files, maxFiles, maxSizeMB, onFilesChange],
   )
 
   const removeFile = useCallback(
@@ -156,15 +175,15 @@ export function AttachmentDropzone({
         style={{
           minHeight: 180,
           border: `2px dashed ${hovering ? 'var(--color-accent)' : 'var(--color-hairline)'}`,
-          borderRadius: 12,
-          background: hovering ? 'var(--color-accent-soft, rgba(0,195,255,0.06))' : 'var(--color-canvas-soft)',
+          borderRadius: 'var(--radius-md)',
+          background: hovering ? 'var(--color-accent-soft)' : 'var(--color-canvas-soft)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: isEmpty ? 'center' : 'flex-start',
           padding: '20px 16px',
           gap: 12,
-          transition: 'border-color 0.15s, background 0.15s',
+          transition: 'border-color var(--dur-fast), background var(--dur-fast)',
           cursor: disabled ? 'not-allowed' : 'pointer',
           opacity: disabled ? 0.6 : 1,
         }}
@@ -197,7 +216,7 @@ export function AttachmentDropzone({
                   alignItems: 'center',
                   gap: 10,
                   padding: '8px 10px',
-                  borderRadius: 8,
+                  borderRadius: 'var(--radius-sm)',
                   background: 'var(--color-canvas)',
                   border: '1px solid var(--color-hairline-soft)',
                 }}
@@ -225,7 +244,7 @@ export function AttachmentDropzone({
                       justifyContent: 'center',
                       width: 24,
                       height: 24,
-                      borderRadius: 6,
+                      borderRadius: 'var(--radius-sm)',
                       border: 'none',
                       background: 'transparent',
                       cursor: 'pointer',
@@ -273,11 +292,11 @@ export function AttachmentDropzone({
 
       {/* Error message */}
       {error && (
-        <p role="alert" className="mt-1 text-xs text-warning">{error}</p>
+        <p role="alert" className="mt-1 text-small text-warning">{error}</p>
       )}
 
       {/* Hint */}
-      <p className="mt-1 text-xs text-ink-muted">
+      <p className="mt-1 text-small text-ink-muted">
         รองรับทุกประเภทไฟล์ · สูงสุด {maxSizeMB} MB ต่อไฟล์ · แนบได้สูงสุด {maxFiles} ไฟล์
       </p>
     </div>

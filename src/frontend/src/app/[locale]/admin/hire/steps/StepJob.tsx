@@ -11,6 +11,14 @@ import { useTranslations } from 'next-intl'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
 import { stepJobSchema } from '@/lib/admin/validation/hireSchema'
 import PositionLookup from '@/components/admin/PositionLookup'
+import {
+  AttachmentDropzone,
+  type AttachedFile,
+} from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
+import {
+  attachmentNameFromFiles,
+  filesFromAttachmentName,
+} from '@/components/admin/AttachmentDropzone/attachmentFiles'
 import { MOCK_POSITION_MASTER } from '@/lib/admin/mock/positions'
 import type { Position, PositionCascade } from '@/lib/admin/types/position'
 import { WORK_LOCATION_CODES } from '@/lib/admin/hire/picklists/workLocation'
@@ -101,6 +109,9 @@ export default function StepJob({ onValidChange }: StepJobProps) {
   const [employmentType,    setEmploymentType]    = useState<string>(job.employmentType ?? '')
   const [contractEndDate,   setContractEndDate]   = useState<string>(job.contractEndDate ?? '')
   const [probationEndDate,  setProbationEndDate]  = useState<string>(job.probationEndDate ?? '')
+  const [attachmentFiles,   setAttachmentFiles]   = useState<AttachedFile[]>(
+    () => filesFromAttachmentName(job.attachmentName, 'job-existing'),
+  )
 
   // Compute FTE when standard weekly hours change
   useEffect(() => {
@@ -220,6 +231,13 @@ export default function StepJob({ onValidChange }: StepJobProps) {
     [setStepData],
   )
 
+  function handleAttachmentFilesChange(files: AttachedFile[]) {
+    setAttachmentFiles(files)
+    setStepData('job', {
+      attachmentName: attachmentNameFromFiles(files) || null,
+    })
+  }
+
   return (
     <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
       {/* ตำแหน่งงาน — PositionLookup (BRD #95 cascade) */}
@@ -285,7 +303,6 @@ export default function StepJob({ onValidChange }: StepJobProps) {
       <fieldset>
         <label htmlFor="store-branch-code" className="humi-label">
           {t('storeBranchCode')}
-          <span className="text-xs text-ink-muted ml-1">Work Location (SF customString7)</span>
         </label>
         <input
           id="store-branch-code"
@@ -380,7 +397,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* Job Family (SF: EmpJob.customString21) — was unstored in pre-Phase3 */}
           <fieldset>
             <label htmlFor="job-function" className="humi-label">
-              Job Family (customString21)<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+              Job Family<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
               {/* TODO Phase 0.4 — picklist binding TBD; use free-text for now */}
             </label>
             <input
@@ -397,7 +414,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* NOTE: stakeholder to confirm zNewCorporateTitle vs zCorporateTitle (legacy) */}
           <fieldset>
             <label htmlFor="corporate-title" className="humi-label">
-              Corporate Title (customString5)
+              Corporate Title
             </label>
             <select
               id="corporate-title"
@@ -415,7 +432,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* Policy Profile (SF: EmpJob.customString1) — zPolicyProfile 27 opts */}
           <fieldset>
             <label htmlFor="policy-profile" className="humi-label">
-              Policy Profile (customString1)<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+              Policy Profile<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
             </label>
             <select
               id="policy-profile"
@@ -509,7 +526,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* Employee Group — customString2 — read from employeeInfo slice (already in store) */}
           <fieldset>
             <label className="humi-label">
-              Employee Group (customString2)
+              Employee Group
               <span className="text-xs text-ink-muted ml-1">จาก Employee Info</span>
             </label>
             <div className="humi-input w-full bg-canvas-soft text-ink-muted">
@@ -520,7 +537,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* Employee Subgroup — customString3 — read from employeeInfo slice */}
           <fieldset>
             <label className="humi-label">
-              Employee Subgroup (customString3)
+              Employee Subgroup
               <span className="text-xs text-ink-muted ml-1">จาก Employee Info</span>
             </label>
             <div className="humi-input w-full bg-canvas-soft text-ink-muted">
@@ -531,7 +548,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* Group / Company Group (SF: EmpJob.customString16) — zSection 125 opts */}
           <fieldset>
             <label htmlFor="group-company" className="humi-label">
-              Group / Company Group (customString16)<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+              Group / Company Group<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
             </label>
             <input
               id="group-company"
@@ -566,7 +583,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* Contract Type (SF: EmpJob.customString24) — contractType 7 opts */}
           <fieldset>
             <label htmlFor="contract-type" className="humi-label">
-              Contract Type (customString24)<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+              Contract Type<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
             </label>
             <select
               id="contract-type"
@@ -602,7 +619,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* SSO Location (SF: EmpJob.customString8) — free-text, picklist TBD Phase 0.4 */}
           <fieldset>
             <label htmlFor="sso-location" className="humi-label">
-              SSO Location (customString8)<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+              SSO Location<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
               {/* TODO Phase 0.4 — picklist binding TBD; use free-text for now */}
             </label>
             <input
@@ -618,7 +635,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* Zone (SF: EmpJob.customString31) — free-text, picklist TBD Phase 0.4 */}
           <fieldset>
             <label htmlFor="zone" className="humi-label">
-              Zone (customString31)<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+              Zone<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
               {/* TODO Phase 0.4 — picklist binding TBD; use free-text for now */}
             </label>
             <input
@@ -842,6 +859,18 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           </fieldset>
 
         </div>
+      </fieldset>
+
+      {/* BA Job Information row 234 — Attachment */}
+      <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
+        <AttachmentDropzone
+          id="job-info-attachment"
+          files={attachmentFiles}
+          onFilesChange={handleAttachmentFilesChange}
+          label="ไฟล์แนบ Job Information (Attachment)"
+          maxFiles={5}
+          maxSizeMB={10}
+        />
       </fieldset>
     </div>
   )

@@ -180,7 +180,7 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
           <SummaryRow label={t('summaryDateOfBirth')}     value={id.dateOfBirth ?? '—'}         ok={identityOk} />
           <SummaryRow label={t('summaryEmployeeId')}      value={id.employeeId || nextEmployeeCode(allEmployees) || '—'} ok={true} />
           {/* Phase 5: auto-derived username (Q5 decision: from primary email, fallback to employeeId) */}
-          <SummaryRow label="Username (SF)" value={derivedUsername || '—'} ok={!!derivedUsername} />
+          <SummaryRow label="Username" value={derivedUsername || '—'} ok={!!derivedUsername} />
           <SummaryRow label={t('summaryIdCardType')}      value={id.nationalIdCardType ?? '—'}  ok={identityOk} />
           <SummaryRow label={t('summaryIdNumber')}        value={id.nationalId || '—'}          ok={identityOk} />
           <SummaryRow label={t('summaryCountry')}         value={id.country ?? '—'}             ok={identityOk} />

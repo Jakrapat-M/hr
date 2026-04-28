@@ -10,6 +10,11 @@
 import { useTranslations } from 'next-intl'
 import { useHireWizard, type EmailEntry, type JobRelationship } from '@/lib/admin/store/useHireWizard'
 import AddressPicklist, { EMPTY_ADDRESS_PICKLIST, type AddressPicklistValue } from '@/components/AddressPicklist'
+import { AttachmentDropzone, type AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
+import {
+  attachmentNameFromFiles,
+  filesFromAttachmentName,
+} from '@/components/admin/AttachmentDropzone/attachmentFiles'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -99,6 +104,7 @@ export default function StepContact() {
 
   // Retrieve address from contact store (extended beyond original schema)
   const address = (formData.contact as Record<string, unknown>)?.address as ThaiAddress | undefined ?? EMPTY_ADDRESS
+  const addressAttachmentName = formData.contact.addressAttachmentName ?? null
 
   // ── Phone helpers ──────────────────────────────────────────────────────────
   function setPhones(next: ExtendedPhoneEntry[]) {
@@ -157,6 +163,12 @@ export default function StepContact() {
 
   function handlePicklistChange(pv: AddressPicklistValue) {
     updateAddress(fromPicklistValue(address, pv))
+  }
+
+  function handleAddressAttachmentFilesChange(files: AttachedFile[]) {
+    setStepData('contact', {
+      addressAttachmentName: attachmentNameFromFiles(files) || null,
+    })
   }
 
   // ── Job Relationship helpers ───────────────────────────────────────────────
@@ -458,6 +470,18 @@ export default function StepContact() {
             </fieldset>
           </div>
         )}
+
+        {/* BA Addresses row 94 — Attachment */}
+        <div className="mt-4">
+          <AttachmentDropzone
+            id="address-attachment"
+            files={filesFromAttachmentName(addressAttachmentName, 'address-existing')}
+            onFilesChange={handleAddressAttachmentFilesChange}
+            label="ไฟล์แนบที่อยู่ (Attachment)"
+            maxFiles={5}
+            maxSizeMB={10}
+          />
+        </div>
       </section>
 
       {/* ─── บุคคลที่เกี่ยวข้อง ───────────────────────────────────────────── */}

@@ -14,6 +14,14 @@ import { useTranslations } from 'next-intl'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
 import type { CostDistributionEntry, RecurringPayComponentEntry } from '@/lib/admin/store/useHireWizard'
 import { stepCompensationSchema } from '@/lib/admin/validation/hireSchema'
+import {
+  AttachmentDropzone,
+  type AttachedFile,
+} from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
+import {
+  attachmentNameFromFiles,
+  filesFromAttachmentName,
+} from '@/components/admin/AttachmentDropzone/attachmentFiles'
 import { PICKLIST_PAY_FREQUENCY, PICKLIST_PAY_COMPONENT_GROUP } from '@hrms/shared/picklists'
 
 // SF EmpCompensation.payGroup — 8 codes from QAS extract
@@ -68,6 +76,9 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
   const [bank, setBank]                     = useState<string>(formData.compensation.bank ?? '')
   const [accountNumber, setAccountNumber]   = useState<string>(formData.compensation.accountNumber ?? '')
   const [bankCode, setBankCode]             = useState<string>(formData.compensation.bankCode ?? '')
+  const [paymentAttachmentFiles, setPaymentAttachmentFiles] = useState<AttachedFile[]>(
+    () => filesFromAttachmentName(formData.compensation.paymentAttachmentName, 'payment-existing'),
+  )
 
   const [touched, setTouched] = useState(false)
   const [error, setError]     = useState<string | undefined>()
@@ -124,6 +135,13 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
   useEffect(() => {
     setStepData('compensation', { bankCountry, paymentMethod, payType, bank, accountNumber, bankCode })
   }, [bankCountry, paymentMethod, payType, bank, accountNumber, bankCode, setStepData])
+
+  function handlePaymentAttachmentFilesChange(files: AttachedFile[]) {
+    setPaymentAttachmentFiles(files)
+    setStepData('compensation', {
+      paymentAttachmentName: attachmentNameFromFiles(files) || null,
+    })
+  }
 
   // Handlers for recurring pay components (BRD #26)
   const addRecurringRow = () => {
@@ -282,7 +300,6 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
               <option value="GBR">United Kingdom (GBR)</option>
               <option value="JPN">Japan (JPN)</option>
             </select>
-            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.bankCountry (BA Required)</p>
           </fieldset>
 
           {/* Payment Method — BA Required — SF: paymentMethod */}
@@ -301,7 +318,6 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
               <option value="C">Check (เช็ค)</option>
               <option value="M">Cash (เงินสด)</option>
             </select>
-            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.paymentMethod (BA Required)</p>
           </fieldset>
 
           {/* Pay Type — BA Required — SF: payType */}
@@ -320,7 +336,6 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
               <option value="V">Value (Fixed Amount)</option>
               <option value="R">Remaining Amount</option>
             </select>
-            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.payType (BA Required)</p>
           </fieldset>
 
           {/* Bank Name — optional — SF: bank */}
@@ -334,7 +349,6 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
               placeholder="ชื่อธนาคาร / Bank name"
               className="humi-input w-full"
             />
-            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.bank (optional)</p>
           </fieldset>
 
           {/* Account Number — optional — SF: accountNumber */}
@@ -348,7 +362,6 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
               placeholder="เลขที่บัญชี / Account number"
               className="humi-input w-full"
             />
-            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.accountNumber (optional)</p>
           </fieldset>
 
           {/* Bank Code (BIC/SWIFT) — optional — SF: businessIdentifierCode */}
@@ -362,7 +375,18 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
               placeholder="รหัสธนาคาร / BIC or SWIFT code"
               className="humi-input w-full"
             />
-            <p className="mt-1 text-xs text-ink-faint">SF: PaymentInformationDetailV3.businessIdentifierCode (optional)</p>
+          </fieldset>
+
+          {/* BA Payment Information row 281 — Attachment */}
+          <fieldset className="md:col-span-2">
+            <AttachmentDropzone
+              id="payment-info-attachment"
+              files={paymentAttachmentFiles}
+              onFilesChange={handlePaymentAttachmentFilesChange}
+              label="ไฟล์แนบ Payment Information (Attachment)"
+              maxFiles={5}
+              maxSizeMB={10}
+            />
           </fieldset>
         </div>
       </fieldset>

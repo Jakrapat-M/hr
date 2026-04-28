@@ -78,7 +78,6 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-ink-faint">SF: genericString5 · RELIGION_THA picklist</p>
         </fieldset>
 
         {/* จำนวนบุตร — SF: genericNumber2 (Edm.Int64) */}
@@ -130,7 +129,6 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
             <option value="Y">มีความพิการ / Yes</option>
             <option value="N">ไม่มีความพิการ / No</option>
           </select>
-          <p className="mt-1 text-xs text-ink-faint">SF: customString1</p>
         </fieldset>
 
         {/* ประเภทความพิการ — SF: genericString2 (conditional: Disability Status = Y) */}
@@ -147,7 +145,6 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
               onChange={(e) => patch({ typeOfDisability: e.target.value })}
               className="humi-input w-full"
             />
-            <p className="mt-1 text-xs text-ink-faint">SF: genericString2</p>
           </fieldset>
         )}
 
@@ -165,7 +162,6 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
               onChange={(e) => patch({ certificateId: e.target.value })}
               className="humi-input w-full"
             />
-            <p className="mt-1 text-xs text-ink-faint">SF: genericString4</p>
           </fieldset>
         )}
 
@@ -182,7 +178,6 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
               onChange={(e) => patch({ disabilityCertStartDate: e.target.value || null })}
               className="humi-input w-full"
             />
-            <p className="mt-1 text-xs text-ink-faint">SF: customDate1</p>
           </fieldset>
         )}
 
@@ -199,7 +194,6 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
               onChange={(e) => patch({ disabilityCertEndDate: e.target.value || null })}
               className="humi-input w-full"
             />
-            <p className="mt-1 text-xs text-ink-faint">SF: customDate2</p>
           </fieldset>
         )}
 
@@ -218,7 +212,6 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
             onChange={(e) => patch({ spouseFatherIdNumber: e.target.value.replace(/\D/g, '').slice(0, 13) })}
             className="humi-input w-full"
           />
-          <p className="mt-1 text-xs text-ink-faint">SF: genericNumber4</p>
         </fieldset>
 
         {/* เลขประจำตัวมารดาของคู่สมรส — SF: genericNumber5 (stored as string, 13-digit) */}
@@ -236,13 +229,12 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
             onChange={(e) => patch({ spouseMotherIdNumber: e.target.value.replace(/\D/g, '').slice(0, 13) })}
             className="humi-input w-full"
           />
-          <p className="mt-1 text-xs text-ink-faint">SF: genericNumber5</p>
         </fieldset>
 
       </div>
 
       {/* ข้อมูลเพิ่มเติม — SF: customString2 (full-width textarea) */}
-      <fieldset>
+      <fieldset className="flex flex-col gap-2">
         <label htmlFor="gi-additional-info" className="humi-label">
           ข้อมูลเพิ่มเติม / Additional Information
         </label>
@@ -253,9 +245,8 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
           placeholder="ข้อมูลเพิ่มเติม (ถ้ามี)"
           value={gi.additionalInformation}
           onChange={(e) => patch({ additionalInformation: e.target.value })}
-          className="humi-input w-full resize-none"
+          className="humi-textarea humi-input--wide w-full resize-none"
         />
-        <p className="mt-1 text-xs text-ink-faint">SF: customString2 · max 256 chars</p>
       </fieldset>
 
     </div>

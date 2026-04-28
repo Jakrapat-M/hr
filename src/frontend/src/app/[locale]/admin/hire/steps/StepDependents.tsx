@@ -10,6 +10,11 @@
 
 import { useEffect } from 'react'
 import { useHireWizard, type DependentEntry } from '@/lib/admin/store/useHireWizard'
+import { AttachmentDropzone, type AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
+import {
+  attachmentNameFromFiles,
+  filesFromAttachmentName,
+} from '@/components/admin/AttachmentDropzone/attachmentFiles'
 
 // ── Array-safe setter ─────────────────────────────────────────────────────────
 // setStepData(step, patch) does { ...formData[step], ...patch } which converts
@@ -48,6 +53,7 @@ const EMPTY_DEP: DependentEntry = {
   email: '',
   isTaxDependent: false,
   addressLine1: '',
+  attachmentName: null,
 }
 
 interface StepDependentsProps {
@@ -86,6 +92,10 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
 
   function updateEntry(idx: number, patch: Partial<DependentEntry>) {
     setDependents(entries.map((dep, i) => (i === idx ? { ...dep, ...patch } : dep)))
+  }
+
+  function updateAttachment(idx: number, files: AttachedFile[]) {
+    updateEntry(idx, { attachmentName: attachmentNameFromFiles(files) || null })
   }
 
   return (
@@ -419,6 +429,16 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
 
               </div>
             </details>
+
+            {/* BA Dependents row 123 — Attachment */}
+            <AttachmentDropzone
+              id={`dependent-attachment-${idx}`}
+              files={filesFromAttachmentName(dep.attachmentName, `dependent-existing-${idx}`)}
+              onFilesChange={(files) => updateAttachment(idx, files)}
+              label="ไฟล์แนบบุคคลในอุปการะ (Attachment)"
+              maxFiles={5}
+              maxSizeMB={10}
+            />
 
           </div>
         )

@@ -10,6 +10,14 @@ import { useTranslations } from 'next-intl'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
 import { stepBiographicalSchema } from '@/lib/admin/validation/hireSchema'
 import {
+  AttachmentDropzone,
+  type AttachedFile,
+} from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
+import {
+  attachmentNameFromFiles,
+  filesFromAttachmentName,
+} from '@/components/admin/AttachmentDropzone/attachmentFiles'
+import {
   PICKLIST_MILITARY_STATUS,
   PICKLIST_GENDER,
   PICKLIST_NATIONALITY,
@@ -68,6 +76,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
   const t = useTranslations('hireForm.biographical')
   const { formData, setStepData } = useHireWizard()
   const bio = formData.biographical
+  const reviewAttachmentName = formData.review.attachmentName
 
   // ── Local field state ───────────────────────────────────────────────────────
   const [otherTitleTh,     setOtherTitleTh]     = useState(bio.otherTitleTh ?? '')
@@ -91,6 +100,9 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
   // BRD #12 MED: religion
   // SF cite: qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json#.d.results[0].customString1
   const [religion, setReligion] = useState((bio as Record<string, unknown>).religion as string ?? '')
+  const [attachmentFiles, setAttachmentFiles] = useState<AttachedFile[]>(
+    () => filesFromAttachmentName(reviewAttachmentName, 'personal-info-existing'),
+  )
 
   // ── Touched / errors ────────────────────────────────────────────────────────
   const [touched, setTouched] = useState<TouchedState>({
@@ -175,6 +187,13 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
   const errMsg = (field: keyof FieldErrors) => {
     if (!touched[field as keyof TouchedState] || !errors[field]) return null
     return <p role="alert" className="mt-1 text-xs text-warning">{errors[field]}</p>
+  }
+
+  function handleAttachmentFilesChange(files: AttachedFile[]) {
+    setAttachmentFiles(files)
+    setStepData('review', {
+      attachmentName: attachmentNameFromFiles(files) || null,
+    })
   }
 
   return (
@@ -437,6 +456,19 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           ))}
         </select>
         {errMsg('religion')}
+      </fieldset>
+
+      {/* ─── BA Personal Info row 48 — Attachment * ─── */}
+      <fieldset className="md:col-span-2">
+        <AttachmentDropzone
+          id="personal-info-attachment"
+          files={attachmentFiles}
+          onFilesChange={handleAttachmentFilesChange}
+          label="ไฟล์แนบ Personal Information (Attachment)"
+          required
+          maxFiles={5}
+          maxSizeMB={10}
+        />
       </fieldset>
 
     </div>

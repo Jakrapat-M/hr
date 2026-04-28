@@ -1,0 +1,118 @@
+import { readFileSync } from 'node:fs'
+import { act, render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import StepIdentity from '@/app/[locale]/admin/hire/steps/StepIdentity'
+import StepBiographical from '@/app/[locale]/admin/hire/steps/StepBiographical'
+import StepContact from '@/app/[locale]/admin/hire/steps/StepContact'
+import StepDependents from '@/app/[locale]/admin/hire/steps/StepDependents'
+import StepJob from '@/app/[locale]/admin/hire/steps/StepJob'
+import StepCompensation from '@/app/[locale]/admin/hire/steps/StepCompensation'
+import { useHireWizard } from '@/lib/admin/store/useHireWizard'
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}))
+
+type CandidateSection = {
+  name: string
+  sourceFile: string
+  renderStep: () => void
+  setup?: () => void
+}
+
+const candidateSections: CandidateSection[] = [
+  {
+    name: 'Identity National ID',
+    sourceFile: '../StepIdentity.tsx',
+    renderStep: () => render(<StepIdentity />),
+  },
+  {
+    name: 'Personal Information',
+    sourceFile: '../StepBiographical.tsx',
+    renderStep: () => render(<StepBiographical />),
+  },
+  {
+    name: 'Addresses',
+    sourceFile: '../StepContact.tsx',
+    renderStep: () => render(<StepContact />),
+  },
+  {
+    name: 'Dependents',
+    sourceFile: '../StepDependents.tsx',
+    setup: () => {
+      useHireWizard.setState((state) => ({
+        formData: {
+          ...state.formData,
+          dependents: [
+            {
+              relationshipType: 'Daughter',
+              salutationEn: null,
+              firstNameEn: 'Test',
+              lastNameEn: '',
+              salutationLocal: null,
+              firstNameLocal: '',
+              lastNameLocal: '',
+              nationality: null,
+              dateOfBirth: null,
+              country: 'THA',
+              nationalIdCardType: null,
+              nationalIdCountry: null,
+              nationalId: '',
+              phone: '',
+              email: '',
+              isTaxDependent: false,
+              addressLine1: '',
+            },
+          ],
+        },
+      }))
+    },
+    renderStep: () => render(<StepDependents />),
+  },
+  {
+    name: 'Job Information',
+    sourceFile: '../StepJob.tsx',
+    renderStep: () => render(<StepJob />),
+  },
+  {
+    name: 'Payment Information',
+    sourceFile: '../StepCompensation.tsx',
+    renderStep: () => render(<StepCompensation />),
+  },
+]
+
+function sourceFor(section: CandidateSection) {
+  return readFileSync(new URL(section.sourceFile, import.meta.url), 'utf8')
+}
+
+beforeEach(() => {
+  localStorage.clear()
+  act(() => {
+    useHireWizard.getState().reset()
+  })
+})
+
+describe('hire wizard BA attachment rows beyond Work Permit', () => {
+  it.each(candidateSections)('$name does not expose a legacy filename textbox', (section) => {
+    const source = sourceFor(section)
+
+    expect(source).not.toMatch(/placeholder=\{?["'`][^"'`]*(ชื่อไฟล์|filename|file name)/i)
+  })
+
+  for (const section of candidateSections) {
+    if (sourceFor(section).includes('AttachmentDropzone')) {
+      it(`${section.name} renders the Humi attachment dropzone instead of a filename text input`, () => {
+        act(() => {
+          section.setup?.()
+        })
+
+        section.renderStep()
+
+        expect(screen.getByRole('button', { name: 'พื้นที่แนบไฟล์' })).toBeInTheDocument()
+        expect(screen.queryByPlaceholderText(/ชื่อไฟล์|filename|file name/i)).not.toBeInTheDocument()
+      })
+    } else {
+      it.todo(`${section.name} attachment dropzone is not implemented in the hire step yet`)
+    }
+  }
+})

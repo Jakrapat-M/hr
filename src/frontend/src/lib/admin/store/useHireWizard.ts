@@ -88,6 +88,8 @@ export interface DependentEntry {
   isTaxDependent: boolean
   // Address (optional, free-text)
   addressLine1: string
+  // BA Dependents row 123 — Attachment
+  attachmentName?: string | null
 }
 
 // ── Phase 1.4: Emergency Contacts (PerEmergencyContacts SF entity) ────────────
@@ -156,6 +158,8 @@ export interface FormData {
     isPrimary: string | null
     // BA row 19 — [VN] Issue Place
     vnIssuePlace: string
+    // BA National ID row 31 — Attachment
+    attachmentName: string | null
     // BA Personal Info row 1 — Salutation (Local)
     salutationLocal: string | null
   }
@@ -204,6 +208,7 @@ export interface FormData {
     phones: PhoneEntry[]           // default [{type:'mobile', value:'', isPrimary:true}]
     emails: EmailEntry[]           // default [{type:'personal', value:'', isPrimary:true}]
     jobRelationships: JobRelationship[]  // default []
+    addressAttachmentName?: string | null // BA Addresses row 94 — Attachment
   }
 
   // ── Phase 1.4: Emergency Contacts (PerEmergencyContacts SF entity) ──
@@ -285,6 +290,7 @@ export interface FormData {
     emplStatus: string | null           // SF: EmpJob.emplStatus — default 'A' on hire
     event: string | null                // SF: EmpJob.event — default 'H' on hire
     employmentType: string | null       // SF: EmpJob.employmentType (picklist EmploymentType 50 opts)
+    attachmentName: string | null       // BA Job Information row 234 — Attachment
   }
   compensation: {
     baseSalary: number | null
@@ -306,6 +312,7 @@ export interface FormData {
     bank?: string               // SF: PaymentInformationDetailV3.bank (optional)
     accountNumber?: string      // SF: PaymentInformationDetailV3.accountNumber (optional)
     bankCode?: string           // SF: PaymentInformationDetailV3.businessIdentifierCode (BIC/SWIFT, optional)
+    paymentAttachmentName?: string | null // BA Payment Information row 281 — Attachment
   }
 }
 
@@ -330,6 +337,7 @@ const initialFormData: FormData = {
     expiryDate: null,
     isPrimary: null,
     vnIssuePlace: '',
+    attachmentName: null,
     salutationLocal: null,
   },
   biographical: {
@@ -358,6 +366,7 @@ const initialFormData: FormData = {
     phones: [{ type: 'mobile' as const, value: '', isPrimary: true }],
     emails: [{ type: 'personal' as const, value: '', isPrimary: true }],
     jobRelationships: [],
+    addressAttachmentName: null,
   },
   // ── Phase 1.4: Emergency Contacts ──
   emergencyContacts: [],
@@ -447,6 +456,7 @@ const initialFormData: FormData = {
     emplStatus: null,
     event: null,
     employmentType: null,
+    attachmentName: null,
   },
   compensation: {
     baseSalary: null,
@@ -458,6 +468,7 @@ const initialFormData: FormData = {
     bank: '',
     accountNumber: '',
     bankCode: '',
+    paymentAttachmentName: null,
   },
 }
 
@@ -705,7 +716,8 @@ export const useHireWizard = create<HireWizardState>()(
       // Version 5 adds: Phase 4 employeeInfo.ssn (maps to User.ssn in User CREATE).
       // Version 6 adds: Phase 5b-2/3/4 globalInfo, workPermit, dependents slices.
       // Version 7 adds: Phase 5 compensation.recurringComponents + bank/payment fields.
-      version: 7,
+      // Version 8 adds BA attachment fields across remaining hire sections.
+      version: 8,
       partialize: (state) => ({
         currentStep: state.currentStep,
         maxUnlockedStep: state.maxUnlockedStep,
@@ -720,12 +732,19 @@ export const useHireWizard = create<HireWizardState>()(
         const p = persisted as any
         if (!p || typeof p !== 'object' || !p.formData) return p
         const fd = p.formData
+        if (!fd.identity || typeof fd.identity !== 'object') {
+          fd.identity = {}
+        }
+        if (!('attachmentName' in fd.identity)) {
+          fd.identity.attachmentName = null
+        }
         // A2 contact — fill slice + inner arrays if missing
         if (!fd.contact || typeof fd.contact !== 'object') {
           fd.contact = {
             phones: [{ type: 'mobile', value: '', isPrimary: true }],
             emails: [{ type: 'personal', value: '', isPrimary: true }],
             jobRelationships: [],
+            addressAttachmentName: null,
           }
         } else {
           if (!Array.isArray(fd.contact.phones)) {
@@ -736,6 +755,9 @@ export const useHireWizard = create<HireWizardState>()(
           }
           if (!Array.isArray(fd.contact.jobRelationships)) {
             fd.contact.jobRelationships = []
+          }
+          if (!('addressAttachmentName' in fd.contact)) {
+            fd.contact.addressAttachmentName = null
           }
         }
         if (!fd.compensation || typeof fd.compensation !== 'object') {
@@ -759,6 +781,7 @@ export const useHireWizard = create<HireWizardState>()(
           ssoLocation: null, groupCompanyGroup: null, contractType: null,
           zone: null, contractEndDate: null, probationEndDate: null,
           emplStatus: null, event: null, employmentType: null,
+          attachmentName: null,
         }
         for (const [k, v] of Object.entries(jobDefaults)) {
           if (!(k in fd.job)) fd.job[k] = v
@@ -790,6 +813,11 @@ export const useHireWizard = create<HireWizardState>()(
         }
         if (!Array.isArray(fd.dependents)) {
           fd.dependents = []
+        } else {
+          fd.dependents = fd.dependents.map((dep: Record<string, unknown>) => ({
+            ...dep,
+            attachmentName: 'attachmentName' in dep ? dep.attachmentName : null,
+          }))
         }
         // v7: Phase 5 compensation bank/payment fields + recurringComponents
         if (!fd.compensation || typeof fd.compensation !== 'object') {
@@ -805,7 +833,10 @@ export const useHireWizard = create<HireWizardState>()(
         for (const [k, v] of Object.entries(compDefaults)) {
           if (!(k in fd.compensation)) fd.compensation[k] = v
         }
-        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v7`)
+        if (!('paymentAttachmentName' in fd.compensation)) {
+          fd.compensation.paymentAttachmentName = null
+        }
+        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v8`)
         return p
       },
     },
