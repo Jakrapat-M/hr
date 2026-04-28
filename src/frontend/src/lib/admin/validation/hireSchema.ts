@@ -247,6 +247,30 @@ export const stepReviewSchema = z.object({
   attachmentName: z.string().optional().nullable(),
 })
 
+// ── Phase 1.4: Emergency Contacts (PerEmergencyContacts SF entity) ────────────
+// relationship: Edm.String maxLength=50 — free-text at OData level, no picklist constraint
+// Phase 2 may upgrade to picklist binding (personRelationshipType / relation).
+
+export const emergencyContactEntrySchema = z.object({
+  name: z.string().min(1, 'Name required'),
+  relationship: z.string().min(1, 'Relationship required').max(50, 'Max 50 characters'),
+  phone: z.string().min(1, 'Phone required'),
+  primaryFlag: z.boolean(),
+  addressCountry: z.string().default('THA'),
+  addressProvince: z.string().default(''),
+  addressDistrict: z.string().default(''),
+  addressSubDistrict: z.string().default(''),
+  addressPostalCode: z.string().default(''),
+})
+
+export type EmergencyContactEntryData = z.infer<typeof emergencyContactEntrySchema>
+
+export const stepEmergencyContactsSchema = z.object({
+  emergencyContacts: z.array(emergencyContactEntrySchema).optional().default([]),
+})
+
+export type StepEmergencyContactsData = z.infer<typeof stepEmergencyContactsSchema>
+
 // ─── Legacy schemas (unchanged — backward compat with existing tests) ─────────
 
 export const stepNameSchema = z.object({

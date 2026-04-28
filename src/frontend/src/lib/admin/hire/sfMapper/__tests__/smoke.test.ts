@@ -29,6 +29,7 @@ const minimalFormData: FormData = {
     emails: [{ type: 'personal', value: '', isPrimary: true }],
     jobRelationships: [],
   },
+  emergencyContacts: [],
   name: { firstNameTh: '', lastNameTh: '', firstNameEn: '', lastNameEn: '' },
   employeeInfo: {
     employeeClass: null,
@@ -49,9 +50,11 @@ const minimalFormData: FormData = {
   compensation: { baseSalary: null },
 }
 
-// Phase 1.3: these 6 mappers now return real verb+payload
+// Phase 1.3: 6 mappers return real verb+payload
+// Phase 1.4: perEmergencyContacts added (7 total implemented)
 const IMPLEMENTED_MAPPERS = new Set([
   'user', 'perPerson', 'perPersonal', 'perNationalId', 'perEmail', 'perPhone',
+  'perEmergencyContacts',
 ])
 
 describe('sfMapper scaffold smoke', () => {
@@ -60,7 +63,7 @@ describe('sfMapper scaffold smoke', () => {
     expect(Object.keys(result)).toHaveLength(17)
   })
 
-  it('PENDING mappers (11) return verb=PENDING and null payload', () => {
+  it('PENDING mappers (10) return verb=PENDING and null payload', () => {
     const result = buildAll(minimalFormData)
     for (const key of Object.keys(result)) {
       if (!IMPLEMENTED_MAPPERS.has(key)) {

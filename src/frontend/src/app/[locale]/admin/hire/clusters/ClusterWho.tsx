@@ -9,8 +9,9 @@ import { useCallback } from 'react'
 import StepIdentity from '../steps/StepIdentity'
 import StepBiographical from '../steps/StepBiographical'
 import StepContact from '../steps/StepContact'
+import StepEmergencyContacts from '../steps/StepEmergencyContacts'
 import { SectionHeader } from '@/components/admin/wizard/SectionHeader'
-import { Fingerprint, User2, Phone } from 'lucide-react'
+import { Fingerprint, User2, Phone, AlertCircle } from 'lucide-react'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
 
 export default function ClusterWho() {
@@ -18,6 +19,7 @@ export default function ClusterWho() {
   // Stable callbacks — required, otherwise child useEffect deps change every render and loop
   const onIdentityValid = useCallback((v: boolean) => setStepValidity('identity', v), [setStepValidity])
   const onBiographicalValid = useCallback((v: boolean) => setStepValidity('biographical', v), [setStepValidity])
+  const onEmergencyContactsValid = useCallback((v: boolean) => setStepValidity('emergencyContacts', v), [setStepValidity])
 
   return (
     <div className="space-y-5">
@@ -54,6 +56,18 @@ export default function ClusterWho() {
         />
         <div className="humi-step-section">
           <StepContact />
+        </div>
+      </div>
+
+      <div className="humi-card">
+        <SectionHeader
+          icon={AlertCircle}
+          eyebrow="ผู้ติดต่อฉุกเฉิน"
+          title="ผู้ติดต่อฉุกเฉิน / Emergency Contacts"
+          sub="ชื่อ ความสัมพันธ์ เบอร์โทร ที่อยู่ (ถ้ามี)"
+        />
+        <div className="humi-step-section">
+          <StepEmergencyContacts onValidChange={onEmergencyContactsValid} />
         </div>
       </div>
 

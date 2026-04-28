@@ -83,6 +83,19 @@ const minimalFormData: FormData = {
     emails: [{ type: 'personal', value: 'test@example.com', isPrimary: true }],
     jobRelationships: [],
   },
+  // Phase 1.4: one populated EC entry so PerEmergencyContacts mapper emits a record
+  // (empty array → payload=[] → allKeysInPayload is empty → E1.i would flag all required fields as missing)
+  emergencyContacts: [{
+    name: 'Jane Doe',
+    relationship: 'Spouse',
+    phone: '0812345678',
+    primaryFlag: true,
+    addressCountry: 'THA',
+    addressProvince: '529',
+    addressDistrict: '15401',
+    addressSubDistrict: '22173',
+    addressPostalCode: '16358',
+  }],
   name: { firstNameTh: '', lastNameTh: '', firstNameEn: '', lastNameEn: '' },
   employeeInfo: {
     employeeClass: null,
@@ -257,10 +270,70 @@ describe('sf-parity-schema', () => {
   })
 
   // --------------------------------------------------------------------------
-  // E1.iii — Hidden sub-entity cascade for PerEmergencyContacts
-  // Deferred to Phase 1.4 when that mapper is implemented.
+  // E1.iii — Hidden sub-entity cascade for PerEmergencyContacts (Phase 1.4)
+  // Verifies that the 7 hidden mandatory SF fields are populated from visible UI inputs.
+  // SF dump finding: addressCustomString12=Province (pair of CS1), addressCustomString13=District (pair of CS2)
+  // Both duplicate pairs receive identical values — no foreigner flag in this entity.
   // --------------------------------------------------------------------------
-  it.todo('E1.iii — PerEmergencyContacts hidden sub-entity cascade — Phase 1.4')
+  describe('E1.iii — PerEmergencyContacts hidden sub-entity cascade', () => {
+    it('mapper output populates 7 hidden mandatory fields when visible parent inputs are set', () => {
+      const formWithEC = {
+        ...minimalFormData,
+        emergencyContacts: [{
+          name: 'Jane Doe',
+          relationship: 'Spouse',
+          phone: '0812345678',
+          primaryFlag: true,
+          addressCountry: 'THA',
+          addressProvince: '529',
+          addressDistrict: '15401',
+          addressSubDistrict: '22173',
+          addressPostalCode: '16358',
+        }],
+      }
+      const result = mappers.perEmergencyContacts.build(formWithEC as any)
+      expect(result.verb).toBe('UPSERT')
+      expect(Array.isArray(result.payload)).toBe(true)
+      const records = result.payload as any[]
+      expect(records).toHaveLength(1)
+      const r = records[0]
+      // 4 visible mandatory
+      expect(r.name).toBe('Jane Doe')
+      expect(r.relationship).toBe('Spouse')
+      expect(r.phone).toBe('0812345678')
+      expect(r.primaryFlag).toBe('Y')
+      // 7 hidden mandatory cascade (SF dump: all sap_required=true, sap_visible=false)
+      expect(r.addressCountry).toBe('THA')
+      expect(r.addressCustomString1).toBe('529')      // Province
+      expect(r.addressCustomString2).toBe('15401')    // District
+      expect(r.addressCustomString3).toBe('22173')    // Sub-District
+      expect(r.addressCustomString4).toBe('16358')    // Postal Code
+      expect(r.addressCustomString12).toBe('529')     // Province duplicate pair (SF schema)
+      expect(r.addressCustomString13).toBe('15401')   // District duplicate pair (SF schema)
+    })
+
+    it('mapper emits empty array when emergencyContacts is []', () => {
+      const formEmpty = { ...minimalFormData, emergencyContacts: [] }
+      const result = mappers.perEmergencyContacts.build(formEmpty as any)
+      expect(result.verb).toBe('UPSERT')
+      expect(result.payload).toEqual([])
+    })
+
+    it('mapper filters out entries missing name, relationship, or phone', () => {
+      const formPartial = {
+        ...minimalFormData,
+        emergencyContacts: [
+          { name: '', relationship: 'Spouse', phone: '0812345678', primaryFlag: true,
+            addressCountry: 'THA', addressProvince: '', addressDistrict: '', addressSubDistrict: '', addressPostalCode: '' },
+          { name: 'John', relationship: '', phone: '0812345678', primaryFlag: false,
+            addressCountry: 'THA', addressProvince: '', addressDistrict: '', addressSubDistrict: '', addressPostalCode: '' },
+        ],
+      }
+      const result = mappers.perEmergencyContacts.build(formPartial as any)
+      expect(result.verb).toBe('UPSERT')
+      expect((result.payload as any[])).toHaveLength(0)
+    })
+  })
 
   // --------------------------------------------------------------------------
   // E1.iv — Picklist codes subset of SF externalCodes

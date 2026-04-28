@@ -22,6 +22,26 @@ export interface EmailEntry { type: 'personal' | 'work'; value: string; isPrimar
 export interface JobRelationship { relationshipType: string; name: string }
 export interface CostDistributionEntry { costCenter: string; percent: number }
 
+// ── Phase 1.4: Emergency Contacts (PerEmergencyContacts SF entity) ────────────
+// 4 visible mandatory + 7 hidden mandatory (address cascade per plan v2 §2.11)
+// SF dump: PerEmergencyContacts.relationship = Edm.String maxLength=50, free-text (no picklist at OData level)
+export interface EmergencyContactEntry {
+  // 4 VISIBLE mandatory
+  name: string          // SF: name (sap_required=true, sap_visible=true)
+  relationship: string  // SF: relationship (Edm.String maxLength=50, free-text — UI may show datalist for UX)
+  phone: string         // SF: phone (sap_required=false, sap_visible=true — UI requires, mapper includes if set)
+  primaryFlag: boolean  // SF: primaryFlag (Y/N — store as boolean, mapper converts)
+  // 7 HIDDEN mandatory: address cascade (UI shows visible block; mapper writes hidden slots)
+  // SF dump: addressCustomString12 = Province (sap_required=true, sap_visible=false)
+  //          addressCustomString13 = District  (sap_required=true, sap_visible=false)
+  //          these DUPLICATE addressCustomString1/2 — mapper writes identical values to both pairs
+  addressCountry: string       // SF: addressCountry (ISO3 — default 'THA')
+  addressProvince: string      // SF: addressCustomString1 + addressCustomString12 (Province cascade pair)
+  addressDistrict: string      // SF: addressCustomString2 + addressCustomString13 (District cascade pair)
+  addressSubDistrict: string   // SF: addressCustomString3 (Sub-District)
+  addressPostalCode: string    // SF: addressCustomString4 (Postal Code)
+}
+
 // employeeClass toggle — BA cols H/I (Permanent vs Partime field visibility)
 export type EmployeeClassToggle = 'PERMANENT' | 'PARTIME'
 
@@ -117,6 +137,10 @@ export interface FormData {
     emails: EmailEntry[]           // default [{type:'personal', value:'', isPrimary:true}]
     jobRelationships: JobRelationship[]  // default []
   }
+
+  // ── Phase 1.4: Emergency Contacts (PerEmergencyContacts SF entity) ──
+  // Optional list (≥0 entries); when entries present, each must have name + relationship + phone
+  emergencyContacts: EmergencyContactEntry[]
 
   // Legacy slices — ยังคง interface เดิมเพื่อ backward compat กับ test suite
   name:         { firstNameTh: string; lastNameTh: string; firstNameEn: string; lastNameEn: string }
@@ -222,6 +246,8 @@ const initialFormData: FormData = {
     emails: [{ type: 'personal' as const, value: '', isPrimary: true }],
     jobRelationships: [],
   },
+  // ── Phase 1.4: Emergency Contacts ──
+  emergencyContacts: [],
   // Legacy slices
   name:         { firstNameTh: '', lastNameTh: '', firstNameEn: '', lastNameEn: '' },
   employeeInfo: {
@@ -269,6 +295,7 @@ interface StepValidity {
   identity: boolean
   biographical: boolean
   contact: boolean
+  emergencyContacts: boolean
   employeeInfo: boolean
   job: boolean
   compensation: boolean
@@ -343,6 +370,13 @@ const sliceValid = {
     const hasEmail = d.contact.emails.some((e) => EMAIL_RE.test(e.value.trim()))
     return hasPhone && hasEmail
   },
+  // Phase 1.4: emergencyContacts — optional list; when entries present, each must have name + relationship + phone
+  emergencyContacts: (d: FormData) => {
+    if (d.emergencyContacts.length === 0) return true  // Optional — 0 entries is valid
+    return d.emergencyContacts.every(
+      (ec) => ec.name.trim() !== '' && ec.relationship.trim() !== '' && ec.phone.trim() !== ''
+    )
+  },
   // Legacy validators — kept for backward compat with existing tests
   name:         (d: FormData) => d.name.firstNameTh.trim() !== '' && d.name.lastNameTh.trim() !== '',
   employeeInfo: (d: FormData) => !!d.employeeInfo.employeeClass,
@@ -372,8 +406,9 @@ function checkStepValid(step: number, d: FormData, sv: StepValidity, hrbpAssigne
   switch (step) {
     case 1:
       // DEF-02/03 strict: identity presence + Zod refine (hireDate ≤90d, NID mod-11)
-      // + biographical/contact Zod gates.
+      // + biographical/contact/emergencyContacts Zod gates.
       return sliceValid.identity(d) && sv.identity && sv.biographical && sv.contact
+        && sliceValid.emergencyContacts(d) && sv.emergencyContacts
     case 2:
       // DEF-05 strict: Cluster 2 presence + sv.employeeInfo (dates/class) + sv.compensation (cost-split sum)
       return sliceValid.employeeInfo(d) && sliceValid.job(d) && sliceValid.compensation(d)
@@ -394,6 +429,7 @@ const initialStepValidity: StepValidity = {
   identity: true,
   biographical: true,
   contact: true,
+  emergencyContacts: true,
   employeeInfo: true,
   job: true,
   compensation: true,
@@ -472,7 +508,8 @@ export const useHireWizard = create<HireWizardState>()(
       // `migrate` before rehydrate so downstream components can trust the
       // shape. Version 2 adds: A2 contact slice (phones[]/emails[]/
       // jobRelationships[]) and any nested slice added after.
-      version: 2,
+      // Version 3 adds: Phase 1.4 emergencyContacts[] slice.
+      version: 3,
       partialize: (state) => ({
         currentStep: state.currentStep,
         maxUnlockedStep: state.maxUnlockedStep,
@@ -510,7 +547,11 @@ export const useHireWizard = create<HireWizardState>()(
         } else if (!Array.isArray(fd.compensation.costDistribution)) {
           fd.compensation.costDistribution = []
         }
-        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v2`)
+        // v3: Phase 1.4 emergencyContacts[] — add if missing (covers v1 and v2 drafts)
+        if (!Array.isArray(fd.emergencyContacts)) {
+          fd.emergencyContacts = []
+        }
+        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v3`)
         return p
       },
     },

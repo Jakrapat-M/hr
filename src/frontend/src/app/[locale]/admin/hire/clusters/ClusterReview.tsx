@@ -13,7 +13,7 @@ import { useEmployees } from '@/lib/admin/store/useEmployees'
 import { nextEmployeeCode } from '@/lib/admin/utils/employeeCode'
 import { useHrbpRoster } from '@/lib/admin/store/hrbpRoster'
 import { SectionHeader } from '@/components/admin/wizard/SectionHeader'
-import { ClipboardCheck, Check, AlertCircle, UserCheck } from 'lucide-react'
+import { ClipboardCheck, Check, AlertCircle, UserCheck, PhoneCall } from 'lucide-react'
 
 function SummaryRow({ label, value, ok }: { label: string; value: string; ok: boolean }) {
   return (
@@ -195,6 +195,45 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
           <SummaryRow label={t('summaryHrbp')}            value={hrbpAssignee || t('summaryNotSelected')} ok={!!hrbpAssignee} />
         </div>
       </div>
+
+      {/* ── ผู้ติดต่อฉุกเฉิน (Phase 1.4) — read-only mirror ─────────────── */}
+      {formData.emergencyContacts && formData.emergencyContacts.length > 0 && (
+        <div className="humi-card">
+          <SectionHeader
+            icon={PhoneCall}
+            eyebrow="ผู้ติดต่อฉุกเฉิน"
+            title="ผู้ติดต่อฉุกเฉิน / Emergency Contacts"
+            sub={`${formData.emergencyContacts.length} รายการ`}
+          />
+          <div className="humi-step-section space-y-3">
+            {formData.emergencyContacts.map((ec, idx) => (
+              <div
+                key={idx}
+                className="rounded border border-hairline-soft bg-surface-muted px-4 py-3 text-sm space-y-1"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-ink">{ec.name || '—'}</span>
+                  {ec.primaryFlag && (
+                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent">
+                      Primary
+                    </span>
+                  )}
+                </div>
+                <div className="text-ink-soft">
+                  {ec.relationship || '—'} · {ec.phone || '—'}
+                </div>
+                {(ec.addressProvince || ec.addressDistrict || ec.addressPostalCode) && (
+                  <div className="text-ink-muted text-xs">
+                    {[ec.addressSubDistrict, ec.addressDistrict, ec.addressProvince, ec.addressPostalCode, ec.addressCountry]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
