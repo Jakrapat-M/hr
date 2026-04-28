@@ -81,7 +81,9 @@ const minimalFormData: FormData = {
     // (empty-value entries are filtered out by the mapper edge-case rule)
     phones: [{ type: 'mobile', value: '0800000000', isPrimary: true }],
     emails: [{ type: 'personal', value: 'test@example.com', isPrimary: true }],
-    jobRelationships: [],
+    // Phase 5b-1: one populated entry so EmpJobRelationships mapper emits a record
+    // (empty array → payload=[] → allKeysInPayload is empty → E1.i would flag all required fields as missing)
+    jobRelationships: [{ relationshipType: 'matrix manager', name: 'John Smith' }],
   },
   // Phase 1.4: one populated EC entry so PerEmergencyContacts mapper emits a record
   // (empty array → payload=[] → allKeysInPayload is empty → E1.i would flag all required fields as missing)
@@ -112,6 +114,14 @@ const minimalFormData: FormData = {
     otFlag: '', standardWeeklyHours: 0, dailyWorkingHours: 0,
     workingDaysPerWeek: 0, fte: 0, holidayCalendar: '', timeProfile: '',
     timeRecordingVariant: '',
+    // Phase 3 new fields
+    department: null, division: null, divisionLabel: null,
+    costCenter: null, jobFunction: null, jobFunctionLabel: null,
+    corporateTitle: null, payScaleType: null, payScaleArea: null,
+    payScaleGroup: null, payScaleLevel: null, policyProfile: null,
+    ssoLocation: null, groupCompanyGroup: null, contractType: null,
+    zone: null, contractEndDate: null, probationEndDate: null,
+    emplStatus: null, event: null, employmentType: null,
   },
   compensation: { baseSalary: null },
 }

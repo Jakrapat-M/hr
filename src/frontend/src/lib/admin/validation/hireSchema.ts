@@ -297,9 +297,52 @@ export const stepPersonalSchema = z.object({
   addressLine1: z.string().min(1, 'กรุณาระบุที่อยู่'),
 })
 
+// Phase 3: EmpJob picklist codes (SF-authoritative, from MISSING-PICKLISTS.md)
+export const POLICY_PROFILE_CODES = [
+  'SCM','PWB','OFM','CRG','CPN','CMG','CHR','CHG','CFR','CFM',
+  'B2S','SSP','RBS','CDS','999','SU-CMC & SDO','SU-MA','SU-INTERNAL AUDIT',
+  'SU-CIS','SU-T1C','SU-CNG','SU-CGO','SU-OTHER','SU-FAST','SU-BD','SU-RIS','SU-HR',
+] as const
+
+export const CORPORATE_TITLE_CODES = [
+  '111','L90','L80','L70','L60','L50','L40','L30','L20','L10',
+  'S70','S60','S50','S40','S30','S20','S10','999',
+] as const
+
+export const CONTRACT_TYPE_CODES = ['R1','C1','C2','C3','C4','C5','V1'] as const
+
+export const EMPLOYMENT_TYPE_CODES = [
+  '7','8','9','07','08','09','10','11','12','13','14','15','16','17','18','19',
+  '20','21','22','23','24','25','26','27','C1','C2','C3','C4','C5','C6',
+  'D1','D2','P1','P2','P3','P5','T1','T2','T3','UC','X7','X8','X9','XA','XB',
+  'Y7','Y8','Y9','YA','YB',
+] as const
+
 export const stepJobSchema = z.object({
   position: z.string({ required_error: 'กรุณาระบุตำแหน่ง' }).min(1, 'กรุณาระบุตำแหน่ง'),
   businessUnit: z.string({ required_error: 'กรุณาเลือกหน่วยธุรกิจ' }).min(1, 'กรุณาเลือกหน่วยธุรกิจ'),
+  // Phase 3: new optional/nullable fields — mandatory enforcement happens at mapper level
+  department: z.string().optional().nullable(),
+  division: z.string().optional().nullable(),
+  divisionLabel: z.string().optional().nullable(),
+  costCenter: z.string().optional().nullable(),
+  jobFunction: z.string().optional().nullable(),
+  jobFunctionLabel: z.string().optional().nullable(),
+  corporateTitle: z.string().optional().nullable(),
+  payScaleType: z.string().optional().nullable(),
+  payScaleArea: z.string().optional().nullable(),
+  payScaleGroup: z.string().optional().nullable(),
+  payScaleLevel: z.string().optional().nullable(),
+  policyProfile: z.string().optional().nullable(),
+  ssoLocation: z.string().optional().nullable(),
+  groupCompanyGroup: z.string().optional().nullable(),
+  contractType: z.string().optional().nullable(),
+  zone: z.string().optional().nullable(),
+  contractEndDate: z.string().optional().nullable(),
+  probationEndDate: z.string().optional().nullable(),
+  emplStatus: z.string().optional().nullable(),
+  event: z.string().optional().nullable(),
+  employmentType: z.string().optional().nullable(),
 })
 
 const costDistributionRowSchema = z.object({

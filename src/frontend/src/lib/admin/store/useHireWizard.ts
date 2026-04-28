@@ -183,6 +183,28 @@ export interface FormData {
     holidayCalendar: string
     timeProfile: string
     timeRecordingVariant: string
+    // Phase 3: EmpJob 38 mandatory fields — new additions
+    department: string | null           // SF: EmpJob.department (Organization)
+    division: string | null             // SF: EmpJob.division (Function) — was unstored
+    divisionLabel: string | null
+    costCenter: string | null           // SF: EmpJob.costCenter
+    jobFunction: string | null          // SF: EmpJob.customString21 (Job Family) — was unstored
+    jobFunctionLabel: string | null
+    corporateTitle: string | null       // SF: EmpJob.customString5 (picklist zNewCorporateTitle) — was unstored
+    payScaleType: string | null         // SF: EmpJob.payScaleType
+    payScaleArea: string | null         // SF: EmpJob.payScaleArea
+    payScaleGroup: string | null        // SF: EmpJob.payScaleGroup
+    payScaleLevel: string | null        // SF: EmpJob.payScaleLevel
+    policyProfile: string | null        // SF: EmpJob.customString1 (picklist zPolicyProfile)
+    ssoLocation: string | null          // SF: EmpJob.customString8 — free-text, picklist TBD Phase 0.4
+    groupCompanyGroup: string | null    // SF: EmpJob.customString16 (picklist zSection)
+    contractType: string | null         // SF: EmpJob.customString24 (picklist contractType)
+    zone: string | null                 // SF: EmpJob.customString31 — free-text, picklist TBD Phase 0.4
+    contractEndDate: string | null      // SF: EmpJob.contractEndDate
+    probationEndDate: string | null     // SF: EmpJob.probationPeriodEndDate
+    emplStatus: string | null           // SF: EmpJob.emplStatus — default 'A' on hire
+    event: string | null                // SF: EmpJob.event — default 'H' on hire
+    employmentType: string | null       // SF: EmpJob.employmentType (picklist EmploymentType 50 opts)
   }
   compensation: {
     baseSalary: number | null
@@ -286,6 +308,28 @@ const initialFormData: FormData = {
     holidayCalendar: '',
     timeProfile: '',
     timeRecordingVariant: '',
+    // Phase 3: new fields (all null / '' by default)
+    department: null,
+    division: null,
+    divisionLabel: null,
+    costCenter: null,
+    jobFunction: null,
+    jobFunctionLabel: null,
+    corporateTitle: null,
+    payScaleType: null,
+    payScaleArea: null,
+    payScaleGroup: null,
+    payScaleLevel: null,
+    policyProfile: null,
+    ssoLocation: null,
+    groupCompanyGroup: null,
+    contractType: null,
+    zone: null,
+    contractEndDate: null,
+    probationEndDate: null,
+    emplStatus: null,
+    event: null,
+    employmentType: null,
   },
   compensation: { baseSalary: null, costDistribution: [] },
 }
@@ -509,7 +553,8 @@ export const useHireWizard = create<HireWizardState>()(
       // shape. Version 2 adds: A2 contact slice (phones[]/emails[]/
       // jobRelationships[]) and any nested slice added after.
       // Version 3 adds: Phase 1.4 emergencyContacts[] slice.
-      version: 3,
+      // Version 4 adds: Phase 3 EmpJob new fields on job slice.
+      version: 4,
       partialize: (state) => ({
         currentStep: state.currentStep,
         maxUnlockedStep: state.maxUnlockedStep,
@@ -551,7 +596,23 @@ export const useHireWizard = create<HireWizardState>()(
         if (!Array.isArray(fd.emergencyContacts)) {
           fd.emergencyContacts = []
         }
-        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v3`)
+        // v4: Phase 3 EmpJob new fields — add if missing (covers v1-v3 drafts)
+        if (!fd.job || typeof fd.job !== 'object') {
+          fd.job = {}
+        }
+        const jobDefaults: Record<string, null | ''> = {
+          department: null, division: null, divisionLabel: null,
+          costCenter: null, jobFunction: null, jobFunctionLabel: null,
+          corporateTitle: null, payScaleType: null, payScaleArea: null,
+          payScaleGroup: null, payScaleLevel: null, policyProfile: null,
+          ssoLocation: null, groupCompanyGroup: null, contractType: null,
+          zone: null, contractEndDate: null, probationEndDate: null,
+          emplStatus: null, event: null, employmentType: null,
+        }
+        for (const [k, v] of Object.entries(jobDefaults)) {
+          if (!(k in fd.job)) fd.job[k] = v
+        }
+        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v4`)
         return p
       },
     },

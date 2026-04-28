@@ -46,6 +46,14 @@ const minimalFormData: FormData = {
     otFlag: '', standardWeeklyHours: 0, dailyWorkingHours: 0,
     workingDaysPerWeek: 0, fte: 0, holidayCalendar: '', timeProfile: '',
     timeRecordingVariant: '',
+    // Phase 3 new fields
+    department: null, division: null, divisionLabel: null,
+    costCenter: null, jobFunction: null, jobFunctionLabel: null,
+    corporateTitle: null, payScaleType: null, payScaleArea: null,
+    payScaleGroup: null, payScaleLevel: null, policyProfile: null,
+    ssoLocation: null, groupCompanyGroup: null, contractType: null,
+    zone: null, contractEndDate: null, probationEndDate: null,
+    emplStatus: null, event: null, employmentType: null,
   },
   compensation: { baseSalary: null },
 }
@@ -53,9 +61,11 @@ const minimalFormData: FormData = {
 // Phase 1.3: 6 mappers return real verb+payload
 // Phase 1.4: perEmergencyContacts added (7 total implemented)
 // Phase 2:   perAddressDEFLT added (8 total implemented)
+// Phase 3:   empJob added (9 total implemented)
+// Phase 5b-1: empJobRelationships added (10 total implemented)
 const IMPLEMENTED_MAPPERS = new Set([
   'user', 'perPerson', 'perPersonal', 'perNationalId', 'perEmail', 'perPhone',
-  'perEmergencyContacts', 'perAddressDEFLT',
+  'perEmergencyContacts', 'perAddressDEFLT', 'empJob', 'empJobRelationships',
 ])
 
 describe('sfMapper scaffold smoke', () => {
@@ -64,7 +74,7 @@ describe('sfMapper scaffold smoke', () => {
     expect(Object.keys(result)).toHaveLength(17)
   })
 
-  it('PENDING mappers (9) return verb=PENDING and null payload', () => {
+  it('PENDING mappers (7) return verb=PENDING and null payload', () => {
     const result = buildAll(minimalFormData)
     for (const key of Object.keys(result)) {
       if (!IMPLEMENTED_MAPPERS.has(key)) {
@@ -74,7 +84,7 @@ describe('sfMapper scaffold smoke', () => {
     }
   })
 
-  it('implemented mappers (6) return non-null payloads with correct verbs', () => {
+  it('implemented mappers (10) return non-null payloads with correct verbs', () => {
     const result = buildAll(minimalFormData)
 
     // User: CREATE
@@ -96,6 +106,14 @@ describe('sfMapper scaffold smoke', () => {
     // perAddressDEFLT: Phase 2 — UPSERT single-record address
     expect(result.perAddressDEFLT.verb).toBe('UPSERT')
     expect(result.perAddressDEFLT.payload).not.toBeNull()
+
+    // empJob: Phase 3 — UPSERT single-record (all 38 mandatory fields)
+    expect(result.empJob.verb).toBe('UPSERT')
+    expect(result.empJob.payload).not.toBeNull()
+
+    // empJobRelationships: Phase 5b-1 — UPSERT multi-record (empty array valid when no relationships)
+    expect(result.empJobRelationships.verb).toBe('UPSERT')
+    expect(Array.isArray(result.empJobRelationships.payload)).toBe(true)
   })
 
   it('all mappers declare entity string and CREATE or UPSERT verb', () => {
