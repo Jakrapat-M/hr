@@ -105,7 +105,7 @@ export default function UsersPage() {
             key={tool.href}
             href={tool.href}
             role="listitem"
-            className="flex flex-col gap-3 p-5 bg-surface rounded-xl border border-hairline shadow-sm hover:shadow-md hover:border-accent transition-all group"
+            className="flex flex-col gap-3 p-5 bg-surface rounded-lg border border-hairline shadow-card hover:shadow-md hover:border-accent transition-all group"
           >
             <div className="flex items-start justify-between">
               <tool.Icon size={20} strokeWidth={1.75} className="text-ink-muted" aria-hidden="true" />

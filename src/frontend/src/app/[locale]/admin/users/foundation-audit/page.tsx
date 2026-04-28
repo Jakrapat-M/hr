@@ -177,7 +177,7 @@ export default function FoundationAuditPage() {
       </div>
 
       {/* Filter row */}
-      <div className="bg-surface rounded-xl border border-hairline shadow-sm p-4 mb-6">
+      <div className="bg-surface rounded-lg border border-hairline shadow-card p-4 mb-6">
         <div className="flex flex-wrap gap-3 items-end">
           {/* Entity filter chips */}
           <div className="flex flex-wrap gap-2">

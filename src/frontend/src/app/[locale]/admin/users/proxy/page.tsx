@@ -33,7 +33,7 @@ type ScopeValue = 'all' | 'leave-only' | 'approval-only'
 const STATUS_BADGE: Record<ProxyStatus, { label: string; cls: string }> = {
   PENDING: { label: 'รออนุมัติ', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
   ACTIVE: { label: 'ใช้งานอยู่', cls: 'bg-green-50 text-green-700 border-green-200' },
-  EXPIRED: { label: 'หมดอายุ', cls: 'bg-gray-50 text-gray-500 border-gray-200' },
+  EXPIRED: { label: 'หมดอายุ', cls: 'bg-canvas-soft text-ink-muted border-hairline' },
   REVOKED: { label: 'ยกเลิกแล้ว', cls: 'bg-red-50 text-red-600 border-red-200' },
 }
 
@@ -87,13 +87,13 @@ function ProxyModal({
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-16 px-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+      <div className="bg-surface rounded-lg shadow-card w-full max-w-lg max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">สร้าง Proxy ใหม่</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-hairline">
+          <h2 className="text-lg font-semibold text-ink">สร้าง Proxy ใหม่</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 p-1 rounded"
+            className="text-ink-muted hover:text-ink p-1 rounded"
             aria-label="ปิด dialog"
           >
             <X size={14} />
@@ -104,7 +104,7 @@ function ProxyModal({
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           {/* Delegator */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               ผู้มอบหมาย <span className="text-red-500">*</span>
             </label>
             <select
@@ -114,7 +114,7 @@ function ProxyModal({
                 // reset delegatee ถ้าเหมือน delegator
                 if (delegateeId === e.target.value) setDelegateeId('')
               }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             >
               <option value="">— เลือกผู้มอบหมาย —</option>
               {users.map((u) => (
@@ -127,14 +127,14 @@ function ProxyModal({
 
           {/* Delegatee — excludes delegator ตาม AC-6 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               ผู้รับมอบหมาย <span className="text-red-500">*</span>
             </label>
             <select
               value={delegateeId}
               onChange={(e) => setDelegateeId(e.target.value)}
               disabled={!delegatorId}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
+              className="w-full border border-hairline rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent disabled:bg-canvas-soft disabled:text-ink-muted"
             >
               <option value="">— เลือกผู้รับมอบหมาย —</option>
               {delegateeOptions.map((u) => (
@@ -151,7 +151,7 @@ function ProxyModal({
           {/* Date range — native input (C3 no 3rd party) */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 วันเริ่มต้น <span className="text-red-500">*</span>
               </label>
               <input
@@ -160,11 +160,11 @@ function ProxyModal({
                 min={todayStr()}
                 max={maxDateStr()}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-hairline rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink mb-1">
                 วันสิ้นสุด <span className="text-red-500">*</span>
               </label>
               <input
@@ -173,19 +173,19 @@ function ProxyModal({
                 min={startDate || todayStr()}
                 max={maxDateStr()}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-hairline rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
           </div>
-          <p className="text-xs text-gray-400">ระยะเวลาสูงสุด {PROXY_MAX_DAYS} วัน</p>
+          <p className="text-xs text-ink-muted">ระยะเวลาสูงสุด {PROXY_MAX_DAYS} วัน</p>
 
           {/* Scope */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">ขอบเขตสิทธิ์</label>
+            <label className="block text-sm font-medium text-ink mb-1">ขอบเขตสิทธิ์</label>
             <select
               value={scope}
               onChange={(e) => setScope(e.target.value as ScopeValue)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             >
               {SCOPE_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -195,7 +195,7 @@ function ProxyModal({
 
           {/* Reason */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               เหตุผล (ไม่บังคับ)
             </label>
             <textarea
@@ -203,23 +203,23 @@ function ProxyModal({
               onChange={(e) => setReason(e.target.value)}
               placeholder="เช่น ลาพักร้อน, ไปอบรม, ลาคลอด"
               rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-hairline rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-hairline">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-sm text-ink border border-hairline rounded-lg hover:bg-canvas-soft"
           >
             ยกเลิก
           </button>
           <button
             onClick={handleSave}
             disabled={!isValid}
-            className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm text-white bg-accent rounded-lg hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
           >
             บันทึก
           </button>
@@ -273,12 +273,12 @@ export default function ProxyPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">จัดการ Proxy</h1>
-          <p className="text-sm text-gray-500 mt-0.5">BRD #187 — มอบหมายสิทธิ์ชั่วคราว พร้อม Log ทุก action</p>
+          <h1 className="text-xl font-semibold text-ink">จัดการ Proxy</h1>
+          <p className="text-sm text-ink-muted mt-0.5">BRD #187 — มอบหมายสิทธิ์ชั่วคราว พร้อม Log ทุก action</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 whitespace-nowrap"
+          className="flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent whitespace-nowrap"
         >
           <span>+</span>
           <span>สร้าง Proxy</span>
@@ -286,22 +286,22 @@ export default function ProxyPage() {
       </div>
 
       {/* List */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-surface rounded-lg border border-hairline shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table role="table" className="w-full text-sm" aria-label="รายการ Proxy">
-            <thead className="bg-gray-50">
+            <thead className="bg-canvas-soft">
               <tr role="row">
-                <th className="px-4 py-3 text-left font-medium text-gray-700 whitespace-nowrap">ผู้มอบหมาย</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700 whitespace-nowrap">ผู้รับมอบหมาย</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700 whitespace-nowrap hidden sm:table-cell">ขอบเขต</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700 whitespace-nowrap hidden md:table-cell">ระยะเวลา</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-700 w-24">สถานะ</th>
+                <th className="px-4 py-3 text-left font-medium text-ink whitespace-nowrap">ผู้มอบหมาย</th>
+                <th className="px-4 py-3 text-left font-medium text-ink whitespace-nowrap">ผู้รับมอบหมาย</th>
+                <th className="px-4 py-3 text-left font-medium text-ink whitespace-nowrap hidden sm:table-cell">ขอบเขต</th>
+                <th className="px-4 py-3 text-left font-medium text-ink whitespace-nowrap hidden md:table-cell">ระยะเวลา</th>
+                <th className="px-4 py-3 text-center font-medium text-ink w-24">สถานะ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-hairline">
               {proxies.length === 0 && (
                 <tr role="row">
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={5} className="px-4 py-8 text-center text-ink-muted">
                     ยังไม่มีรายการ Proxy
                   </td>
                 </tr>
@@ -309,25 +309,25 @@ export default function ProxyPage() {
               {proxies.map((proxy) => {
                 const badge = STATUS_BADGE[proxy.status]
                 return (
-                  <tr key={proxy.id} role="row" className="hover:bg-gray-50">
+                  <tr key={proxy.id} role="row" className="hover:bg-canvas-soft">
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <p className="font-medium text-gray-900">{proxy.delegatorName}</p>
-                      <p className="text-xs text-gray-400">{proxy.delegatorId}</p>
+                      <p className="font-medium text-ink">{proxy.delegatorName}</p>
+                      <p className="text-xs text-ink-muted">{proxy.delegatorId}</p>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <p className="font-medium text-gray-900">{proxy.delegateeName}</p>
-                      <p className="text-xs text-gray-400">{proxy.delegateeId}</p>
+                      <p className="font-medium text-ink">{proxy.delegateeName}</p>
+                      <p className="text-xs text-ink-muted">{proxy.delegateeId}</p>
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
                       <div className="flex flex-wrap gap-1">
                         {proxy.scope.map((s) => (
-                          <span key={s} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                          <span key={s} className="text-xs bg-canvas-soft text-ink-muted px-2 py-0.5 rounded">
                             {s}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell whitespace-nowrap">
+                    <td className="px-4 py-3 text-xs text-ink-muted hidden md:table-cell whitespace-nowrap">
                       {proxy.startDate} → {proxy.endDate}
                     </td>
                     <td className="px-4 py-3 text-center">

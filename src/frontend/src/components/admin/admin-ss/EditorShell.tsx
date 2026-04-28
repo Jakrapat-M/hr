@@ -37,8 +37,8 @@ export function EditorShell({ editor, titleTh, brd, children }: EditorShellProps
       <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold text-gray-900 whitespace-nowrap">{titleTh}</h1>
-            <span className="text-xs bg-gray-100 text-gray-500 font-medium px-2 py-0.5 rounded-full">
+            <h1 className="text-xl font-semibold text-ink whitespace-nowrap">{titleTh}</h1>
+            <span className="text-xs bg-canvas-soft text-ink-muted font-medium px-2 py-0.5 rounded-full">
               BRD {brd}
             </span>
             {isDirty && (
@@ -48,7 +48,7 @@ export function EditorShell({ editor, titleTh, brd, children }: EditorShellProps
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-500 mt-0.5">HRIS Admin</p>
+          <p className="text-sm text-ink-muted mt-0.5">HRIS Admin</p>
         </div>
 
         {/* Action buttons (AC-7) */}
@@ -57,7 +57,7 @@ export function EditorShell({ editor, titleTh, brd, children }: EditorShellProps
             type="button"
             onClick={saveDraft}
             disabled={!isDirty}
-            className="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-md border border-hairline bg-surface text-ink hover:bg-canvas-soft disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             บันทึกร่าง
           </button>
@@ -65,7 +65,7 @@ export function EditorShell({ editor, titleTh, brd, children }: EditorShellProps
             type="button"
             onClick={() => publish(editor)}
             disabled={!isDirty}
-            className="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-md bg-accent text-white hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             เผยแพร่
           </button>
@@ -73,7 +73,7 @@ export function EditorShell({ editor, titleTh, brd, children }: EditorShellProps
             type="button"
             onClick={handleReset}
             disabled={!isDirty}
-            className="px-4 py-2 text-sm font-medium rounded-md border border-red-300 text-red-600 bg-white hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-md border border-red-300 text-red-600 bg-surface hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             รีเซ็ต
           </button>
@@ -81,7 +81,7 @@ export function EditorShell({ editor, titleTh, brd, children }: EditorShellProps
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-5">
+      <div className="border-b border-hairline mb-5">
         <nav className="flex gap-0" aria-label={`${titleTh} tabs`}>
           {([['config', 'ตั้งค่า'], ['audit', 'ประวัติการแก้ไข']] as [TabKey, string][]).map(([key, label]) => (
             <button
@@ -93,8 +93,8 @@ export function EditorShell({ editor, titleTh, brd, children }: EditorShellProps
               className={[
                 'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
                 activeTab === key
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                  ? 'border-accent text-accent'
+                  : 'border-transparent text-ink-muted hover:text-ink hover:border-hairline',
               ].join(' ')}
             >
               {label}

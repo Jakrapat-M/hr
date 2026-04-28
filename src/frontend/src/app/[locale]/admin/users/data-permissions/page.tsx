@@ -83,7 +83,7 @@ function MultiSelectField({
 
   return (
     <div>
-      <p className="text-xs font-medium text-gray-600 mb-1">{label}</p>
+      <p className="text-xs font-medium text-ink-muted mb-1">{label}</p>
       <div className="flex flex-wrap gap-1.5">
         {options.map((opt) => (
           <button
@@ -93,8 +93,8 @@ function MultiSelectField({
             className={[
               'px-2.5 py-1 rounded-full text-xs border transition-colors',
               value.includes(opt)
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400',
+                ? 'bg-accent text-white border-accent'
+                : 'bg-surface text-ink-muted border-hairline hover:border-accent',
             ].join(' ')}
             aria-pressed={value.includes(opt)}
           >
@@ -117,11 +117,11 @@ function ScopeBuilder({
   onChange: (s: CustomScope) => void
 }) {
   return (
-    <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+    <div className="space-y-4 p-4 bg-canvas-soft rounded-lg border border-hairline">
       {/* Module — fixed "EC" per BRD #184 */}
       <div>
-        <p className="text-xs font-medium text-gray-600 mb-1">Module</p>
-        <span className="px-2.5 py-1 rounded-full text-xs bg-blue-100 text-blue-700 border border-blue-200">
+        <p className="text-xs font-medium text-ink-muted mb-1">Module</p>
+        <span className="px-2.5 py-1 rounded-full text-xs bg-blue-100 text-accent border border-blue-200">
           EC (ค่าเริ่มต้น ไม่สามารถเปลี่ยนได้)
         </span>
       </div>
@@ -164,7 +164,7 @@ function ScopeBuilder({
       />
 
       {/* SPD ใหม่ toggle #184 line 425 */}
-      <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
+      <div className="flex items-center gap-3 pt-2 border-t border-hairline">
         <input
           type="checkbox"
           id="newSpd"
@@ -172,7 +172,7 @@ function ScopeBuilder({
           onChange={(e) => onChange({ ...scope, newSpd: e.target.checked })}
           className="w-4 h-4 accent-blue-600"
         />
-        <label htmlFor="newSpd" className="text-sm text-gray-700 cursor-pointer">
+        <label htmlFor="newSpd" className="text-sm text-ink cursor-pointer">
           SPD ใหม่ — เปิดสิทธิ์เห็นทั้งหมดโดยไม่ restrict ช่วงเวลา
         </label>
       </div>
@@ -239,15 +239,15 @@ function DataPermissionModal({
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-12 px-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+      <div className="bg-surface rounded-lg shadow-card w-full max-w-2xl max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-hairline">
+          <h2 className="text-lg font-semibold text-ink">
             {isEdit ? 'แก้ไขกลุ่มสิทธิ์ข้อมูล' : 'สร้างกลุ่มสิทธิ์ข้อมูลใหม่'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 p-1 rounded"
+            className="text-ink-muted hover:text-ink p-1 rounded"
             aria-label="ปิด dialog"
           >
             <X size={14} />
@@ -258,7 +258,7 @@ function DataPermissionModal({
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           {/* ชื่อ */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               ชื่อกลุ่มสิทธิ์ข้อมูล <span className="text-red-500">*</span>
             </label>
             <input
@@ -266,13 +266,13 @@ function DataPermissionModal({
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="เช่น ทีม HR บริษัทแม่"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
 
           {/* Preset chips */}
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">ขอบเขตข้อมูล (เลือก preset หรือกำหนดเอง)</p>
+            <p className="text-sm font-medium text-ink mb-2">ขอบเขตข้อมูล (เลือก preset หรือกำหนดเอง)</p>
             <div className="flex flex-wrap gap-2">
               {PRESET_CHIPS.map((chip) => (
                 <button
@@ -282,8 +282,8 @@ function DataPermissionModal({
                   className={[
                     'px-3 py-1.5 rounded-full text-sm border transition-colors',
                     selectedPreset === chip.key
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400',
+                      ? 'bg-accent text-white border-accent'
+                      : 'bg-surface text-ink border-hairline hover:border-accent',
                   ].join(' ')}
                   aria-pressed={selectedPreset === chip.key}
                   title={chip.description}
@@ -296,23 +296,23 @@ function DataPermissionModal({
 
           {/* Custom scope builder */}
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">กำหนดขอบเขตเอง</p>
+            <p className="text-sm font-medium text-ink mb-2">กำหนดขอบเขตเอง</p>
             <ScopeBuilder scope={customScope} onChange={setCustomScope} />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-hairline">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-sm text-ink border border-hairline rounded-lg hover:bg-canvas-soft"
           >
             ยกเลิก
           </button>
           <button
             onClick={handleSave}
             disabled={!label.trim()}
-            className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm text-white bg-accent rounded-lg hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
           >
             บันทึก
           </button>
@@ -348,12 +348,12 @@ export default function DataPermissionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">กลุ่มสิทธิ์ข้อมูล</h1>
-          <p className="text-sm text-gray-500 mt-0.5">BRD #184 — กำหนด Data Scope ตาม Module / BG / Company / Division / Department / EmpGroup / PG</p>
+          <h1 className="text-xl font-semibold text-ink">กลุ่มสิทธิ์ข้อมูล</h1>
+          <p className="text-sm text-ink-muted mt-0.5">BRD #184 — กำหนด Data Scope ตาม Module / BG / Company / Division / Department / EmpGroup / PG</p>
         </div>
         <button
           onClick={() => setModal({ type: 'create' })}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 whitespace-nowrap"
+          className="flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent whitespace-nowrap"
         >
           <span>+</span>
           <span>เพิ่มกลุ่มสิทธิ์ข้อมูล</span>
@@ -363,36 +363,36 @@ export default function DataPermissionsPage() {
       {/* Preset info */}
       <div className="mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
         {PRESET_CHIPS.map((chip) => (
-          <div key={chip.key} className="p-3 bg-white rounded-lg border border-gray-200 text-center">
-            <p className="text-xs font-medium text-gray-700 whitespace-nowrap">{chip.label}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{chip.description}</p>
+          <div key={chip.key} className="p-3 bg-surface rounded-lg border border-hairline text-center">
+            <p className="text-xs font-medium text-ink whitespace-nowrap">{chip.label}</p>
+            <p className="text-xs text-ink-muted mt-0.5">{chip.description}</p>
           </div>
         ))}
       </div>
 
       {/* List */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-surface rounded-lg border border-hairline shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table role="table" className="w-full text-sm" aria-label="รายการกลุ่มสิทธิ์ข้อมูล">
-            <thead className="bg-gray-50">
+            <thead className="bg-canvas-soft">
               <tr role="row">
-                <th className="px-4 py-3 text-left font-medium text-gray-700">ชื่อกลุ่มสิทธิ์</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700 hidden sm:table-cell">ขอบเขต</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700 hidden md:table-cell">คำอธิบาย</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-700 w-24">จัดการ</th>
+                <th className="px-4 py-3 text-left font-medium text-ink">ชื่อกลุ่มสิทธิ์</th>
+                <th className="px-4 py-3 text-left font-medium text-ink hidden sm:table-cell">ขอบเขต</th>
+                <th className="px-4 py-3 text-left font-medium text-ink hidden md:table-cell">คำอธิบาย</th>
+                <th className="px-4 py-3 text-center font-medium text-ink w-24">จัดการ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-hairline">
               {dataPermissions.length === 0 && (
                 <tr role="row">
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={4} className="px-4 py-8 text-center text-ink-muted">
                     ยังไม่มีกลุ่มสิทธิ์ข้อมูล
                   </td>
                 </tr>
               )}
               {dataPermissions.map((dp) => (
-                <tr key={dp.id} role="row" className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                <tr key={dp.id} role="row" className="hover:bg-canvas-soft">
+                  <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">
                     {dp.label}
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
@@ -400,13 +400,13 @@ export default function DataPermissionsPage() {
                       {scopeLabel[dp.scope] ?? dp.scope}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 hidden md:table-cell max-w-xs truncate">
+                  <td className="px-4 py-3 text-ink-muted hidden md:table-cell max-w-xs truncate">
                     {dp.description}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => setModal({ type: 'edit', dp })}
-                      className="text-xs text-blue-600 hover:underline px-2 py-1"
+                      className="text-xs text-accent hover:underline px-2 py-1"
                       aria-label={`แก้ไข ${dp.label}`}
                     >
                       แก้ไข

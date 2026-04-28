@@ -33,11 +33,11 @@ function Toggle({
       }}
       className={[
         'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent',
-        'transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-1',
-        checked ? 'bg-violet-600' : 'bg-gray-200',
+        'transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1',
+        checked ? 'bg-accent' : 'bg-surface-raised',
       ].join(' ')}
     >
-      <span className={['pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow ring-0 transition-transform duration-200', checked ? 'translate-x-4' : 'translate-x-0'].join(' ')} />
+      <span className={['pointer-events-none inline-block h-4 w-4 rounded-full bg-surface shadow-card ring-0 transition-transform duration-200', checked ? 'translate-x-4' : 'translate-x-0'].join(' ')} />
     </button>
   )
 }
@@ -63,11 +63,11 @@ export default function MandatoryPage() {
         <div className="flex-1 min-w-0">
           {/* Form filter */}
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Form:</label>
+            <label className="text-sm font-medium text-ink whitespace-nowrap">Form:</label>
             <div className="flex gap-2">
               {FORM_SCOPES.map((scope) => (
                 <button key={scope} type="button" onClick={() => setFormFilter(scope)}
-                  className={['px-3 py-1.5 text-sm rounded-md border transition-colors', formFilter === scope ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'].join(' ')}>
+                  className={['px-3 py-1.5 text-sm rounded-md border transition-colors', formFilter === scope ? 'bg-accent text-white border-accent' : 'bg-surface text-ink-muted border-hairline hover:border-accent'].join(' ')}>
                   {scope}
                 </button>
               ))}
@@ -75,22 +75,22 @@ export default function MandatoryPage() {
           </div>
 
           {/* Matrix table (sm+) */}
-          <div className="hidden sm:block overflow-x-auto rounded-lg border border-gray-200">
+          <div className="hidden sm:block overflow-x-auto rounded-lg border border-hairline">
             <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-canvas-soft border-b border-hairline">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Field</th>
+                  <th className="px-4 py-3 text-left font-medium text-ink-muted">Field</th>
                   {ROLES.map((role) => (
-                    <th key={role} className="px-4 py-3 text-center font-medium text-gray-600 whitespace-nowrap">{role}</th>
+                    <th key={role} className="px-4 py-3 text-center font-medium text-ink-muted whitespace-nowrap">{role}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className="divide-y divide-hairline bg-surface">
                 {filteredFields.map((field) => (
-                  <tr key={field.id} className="hover:bg-gray-50">
+                  <tr key={field.id} className="hover:bg-canvas-soft">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-800 whitespace-nowrap">{field.label}</div>
-                      <div className="text-xs text-gray-400 mt-0.5">{field.id}</div>
+                      <div className="font-medium text-ink whitespace-nowrap">{field.label}</div>
+                      <div className="text-xs text-ink-muted mt-0.5">{field.id}</div>
                     </td>
                     {ROLES.map((role) => (
                       <td key={role} className="px-4 py-3 text-center">
@@ -110,12 +110,12 @@ export default function MandatoryPage() {
           {/* Stacked cards mobile (AC-10) */}
           <div className="sm:hidden space-y-3">
             {filteredFields.map((field) => (
-              <div key={field.id} className="rounded-lg border border-gray-200 bg-white p-4">
-                <div className="font-medium text-gray-800 mb-3">{field.label}</div>
+              <div key={field.id} className="rounded-lg border border-hairline bg-surface p-4">
+                <div className="font-medium text-ink mb-3">{field.label}</div>
                 <div className="grid grid-cols-2 gap-2">
                   {ROLES.map((role) => (
-                    <div key={role} className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-3 py-2">
-                      <span className="text-sm text-gray-600">{role}</span>
+                    <div key={role} className="flex items-center justify-between gap-2 rounded-md bg-canvas-soft px-3 py-2">
+                      <span className="text-sm text-ink-muted">{role}</span>
                       <Toggle checked={getValue(field.id, role)} onChange={(v) => setMandatory(field.id, role, v)} ariaLabel={`mandatory-${field.id}-${role}`} />
                     </div>
                   ))}
@@ -127,12 +127,12 @@ export default function MandatoryPage() {
 
         {/* Preview panel (AC-9) */}
         <div className="lg:w-72 shrink-0">
-          <div className="bg-white rounded-lg border border-gray-200 p-4 sticky top-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Preview as</h3>
+          <div className="bg-surface rounded-lg border border-hairline p-4 sticky top-4">
+            <h3 className="text-sm font-medium text-ink mb-3">Preview as</h3>
             <select
               value={previewRole}
               onChange={(e) => setPreviewRole(e.target.value as RoleName)}
-              className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm bg-white mb-4 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="w-full rounded-md border border-hairline px-3 py-1.5 text-sm bg-surface mb-4 focus:outline-none focus:ring-2 focus:ring-accent"
             >
               {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
@@ -140,12 +140,12 @@ export default function MandatoryPage() {
               {filteredFields.map((field) => {
                 const required = getValue(field.id, previewRole)
                 return (
-                  <div key={field.id} className="rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <div key={field.id} className="rounded-md border border-hairline bg-canvas-soft px-3 py-2">
+                    <div className="flex items-center gap-1 text-xs text-ink-muted">
                       {field.label}
                       {required && <span className="text-red-500 font-bold">*</span>}
                     </div>
-                    <div className="text-sm text-gray-300 mt-0.5 italic">— ตัวอย่างข้อมูล —</div>
+                    <div className="text-sm text-ink-muted mt-0.5 italic">— ตัวอย่างข้อมูล —</div>
                   </div>
                 )
               })}

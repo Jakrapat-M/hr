@@ -129,34 +129,34 @@ export default function AuditReportPage() {
     <div className="p-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">รายงาน Audit</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <h1 className="text-xl font-semibold text-ink">รายงาน Audit</h1>
+        <p className="text-sm text-ink-muted mt-0.5">
           BRD #189 — Log Add / Edit / Delete ทุก Module พร้อม Export CSV
         </p>
       </div>
 
       {/* Filter bar — sticky */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-4 sticky top-0 z-10">
+      <div className="bg-surface rounded-lg border border-hairline shadow-card p-4 mb-4 sticky top-0 z-10">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {/* ผู้ดำเนินการ */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">ผู้ดำเนินการ</label>
+            <label className="block text-xs font-medium text-ink-muted mb-1">ผู้ดำเนินการ</label>
             <input
               type="text"
               value={filterUser}
               onChange={(e) => { setFilterUser(e.target.value); setCurrentPage(1) }}
               placeholder="ชื่อหรือรหัสพนักงาน"
-              className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
 
           {/* การดำเนินการ */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">การดำเนินการ</label>
+            <label className="block text-xs font-medium text-ink-muted mb-1">การดำเนินการ</label>
             <select
               value={filterAction}
               onChange={(e) => { setFilterAction(e.target.value as AuditAction | 'ALL'); setCurrentPage(1) }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             >
               <option value="ALL">ทั้งหมด</option>
               {actionOptions.map((a) => (
@@ -167,11 +167,11 @@ export default function AuditReportPage() {
 
           {/* ประเภท Entity */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">ประเภท Entity</label>
+            <label className="block text-xs font-medium text-ink-muted mb-1">ประเภท Entity</label>
             <select
               value={filterEntity}
               onChange={(e) => { setFilterEntity(e.target.value as AuditEntityType | 'ALL'); setCurrentPage(1) }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             >
               <option value="ALL">ทั้งหมด</option>
               {entityOptions.map((et) => (
@@ -182,21 +182,21 @@ export default function AuditReportPage() {
 
           {/* Date range */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">ช่วงเวลา</label>
+            <label className="block text-xs font-medium text-ink-muted mb-1">ช่วงเวลา</label>
             <div className="flex items-center gap-1">
               <input
                 type="date"
                 value={filterDateFrom}
                 onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1) }}
-                className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 border border-hairline rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-accent"
                 aria-label="วันเริ่มต้น"
               />
-              <span className="text-gray-400 text-xs">—</span>
+              <span className="text-ink-muted text-xs">—</span>
               <input
                 type="date"
                 value={filterDateTo}
                 onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1) }}
-                className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 border border-hairline rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-accent"
                 aria-label="วันสิ้นสุด"
               />
             </div>
@@ -204,16 +204,16 @@ export default function AuditReportPage() {
         </div>
 
         {/* Action row */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-hairline">
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-ink-muted">
               พบ {filtered.length} รายการ
               {isFilterApplied && ` (filter แล้ว)`}
             </span>
             {isFilterApplied && (
               <button
                 onClick={resetFilters}
-                className="text-xs text-gray-400 hover:text-gray-700 underline"
+                className="text-xs text-ink-muted hover:text-ink underline"
               >
                 ล้าง filter
               </button>
@@ -235,35 +235,35 @@ export default function AuditReportPage() {
       </div>
 
       {/* Results table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-surface rounded-lg border border-hairline shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table role="table" className="w-full text-sm" aria-label="ตารางรายงาน Audit">
-            <thead className="bg-gray-50">
+            <thead className="bg-canvas-soft">
               <tr role="row">
-                <th className="px-4 py-3 text-left font-medium text-gray-700 whitespace-nowrap">วันที่</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700 whitespace-nowrap hidden sm:table-cell">ผู้ดำเนินการ</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700 whitespace-nowrap">การดำเนินการ</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700 whitespace-nowrap hidden md:table-cell">Entity</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700 hidden lg:table-cell">รายละเอียด</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-700 w-16">สถานะ</th>
+                <th className="px-4 py-3 text-left font-medium text-ink whitespace-nowrap">วันที่</th>
+                <th className="px-4 py-3 text-left font-medium text-ink whitespace-nowrap hidden sm:table-cell">ผู้ดำเนินการ</th>
+                <th className="px-4 py-3 text-left font-medium text-ink whitespace-nowrap">การดำเนินการ</th>
+                <th className="px-4 py-3 text-left font-medium text-ink whitespace-nowrap hidden md:table-cell">Entity</th>
+                <th className="px-4 py-3 text-left font-medium text-ink hidden lg:table-cell">รายละเอียด</th>
+                <th className="px-4 py-3 text-center font-medium text-ink w-16">สถานะ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-hairline">
               {paginated.length === 0 && (
                 <tr role="row">
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={6} className="px-4 py-8 text-center text-ink-muted">
                     {isFilterApplied ? 'ไม่พบรายการที่ตรงกับเงื่อนไข' : 'ใส่ filter เพื่อดูรายการ'}
                   </td>
                 </tr>
               )}
               {paginated.map((entry) => (
-                <tr key={entry.id} role="row" className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+                <tr key={entry.id} role="row" className="hover:bg-canvas-soft">
+                  <td className="px-4 py-3 text-xs text-ink-muted whitespace-nowrap">
                     {new Date(entry.timestamp).toLocaleString('th-TH')}
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <p className="font-medium text-gray-900 text-xs whitespace-nowrap">{entry.userName}</p>
-                    <p className="text-xs text-gray-400">{entry.userId}</p>
+                    <p className="font-medium text-ink text-xs whitespace-nowrap">{entry.userName}</p>
+                    <p className="text-xs text-ink-muted">{entry.userId}</p>
                   </td>
                   <td className="px-4 py-3">
                     <span
@@ -271,21 +271,21 @@ export default function AuditReportPage() {
                         'text-xs px-2 py-0.5 rounded-full whitespace-nowrap',
                         entry.action === 'CREATE' ? 'bg-green-50 text-green-700' :
                         entry.action === 'DELETE' ? 'bg-red-50 text-red-600' :
-                        entry.action === 'UPDATE' ? 'bg-blue-50 text-blue-700' :
-                        'bg-gray-50 text-gray-600',
+                        entry.action === 'UPDATE' ? 'bg-accent-soft text-accent' :
+                        'bg-canvas-soft text-ink-muted',
                       ].join(' ')}
                     >
                       {ACTION_LABELS[entry.action] ?? entry.action}
                     </span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <p className="text-xs text-gray-600 whitespace-nowrap">
+                    <p className="text-xs text-ink-muted whitespace-nowrap">
                       {ENTITY_LABELS[entry.entityType] ?? entry.entityType}
                     </p>
-                    <p className="text-xs text-gray-400 truncate max-w-xs">{entry.entityName}</p>
+                    <p className="text-xs text-ink-muted truncate max-w-xs">{entry.entityName}</p>
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
-                    <p className="text-xs text-gray-500 max-w-xs truncate">{entry.description}</p>
+                    <p className="text-xs text-ink-muted max-w-xs truncate">{entry.description}</p>
                   </td>
                   <td className="px-4 py-3 text-center">
                     {entry.isSuccess ? <Check size={14} className="text-success" /> : <X size={14} className="text-danger" />}
@@ -298,22 +298,22 @@ export default function AuditReportPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-hairline">
+            <p className="text-xs text-ink-muted">
               หน้า {currentPage} จาก {totalPages} ({filtered.length} รายการ)
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-xs border border-hairline rounded hover:bg-canvas-soft disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 ← ก่อนหน้า
               </button>
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-xs border border-hairline rounded hover:bg-canvas-soft disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 ถัดไป →
               </button>

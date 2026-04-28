@@ -86,25 +86,25 @@ function CapabilitiesMatrix({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
+    <div className="overflow-x-auto rounded-lg border border-hairline">
       <table
         role="table"
         className="w-full text-sm"
         aria-label="CapabilitiesMatrix — สิทธิ์แต่ละเมนู"
       >
-        <thead className="bg-gray-50">
+        <thead className="bg-canvas-soft">
           <tr role="row">
-            <th className="px-4 py-2.5 text-left font-medium text-gray-700 whitespace-nowrap">เมนู</th>
-            <th className="px-3 py-2.5 text-center font-medium text-gray-700 w-16">View</th>
-            <th className="px-3 py-2.5 text-center font-medium text-gray-700 w-16">Edit</th>
-            <th className="px-3 py-2.5 text-center font-medium text-gray-700 w-16">Enable</th>
-            <th className="px-3 py-2.5 text-center font-medium text-gray-700 w-16">Disable</th>
+            <th className="px-4 py-2.5 text-left font-medium text-ink whitespace-nowrap">เมนู</th>
+            <th className="px-3 py-2.5 text-center font-medium text-ink w-16">View</th>
+            <th className="px-3 py-2.5 text-center font-medium text-ink w-16">Edit</th>
+            <th className="px-3 py-2.5 text-center font-medium text-ink w-16">Enable</th>
+            <th className="px-3 py-2.5 text-center font-medium text-ink w-16">Disable</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-hairline">
           {rows.map((row, idx) => (
-            <tr key={row.menu} role="row" className="hover:bg-gray-50">
-              <td className="px-4 py-2 font-mono text-xs text-gray-600 whitespace-nowrap">{row.menu}</td>
+            <tr key={row.menu} role="row" className="hover:bg-canvas-soft">
+              <td className="px-4 py-2 font-mono text-xs text-ink-muted whitespace-nowrap">{row.menu}</td>
               {(['view', 'edit', 'enable', 'disable'] as const).map((field) => (
                 <td key={field} className="px-3 py-2 text-center">
                   <input
@@ -162,15 +162,15 @@ function RoleGroupModal({
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-16 px-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[80vh] flex flex-col">
+      <div className="bg-surface rounded-lg shadow-card w-full max-w-3xl max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-hairline">
+          <h2 className="text-lg font-semibold text-ink">
             {isEdit ? 'แก้ไขกลุ่มสิทธิ์แอปพลิเคชัน' : 'สร้างกลุ่มสิทธิ์ใหม่'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 p-1 rounded"
+            className="text-ink-muted hover:text-ink p-1 rounded"
             aria-label="ปิด dialog"
           >
             <X size={14} />
@@ -181,7 +181,7 @@ function RoleGroupModal({
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           {/* ชื่อ */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               ชื่อกลุ่มสิทธิ์ <span className="text-red-500">*</span>
             </label>
             <input
@@ -189,17 +189,17 @@ function RoleGroupModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="เช่น HRIS Admin Group"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <label className="block text-sm font-medium text-ink mb-1">Role</label>
             <select
               value={roleType}
               onChange={(e) => setRoleType(e.target.value as RoleOption)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             >
               {ROLE_OPTIONS.map((r) => (
                 <option key={r} value={r}>{r}</option>
@@ -209,23 +209,23 @@ function RoleGroupModal({
 
           {/* Capabilities Matrix */}
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">สิทธิ์แต่ละเมนู</p>
+            <p className="text-sm font-medium text-ink mb-2">สิทธิ์แต่ละเมนู</p>
             <CapabilitiesMatrix rows={capRows} onChange={setCapRows} />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-hairline">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-sm text-ink border border-hairline rounded-lg hover:bg-canvas-soft"
           >
             ยกเลิก
           </button>
           <button
             onClick={handleSave}
             disabled={!name.trim()}
-            className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm text-white bg-accent rounded-lg hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
           >
             บันทึก
           </button>
@@ -269,12 +269,12 @@ export default function RoleGroupsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">กลุ่มสิทธิ์แอปพลิเคชัน</h1>
-          <p className="text-sm text-gray-500 mt-0.5">BRD #185 — สิทธิ์เมนูและฟังก์ชันระดับ Field</p>
+          <h1 className="text-xl font-semibold text-ink">กลุ่มสิทธิ์แอปพลิเคชัน</h1>
+          <p className="text-sm text-ink-muted mt-0.5">BRD #185 — สิทธิ์เมนูและฟังก์ชันระดับ Field</p>
         </div>
         <button
           onClick={() => setModal({ type: 'create' })}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent"
         >
           <span>+</span>
           <span className="whitespace-nowrap">เพิ่มกลุ่มสิทธิ์</span>
@@ -282,40 +282,40 @@ export default function RoleGroupsPage() {
       </div>
 
       {/* List */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-surface rounded-lg border border-hairline shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table role="table" className="w-full text-sm" aria-label="รายการกลุ่มสิทธิ์แอปพลิเคชัน">
-            <thead className="bg-gray-50">
+            <thead className="bg-canvas-soft">
               <tr role="row">
-                <th className="px-4 py-3 text-left font-medium text-gray-700">ชื่อกลุ่มสิทธิ์</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700 hidden sm:table-cell">คำอธิบาย</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-700 w-24">ประเภท</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-700 w-28">จัดการ</th>
+                <th className="px-4 py-3 text-left font-medium text-ink">ชื่อกลุ่มสิทธิ์</th>
+                <th className="px-4 py-3 text-left font-medium text-ink hidden sm:table-cell">คำอธิบาย</th>
+                <th className="px-4 py-3 text-center font-medium text-ink w-24">ประเภท</th>
+                <th className="px-4 py-3 text-center font-medium text-ink w-28">จัดการ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-hairline">
               {roles.length === 0 && (
                 <tr role="row">
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={4} className="px-4 py-8 text-center text-ink-muted">
                     ยังไม่มีกลุ่มสิทธิ์
                   </td>
                 </tr>
               )}
               {roles.map((role) => (
-                <tr key={role.id} role="row" className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                <tr key={role.id} role="row" className="hover:bg-canvas-soft">
+                  <td className="px-4 py-3 font-medium text-ink whitespace-nowrap">
                     {role.name}
                     {role.isSystemRole && (
-                      <span className="ml-2 text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                      <span className="ml-2 text-xs text-ink-muted bg-canvas-soft px-1.5 py-0.5 rounded">
                         system
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-500 hidden sm:table-cell max-w-xs truncate">
+                  <td className="px-4 py-3 text-ink-muted hidden sm:table-cell max-w-xs truncate">
                     {role.description}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap">
+                    <span className="text-xs bg-accent-soft text-accent px-2 py-0.5 rounded-full whitespace-nowrap">
                       {role.capabilities.length} สิทธิ์
                     </span>
                   </td>
@@ -323,7 +323,7 @@ export default function RoleGroupsPage() {
                     <div className="flex justify-center gap-2">
                       <button
                         onClick={() => setModal({ type: 'edit', role })}
-                        className="text-xs text-blue-600 hover:underline px-2 py-1"
+                        className="text-xs text-accent hover:underline px-2 py-1"
                         aria-label={`แก้ไข ${role.name}`}
                       >
                         แก้ไข

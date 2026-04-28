@@ -20,41 +20,41 @@ export function AuditLogTab({ editor }: AuditLogTabProps) {
 
   if (filtered.length === 0) {
     return (
-      <div className="py-12 text-center text-sm text-gray-400">
+      <div className="py-12 text-center text-sm text-ink-muted">
         ยังไม่มีประวัติการแก้ไขสำหรับ editor นี้
       </div>
     )
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
+    <div className="overflow-x-auto rounded-lg border border-hairline">
       <table className="min-w-full text-sm">
-        <thead className="bg-gray-50 border-b border-gray-200">
+        <thead className="bg-canvas-soft border-b border-hairline">
           <tr>
-            <th className="px-4 py-3 text-left font-medium text-gray-600 whitespace-nowrap">เวลา</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-600 whitespace-nowrap">ผู้แก้ไข</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-600 whitespace-nowrap">Target</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-600 whitespace-nowrap">ก่อน → หลัง</th>
+            <th className="px-4 py-3 text-left font-medium text-ink-muted whitespace-nowrap">เวลา</th>
+            <th className="px-4 py-3 text-left font-medium text-ink-muted whitespace-nowrap">ผู้แก้ไข</th>
+            <th className="px-4 py-3 text-left font-medium text-ink-muted whitespace-nowrap">Target</th>
+            <th className="px-4 py-3 text-left font-medium text-ink-muted whitespace-nowrap">ก่อน → หลัง</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
+        <tbody className="divide-y divide-hairline bg-surface">
           {filtered.map((entry) => (
-            <tr key={entry.id} className="hover:bg-gray-50">
-              <td className="px-4 py-3 text-gray-500 tabular-nums whitespace-nowrap text-xs">
+            <tr key={entry.id} className="hover:bg-canvas-soft">
+              <td className="px-4 py-3 text-ink-muted tabular-nums whitespace-nowrap text-xs">
                 {new Date(entry.timestamp).toLocaleString('th-TH', {
                   dateStyle: 'short',
                   timeStyle: 'short',
                 })}
               </td>
-              <td className="px-4 py-3 text-gray-800 whitespace-nowrap">{entry.adminUser}</td>
+              <td className="px-4 py-3 text-ink whitespace-nowrap">{entry.adminUser}</td>
               <td className="px-4 py-3">
-                <code className="text-xs bg-gray-100 rounded px-1.5 py-0.5 text-gray-600">
+                <code className="text-xs bg-canvas-soft rounded px-1.5 py-0.5 text-ink-muted">
                   {entry.targetEntity}
                 </code>
               </td>
-              <td className="px-4 py-3 text-gray-600 text-xs">
+              <td className="px-4 py-3 text-ink-muted text-xs">
                 <span className="text-red-500">{entry.before ?? '—'}</span>
-                <span className="mx-1.5 text-gray-400">→</span>
+                <span className="mx-1.5 text-ink-muted">→</span>
                 <span className="text-green-600">{entry.after ?? '—'}</span>
               </td>
             </tr>

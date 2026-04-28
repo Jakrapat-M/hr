@@ -26,7 +26,7 @@ export default function SelfServiceLayout({ children }: { children: React.ReactN
     <div className="flex flex-col min-h-full">
       {/* Sub-nav bar */}
       <nav
-        className="bg-white border-b border-gray-200 overflow-x-auto"
+        className="bg-surface border-b border-hairline overflow-x-auto"
         aria-label="Self-Service Config navigation"
       >
         <ul className="flex gap-1 px-4 whitespace-nowrap">
@@ -42,14 +42,14 @@ export default function SelfServiceLayout({ children }: { children: React.ReactN
                   className={[
                     'inline-flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-colors',
                     isActive
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300',
+                      ? 'border-accent text-accent'
+                      : 'border-transparent text-ink-muted hover:text-ink hover:border-hairline',
                   ].join(' ')}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   {labelTh}
                   {brd && (
-                    <span className="text-xs text-gray-400 font-normal">{brd}</span>
+                    <span className="text-xs text-ink-muted font-normal">{brd}</span>
                   )}
                   {/* dirty indicator — แสดงเมื่อ draft ยังไม่ publish */}
                   {isActive && isDirty && !href.endsWith('/self-service') && (

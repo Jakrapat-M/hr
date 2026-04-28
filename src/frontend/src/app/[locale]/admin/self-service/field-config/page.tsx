@@ -51,7 +51,7 @@ export default function FieldConfigPage() {
     <EditorShell editor="field-config" titleTh="จัดการ Field Configuration" brd="#178">
       {/* Filter row */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Form:</label>
+        <label className="text-sm font-medium text-ink whitespace-nowrap">Form:</label>
         <div className="flex gap-2">
           {(['ทั้งหมด', ...FORM_SCOPES] as const).map((scope) => (
             <button
@@ -61,8 +61,8 @@ export default function FieldConfigPage() {
               className={[
                 'px-3 py-1.5 text-sm rounded-md border transition-colors',
                 formFilter === scope
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400',
+                  ? 'bg-accent text-white border-accent'
+                  : 'bg-surface text-ink-muted border-hairline hover:border-accent',
               ].join(' ')}
             >
               {scope}
@@ -73,36 +73,36 @@ export default function FieldConfigPage() {
 
       {/* DataTable */}
       {filtered.length === 0 ? (
-        <div className="py-12 text-center text-sm text-gray-400">ไม่พบ field ในกลุ่มนี้</div>
+        <div className="py-12 text-center text-sm text-ink-muted">ไม่พบ field ในกลุ่มนี้</div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <div className="overflow-x-auto rounded-lg border border-hairline">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-canvas-soft border-b border-hairline">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 whitespace-nowrap">Field ID</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 whitespace-nowrap">ชื่อ Field</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 whitespace-nowrap">Form</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 whitespace-nowrap">ประเภท Field</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 whitespace-nowrap">ค่าเริ่มต้น</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 whitespace-nowrap">System</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Actions</th>
+                <th className="px-4 py-3 text-left font-medium text-ink-muted whitespace-nowrap">Field ID</th>
+                <th className="px-4 py-3 text-left font-medium text-ink-muted whitespace-nowrap">ชื่อ Field</th>
+                <th className="px-4 py-3 text-left font-medium text-ink-muted whitespace-nowrap">Form</th>
+                <th className="px-4 py-3 text-left font-medium text-ink-muted whitespace-nowrap">ประเภท Field</th>
+                <th className="px-4 py-3 text-left font-medium text-ink-muted whitespace-nowrap">ค่าเริ่มต้น</th>
+                <th className="px-4 py-3 text-left font-medium text-ink-muted whitespace-nowrap">System</th>
+                <th className="px-4 py-3 text-left font-medium text-ink-muted">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
+            <tbody className="divide-y divide-hairline bg-surface">
               {filtered.map((field) => (
-                <tr key={field.id} className="hover:bg-gray-50">
+                <tr key={field.id} className="hover:bg-canvas-soft">
                   <td className="px-4 py-3">
-                    <code className="text-xs bg-gray-100 rounded px-1.5 py-0.5 text-gray-600">{field.id}</code>
+                    <code className="text-xs bg-canvas-soft rounded px-1.5 py-0.5 text-ink-muted">{field.id}</code>
                   </td>
-                  <td className="px-4 py-3 text-gray-800 whitespace-nowrap">{field.label}</td>
-                  <td className="px-4 py-3 text-gray-500">{field.scope}</td>
-                  <td className="px-4 py-3 text-gray-500">{field.fieldType}</td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">{field.defaultValue ?? '—'}</td>
+                  <td className="px-4 py-3 text-ink whitespace-nowrap">{field.label}</td>
+                  <td className="px-4 py-3 text-ink-muted">{field.scope}</td>
+                  <td className="px-4 py-3 text-ink-muted">{field.fieldType}</td>
+                  <td className="px-4 py-3 text-ink-muted text-xs">{field.defaultValue ?? '—'}</td>
                   <td className="px-4 py-3">
                     {field.isSystem ? (
-                      <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">System</span>
+                      <span className="text-xs bg-accent-soft text-accent px-2 py-0.5 rounded-full">System</span>
                     ) : (
-                      <span className="text-xs text-gray-400">—</span>
+                      <span className="text-xs text-ink-muted">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -110,7 +110,7 @@ export default function FieldConfigPage() {
                       type="button"
                       onClick={() => openEdit(field)}
                       disabled={field.isSystem}
-                      className="text-sm text-blue-600 hover:underline disabled:text-gray-300 disabled:no-underline disabled:cursor-not-allowed"
+                      className="text-sm text-accent hover:underline disabled:text-ink-muted disabled:no-underline disabled:cursor-not-allowed"
                     >
                       แก้ไข
                     </button>
@@ -130,18 +130,18 @@ export default function FieldConfigPage() {
           aria-modal="true"
           aria-label={`แก้ไข field ${editTarget.label}`}
         >
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">
-              แก้ไข Field: <span className="text-blue-600">{editTarget.label}</span>
+          <div className="bg-surface rounded-lg shadow-card w-full max-w-md p-6">
+            <h2 className="text-base font-semibold text-ink mb-4">
+              แก้ไข Field: <span className="text-accent">{editTarget.label}</span>
             </h2>
 
             {/* ประเภท field */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">ประเภท Field</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">ประเภท Field</label>
               <select
                 value={modalType}
                 onChange={(e) => setModalType(e.target.value as FieldConfigEntry['fieldType'])}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-hairline px-3 py-2 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-accent"
               >
                 {FIELD_TYPES.map((t) => (
                   <option key={t} value={t}>{t}</option>
@@ -151,13 +151,13 @@ export default function FieldConfigPage() {
 
             {/* ค่าเริ่มต้น */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">ค่าเริ่มต้น</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">ค่าเริ่มต้น</label>
               <input
                 type="text"
                 value={modalDefault}
                 onChange={(e) => setModalDefault(e.target.value)}
                 placeholder="ไม่ระบุ = ไม่มีค่าเริ่มต้น"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
 
@@ -166,14 +166,14 @@ export default function FieldConfigPage() {
               <button
                 type="button"
                 onClick={() => setEditTarget(null)}
-                className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 text-sm rounded-md border border-hairline text-ink hover:bg-canvas-soft"
               >
                 ยกเลิก
               </button>
               <button
                 type="button"
                 onClick={saveModal}
-                className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                className="px-4 py-2 text-sm rounded-md bg-accent text-white hover:bg-accent"
               >
                 บันทึก
               </button>

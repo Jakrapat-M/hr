@@ -20,7 +20,7 @@ function UsersSubNav() {
   return (
     <nav
       aria-label="เมนูย่อย ผู้ใช้และสิทธิ์"
-      className="bg-white border-b border-gray-200 px-6"
+      className="bg-surface border-b border-hairline px-6"
     >
       <ul className="flex gap-1 overflow-x-auto" role="list">
         {TOOLS.map((tool) => {
@@ -38,13 +38,13 @@ function UsersSubNav() {
                 className={[
                   'flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors',
                   isActive
-                    ? 'border-blue-600 text-blue-700'
-                    : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300',
+                    ? 'border-accent text-accent'
+                    : 'border-transparent text-ink-muted hover:text-ink hover:border-hairline',
                 ].join(' ')}
               >
                 <span>{tool.label}</span>
                 {tool.brd && (
-                  <span className="text-xs text-gray-400 hidden lg:inline">{tool.brd}</span>
+                  <span className="text-xs text-ink-muted hidden lg:inline">{tool.brd}</span>
                 )}
               </Link>
             </li>
