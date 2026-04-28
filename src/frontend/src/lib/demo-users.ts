@@ -122,12 +122,14 @@ export const PERSONA_BADGE: Record<string, { label: string; tone: string }> = {
 //   - HRBP + HR Admin edit personal info *directly* via /admin (Pattern 2,
 //     no approval workflow) — their landing is /admin, not an inbox.
 //   - Manager approves LEAVE, not personal info. No inbox for this journey.
+//   - /manager-dashboard was removed from the App Router; manager personas
+//     land on home to avoid proxy switching into a 404.
 const ROLE_LANDING: Array<[Role, string]> = [
   ['hr_admin', '/admin'],
   ['hr_manager', '/admin'],
   ['spd', '/spd/inbox'],
   ['hrbp', '/admin/employees'],  // HRBP uses admin direct-edit path
-  ['manager', '/manager-dashboard'], // T7 — Manager lands on dashboard (was /home)
+  ['manager', '/home'],
   ['employee', '/home'],
 ];
 
