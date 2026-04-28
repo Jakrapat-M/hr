@@ -103,6 +103,7 @@ const minimalFormData: FormData = {
     employeeClass: null,
     originalStartDate: '', seniorityStartDate: '', retirementDate: '',
     pfServiceDate: '', dvtPreviousId: '', cgPreviousEmployeeId: '',
+    ssn: '',
   },
   nationalId: { value: '' },
   personal: { addressLine1: '' },

@@ -39,6 +39,8 @@ export const UserMapper: PortletMapper = {
         cust_disability: null,
         nickname: input.biographical.nickname || '',
         nicknamelocal: input.biographical.nickname || '',
+        // Phase 4: User.ssn (sap_label="National ID", sap_creatable=true) — Thai SSN 13 digits
+        ssn: input.employeeInfo.ssn || null,
       },
       notes,
     }

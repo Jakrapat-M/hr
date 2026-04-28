@@ -284,6 +284,9 @@ export const stepEmployeeInfoSchema = z.object({
   employeeClass: z.enum(EMPLOYEE_CLASSES, { required_error: 'กรุณาเลือก Employee Class' }),
   originalStartDate: z.string().min(1, 'กรุณาระบุวันเริ่มงานครั้งแรก'),
   seniorityStartDate: z.string().min(1, 'กรุณาระบุวันนับอายุงาน'),
+  // Phase 4: SSN — User.ssn (sap_label="National ID", sap_creatable=true).
+  // Optional 13-digit Thai social security / national ID number for User entity.
+  ssn: z.string().optional().default(''),
 })
 
 export const stepNationalIdSchema = z.object({

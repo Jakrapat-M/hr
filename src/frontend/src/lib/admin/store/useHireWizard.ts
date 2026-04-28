@@ -156,6 +156,9 @@ export interface FormData {
     // BRD #23, #30: employeeGroup + employeeSubGroup (SF EmpJob.employeeGroup/.employeeSubGroup)
     employeeGroup?: string
     employeeSubGroup?: string
+    // Phase 4: SSN — maps to User.ssn (User entity, sap_label="National ID", sap_creatable=true)
+    // NOT EmpEmployment — no SSN slot on that entity
+    ssn?: string
   }
   nationalId:   { value: string }
   personal:     { addressLine1: string }
@@ -554,7 +557,8 @@ export const useHireWizard = create<HireWizardState>()(
       // jobRelationships[]) and any nested slice added after.
       // Version 3 adds: Phase 1.4 emergencyContacts[] slice.
       // Version 4 adds: Phase 3 EmpJob new fields on job slice.
-      version: 4,
+      // Version 5 adds: Phase 4 employeeInfo.ssn (maps to User.ssn in User CREATE).
+      version: 5,
       partialize: (state) => ({
         currentStep: state.currentStep,
         maxUnlockedStep: state.maxUnlockedStep,
@@ -612,7 +616,14 @@ export const useHireWizard = create<HireWizardState>()(
         for (const [k, v] of Object.entries(jobDefaults)) {
           if (!(k in fd.job)) fd.job[k] = v
         }
-        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v4`)
+        // v5: Phase 4 employeeInfo.ssn — add if missing (covers v1-v4 drafts)
+        if (!fd.employeeInfo || typeof fd.employeeInfo !== 'object') {
+          fd.employeeInfo = {}
+        }
+        if (!('ssn' in fd.employeeInfo)) {
+          fd.employeeInfo.ssn = ''
+        }
+        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v5`)
         return p
       },
     },

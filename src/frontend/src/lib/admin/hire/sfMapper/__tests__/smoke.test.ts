@@ -35,6 +35,7 @@ const minimalFormData: FormData = {
     employeeClass: null,
     originalStartDate: '', seniorityStartDate: '', retirementDate: '',
     pfServiceDate: '', dvtPreviousId: '', cgPreviousEmployeeId: '',
+    ssn: '',
   },
   nationalId: { value: '' },
   personal: { addressLine1: '' },
@@ -63,9 +64,11 @@ const minimalFormData: FormData = {
 // Phase 2:   perAddressDEFLT added (8 total implemented)
 // Phase 3:   empJob added (9 total implemented)
 // Phase 5b-1: empJobRelationships added (10 total implemented)
+// Phase 4:   empEmployment added (11 total implemented)
 const IMPLEMENTED_MAPPERS = new Set([
   'user', 'perPerson', 'perPersonal', 'perNationalId', 'perEmail', 'perPhone',
   'perEmergencyContacts', 'perAddressDEFLT', 'empJob', 'empJobRelationships',
+  'empEmployment',
 ])
 
 describe('sfMapper scaffold smoke', () => {
@@ -74,7 +77,7 @@ describe('sfMapper scaffold smoke', () => {
     expect(Object.keys(result)).toHaveLength(17)
   })
 
-  it('PENDING mappers (7) return verb=PENDING and null payload', () => {
+  it('PENDING mappers (6) return verb=PENDING and null payload', () => {
     const result = buildAll(minimalFormData)
     for (const key of Object.keys(result)) {
       if (!IMPLEMENTED_MAPPERS.has(key)) {
@@ -84,7 +87,7 @@ describe('sfMapper scaffold smoke', () => {
     }
   })
 
-  it('implemented mappers (10) return non-null payloads with correct verbs', () => {
+  it('implemented mappers (11) return non-null payloads with correct verbs', () => {
     const result = buildAll(minimalFormData)
 
     // User: CREATE
@@ -114,6 +117,10 @@ describe('sfMapper scaffold smoke', () => {
     // empJobRelationships: Phase 5b-1 — UPSERT multi-record (empty array valid when no relationships)
     expect(result.empJobRelationships.verb).toBe('UPSERT')
     expect(Array.isArray(result.empJobRelationships.payload)).toBe(true)
+
+    // empEmployment: Phase 4 — UPSERT single-record (5 mandatory hire fields)
+    expect(result.empEmployment.verb).toBe('UPSERT')
+    expect(result.empEmployment.payload).not.toBeNull()
   })
 
   it('all mappers declare entity string and CREATE or UPSERT verb', () => {
