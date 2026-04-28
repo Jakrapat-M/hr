@@ -77,8 +77,10 @@ const minimalFormData: FormData = {
     lastNameEnReview: '', middleNameEnReview: '', attachmentName: null,
   },
   contact: {
-    phones: [{ type: 'mobile', value: '', isPrimary: true }],
-    emails: [{ type: 'personal', value: '', isPrimary: true }],
+    // Non-empty values so PerEmail/PerPhone mappers emit at least one record
+    // (empty-value entries are filtered out by the mapper edge-case rule)
+    phones: [{ type: 'mobile', value: '0800000000', isPrimary: true }],
+    emails: [{ type: 'personal', value: 'test@example.com', isPrimary: true }],
     jobRelationships: [],
   },
   name: { firstNameTh: '', lastNameTh: '', firstNameEn: '', lastNameEn: '' },

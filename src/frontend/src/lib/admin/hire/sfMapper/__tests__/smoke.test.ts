@@ -1,5 +1,6 @@
-// Phase 1.1 scaffold smoke test — verifies buildAll runs without throwing
-// and returns 17 PENDING keys. Superseded by Phase 1.2 parity test framework.
+// Phase 1.3 smoke test — verifies buildAll runs without throwing.
+// After Phase 1.3, 6 mappers return real CREATE/UPSERT payloads;
+// the remaining 11 are still PENDING stubs.
 import { describe, it, expect } from 'vitest'
 import { buildAll, mappers } from '../index'
 import type { FormData } from '../../../store/useHireWizard'
@@ -48,14 +49,44 @@ const minimalFormData: FormData = {
   compensation: { baseSalary: null },
 }
 
+// Phase 1.3: these 6 mappers now return real verb+payload
+const IMPLEMENTED_MAPPERS = new Set([
+  'user', 'perPerson', 'perPersonal', 'perNationalId', 'perEmail', 'perPhone',
+])
+
 describe('sfMapper scaffold smoke', () => {
-  it('buildAll returns 17 keys all PENDING with null payloads', () => {
+  it('buildAll returns 17 keys', () => {
     const result = buildAll(minimalFormData)
-    const keys = Object.keys(result)
-    expect(keys).toHaveLength(17)
-    for (const key of keys) {
-      expect(result[key as keyof typeof result].verb).toBe('PENDING')
-      expect(result[key as keyof typeof result].payload).toBeNull()
+    expect(Object.keys(result)).toHaveLength(17)
+  })
+
+  it('PENDING mappers (11) return verb=PENDING and null payload', () => {
+    const result = buildAll(minimalFormData)
+    for (const key of Object.keys(result)) {
+      if (!IMPLEMENTED_MAPPERS.has(key)) {
+        expect(result[key as keyof typeof result].verb).toBe('PENDING')
+        expect(result[key as keyof typeof result].payload).toBeNull()
+      }
+    }
+  })
+
+  it('implemented mappers (6) return non-null payloads with correct verbs', () => {
+    const result = buildAll(minimalFormData)
+
+    // User: CREATE
+    expect(result.user.verb).toBe('CREATE')
+    expect(result.user.payload).not.toBeNull()
+
+    // UPSERT single-record mappers
+    for (const key of ['perPerson', 'perPersonal', 'perNationalId'] as const) {
+      expect(result[key].verb).toBe('UPSERT')
+      expect(result[key].payload).not.toBeNull()
+    }
+
+    // UPSERT multi-record mappers — empty arrays are valid (no non-empty entries in minimal data)
+    for (const key of ['perEmail', 'perPhone'] as const) {
+      expect(result[key].verb).toBe('UPSERT')
+      expect(Array.isArray(result[key].payload)).toBe(true)
     }
   })
 
