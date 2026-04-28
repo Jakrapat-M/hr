@@ -350,7 +350,9 @@ export const stepNameSchema = z.object({
 })
 
 export const stepEmployeeInfoSchema = z.object({
-  employeeClass: z.enum(EMPLOYEE_CLASSES, { required_error: 'กรุณาเลือก Employee Class' }),
+  // Phase 6: employeeClass UI removed — rely on employeeGroup+employeeSubGroup only.
+  // Keep optional in schema for migration compat; mapper already drops it.
+  employeeClass: z.enum(EMPLOYEE_CLASSES).optional(),
   originalStartDate: z.string().min(1, 'กรุณาระบุวันเริ่มงานครั้งแรก'),
   seniorityStartDate: z.string().min(1, 'กรุณาระบุวันนับอายุงาน'),
   // Phase 4: SSN — User.ssn (sap_label="National ID", sap_creatable=true).

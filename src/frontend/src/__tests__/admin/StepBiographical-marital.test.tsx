@@ -99,16 +99,15 @@ describe('StepBiographical — MARITAL picklist renders', () => {
     expect((option as HTMLOptionElement).value).toBe('DIVORCED')
   })
 
-  // AC-3: WIDOWED option rendered with Thai label "คู่สมรสเสียชีวิต"
-  it('AC-3: renders WIDOWED option with Thai label "คู่สมรสเสียชีวิต"', () => {
+  // AC-3: WIDOWED removed per Phase 6 (Q7 decision — not in SF ecMaritalStatus)
+  it('AC-3: WIDOWED option is NOT rendered (dropped per Q7 SF parity decision)', () => {
     render(<StepBiographical />)
-    const option = screen.getByRole('option', { name: 'คู่สมรสเสียชีวิต' })
-    expect(option).toBeInTheDocument()
-    expect((option as HTMLOptionElement).value).toBe('WIDOWED')
+    const option = screen.queryByRole('option', { name: 'คู่สมรสเสียชีวิต' })
+    expect(option).toBeNull()
   })
 
-  // AC-3: At least 4 required options are rendered (SINGLE/MARRIED/DIVORCED/WIDOWED)
-  it('AC-3: renders at minimum 4 picklist options (excluding placeholder)', () => {
+  // AC-3: At least 3 required options are rendered (SINGLE/MARRIED/DIVORCED — WIDOWED/SEPARATED dropped)
+  it('AC-3: renders at minimum 3 picklist options (excluding placeholder)', () => {
     render(<StepBiographical />)
     const select = screen.getByRole('combobox', { name: /สถานภาพสมรส|Marital Status/i })
     // All <option> children minus the placeholder "— เลือกสถานภาพ —"
@@ -215,18 +214,22 @@ describe('StepBiographical — store update on marital status change', () => {
 
 describe('StepBiographical — active items filter', () => {
   // AC-3: All rendered options correspond to active PICKLIST_MARITAL_STATUS items
-  it('AC-3: rendered options only include active picklist items', () => {
+  it('AC-3: rendered options only include SF-mapped active picklist items', () => {
     render(<StepBiographical />)
     const select = screen.getByRole('combobox', { name: /สถานภาพสมรส|Marital Status/i })
     const options = Array.from(select.querySelectorAll('option')).filter(
       (o) => (o as HTMLOptionElement).value !== ''
     )
-    // All active MARITAL_STATUS items from picklist: SINGLE, MARRIED, DIVORCED, WIDOWED, SEPARATED
-    // The component filters by item.active — all 5 are active in Phase 0 F2
-    expect(options.length).toBeGreaterThanOrEqual(4)
+    // SF-aligned MARITAL_STATUS items: SINGLE, MARRIED, DIVORCED, N, E (Engaged)
+    // WIDOWED/SEPARATED dropped per Q7 decision — active=false in source + filtered here
+    expect(options.length).toBeGreaterThanOrEqual(3)
     // No option should have a blank id (placeholder has value="")
     for (const opt of options) {
       expect((opt as HTMLOptionElement).value).not.toBe('')
     }
+    // Confirm WIDOWED and SEPARATED are absent
+    const values = options.map((o) => (o as HTMLOptionElement).value)
+    expect(values).not.toContain('WIDOWED')
+    expect(values).not.toContain('SEPARATED')
   })
 })

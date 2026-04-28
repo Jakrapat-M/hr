@@ -10483,14 +10483,14 @@ export const PICKLIST_MARITAL_STATUS: readonly PicklistItem[] = [
     "labelTh": "คู่สมรสเสียชีวิต",
     "labelEn": "Widowed",
     "sortOrder": 4,
-    "active": true
+    "active": false
   },
   {
     "id": "SEPARATED",
     "labelTh": "แยกกันอยู่",
     "labelEn": "Separated",
     "sortOrder": 5,
-    "active": true
+    "active": false
   },
   {
     "id": "N",
@@ -11372,7 +11372,8 @@ export type GenderId = "M" | "F" | "X"
 export type JobFunctionId = "99999999" | "BDA" | "BDB" | "CSA" | "CSB" | "EAC" | "EMA" | "FAA" | "FAB" | "FAD" | "FBA" | "FBB" | "FBC" | "FBD" | "GAA" | "GAB" | "GAC" | "GAD" | "HRA" | "HRB" | "HTA" | "HTB" | "HTC" | "HTD" | "HTE" | "HTF" | "IAA" | "IAB" | "IAC" | "LCB" | "MKA" | "MKB" | "MKC" | "MKD" | "MKE" | "MKH" | "MKI" | "PRA" | "PRB" | "PSA" | "PSB" | "PSC" | "PSD" | "PSE" | "PSF" | "PSG" | "PTA" | "PTB" | "PTC" | "QAA" | "QAB" | "RKA" | "SLA" | "SLB" | "SLC" | "SLE" | "SPA" | "SPC" | "STA" | "STB" | "STC" | "STD" | "STE" | "BDC" | "BMD" | "CSC" | "FAE" | "FAF" | "FAG" | "FAH" | "GAE" | "HRF" | "HRG" | "HRH" | "ITE" | "ITF" | "ITG" | "ITH" | "ITI" | "LCC" | "LCD" | "LCE" | "LDH" | "LDI" | "MKJ" | "MKK" | "PDA" | "PDB" | "PMA" | "PMB" | "PMC" | "QAC" | "SDA" | "SDB" | "SLF" | "SLG" | "SSA" | "SSB" | "BIA" | "BIB" | "BIC" | "BMA" | "BMB" | "BMC" | "EAA" | "EAB" | "EAD" | "EAE" | "EAF" | "FAC" | "HRC" | "HRD" | "HRE" | "ITA" | "ITB" | "ITC" | "ITD" | "LCA" | "LDA" | "LDB" | "LDC" | "LDD" | "LDE" | "LDF" | "LDG" | "LPA" | "LPB" | "LPC" | "MKF" | "MKG" | "SLD" | "SPB"
 export type JobTypeId = "A04" | "A05" | "A01" | "A02" | "A03"
 export type ManagementProgramId = "MA" | "OT" | "MT"
-export type MaritalStatusId = "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED" | "SEPARATED" | "N"
+// Q7: WIDOWED/SEPARATED dropped — no SF ecMaritalStatus counterpart for THA scope
+export type MaritalStatusId = "SINGLE" | "MARRIED" | "DIVORCED" | "N"
 export type NationalityId = "TH" | "MM" | "KH" | "LA" | "VN" | "PH" | "ID" | "MY" | "SG" | "IN" | "CN" | "JP" | "KR" | "US" | "GB" | "AU" | "DE" | "FR" | "NL" | "OTHER"
 export type PayComponentId = "BE01" | "VN_1004" | "VN_1000" | "TH_1004" | "TH_1003" | "TH_1002" | "TH_1001" | "TH_1000"
 export type PayComponentGroupId = "BE01" | "TH_1004" | "TH_1000" | "TH_1001" | "TH_1002" | "TH_1003" | "VN_1000" | "AnnualizedSalary" | "VN_1004"

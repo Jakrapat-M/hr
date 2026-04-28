@@ -12,8 +12,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
-import { stepEmployeeInfoSchema, EMPLOYEE_CLASSES } from '@/lib/admin/validation/hireSchema'
-import { PICKLIST_EMPLOYEE_CLASS } from '@hrms/shared/picklists'
+import { stepEmployeeInfoSchema } from '@/lib/admin/validation/hireSchema'
 
 // SF EmpJob.employeeGroup — standard SAP codes (QAS values null; using standard EG codes)
 // SF source: EmpJob entity schema — employeeGroup field
@@ -123,30 +122,8 @@ export default function StepEmployeeInfo({ onValidChange }: StepEmployeeInfoProp
 
   return (
     <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-      <fieldset>
-        <label htmlFor="employee-class" className="humi-label">
-          {t('employeeClass')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-        </label>
-        <select
-          id="employee-class"
-          required
-          aria-required="true"
-          aria-invalid={touched && !!error}
-          aria-describedby={touched && error ? 'eclass-error' : undefined}
-          value={employeeClass}
-          onChange={(e) => setEmployeeClass(e.target.value)}
-          onBlur={() => setTouched(true)}
-          className="humi-select w-full"
-        >
-          <option value="">{t('selectEmployeeClass')}</option>
-          {PICKLIST_EMPLOYEE_CLASS.filter((item) => item.active).map((item) => (
-            <option key={item.id} value={item.id}>{item.labelTh}</option>
-          ))}
-        </select>
-        {touched && error && (
-          <p id="eclass-error" role="alert" className="mt-1 text-xs text-warning">{error}</p>
-        )}
-      </fieldset>
+      {/* employeeClass UI input removed per Phase 6 — rely on employeeGroup + employeeSubGroup.
+          State + store write kept for migration compat. Mapper already drops employeeClass. */}
 
       {/* กลุ่มพนักงาน — BRD #23 — SF EmpJob.employeeGroup (required for payroll classification) */}
       {/* SF source: jq '.d.results[0].employeeGroup' sf-qas-EmpJob-2026-04-26.json */}

@@ -77,24 +77,22 @@ beforeEach(() => {
 
 // ─── AC-5 R3: VN Issue Place conditional render ───────────────────────────────
 
-describe('AC-5 R3 VN Issue Place — conditional render ตาม nationality/country', () => {
-  it('Case 1: nationality="VN" → สถานที่ออกบัตร input ต้องแสดง', () => {
-    // seed biographical.nationality = 'VN' ใน store ก่อน render
-    // StepIdentity อ่าน nationality จาก formData.biographical?.nationality
+// Phase 6: vnIssuePlace UI input removed (VN scope deferred).
+// All cases now assert the field is NOT rendered regardless of nationality/country.
+describe('AC-5 R3 VN Issue Place — removed per Phase 6 (VN scope deferred)', () => {
+  it('Case 1: nationality="VN" → สถานที่ออกบัตร input ต้องไม่แสดง (removed)', () => {
     act(() => {
       useHireWizard.getState().setStepData('biographical', { nationality: 'VN' })
     })
 
     render(<StepIdentity />)
 
-    // label คือ "สถานที่ออกบัตร" (StepIdentity.tsx line 468)
-    const field = screen.getByLabelText(/สถานที่ออกบัตร/)
-    expect(field).toBeInTheDocument()
+    // UI input removed — field must not be in the DOM
+    const field = screen.queryByLabelText(/สถานที่ออกบัตร/)
+    expect(field).toBeNull()
   })
 
   it('Case 2: nationality="TH" → สถานที่ออกบัตร input ต้องไม่แสดง', () => {
-    // default country ใน identity store = '' (ไม่ใช่ VN)
-    // biographical.nationality = 'TH' → ทั้งสองเงื่อนไขไม่ match → ซ่อน field
     act(() => {
       useHireWizard.getState().setStepData('biographical', { nationality: 'TH' })
     })
@@ -105,9 +103,7 @@ describe('AC-5 R3 VN Issue Place — conditional render ตาม nationality/co
     expect(field).toBeNull()
   })
 
-  it('Case 3 (bonus): country="VN" + nationality="TH" → OR condition → field แสดง', () => {
-    // country ใน identity slice = 'VN' → condition ซ้ายเป็น true → field แสดง
-    // แม้ nationality ไม่ใช่ VN (OR logic ที่ StepIdentity.tsx line 465)
+  it('Case 3: country="VN" + nationality="TH" → สถานที่ออกบัตร input ต้องไม่แสดง (removed)', () => {
     act(() => {
       useHireWizard.getState().setStepData('identity', { country: 'VN' })
       useHireWizard.getState().setStepData('biographical', { nationality: 'TH' })
@@ -115,7 +111,8 @@ describe('AC-5 R3 VN Issue Place — conditional render ตาม nationality/co
 
     render(<StepIdentity />)
 
-    const field = screen.getByLabelText(/สถานที่ออกบัตร/)
-    expect(field).toBeInTheDocument()
+    // UI input removed — OR condition no longer triggers render
+    const field = screen.queryByLabelText(/สถานที่ออกบัตร/)
+    expect(field).toBeNull()
   })
 })

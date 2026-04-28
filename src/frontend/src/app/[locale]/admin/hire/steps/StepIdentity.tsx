@@ -485,19 +485,8 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
         {errMsg('isPrimary')}
       </fieldset>
 
-      {/* ─── BA row 19 — [VN] Issue Place — optional (Vietnam only) ─── */}
-      {(country === 'VN' || nationality === 'VN') && (
-        <fieldset>
-          <label htmlFor="vn-issue-place" className="humi-label">
-            {t('vnIssuePlace')}
-            <span className="ml-1 text-xs text-ink-muted">({t('vnIssuePlaceHint')})</span>
-          </label>
-          <input id="vn-issue-place" type="text" placeholder={t('vnIssuePlacePlaceholder')}
-            value={vnIssuePlace}
-            onChange={(e) => setVnIssuePlace(e.target.value)}
-            className="humi-input w-full" />
-        </fieldset>
-      )}
+      {/* BA row 19 — [VN] Issue Place: UI input removed per Phase 6 (VN scope deferred).
+          vnIssuePlace state + store write kept for migration compat. */}
 
       <p className="text-xs text-ink-soft">
         <span className="humi-asterisk">*</span> {t('requiredHint')}

@@ -15,7 +15,6 @@ import {
   PICKLIST_NATIONALITY,
   PICKLIST_BLOOD_TYPE,
   PICKLIST_MARITAL_STATUS,
-  PICKLIST_YES_NO,
   PICKLIST_RELIGION,
 } from '@hrms/shared/picklists'
 
@@ -24,15 +23,19 @@ import {
 // PICKLIST_GENDER uses Humi IDs 'M'/'F'/'X'; filter to M/F only (drop X — no SF counterpart)
 const SF_GENDER_OPTIONS = PICKLIST_GENDER.filter((g) => g.id === 'M' || g.id === 'F')
 
-// SF-aligned marital status — add 'E' (Engaged) which was missing; keep legacy options for compat
+// SF-aligned marital status — keep only SF-mapped codes: SINGLE/MARRIED/DIVORCED/N
+// Q7 decision: WIDOWED/SEPARATED dropped (no SF ecMaritalStatus counterpart)
+// Add 'E' (Engaged) which was missing from source picklist
 // SF cite: qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.ecMaritalStatus
-// SF codes: M/E/D/S/N — Humi legacy: SINGLE/MARRIED/DIVORCED/WIDOWED/SEPARATED/N
+// SF codes: M/E/D/S/N
+const SF_MARITAL_IDS = new Set(['SINGLE', 'MARRIED', 'DIVORCED', 'N', 'E'])
 const ENGAGED_OPTION = { id: 'E', labelTh: 'คู่หมั้น (Engaged)', labelEn: 'Engaged', sortOrder: 1.5, active: true }
 const MARITAL_OPTIONS = (() => {
-  const base = [...PICKLIST_MARITAL_STATUS]
+  // Drop WIDOWED/SEPARATED (inactive in source + not in SF)
+  const base = [...PICKLIST_MARITAL_STATUS].filter((m) => SF_MARITAL_IDS.has(m.id))
   const hasEngaged = base.some((m) => m.id === 'E')
   if (!hasEngaged) {
-    // Insert after MARRIED (index 1)
+    // Insert after MARRIED
     const marriedIdx = base.findIndex((m) => m.id === 'MARRIED')
     base.splice(marriedIdx >= 0 ? marriedIdx + 1 : 1, 0, ENGAGED_OPTION)
   }
@@ -314,21 +317,9 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
         {errMsg('nationality')}
       </fieldset>
 
-      {/* ─── BA Personal Info row 14 — Foreigner — auto-derived from nationality (SF rule XX-XXX-EIM-OI-SetFlagForeigner) ─── */}
-      <fieldset>
-        <label htmlFor="foreigner" className="humi-label">
-          {t('foreigner')}
-          <span className="ml-1 text-xs text-ink-muted">{t('foreignerAuto')}</span>
-        </label>
-        <select id="foreigner" disabled
-          value={foreigner}
-          className="humi-select w-full opacity-60 cursor-not-allowed">
-          <option value="">{t('selectForeigner')}</option>
-          {PICKLIST_YES_NO.filter((y) => y.active).map((y) => (
-            <option key={y.id} value={y.id}>{y.labelTh}</option>
-          ))}
-        </select>
-      </fieldset>
+      {/* foreigner: auto-derived from nationality (SF rule XX-XXX-EIM-OI-SetFlagForeigner)
+          UI input removed per Phase 6 — field is computed-only, not user-editable.
+          State + store write kept for migration compat. */}
 
       {/* ─── BA Personal Info row 15 — Blood Type — optional (not in SF schema; Thai-locale custom) ─── */}
       <fieldset>
