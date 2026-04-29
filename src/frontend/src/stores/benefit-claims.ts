@@ -7,8 +7,15 @@ export type BenefitClaimType = 'medical' | 'gasoline' | 'mobile' | 'physical_che
 
 export interface BenefitAttachment {
   id: string;
-  filename: string;
-  sizeMb: number;
+  /** Canonical display name used by the benefit module. */
+  filename?: string;
+  /** Compatibility with earlier benefit-surface tests and fixture shape. */
+  name?: string;
+  extension?: string;
+  /** Canonical size in MB. */
+  sizeMb?: number;
+  /** Compatibility with byte-sized mock upload fixtures. */
+  size?: number;
   mimeType?: string;
 }
 
@@ -38,10 +45,13 @@ export interface BenefitClaimRequest {
   receiptDate: string;
   receiptAmount: number;
   totalClaimAmount: number;
+  /** Compatibility alias from earlier claim-form drafts. */
+  claimAmount?: number;
   status: BenefitClaimStatus;
   submittedAt: string;
   updatedAt: string;
   hospitalType?: string;
+  opdIpd?: string;
   hospitalName?: string;
   patientTransferDocumentNo?: string;
   diseaseDetails?: string;
@@ -62,15 +72,20 @@ export interface BenefitClaimInput {
   businessUnit?: string;
   employeeGroup?: string;
   personalGrade?: string;
-  benefitType: BenefitClaimType;
+  benefitType?: BenefitClaimType;
+  /** Compatibility alias from the first surface-test pass. */
+  claimType?: BenefitClaimType;
   benefitCode?: string;
   benefitName?: string;
   remainingAmount?: number;
   receiptNo: string;
   receiptDate: string;
   receiptAmount: number;
-  totalClaimAmount: number;
+  totalClaimAmount?: number;
+  /** Compatibility alias from earlier claim-form drafts. */
+  claimAmount?: number;
   hospitalType?: string;
+  opdIpd?: string;
   hospitalName?: string;
   patientTransferDocumentNo?: string;
   diseaseDetails?: string;
@@ -79,6 +94,9 @@ export interface BenefitClaimInput {
   dependentRelationship?: string;
   attachments?: BenefitAttachment[];
 }
+
+export type BenefitClaimDraftInput = BenefitClaimInput;
+export type BenefitClaimSubmitInput = BenefitClaimInput;
 
 interface Actor {
   role: 'employee' | 'spd';
@@ -93,6 +111,7 @@ interface BenefitClaimsState {
   sendBackClaim: (id: string, actor: Actor, reason: string) => void;
   resubmitClaim: (id: string, input: Partial<BenefitClaimInput>, actor?: Actor) => void;
   hasDuplicateReceipt: (employeeId: string, benefitCode: string, receiptNo: string, excludingId?: string) => boolean;
+  clear: () => void;
 }
 
 export const BENEFIT_STATUS_LABEL: Record<BenefitClaimStatus, string> = {
@@ -138,17 +157,19 @@ function stepStatus(status: BenefitClaimStatus): HumiApprovalStep['status'] {
   return 'pending';
 }
 
-export function validateBenefitAttachmentRules(input: Pick<BenefitClaimInput, 'benefitType' | 'attachments'>) {
+export function validateBenefitAttachmentRules(input: Pick<BenefitClaimInput, 'benefitType' | 'claimType' | 'attachments'>) {
   const attachments = input.attachments ?? [];
   const errors: string[] = [];
   const allowed = ['.pdf', '.jpg', '.jpeg', '.png', '.pptx', '.xlsx'];
   if (attachments.length > 5) errors.push('แนบไฟล์ได้สูงสุด 5 ไฟล์');
   attachments.forEach((file) => {
-    const lower = file.filename.toLowerCase();
-    if (!allowed.some((ext) => lower.endsWith(ext))) errors.push(`ชนิดไฟล์ไม่รองรับ: ${file.filename}`);
-    if (file.sizeMb > 10) errors.push(`ไฟล์เกิน 10 MB: ${file.filename}`);
+    const filename = file.filename ?? file.name ?? '';
+    const lower = filename.toLowerCase();
+    const sizeMb = file.sizeMb ?? (file.size ? file.size / 1_000_000 : 0);
+    if (!allowed.some((ext) => lower.endsWith(ext))) errors.push(`ชนิดไฟล์ไม่รองรับ: ${filename || 'unknown file'}`);
+    if (sizeMb > 10) errors.push(`ไฟล์เกิน 10 MB: ${filename || 'unknown file'}`);
   });
-  if (input.benefitType === 'medical' && attachments.length === 0) {
+  if ((input.benefitType ?? input.claimType) === 'medical' && attachments.length === 0) {
     errors.push('ค่ารักษาพยาบาลต้องแนบเอกสารอย่างน้อย 1 ไฟล์');
   }
   return errors;
@@ -173,6 +194,15 @@ export function selectBenefitRequestSummaries(claims: BenefitClaimRequest[]) {
       },
     ] satisfies HumiApprovalStep[],
     claim,
+  }));
+}
+
+function normalizeAttachments(attachments: BenefitAttachment[] = []): BenefitAttachment[] {
+  return attachments.map((file, index) => ({
+    ...file,
+    id: file.id || `att-${index + 1}`,
+    filename: file.filename ?? file.name ?? 'attachment',
+    sizeMb: file.sizeMb ?? (file.size ? file.size / 1_000_000 : 0),
   }));
 }
 
@@ -216,8 +246,9 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
       submitClaim: (input) => {
         const at = nowIso();
         const count = get().claims.length;
-        const benefitType = input.benefitType;
+        const benefitType = input.benefitType ?? input.claimType ?? 'medical';
         const benefitCode = input.benefitCode ?? BENEFIT_CODE_BY_TYPE[benefitType];
+        const totalClaimAmount = input.totalClaimAmount ?? input.claimAmount ?? input.receiptAmount;
         const claim: BenefitClaimRequest = {
           id: nextId('BEN-CLM', 4, count),
           workflowRequestId: nextId('REQ-BEN', 4, count),
@@ -235,18 +266,19 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
           receiptNo: input.receiptNo,
           receiptDate: input.receiptDate,
           receiptAmount: input.receiptAmount,
-          totalClaimAmount: input.totalClaimAmount,
+          totalClaimAmount,
+          claimAmount: totalClaimAmount,
           status: 'pending_spd',
           submittedAt: at,
           updatedAt: at,
-          hospitalType: input.hospitalType,
+          hospitalType: input.hospitalType ?? input.opdIpd,
           hospitalName: input.hospitalName,
           patientTransferDocumentNo: input.patientTransferDocumentNo,
           diseaseDetails: input.diseaseDetails,
           gasolineClaimType: input.gasolineClaimType,
           dependentName: input.dependentName,
           dependentRelationship: input.dependentRelationship,
-          attachments: input.attachments ?? [],
+          attachments: normalizeAttachments(input.attachments),
           audit: [{ at, actorRole: 'employee', actorName: input.employeeName ?? 'จงรักษ์ ทานากะ', action: 'submit', note: 'ส่งคำขอเบิกสวัสดิการ' }],
           version: 1,
           previousVersions: [],
@@ -275,6 +307,7 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
       })),
       hasDuplicateReceipt: (employeeId, benefitCode, receiptNo, excludingId) =>
         get().claims.some((claim) => claim.id !== excludingId && claim.employeeId === employeeId && claim.benefitCode === benefitCode && claim.receiptNo.trim().toLowerCase() === receiptNo.trim().toLowerCase()),
+      clear: () => set({ claims: [] }),
     }),
     { name: 'humi-benefit-claims' },
   ),
