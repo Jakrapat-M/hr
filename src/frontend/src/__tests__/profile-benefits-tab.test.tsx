@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const navigationMocks = vi.hoisted(() => ({
   searchParams: new URLSearchParams('tab=benefits'),
@@ -99,5 +99,24 @@ describe('/profile/me benefits tab', () => {
     expect(screen.getByRole('tab', { name: 'สวัสดิการ' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('heading', { name: 'สวัสดิการของฉัน' })).toBeInTheDocument();
     expect(screen.queryByText('SF: EmpJob.employeeGroup')).not.toBeInTheDocument();
+  });
+
+  it('renders the benefit claim attachment control with Humi upload tokens', async () => {
+    const { default: Page } = await import('@/app/[locale]/profile/me/page');
+    const { useHumiProfileStore } = await import('@/stores/humi-profile-slice');
+
+    render(<Page />);
+
+    await waitFor(() => {
+      expect(useHumiProfileStore.getState().activeTab).toBe('benefits');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'เบิกสวัสดิการ' }));
+
+    const attachmentField = await screen.findByTestId('benefit-attachment-field');
+    expect(attachmentField).toHaveClass('humi-dropzone');
+    expect(attachmentField).toHaveClass('focus-within:ring-accent-soft');
+    expect(screen.getByText('receipt.pdf')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('receipt.pdf')).not.toBeInTheDocument();
   });
 });

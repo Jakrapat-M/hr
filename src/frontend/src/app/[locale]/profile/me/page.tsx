@@ -256,6 +256,91 @@ function BenefitInput({ label, value, onChange, type = 'text' }: { label: string
   );
 }
 
+function formatBenefitAttachmentSize(file: File) {
+  const sizeMb = file.size / (1024 * 1024);
+  if (sizeMb > 0 && sizeMb < 0.1) return '0.1';
+  return sizeMb.toFixed(1).replace(/\.0$/, '');
+}
+
+function BenefitAttachmentField({
+  label,
+  filename,
+  sizeMb,
+  onFileSelected,
+  onClear,
+}: {
+  label: string;
+  filename: string;
+  sizeMb: string;
+  onFileSelected: (file: File) => void;
+  onClear: () => void;
+}) {
+  const id = `benefit-${label.replace(/\s+/g, '-')}`;
+  const labelId = `${id}-label`;
+  const helperId = `${id}-helper`;
+  const hasFile = filename.trim().length > 0;
+
+  return (
+    <div className="flex flex-col gap-1.5 text-small font-medium text-ink-soft sm:col-span-2">
+      <span id={labelId}>{label}</span>
+      <div
+        data-testid="benefit-attachment-field"
+        className="humi-dropzone flex flex-col items-start gap-3 text-left transition-colors focus-within:border-accent focus-within:ring-4 focus-within:ring-accent-soft"
+      >
+        <input
+          id={id}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,.pptx,.xlsx"
+          aria-labelledby={labelId}
+          aria-describedby={helperId}
+          className="sr-only"
+          onChange={(event) => {
+            const file = event.currentTarget.files?.[0];
+            if (!file) return;
+            onFileSelected(file);
+            event.currentTarget.value = '';
+          }}
+        />
+        {hasFile ? (
+          <div className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-hairline bg-surface px-3 py-2 text-ink">
+            <span className="flex min-w-0 items-center gap-2">
+              <FileText className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{filename}</span>
+                <span className="block text-xs font-normal text-ink-muted">{sizeMb ? `${sizeMb} MB` : 'พร้อมส่งคำขอ'}</span>
+              </span>
+            </span>
+            <button
+              type="button"
+              aria-label="ลบไฟล์แนบ"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-ink-muted transition-colors hover:bg-canvas-soft hover:text-ink focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent-soft"
+              onClick={onClear}
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex w-full items-center gap-3 rounded-[var(--radius-sm)] border border-dashed border-hairline bg-surface px-3 py-3 text-ink-muted">
+            <FileText className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+            <span className="font-normal">ยังไม่ได้เลือกไฟล์</span>
+          </div>
+        )}
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <span id={helperId} className="text-xs font-normal text-ink-muted">
+            รองรับ .pdf .jpg .jpeg .png .pptx .xlsx
+          </span>
+          <label
+            htmlFor={id}
+            className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[var(--radius-sm)] border border-hairline bg-surface px-3 text-small font-medium text-ink transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent-soft"
+          >
+            เลือกไฟล์
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BenefitSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: Array<[string, string]> }) {
   const id = `benefit-${label.replace(/\s+/g, '-')}`;
   return (
@@ -1764,7 +1849,19 @@ export default function HumiProfileMePage() {
                     </div>
                   )}
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <BenefitInput label="ไฟล์แนบ (.pdf .jpg .jpeg .png .pptx .xlsx)" value={benefitForm.attachmentName} onChange={(value) => updateBenefitField('attachmentName', value)} />
+                    <BenefitAttachmentField
+                      label="ไฟล์แนบ"
+                      filename={benefitForm.attachmentName}
+                      sizeMb={benefitForm.attachmentSizeMb}
+                      onFileSelected={(file) => {
+                        updateBenefitField('attachmentName', file.name);
+                        updateBenefitField('attachmentSizeMb', formatBenefitAttachmentSize(file));
+                      }}
+                      onClear={() => {
+                        updateBenefitField('attachmentName', '');
+                        updateBenefitField('attachmentSizeMb', '');
+                      }}
+                    />
                     <BenefitInput label="ขนาดไฟล์ (MB, สูงสุด 10)" value={benefitForm.attachmentSizeMb} onChange={(value) => updateBenefitField('attachmentSizeMb', value)} />
                   </div>
                   {benefitErrors.length > 0 && <div role="alert" className="rounded-md bg-canvas-soft p-3 text-small text-ink"><ul className="list-disc pl-5">{benefitErrors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
