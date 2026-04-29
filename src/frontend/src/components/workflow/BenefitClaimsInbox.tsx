@@ -26,6 +26,7 @@ export function BenefitClaimsInbox() {
     <div className="pb-8" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
         <h1 className="font-display text-[22px] font-semibold text-ink">Benefit Reimbursement — SPD</h1>
+        <p className="text-small text-ink-muted mt-1">สวัสดิการรอ SPD ตรวจสอบ</p>
         <p className="text-small text-ink-muted mt-1">ตรวจคำขอเบิกสวัสดิการจาก Employee Self Service พร้อม approve / reject / send back</p>
       </div>
 
@@ -82,19 +83,7 @@ export function BenefitClaimsInbox() {
 }
 
 function BenefitClaimCard({ claim, onApprove, onReject, onSendBack }: { claim: BenefitClaimRequest; onApprove: (note?: string) => void; onReject: (reason: string) => void; onSendBack: (reason: string) => void }) {
-  const [mode, setMode] = useState<'none' | 'approve' | 'reject' | 'send_back'>('none');
   const [comment, setComment] = useState('');
-
-  function submitAction() {
-    const trimmed = comment.trim();
-    if (mode === 'approve') onApprove(trimmed || undefined);
-    if (mode === 'reject' && trimmed) onReject(trimmed);
-    if (mode === 'send_back' && trimmed) onSendBack(trimmed);
-    if (mode !== 'none' && (mode === 'approve' || trimmed)) {
-      setMode('none');
-      setComment('');
-    }
-  }
 
   return (
     <div className="humi-card" style={{ padding: 18 }}>
@@ -126,22 +115,15 @@ function BenefitClaimCard({ claim, onApprove, onReject, onSendBack }: { claim: B
         ))}
       </div>
 
-      {mode === 'none' ? (
-        <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
-          <Button variant="ghost" size="sm" onClick={() => { setMode('send_back'); setComment(''); }}><RotateCcw size={14} aria-hidden />ส่งกลับแก้ไข</Button>
-          <Button variant="ghost" size="sm" onClick={() => { setMode('reject'); setComment(''); }}><X size={14} aria-hidden />ปฏิเสธ</Button>
-          <Button variant="primary" size="sm" onClick={() => { setMode('approve'); setComment(''); }}><Check size={14} aria-hidden />อนุมัติ</Button>
+      <div style={{ marginTop: 14, borderTop: '1px solid var(--color-hairline-soft)', paddingTop: 14 }}>
+        <label className="humi-label" htmlFor={`${claim.id}-benefit-comment`}>เหตุผล (จำเป็นเมื่อปฏิเสธหรือส่งกลับ)</label>
+        <textarea id={`${claim.id}-benefit-comment`} value={comment} onChange={(e) => setComment(e.target.value)} rows={3} className="humi-input" style={{ width: '100%', minHeight: 80 }} />
+        <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+          <Button variant="ghost" size="sm" onClick={() => { onSendBack(comment.trim()); setComment(''); }} disabled={!comment.trim()}><RotateCcw size={14} aria-hidden />ส่งกลับแก้ไข</Button>
+          <Button variant="ghost" size="sm" onClick={() => { onReject(comment.trim()); setComment(''); }} disabled={!comment.trim()}><X size={14} aria-hidden />ปฏิเสธ</Button>
+          <Button variant="primary" size="sm" onClick={() => { onApprove(comment.trim() || undefined); setComment(''); }}><Check size={14} aria-hidden />อนุมัติ</Button>
         </div>
-      ) : (
-        <div style={{ marginTop: 14, borderTop: '1px solid var(--color-hairline-soft)', paddingTop: 14 }}>
-          <label className="humi-label" htmlFor={`${claim.id}-benefit-comment`}>{mode === 'approve' ? 'หมายเหตุ (ไม่บังคับ)' : 'เหตุผล *'}</label>
-          <textarea id={`${claim.id}-benefit-comment`} value={comment} onChange={(e) => setComment(e.target.value)} rows={3} className="humi-input" style={{ width: '100%', minHeight: 80 }} />
-          <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-            <Button variant="ghost" size="sm" onClick={() => { setMode('none'); setComment(''); }}>ยกเลิก</Button>
-            <Button variant={mode === 'approve' ? 'primary' : 'secondary'} size="sm" onClick={submitAction} disabled={mode !== 'approve' && !comment.trim()}>ยืนยัน</Button>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

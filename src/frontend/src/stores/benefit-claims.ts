@@ -178,7 +178,7 @@ export function validateBenefitAttachmentRules(input: Pick<BenefitClaimInput, 'b
 export function selectBenefitRequestSummaries(claims: BenefitClaimRequest[]) {
   return claims.map((claim) => ({
     id: claim.workflowRequestId,
-    type: `เบิกสวัสดิการ · ${claim.benefitName}`,
+    type: `เบิกสวัสดิการ · ${BENEFIT_TYPE_LABEL[claim.benefitType]}`,
     sub: `${claim.benefitCode} · ใบเสร็จ ${claim.receiptNo} · ฿${claim.totalClaimAmount.toLocaleString('th-TH')}`,
     submitted: thaiDate(claim.submittedAt),
     status: statusToRequestStatus(claim.status),

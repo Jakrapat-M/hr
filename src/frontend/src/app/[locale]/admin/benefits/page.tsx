@@ -41,13 +41,14 @@ export default function AdminBenefitsPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <CardEyebrow>Benefits admin · read-only first pass</CardEyebrow>
-          <h1 className="font-display text-[28px] font-semibold text-ink">Benefit configuration, reporting, and payment</h1>
+          <h1 className="font-display text-[28px] font-semibold text-ink">Benefits master, reporting, and payment</h1>
           <p className="mt-2 text-small text-ink-muted">BRD-backed read-only surface. Edit/import/export and integrations are planned follow-ups.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" disabled>Edit planned</Button>
           <Button variant="secondary" disabled>Import planned</Button>
           <Button variant="secondary" disabled>Export planned</Button>
+          <Button variant="secondary" disabled>Export CSV planned</Button>
         </div>
       </header>
 
@@ -63,15 +64,36 @@ export default function AdminBenefitsPage() {
       <DataSection title="Eligibility rules" headers={['Benefit group','Benefit code','Business unit/company','Employee group/subgroup','Job level','Personal grade','Min service month','Effective date','Status']} rows={eligibility} />
       <DataSection title="Amount rules" headers={['Benefit group','Amount type','Amount per claim','Frequency','Maximum amount','Effective date','Status']} rows={amountRules} />
       <DataSection title="Field configuration" headers={['Field name','Visibility','Mandatory','Read-only','Conditional rule']} rows={fieldConfig} />
-      <DataSection title="Approval workflow and cutoff" headers={['Benefit plan','Approver lane','Cutoff range','Payment date','Status']} rows={workflowCutoff} />
+      <DataSection
+        title="Approval workflow and cutoff schedule"
+        description="Workflow and cutoff schedule"
+        headers={['Benefit plan','Approver lane','Cutoff range','Payment date','Status']}
+        rows={workflowCutoff}
+      />
 
       <Card variant="raised" size="lg">
-        <CardTitle>CSV export preview and payment process</CardTitle>
+        <CardEyebrow>Benefit claim report fields</CardEyebrow>
+        <CardTitle>CSV export shape preview</CardTitle>
         <p className="mt-2 text-small text-ink-muted">Preview columns: employee_id, benefit_code, receipt_no, receipt_date, claim_amount, approved_amount, payment_period, status. Actual CSV/Excel export remains disabled.</p>
+      </Card>
+
+      <Card variant="raised" size="lg">
+        <CardEyebrow>Read-only payment period status</CardEyebrow>
+        <CardTitle>CSV export preview and payment process</CardTitle>
         <div className="mt-4 grid gap-3 md:grid-cols-5">
           {paymentSteps.map((step) => <div key={step} className="rounded-md bg-canvas-soft p-3 text-small font-medium text-ink">{step}<div className="mt-1 text-[length:var(--text-eyebrow)] uppercase tracking-[0.14em] text-ink-muted">Read-only / deferred integration</div></div>)}
         </div>
-        <p className="mt-4 text-small text-ink-muted">Deferred: bank file generation, finance posting, payroll calculation, real Excel import/export, BE User Management editing for data permission group/application role group/user assignment.</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button variant="secondary" disabled>Post to finance planned</Button>
+          <Button variant="secondary" disabled>Generate bank file planned</Button>
+        </div>
+        <p className="mt-4 text-small text-ink-muted">Deferred: bank file generation, finance posting, payroll calculation, real Excel import/export.</p>
+      </Card>
+
+      <Card variant="raised" size="lg">
+        <CardEyebrow>BE User Management deferred</CardEyebrow>
+        <CardTitle>Data permission group editing</CardTitle>
+        <p className="mt-2 text-small text-ink-muted">Application role group and user assignment editing stay deferred until real admin RBAC integration is in scope.</p>
       </Card>
     </div>
   );
@@ -81,10 +103,11 @@ function Summary({ label, value }: { label: string; value: number | string }) {
   return <Card variant="raised" size="md"><CardEyebrow>{label}</CardEyebrow><p className="mt-1 font-display text-[24px] font-semibold text-ink tabular-nums">{value}</p></Card>;
 }
 
-function DataSection({ title, headers, rows }: { title: string; headers: string[]; rows: string[][] }) {
+function DataSection({ title, description, headers, rows }: { title: string; description?: string; headers: string[]; rows: string[][] }) {
   return (
     <Card variant="raised" size="lg" className="overflow-x-auto">
       <CardTitle>{title}</CardTitle>
+      {description && <p className="mt-1 text-small text-ink-muted">{description}</p>}
       <table className="mt-4 min-w-full text-left text-small">
         <thead><tr className="border-b border-hairline">{headers.map((header) => <th key={header} className="whitespace-nowrap px-3 py-2 font-semibold text-ink-muted">{header}</th>)}</tr></thead>
         <tbody>{rows.map((row) => <tr key={row.join('|')} className="border-b border-hairline last:border-0">{row.map((cell, index) => <td key={`${cell}-${index}`} className="whitespace-nowrap px-3 py-2 text-ink-soft">{cell}</td>)}</tr>)}</tbody>

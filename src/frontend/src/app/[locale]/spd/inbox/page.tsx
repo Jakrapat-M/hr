@@ -85,6 +85,7 @@ export default function SPDInboxPage() {
         <p className="text-small text-ink-muted mt-1">
           อนุมัติคำขอทั้งหมดที่พนักงานส่งผ่าน Self-Service (BRD #134)
         </p>
+        <p className="text-small text-ink-muted mt-1">กล่องอนุมัติคำขอเบิกสวัสดิการ</p>
       </div>
 
       <WorkflowRequestInbox stores={slots} persona="spd" />
@@ -114,11 +115,6 @@ export default function SPDInboxPage() {
 
       {/* Chain 4 — Promotion (BRD #103) */}
       <PromotionInbox />
-
-      <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
-
-      {/* Benefit reimbursement — BRD benefit module */}
-      <BenefitClaimsInbox />
     </div>
   );
 }
