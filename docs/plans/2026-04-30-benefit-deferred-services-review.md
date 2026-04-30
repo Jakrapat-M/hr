@@ -1,3 +1,9 @@
+# Historical note
+
+This document records the earlier deferred-services review checklist. The current Benefits/Profile entry-point IA review and route contract live in `docs/plans/2026-04-30-benefits-profile-entrypoint-ia-cleanup.md`. Treat the "current worktree" findings below as historical pre-integration observations unless revalidated against the latest branch.
+
+---
+
 # Benefit Deferred Services — Implementation Review + Documentation Handoff
 
 Status: **review/documentation pass for task 3**  

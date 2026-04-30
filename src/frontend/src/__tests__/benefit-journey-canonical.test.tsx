@@ -152,7 +152,7 @@ describe('benefit claim journey canonical route', () => {
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=benefits');
   });
 
-  it('/hospital-referral redirects to the profile benefits referral shortcut instead of rendering a legacy journey', async () => {
+  it('/hospital-referral redirects to the profile referral service shortcut instead of rendering a second referral journey', async () => {
     const { default: HospitalReferralPage } = await import('@/app/[locale]/hospital-referral/page');
 
     await expect(
