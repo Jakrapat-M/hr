@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Check, FileText, RotateCcw, X } from 'lucide-react';
-import { Button } from '@/components/humi';
+import { Button, Card, CardEyebrow, FormField } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
 import { BENEFIT_REFERRAL_STATUS_LABEL, useBenefitReferralsStore, type BenefitReferralRequest } from '@/stores/benefit-referrals';
 
@@ -22,15 +22,20 @@ export function BenefitReferralInbox() {
   const approved = useMemo(() => referrals.filter((item) => item.status === 'approved'), [referrals]);
 
   return (
-    <div className="pb-8" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div>
-        <h1 className="font-display text-[22px] font-semibold text-ink">Hospital Referral — SPD</h1>
+    <div className="space-y-5 pb-8">
+      <header>
+        <CardEyebrow>Hospital referral · SPD</CardEyebrow>
+        <h1 className="mt-1 font-display text-[22px] font-semibold text-ink">Hospital Referral — SPD</h1>
         <p className="text-small text-ink-muted mt-1">ขอใบส่งตัว/ePatient แยกจาก Benefit Reimbursement</p>
-      </div>
-      <section>
-        <div className="humi-eyebrow" style={{ marginBottom: 10 }}>คำขอใบส่งตัวรอ SPD</div>
-        {[...pending, ...approved].length === 0 ? <div className="humi-card humi-card--cream" style={{ textAlign: 'center', padding: 40 }}><p className="text-body text-ink-muted">ไม่มีคำขอใบส่งตัวรอ SPD</p></div> : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      </header>
+      <section aria-labelledby="benefit-referral-inbox-heading">
+        <CardEyebrow id="benefit-referral-inbox-heading" className="mb-3 block">คำขอใบส่งตัวรอ SPD</CardEyebrow>
+        {[...pending, ...approved].length === 0 ? (
+          <Card variant="flat" tone="canvas" className="text-center">
+            <p className="py-8 text-body text-ink-muted">ไม่มีคำขอใบส่งตัวรอ SPD</p>
+          </Card>
+        ) : (
+          <div className="grid gap-3">
             {[...pending, ...approved].map((referral) => (
               <ReferralCard
                 key={referral.id}
@@ -51,10 +56,10 @@ export function BenefitReferralInbox() {
 function ReferralCard({ referral, onApprove, onReject, onSendBack, onIssue }: { referral: BenefitReferralRequest; onApprove: (note?: string) => void; onReject: (reason: string) => void; onSendBack: (reason: string) => void; onIssue: () => void }) {
   const [comment, setComment] = useState('');
   return (
-    <div className="humi-card" style={{ padding: 18 }}>
-      <div className="humi-row" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        <div style={{ flex: 1, minWidth: 220 }}>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>{referral.workflowRequestId} · {referral.id}</div>
+    <Card variant="raised" size="lg">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-[220px] flex-1">
+          <CardEyebrow className="mb-0.5 block">{referral.workflowRequestId} · {referral.id}</CardEyebrow>
           <div className="text-body font-semibold text-ink">{referral.employeeName} — {referral.hospital.name}</div>
           <div className="text-small text-ink-muted mt-0.5">{referral.coveredPersonName} · นัด {referral.preferredVisitDate} · {formatDate(referral.submittedAt ?? referral.updatedAt)}</div>
         </div>
@@ -67,9 +72,22 @@ function ReferralCard({ referral, onApprove, onReject, onSendBack, onIssue }: { 
         <Info label="หมายเหตุ" value={referral.notes ?? '-'} />
       </dl>
       <div className="mt-4 border-t border-hairline pt-3">
-        <label className="humi-label" htmlFor={`${referral.id}-comment`}>เหตุผล (จำเป็นเมื่อปฏิเสธหรือส่งกลับ)</label>
-        <textarea id={`${referral.id}-comment`} value={comment} onChange={(event) => setComment(event.target.value)} rows={3} className="humi-input" style={{ width: '100%', minHeight: 80 }} />
-        <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+        <FormField
+          id={`${referral.id}-comment`}
+          label="เหตุผล (จำเป็นเมื่อปฏิเสธหรือส่งกลับ)"
+          help="ใช้บันทึกคำอธิบายสำหรับการส่งกลับ แก้ไข หรือปฏิเสธคำขอ"
+        >
+          {(controlProps) => (
+            <textarea
+              {...controlProps}
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              rows={3}
+              className="min-h-20 w-full rounded-md border border-hairline bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-faint transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas"
+            />
+          )}
+        </FormField>
+        <div className="mt-3 flex flex-wrap justify-end gap-2.5">
           {referral.status === 'pending_spd' && <>
             <Button variant="ghost" size="sm" disabled={!comment.trim()} onClick={() => { onSendBack(comment.trim()); setComment(''); }}><RotateCcw size={14} aria-hidden />ส่งกลับแก้ไข</Button>
             <Button variant="ghost" size="sm" disabled={!comment.trim()} onClick={() => { onReject(comment.trim()); setComment(''); }}><X size={14} aria-hidden />ปฏิเสธ</Button>
@@ -78,10 +96,10 @@ function ReferralCard({ referral, onApprove, onReject, onSendBack, onIssue }: { 
           {referral.status === 'approved' && <Button variant="primary" size="sm" onClick={onIssue}><FileText size={14} aria-hidden />ออกใบส่งตัว</Button>}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
 function Info({ label, value }: { label: string; value: string }) {
-  return <div style={{ padding: '6px 10px', background: 'var(--color-canvas-soft)', borderRadius: 8 }}><dt className="text-ink-muted">{label}</dt><dd className="font-medium text-ink">{value}</dd></div>;
+  return <div className="rounded-md bg-canvas-soft px-2.5 py-1.5"><dt className="text-ink-muted">{label}</dt><dd className="font-medium text-ink">{value}</dd></div>;
 }
