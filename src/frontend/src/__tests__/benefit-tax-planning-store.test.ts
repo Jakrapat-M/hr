@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  TAX_PLANNING_TRANSITIONS,
   estimateTaxPlanning,
   formatTHB,
+  selectPayrollTaxPlanningInboxRows,
   selectTaxPlanningRequestSummaries,
   serializeTaxPlanningDraftsForStorage,
+  submitTaxPlanningForPayrollReview,
   useBenefitTaxPlanningStore,
 } from '@/stores/benefit-tax-planning';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
@@ -60,5 +63,58 @@ describe('benefit tax planning store', () => {
     expect(selectTaxPlanningRequestSummaries([draft])).toEqual([]);
     expect(useBenefitClaimsStore.getState().claims).toHaveLength(0);
     expect(useBenefitTaxPlanningStore.getState()).not.toHaveProperty('submitForReview');
+  });
+
+  it('moves estimated plans through Payroll review without exposing raw tax details', () => {
+    const store = useBenefitTaxPlanningStore.getState();
+    const draft = store.saveDraft({ expectedAdditionalIncome: 180_000 });
+
+    expect(() => submitTaxPlanningForPayrollReview(draft)).toThrow(/Invalid tax planning transition/);
+
+    const estimated = useBenefitTaxPlanningStore.getState().estimateDraft(draft.id);
+    expect(TAX_PLANNING_TRANSITIONS.estimated).toContain('submitted_payroll');
+
+    const submitted = useBenefitTaxPlanningStore.getState().submitTaxPlanningForPayrollReview(estimated.id);
+    expect(submitted.status).toBe('submitted_payroll');
+
+    const requestRows = selectTaxPlanningRequestSummaries(useBenefitTaxPlanningStore.getState().drafts);
+    expect(requestRows).toHaveLength(1);
+    expect(requestRows[0]).toMatchObject({
+      id: submitted.workflowRequestId,
+      status: 'pending',
+      href: '/th/profile/me?tab=tax&mode=planning',
+    });
+    expect(JSON.stringify(requestRows)).not.toContain('1100100001001');
+    expect(JSON.stringify(requestRows)).not.toContain('allowances');
+
+    const inboxRows = selectPayrollTaxPlanningInboxRows(useBenefitTaxPlanningStore.getState().drafts);
+    expect(inboxRows).toHaveLength(1);
+    expect(inboxRows[0].maskedTaxId).toBe('X-XXXX-XXXXX-01-X');
+    expect(JSON.stringify(inboxRows)).not.toContain('1100100001001');
+  });
+
+  it('supports send-back, fresh estimate, resubmit, and lineage-aware cancellation projection', () => {
+    const store = useBenefitTaxPlanningStore.getState();
+    const first = store.estimateDraft(store.saveDraft({ expectedAdditionalIncome: 50_000 }).id);
+    store.submitTaxPlanningForPayrollReview(first.id);
+    store.startPayrollTaxPlanningReview(first.id, { role: 'payroll', name: 'Payroll reviewer' });
+
+    const sentBack = store.sendBackPayrollTaxPlanningReview(first.id, { role: 'payroll', name: 'Payroll reviewer' }, 'เพิ่มข้อมูลกองทุน');
+    expect(sentBack.status).toBe('send_back');
+    expect(() => store.resubmitTaxPlanningForPayrollReview(first.id)).toThrow(/fresh estimate/);
+
+    store.saveDraft({ expectedAdditionalIncome: 60_000 });
+    const reestimated = store.estimateDraft(first.id);
+    expect(reestimated.status).toBe('estimated');
+
+    const resubmitted = store.resubmitTaxPlanningForPayrollReview(first.id);
+    expect(resubmitted.status).toBe('submitted_payroll');
+    store.cancelTaxPlanningReview(first.id);
+    expect(selectTaxPlanningRequestSummaries(useBenefitTaxPlanningStore.getState().drafts)[0].status).toBe('rejected');
+
+    useBenefitTaxPlanningStore.getState().clear();
+    const preSubmit = store.estimateDraft(store.saveDraft({ expectedAdditionalIncome: 10_000 }).id);
+    store.cancelTaxPlanningReview(preSubmit.id);
+    expect(selectTaxPlanningRequestSummaries(useBenefitTaxPlanningStore.getState().drafts)).toEqual([]);
   });
 });

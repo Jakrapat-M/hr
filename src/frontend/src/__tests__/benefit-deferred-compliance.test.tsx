@@ -53,15 +53,17 @@ describe('deferred benefit journey and token compliance', () => {
     expect(screen.queryByLabelText(/เลขที่ใบเสร็จ|จำนวนเงินที่ขอเบิก|เอกสารแนบเบิกย้อนหลัง/)).not.toBeInTheDocument();
   });
 
-  it('renders accessible Humi-style labels and helper copy for tax planning without workflow submission controls', () => {
+  it('renders accessible Humi-style labels and helper copy for tax planning with Payroll review controls', () => {
     render(<TaxPlanningPanel />);
 
     expect(screen.getByText(/ประมาณการส่วนตัวเพื่อวางแผน ไม่ใช่คำแนะนำภาษี/)).toBeInTheDocument();
+    expect(screen.getByText(/ไม่อัปเดตเงินเดือน ไม่ยื่นภาษี/)).toBeInTheDocument();
     expect(screen.getByLabelText('รายได้เพิ่มเติมคาดการณ์ทั้งปี')).toBeInTheDocument();
     for (const label of ['คู่สมรส', 'บุตร', 'บิดามารดา', 'ผู้พิการ', 'ประกันชีวิต', 'กองทุนสำรองเลี้ยงชีพ', 'กองทุนเกษียณ', 'ประกันสังคม', 'เงินบริจาค', 'ค่าลดหย่อนอื่น ๆ']) {
       expect(screen.getByLabelText(new RegExp(label))).toBeInTheDocument();
     }
-    expect(screen.getByRole('button', { name: 'ส่งให้ Payroll (ยังไม่เปิดใช้)' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'ส่งให้ Payroll ตรวจแผน' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'ยกเลิกคำขอตรวจแผน' })).toBeDisabled();
   });
 
   it('keeps new deferred benefit surfaces free of hardcoded red and legacy card color utilities', () => {

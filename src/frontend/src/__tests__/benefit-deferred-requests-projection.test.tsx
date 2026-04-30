@@ -59,4 +59,25 @@ describe('deferred benefit service request projection', () => {
     expect(screen.getByText(/โรงพยาบาลกรุงเทพ/)).toBeInTheDocument();
     expect(screen.queryByText(/วางแผนภาษี/)).not.toBeInTheDocument();
   });
+
+  it('/requests projects submitted tax planning rows safely and omits pre-submit cancellations', async () => {
+    const preSubmit = useBenefitTaxPlanningStore.getState().saveDraft({ expectedAdditionalIncome: 10000 });
+    useBenefitTaxPlanningStore.getState().estimateDraft(preSubmit.id);
+    useBenefitTaxPlanningStore.getState().cancelTaxPlanningReview(preSubmit.id);
+
+    const submitted = useBenefitTaxPlanningStore.getState().saveDraft({ expectedAdditionalIncome: 25000 });
+    useBenefitTaxPlanningStore.getState().estimateDraft(submitted.id);
+    const payrollReview = useBenefitTaxPlanningStore.getState().submitTaxPlanningForPayrollReview(submitted.id);
+
+    const { default: RequestsPage } = await import('@/app/[locale]/requests/page');
+    render(<RequestsPage />);
+
+    expect(screen.getByText('วางแผนภาษี · Payroll review')).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(payrollReview.workflowRequestId))).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'วางแผนภาษี · Payroll review' })).toHaveAttribute('href', '/th/profile/me?tab=tax&mode=planning');
+    expect(screen.getByText(/X-XXXX-XXXXX-01-X/)).toBeInTheDocument();
+    expect(screen.queryByText('1100100001001')).not.toBeInTheDocument();
+    expect(screen.queryByText(/allowances/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(preSubmit.workflowRequestId)).not.toBeInTheDocument();
+  });
 });

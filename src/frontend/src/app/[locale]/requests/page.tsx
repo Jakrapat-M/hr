@@ -48,6 +48,7 @@ import {
 } from '@/stores/humi-requests-slice';
 import { selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
+import { selectTaxPlanningRequestSummaries, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
 // ════════════════════════════════════════════════════════════
 // /requests — Forms/requests tracker
@@ -116,6 +117,7 @@ export default function HumiRequestsPage() {
   const { submissions, filter } = useRequestsStore();
   const benefitClaims = useBenefitClaimsStore((state) => state.claims);
   const benefitReferrals = useBenefitReferralsStore((state) => state.referrals);
+  const taxPlanningDrafts = useBenefitTaxPlanningStore((state) => state.drafts);
 
   const allMine = useMemo(() => {
     const base = HUMI_MY_REQUESTS.map((r) => ({ ...r }));
@@ -131,8 +133,9 @@ export default function HumiRequestsPage() {
     }));
     const benefitRows = selectBenefitRequestSummaries(benefitClaims);
     const referralRows = selectBenefitReferralRequestSummaries(benefitReferrals);
-    return [...referralRows, ...benefitRows, ...store, ...base];
-  }, [benefitClaims, benefitReferrals, submissions]);
+    const taxRows = selectTaxPlanningRequestSummaries(taxPlanningDrafts);
+    return [...referralRows, ...taxRows, ...benefitRows, ...store, ...base];
+  }, [benefitClaims, benefitReferrals, taxPlanningDrafts, submissions]);
 
   const filtered = useMemo(() => {
     if (filter === 'all') return allMine;
@@ -233,7 +236,7 @@ export default function HumiRequestsPage() {
 // Tab: Mine — with filter chips
 // ────────────────────────────────────────────────────────────
 
-type MineRow = { id: string; type: string; sub: string; submitted: string; status: RequestStatus; approvalChain: HumiApprovalStep[] };
+type MineRow = { id: string; type: string; sub: string; submitted: string; status: RequestStatus; approvalChain: HumiApprovalStep[]; href?: string };
 
 function MineTab({
   summary,
@@ -325,7 +328,9 @@ function MineTab({
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-body font-semibold text-ink">
-                      {r.type}{' '}
+                      {r.href ? (
+                        <Link href={r.href} className="hover:text-accent">{r.type}</Link>
+                      ) : r.type}{' '}
                       <span className="font-mono text-small font-normal text-ink-muted">
                         · {r.id}
                       </span>

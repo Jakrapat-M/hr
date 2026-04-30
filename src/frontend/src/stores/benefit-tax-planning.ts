@@ -333,7 +333,7 @@ export function serializeTaxPlanningDraftsForStorage(drafts: TaxPlanningDraft[])
 }
 
 function ensureTransition(status: TaxPlanningStatus, nextStatus: TaxPlanningStatus) {
-  if (!TAX_PLANNING_TRANSITIONS[status].includes(nextStatus)) {
+  if (!(TAX_PLANNING_TRANSITIONS[status] as readonly TaxPlanningStatus[]).includes(nextStatus)) {
     throw new Error(`Invalid tax planning transition: ${status} -> ${nextStatus}`);
   }
 }
@@ -426,10 +426,10 @@ export const useBenefitTaxPlanningStore = create<BenefitTaxPlanningState>()((set
   saveDraft: (input) => {
     assertDraftInput(input);
     const at = nowIso();
-    const existing = get().drafts[0];
-    if (existing && ['submitted_payroll', 'payroll_reviewing', 'approved', 'rejected', 'cancelled'].includes(existing.status)) {
-      throw new Error(`Cannot edit tax planning draft in ${existing.status} status`);
-    }
+    const latest = get().drafts[0];
+    const existing = latest && !['submitted_payroll', 'payroll_reviewing', 'approved', 'rejected', 'cancelled'].includes(latest.status)
+      ? latest
+      : undefined;
     const isNew = !existing;
     const draft: TaxPlanningDraft = {
       id: existing?.id ?? nextDraftId(get().drafts.length),
@@ -454,7 +454,7 @@ export const useBenefitTaxPlanningStore = create<BenefitTaxPlanningState>()((set
   },
   estimateDraft: (id) => {
     const result = updateDraft(get().drafts, id, (draft) => {
-      ensureTransition(draft.status, 'estimated');
+      if (draft.status !== 'estimated') ensureTransition(draft.status, 'estimated');
       const at = nowIso();
       const estimate = calculateThaiPitEstimate({
         ytdIncome: profile.ytdIncome,
