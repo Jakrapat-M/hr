@@ -17,6 +17,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Check, FileText, Download, Pencil, X, FileX } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { benefitsHubRoute } from '@/lib/benefit-routes';
 import { Button } from '@/components/humi';
 import {
   BENEFIT_CODE_BY_TYPE,

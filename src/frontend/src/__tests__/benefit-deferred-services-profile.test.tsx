@@ -94,6 +94,8 @@ describe('benefit deferred services profile launchpad', () => {
     expect(screen.getAllByRole('button', { name: 'เบิกสวัสดิการ' }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'ขอใบส่งตัว' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'วางแผนภาษี' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'ขอใบส่งตัว' })).toHaveAttribute('href', '/th/profile/me?tab=benefits&service=referral');
+    expect(screen.getByRole('link', { name: 'วางแผนภาษี' })).toHaveAttribute('href', '/th/profile/me?tab=tax&mode=planning');
     expect(screen.getByText(/ไม่ใช่การเบิกย้อนหลัง/)).toBeInTheDocument();
     expect(screen.getByText(/ไม่ใช่คำแนะนำภาษี/)).toBeInTheDocument();
   });
