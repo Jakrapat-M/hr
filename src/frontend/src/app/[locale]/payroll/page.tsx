@@ -41,7 +41,7 @@ export default function PayrollLandingPage() {
  },
  {
  title: 'ตรวจแผนภาษี',
- description: 'Review employee tax planning submissions with masked summaries only.',
+ description: 'ตรวจคำขอวางแผนภาษีจากพนักงานด้วยข้อมูลสรุปที่ปิดบังเลขสำคัญแล้ว',
  href: `/${locale}/payroll/tax-review`,
  icon: <ShieldCheck className="h-6 w-6" />,
  color:'text-accent bg-accent-tint',
