@@ -97,7 +97,7 @@ export default function PayrollTaxReviewPage() {
 
     const action = payrollTaxPlanning[actionName] as PayrollTaxAction | undefined;
     if (!action) {
-      setMessage('ยังไม่สามารถบันทึกการตรวจแผนภาษีได้ กรุณาลองใหม่อีกครั้ง');
+      setMessage('Payroll review action is waiting for tax planning workflow state to finish syncing.');
       return;
     }
 
@@ -151,7 +151,7 @@ export default function PayrollTaxReviewPage() {
         <CardEyebrow>Review queue</CardEyebrow>
         <CardTitle>รายการตรวจแผนภาษีจากพนักงาน</CardTitle>
         <p className="mt-2 text-small text-ink-muted">
-          แสดงเฉพาะสรุปที่ Payroll ใช้ตรวจ อนุมัติ ส่งกลับ หรือไม่อนุมัติ โดยไม่แก้ไขรายละเอียดลดหย่อนของพนักงานโดยตรง
+          ข้อมูลนี้มาจาก selectPayrollTaxPlanningInboxRows และใช้เพื่ออนุมัติ ส่งกลับ หรือไม่อนุมัติแผนภาษีโดยไม่แก้ไข allowance ของพนักงานโดยตรง
         </p>
 
         <div className="mt-5 space-y-4">
