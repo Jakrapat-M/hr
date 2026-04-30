@@ -74,23 +74,18 @@ describe('benefit claim journey canonical route', () => {
     expect(screen.queryByRole('button', { name: 'สร้างคำขอเบิก' })).not.toBeInTheDocument();
   });
 
-  it('/benefits-hub benefits tab remains browse/learn and shortcuts plan actions to profile benefits', async () => {
+  it('/benefits-hub benefits tab stays browse-only and sends actions to profile benefits', async () => {
     const { useBenefitsStore } = await import('@/stores/humi-benefits-slice');
     useBenefitsStore.getState().setTab('benefits');
 
     const { default: BenefitsHubPage } = await import('@/app/[locale]/benefits-hub/page');
     render(<BenefitsHubPage />);
 
-    expect(screen.getByRole('heading', { name: 'เลือกแผนสวัสดิการของคุณสำหรับปีนี้' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'สำรวจแผนสวัสดิการก่อนจัดการสิทธิ์ในโปรไฟล์' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'ไปที่สิทธิ์ของฉัน' })).toHaveAttribute('href', '/th/profile/me?tab=benefits');
     expect(screen.queryByRole('button', { name: 'เริ่มลงทะเบียน' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /สมัคร/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'เพิ่มผู้อุปการะ' })).not.toBeInTheDocument();
-
-    const profileShortcuts = screen.getAllByRole('link', { name: /โปรไฟล์/ });
-    expect(profileShortcuts.length).toBeGreaterThanOrEqual(2);
-    profileShortcuts.forEach((link) => {
-      expect(link).toHaveAttribute('href', '/th/profile/me?tab=benefits');
-    });
+    expect(screen.queryByRole('button', { name: 'สมัคร' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'ยกเลิกสมัคร' })).not.toBeInTheDocument();
   });
 
   it('ESS quick action points benefit claim entry to profile benefits', () => {
@@ -157,7 +152,7 @@ describe('benefit claim journey canonical route', () => {
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=benefits');
   });
 
-  it('/hospital-referral redirects to the profile referral service shortcut instead of rendering a second referral journey', async () => {
+  it('/hospital-referral redirects to the profile benefits referral shortcut instead of rendering a legacy journey', async () => {
     const { default: HospitalReferralPage } = await import('@/app/[locale]/hospital-referral/page');
 
     await expect(

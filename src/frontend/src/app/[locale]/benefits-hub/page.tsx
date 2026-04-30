@@ -144,10 +144,7 @@ export default function HumiBenefitsHubPage() {
 // ────────────────────────────────────────────────────────────
 
 function BenefitsTab() {
-  const params = useParams<{ locale?: string }>();
-  const locale = typeof params.locale === 'string' ? params.locale : 'th';
   const { enrolled } = useBenefitsStore();
-  const profileBenefitsHref = benefitProfileRoute(locale);
   const [detailPlan, setDetailPlan] = useState<HumiBenefitPlan | null>(null);
   const params = useParams<{ locale?: string }>();
   const locale = typeof params.locale === 'string' ? params.locale : 'th';
@@ -192,10 +189,12 @@ function BenefitsTab() {
             </ul>
             <div className="flex gap-2 pt-2">
               <Link
-                href={profileBenefitsHref}
-                className={buttonVariants({ variant: 'secondary' })}
+                href={benefitProfileRoute(locale)}
+                className={buttonVariants({
+                  variant: enrolled.has(detailPlan.id) ? 'secondary' : 'primary',
+                })}
               >
-                จัดการในโปรไฟล์ของฉัน
+                จัดการในโปรไฟล์
               </Link>
               <Button variant="ghost" className="min-h-[44px]" onClick={() => setDetailPlan(null)}>
                 ปิด
@@ -237,10 +236,10 @@ function BenefitsTab() {
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
-              href={profileBenefitsHref}
+              href={benefitProfileRoute(locale)}
               className={buttonVariants({ variant: 'primary' })}
             >
-              จัดการแผนในโปรไฟล์ของฉัน
+              ไปที่สิทธิ์ของฉัน
             </Link>
             <Button variant="ghost">เปรียบเทียบแผน</Button>
           </div>
@@ -298,13 +297,14 @@ function BenefitsTab() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href={profileBenefitsHref}
-                className={cn(buttonVariants({ variant: 'ghost', block: true }), 'mt-5 min-h-[44px]')}
-                onClick={(event) => event.stopPropagation()}
+              <Button
+                variant="ghost"
+                block
+                className="mt-5 min-h-[44px]"
+                onClick={(e) => { e.stopPropagation(); setDetailPlan(b); }}
               >
-                จัดการในโปรไฟล์
-              </Link>
+                ดูรายละเอียด
+              </Button>
             </Card>
           );
         })}
@@ -318,11 +318,11 @@ function BenefitsTab() {
             <CardTitle className="mt-1">ในแผนของคุณ</CardTitle>
           </div>
           <Link
-            href={profileBenefitsHref}
+            href={benefitProfileRoute(locale)}
             className={buttonVariants({ variant: 'ghost' })}
           >
             <Plus size={14} aria-hidden />
-            <span>จัดการผู้รับสิทธิ์ในโปรไฟล์</span>
+            จัดการผู้รับสิทธิ์ในโปรไฟล์
           </Link>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
