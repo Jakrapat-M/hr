@@ -1,0 +1,200 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e348]:
+    - complementary "เมนู Admin" [ref=e349]:
+      - img "Humi" [ref=e352]
+      - navigation "เมนู Admin" [ref=e353]:
+        - generic [ref=e354]:
+          - generic [ref=e355]: ภาพรวม
+          - link "ศูนย์ Admin" [ref=e356] [cursor=pointer]:
+            - /url: /th/admin
+            - img [ref=e358]
+            - generic [ref=e363]: ศูนย์ Admin
+        - generic [ref=e364]:
+          - generic [ref=e365]: การจ้างงาน
+          - link "รับพนักงานใหม่" [ref=e366] [cursor=pointer]:
+            - /url: /th/admin/hire
+            - img [ref=e368]
+            - generic [ref=e371]: รับพนักงานใหม่
+          - link "พนักงาน" [ref=e372] [cursor=pointer]:
+            - /url: /th/admin/employees
+            - img [ref=e374]
+            - generic [ref=e379]: พนักงาน
+        - generic [ref=e380]:
+          - generic [ref=e381]: โครงสร้างองค์กร
+          - link "หน่วยงาน" [ref=e382] [cursor=pointer]:
+            - /url: /th/admin/organization
+            - img [ref=e384]
+            - generic [ref=e389]: หน่วยงาน
+          - link "งาน/Job" [ref=e390] [cursor=pointer]:
+            - /url: /th/admin/jobs
+            - img [ref=e392]
+            - generic [ref=e396]: งาน/Job
+          - link "ตำแหน่ง" [ref=e397] [cursor=pointer]:
+            - /url: /th/admin/positions
+            - img [ref=e399]
+            - generic [ref=e402]: ตำแหน่ง
+        - generic [ref=e403]:
+          - generic [ref=e404]: บริหารระบบ
+          - link "รายงาน" [ref=e405] [cursor=pointer]:
+            - /url: /th/admin/reports
+            - img [ref=e407]
+            - generic [ref=e409]: รายงาน
+          - link "Self-Service" [ref=e410] [cursor=pointer]:
+            - /url: /th/admin/self-service
+            - img [ref=e412]
+            - generic [ref=e413]: Self-Service
+          - link "ผู้ใช้และสิทธิ์" [ref=e414] [cursor=pointer]:
+            - /url: /th/admin/users
+            - img [ref=e416]
+            - generic [ref=e428]: ผู้ใช้และสิทธิ์
+          - link "ระบบ" [ref=e429] [cursor=pointer]:
+            - /url: /th/admin/system
+            - img [ref=e431]
+            - generic [ref=e434]: ระบบ
+        - generic [ref=e435]:
+          - link "กลับสู่พนักงาน" [ref=e436] [cursor=pointer]:
+            - /url: /th/home
+            - img [ref=e438]
+            - generic [ref=e440]: กลับสู่พนักงาน
+          - link "ออกจากระบบ" [ref=e441] [cursor=pointer]:
+            - /url: /th/login
+            - img [ref=e443]
+            - generic [ref=e446]: ออกจากระบบ
+    - generic [ref=e447]:
+      - generic [ref=e448]:
+        - generic [ref=e449]:
+          - generic [ref=e450]: สวัสดีตอนเช้าค่ะ คุณจงรักษ์
+          - heading "ศูนย์ Admin" [level=2] [ref=e451]
+        - search "ค้นหา" [ref=e452] [cursor=pointer]:
+          - img [ref=e453]
+          - generic [ref=e456]: ค้นหาพนักงาน เอกสาร…
+          - generic [ref=e457]: ⌘K
+        - group "เลือกภาษา" [ref=e458]:
+          - button "ไทย" [pressed] [ref=e459]
+          - button "EN" [ref=e460]
+        - button "สลับโหมดมืด" [ref=e461] [cursor=pointer]:
+          - img [ref=e462]
+        - button "การแจ้งเตือน" [ref=e464] [cursor=pointer]:
+          - img [ref=e465]
+        - button "สลับ persona สำหรับ demo" [ref=e470]:
+          - img [ref=e471]
+          - generic [ref=e483]: เลือก Persona · HR Admin
+          - img [ref=e484]
+      - main [ref=e486]:
+        - generic [ref=e487]:
+          - generic [ref=e488]:
+            - generic [ref=e489]:
+              - generic [ref=e490]: Admin Center
+              - heading "ศูนย์จัดการพนักงาน จัดการข้อมูล การจ้าง และการตั้งค่าระบบ EC" [level=1] [ref=e491]:
+                - text: ศูนย์จัดการพนักงาน
+                - text: จัดการข้อมูล การจ้าง และการตั้งค่าระบบ EC
+              - generic [ref=e492]:
+                - link "จ้างพนักงานใหม่" [ref=e493] [cursor=pointer]:
+                  - /url: /th/admin/hire
+                  - img [ref=e494]
+                  - text: จ้างพนักงานใหม่
+                - link "ดูข้อมูลพนักงาน" [ref=e497] [cursor=pointer]:
+                  - /url: /th/admin/employees
+                  - img [ref=e498]
+                  - text: ดูข้อมูลพนักงาน
+            - generic [ref=e503]:
+              - generic [ref=e504]:
+                - generic [ref=e505]:
+                  - generic [ref=e506]: ภาพรวม
+                  - heading "สถานะระบบ" [level=3] [ref=e507]
+                - generic [ref=e508]: Live
+              - generic [ref=e509]:
+                - generic [ref=e510]:
+                  - generic [ref=e511]: พนักงาน
+                  - generic [ref=e512]: 240K+
+                - generic [ref=e513]:
+                  - generic [ref=e514]: Workflow รอดำเนินการ
+                  - generic [ref=e515]: "0"
+                - generic [ref=e516]:
+                  - generic [ref=e517]: บริษัท
+                  - generic [ref=e518]: "164"
+                - generic [ref=e519]:
+                  - generic [ref=e520]: แผนก
+                  - generic [ref=e521]: 17K
+              - separator [ref=e522]
+              - generic [ref=e523]:
+                - img [ref=e524]
+                - generic [ref=e526]: สรุปล่าสุด · 30/4/2569
+          - generic [ref=e527]:
+            - generic [ref=e529]:
+              - generic [ref=e530]: Admin Tools
+              - heading "เครื่องมือการจัดการ" [level=3] [ref=e531]
+            - generic [ref=e532]:
+              - link "Lifecycle Actions การจ้างพนักงาน รับใหม่ • จ้างซ้ำ • โอนย้าย • ออกจากงาน 4 workflows" [ref=e533] [cursor=pointer]:
+                - /url: /th/admin/hire
+                - generic [ref=e534]:
+                  - img [ref=e536]
+                  - generic [ref=e539]:
+                    - generic [ref=e540]: Lifecycle Actions
+                    - heading "การจ้างพนักงาน" [level=4] [ref=e541]
+                    - paragraph [ref=e542]: รับใหม่ • จ้างซ้ำ • โอนย้าย • ออกจากงาน
+                    - generic [ref=e543]:
+                      - generic [ref=e544]: 4 workflows
+                      - img [ref=e545]
+              - link "Employee Data ข้อมูลพนักงาน ดูและแก้ข้อมูลพนักงาน • Employment Info 240K+ records" [ref=e547] [cursor=pointer]:
+                - /url: /th/admin/employees
+                - generic [ref=e548]:
+                  - img [ref=e550]
+                  - generic [ref=e555]:
+                    - generic [ref=e556]: Employee Data
+                    - heading "ข้อมูลพนักงาน" [level=4] [ref=e557]
+                    - paragraph [ref=e558]: ดูและแก้ข้อมูลพนักงาน • Employment Info
+                    - generic [ref=e559]:
+                      - generic [ref=e560]: 240K+ records
+                      - img [ref=e561]
+              - link "Self-Service Config ตั้งค่า Self-Service Field config • Visibility • Mandatory • Quick Actions • Tiles 6 editors" [ref=e563] [cursor=pointer]:
+                - /url: /th/admin/self-service
+                - generic [ref=e564]:
+                  - img [ref=e566]
+                  - generic [ref=e569]:
+                    - generic [ref=e570]: Self-Service Config
+                    - heading "ตั้งค่า Self-Service" [level=4] [ref=e571]
+                    - paragraph [ref=e572]: Field config • Visibility • Mandatory • Quick Actions • Tiles
+                    - generic [ref=e573]:
+                      - generic [ref=e574]: 6 editors
+                      - img [ref=e575]
+              - link "Users & Permissions ผู้ใช้และสิทธิ์ Role Groups • Data Permissions • Proxy • Audit 6 tools" [ref=e577] [cursor=pointer]:
+                - /url: /th/admin/users
+                - generic [ref=e578]:
+                  - img [ref=e580]
+                  - generic [ref=e583]:
+                    - generic [ref=e584]: Users & Permissions
+                    - heading "ผู้ใช้และสิทธิ์" [level=4] [ref=e585]
+                    - paragraph [ref=e586]: Role Groups • Data Permissions • Proxy • Audit
+                    - generic [ref=e587]:
+                      - generic [ref=e588]: 6 tools
+                      - img [ref=e589]
+              - link "Data Management จัดการระบบ รายงาน • Integration • Security • Data migration 18 tools" [ref=e591] [cursor=pointer]:
+                - /url: /th/admin/system
+                - generic [ref=e592]:
+                  - img [ref=e594]
+                  - generic [ref=e598]:
+                    - generic [ref=e599]: Data Management
+                    - heading "จัดการระบบ" [level=4] [ref=e600]
+                    - paragraph [ref=e601]: รายงาน • Integration • Security • Data migration
+                    - generic [ref=e602]:
+                      - generic [ref=e603]: 18 tools
+                      - img [ref=e604]
+              - link "Reports รายงาน รายงานทั้งหมด • CSV export ดูทั้งหมด" [ref=e606] [cursor=pointer]:
+                - /url: /th/admin/reports
+                - generic [ref=e607]:
+                  - img [ref=e609]
+                  - generic [ref=e612]:
+                    - generic [ref=e613]: Reports
+                    - heading "รายงาน" [level=4] [ref=e614]
+                    - paragraph [ref=e615]: รายงานทั้งหมด • CSV export
+                    - generic [ref=e616]:
+                      - generic [ref=e617]: ดูทั้งหมด
+                      - img [ref=e618]
+          - generic [ref=e620]:
+            - generic [ref=e621]:
+              - img [ref=e622]
+              - text: Recent Activity
+            - heading "กิจกรรมล่าสุด" [level=3] [ref=e624]
+            - paragraph [ref=e625]: ยังไม่มีกิจกรรมในระบบ — เริ่มใช้งานโดยคลิกหนึ่งในเครื่องมือด้านบน
