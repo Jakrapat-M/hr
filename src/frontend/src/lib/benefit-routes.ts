@@ -22,27 +22,3 @@ export function benefitTaxPlanningRoute(locale: string | null | undefined) {
 export function benefitsHubRoute(locale: string | null | undefined) {
   return localizedRoute(locale, BENEFITS_HUB_ROUTE);
 }
-
-export function benefitReferralRoute(locale: string) {
-  return `/${locale}${BENEFIT_REFERRAL_ROUTE}`;
-}
-
-export function benefitTaxPlanningRoute(locale: string) {
-  return `/${locale}${BENEFIT_TAX_PLANNING_ROUTE}`;
-}
-
-export function benefitsHubRoute(locale: string) {
-  return `/${locale}${BENEFITS_HUB_ROUTE}`;
-}
-
-export function benefitReferralRoute(locale: string) {
-  return `/${locale}${BENEFIT_REFERRAL_ROUTE}`;
-}
-
-export function benefitTaxPlanningRoute(locale: string) {
-  return `/${locale}${BENEFIT_TAX_PLANNING_ROUTE}`;
-}
-
-export function benefitsHubRoute(locale: string) {
-  return `/${locale}${BENEFITS_HUB_ROUTE}`;
-}
