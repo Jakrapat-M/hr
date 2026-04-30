@@ -12,7 +12,7 @@ export function BenefitServicesPanel({ locale, onOpenClaim }: { locale: string; 
   const taxProfile = useBenefitTaxPlanningStore((state) => state.profile);
   const taxDrafts = useBenefitTaxPlanningStore((state) => state.drafts);
   const taxSummary = selectTaxPlanningSafeSummary({ profile: taxProfile, drafts: taxDrafts });
-  const pendingReferralCount = referrals.filter((item) => ['pending_spd', 'send_back', 'approved'].includes(item.status)).length;
+  const pendingReferralCount = referrals.filter((item) => ['pending_spd', 'spd_reviewing', 'send_back', 'approved'].includes(item.status)).length;
   const issuedReferralCount = referrals.filter((item) => item.status === 'letter_issued').length;
 
   return (

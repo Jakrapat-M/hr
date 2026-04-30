@@ -20,7 +20,8 @@ export function ReferralLetterPreview({ referral, open, onClose }: { referral: B
           <Info label="มีผลตั้งแต่" value={referral.letter?.validFrom ?? '-'} />
           <Info label="ใช้ได้ถึง" value={referral.letter?.validUntil ?? '-'} />
           <Info label="ผู้ออกใบส่งตัว" value={referral.letter?.issuedBy ?? '-'} />
-          <Info label="สถานะ integration" value={payload.integrationStatus} />
+          <Info label="ePatient reference" value={payload.ePatientReference ?? '-'} />
+          <Info label="สถานะ ePatient" value={payload.integrationStatus} />
         </dl>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>ปิด</Button>

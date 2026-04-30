@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Check, FileText, RotateCcw, X } from 'lucide-react';
 import { Button, Card, CardEyebrow, FormField } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
-import { BENEFIT_REFERRAL_STATUS_LABEL, useBenefitReferralsStore, type BenefitReferralRequest } from '@/stores/benefit-referrals';
+import { BENEFIT_REFERRAL_STATUS_LABEL, selectReferralInboxRows, useBenefitReferralsStore, type BenefitReferralRequest } from '@/stores/benefit-referrals';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -12,13 +12,14 @@ function formatDate(iso: string) {
 
 export function BenefitReferralInbox() {
   const referrals = useBenefitReferralsStore((state) => state.referrals);
+  const startReferralReview = useBenefitReferralsStore((state) => state.startReferralReview);
   const approveReferral = useBenefitReferralsStore((state) => state.approveReferral);
   const rejectReferral = useBenefitReferralsStore((state) => state.rejectReferral);
   const sendBackReferral = useBenefitReferralsStore((state) => state.sendBackReferral);
   const issueReferralLetter = useBenefitReferralsStore((state) => state.issueReferralLetter);
   const actorName = useAuthStore((state) => state.username) ?? 'SPD Benefits';
   const actor = { role: 'spd' as const, name: actorName };
-  const pending = useMemo(() => referrals.filter((item) => item.status === 'pending_spd'), [referrals]);
+  const pending = useMemo(() => selectReferralInboxRows(referrals).filter((item) => ['pending_spd', 'spd_reviewing'].includes(item.status)), [referrals]);
   const approved = useMemo(() => referrals.filter((item) => item.status === 'approved'), [referrals]);
 
   return (
@@ -40,6 +41,7 @@ export function BenefitReferralInbox() {
               <ReferralCard
                 key={referral.id}
                 referral={referral}
+                onStartReview={(note) => startReferralReview(referral.id, actor, note)}
                 onApprove={(note) => approveReferral(referral.id, actor, note)}
                 onReject={(reason) => rejectReferral(referral.id, actor, reason)}
                 onSendBack={(reason) => sendBackReferral(referral.id, actor, reason)}
@@ -53,7 +55,7 @@ export function BenefitReferralInbox() {
   );
 }
 
-function ReferralCard({ referral, onApprove, onReject, onSendBack, onIssue }: { referral: BenefitReferralRequest; onApprove: (note?: string) => void; onReject: (reason: string) => void; onSendBack: (reason: string) => void; onIssue: () => void }) {
+function ReferralCard({ referral, onStartReview, onApprove, onReject, onSendBack, onIssue }: { referral: BenefitReferralRequest; onStartReview: (note?: string) => void; onApprove: (note?: string) => void; onReject: (reason: string) => void; onSendBack: (reason: string) => void; onIssue: () => void }) {
   const [comment, setComment] = useState('');
   return (
     <Card variant="raised" size="lg">
@@ -69,6 +71,8 @@ function ReferralCard({ referral, onApprove, onReject, onSendBack, onIssue }: { 
         <Info label="เหตุผล" value={referral.serviceReason} />
         <Info label="สาขา/จังหวัด" value={`${referral.hospital.branch} · ${referral.hospital.province}`} />
         <Info label="ePatient code" value={referral.hospital.ePatientCode} />
+        <Info label="เบอร์ติดต่อ" value={referral.contactPhone ?? '-'} />
+        <Info label="หมายเหตุเอกสาร" value={referral.documentNote ?? '-'} />
         <Info label="หมายเหตุ" value={referral.notes ?? '-'} />
       </dl>
       <div className="mt-4 border-t border-hairline pt-3">
@@ -88,7 +92,8 @@ function ReferralCard({ referral, onApprove, onReject, onSendBack, onIssue }: { 
           )}
         </FormField>
         <div className="mt-3 flex flex-wrap justify-end gap-2.5">
-          {referral.status === 'pending_spd' && <>
+          {referral.status === 'pending_spd' && <Button variant="secondary" size="sm" onClick={() => { onStartReview(comment.trim() || undefined); setComment(''); }}>เริ่มตรวจ</Button>}
+          {['pending_spd', 'spd_reviewing'].includes(referral.status) && <>
             <Button variant="ghost" size="sm" disabled={!comment.trim()} onClick={() => { onSendBack(comment.trim()); setComment(''); }}><RotateCcw size={14} aria-hidden />ส่งกลับแก้ไข</Button>
             <Button variant="ghost" size="sm" disabled={!comment.trim()} onClick={() => { onReject(comment.trim()); setComment(''); }}><X size={14} aria-hidden />ปฏิเสธ</Button>
             <Button variant="primary" size="sm" onClick={() => { onApprove(comment.trim() || undefined); setComment(''); }}><Check size={14} aria-hidden />อนุมัติ</Button>

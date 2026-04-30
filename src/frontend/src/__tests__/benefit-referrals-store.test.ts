@@ -11,6 +11,8 @@ const validInput = {
   hospitalId: 'HOSP-BNH',
   serviceReason: 'พบแพทย์เฉพาะทาง',
   preferredVisitDate: '2026-05-10',
+  contactPhone: '080-123-4567',
+  documentNote: 'ใช้บัตรพนักงานยืนยันสิทธิ์',
 };
 
 describe('benefit referral store', () => {
@@ -24,6 +26,8 @@ describe('benefit referral store', () => {
     expect(referral.id).toMatch(/^BEN-REF-/);
     expect(referral.workflowRequestId).toMatch(/^REQ-REF-/);
     expect(referral.status).toBe('draft');
+    expect(referral.contactPhone).toBe('080-123-4567');
+    expect(referral.documentNote).toBe('ใช้บัตรพนักงานยืนยันสิทธิ์');
     expect('receiptNo' in referral).toBe(false);
     expect('totalClaimAmount' in referral).toBe(false);
 
@@ -32,6 +36,7 @@ describe('benefit referral store', () => {
     expect(row.type).toBe('ขอใบส่งตัว · ePatient referral');
     expect(row.sub).toContain('โรงพยาบาลบีเอ็นเอช');
     expect(row.status).toBe('pending');
+    expect(JSON.stringify(row)).not.toMatch(/receiptNo|totalClaimAmount|tax/i);
   });
 
   it('enforces referral-specific validation and SPD letter lifecycle', () => {
@@ -42,19 +47,25 @@ describe('benefit referral store', () => {
 
     const referral = useBenefitReferralsStore.getState().createReferral(validInput);
     useBenefitReferralsStore.getState().submitReferral(referral.id);
+    useBenefitReferralsStore.getState().startReferralReview(referral.id, { role: 'spd', name: 'SPD' });
+    expect(useBenefitReferralsStore.getState().referrals[0].status).toBe('spd_reviewing');
     useBenefitReferralsStore.getState().approveReferral(referral.id, { role: 'spd', name: 'SPD' });
+    expect(selectBenefitReferralRequestSummaries(useBenefitReferralsStore.getState().referrals)[0].status).toBe('pending');
     useBenefitReferralsStore.getState().issueReferralLetter(referral.id, { role: 'spd', name: 'SPD' });
+    expect(selectBenefitReferralRequestSummaries(useBenefitReferralsStore.getState().referrals)[0].status).toBe('approved');
 
     const issued = useBenefitReferralsStore.getState().referrals[0];
     expect(issued.status).toBe('letter_issued');
     expect(issued.letter?.referralNumber).toMatch(/^EP-/);
-    expect(issued.audit.map((entry) => entry.action)).toEqual(['create', 'submit', 'approve', 'issue_letter']);
+    expect(issued.letter?.ePatientReference).toContain('EP-BNH-SILOM-REQ-REF-');
+    expect(issued.audit.map((entry) => entry.action)).toEqual(['create', 'submit', 'start_review', 'approve', 'issue_letter']);
     expect(BENEFIT_REFERRAL_STATUS_LABEL.letter_issued).toBe('ออกใบส่งตัวแล้ว');
   });
 
   it('send-back and reject require domain reasons without touching reimbursement selectors', () => {
     const referral = useBenefitReferralsStore.getState().createReferral(validInput);
     useBenefitReferralsStore.getState().submitReferral(referral.id);
+    expect(() => useBenefitReferralsStore.getState().sendBackReferral(referral.id, { role: 'spd', name: 'SPD' }, '')).toThrow(/กรุณาระบุเหตุผล/);
     useBenefitReferralsStore.getState().sendBackReferral(referral.id, { role: 'spd', name: 'SPD' }, 'เลือกวันที่ใหม่');
 
     let updated = useBenefitReferralsStore.getState().referrals[0];

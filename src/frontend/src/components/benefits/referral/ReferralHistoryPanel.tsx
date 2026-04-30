@@ -27,7 +27,7 @@ export function ReferralHistoryPanel() {
             </div>
             <div className="mt-3 flex flex-wrap justify-end gap-2">
               <Button variant="ghost" size="sm" disabled={referral.status !== 'letter_issued'} onClick={() => setSelected(referral)}>ดูใบส่งตัว</Button>
-              <Button variant="ghost" size="sm" disabled={!['draft', 'pending_spd', 'send_back'].includes(referral.status)} onClick={() => cancelReferral(referral.id)}>ยกเลิก</Button>
+              <Button variant="ghost" size="sm" disabled={!['draft', 'pending_spd', 'spd_reviewing', 'send_back'].includes(referral.status)} onClick={() => cancelReferral(referral.id)}>ยกเลิก</Button>
             </div>
           </div>
         ))}

@@ -9,7 +9,15 @@ export function ReferralRequestPanel({ onSubmitted }: { onSubmitted?: (workflowR
   const coveredPeople = useBenefitReferralsStore((state) => state.coveredPeople);
   const createReferral = useBenefitReferralsStore((state) => state.createReferral);
   const submitReferral = useBenefitReferralsStore((state) => state.submitReferral);
-  const [form, setForm] = useState({ coveredPersonId: coveredPeople[0]?.id ?? '', hospitalId: hospitals[0]?.id ?? '', serviceReason: '', preferredVisitDate: '', notes: '' });
+  const [form, setForm] = useState({
+    coveredPersonId: coveredPeople[0]?.id ?? '',
+    hospitalId: hospitals[0]?.id ?? '',
+    serviceReason: '',
+    preferredVisitDate: '',
+    contactPhone: '080-000-0001',
+    documentNote: '',
+    notes: '',
+  });
   const [errors, setErrors] = useState<string[]>([]);
 
   const setField = (field: keyof typeof form, value: string) => {
@@ -25,7 +33,7 @@ export function ReferralRequestPanel({ onSubmitted }: { onSubmitted?: (workflowR
     }
     const referral = createReferral(form);
     submitReferral(referral.id);
-    setForm((prev) => ({ ...prev, serviceReason: '', preferredVisitDate: '', notes: '' }));
+    setForm((prev) => ({ ...prev, serviceReason: '', preferredVisitDate: '', documentNote: '', notes: '' }));
     onSubmitted?.(referral.workflowRequestId);
   };
 
@@ -76,6 +84,26 @@ export function ReferralRequestPanel({ onSubmitted }: { onSubmitted?: (workflowR
               type="date"
               value={form.preferredVisitDate}
               onChange={(event) => setField('preferredVisitDate', event.target.value)}
+            />
+          )}
+        </FormField>
+        <FormField id="referral-contact-phone" label="เบอร์ติดต่อสำหรับประสานงาน" help="ใช้เฉพาะให้ SPD ติดต่อกลับเกี่ยวกับใบส่งตัว">
+          {(controlProps) => (
+            <FormInput
+              {...controlProps}
+              value={form.contactPhone}
+              onChange={(event) => setField('contactPhone', event.target.value)}
+              placeholder="เช่น 080-000-0001"
+            />
+          )}
+        </FormField>
+        <FormField id="referral-document-note" label="หมายเหตุเอกสารประกอบ" help="ระบุเอกสารสิทธิ์หรือข้อมูลประกอบ ไม่ใช่ใบเสร็จเบิกย้อนหลัง">
+          {(controlProps) => (
+            <FormInput
+              {...controlProps}
+              value={form.documentNote}
+              onChange={(event) => setField('documentNote', event.target.value)}
+              placeholder="เช่น ใช้บัตรพนักงานและบัตรประชาชน"
             />
           )}
         </FormField>
