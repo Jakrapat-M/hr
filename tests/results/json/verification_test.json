@@ -1,57 +1,45 @@
 {
-  "timestamp": "2026-02-22T15:42:36.389Z",
+  "timestamp": "2026-04-30T15:51:52.105Z",
   "baseUrl": "http://localhost:8080",
   "totalTests": 3,
-  "passed": 3,
-  "failed": 0,
+  "passed": 0,
+  "failed": 3,
   "tests": [
     {
       "name": "Succession Planning",
       "route": "#/succession-planning",
       "description": "Fix 1: succession-planning route added to app.js and scripts added to index.html",
-      "status": "passed",
-      "errors": [],
-      "warnings": [],
-      "screenshot": "succession_planning_verification.png",
-      "timestamp": "2026-02-22T15:42:38.929Z",
-      "foundKeywords": [
-        "Succession Planning",
-        "succession",
-        "planning"
+      "status": "failed",
+      "errors": [
+        "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8080/#/succession-planning\nCall log:\n\u001b[2m  - navigating to \"http://localhost:8080/#/succession-planning\", waiting until \"networkidle\"\u001b[22m\n"
       ],
-      "pageTitle": "Succession Planning"
+      "warnings": [],
+      "screenshot": "FAIL_succession_planning_verification.png",
+      "timestamp": "2026-04-30T15:52:03.656Z"
     },
     {
       "name": "Resignation",
       "route": "#/resignation",
       "description": "Fix 2: Resignation page fixed - route added and Thai translations added",
-      "status": "passed",
-      "errors": [],
-      "warnings": [],
-      "screenshot": "resignation_verification.png",
-      "timestamp": "2026-02-22T15:42:45.159Z",
-      "foundKeywords": [
-        "Resignation"
+      "status": "failed",
+      "errors": [
+        "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8080/#/resignation\nCall log:\n\u001b[2m  - navigating to \"http://localhost:8080/#/resignation\", waiting until \"networkidle\"\u001b[22m\n"
       ],
-      "pageTitle": "Resignation Checklist"
+      "warnings": [],
+      "screenshot": "FAIL_resignation_verification.png",
+      "timestamp": "2026-04-30T15:52:05.681Z"
     },
     {
       "name": "Payroll Setup",
       "route": "#/payroll-setup",
       "description": "Fix 3: Payroll Setup Thai title updated to include \"ค่าตอบแทน\"",
-      "status": "passed",
-      "errors": [],
-      "warnings": [],
-      "screenshot": "payroll_setup_verification.png",
-      "timestamp": "2026-02-22T15:42:50.242Z",
-      "foundKeywords": [
-        "Payroll",
-        "Setup",
-        "Master",
-        "earning",
-        "deduction"
+      "status": "failed",
+      "errors": [
+        "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8080/#/payroll-setup\nCall log:\n\u001b[2m  - navigating to \"http://localhost:8080/#/payroll-setup\", waiting until \"networkidle\"\u001b[22m\n"
       ],
-      "pageTitle": "Payroll Master Setup"
+      "warnings": [],
+      "screenshot": "FAIL_payroll_setup_verification.png",
+      "timestamp": "2026-04-30T15:52:05.717Z"
     }
   ]
 }
