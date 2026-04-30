@@ -70,7 +70,7 @@ describe('benefit workflow surfaces', () => {
 
     render(<SPDInboxPage />);
 
-    expect(screen.getAllByText('Benefit Reimbursement').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Benefit Reimbursement/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/เบิกสวัสดิการ · ค่ารักษาพยาบาล/).length).toBeGreaterThan(0);
     expect(screen.getByText('กล่องอนุมัติคำขอเบิกสวัสดิการ')).toBeInTheDocument();
   });

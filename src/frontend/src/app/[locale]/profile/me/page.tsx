@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/static-components */
 // VALIDATION_EXEMPT: validation in Zustand humi-profile-slice + emergency/dependents/address editors (per design-gates Track C 2026-04-26)
 'use client';
 /* eslint-disable react-hooks/static-components -- existing profile editor subcomponents are declared inside the page to close over draft/update handlers. */
@@ -29,6 +28,10 @@ import {
   type BenefitClaimInput,
   type BenefitClaimType,
 } from '@/stores/benefit-claims';
+import { BenefitServicesPanel } from '@/components/benefits/BenefitServicesPanel';
+import { ReferralHistoryPanel } from '@/components/benefits/referral/ReferralHistoryPanel';
+import { ReferralRequestPanel } from '@/components/benefits/referral/ReferralRequestPanel';
+import { TaxPlanningPanel } from '@/components/benefits/tax/TaxPlanningPanel';
 import {
   CLAIM_STATUS_META,
   DEPENDENT_RELATION_LABELS,
@@ -410,10 +413,16 @@ export default function HumiProfileMePage() {
 
   // Derive panel key from slice activeTab
   const panelKey = SLICE_TO_PANEL[activeTab];
+  const benefitService = searchParams?.get('service');
+  const profileMode = searchParams?.get('mode');
 
   useEffect(() => {
-    if (searchParams?.get('tab') === 'benefits' && activeTab !== 'benefits') {
+    const requestedTab = searchParams?.get('tab');
+    if (requestedTab === 'benefits' && activeTab !== 'benefits') {
       setTab('benefits');
+    }
+    if (requestedTab === 'tax' && activeTab !== 'activity') {
+      setTab('activity');
     }
   }, [activeTab, searchParams, setTab]);
 
@@ -1657,8 +1666,10 @@ export default function HumiProfileMePage() {
                 </div>
                 <div className="humi-row" style={{ gap: 10, flexWrap: 'wrap' }}>
                   <Button variant="secondary" onClick={() => setBenefitFormOpen(true)}>เบิกสวัสดิการ</Button>
-                  <Button variant="ghost" disabled>ขอใบส่งตัว · วางแผน</Button>
                 </div>
+              </div>
+              <div className="mt-4">
+                <BenefitServicesPanel locale={locale} onOpenClaim={() => setBenefitFormOpen(true)} />
               </div>
               {sendBackClaims.length > 0 && (
                 <div className="mt-4 rounded-md bg-canvas-soft p-3">
@@ -1669,6 +1680,13 @@ export default function HumiProfileMePage() {
                 </div>
               )}
             </div>
+
+            {benefitService === 'referral' && (
+              <div className="lg:col-span-2 grid gap-4 xl:grid-cols-[1fr_1fr]">
+                <ReferralRequestPanel onSubmitted={(id) => showToast(`ส่งคำขอใบส่งตัว ${id} แล้ว · ติดตามได้ที่ /requests`)} />
+                <ReferralHistoryPanel />
+              </div>
+            )}
 
             <div className="humi-card">
               <h4 className="font-display text-[18px] font-semibold leading-[1.2] tracking-tight text-ink">
@@ -1937,74 +1955,78 @@ export default function HumiProfileMePage() {
 
       {/* ── Activity tab (tax panel key = activity) — shows pendingChanges ─ */}
       {panelKey === 'tax' && (
-        <div className="humi-card">
-          <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink mb-4">
-            {tActivity('title')}
-          </h3>
+        <div className="grid gap-4">
+          {profileMode === 'planning' && <TaxPlanningPanel />}
 
-          {pendingChanges.length === 0 ? (
-            <p style={{ color: 'var(--color-ink-muted)', fontSize: 14 }}>
-              {tActivity('noChanges')}
-            </p>
-          ) : (
-            <ul className="humi-col" style={{ gap: 16 }} role="list">
-              {pendingChanges.map((pc) => (
-                <PendingChangeCard
-                  key={pc.id}
-                  pc={pc}
-                  attachments={attachments}
-                  tPending={tPending}
-                  tActivity={tActivity}
-                />
+          <div className="humi-card">
+            <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink mb-4">
+              {tActivity('title')}
+            </h3>
+
+            {pendingChanges.length === 0 ? (
+              <p style={{ color: 'var(--color-ink-muted)', fontSize: 14 }}>
+                {tActivity('noChanges')}
+              </p>
+            ) : (
+              <ul className="humi-col" style={{ gap: 16 }} role="list">
+                {pendingChanges.map((pc) => (
+                  <PendingChangeCard
+                    key={pc.id}
+                    pc={pc}
+                    attachments={attachments}
+                    tPending={tPending}
+                    tActivity={tActivity}
+                  />
+                ))}
+              </ul>
+            )}
+
+            {/* Legacy tax documents */}
+            <hr className="humi-divider" style={{ marginTop: 24, marginBottom: 16 }} />
+            <h4
+              className="font-display text-[16px] font-semibold leading-[1.2] tracking-tight text-ink mb-3"
+              style={{ color: 'var(--color-ink-muted)' }}
+            >
+              {t('taxTitle')}
+            </h4>
+            <ul className="humi-list" role="list">
+              {[
+                { n: 'ภ.ง.ด. 91 ปี 2568', d: 'ก.พ. 2568' },
+                { n: 'หนังสือรับรองการหักภาษี ณ ที่จ่าย', d: 'ม.ค. 2568' },
+                { n: '50 ทวิ — ปี 2567', d: 'ธ.ค. 2567' },
+              ].map((d) => (
+                <li key={d.n} className="humi-row-item">
+                  <div
+                    style={{
+                      width: 34,
+                      height: 42,
+                      borderRadius: 6,
+                      background: 'var(--color-canvas-soft)',
+                      border: '1px solid var(--color-hairline)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--color-ink-soft)',
+                    }}
+                    aria-hidden
+                  >
+                    <FileText size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
+                      {d.n}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+                      ยื่นเมื่อ {d.d}
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" leadingIcon={<Download size={13} />}>
+                    {t('downloadCta')}
+                  </Button>
+                </li>
               ))}
             </ul>
-          )}
-
-          {/* Legacy tax documents */}
-          <hr className="humi-divider" style={{ marginTop: 24, marginBottom: 16 }} />
-          <h4
-            className="font-display text-[16px] font-semibold leading-[1.2] tracking-tight text-ink mb-3"
-            style={{ color: 'var(--color-ink-muted)' }}
-          >
-            {t('taxTitle')}
-          </h4>
-          <ul className="humi-list" role="list">
-            {[
-              { n: 'ภ.ง.ด. 91 ปี 2568', d: 'ก.พ. 2568' },
-              { n: 'หนังสือรับรองการหักภาษี ณ ที่จ่าย', d: 'ม.ค. 2568' },
-              { n: '50 ทวิ — ปี 2567', d: 'ธ.ค. 2567' },
-            ].map((d) => (
-              <li key={d.n} className="humi-row-item">
-                <div
-                  style={{
-                    width: 34,
-                    height: 42,
-                    borderRadius: 6,
-                    background: 'var(--color-canvas-soft)',
-                    border: '1px solid var(--color-hairline)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--color-ink-soft)',
-                  }}
-                  aria-hidden
-                >
-                  <FileText size={18} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
-                    {d.n}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-                    ยื่นเมื่อ {d.d}
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm" leadingIcon={<Download size={13} />}>
-                  {t('downloadCta')}
-                </Button>
-              </li>
-            ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>

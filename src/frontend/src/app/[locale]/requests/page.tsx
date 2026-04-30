@@ -47,6 +47,8 @@ import {
   type RequestSubmission,
 } from '@/stores/humi-requests-slice';
 import { selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
+import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
+import { selectTaxPlanningRequestSummaries, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
 // ════════════════════════════════════════════════════════════
 // /requests — Forms/requests tracker
@@ -114,6 +116,8 @@ export default function HumiRequestsPage() {
 
   const { submissions, filter } = useRequestsStore();
   const benefitClaims = useBenefitClaimsStore((state) => state.claims);
+  const benefitReferrals = useBenefitReferralsStore((state) => state.referrals);
+  const taxDrafts = useBenefitTaxPlanningStore((state) => state.drafts);
 
   const allMine = useMemo(() => {
     const base = HUMI_MY_REQUESTS.map((r) => ({ ...r }));
@@ -128,8 +132,10 @@ export default function HumiRequestsPage() {
       ] satisfies HumiApprovalStep[],
     }));
     const benefitRows = selectBenefitRequestSummaries(benefitClaims);
-    return [...benefitRows, ...store, ...base];
-  }, [benefitClaims, submissions]);
+    const referralRows = selectBenefitReferralRequestSummaries(benefitReferrals);
+    const taxRows = selectTaxPlanningRequestSummaries(taxDrafts);
+    return [...referralRows, ...taxRows, ...benefitRows, ...store, ...base];
+  }, [benefitClaims, benefitReferrals, submissions, taxDrafts]);
 
   const filtered = useMemo(() => {
     if (filter === 'all') return allMine;
@@ -576,9 +582,9 @@ function CatalogTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
               เริ่มคำขอจากข้อมูลสิทธิ์ในโปรไฟล์ เพื่อไม่ให้เกิดแบบฟอร์มซ้ำใน Requests
             </p>
           </div>
-          <a href="/th/profile/me?tab=benefits" className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-canvas-soft px-4 text-small font-semibold text-ink hover:bg-hairline-soft">
+          <Link href="/th/profile/me?tab=benefits" className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-canvas-soft px-4 text-small font-semibold text-ink hover:bg-hairline-soft">
             ไปที่สวัสดิการของฉัน <ArrowRight size={14} className="ml-2" />
-          </a>
+          </Link>
         </div>
       </Card>
 

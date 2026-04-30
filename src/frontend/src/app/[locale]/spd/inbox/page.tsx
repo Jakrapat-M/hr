@@ -14,10 +14,12 @@ import { ApprovalInbox } from '@/components/workflow/ApprovalInbox';
 import { TerminationInbox } from '@/components/workflow/TerminationInbox';
 import { PromotionInbox } from '@/components/workflow/PromotionInbox';
 import { BenefitClaimsInbox } from '@/components/workflow/BenefitClaimsInbox';
+import { BenefitReferralInbox } from '@/components/workflow/BenefitReferralInbox';
 import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useTerminationApprovals } from '@/stores/termination-approvals';
 import { usePromotionApprovals } from '@/stores/promotion-approvals';
 import { BENEFIT_STATUS_LABEL, selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
+import { BENEFIT_REFERRAL_STATUS_LABEL, selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { STEP_LABEL } from '@/stores/workflow-approvals';
 import { TERMINATION_STEP_LABEL } from '@/stores/termination-approvals';
 import { PROMOTION_STEP_LABEL } from '@/stores/promotion-approvals';
@@ -28,6 +30,7 @@ function useSPDStoreSlots(): StoreSlot[] {
   const termRequests = useTerminationApprovals((s) => s.requests);
   const promRequests = usePromotionApprovals((s) => s.requests);
   const benefitClaims = useBenefitClaimsStore((s) => s.claims);
+  const benefitReferrals = useBenefitReferralsStore((s) => s.referrals);
 
   const wfRows: WorkflowRow[] = wfRequests.map((r) => ({
     id: r.id,
@@ -65,12 +68,21 @@ function useSPDStoreSlots(): StoreSlot[] {
     status: r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : 'pending',
   }));
 
+  const referralRows: WorkflowRow[] = selectBenefitReferralRequestSummaries(benefitReferrals).map((r) => ({
+    id: r.id,
+    requestType: r.type,
+    requestedBy: r.referral.employeeName,
+    requestedOn: r.referral.submittedAt ?? r.referral.updatedAt,
+    currentStep: BENEFIT_REFERRAL_STATUS_LABEL[r.referral.status],
+    status: r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : 'pending',
+  }));
+
   return [
-    { name: 'Benefit Reimbursement (BRD Benefits)', rows: benefitRows },
+    { name: 'Benefit Reimbursement', rows: benefitRows },
+    { name: 'Hospital Referral / ขอใบส่งตัว', rows: referralRows },
     { name: 'แก้ไขข้อมูลส่วนตัว (BRD #166)', rows: wfRows },
     { name: 'คำขอลาออก (BRD #172)',           rows: termRows },
     { name: 'คำขอเลื่อนตำแหน่ง (BRD #103)',   rows: promRows },
-    { name: 'Benefit Reimbursement', rows: benefitRows },
   ];
 }
 
@@ -105,6 +117,11 @@ export default function SPDInboxPage() {
 
       {/* Benefit reimbursement workflow */}
       <BenefitClaimsInbox />
+
+      <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
+
+      {/* Benefit referral workflow */}
+      <BenefitReferralInbox />
 
       <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
 

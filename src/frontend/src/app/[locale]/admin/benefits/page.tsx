@@ -2,6 +2,8 @@
 
 import { Card, CardEyebrow, CardTitle, Button } from '@/components/humi';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
+import { REFERRAL_HOSPITALS } from '@/stores/benefit-referrals';
+import { THAI_TAX_YEAR_ASSUMPTIONS, formatTHB } from '@/lib/tax-planning';
 
 const masterData = [
   ['BEN-MED-OPD', 'Medical reimbursement', 'Medical', 'Reimbursement', 'INC-MED', '2026-01-01', '2026-12-31', 'Active'],
@@ -27,6 +29,18 @@ const workflowCutoff = [
   ['Fuel/mobile reimbursement', 'Employee → SPD Benefits → Payment', '1-20 monthly', 'Month-end bank run', 'Active'],
 ];
 const paymentSteps = ['Create period', 'Calculate', 'Post to finance', 'Upload bank file', 'Close period'];
+const referralWorkflow = [
+  ['Employee draft/submit', 'Profile benefits canonical surface', 'Active mock'],
+  ['SPD approve/send back/reject', 'Dedicated referral lane', 'Active mock'],
+  ['Issue letter', 'ePatient payload + 30-day validity', 'Active mock'],
+  ['ePatient API sync', 'External integration', 'Planned'],
+];
+const taxAllowanceRows = Object.entries(THAI_TAX_YEAR_ASSUMPTIONS.caps).map(([key, cap]) => [
+  key,
+  formatTHB(cap),
+  'Employee-entered planning allowance',
+  'Mock/planned payroll integration',
+]);
 
 export default function AdminBenefitsPage() {
   const claims = useBenefitClaimsStore((s) => s.claims);
@@ -70,6 +84,34 @@ export default function AdminBenefitsPage() {
         headers={['Benefit plan','Approver lane','Cutoff range','Payment date','Status']}
         rows={workflowCutoff}
       />
+
+      <DataSection
+        title="Referral configuration preview"
+        description="Hospital network, referral workflow setup, letter template, and ePatient integration are read-only in this pass."
+        headers={['Hospital / workflow item','Branch / route','Province / behavior','Status']}
+        rows={[
+          ...REFERRAL_HOSPITALS.map((hospital) => [hospital.name, hospital.branch, hospital.province, `Mock ePatient ${hospital.ePatientCode}`]),
+          ...referralWorkflow,
+        ]}
+      />
+
+      <DataSection
+        title="Tax Planning configuration preview"
+        description={`Tax year ${THAI_TAX_YEAR_ASSUMPTIONS.taxYear}; local estimator only, no payroll mutation or reviewer workflow.`}
+        headers={['Allowance category','Maximum cap','Purpose','Integration status']}
+        rows={taxAllowanceRows}
+      />
+
+      <Card variant="raised" size="lg">
+        <CardEyebrow>Deferred service integrations</CardEyebrow>
+        <CardTitle>Planned admin actions</CardTitle>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button variant="secondary" disabled>Hospital import planned</Button>
+          <Button variant="secondary" disabled>ePatient sync planned</Button>
+          <Button variant="secondary" disabled>Edit tax brackets planned</Button>
+          <Button variant="secondary" disabled>Payroll sync planned</Button>
+        </div>
+      </Card>
 
       <Card variant="raised" size="lg">
         <CardEyebrow>Benefit claim report fields</CardEyebrow>
