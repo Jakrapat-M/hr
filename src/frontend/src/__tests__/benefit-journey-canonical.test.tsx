@@ -143,6 +143,15 @@ describe('benefit claim journey canonical route', () => {
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me');
   });
 
+  it('/employees/me redirects to the canonical personal profile entry', async () => {
+    const { default: EmployeeProfilePage } = await import('@/app/[locale]/employees/me/page');
+
+    await expect(
+      EmployeeProfilePage({ params: Promise.resolve({ locale: 'th' }) } as never)
+    ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me');
+    expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me');
+  });
+
   it('/employees/me/benefits redirects to the profile benefits tab instead of rendering a separate benefits page', async () => {
     const { default: EmployeeBenefitsPage } = await import('@/app/[locale]/employees/me/benefits/page');
 
