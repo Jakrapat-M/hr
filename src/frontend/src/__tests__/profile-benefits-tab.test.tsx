@@ -101,6 +101,23 @@ describe('/profile/me benefits tab', () => {
     expect(screen.queryByText('SF: EmpJob.employeeGroup')).not.toBeInTheDocument();
   });
 
+  it('keeps /profile/me as the personal profile entry when no tab query is present', async () => {
+    navigationMocks.searchParams = new URLSearchParams();
+    const { default: Page } = await import('@/app/[locale]/profile/me/page');
+    const { useHumiProfileStore } = await import('@/stores/humi-profile-slice');
+
+    useHumiProfileStore.setState({ activeTab: 'benefits' });
+    render(<Page />);
+
+    await waitFor(() => {
+      expect(useHumiProfileStore.getState().activeTab).toBe('personal');
+    });
+
+    expect(screen.getByRole('tab', { name: 'ข้อมูลส่วนตัว' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'สิทธิ์ของฉัน' })).toHaveAttribute('aria-selected', 'false');
+    expect(screen.queryByRole('heading', { name: 'สวัสดิการของฉัน' })).not.toBeInTheDocument();
+  });
+
   it('renders the benefit claim attachment control with Humi upload tokens', async () => {
     const { default: Page } = await import('@/app/[locale]/profile/me/page');
     const { useHumiProfileStore } = await import('@/stores/humi-profile-slice');
@@ -111,7 +128,7 @@ describe('/profile/me benefits tab', () => {
       expect(useHumiProfileStore.getState().activeTab).toBe('benefits');
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'เบิกสวัสดิการ' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'เบิกสวัสดิการ' })[0]);
 
     const attachmentField = await screen.findByTestId('benefit-attachment-field');
     expect(attachmentField).toHaveClass('humi-dropzone');

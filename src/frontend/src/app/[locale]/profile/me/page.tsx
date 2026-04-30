@@ -11,7 +11,7 @@
 // Build-B: full 15+ field form + admin mode + activity log (issue #12)
 // ════════════════════════════════════════════════════════════
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -79,6 +79,49 @@ const SLICE_TO_PANEL: Record<ProfileTab, TabKey> = {
   documents: 'docs',
   activity: 'tax', // activity mapped to tax tab panel — now shows pendingChanges
 };
+
+const PROFILE_TAB_QUERY: Record<ProfileTab, string | null> = {
+  personal: null,
+  employment: 'employment',
+  compensation: 'emergency',
+  benefits: 'benefits',
+  documents: 'documents',
+  activity: 'tax',
+};
+
+const PROFILE_TAB_FROM_QUERY: Record<string, ProfileTab> = {
+  personal: 'personal',
+  employment: 'employment',
+  job: 'employment',
+  emergency: 'compensation',
+  compensation: 'compensation',
+  benefits: 'benefits',
+  documents: 'documents',
+  docs: 'documents',
+  tax: 'activity',
+  activity: 'activity',
+};
+
+function profileTabHref(locale: string, tab: ProfileTab) {
+  const query = PROFILE_TAB_QUERY[tab];
+  return query ? `/${locale}/profile/me?tab=${query}` : `/${locale}/profile/me`;
+}
+
+type ProfileSearchParams = Pick<URLSearchParams, 'get'>;
+
+function resolveProfileTab(searchParams: ProfileSearchParams | null | undefined): ProfileTab {
+  const requestedTab = searchParams?.get('tab');
+  if (requestedTab && PROFILE_TAB_FROM_QUERY[requestedTab]) {
+    return PROFILE_TAB_FROM_QUERY[requestedTab];
+  }
+  if (searchParams?.get('service') === 'referral') {
+    return 'benefits';
+  }
+  if (searchParams?.get('mode') === 'planning') {
+    return 'activity';
+  }
+  return 'personal';
+}
 
 const AVATAR_TONE_MAP = {
   teal: 'humi-avatar humi-avatar--teal',
@@ -410,21 +453,32 @@ export default function HumiProfileMePage() {
     attachmentSizeMb: '1',
   });
   const [benefitErrors, setBenefitErrors] = useState<string[]>([]);
+  const lastAppliedProfileSearchRef = useRef<string | null>(null);
 
   // Derive panel key from slice activeTab
   const panelKey = SLICE_TO_PANEL[activeTab];
   const benefitService = searchParams?.get('service');
   const profileMode = searchParams?.get('mode');
+  const profileSearchKey = searchParams?.toString() ?? '';
 
   useEffect(() => {
-    const requestedTab = searchParams?.get('tab');
-    if (requestedTab === 'benefits' && activeTab !== 'benefits') {
-      setTab('benefits');
+    if (lastAppliedProfileSearchRef.current === profileSearchKey) {
+      return;
     }
-    if (requestedTab === 'tax' && activeTab !== 'activity') {
-      setTab('activity');
+    lastAppliedProfileSearchRef.current = profileSearchKey;
+
+    const requestedProfileTab = resolveProfileTab(searchParams);
+    if (activeTab !== requestedProfileTab) {
+      setTab(requestedProfileTab);
     }
-  }, [activeTab, searchParams, setTab]);
+  }, [activeTab, profileSearchKey, searchParams, setTab]);
+
+  const handleProfileTabClick = useCallback((tab: ProfileTab) => {
+    setTab(tab);
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', profileTabHref(locale, tab));
+    }
+  }, [locale, setTab]);
 
   // ── Toast helper ──────────────────────────────────────────────────────────
 
@@ -1000,7 +1054,7 @@ export default function HumiProfileMePage() {
               role="tab"
               aria-selected={activeTab === k}
               className={cn('humi-tab min-h-[44px]', activeTab === k && 'humi-tab--active')}
-              onClick={() => setTab(k)}
+              onClick={() => handleProfileTabClick(k)}
             >
               {l}
             </button>
