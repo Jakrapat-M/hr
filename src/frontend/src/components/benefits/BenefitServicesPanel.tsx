@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, Calculator, FileText, Hospital } from 'lucide-react';
 import { Button, Card, CardEyebrow, CardTitle } from '@/components/humi';
+import { benefitReferralRoute, benefitTaxPlanningRoute } from '@/lib/benefit-routes';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { selectTaxPlanningSafeSummary, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
@@ -33,7 +34,7 @@ export function BenefitServicesPanel({ locale, onOpenClaim }: { locale: string; 
           <CardTitle className="flex items-center gap-2"><Hospital size={18} aria-hidden />ขอใบส่งตัว</CardTitle>
           <p className="text-small text-ink-muted">เลือกผู้ใช้สิทธิ์ โรงพยาบาล และวันที่เข้ารับบริการ แล้วให้ SPD ออกใบส่งตัว</p>
           <p className="text-small font-semibold text-ink">ไม่ใช่การเบิกย้อนหลัง · รอ {pendingReferralCount} · ออกแล้ว {issuedReferralCount}</p>
-          <Link href={`/${locale}/profile/me?tab=benefits&service=referral`} className="mt-auto">
+          <Link href={benefitReferralRoute(locale)} className="mt-auto">
             <Button className="min-h-[44px]" variant="secondary" trailingIcon={<ArrowRight size={14} />}>ขอใบส่งตัว</Button>
           </Link>
         </div>
@@ -45,7 +46,7 @@ export function BenefitServicesPanel({ locale, onOpenClaim }: { locale: string; 
           <CardTitle className="flex items-center gap-2"><Calculator size={18} aria-hidden />วางแผนภาษี</CardTitle>
           <p className="text-small text-ink-muted">จำลอง PIT จากรายได้ YTD และค่าลดหย่อนที่ประกาศไว้ พร้อมสมมติฐานปีภาษี</p>
           <p className="text-small font-semibold text-ink">ประมาณการเพื่อวางแผน ไม่ใช่คำแนะนำภาษี · ร่าง {taxSummary.savedDrafts}</p>
-          <Link href={`/${locale}/profile/me?tab=tax&mode=planning`} className="mt-auto">
+          <Link href={benefitTaxPlanningRoute(locale)} className="mt-auto">
             <Button className="min-h-[44px]" variant="secondary" trailingIcon={<ArrowRight size={14} />}>วางแผนภาษี</Button>
           </Link>
         </div>

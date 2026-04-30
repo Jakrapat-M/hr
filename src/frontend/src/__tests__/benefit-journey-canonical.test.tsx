@@ -74,6 +74,20 @@ describe('benefit claim journey canonical route', () => {
     expect(screen.queryByRole('button', { name: 'สร้างคำขอเบิก' })).not.toBeInTheDocument();
   });
 
+  it('/benefits-hub benefits tab stays browse-only and sends actions to profile benefits', async () => {
+    const { useBenefitsStore } = await import('@/stores/humi-benefits-slice');
+    useBenefitsStore.getState().setTab('benefits');
+
+    const { default: BenefitsHubPage } = await import('@/app/[locale]/benefits-hub/page');
+    render(<BenefitsHubPage />);
+
+    expect(screen.getByRole('heading', { name: 'สำรวจแผนสวัสดิการก่อนจัดการสิทธิ์ในโปรไฟล์' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'ไปที่สิทธิ์ของฉัน' })).toHaveAttribute('href', '/th/profile/me?tab=benefits');
+    expect(screen.queryByRole('button', { name: 'เริ่มลงทะเบียน' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'สมัคร' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'ยกเลิกสมัคร' })).not.toBeInTheDocument();
+  });
+
   it('ESS quick action points benefit claim entry to profile benefits', () => {
     const benefitAction = DEFAULT_ESS_ACTIONS.find((action) => action.labelTh === 'เบิกสวัสดิการ');
 
@@ -86,6 +100,20 @@ describe('benefit claim journey canonical route', () => {
 
     expect(benefitCommand?.label).toBe('สวัสดิการ');
     expect(benefitCommand?.route).toBe('/profile/me?tab=benefits');
+  });
+
+  it('benefit route helpers keep one canonical destination per intent', async () => {
+    const {
+      benefitProfileRoute,
+      benefitReferralRoute,
+      benefitTaxPlanningRoute,
+      benefitsHubRoute,
+    } = await import('@/lib/benefit-routes');
+
+    expect(benefitProfileRoute('th')).toBe('/th/profile/me?tab=benefits');
+    expect(benefitReferralRoute('th')).toBe('/th/profile/me?tab=benefits&service=referral');
+    expect(benefitTaxPlanningRoute('th')).toBe('/th/profile/me?tab=tax&mode=planning');
+    expect(benefitsHubRoute('th')).toBe('/th/benefits-hub');
   });
 
   it('/benefits redirects to the canonical profile benefits route', async () => {
@@ -122,5 +150,14 @@ describe('benefit claim journey canonical route', () => {
       EmployeeBenefitsPage({ params: Promise.resolve({ locale: 'th' }) } as never)
     ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me?tab=benefits');
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=benefits');
+  });
+
+  it('/hospital-referral redirects to the profile benefits referral shortcut instead of rendering a legacy journey', async () => {
+    const { default: HospitalReferralPage } = await import('@/app/[locale]/hospital-referral/page');
+
+    await expect(
+      HospitalReferralPage({ params: Promise.resolve({ locale: 'th' }) } as never)
+    ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me?tab=benefits&service=referral');
+    expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=benefits&service=referral');
   });
 });

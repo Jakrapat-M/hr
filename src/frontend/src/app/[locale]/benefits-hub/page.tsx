@@ -35,7 +35,7 @@ import {
 import { useBenefitsStore, type BenefitsTabKey } from '@/stores/humi-benefits-slice';
 
 // ════════════════════════════════════════════════════════════
-// /benefits-hub — Salary + benefits overview
+// /benefits-hub — Salary + benefits browse/learn overview
 // Port of docs/design-ref/shelfly-bundle/project/screens/benefits.jsx
 // 5-tab panel: benefits / claims / docs / policies / pay
 // c6: Zustand persist tab + enroll toggle + Modal detail
@@ -144,8 +144,10 @@ export default function HumiBenefitsHubPage() {
 // ────────────────────────────────────────────────────────────
 
 function BenefitsTab() {
-  const { enrolled, toggleEnroll } = useBenefitsStore();
+  const { enrolled } = useBenefitsStore();
   const [detailPlan, setDetailPlan] = useState<HumiBenefitPlan | null>(null);
+  const params = useParams<{ locale?: string }>();
+  const locale = typeof params.locale === 'string' ? params.locale : 'th';
 
   return (
     <>
@@ -186,13 +188,14 @@ function BenefitsTab() {
               ))}
             </ul>
             <div className="flex gap-2 pt-2">
-              <Button
-                variant={enrolled.has(detailPlan.id) ? 'secondary' : 'primary'}
-                className="min-h-[44px]"
-                onClick={() => toggleEnroll(detailPlan.id)}
+              <Link
+                href={benefitProfileRoute(locale)}
+                className={buttonVariants({
+                  variant: enrolled.has(detailPlan.id) ? 'secondary' : 'primary',
+                })}
               >
-                {enrolled.has(detailPlan.id) ? 'ยกเลิกสมัคร' : 'สมัคร'}
-              </Button>
+                จัดการในโปรไฟล์
+              </Link>
               <Button variant="ghost" className="min-h-[44px]" onClick={() => setDetailPlan(null)}>
                 ปิด
               </Button>
@@ -217,7 +220,7 @@ function BenefitsTab() {
         />
         <div className="relative">
           <CardEyebrow>
-            ลงทะเบียนสวัสดิการปี 2569 · เปิดรับถึง 3 พ.ค.
+            คู่มือสวัสดิการปี 2569 · เปิดอ่านถึง 3 พ.ค.
           </CardEyebrow>
           <h2
             className={cn(
@@ -225,14 +228,19 @@ function BenefitsTab() {
               'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
             )}
           >
-            เลือกแผนสวัสดิการของคุณสำหรับปีนี้
+            สำรวจแผนสวัสดิการก่อนจัดการสิทธิ์ในโปรไฟล์
           </h2>
           <p className="mt-3 max-w-xl text-body text-ink-soft leading-relaxed">
-            คุณมีเวลา 13 วันในการทบทวนความคุ้มครอง เพิ่มผู้อุปการะ และยืนยัน
-            ระบบจะใช้แผนเดิมของคุณโดยอัตโนมัติหากไม่มีการเปลี่ยนแปลง
+            หน้านี้เป็นฮับสำหรับอ่าน เปรียบเทียบ และทำความเข้าใจความคุ้มครอง
+            การเปลี่ยนแปลงสิทธิ์ให้ทำในแท็บสวัสดิการของโปรไฟล์เท่านั้น
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Button variant="primary">เริ่มลงทะเบียน</Button>
+            <Link
+              href={benefitProfileRoute(locale)}
+              className={buttonVariants({ variant: 'primary' })}
+            >
+              ไปที่สิทธิ์ของฉัน
+            </Link>
             <Button variant="ghost">เปรียบเทียบแผน</Button>
           </div>
         </div>
@@ -290,12 +298,12 @@ function BenefitsTab() {
                 ))}
               </ul>
               <Button
-                variant={isEnrolled ? 'secondary' : 'ghost'}
+                variant="ghost"
                 block
                 className="mt-5 min-h-[44px]"
-                onClick={(e) => { e.stopPropagation(); toggleEnroll(b.id); }}
+                onClick={(e) => { e.stopPropagation(); setDetailPlan(b); }}
               >
-                {isEnrolled ? 'ยกเลิกสมัคร' : 'สมัคร'}
+                ดูรายละเอียด
               </Button>
             </Card>
           );
@@ -309,9 +317,13 @@ function BenefitsTab() {
             <CardEyebrow>ผู้อุปการะ</CardEyebrow>
             <CardTitle className="mt-1">ในแผนของคุณ</CardTitle>
           </div>
-          <Button variant="ghost" leadingIcon={<Plus size={14} />}>
-            เพิ่มผู้อุปการะ
-          </Button>
+          <Link
+            href={benefitProfileRoute(locale)}
+            className={buttonVariants({ variant: 'ghost' })}
+          >
+            <Plus size={14} aria-hidden />
+            จัดการผู้รับสิทธิ์ในโปรไฟล์
+          </Link>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {HUMI_DEPENDENTS.map((d) => (
