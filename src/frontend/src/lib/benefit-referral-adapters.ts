@@ -23,6 +23,7 @@ export function buildMockEPatientLetterPayload(referral: BenefitReferralRequest)
     reason: referral.serviceReason,
     preferredVisitDate: referral.preferredVisitDate,
     referralNumber: referral.letter?.referralNumber,
-    integrationStatus: 'mock/planned' as const,
+    ePatientReference: referral.letter?.ePatientReference,
+    integrationStatus: referral.letter ? 'พร้อมใช้อ้างอิง ePatient' : 'รอ SPD ออกใบส่งตัว',
   };
 }

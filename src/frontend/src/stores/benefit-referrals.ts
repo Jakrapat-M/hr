@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { HumiApprovalStep, RequestStatus } from '@/lib/humi-mock-data';
 import { addReferralValidityWindow } from '@/lib/benefit-referral-adapters';
 
-export type BenefitReferralStatus = 'draft' | 'pending_spd' | 'send_back' | 'approved' | 'rejected' | 'letter_issued' | 'cancelled';
+export type BenefitReferralStatus = 'draft' | 'pending_spd' | 'spd_reviewing' | 'send_back' | 'approved' | 'rejected' | 'letter_issued' | 'cancelled';
 
 export interface BenefitReferralHospital {
   id: string;
@@ -20,6 +20,7 @@ export interface BenefitReferralCoveredPerson {
 
 export interface BenefitReferralLetter {
   referralNumber: string;
+  ePatientReference: string;
   validFrom: string;
   validUntil: string;
   issuedBy: string;
@@ -31,7 +32,7 @@ export interface BenefitReferralAuditEntry {
   at: string;
   actorRole: 'employee' | 'spd';
   actorName: string;
-  action: 'create' | 'submit' | 'approve' | 'reject' | 'send_back' | 'resubmit' | 'issue_letter' | 'cancel';
+  action: 'create' | 'submit' | 'start_review' | 'approve' | 'reject' | 'send_back' | 'resubmit' | 'issue_letter' | 'cancel';
   note?: string;
 }
 
@@ -46,6 +47,8 @@ export interface BenefitReferralRequest {
   hospital: BenefitReferralHospital;
   serviceReason: string;
   preferredVisitDate: string;
+  contactPhone?: string;
+  documentNote?: string;
   notes?: string;
   status: BenefitReferralStatus;
   submittedAt?: string;
@@ -63,6 +66,8 @@ export interface BenefitReferralInput {
   hospitalId: string;
   serviceReason: string;
   preferredVisitDate: string;
+  contactPhone?: string;
+  documentNote?: string;
   notes?: string;
 }
 
@@ -78,6 +83,7 @@ interface BenefitReferralsState {
   createReferral: (input: BenefitReferralInput) => BenefitReferralRequest;
   submitReferral: (id: string, actor?: Actor) => void;
   resubmitReferral: (id: string, input: Partial<BenefitReferralInput>, actor?: Actor) => void;
+  startReferralReview: (id: string, actor: Actor, note?: string) => void;
   approveReferral: (id: string, actor: Actor, note?: string) => void;
   rejectReferral: (id: string, actor: Actor, reason: string) => void;
   sendBackReferral: (id: string, actor: Actor, reason: string) => void;
@@ -89,6 +95,7 @@ interface BenefitReferralsState {
 export const BENEFIT_REFERRAL_STATUS_LABEL: Record<BenefitReferralStatus, string> = {
   draft: 'ร่างคำขอ',
   pending_spd: 'รอ SPD อนุมัติ',
+  spd_reviewing: 'SPD กำลังตรวจ',
   send_back: 'ส่งกลับให้แก้ไข',
   approved: 'อนุมัติแล้ว',
   rejected: 'ไม่อนุมัติ',
@@ -120,6 +127,8 @@ const initialReferrals: BenefitReferralRequest[] = [
     hospital: REFERRAL_HOSPITALS[0],
     serviceReason: 'พบแพทย์เฉพาะทางกระดูก',
     preferredVisitDate: '2026-05-05',
+    contactPhone: '080-000-0001',
+    documentNote: 'ใช้บัตรพนักงานและบัตรประชาชนยืนยันสิทธิ์',
     notes: 'ต้องการใช้สิทธิ์ ePatient',
     status: 'pending_spd',
     submittedAt: '2026-04-29T09:00:00.000Z',
@@ -142,14 +151,14 @@ export function validateBenefitReferralInput(input: BenefitReferralInput, hospit
 }
 
 function statusToRequestStatus(status: BenefitReferralStatus): RequestStatus {
-  if (status === 'approved' || status === 'letter_issued') return 'approved';
+  if (status === 'letter_issued') return 'approved';
   if (status === 'rejected' || status === 'cancelled') return 'rejected';
   if (status === 'send_back') return 'info';
   return 'pending';
 }
 
 function stepStatus(status: BenefitReferralStatus): HumiApprovalStep['status'] {
-  if (status === 'approved' || status === 'letter_issued') return 'approved';
+  if (status === 'letter_issued') return 'approved';
   if (status === 'rejected' || status === 'cancelled') return 'rejected';
   return 'pending';
 }
@@ -174,12 +183,26 @@ export function selectBenefitReferralRequestSummaries(referrals: BenefitReferral
           note: referral.correctionReason ?? referral.rejectionReason,
         },
       ] satisfies HumiApprovalStep[],
-      referral,
+      referral: {
+        id: referral.id,
+        workflowRequestId: referral.workflowRequestId,
+        employeeId: referral.employeeId,
+        employeeName: referral.employeeName,
+        coveredPersonName: referral.coveredPersonName,
+        hospitalName: referral.hospital.name,
+        hospitalBranch: referral.hospital.branch,
+        preferredVisitDate: referral.preferredVisitDate,
+        submittedAt: referral.submittedAt,
+        updatedAt: referral.updatedAt,
+        status: referral.status,
+        letterReferralNumber: referral.letter?.referralNumber,
+        ePatientReference: referral.letter?.ePatientReference,
+      },
     }));
 }
 
 export function selectReferralInboxRows(referrals: BenefitReferralRequest[]) {
-  return referrals.filter((referral) => referral.status !== 'draft' && referral.status !== 'cancelled');
+  return referrals.filter((referral) => !['draft', 'send_back', 'cancelled'].includes(referral.status));
 }
 
 export const useBenefitReferralsStore = create<BenefitReferralsState>()((set, get) => ({
@@ -204,6 +227,8 @@ export const useBenefitReferralsStore = create<BenefitReferralsState>()((set, ge
       hospital,
       serviceReason: input.serviceReason.trim(),
       preferredVisitDate: input.preferredVisitDate,
+      contactPhone: input.contactPhone?.trim() || '080-000-0001',
+      documentNote: input.documentNote?.trim() || undefined,
       notes: input.notes?.trim() || undefined,
       status: 'draft',
       updatedAt: at,
@@ -241,11 +266,25 @@ export const useBenefitReferralsStore = create<BenefitReferralsState>()((set, ge
         coveredPersonRelationship: person?.relationship ?? referral.coveredPersonRelationship,
         serviceReason: input.serviceReason?.trim() || referral.serviceReason,
         preferredVisitDate: input.preferredVisitDate ?? referral.preferredVisitDate,
+        contactPhone: input.contactPhone?.trim() || referral.contactPhone,
+        documentNote: input.documentNote?.trim() || referral.documentNote,
         notes: input.notes?.trim() || referral.notes,
         status: 'pending_spd',
         correctionReason: undefined,
         updatedAt: at,
         audit: [...referral.audit, { at, actorRole: actor.role, actorName: actor.name, action: 'resubmit', note: 'แก้ไขและส่งคำขอใบส่งตัวอีกครั้ง' }],
+      };
+    }),
+  })),
+  startReferralReview: (id, actor, note) => set((state) => ({
+    referrals: state.referrals.map((referral) => {
+      if (referral.id !== id || referral.status !== 'pending_spd') return referral;
+      const at = nowIso();
+      return {
+        ...referral,
+        status: 'spd_reviewing',
+        updatedAt: at,
+        audit: [...referral.audit, { at, actorRole: actor.role, actorName: actor.name, action: 'start_review', note: note?.trim() || undefined }],
       };
     }),
   })),
@@ -263,6 +302,7 @@ export const useBenefitReferralsStore = create<BenefitReferralsState>()((set, ge
         updatedAt: at,
         letter: {
           referralNumber: `EP-${new Date(at).getFullYear()}-${referral.id.slice(-4)}`,
+          ePatientReference: `${referral.hospital.ePatientCode}-${referral.workflowRequestId}`,
           ...validity,
           issuedBy: actor.name,
           issuedAt: at,
@@ -274,7 +314,7 @@ export const useBenefitReferralsStore = create<BenefitReferralsState>()((set, ge
   })),
   cancelReferral: (id, actor = { role: 'employee', name: 'จงรักษ์ ทานากะ' }, reason) => set((state) => ({
     referrals: state.referrals.map((referral) => {
-      if (referral.id !== id || !['draft', 'pending_spd', 'send_back'].includes(referral.status)) return referral;
+      if (referral.id !== id || !['draft', 'pending_spd', 'spd_reviewing', 'send_back'].includes(referral.status)) return referral;
       const at = nowIso();
       return { ...referral, status: 'cancelled', updatedAt: at, audit: [...referral.audit, { at, actorRole: actor.role, actorName: actor.name, action: 'cancel', note: reason }] };
     }),
@@ -290,16 +330,19 @@ function transition(
   action: BenefitReferralAuditEntry['action'],
   note?: string,
 ) {
+  if ((action === 'reject' || action === 'send_back') && !note?.trim()) {
+    throw new Error('กรุณาระบุเหตุผลสำหรับการส่งกลับหรือปฏิเสธคำขอใบส่งตัว');
+  }
   const at = nowIso();
   return referrals.map((referral) => {
-    if (referral.id !== id || referral.status !== 'pending_spd') return referral;
+    if (referral.id !== id || !['pending_spd', 'spd_reviewing'].includes(referral.status)) return referral;
     return {
       ...referral,
       status,
       updatedAt: at,
-      correctionReason: status === 'send_back' ? note : undefined,
-      rejectionReason: status === 'rejected' ? note : undefined,
-      audit: [...referral.audit, { at, actorRole: actor.role, actorName: actor.name, action, note }],
+      correctionReason: status === 'send_back' ? note?.trim() : undefined,
+      rejectionReason: status === 'rejected' ? note?.trim() : undefined,
+      audit: [...referral.audit, { at, actorRole: actor.role, actorName: actor.name, action, note: note?.trim() || undefined }],
     };
   });
 }
