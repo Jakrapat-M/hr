@@ -30,16 +30,16 @@ const workflowCutoff = [
 ];
 const paymentSteps = ['Create period', 'Calculate', 'Post to finance', 'Upload bank file', 'Close period'];
 const referralWorkflow = [
-  ['Employee draft/submit', 'Profile benefits canonical surface', 'Active mock'],
-  ['SPD approve/send back/reject', 'Dedicated referral lane', 'Active mock'],
-  ['Issue letter', 'ePatient payload + 30-day validity', 'Active mock'],
-  ['ePatient API sync', 'External integration', 'Planned'],
+  ['Employee draft/submit', 'Profile benefits canonical surface', 'Active preview'],
+  ['SPD approve/send back/reject', 'Dedicated referral lane', 'Active preview'],
+  ['Issue letter', 'ePatient payload + 30-day validity', 'Active preview'],
+  ['ePatient API sync', 'Secure integration queue', 'ยังไม่เปิดใช้'],
 ];
 const taxAllowanceRows = Object.entries(THAI_TAX_YEAR_ASSUMPTIONS.caps).map(([key, cap]) => [
   key,
   formatTHB(cap),
   'Employee-entered planning allowance',
-  'Mock/planned payroll integration',
+  'รอเชื่อมต่อ Payroll',
 ]);
 
 export default function AdminBenefitsPage() {
@@ -56,13 +56,13 @@ export default function AdminBenefitsPage() {
         <div>
           <CardEyebrow>Benefits admin · read-only first pass</CardEyebrow>
           <h1 className="font-display text-[28px] font-semibold text-ink">Benefits master, reporting, and payment</h1>
-          <p className="mt-2 text-small text-ink-muted">BRD-backed read-only surface. Edit/import/export and integrations are planned follow-ups.</p>
+          <p className="mt-2 text-small text-ink-muted">BRD-backed read-only setup. Edit, import, export, and integrations remain disabled until governance is ready.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" disabled>Edit planned</Button>
-          <Button variant="secondary" disabled>Import planned</Button>
-          <Button variant="secondary" disabled>Export planned</Button>
-          <Button variant="secondary" disabled>Export CSV planned</Button>
+          <Button variant="secondary" disabled>Edit disabled</Button>
+          <Button variant="secondary" disabled>Import disabled</Button>
+          <Button variant="secondary" disabled>Export disabled</Button>
+          <Button variant="secondary" disabled>Export CSV disabled</Button>
         </div>
       </header>
 
@@ -90,26 +90,26 @@ export default function AdminBenefitsPage() {
         description="Hospital network, referral workflow setup, letter template, and ePatient integration are read-only in this pass."
         headers={['Hospital / workflow item','Branch / route','Province / behavior','Status']}
         rows={[
-          ...REFERRAL_HOSPITALS.map((hospital) => [hospital.name, hospital.branch, hospital.province, `Mock ePatient ${hospital.ePatientCode}`]),
+          ...REFERRAL_HOSPITALS.map((hospital) => [hospital.name, hospital.branch, hospital.province, `ePatient code ${hospital.ePatientCode}`]),
           ...referralWorkflow,
         ]}
       />
 
       <DataSection
         title="Tax Planning configuration preview"
-        description={`Tax year ${THAI_TAX_YEAR_ASSUMPTIONS.taxYear}; local estimator only, no payroll mutation or reviewer workflow.`}
+        description={`Tax year ${THAI_TAX_YEAR_ASSUMPTIONS.taxYear}; employee-only estimate with no payroll mutation or reviewer workflow.`}
         headers={['Allowance category','Maximum cap','Purpose','Integration status']}
         rows={taxAllowanceRows}
       />
 
       <Card variant="raised" size="lg">
         <CardEyebrow>Deferred service integrations</CardEyebrow>
-        <CardTitle>Planned admin actions</CardTitle>
+        <CardTitle>Disabled admin actions</CardTitle>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant="secondary" disabled>Hospital import planned</Button>
-          <Button variant="secondary" disabled>ePatient sync planned</Button>
-          <Button variant="secondary" disabled>Edit tax brackets planned</Button>
-          <Button variant="secondary" disabled>Payroll sync planned</Button>
+          <Button variant="secondary" disabled>Hospital import disabled</Button>
+          <Button variant="secondary" disabled>ePatient sync disabled</Button>
+          <Button variant="secondary" disabled>Edit tax brackets disabled</Button>
+          <Button variant="secondary" disabled>Payroll sync disabled</Button>
         </div>
       </Card>
 
@@ -126,8 +126,8 @@ export default function AdminBenefitsPage() {
           {paymentSteps.map((step) => <div key={step} className="rounded-md bg-canvas-soft p-3 text-small font-medium text-ink">{step}<div className="mt-1 text-[length:var(--text-eyebrow)] uppercase tracking-[0.14em] text-ink-muted">Read-only / deferred integration</div></div>)}
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant="secondary" disabled>Post to finance planned</Button>
-          <Button variant="secondary" disabled>Generate bank file planned</Button>
+          <Button variant="secondary" disabled>Post to finance disabled</Button>
+          <Button variant="secondary" disabled>Generate bank file disabled</Button>
         </div>
         <p className="mt-4 text-small text-ink-muted">Deferred: bank file generation, finance posting, payroll calculation, real Excel import/export.</p>
       </Card>

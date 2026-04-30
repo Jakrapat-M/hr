@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { BenefitReferralInbox } from '@/components/workflow/BenefitReferralInbox';
 import { BenefitClaimsInbox } from '@/components/workflow/BenefitClaimsInbox';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
@@ -55,5 +57,13 @@ describe('benefit referral inbox lane', () => {
 
     expect(screen.getByText('Benefit Reimbursement — SPD')).toBeInTheDocument();
     expect(screen.queryByText(/โรงพยาบาลกรุงเทพ/)).not.toBeInTheDocument();
+  });
+
+  it('uses Humi primitives rather than legacy card classes or inline styles', () => {
+    const source = readFileSync(path.join(process.cwd(), 'src/components/workflow/BenefitReferralInbox.tsx'), 'utf8');
+
+    expect(source).toMatch(/<Card/);
+    expect(source).toMatch(/<FormField/);
+    expect(source).not.toMatch(/style=|humi-card|humi-row|humi-col|#[0-9a-f]{3,8}/i);
   });
 });

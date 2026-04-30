@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
@@ -102,7 +104,8 @@ describe('benefit deferred services profile launchpad', () => {
     render(<ReferralPage />);
 
     expect(await screen.findByText('ขอใบส่งตัว / ePatient referral')).toBeInTheDocument();
-    expect(screen.getByLabelText('โรงพยาบาล / สาขา')).toBeInTheDocument();
+    expect(screen.getByLabelText(/โรงพยาบาล \/ สาขา/)).toBeInTheDocument();
+    expect(screen.getByText('ไม่ต้องแนบข้อมูลใบเสร็จหรือจำนวนเงินในช่องนี้')).toBeInTheDocument();
     expect(screen.queryByLabelText('เลขที่ใบเสร็จ/เอกสาร')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('จำนวนเงินที่ขอเบิก')).not.toBeInTheDocument();
   });
@@ -119,5 +122,18 @@ describe('benefit deferred services profile launchpad', () => {
     fireEvent.click(screen.getByRole('button', { name: 'คำนวณประมาณการ' }));
     await waitFor(() => expect(useBenefitTaxPlanningStore.getState().drafts).toHaveLength(1));
     expect(JSON.stringify(useBenefitTaxPlanningStore.getState().drafts)).not.toContain('3101700000000');
+  });
+
+  it('keeps referral and tax forms on Humi field primitives without implementation copy', () => {
+    const files = [
+      'src/components/benefits/referral/ReferralRequestPanel.tsx',
+      'src/components/benefits/tax/TaxPlanningPanel.tsx',
+      'src/components/benefits/referral/ReferralLetterPreview.tsx',
+    ];
+    const source = files.map((file) => readFileSync(path.join(process.cwd(), file), 'utf8')).join('\n');
+
+    expect(source).toMatch(/FormField/);
+    expect(source).toMatch(/FormInput/);
+    expect(source).not.toMatch(/local estimator only|mocked for planning|Submit for review planned|PDF planned/i);
   });
 });

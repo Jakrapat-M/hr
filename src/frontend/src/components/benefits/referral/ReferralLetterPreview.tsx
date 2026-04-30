@@ -24,7 +24,7 @@ export function ReferralLetterPreview({ referral, open, onClose }: { referral: B
         </dl>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>ปิด</Button>
-          <Button variant="secondary" disabled={!referral.letter}>ดาวน์โหลด PDF planned</Button>
+          <Button variant="secondary" disabled={!referral.letter}>ดาวน์โหลด PDF (ยังไม่เปิดใช้)</Button>
         </div>
       </Card>
     </Modal>

@@ -48,7 +48,6 @@ import {
 } from '@/stores/humi-requests-slice';
 import { selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
-import { selectTaxPlanningRequestSummaries, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
 // ════════════════════════════════════════════════════════════
 // /requests — Forms/requests tracker
@@ -117,7 +116,6 @@ export default function HumiRequestsPage() {
   const { submissions, filter } = useRequestsStore();
   const benefitClaims = useBenefitClaimsStore((state) => state.claims);
   const benefitReferrals = useBenefitReferralsStore((state) => state.referrals);
-  const taxDrafts = useBenefitTaxPlanningStore((state) => state.drafts);
 
   const allMine = useMemo(() => {
     const base = HUMI_MY_REQUESTS.map((r) => ({ ...r }));
@@ -133,9 +131,8 @@ export default function HumiRequestsPage() {
     }));
     const benefitRows = selectBenefitRequestSummaries(benefitClaims);
     const referralRows = selectBenefitReferralRequestSummaries(benefitReferrals);
-    const taxRows = selectTaxPlanningRequestSummaries(taxDrafts);
-    return [...referralRows, ...taxRows, ...benefitRows, ...store, ...base];
-  }, [benefitClaims, benefitReferrals, submissions, taxDrafts]);
+    return [...referralRows, ...benefitRows, ...store, ...base];
+  }, [benefitClaims, benefitReferrals, submissions]);
 
   const filtered = useMemo(() => {
     if (filter === 'all') return allMine;

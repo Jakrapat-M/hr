@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, CardEyebrow, CardTitle } from '@/components/humi';
+import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/humi';
 import { THAI_TAX_YEAR_ASSUMPTIONS, formatTHB, type TaxAllowanceInput } from '@/lib/tax-planning';
 import { EMPTY_TAX_ALLOWANCES, selectTaxPlanningSafeSummary, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
@@ -46,9 +46,9 @@ export function TaxPlanningPanel() {
 
   return (
     <Card variant="raised" size="lg">
-      <CardEyebrow>Tax planning · local estimator only</CardEyebrow>
+      <CardEyebrow>Tax planning · private estimate</CardEyebrow>
       <CardTitle>วางแผนภาษีปี {profile.taxYear}</CardTitle>
-      <p className="mt-2 text-small text-ink-muted">ประมาณการเพื่อวางแผน ไม่ใช่คำแนะนำภาษี และยังไม่ส่งให้ payroll/SPD review ใน MVP</p>
+      <p className="mt-2 text-small text-ink-muted">ประมาณการส่วนตัวเพื่อวางแผน ไม่ใช่คำแนะนำภาษี และยังไม่ส่งข้อมูลให้ Payroll หรือ SPD</p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-4">
         <Summary label="Tax ID" value={profile.maskedTaxId} />
@@ -58,17 +58,36 @@ export function TaxPlanningPanel() {
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="humi-label">รายได้เพิ่มเติมคาดการณ์ทั้งปี
-          <input className="humi-input mt-1" inputMode="numeric" value={expectedAdditionalIncome} onChange={(event) => { setExpectedAdditionalIncome(event.target.value); setError(null); }} />
-        </label>
+        <FormField id="tax-expected-additional-income" label="รายได้เพิ่มเติมคาดการณ์ทั้งปี" help="ใส่เฉพาะรายได้ที่คาดว่าจะเพิ่มจากยอด YTD">
+          {(controlProps) => (
+            <FormInput
+              {...controlProps}
+              inputMode="numeric"
+              value={expectedAdditionalIncome}
+              onChange={(event) => { setExpectedAdditionalIncome(event.target.value); setError(null); }}
+            />
+          )}
+        </FormField>
         {allowanceLabels.map(([key, label]) => (
-          <label key={key} className="humi-label">{label} <span className="text-ink-muted">(cap {formatTHB(THAI_TAX_YEAR_ASSUMPTIONS.caps[key])})</span>
-            <input className="humi-input mt-1" inputMode="numeric" value={allowances[key]} onChange={(event) => updateAllowance(key, event.target.value)} />
-          </label>
+          <FormField
+            key={key}
+            id={`tax-allowance-${key}`}
+            label={label}
+            help={`วงเงินสูงสุด ${formatTHB(THAI_TAX_YEAR_ASSUMPTIONS.caps[key])}`}
+          >
+            {(controlProps) => (
+              <FormInput
+                {...controlProps}
+                inputMode="numeric"
+                value={allowances[key]}
+                onChange={(event) => updateAllowance(key, event.target.value)}
+              />
+            )}
+          </FormField>
         ))}
       </div>
 
-      {error && <div role="alert" className="mt-4 rounded-md bg-danger-tint p-3 text-small text-ink">{error}</div>}
+      {error && <div role="alert" className="mt-4 rounded-md bg-danger-soft p-3 text-small text-ink">{error}</div>}
 
       {summary.latestEstimate && (
         <div className="mt-4 grid gap-3 sm:grid-cols-4" aria-label="tax estimate summary">
@@ -82,13 +101,13 @@ export function TaxPlanningPanel() {
       )}
 
       <div className="mt-4 rounded-md bg-canvas-soft p-3 text-small text-ink-muted">
-        Assumptions: personal allowance {formatTHB(THAI_TAX_YEAR_ASSUMPTIONS.personalAllowance)}, expense deduction capped at {formatTHB(THAI_TAX_YEAR_ASSUMPTIONS.expenseDeductionCap)}, Thai PIT brackets mocked for planning. โปรดตรวจสอบกับ payroll/finance ก่อนตัดสินใจจริง
+        สมมติฐาน: ค่าลดหย่อนส่วนตัว {formatTHB(THAI_TAX_YEAR_ASSUMPTIONS.personalAllowance)}, ค่าใช้จ่ายหักได้สูงสุด {formatTHB(THAI_TAX_YEAR_ASSUMPTIONS.expenseDeductionCap)}, อัตราภาษีเงินได้บุคคลธรรมดาตามปีภาษีที่เลือก โปรดตรวจสอบกับ Payroll/Finance ก่อนตัดสินใจจริง
       </div>
 
       <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={() => saveDraft({ expectedAdditionalIncome: Number(expectedAdditionalIncome || 0), allowances })}>บันทึกร่าง</Button>
         <Button variant="primary" onClick={calculate}>คำนวณประมาณการ</Button>
-        <Button variant="ghost" disabled>Submit for review planned</Button>
+        <Button variant="ghost" disabled>ส่งให้ Payroll (ยังไม่เปิดใช้)</Button>
       </div>
     </Card>
   );

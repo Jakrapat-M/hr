@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, CardEyebrow, CardTitle } from '@/components/humi';
+import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/humi';
 import { validateBenefitReferralInput, useBenefitReferralsStore } from '@/stores/benefit-referrals';
 
 export function ReferralRequestPanel({ onSubmitted }: { onSubmitted?: (workflowRequestId: string) => void }) {
@@ -35,27 +35,62 @@ export function ReferralRequestPanel({ onSubmitted }: { onSubmitted?: (workflowR
       <CardTitle>ขอใบส่งตัว / ePatient referral</CardTitle>
       <p className="mt-2 text-small text-ink-muted">กรอกข้อมูลใบส่งตัวโดยไม่ต้องใช้เลขใบเสร็จ จำนวนเงิน หรือเอกสารแนบเบิกย้อนหลัง</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="humi-label">ผู้ใช้สิทธิ์
-          <select className="humi-input mt-1" value={form.coveredPersonId} onChange={(event) => setField('coveredPersonId', event.target.value)}>
-            {coveredPeople.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
-          </select>
-        </label>
-        <label className="humi-label">โรงพยาบาล / สาขา
-          <select className="humi-input mt-1" value={form.hospitalId} onChange={(event) => setField('hospitalId', event.target.value)}>
-            {hospitals.map((hospital) => <option key={hospital.id} value={hospital.id}>{hospital.name} · {hospital.branch} · {hospital.province}</option>)}
-          </select>
-        </label>
-        <label className="humi-label">เหตุผลหรือบริการที่ต้องการพบแพทย์
-          <input className="humi-input mt-1" value={form.serviceReason} onChange={(event) => setField('serviceReason', event.target.value)} placeholder="เช่น พบแพทย์เฉพาะทาง" />
-        </label>
-        <label className="humi-label">วันที่ต้องการเข้ารับบริการ
-          <input className="humi-input mt-1" type="date" value={form.preferredVisitDate} onChange={(event) => setField('preferredVisitDate', event.target.value)} />
-        </label>
-        <label className="humi-label sm:col-span-2">หมายเหตุถึง SPD
-          <textarea className="humi-input mt-1 min-h-[88px]" value={form.notes} onChange={(event) => setField('notes', event.target.value)} />
-        </label>
+        <FormField id="referral-covered-person" label="ผู้ใช้สิทธิ์" required>
+          {(controlProps) => (
+            <select
+              {...controlProps}
+              className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas"
+              value={form.coveredPersonId}
+              onChange={(event) => setField('coveredPersonId', event.target.value)}
+            >
+              {coveredPeople.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
+            </select>
+          )}
+        </FormField>
+        <FormField id="referral-hospital" label="โรงพยาบาล / สาขา" required>
+          {(controlProps) => (
+            <select
+              {...controlProps}
+              className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas"
+              value={form.hospitalId}
+              onChange={(event) => setField('hospitalId', event.target.value)}
+            >
+              {hospitals.map((hospital) => <option key={hospital.id} value={hospital.id}>{hospital.name} · {hospital.branch} · {hospital.province}</option>)}
+            </select>
+          )}
+        </FormField>
+        <FormField id="referral-service-reason" label="เหตุผลหรือบริการที่ต้องการพบแพทย์" help="ระบุอาการหรือแผนกที่ต้องการรับบริการ" required>
+          {(controlProps) => (
+            <FormInput
+              {...controlProps}
+              value={form.serviceReason}
+              onChange={(event) => setField('serviceReason', event.target.value)}
+              placeholder="เช่น พบแพทย์เฉพาะทาง"
+            />
+          )}
+        </FormField>
+        <FormField id="referral-visit-date" label="วันที่ต้องการเข้ารับบริการ" required>
+          {(controlProps) => (
+            <FormInput
+              {...controlProps}
+              type="date"
+              value={form.preferredVisitDate}
+              onChange={(event) => setField('preferredVisitDate', event.target.value)}
+            />
+          )}
+        </FormField>
+        <FormField id="referral-notes" label="หมายเหตุถึง SPD" help="ไม่ต้องแนบข้อมูลใบเสร็จหรือจำนวนเงินในช่องนี้" className="sm:col-span-2">
+          {(controlProps) => (
+            <textarea
+              {...controlProps}
+              className="min-h-[88px] w-full rounded-md border border-hairline bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-faint transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas"
+              value={form.notes}
+              onChange={(event) => setField('notes', event.target.value)}
+            />
+          )}
+        </FormField>
       </div>
-      {errors.length > 0 && <div role="alert" className="mt-4 rounded-md bg-danger-tint p-3 text-small text-ink"><ul className="list-disc pl-5">{errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
+      {errors.length > 0 && <div role="alert" className="mt-4 rounded-md bg-danger-soft p-3 text-small text-ink"><ul className="list-disc pl-5">{errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
       <div className="mt-4 flex justify-end gap-2">
         <Button variant="primary" onClick={submit}>ส่งคำขอใบส่งตัว</Button>
       </div>
