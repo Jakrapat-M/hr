@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
-import { DollarSign, Calculator, BarChart3, Calendar } from 'lucide-react';
+import { DollarSign, Calculator, BarChart3, Calendar, ShieldCheck } from 'lucide-react';
 import { Card, CardTitle } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
 import { canAccessModule } from '@/lib/rbac';
@@ -38,6 +38,13 @@ export default function PayrollLandingPage() {
  href: `/${locale}/payroll/reports`,
  icon: <BarChart3 className="h-6 w-6" />,
  color:'text-success bg-success-tint',
+ },
+ {
+ title: 'ตรวจแผนภาษี',
+ description: 'Review employee tax planning submissions with masked summaries only.',
+ href: `/${locale}/payroll/tax-review`,
+ icon: <ShieldCheck className="h-6 w-6" />,
+ color:'text-accent bg-accent-tint',
  },
  ];
 
@@ -80,7 +87,7 @@ export default function PayrollLandingPage() {
  </div>
 
  {/* Navigation Cards */}
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+ <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
  {links.map((link) => (
  <a key={link.href} href={link.href}>
  <Card
