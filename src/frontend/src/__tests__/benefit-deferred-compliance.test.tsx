@@ -75,6 +75,7 @@ describe('deferred benefit journey and token compliance', () => {
       'components/benefits/tax/TaxPlanningPanel.tsx',
       'components/workflow/BenefitReferralInbox.tsx',
       'app/[locale]/admin/benefits/page.tsx',
+      'app/[locale]/payroll/tax-review/page.tsx',
       'app/[locale]/requests/page.tsx',
     ];
     const forbiddenLegacyPatterns = [

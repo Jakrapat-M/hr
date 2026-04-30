@@ -13,6 +13,8 @@ describe('admin benefit deferred service configuration', () => {
     expect(screen.getByText(/letter template, and ePatient integration/)).toBeInTheDocument();
     expect(screen.getByText('ePatient payload + 30-day validity')).toBeInTheDocument();
     expect(screen.getByText('Tax Planning configuration preview')).toBeInTheDocument();
+    expect(screen.getByText(/review is enabled for demo and payroll sync is disabled/)).toBeInTheDocument();
+    expect(screen.getByText('Tax review requests')).toBeInTheDocument();
     expect(screen.getByText('Payroll sync disabled')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ePatient sync disabled' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Edit tax brackets disabled' })).toBeDisabled();

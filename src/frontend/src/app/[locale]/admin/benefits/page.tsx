@@ -2,7 +2,8 @@
 
 import { Card, CardEyebrow, CardTitle, Button } from '@/components/humi';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
-import { REFERRAL_HOSPITALS } from '@/stores/benefit-referrals';
+import { REFERRAL_HOSPITALS, useBenefitReferralsStore } from '@/stores/benefit-referrals';
+import { useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 import { THAI_TAX_YEAR_ASSUMPTIONS, formatTHB } from '@/lib/tax-planning';
 
 const masterData = [
@@ -39,16 +40,20 @@ const taxAllowanceRows = Object.entries(THAI_TAX_YEAR_ASSUMPTIONS.caps).map(([ke
   key,
   formatTHB(cap),
   'Employee-entered planning allowance',
-  'รอเชื่อมต่อ Payroll',
+  'Payroll review enabled for demo; payroll sync disabled.',
 ]);
 
 export default function AdminBenefitsPage() {
   const claims = useBenefitClaimsStore((s) => s.claims);
+  const referrals = useBenefitReferralsStore((s) => s.referrals);
+  const taxDrafts = useBenefitTaxPlanningStore((s) => s.drafts);
   const pending = claims.filter((c) => c.status === 'pending_spd').length;
   const approved = claims.filter((c) => c.status === 'approved').length;
   const sendBack = claims.filter((c) => c.status === 'send_back').length;
   const totalClaimAmount = claims.reduce((sum, c) => sum + c.totalClaimAmount, 0);
   const remainingAmount = claims.reduce((sum, c) => sum + c.remainingAmount, 0);
+  const activeReferrals = referrals.filter((referral) => !['draft', 'cancelled'].includes(referral.status)).length;
+  const taxReviewRequests = taxDrafts.filter((draft) => ['submitted_payroll', 'payroll_reviewing', 'send_back', 'approved', 'rejected', 'cancelled'].includes(String(draft.status))).length;
 
   return (
     <div className="space-y-6">
@@ -66,10 +71,12 @@ export default function AdminBenefitsPage() {
         </div>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-7">
         <Summary label="Pending claims" value={pending} />
         <Summary label="Approved claims" value={approved} />
         <Summary label="Send-back claims" value={sendBack} />
+        <Summary label="Referral requests" value={activeReferrals} />
+        <Summary label="Tax review requests" value={taxReviewRequests} />
         <Summary label="Remaining amount" value={`฿${remainingAmount.toLocaleString('th-TH')}`} />
         <Summary label="Total claim amount" value={`฿${totalClaimAmount.toLocaleString('th-TH')}`} />
       </section>
@@ -97,14 +104,14 @@ export default function AdminBenefitsPage() {
 
       <DataSection
         title="Tax Planning configuration preview"
-        description={`Tax year ${THAI_TAX_YEAR_ASSUMPTIONS.taxYear}; employee-only estimate with no payroll mutation or reviewer workflow.`}
+        description={`Tax year ${THAI_TAX_YEAR_ASSUMPTIONS.taxYear}; review is enabled for demo and payroll sync is disabled.`}
         headers={['Allowance category','Maximum cap','Purpose','Integration status']}
         rows={taxAllowanceRows}
       />
 
       <Card variant="raised" size="lg">
-        <CardEyebrow>Deferred service integrations</CardEyebrow>
-        <CardTitle>Disabled admin actions</CardTitle>
+        <CardEyebrow>Service integrations</CardEyebrow>
+        <CardTitle>Read-only admin actions</CardTitle>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="secondary" disabled>Hospital import disabled</Button>
           <Button variant="secondary" disabled>ePatient sync disabled</Button>
