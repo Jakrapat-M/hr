@@ -225,7 +225,7 @@ describe('b4 — i18n routing config (locale redirect)', () => {
       NextResponse: { next: () => ({}) },
     }));
     const mod = await import(
-      /* @vite-ignore */ '/Users/tachongrak/Projects/hr/src/frontend/middleware.ts'
+      /* @vite-ignore */ '/Users/tachongrak/Projects/hr/src/frontend/middleware'
     );
     expect(typeof mod.default).toBe('function');
     vi.doUnmock('next-intl/middleware');
