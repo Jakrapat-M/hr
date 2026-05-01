@@ -3,8 +3,6 @@
 import { Card, CardEyebrow, CardTitle, Button } from '@/components/humi';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { REFERRAL_HOSPITALS, useBenefitReferralsStore } from '@/stores/benefit-referrals';
-import { useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
-import { THAI_TAX_YEAR_ASSUMPTIONS, formatTHB } from '@/lib/tax-planning';
 
 const masterData = [
   ['BEN-MED-OPD', 'Medical reimbursement', 'Medical', 'Reimbursement', 'INC-MED', '2026-01-01', '2026-12-31', 'Active'],
@@ -29,39 +27,35 @@ const workflowCutoff = [
   ['Medical reimbursement', 'Employee → SPD Benefits → Payment', '1-25 monthly', 'Next payroll date', 'Active'],
   ['Fuel/mobile reimbursement', 'Employee → SPD Benefits → Payment', '1-20 monthly', 'Month-end bank run', 'Active'],
 ];
-const paymentSteps = ['Create period', 'Calculate', 'Post to finance', 'Upload bank file', 'Close period'];
+const paymentSteps = ['Create payment period', 'Validate approved claims', 'Prepare finance export', 'Preview bank file', 'Close period'];
 const referralWorkflow = [
   ['Employee draft/submit', 'Profile benefits canonical surface', 'Active preview'],
   ['SPD approve/send back/reject', 'Dedicated referral lane', 'Active preview'],
   ['Issue letter', 'ePatient payload + 30-day validity', 'Active preview'],
   ['ePatient API sync', 'Secure integration queue', 'ยังไม่เปิดใช้'],
 ];
-const taxAllowanceRows = Object.entries(THAI_TAX_YEAR_ASSUMPTIONS.caps).map(([key, cap]) => [
-  key,
-  formatTHB(cap),
-  'Employee-entered planning allowance',
-  'Payroll review enabled for demo; payroll sync disabled.',
-]);
+const eboRows = [
+  ['EBO-MED-2026', 'Employee Benefit Obligation', 'Medical carry-forward obligation', 'Admin/reporting only', 'Restricted'],
+  ['EBO-FAM-2026', 'Employee Benefit Obligation', 'Dependent eligibility obligation', 'Admin/reporting only', 'Restricted'],
+];
 
 export default function AdminBenefitsPage() {
   const claims = useBenefitClaimsStore((s) => s.claims);
   const referrals = useBenefitReferralsStore((s) => s.referrals);
-  const taxDrafts = useBenefitTaxPlanningStore((s) => s.drafts);
   const pending = claims.filter((c) => c.status === 'pending_spd').length;
   const approved = claims.filter((c) => c.status === 'approved').length;
   const sendBack = claims.filter((c) => c.status === 'send_back').length;
   const totalClaimAmount = claims.reduce((sum, c) => sum + c.totalClaimAmount, 0);
   const remainingAmount = claims.reduce((sum, c) => sum + c.remainingAmount, 0);
   const activeReferrals = referrals.filter((referral) => !['draft', 'cancelled'].includes(referral.status)).length;
-  const taxReviewRequests = taxDrafts.filter((draft) => ['submitted_payroll', 'payroll_reviewing', 'send_back', 'approved', 'rejected', 'cancelled'].includes(String(draft.status))).length;
 
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <CardEyebrow>Benefits admin · read-only first pass</CardEyebrow>
-          <h1 className="font-display text-[28px] font-semibold text-ink">Benefits master, reporting, and payment</h1>
-          <p className="mt-2 text-small text-ink-muted">BRD-backed read-only setup. Edit, import, export, and integrations remain disabled until governance is ready.</p>
+          <CardEyebrow>Benefits admin · EC/BRD-derived read-only first pass</CardEyebrow>
+          <h1 className="font-display text-[28px] font-semibold text-ink">Benefits governance and service operations</h1>
+          <p className="mt-2 text-small text-ink-muted">Master data, eligibility, Benefit Special Privilege, EBO reporting, SPD workflows, payment export status, and hospital integration previews. Payroll/Tax review stays outside Benefits Admin.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" disabled>Edit disabled</Button>
@@ -71,18 +65,18 @@ export default function AdminBenefitsPage() {
         </div>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-7">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <Summary label="Pending claims" value={pending} />
         <Summary label="Approved claims" value={approved} />
         <Summary label="Send-back claims" value={sendBack} />
         <Summary label="Referral requests" value={activeReferrals} />
-        <Summary label="Tax review requests" value={taxReviewRequests} />
         <Summary label="Remaining amount" value={`฿${remainingAmount.toLocaleString('th-TH')}`} />
         <Summary label="Total claim amount" value={`฿${totalClaimAmount.toLocaleString('th-TH')}`} />
       </section>
 
       <DataSection title="Benefit master data" headers={['Benefit code','Name','Category','Type','Payroll income code','Effective date','End date','Status']} rows={masterData} />
       <DataSection title="Eligibility rules" headers={['Benefit group','Benefit code','Business unit/company','Employee group/subgroup','Job level','Personal grade','Min service month','Effective date','Status']} rows={eligibility} />
+      <DataSection title="Benefit Special Privilege and EBO reporting" description="EBO is admin/reporting-only in this pass and is not exposed to employees." headers={['Record code','Section','Description','Visibility','Status']} rows={eboRows} />
       <DataSection title="Amount rules" headers={['Benefit group','Amount type','Amount per claim','Frequency','Maximum amount','Effective date','Status']} rows={amountRules} />
       <DataSection title="Field configuration" headers={['Field name','Visibility','Mandatory','Read-only','Conditional rule']} rows={fieldConfig} />
       <DataSection
@@ -102,21 +96,14 @@ export default function AdminBenefitsPage() {
         ]}
       />
 
-      <DataSection
-        title="Tax Planning configuration preview"
-        description={`Tax year ${THAI_TAX_YEAR_ASSUMPTIONS.taxYear}; review is enabled for demo and payroll sync is disabled.`}
-        headers={['Allowance category','Maximum cap','Purpose','Integration status']}
-        rows={taxAllowanceRows}
-      />
-
       <Card variant="raised" size="lg">
         <CardEyebrow>Service integrations</CardEyebrow>
         <CardTitle>Read-only admin actions</CardTitle>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="secondary" disabled>Hospital import disabled</Button>
           <Button variant="secondary" disabled>ePatient sync disabled</Button>
-          <Button variant="secondary" disabled>Edit tax brackets disabled</Button>
-          <Button variant="secondary" disabled>Payroll sync disabled</Button>
+          <Button variant="secondary" disabled>Finance export disabled</Button>
+          <Button variant="secondary" disabled>Bank file generation disabled</Button>
         </div>
       </Card>
 
@@ -136,7 +123,7 @@ export default function AdminBenefitsPage() {
           <Button variant="secondary" disabled>Post to finance disabled</Button>
           <Button variant="secondary" disabled>Generate bank file disabled</Button>
         </div>
-        <p className="mt-4 text-small text-ink-muted">Deferred: bank file generation, finance posting, payroll calculation, real Excel import/export.</p>
+        <p className="mt-4 text-small text-ink-muted">Deferred: bank file generation, finance posting, payroll calculation, tax processing, and real Excel import/export. Benefits Admin only previews payment/export readiness.</p>
       </Card>
 
       <Card variant="raised" size="lg">

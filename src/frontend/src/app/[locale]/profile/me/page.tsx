@@ -1594,7 +1594,7 @@ export default function HumiProfileMePage() {
                   </h4>
                   <p className="mt-1 text-small text-ink-muted">
                     โปรไฟล์แสดงเฉพาะสิทธิ์ วงเงิน ผู้รับสิทธิ์ร่วม และสถานะล่าสุด
-                    เริ่มบริการสวัสดิการจากฮับเท่านั้น
+                    เริ่มบริการจากงานสวัสดิการเท่านั้น
                   </p>
                 </div>
                 <Link
@@ -1607,7 +1607,7 @@ export default function HumiProfileMePage() {
                     fontSize: 13,
                   }}
                 >
-                  เริ่มบริการที่ Benefits Hub
+                  ไปที่งานสวัสดิการ
                 </Link>
               </div>
               {sendBackClaims.length > 0 && (

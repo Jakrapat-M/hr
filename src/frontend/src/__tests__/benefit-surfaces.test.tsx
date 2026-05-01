@@ -54,6 +54,7 @@ describe('benefit workflow/admin surfaces', () => {
 
     expect(screen.getByText('Benefit master data')).toBeInTheDocument();
     expect(screen.getByText('Eligibility rules')).toBeInTheDocument();
+    expect(screen.getByText('Benefit Special Privilege and EBO reporting')).toBeInTheDocument();
     expect(screen.getByText('Amount rules')).toBeInTheDocument();
     expect(screen.getByText('Field configuration')).toBeInTheDocument();
     expect(screen.getByText('Workflow and cutoff schedule')).toBeInTheDocument();

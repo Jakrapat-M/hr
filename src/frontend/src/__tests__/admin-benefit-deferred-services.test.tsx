@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 describe('admin benefit deferred service configuration', () => {
-  it('renders read-only referral and tax planning configuration sections', async () => {
+  it('renders read-only referral, EBO, and benefit payment configuration sections without Payroll Tax ownership', async () => {
     const { default: AdminBenefitsPage } = await import('@/app/[locale]/admin/benefits/page');
 
     render(<AdminBenefitsPage />);
@@ -12,12 +12,13 @@ describe('admin benefit deferred service configuration', () => {
     expect(screen.getByText('Referral configuration preview')).toBeInTheDocument();
     expect(screen.getByText(/letter template, and ePatient integration/)).toBeInTheDocument();
     expect(screen.getByText('ePatient payload + 30-day validity')).toBeInTheDocument();
-    expect(screen.getByText('Tax Planning configuration preview')).toBeInTheDocument();
-    expect(screen.getByText(/review is enabled for demo and payroll sync is disabled/)).toBeInTheDocument();
-    expect(screen.getByText('Tax review requests')).toBeInTheDocument();
-    expect(screen.getByText('Payroll sync disabled')).toBeInTheDocument();
+    expect(screen.getByText('Benefit Special Privilege and EBO reporting')).toBeInTheDocument();
+    expect(screen.getAllByText('Admin/reporting only').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Tax Planning configuration preview')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tax review requests')).not.toBeInTheDocument();
+    expect(screen.queryByText('Payroll sync disabled')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ePatient sync disabled' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Edit tax brackets disabled' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Finance export disabled' })).toBeDisabled();
     expect(screen.getByText('Benefit master data')).toBeInTheDocument();
   });
 

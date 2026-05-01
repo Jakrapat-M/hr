@@ -136,7 +136,7 @@ describe('/profile/me benefits tab', () => {
     expect(screen.queryByRole('heading', { name: 'สวัสดิการของฉัน' })).not.toBeInTheDocument();
   });
 
-  it('keeps Profile Benefits summary-only and sends service starts to Benefits Hub', async () => {
+  it('keeps Profile Benefits summary-only and sends service starts to งานสวัสดิการ', async () => {
     const { default: Page } = await import('@/app/[locale]/profile/me/page');
     const { useHumiProfileStore } = await import('@/stores/humi-profile-slice');
 
@@ -147,13 +147,14 @@ describe('/profile/me benefits tab', () => {
     });
 
     expect(screen.getByText('ภาพรวมสิทธิ์สวัสดิการ')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'เริ่มบริการที่ Benefits Hub' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'ไปที่งานสวัสดิการ' })).toHaveAttribute(
       'href',
       '/th/benefits-hub',
     );
     expect(screen.queryByLabelText('เลขที่ใบเสร็จ/เอกสาร')).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/เหตุผลหรือบริการที่ต้องการพบแพทย์/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText('รายได้เพิ่มเติมคาดการณ์ทั้งปี')).not.toBeInTheDocument();
+    expect(screen.queryByText(/EBO|Employee Benefit Obligation/)).not.toBeInTheDocument();
     expect(screen.queryByTestId('benefit-attachment-field')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'ส่งคำขอใบส่งตัว' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'ส่งคำขอเบิก' })).not.toBeInTheDocument();

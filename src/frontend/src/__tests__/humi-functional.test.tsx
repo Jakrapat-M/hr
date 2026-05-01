@@ -316,12 +316,12 @@ describe('AC-10 — /benefits-hub functional', () => {
     localStorage.clear();
   });
 
-  it('clicking claims tab sets activeTab to claims', async () => {
+  it('clicking claim history tab sets activeTab to claims', async () => {
     const user = userEvent.setup();
     const { default: Page } = await import('@/app/[locale]/benefits-hub/page');
     render(<Page />);
 
-    const claimsTab = screen.getByRole('tab', { name: /เบิกค่าใช้จ่าย/i });
+    const claimsTab = screen.getByRole('tab', { name: /ประวัติการเบิก/i });
     await user.click(claimsTab);
 
     const { useBenefitsStore } = await import('@/stores/humi-benefits-slice');

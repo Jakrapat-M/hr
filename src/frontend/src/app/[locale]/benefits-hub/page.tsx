@@ -34,15 +34,14 @@ import {
 import { useBenefitsStore, type BenefitsTabKey } from '@/stores/humi-benefits-slice';
 
 // ════════════════════════════════════════════════════════════
-// /benefits-hub — Salary + benefits browse/learn overview
-// Port of docs/design-ref/shelfly-bundle/project/screens/benefits.jsx
-// 5-tab panel: benefits / claims / docs / policies / pay
-// c6: Zustand persist tab + enroll toggle + Modal detail
+// /benefits-hub — Benefit Work Zone
+// EC/BRD-inspired entitlement summary + benefit-owned service actions.
+// Payroll/Tax stays in /payroll.
 // ════════════════════════════════════════════════════════════
 
 const TABS: Array<[BenefitsTabKey, string]> = [
-  ['benefits', 'สวัสดิการ'],
-  ['claims', 'เบิกค่าใช้จ่าย'],
+  ['benefits', 'สิทธิ์และผู้รับสิทธิ์'],
+  ['claims', 'ประวัติการเบิก'],
   ['docs', 'เอกสาร'],
   ['policies', 'นโยบาย'],
 ];
@@ -79,6 +78,10 @@ const POLICIES = [
   },
 ];
 
+function benefitDisplayItem(item: string) {
+  return item === 'ไม่ต้องเสียภาษี' ? 'ใช้ตามเงื่อนไขสวัสดิการ' : item;
+}
+
 export default function HumiBenefitsHubPage() {
   const { activeTab, setTab } = useBenefitsStore();
   const params = useParams<{ locale?: string }>();
@@ -89,17 +92,17 @@ export default function HumiBenefitsHubPage() {
       {/* Page header */}
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <CardEyebrow>Benefits Hub</CardEyebrow>
+          <CardEyebrow>Benefits Work Zone</CardEyebrow>
           <h1
             className={cn(
               'font-display font-semibold tracking-tight text-ink',
               'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
             )}
           >
-            สวัสดิการของฉัน
+            งานสวัสดิการ
           </h1>
           <p className="max-w-2xl text-body leading-relaxed text-ink-soft">
-            ดูสิทธิ์ เริ่มบริการ และติดตามสถานะจากฮับสวัสดิการ โดยหน้านี้รวมเฉพาะบริการสวัสดิการ ไม่ฝังฟอร์มในโปรไฟล์
+            เริ่มงานสวัสดิการจากข้อมูลสิทธิ์ในโปรไฟล์ ติดตามสถานะ และอ่านเอกสาร โดยไม่ปนกับงานนอกโดเมนสวัสดิการหรือฟอร์มแก้ไขโปรไฟล์
           </p>
         </div>
       </header>
@@ -107,6 +110,8 @@ export default function HumiBenefitsHubPage() {
       <section className="mb-6" aria-label="บริการสวัสดิการ">
         <BenefitServicesPanel locale={locale} />
       </section>
+
+      <WorkZoneOverview locale={locale} />
 
       {/* Tabs */}
       <div
@@ -139,6 +144,42 @@ export default function HumiBenefitsHubPage() {
       {activeTab === 'docs' && <DocsTab />}
       {activeTab === 'policies' && <PoliciesTab />}
     </>
+  );
+}
+
+function WorkZoneOverview({ locale }: { locale: string }) {
+  return (
+    <section className="mb-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr_0.8fr]" aria-label="ภาพรวมงานสวัสดิการ">
+      <Card variant="raised" size="md" className="border-l-4 border-l-accent">
+        <CardEyebrow>Entitlement source</CardEyebrow>
+        <CardTitle className="mt-1">สิทธิ์จากข้อมูล HRMS/EC</CardTitle>
+        <p className="mt-2 text-small leading-relaxed text-ink-muted">
+          โปรไฟล์เป็นแหล่งข้อมูลสิทธิ์ แผน ผู้รับสิทธิ์ร่วม และวงเงิน ส่วนหน้านี้เป็น work zone สำหรับเริ่มงานสวัสดิการ
+        </p>
+        <Link href={benefitProfileRoute(locale)} className={cn(buttonVariants({ variant: 'ghost' }), 'mt-3')}>
+          ดูสรุปสิทธิ์ในโปรไฟล์
+        </Link>
+      </Card>
+
+      <Card variant="raised" size="md">
+        <CardEyebrow>Recent request status</CardEyebrow>
+        <CardTitle className="mt-1">ติดตามงานล่าสุด</CardTitle>
+        <p className="mt-2 text-small text-ink-muted">
+          คำขอเบิกและใบส่งตัวไปรวมสถานะใน Requests เพื่อไม่ให้ผู้ใช้เริ่มงานซ้ำจากหลายหน้า
+        </p>
+        <Link href={`/${locale}/requests`} className={cn(buttonVariants({ variant: 'ghost' }), 'mt-3')}>
+          เปิด Requests
+        </Link>
+      </Card>
+
+      <Card variant="raised" size="md">
+        <CardEyebrow>Documents and policy</CardEyebrow>
+        <CardTitle className="mt-1">อ่านก่อนเริ่มงาน</CardTitle>
+        <p className="mt-2 text-small text-ink-muted">
+          เอกสาร นโยบาย และเงื่อนไขอยู่ในแท็บสนับสนุนด้านล่าง ไม่ใช่ CTA แข่งกับงานหลัก
+        </p>
+      </Card>
+    </section>
   );
 }
 
@@ -186,7 +227,7 @@ function BenefitsTab() {
                     aria-hidden
                     className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-ink-faint"
                   />
-                  <span>{x}</span>
+                  <span>{benefitDisplayItem(x)}</span>
                 </li>
               ))}
             </ul>
@@ -231,19 +272,11 @@ function BenefitsTab() {
               'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
             )}
           >
-            สำรวจสิทธิ์และเริ่มบริการจาก Benefits Hub
+            สำรวจสิทธิ์ในงานสวัสดิการ
           </h2>
           <p className="mt-3 max-w-xl text-body text-ink-soft leading-relaxed">
-            หน้านี้เป็นพื้นที่อ่านสิทธิ์และรายละเอียดแผน ส่วนการเริ่มบริการให้ใช้แถบ action ด้านบน
+            ส่วนนี้ใช้ดูแผน วงเงิน และผู้รับสิทธิ์ร่วมเท่านั้น การเริ่มบริการใช้ action หลักด้านบน
           </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link
-              href={benefitProfileRoute(locale)}
-              className={buttonVariants({ variant: 'secondary' })}
-            >
-              ดูสรุปสิทธิ์ในโปรไฟล์
-            </Link>
-          </div>
         </div>
       </Card>
 
@@ -294,7 +327,7 @@ function BenefitsTab() {
                       aria-hidden
                       className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-ink-faint"
                     />
-                    <span>{x}</span>
+                    <span>{benefitDisplayItem(x)}</span>
                   </li>
                 ))}
               </ul>

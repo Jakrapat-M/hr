@@ -86,19 +86,24 @@ describe('benefit claim journey canonical route', () => {
     expect(screen.queryByRole('button', { name: 'สร้างคำขอเบิก' })).not.toBeInTheDocument();
   });
 
-  it('/benefits-hub benefits tab keeps coverage browse content and service actions in the hub', async () => {
+  it('/benefits-hub presents a Benefit Work Zone with exactly two benefit-owned actions', async () => {
     const { useBenefitsStore } = await import('@/stores/humi-benefits-slice');
     useBenefitsStore.getState().setTab('benefits');
 
     const { default: BenefitsHubPage } = await import('@/app/[locale]/benefits-hub/page');
     render(<BenefitsHubPage />);
 
-    expect(screen.getByRole('heading', { name: 'สำรวจสิทธิ์และเริ่มบริการจาก Benefits Hub' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'งานสวัสดิการ' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'เลือกงานที่ต้องการทำ' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'สิทธิ์จากข้อมูล HRMS/EC' })).toBeInTheDocument();
+    expect(document.querySelectorAll('[data-benefit-owned-action="true"]')).toHaveLength(2);
     expect(screen.getByRole('link', { name: 'ดูสรุปสิทธิ์ในโปรไฟล์' })).toHaveAttribute('href', '/th/profile/me?tab=benefits');
     expect(screen.getByRole('link', { name: 'เบิกสวัสดิการ' })).toHaveAttribute('href', '/th/benefits-hub/reimbursement');
+    expect(screen.getByRole('link', { name: 'ขอใบส่งตัว' })).toHaveAttribute('href', '/th/benefits-hub/referral');
     expect(screen.queryByRole('tab', { name: 'สลิปเงินเดือน' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /วางแผนภาษี/ })).not.toBeInTheDocument();
     expect(screen.queryByText(/Payroll\/Tax|เงินเดือนและสวัสดิการ/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/EBO|Employee Benefit Obligation/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'เริ่มลงทะเบียน' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'สมัคร' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'ยกเลิกสมัคร' })).not.toBeInTheDocument();
@@ -177,6 +182,25 @@ describe('benefit claim journey canonical route', () => {
       EmployeeBenefitsPage({ params: Promise.resolve({ locale: 'th' }) } as never),
     ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me?tab=benefits');
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=benefits');
+  });
+
+  it('/employees/me/payslip redirects salary statements to Profile Employment', async () => {
+    const { default: EmployeePayslipPage } =
+      await import('@/app/[locale]/employees/me/payslip/page');
+
+    await expect(
+      EmployeePayslipPage({ params: Promise.resolve({ locale: 'th' }) } as never),
+    ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me?tab=employment#pay-statements');
+    expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=employment#pay-statements');
+  });
+
+  it('/payslip redirects legacy payslip entry to Profile Employment', async () => {
+    const { default: LegacyPayslipPage } = await import('@/app/[locale]/payslip/page');
+
+    await expect(
+      LegacyPayslipPage({ params: Promise.resolve({ locale: 'th' }) } as never),
+    ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me?tab=employment#pay-statements');
+    expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=employment#pay-statements');
   });
 
   it('/hospital-referral redirects to the dedicated Benefits Hub referral route', async () => {

@@ -41,7 +41,7 @@ describe('QuickActionsTile — AC-2 BASELINE ACTIONS', () => {
 
   it.each([
     ['ขอลาหยุด', '/th/timeoff'],
-    ['สลิปเงินเดือน', '/th/employees/me/payslip'],
+    ['สลิปเงินเดือน', '/th/profile/me?tab=employment#pay-statements'],
     ['ดูข้อมูลส่วนตัว', '/th/profile/me'],
     ['เบิกสวัสดิการ', '/th/benefits-hub/reimbursement'],
   ])('renders link "%s" → href "%s"', (labelTh, href) => {

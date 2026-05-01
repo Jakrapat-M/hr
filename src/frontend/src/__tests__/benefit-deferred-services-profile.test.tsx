@@ -110,12 +110,12 @@ describe('benefit deferred services profile launchpad', () => {
     useBenefitTaxPlanningStore.getState().clear();
   });
 
-  it('keeps Profile Benefits as a summary surface with a Benefits Hub CTA', async () => {
+  it('keeps Profile Benefits as a summary surface with a งานสวัสดิการ CTA', async () => {
     const { default: Page } = await import('@/app/[locale]/profile/me/page');
     render(<Page />);
 
     expect(await screen.findByText('ภาพรวมสิทธิ์สวัสดิการ')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'เริ่มบริการที่ Benefits Hub' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'ไปที่งานสวัสดิการ' })).toHaveAttribute(
       'href',
       '/th/benefits-hub',
     );

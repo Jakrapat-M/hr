@@ -16,17 +16,21 @@ export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?:
       <Card variant="raised" size="lg" className="border-accent-soft bg-canvas-soft">
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           <div>
-            <CardEyebrow>เริ่มบริการสวัสดิการ</CardEyebrow>
+            <CardEyebrow>งานสวัสดิการ · Benefit-owned services</CardEyebrow>
             <CardTitle id="benefit-services-heading" className="mt-1">
-              ต้องการทำอะไรวันนี้?
+              เลือกงานที่ต้องการทำ
             </CardTitle>
             <p className="mt-2 max-w-2xl text-body text-ink-soft leading-relaxed">
-              เลือก action หลักจากจุดเดียว ส่วนการ์ดด้านล่างใช้สำหรับอ่านสิทธิ์และรายละเอียดเท่านั้น
+              จุดเริ่มต้นของบริการสวัสดิการมี 2 งานหลักเท่านั้น: เบิกย้อนหลังตามใบเสร็จ หรือขอใบส่งตัวก่อนเข้ารับบริการ
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
-            <Link href={benefitReimbursementRoute(locale)} className="sm:min-w-[180px]">
+          <div className="flex flex-col gap-3 sm:flex-row lg:justify-end" aria-label="benefit-owned actions">
+            <Link
+              href={benefitReimbursementRoute(locale)}
+              className="sm:min-w-[180px]"
+              data-benefit-owned-action="true"
+            >
               <Button
                 block
                 className="min-h-[48px]"
@@ -37,7 +41,11 @@ export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?:
                 เบิกสวัสดิการ
               </Button>
             </Link>
-            <Link href={benefitReferralRoute(locale)} className="sm:min-w-[180px]">
+            <Link
+              href={benefitReferralRoute(locale)}
+              className="sm:min-w-[180px]"
+              data-benefit-owned-action="true"
+            >
               <Button
                 block
                 className="min-h-[48px]"
@@ -55,7 +63,7 @@ export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?:
           <div className="flex items-start gap-2">
             <FileText size={16} className="mt-0.5 text-accent" aria-hidden />
             <p>
-              <span className="font-semibold text-ink">เบิกสวัสดิการ</span> สำหรับคำขอย้อนหลังตามใบเสร็จและวงเงินเดิม
+              <span className="font-semibold text-ink">เบิกสวัสดิการ</span> ใช้ข้อมูลสิทธิ์และวงเงินจากโปรไฟล์/HRMS แต่ส่งคำขอในเส้นทางเฉพาะ
             </p>
           </div>
           <div className="flex items-start gap-2">

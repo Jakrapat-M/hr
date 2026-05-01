@@ -6,7 +6,7 @@
  *   AC-1 — 3 sections render (base/recurring/link) — YTD removed per Ken UAT 2026-04-26
  *   AC-2 — base salary masked by default (last 4 chars visible, '฿ ••••,500')
  *   AC-3 — reveal button unmasks salary + shows SH1-deferral toast with PIN mention
- *   AC-4 — payslip link href === '/th/employees/me/payslip' (canonical Humi route)
+ *   AC-4 — salary statement/history href stays in /profile/me?tab=employment
  *   AC-6 — all visible labels are Thai-primary (no SF-style bilingual duplicates)
  *
  * Edge cases:
@@ -41,6 +41,7 @@ vi.mock('lucide-react', () => ({
   Eye: () => null,
   EyeOff: () => null,
   ExternalLink: () => null,
+  FileText: () => null,
 }))
 
 import CompensationSummary from '@/components/profile/CompensationSummary'
@@ -60,10 +61,11 @@ const MASKED_PATTERN = /••••,500/
 const UNMASKED_PATTERN = /82,500/
 
 describe('hr#83 BRD #170 — CompensationSummary', () => {
-  it('AC-1 — renders 3 sections (base/recurring/link)', () => {
+  it('AC-1 — renders base, recurring, and pay statement sections', () => {
     render(<CompensationSummary />)
     expect(screen.getByTestId('comp-base')).toBeInTheDocument()
     expect(screen.getByTestId('comp-recurring')).toBeInTheDocument()
+    expect(screen.getByTestId('pay-statements')).toBeInTheDocument()
     expect(screen.getByTestId('comp-payslip-link')).toBeInTheDocument()
   })
 
@@ -72,7 +74,7 @@ describe('hr#83 BRD #170 — CompensationSummary', () => {
     expect(screen.getByTestId('compensation-summary')).toBeInTheDocument()
   })
 
-  it('AC-1 (no-ytd) — YTD section is removed (Ken UAT 2026-04-26 — payslip page is canonical)', () => {
+  it('AC-1 (no-ytd) — YTD section is removed and statement history stays in employment tab', () => {
     render(<CompensationSummary />)
     expect(screen.queryByTestId('comp-ytd')).toBeNull()
   })
@@ -136,18 +138,31 @@ describe('hr#83 BRD #170 — CompensationSummary', () => {
     expect(screen.getAllByTestId('comp-reveal-toast')).toHaveLength(1)
   })
 
-  // ── AC-4: payslip link points at canonical Humi route ──────────────────────
+  // ── AC-4: salary statements are canonical inside Profile > Employment ─────
 
-  it('AC-4 — payslip link href is /th/employees/me/payslip (canonical Humi route)', () => {
+  it('AC-4 — statement history link href is /th/profile/me?tab=employment#pay-statements', () => {
     render(<CompensationSummary />)
     const link = screen.getByTestId('comp-payslip-link')
-    expect(link.getAttribute('href')).toBe('/th/employees/me/payslip')
+    expect(link.getAttribute('href')).toBe('/th/profile/me?tab=employment#pay-statements')
   })
 
-  it('AC-4 — link text contains ดูใบสลิปเต็ม', () => {
+  it('AC-4 — link text contains ดูย้อนหลัง', () => {
     render(<CompensationSummary />)
     const link = screen.getByTestId('comp-payslip-link')
-    expect(link.textContent).toMatch(/ดูใบสลิปเต็ม/)
+    expect(link.textContent).toMatch(/ดูย้อนหลัง/)
+  })
+
+  it('AC-4 — renders salary statement rows in the employment tab surface', () => {
+    render(<CompensationSummary />)
+    const statements = screen.getByTestId('pay-statements')
+    expect(statements.textContent).toMatch(/ดู statement เงินเดือนและย้อนหลัง/)
+    expect(screen.getByTestId('pay-statements-canonical-mark')).toHaveTextContent(
+      'ช่องทางหลักในแท็บการจ้างงาน',
+    )
+    expect(screen.getByRole('link', { name: /statement เงินเดือน มีนาคม 2569/ })).toHaveAttribute(
+      'href',
+      '/th/profile/me?tab=employment#pay-statements',
+    )
   })
 
   // ── AC-6: all visible labels are Thai-primary ───────────────────────────────
