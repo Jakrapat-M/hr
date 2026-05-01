@@ -30,52 +30,52 @@ import { ensureDemoSeed } from '@/lib/demo-seed';
  *  title entry here, otherwise topbar falls back to 'Humi' and visually
  *  duplicates the sidebar brand logo (Ken UAT 2026-04-22 "double humi"). */
 const TITLE_MAP: Array<{ prefix: string; title: string }> = [
-  { prefix: '/th/home',               title: 'หน้าหลัก' },
-  { prefix: '/en/home',               title: 'หน้าหลัก' },
-  { prefix: '/th/profile',            title: 'โปรไฟล์ของฉัน' },
-  { prefix: '/en/profile',            title: 'โปรไฟล์ของฉัน' },
-  { prefix: '/th/timeoff',            title: 'ลางาน' },
-  { prefix: '/en/timeoff',            title: 'ลางาน' },
-  { prefix: '/th/benefits-hub',       title: 'สวัสดิการ' },
-  { prefix: '/en/benefits-hub',       title: 'สวัสดิการ' },
+  { prefix: '/th/home', title: 'หน้าหลัก' },
+  { prefix: '/en/home', title: 'หน้าหลัก' },
+  { prefix: '/th/profile', title: 'โปรไฟล์ของฉัน' },
+  { prefix: '/en/profile', title: 'โปรไฟล์ของฉัน' },
+  { prefix: '/th/timeoff', title: 'ลางาน' },
+  { prefix: '/en/timeoff', title: 'ลางาน' },
+  { prefix: '/th/benefits-hub', title: 'สวัสดิการ' },
+  { prefix: '/en/benefits-hub', title: 'สวัสดิการ' },
   { prefix: '/th/employees/me/payslip', title: 'สลิปเงินเดือน' },
   { prefix: '/en/employees/me/payslip', title: 'สลิปเงินเดือน' },
-  { prefix: '/th/employees/me',       title: 'โปรไฟล์ของฉัน' },
-  { prefix: '/en/employees/me',       title: 'โปรไฟล์ของฉัน' },
-  { prefix: '/th/ess/workflows',      title: 'คำขอของฉัน' },
-  { prefix: '/en/ess/workflows',      title: 'คำขอของฉัน' },
-  { prefix: '/th/quick-approve',      title: 'คำขอรออนุมัติ' },
-  { prefix: '/en/quick-approve',      title: 'คำขอรออนุมัติ' },
-  { prefix: '/th/spd/inbox',          title: 'กล่องอนุมัติ SPD' },
-  { prefix: '/en/spd/inbox',          title: 'กล่องอนุมัติ SPD' },
-  { prefix: '/th/requests',           title: 'คำร้องและแบบฟอร์ม' },
-  { prefix: '/en/requests',           title: 'คำร้องและแบบฟอร์ม' },
-  { prefix: '/th/goals',              title: 'เป้าหมายและผลงาน' },
-  { prefix: '/en/goals',              title: 'เป้าหมายและผลงาน' },
+  { prefix: '/th/employees/me', title: 'โปรไฟล์ของฉัน' },
+  { prefix: '/en/employees/me', title: 'โปรไฟล์ของฉัน' },
+  { prefix: '/th/ess/workflows', title: 'คำขอของฉัน' },
+  { prefix: '/en/ess/workflows', title: 'คำขอของฉัน' },
+  { prefix: '/th/quick-approve', title: 'คำขอรออนุมัติ' },
+  { prefix: '/en/quick-approve', title: 'คำขอรออนุมัติ' },
+  { prefix: '/th/spd/inbox', title: 'กล่องอนุมัติ SPD' },
+  { prefix: '/en/spd/inbox', title: 'กล่องอนุมัติ SPD' },
+  { prefix: '/th/requests', title: 'คำร้องและแบบฟอร์ม' },
+  { prefix: '/en/requests', title: 'คำร้องและแบบฟอร์ม' },
+  { prefix: '/th/goals', title: 'เป้าหมายและผลงาน' },
+  { prefix: '/en/goals', title: 'เป้าหมายและผลงาน' },
   { prefix: '/th/learning-directory', title: 'การเรียนรู้' },
   { prefix: '/en/learning-directory', title: 'การเรียนรู้' },
-  { prefix: '/th/org-chart',          title: 'ผังองค์กร' },
-  { prefix: '/en/org-chart',          title: 'ผังองค์กร' },
-  { prefix: '/th/performance-form',   title: 'ประเมินผลงาน' },
-  { prefix: '/en/performance-form',   title: 'ประเมินผลงาน' },
-  { prefix: '/th/development',        title: 'การพัฒนา' },
-  { prefix: '/en/development',        title: 'การพัฒนา' },
-  { prefix: '/th/succession',         title: 'สายการสืบทอด' },
-  { prefix: '/en/succession',         title: 'สายการสืบทอด' },
-  { prefix: '/th/announcements',      title: 'ประกาศ' },
-  { prefix: '/en/announcements',      title: 'ประกาศ' },
-  { prefix: '/th/integrations',       title: 'จัดการระบบ' },
-  { prefix: '/en/integrations',       title: 'จัดการระบบ' },
-  { prefix: '/th/careers',            title: 'ตำแหน่งว่างภายใน' },
-  { prefix: '/en/careers',            title: 'ตำแหน่งว่างภายใน' },
-  { prefix: '/th/recruiting',         title: 'สรรหา' },
-  { prefix: '/en/recruiting',         title: 'สรรหา' },
-  { prefix: '/th/reports',            title: 'รายงาน' },
-  { prefix: '/en/reports',            title: 'รายงาน' },
-  { prefix: '/th/admin',              title: 'ศูนย์ Admin' },
-  { prefix: '/en/admin',              title: 'ศูนย์ Admin' },
-  { prefix: '/th/ess',                title: 'บริการตนเอง' },
-  { prefix: '/en/ess',                title: 'บริการตนเอง' },
+  { prefix: '/th/org-chart', title: 'ผังองค์กร' },
+  { prefix: '/en/org-chart', title: 'ผังองค์กร' },
+  { prefix: '/th/performance-form', title: 'ประเมินผลงาน' },
+  { prefix: '/en/performance-form', title: 'ประเมินผลงาน' },
+  { prefix: '/th/development', title: 'การพัฒนา' },
+  { prefix: '/en/development', title: 'การพัฒนา' },
+  { prefix: '/th/succession', title: 'สายการสืบทอด' },
+  { prefix: '/en/succession', title: 'สายการสืบทอด' },
+  { prefix: '/th/announcements', title: 'ประกาศ' },
+  { prefix: '/en/announcements', title: 'ประกาศ' },
+  { prefix: '/th/integrations', title: 'จัดการระบบ' },
+  { prefix: '/en/integrations', title: 'จัดการระบบ' },
+  { prefix: '/th/careers', title: 'ตำแหน่งว่างภายใน' },
+  { prefix: '/en/careers', title: 'ตำแหน่งว่างภายใน' },
+  { prefix: '/th/recruiting', title: 'สรรหา' },
+  { prefix: '/en/recruiting', title: 'สรรหา' },
+  { prefix: '/th/reports', title: 'รายงาน' },
+  { prefix: '/en/reports', title: 'รายงาน' },
+  { prefix: '/th/admin', title: 'ศูนย์ Admin' },
+  { prefix: '/en/admin', title: 'ศูนย์ Admin' },
+  { prefix: '/th/ess', title: 'บริการตนเอง' },
+  { prefix: '/en/ess', title: 'บริการตนเอง' },
 ];
 
 type ReadonlyURLSearchParamsLike = {
@@ -83,9 +83,7 @@ type ReadonlyURLSearchParamsLike = {
 };
 
 function resolveTitle(pathname: string, searchParams?: ReadonlyURLSearchParamsLike | null): string {
-  const hit = TITLE_MAP.find(
-    (m) => pathname === m.prefix || pathname.startsWith(m.prefix + '/'),
-  );
+  const hit = TITLE_MAP.find((m) => pathname === m.prefix || pathname.startsWith(m.prefix + '/'));
   return hit?.title ?? 'Humi';
 }
 
@@ -146,7 +144,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!mobileMenuOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, [mobileMenuOpen]);
 
   // Auto-close drawer when viewport crosses lg breakpoint — without this the
@@ -246,10 +246,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="humi-main">
-        <Topbar
-          title={title}
-          onSearchClick={() => setPaletteOpen(true)}
-        />
+        <Topbar title={title} onSearchClick={() => setPaletteOpen(true)} />
         <main className="humi-page-wrap">{children}</main>
       </div>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />

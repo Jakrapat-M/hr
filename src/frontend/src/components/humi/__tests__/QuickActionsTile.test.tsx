@@ -40,10 +40,10 @@ describe('QuickActionsTile — AC-2 BASELINE ACTIONS', () => {
   });
 
   it.each([
-    ['ขอลาหยุด',      '/th/timeoff'],
-    ['สลิปเงินเดือน',  '/th/employees/me/payslip'],
+    ['ขอลาหยุด', '/th/timeoff'],
+    ['สลิปเงินเดือน', '/th/employees/me/payslip'],
     ['ดูข้อมูลส่วนตัว', '/th/profile/me'],
-    ['เบิกสวัสดิการ',   '/th/benefits-hub/reimbursement'],
+    ['เบิกสวัสดิการ', '/th/benefits-hub/reimbursement'],
   ])('renders link "%s" → href "%s"', (labelTh, href) => {
     render(<QuickActionsTile />);
     const link = screen.getByRole('link', { name: labelTh });

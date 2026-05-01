@@ -24,8 +24,18 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ href, children, ...props }: { href: string; children: React.ReactNode; [k: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+    [k: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -59,7 +69,9 @@ describe('benefit claim journey canonical route', () => {
     await user.click(screen.getByRole('button', { name: 'สร้างคำร้องใหม่' }));
 
     expect(screen.queryByText('เบิกค่าใช้จ่าย')).not.toBeInTheDocument();
-    expect(screen.queryByText('ค่ารักษาพยาบาล · ทันตกรรม · น้ำมัน · โทรศัพท์')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('ค่ารักษาพยาบาล · ทันตกรรม · น้ำมัน · โทรศัพท์'),
+    ).not.toBeInTheDocument();
   });
 
   it('/benefits-hub claims tab routes to the profile benefits context instead of starting a duplicate form', async () => {
@@ -122,7 +134,7 @@ describe('benefit claim journey canonical route', () => {
     const { default: BenefitsPage } = await import('@/app/[locale]/benefits/page');
 
     await expect(
-      BenefitsPage({ params: Promise.resolve({ locale: 'th' }) } as never)
+      BenefitsPage({ params: Promise.resolve({ locale: 'th' }) } as never),
     ).rejects.toThrow('NEXT_REDIRECT:/th/benefits-hub');
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/benefits-hub');
   });
@@ -131,7 +143,7 @@ describe('benefit claim journey canonical route', () => {
     const { default: ProfileBenefitsPage } = await import('@/app/[locale]/profile/benefits/page');
 
     await expect(
-      ProfileBenefitsPage({ params: Promise.resolve({ locale: 'th' }) } as never)
+      ProfileBenefitsPage({ params: Promise.resolve({ locale: 'th' }) } as never),
     ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me?tab=benefits');
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=benefits');
   });
@@ -140,7 +152,7 @@ describe('benefit claim journey canonical route', () => {
     const { default: ProfileTabPage } = await import('@/app/[locale]/profile/[tab]/page');
 
     await expect(
-      ProfileTabPage({ params: Promise.resolve({ locale: 'th', tab: 'personal' }) } as never)
+      ProfileTabPage({ params: Promise.resolve({ locale: 'th', tab: 'personal' }) } as never),
     ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me');
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me');
   });
@@ -149,16 +161,17 @@ describe('benefit claim journey canonical route', () => {
     const { default: EmployeeProfilePage } = await import('@/app/[locale]/employees/me/page');
 
     await expect(
-      EmployeeProfilePage({ params: Promise.resolve({ locale: 'th' }) } as never)
+      EmployeeProfilePage({ params: Promise.resolve({ locale: 'th' }) } as never),
     ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me');
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me');
   });
 
   it('/employees/me/benefits redirects to the profile benefits tab instead of rendering a separate benefits page', async () => {
-    const { default: EmployeeBenefitsPage } = await import('@/app/[locale]/employees/me/benefits/page');
+    const { default: EmployeeBenefitsPage } =
+      await import('@/app/[locale]/employees/me/benefits/page');
 
     await expect(
-      EmployeeBenefitsPage({ params: Promise.resolve({ locale: 'th' }) } as never)
+      EmployeeBenefitsPage({ params: Promise.resolve({ locale: 'th' }) } as never),
     ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me?tab=benefits');
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=benefits');
   });
@@ -167,7 +180,7 @@ describe('benefit claim journey canonical route', () => {
     const { default: HospitalReferralPage } = await import('@/app/[locale]/hospital-referral/page');
 
     await expect(
-      HospitalReferralPage({ params: Promise.resolve({ locale: 'th' }) } as never)
+      HospitalReferralPage({ params: Promise.resolve({ locale: 'th' }) } as never),
     ).rejects.toThrow('NEXT_REDIRECT:/th/benefits-hub/referral');
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/benefits-hub/referral');
   });

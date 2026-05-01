@@ -44,7 +44,21 @@ vi.mock('next/link', () => ({
 
 // Mock next/image — renders as <img> in jsdom
 vi.mock('next/image', () => ({
-  default: ({ src, alt, width, height, priority: _p, ...props }: { src: string; alt: string; width?: number; height?: number; priority?: boolean; [k: string]: unknown }) => (
+  default: ({
+    src,
+    alt,
+    width,
+    height,
+    priority: _p,
+    ...props
+  }: {
+    src: string;
+    alt: string;
+    width?: number;
+    height?: number;
+    priority?: boolean;
+    [k: string]: unknown;
+  }) => (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={src} alt={alt} width={width} height={height} {...props} />
   ),
@@ -217,9 +231,9 @@ describe('AC-5: Sidebar — T&A external link target + rel attrs', () => {
   it('T&A link is the only nav item with target="_blank" (AC-5)', () => {
     render(<Sidebar />);
     const nav = screen.getByRole('navigation', { name: 'เมนูหลัก' });
-    const externalLinks = within(nav).getAllByRole('link').filter(
-      (link) => link.getAttribute('target') === '_blank',
-    );
+    const externalLinks = within(nav)
+      .getAllByRole('link')
+      .filter((link) => link.getAttribute('target') === '_blank');
     expect(externalLinks).toHaveLength(1);
     expect(externalLinks[0]).toHaveAttribute('href', 'https://cnext-time.centralgroup.com');
   });

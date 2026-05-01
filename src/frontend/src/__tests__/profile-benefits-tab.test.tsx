@@ -34,9 +34,8 @@ vi.mock('@/stores/auth-store', () => {
     setHasHydrated: vi.fn(),
   };
   const useAuthStore = Object.assign(
-    (selector?: (s: typeof state) => unknown) =>
-      selector ? selector(state) : state,
-    { getState: () => state, setState: vi.fn(), subscribe: vi.fn() }
+    (selector?: (s: typeof state) => unknown) => (selector ? selector(state) : state),
+    { getState: () => state, setState: vi.fn(), subscribe: vi.fn() },
   );
   return { useAuthStore };
 });
@@ -74,8 +73,18 @@ vi.mock('next-intl', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ href, children, ...props }: { href: string; children: React.ReactNode; [k: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+    [k: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -96,7 +105,10 @@ describe('/profile/me benefits tab', () => {
       expect(useHumiProfileStore.getState().activeTab).toBe('benefits');
     });
 
-    expect(screen.getByRole('tab', { name: 'สิทธิ์ของฉัน' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'สิทธิ์ของฉัน' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     expect(screen.getByRole('heading', { name: 'สวัสดิการของฉัน' })).toBeInTheDocument();
     expect(screen.queryByText('SF: EmpJob.employeeGroup')).not.toBeInTheDocument();
   });
@@ -113,8 +125,14 @@ describe('/profile/me benefits tab', () => {
       expect(useHumiProfileStore.getState().activeTab).toBe('personal');
     });
 
-    expect(screen.getByRole('tab', { name: 'ข้อมูลส่วนตัว' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tab', { name: 'สิทธิ์ของฉัน' })).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getByRole('tab', { name: 'ข้อมูลส่วนตัว' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByRole('tab', { name: 'สิทธิ์ของฉัน' })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    );
     expect(screen.queryByRole('heading', { name: 'สวัสดิการของฉัน' })).not.toBeInTheDocument();
   });
 
@@ -129,7 +147,10 @@ describe('/profile/me benefits tab', () => {
     });
 
     expect(screen.getByText('ภาพรวมสิทธิ์สวัสดิการ')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'เริ่มบริการที่ Benefits Hub' })).toHaveAttribute('href', '/th/benefits-hub');
+    expect(screen.getByRole('link', { name: 'เริ่มบริการที่ Benefits Hub' })).toHaveAttribute(
+      'href',
+      '/th/benefits-hub',
+    );
     expect(screen.queryByLabelText('เลขที่ใบเสร็จ/เอกสาร')).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/เหตุผลหรือบริการที่ต้องการพบแพทย์/)).not.toBeInTheDocument();
     expect(screen.queryByLabelText('รายได้เพิ่มเติมคาดการณ์ทั้งปี')).not.toBeInTheDocument();
