@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { benefitProfileRoute } from '@/lib/benefit-routes';
+import { benefitsHubRoute } from '@/lib/benefit-routes';
 
 export default async function BenefitsPage({
   params,
@@ -7,5 +7,5 @@ export default async function BenefitsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  redirect(benefitProfileRoute(locale));
+  redirect(benefitsHubRoute(locale));
 }

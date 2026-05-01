@@ -11,7 +11,7 @@ import {
   Users2,
   type LucideIcon,
 } from 'lucide-react';
-import { benefitProfileRoute } from '@/lib/benefit-routes';
+import { benefitReimbursementRoute } from '@/lib/benefit-routes';
 
 // ════════════════════════════════════════════════════════════
 // QuickActionsTile — ESS home tile, BRD #171
@@ -40,7 +40,7 @@ export const DEFAULT_ESS_ACTIONS: QuickAction[] = [
   { icon: makeIcon(CalendarPlus), labelTh: 'ขอลาหยุด',          href: '/th/timeoff'      },
   { icon: makeIcon(FileText),     labelTh: 'สลิปเงินเดือน',       href: '/th/employees/me/payslip' },
   { icon: makeIcon(User),         labelTh: 'ดูข้อมูลส่วนตัว',     href: '/th/profile/me'   },
-  { icon: makeIcon(Wallet),       labelTh: 'เบิกสวัสดิการ',       href: benefitProfileRoute('th') },
+  { icon: makeIcon(Wallet),       labelTh: 'เบิกสวัสดิการ',       href: benefitReimbursementRoute('th') },
 ];
 
 // Manager-tier Quick Actions — SF Employee Central pattern (Path C, autopilot
