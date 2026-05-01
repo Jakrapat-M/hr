@@ -1,4 +1,6 @@
 export const BENEFIT_PROFILE_ROUTE = '/profile/me?tab=benefits';
+export const BENEFIT_REFERRAL_ROUTE = '/profile/me?tab=benefits&service=referral';
+export const BENEFIT_TAX_PLANNING_ROUTE = '/payroll/tax-planning';
 export const BENEFITS_HUB_ROUTE = '/benefits-hub';
 export const BENEFIT_REIMBURSEMENT_ROUTE = '/benefits-hub/reimbursement';
 export const BENEFIT_REFERRAL_ROUTE = '/benefits-hub/referral';
