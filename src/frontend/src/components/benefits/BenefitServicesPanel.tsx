@@ -12,29 +12,58 @@ export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?:
   const issuedReferralCount = referrals.filter((item) => item.status === 'letter_issued').length;
 
   return (
-    <section className="grid gap-3 lg:grid-cols-2" aria-labelledby="benefit-services-heading">
-      <h3 id="benefit-services-heading" className="sr-only">บริการสวัสดิการของฉัน</h3>
-      <Card variant="flat" tone="canvas" className="min-h-[220px]">
-        <div className="flex h-full flex-col gap-4">
-          <CardEyebrow>Benefit reimbursement</CardEyebrow>
-          <CardTitle className="flex items-center gap-2"><FileText size={18} aria-hidden />เบิกสวัสดิการ</CardTitle>
-          <p className="text-small text-ink-muted">คำขอเบิกย้อนหลังตามใบเสร็จและวงเงินสวัสดิการเดิม</p>
-          <p className="text-small font-semibold text-ink">บริการเบิกย้อนหลัง แยกจากใบส่งตัว</p>
-          <Link href={benefitReimbursementRoute(locale)} className="mt-auto">
-            <Button className="min-h-[44px]" variant="secondary" trailingIcon={<ArrowRight size={14} />}>เบิกสวัสดิการ</Button>
-          </Link>
-        </div>
-      </Card>
+    <section aria-labelledby="benefit-services-heading">
+      <Card variant="raised" size="lg" className="border-accent-soft bg-canvas-soft">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div>
+            <CardEyebrow>เริ่มบริการสวัสดิการ</CardEyebrow>
+            <CardTitle id="benefit-services-heading" className="mt-1">
+              ต้องการทำอะไรวันนี้?
+            </CardTitle>
+            <p className="mt-2 max-w-2xl text-body text-ink-soft leading-relaxed">
+              เลือก action หลักจากจุดเดียว ส่วนการ์ดด้านล่างใช้สำหรับอ่านสิทธิ์และรายละเอียดเท่านั้น
+            </p>
+          </div>
 
-      <Card variant="flat" tone="canvas" className="min-h-[220px]">
-        <div className="flex h-full flex-col gap-4">
-          <CardEyebrow>Hospital referral · ePatient</CardEyebrow>
-          <CardTitle className="flex items-center gap-2"><Hospital size={18} aria-hidden />ขอใบส่งตัว</CardTitle>
-          <p className="text-small text-ink-muted">เลือกผู้ใช้สิทธิ์ โรงพยาบาล และวันที่เข้ารับบริการ แล้วให้ SPD ออกใบส่งตัว</p>
-          <p className="text-small font-semibold text-ink">ไม่ใช่การเบิกย้อนหลัง · รอ {pendingReferralCount} · ออกแล้ว {issuedReferralCount}</p>
-          <Link href={benefitReferralRoute(locale)} className="mt-auto">
-            <Button className="min-h-[44px]" variant="secondary" trailingIcon={<ArrowRight size={14} />}>ขอใบส่งตัว</Button>
-          </Link>
+          <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
+            <Link href={benefitReimbursementRoute(locale)} className="sm:min-w-[180px]">
+              <Button
+                block
+                className="min-h-[48px]"
+                variant="primary"
+                leadingIcon={<FileText size={16} aria-hidden />}
+                trailingIcon={<ArrowRight size={14} aria-hidden />}
+              >
+                เบิกสวัสดิการ
+              </Button>
+            </Link>
+            <Link href={benefitReferralRoute(locale)} className="sm:min-w-[180px]">
+              <Button
+                block
+                className="min-h-[48px]"
+                variant="secondary"
+                leadingIcon={<Hospital size={16} aria-hidden />}
+                trailingIcon={<ArrowRight size={14} aria-hidden />}
+              >
+                ขอใบส่งตัว
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 border-t border-hairline pt-4 text-small text-ink-muted sm:grid-cols-2">
+          <div className="flex items-start gap-2">
+            <FileText size={16} className="mt-0.5 text-accent" aria-hidden />
+            <p>
+              <span className="font-semibold text-ink">เบิกสวัสดิการ</span> สำหรับคำขอย้อนหลังตามใบเสร็จและวงเงินเดิม
+            </p>
+          </div>
+          <div className="flex items-start gap-2">
+            <Hospital size={16} className="mt-0.5 text-accent" aria-hidden />
+            <p>
+              <span className="font-semibold text-ink">ใบส่งตัว</span> สำหรับ ePatient ก่อนเข้ารับบริการ · รอ {pendingReferralCount} · ออกแล้ว {issuedReferralCount}
+            </p>
+          </div>
         </div>
       </Card>
     </section>

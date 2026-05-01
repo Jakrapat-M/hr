@@ -234,16 +234,15 @@ function BenefitsTab() {
             สำรวจสิทธิ์และเริ่มบริการจาก Benefits Hub
           </h2>
           <p className="mt-3 max-w-xl text-body text-ink-soft leading-relaxed">
-            หน้านี้เป็นฮับสำหรับอ่าน เปรียบเทียบ เริ่มบริการ และกลับไปดูสรุปสิทธิ์ในโปรไฟล์เมื่อจำเป็น
+            หน้านี้เป็นพื้นที่อ่านสิทธิ์และรายละเอียดแผน ส่วนการเริ่มบริการให้ใช้แถบ action ด้านบน
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href={benefitProfileRoute(locale)}
-              className={buttonVariants({ variant: 'primary' })}
+              className={buttonVariants({ variant: 'secondary' })}
             >
-              ไปที่สิทธิ์ของฉัน
+              ดูสรุปสิทธิ์ในโปรไฟล์
             </Link>
-            <Button variant="ghost">เปรียบเทียบแผน</Button>
           </div>
         </div>
       </Card>
@@ -299,14 +298,9 @@ function BenefitsTab() {
                   </li>
                 ))}
               </ul>
-              <Button
-                variant="ghost"
-                block
-                className="mt-5 min-h-[44px]"
-                onClick={(e) => { e.stopPropagation(); setDetailPlan(b); }}
-              >
-                ดูรายละเอียด
-              </Button>
+              <p className="mt-5 text-small font-semibold text-accent">
+                คลิกการ์ดเพื่อดูรายละเอียด
+              </p>
             </Card>
           );
         })}
