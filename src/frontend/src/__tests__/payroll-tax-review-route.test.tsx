@@ -11,6 +11,7 @@ const payrollMocks = vi.hoisted(() => ({
   rows: [
     {
       id: 'TAX-PLAN-0001',
+      workflowId: 'REQ-TAX-0001',
       employeeId: 'EMP001',
       employeeName: 'จงรักษ์ ทานากะ',
       maskedTaxId: '***-***-1001',
@@ -64,15 +65,56 @@ vi.mock('@/stores/auth-store', () => {
   return { useAuthStore };
 });
 
-vi.mock('@/stores/benefit-tax-planning', () => ({
-  useBenefitTaxPlanningStore: (selector: (state: { drafts: unknown[] }) => unknown) => selector({ drafts: [{ id: 'TAX-PLAN-0001' }] }),
+vi.mock('@/stores/benefit-tax-planning', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/stores/benefit-tax-planning')>();
+  const mockDraft = {
+    id: 'TAX-PLAN-0001',
+    workflowRequestId: 'REQ-TAX-0001',
+    employeeId: 'EMP001',
+    employeeName: 'จงรักษ์ ทานากะ',
+    maskedTaxId: 'X-XXXX-XXXXX-01-X',
+    taxYear: 2026,
+    status: 'estimated',
+    expectedAdditionalIncome: 0,
+    allowances: actual.EMPTY_TAX_ALLOWANCES,
+    updatedAt: '2026-05-01T00:00:00.000Z',
+    audit: [],
+  };
+  const mockState = {
+    profile: {
+      employeeId: 'EMP001',
+      employeeName: 'จงรักษ์ ทานากะ',
+      maskedTaxId: 'X-XXXX-XXXXX-01-X',
+      taxYear: 2026,
+      ytdIncome: 840000,
+      ytdWithholding: 56000,
+      socialSecurityYtd: 9000,
+    },
+    drafts: [mockDraft],
+    saveDraft: vi.fn(),
+    estimateDraft: vi.fn(),
+    submitTaxPlanningForPayrollReview: vi.fn(),
+    resubmitTaxPlanningForPayrollReview: vi.fn(),
+    cancelTaxPlanningReview: vi.fn(),
+  };
+  return {
+    ...actual,
+    useBenefitTaxPlanningStore: Object.assign(
+    (selector: (state: typeof mockState) => unknown) => selector(mockState),
+    {
+      getState: () => ({
+        drafts: [mockDraft],
+        startPayrollTaxPlanningReview: (...args: unknown[]) => payrollMocks.start(...args),
+        sendBackPayrollTaxPlanningReview: (...args: unknown[]) => payrollMocks.sendBack(...args),
+        approvePayrollTaxPlanningReview: (...args: unknown[]) => payrollMocks.approve(...args),
+        rejectPayrollTaxPlanningReview: (...args: unknown[]) => payrollMocks.reject(...args),
+        cancelTaxPlanningReview: (...args: unknown[]) => payrollMocks.cancel(...args),
+      }),
+    },
+  ),
   selectPayrollTaxPlanningInboxRows: (drafts: unknown[]) => payrollMocks.selector(drafts),
-  startPayrollTaxPlanningReview: (...args: unknown[]) => payrollMocks.start(...args),
-  sendBackPayrollTaxPlanningReview: (...args: unknown[]) => payrollMocks.sendBack(...args),
-  approvePayrollTaxPlanningReview: (...args: unknown[]) => payrollMocks.approve(...args),
-  rejectPayrollTaxPlanningReview: (...args: unknown[]) => payrollMocks.reject(...args),
-  cancelTaxPlanningReview: (...args: unknown[]) => payrollMocks.cancel(...args),
-}));
+  };
+});
 
 describe('payroll tax review route', () => {
   beforeEach(() => {
@@ -112,11 +154,22 @@ describe('payroll tax review route', () => {
 
     render(<PayrollTaxReviewPage />);
 
-    expect(payrollMocks.selector).toHaveBeenCalledWith([{ id: 'TAX-PLAN-0001' }]);
+    expect(payrollMocks.selector).toHaveBeenCalledWith([expect.objectContaining({ id: 'TAX-PLAN-0001' })]);
     expect(screen.getByRole('heading', { name: 'ตรวจแผนภาษี' })).toBeInTheDocument();
     expect(screen.getByText('จงรักษ์ ทานากะ')).toBeInTheDocument();
     expect(screen.getByText('***-***-1001')).toBeInTheDocument();
     expect(screen.queryByText('1100100001001')).not.toBeInTheDocument();
+  });
+
+  it('renders the employee tax planning route under Payroll/Tax context', async () => {
+    const { default: PayrollTaxPlanningPage } = await import('@/app/[locale]/payroll/tax-planning/page');
+
+    render(<PayrollTaxPlanningPage />);
+
+    expect(screen.getByRole('heading', { name: 'วางแผนภาษี' })).toBeInTheDocument();
+    expect(screen.getByText('Payroll/Tax context')).toBeInTheDocument();
+    expect(screen.getByLabelText('รายได้เพิ่มเติมคาดการณ์ทั้งปี')).toBeInTheDocument();
+    expect(screen.getByText(/ไม่ใช่การยื่นภาษีหรือแก้ไข payroll snapshot/)).toBeInTheDocument();
   });
 
   it('starts review, requires reasons for send-back/reject, and calls payroll tax actions', async () => {

@@ -74,7 +74,7 @@ describe('deferred benefit service request projection', () => {
 
     expect(screen.getByText('วางแผนภาษี · Payroll review')).toBeInTheDocument();
     expect(screen.getByText(new RegExp(payrollReview.workflowRequestId))).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'วางแผนภาษี · Payroll review' })).toHaveAttribute('href', '/th/profile/me?tab=tax&mode=planning');
+    expect(screen.getByRole('link', { name: 'วางแผนภาษี · Payroll review' })).toHaveAttribute('href', '/th/payroll/tax-planning');
     expect(screen.getByText(/X-XXXX-XXXXX-01-X/)).toBeInTheDocument();
     expect(screen.queryByText('1100100001001')).not.toBeInTheDocument();
     expect(screen.queryByText(/allowances/i)).not.toBeInTheDocument();

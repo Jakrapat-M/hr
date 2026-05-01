@@ -82,13 +82,15 @@ describe('benefit tax planning store', () => {
     expect(requestRows[0]).toMatchObject({
       id: submitted.workflowRequestId,
       status: 'pending',
-      href: '/th/profile/me?tab=tax&mode=planning',
+      href: '/th/payroll/tax-planning',
     });
     expect(JSON.stringify(requestRows)).not.toContain('1100100001001');
     expect(JSON.stringify(requestRows)).not.toContain('allowances');
 
     const inboxRows = selectPayrollTaxPlanningInboxRows(useBenefitTaxPlanningStore.getState().drafts);
     expect(inboxRows).toHaveLength(1);
+    expect(inboxRows[0].id).toBe(submitted.id);
+    expect(inboxRows[0].workflowId).toBe(submitted.workflowRequestId);
     expect(inboxRows[0].maskedTaxId).toBe('X-XXXX-XXXXX-01-X');
     expect(JSON.stringify(inboxRows)).not.toContain('1100100001001');
   });

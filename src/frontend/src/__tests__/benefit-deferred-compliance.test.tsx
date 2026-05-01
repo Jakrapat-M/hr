@@ -25,11 +25,11 @@ describe('deferred benefit journey and token compliance', () => {
     useBenefitTaxPlanningStore.getState().clear();
   });
 
-  it('routes referral and tax planning through canonical profile deep links instead of /requests duplicate starts', () => {
+  it('routes referral through the existing shortcut and tax planning through Payroll/Tax instead of /requests duplicate starts', () => {
     render(<BenefitServicesPanel locale="th" onOpenClaim={vi.fn()} />);
 
     expect(screen.getByRole('link', { name: /ขอใบส่งตัว/ })).toHaveAttribute('href', '/th/profile/me?tab=benefits&service=referral');
-    expect(screen.getByRole('link', { name: /วางแผนภาษี/ })).toHaveAttribute('href', '/th/profile/me?tab=tax&mode=planning');
+    expect(screen.getByRole('link', { name: /วางแผนภาษี/ })).toHaveAttribute('href', '/th/payroll/tax-planning');
     expect(screen.queryByRole('link', { name: /requests/i })).not.toBeInTheDocument();
   });
 
