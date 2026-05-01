@@ -28,3 +28,7 @@ chrome/
 
 # Playwright MCP screenshots
 .playwright-mcp/
+
+# Generated framework/debug artifacts
+.next/
+src/frontend/test-artifacts/**/debug-*.png
