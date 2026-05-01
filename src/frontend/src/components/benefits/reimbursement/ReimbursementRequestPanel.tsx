@@ -83,7 +83,7 @@ export function ReimbursementRequestPanel({
     const claim = submitClaim({
       employeeId: 'EMP001',
       employeeName: 'จงรักษ์ ทานากะ',
-      department: 'People Operations',
+      businessUnit: 'People Operations',
       benefitType: form.benefitType,
       benefitCode,
       benefitName: BENEFIT_TYPE_LABEL[form.benefitType],
