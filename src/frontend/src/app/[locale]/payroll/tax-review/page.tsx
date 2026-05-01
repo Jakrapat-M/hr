@@ -85,7 +85,7 @@ export default function PayrollTaxReviewPage() {
   const canReviewTaxPlanning = canAccessModule(roles, 'payroll-processing');
 
   const rows = useMemo(() => {
-    return taxPlanning.selectPayrollTaxPlanningInboxRows?.(drafts as unknown[]) ?? [];
+    return taxPlanning.selectPayrollTaxPlanningInboxRows(drafts) as PayrollTaxReviewRow[];
   }, [drafts]);
 
   if (!canReviewTaxPlanning) {
