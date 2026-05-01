@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 
 const navigationMocks = vi.hoisted(() => ({
   searchParams: new URLSearchParams('tab=benefits'),
@@ -118,7 +118,7 @@ describe('/profile/me benefits tab', () => {
     expect(screen.queryByRole('heading', { name: 'สวัสดิการของฉัน' })).not.toBeInTheDocument();
   });
 
-  it('renders the benefit claim attachment control with Humi upload tokens', async () => {
+  it('keeps Profile Benefits summary-only and sends service starts to Benefits Hub', async () => {
     const { default: Page } = await import('@/app/[locale]/profile/me/page');
     const { useHumiProfileStore } = await import('@/stores/humi-profile-slice');
 
@@ -128,12 +128,13 @@ describe('/profile/me benefits tab', () => {
       expect(useHumiProfileStore.getState().activeTab).toBe('benefits');
     });
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'เบิกสวัสดิการ' })[0]);
-
-    const attachmentField = await screen.findByTestId('benefit-attachment-field');
-    expect(attachmentField).toHaveClass('humi-dropzone');
-    expect(attachmentField).toHaveClass('focus-within:ring-accent-soft');
-    expect(screen.getByText('receipt.pdf')).toBeInTheDocument();
-    expect(screen.queryByDisplayValue('receipt.pdf')).not.toBeInTheDocument();
+    expect(screen.getByText('ภาพรวมสิทธิ์สวัสดิการ')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'เริ่มบริการที่ Benefits Hub' })).toHaveAttribute('href', '/th/benefits-hub');
+    expect(screen.queryByLabelText('เลขที่ใบเสร็จ/เอกสาร')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/เหตุผลหรือบริการที่ต้องการพบแพทย์/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('รายได้เพิ่มเติมคาดการณ์ทั้งปี')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('benefit-attachment-field')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'ส่งคำขอใบส่งตัว' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'ส่งคำขอเบิก' })).not.toBeInTheDocument();
   });
 });

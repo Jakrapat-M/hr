@@ -83,12 +83,6 @@ type ReadonlyURLSearchParamsLike = {
 };
 
 function resolveTitle(pathname: string, searchParams?: ReadonlyURLSearchParamsLike | null): string {
-  if (
-    (pathname === '/th/profile/me' || pathname === '/en/profile/me') &&
-    searchParams?.get('tab') === 'benefits'
-  ) {
-    return 'สวัสดิการ';
-  }
   const hit = TITLE_MAP.find(
     (m) => pathname === m.prefix || pathname.startsWith(m.prefix + '/'),
   );

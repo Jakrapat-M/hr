@@ -88,41 +88,43 @@ describe('benefit claim journey canonical route', () => {
     expect(screen.queryByRole('button', { name: 'ยกเลิกสมัคร' })).not.toBeInTheDocument();
   });
 
-  it('ESS quick action points benefit claim entry to profile benefits', () => {
+  it('ESS quick action points benefit claim entry to the Benefits-owned reimbursement route', () => {
     const benefitAction = DEFAULT_ESS_ACTIONS.find((action) => action.labelTh === 'เบิกสวัสดิการ');
 
-    expect(benefitAction?.href).toBe('/th/profile/me?tab=benefits');
+    expect(benefitAction?.href).toBe('/th/benefits-hub/reimbursement');
   });
 
-  it('command palette benefit navigation points to profile benefits', async () => {
+  it('command palette benefit navigation points to Benefits Hub', async () => {
     const { HUMI_COMMANDS } = await import('@/lib/humi-command-registry');
     const benefitCommand = HUMI_COMMANDS.find((command) => command.id === 'benefits');
 
     expect(benefitCommand?.label).toBe('สวัสดิการ');
-    expect(benefitCommand?.route).toBe('/profile/me?tab=benefits');
+    expect(benefitCommand?.route).toBe('/benefits-hub');
   });
 
   it('benefit route helpers keep one canonical destination per intent', async () => {
     const {
       benefitProfileRoute,
+      benefitReimbursementRoute,
       benefitReferralRoute,
       benefitTaxPlanningRoute,
       benefitsHubRoute,
     } = await import('@/lib/benefit-routes');
 
     expect(benefitProfileRoute('th')).toBe('/th/profile/me?tab=benefits');
-    expect(benefitReferralRoute('th')).toBe('/th/profile/me?tab=benefits&service=referral');
+    expect(benefitReimbursementRoute('th')).toBe('/th/benefits-hub/reimbursement');
+    expect(benefitReferralRoute('th')).toBe('/th/benefits-hub/referral');
     expect(benefitTaxPlanningRoute('th')).toBe('/th/payroll/tax-planning');
     expect(benefitsHubRoute('th')).toBe('/th/benefits-hub');
   });
 
-  it('/benefits redirects to the canonical profile benefits route', async () => {
+  it('/benefits redirects to the canonical Benefits Hub route', async () => {
     const { default: BenefitsPage } = await import('@/app/[locale]/benefits/page');
 
     await expect(
       BenefitsPage({ params: Promise.resolve({ locale: 'th' }) } as never)
-    ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me?tab=benefits');
-    expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=benefits');
+    ).rejects.toThrow('NEXT_REDIRECT:/th/benefits-hub');
+    expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/benefits-hub');
   });
 
   it('/profile/benefits redirects to the profile benefits tab instead of rendering a second profile page', async () => {
@@ -161,12 +163,12 @@ describe('benefit claim journey canonical route', () => {
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=benefits');
   });
 
-  it('/hospital-referral redirects to the profile referral service shortcut instead of rendering a second referral journey', async () => {
+  it('/hospital-referral redirects to the dedicated Benefits Hub referral route', async () => {
     const { default: HospitalReferralPage } = await import('@/app/[locale]/hospital-referral/page');
 
     await expect(
       HospitalReferralPage({ params: Promise.resolve({ locale: 'th' }) } as never)
-    ).rejects.toThrow('NEXT_REDIRECT:/th/profile/me?tab=benefits&service=referral');
-    expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=benefits&service=referral');
+    ).rejects.toThrow('NEXT_REDIRECT:/th/benefits-hub/referral');
+    expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/benefits-hub/referral');
   });
 });

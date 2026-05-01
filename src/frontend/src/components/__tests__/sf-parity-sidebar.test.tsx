@@ -116,11 +116,11 @@ describe('AC-4: Sidebar — 17 total nav items', () => {
 });
 
 describe('REGRESSION: Sidebar profile/benefits canonical tab navigation', () => {
-  it('benefits menu points to the profile benefits tab with a single-purpose label', () => {
+  it('benefits menu points to the Benefits Hub with a single-purpose label', () => {
     render(<Sidebar />);
 
     const benefitLink = screen.getByText('สวัสดิการ').closest('a')!;
-    expect(benefitLink).toHaveAttribute('href', '/th/profile/me?tab=benefits');
+    expect(benefitLink).toHaveAttribute('href', '/th/benefits-hub');
     expect(screen.queryByText('เงินเดือนและสวัสดิการ')).not.toBeInTheDocument();
   });
 
@@ -134,9 +134,19 @@ describe('REGRESSION: Sidebar profile/benefits canonical tab navigation', () => 
     expect(screen.getByText('สวัสดิการ').closest('a')).not.toHaveClass('active');
   });
 
-  it('benefits menu is active on /profile/me?tab=benefits and profile is not double-active', () => {
+  it('profile menu stays active for the summary-only Profile Benefits tab', () => {
     navigationMocks.pathname = '/th/profile/me';
     navigationMocks.searchParams = new URLSearchParams('tab=benefits');
+
+    render(<Sidebar />);
+
+    expect(screen.getByText('โปรไฟล์ของฉัน').closest('a')).toHaveClass('active');
+    expect(screen.getByText('สวัสดิการ').closest('a')).not.toHaveClass('active');
+  });
+
+  it('benefits menu is active on Benefits Hub child service routes', () => {
+    navigationMocks.pathname = '/th/benefits-hub/referral';
+    navigationMocks.searchParams = new URLSearchParams();
 
     render(<Sidebar />);
 
