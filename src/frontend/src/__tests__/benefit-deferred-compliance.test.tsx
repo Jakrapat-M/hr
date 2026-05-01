@@ -40,14 +40,9 @@ describe('deferred benefit journey and token compliance', () => {
   it('routes referral through the dedicated Benefits Hub route and tax planning through Payroll/Tax instead of /requests duplicate starts', () => {
     render(<BenefitServicesPanel locale="th" onOpenClaim={vi.fn()} />);
 
-    expect(screen.getByRole('link', { name: /ขอใบส่งตัว/ })).toHaveAttribute(
-      'href',
-      '/th/benefits-hub/referral',
-    );
-    expect(screen.getByRole('link', { name: /วางแผนภาษี/ })).toHaveAttribute(
-      'href',
-      '/th/payroll/tax-planning',
-    );
+    expect(screen.getByRole('link', { name: /เบิกสวัสดิการ/ })).toHaveAttribute('href', '/th/benefits-hub/reimbursement');
+    expect(screen.getByRole('link', { name: /ขอใบส่งตัว/ })).toHaveAttribute('href', '/th/benefits-hub/referral');
+    expect(screen.getByRole('link', { name: /วางแผนภาษี/ })).toHaveAttribute('href', '/th/payroll/tax-planning');
     expect(screen.queryByRole('link', { name: /requests/i })).not.toBeInTheDocument();
   });
 
@@ -100,6 +95,10 @@ describe('deferred benefit journey and token compliance', () => {
   it('keeps new deferred benefit surfaces free of hardcoded red and legacy card color utilities', () => {
     const deferredSurfaceFiles = [
       'components/benefits/BenefitServicesPanel.tsx',
+      'components/benefits/reimbursement/ReimbursementRequestPanel.tsx',
+      'app/[locale]/benefits-hub/reimbursement/page.tsx',
+      'app/[locale]/benefits-hub/referral/page.tsx',
+      'app/[locale]/payroll/tax-planning/page.tsx',
       'components/benefits/referral/ReferralRequestPanel.tsx',
       'components/benefits/referral/ReferralHistoryPanel.tsx',
       'components/benefits/referral/ReferralLetterPreview.tsx',

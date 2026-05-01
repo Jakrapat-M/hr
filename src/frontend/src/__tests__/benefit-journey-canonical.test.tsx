@@ -74,7 +74,7 @@ describe('benefit claim journey canonical route', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('/benefits-hub claims tab starts reimbursement from a Benefits-owned route', async () => {
+  it('/benefits-hub claims tab routes to the dedicated reimbursement service', async () => {
     const { useBenefitsStore } = await import('@/stores/humi-benefits-slice');
     useBenefitsStore.getState().setTab('claims');
 
@@ -86,14 +86,14 @@ describe('benefit claim journey canonical route', () => {
     expect(screen.queryByRole('button', { name: 'สร้างคำขอเบิก' })).not.toBeInTheDocument();
   });
 
-  it('/benefits-hub benefits tab exposes service actions while profile remains summary-only', async () => {
+  it('/benefits-hub benefits tab keeps coverage browse content and service actions in the hub', async () => {
     const { useBenefitsStore } = await import('@/stores/humi-benefits-slice');
     useBenefitsStore.getState().setTab('benefits');
 
     const { default: BenefitsHubPage } = await import('@/app/[locale]/benefits-hub/page');
     render(<BenefitsHubPage />);
 
-    expect(screen.getByRole('heading', { name: 'สวัสดิการของฉัน' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'สำรวจสิทธิ์และเริ่มบริการจาก Benefits Hub' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'ไปที่สิทธิ์ของฉัน' })).toHaveAttribute('href', '/th/profile/me?tab=benefits');
     expect(screen.getByRole('link', { name: 'เบิกสวัสดิการ' })).toHaveAttribute('href', '/th/benefits-hub/reimbursement');
     expect(screen.queryByRole('button', { name: 'เริ่มลงทะเบียน' })).not.toBeInTheDocument();
