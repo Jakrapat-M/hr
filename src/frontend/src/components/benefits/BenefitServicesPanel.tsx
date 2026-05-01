@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { ArrowRight, Calculator, FileText, Hospital } from 'lucide-react';
 import { Button, Card, CardEyebrow, CardTitle } from '@/components/humi';
-import { benefitReferralRoute, benefitTaxPlanningRoute } from '@/lib/benefit-routes';
+import { benefitReferralRoute, benefitReimbursementRoute, benefitTaxPlanningRoute } from '@/lib/benefit-routes';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { selectTaxPlanningSafeSummary, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
-export function BenefitServicesPanel({ locale, onOpenClaim }: { locale: string; onOpenClaim: () => void }) {
+export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?: () => void }) {
   const referrals = useBenefitReferralsStore((state) => state.referrals);
   const taxProfile = useBenefitTaxPlanningStore((state) => state.profile);
   const taxDrafts = useBenefitTaxPlanningStore((state) => state.drafts);
@@ -24,7 +24,9 @@ export function BenefitServicesPanel({ locale, onOpenClaim }: { locale: string; 
           <CardTitle className="flex items-center gap-2"><FileText size={18} aria-hidden />เบิกสวัสดิการ</CardTitle>
           <p className="text-small text-ink-muted">คำขอเบิกย้อนหลังตามใบเสร็จและวงเงินสวัสดิการเดิม</p>
           <p className="text-small font-semibold text-ink">แยกจากใบส่งตัวและวางแผนภาษี</p>
-          <Button className="mt-auto min-h-[44px]" variant="secondary" onClick={onOpenClaim}>เบิกสวัสดิการ</Button>
+          <Link href={benefitReimbursementRoute(locale)} className="mt-auto">
+            <Button className="min-h-[44px]" variant="secondary" trailingIcon={<ArrowRight size={14} />}>เบิกสวัสดิการ</Button>
+          </Link>
         </div>
       </Card>
 

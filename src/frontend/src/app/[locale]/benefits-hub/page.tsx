@@ -20,8 +20,9 @@ import {
   buttonVariants,
   Modal,
 } from '@/components/humi';
+import { BenefitServicesPanel } from '@/components/benefits/BenefitServicesPanel';
 import { cn } from '@/lib/utils';
-import { benefitProfileRoute } from '@/lib/benefit-routes';
+import { benefitProfileRoute, benefitReimbursementRoute } from '@/lib/benefit-routes';
 import {
   HUMI_BENEFIT_PLANS,
   HUMI_DEPENDENTS,
@@ -83,6 +84,8 @@ const POLICIES = [
 
 export default function HumiBenefitsHubPage() {
   const { activeTab, setTab } = useBenefitsStore();
+  const params = useParams<{ locale?: string }>();
+  const locale = typeof params.locale === 'string' ? params.locale : 'th';
 
   return (
     <>
@@ -96,13 +99,20 @@ export default function HumiBenefitsHubPage() {
               'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
             )}
           >
-            ความคุ้มครอง แบบฟอร์ม และนโยบาย
+            สวัสดิการของฉัน
           </h1>
+          <p className="max-w-2xl text-body leading-relaxed text-ink-soft">
+            ดูสิทธิ์ เริ่มบริการ และติดตามสถานะจากฮับสวัสดิการ โดยแยกเบิกสวัสดิการ ใบส่งตัว และภาษีออกจากโปรไฟล์
+          </p>
         </div>
         <Button variant="ghost" leadingIcon={<Download size={14} />}>
           ดาวน์โหลดสลิปเงินเดือน
         </Button>
       </header>
+
+      <section className="mb-6" aria-label="บริการสวัสดิการ">
+        <BenefitServicesPanel locale={locale} />
+      </section>
 
       {/* Tabs */}
       <div
@@ -228,11 +238,10 @@ function BenefitsTab() {
               'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
             )}
           >
-            สำรวจแผนสวัสดิการก่อนจัดการสิทธิ์ในโปรไฟล์
+            สำรวจสิทธิ์และเริ่มบริการจาก Benefits Hub
           </h2>
           <p className="mt-3 max-w-xl text-body text-ink-soft leading-relaxed">
-            หน้านี้เป็นฮับสำหรับอ่าน เปรียบเทียบ และทำความเข้าใจความคุ้มครอง
-            การเปลี่ยนแปลงสิทธิ์ให้ทำในแท็บสวัสดิการของโปรไฟล์เท่านั้น
+            หน้านี้เป็นฮับสำหรับอ่าน เปรียบเทียบ เริ่มบริการ และกลับไปดูสรุปสิทธิ์ในโปรไฟล์เมื่อจำเป็น
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
@@ -378,16 +387,16 @@ function ClaimsTab() {
               เบิกค่าใช้จ่ายสวัสดิการ
             </h2>
             <p className="mt-2 max-w-lg text-body text-ink-soft leading-relaxed">
-              ดูวงเงิน ประวัติ และเริ่มจากข้อมูลสวัสดิการในโปรไฟล์พนักงาน
-              เพื่อให้คำขออยู่ในเส้นทาง ESS เดียวกัน
+              ดูวงเงิน ประวัติ และเริ่มคำขอเบิกย้อนหลังในเส้นทาง Benefits Hub
+              โดยไม่ปะปนกับใบส่งตัวหรือภาษี
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
-                href={benefitProfileRoute(locale)}
+                href={benefitReimbursementRoute(locale)}
                 className={buttonVariants({ variant: 'primary' })}
               >
                 <Plus size={14} aria-hidden />
-                <span>เริ่มจากข้อมูลสวัสดิการของฉัน</span>
+                <span>เริ่มเบิกสวัสดิการ</span>
               </Link>
               <Button variant="ghost">ดูประวัติทั้งหมด</Button>
             </div>
