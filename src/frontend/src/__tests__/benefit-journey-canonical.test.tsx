@@ -74,7 +74,7 @@ describe('benefit claim journey canonical route', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('/benefits-hub claims tab routes to the profile benefits context instead of starting a duplicate form', async () => {
+  it('/benefits-hub claims tab starts reimbursement from a Benefits-owned route', async () => {
     const { useBenefitsStore } = await import('@/stores/humi-benefits-slice');
     useBenefitsStore.getState().setTab('claims');
 
@@ -86,7 +86,7 @@ describe('benefit claim journey canonical route', () => {
     expect(screen.queryByRole('button', { name: 'สร้างคำขอเบิก' })).not.toBeInTheDocument();
   });
 
-  it('/benefits-hub benefits tab stays browse-only and sends actions to profile benefits', async () => {
+  it('/benefits-hub benefits tab exposes service actions while profile remains summary-only', async () => {
     const { useBenefitsStore } = await import('@/stores/humi-benefits-slice');
     useBenefitsStore.getState().setTab('benefits');
 
