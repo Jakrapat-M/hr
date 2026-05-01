@@ -9,7 +9,6 @@ import {
   FileText,
   ArrowRight,
   Search,
-  Circle,
 } from 'lucide-react';
 import {
   Avatar,
@@ -28,7 +27,6 @@ import {
   HUMI_DEPENDENTS,
   HUMI_CLAIM_ALLOWANCES,
   HUMI_CLAIM_HISTORY,
-  HUMI_PAYSLIPS,
   ACCENT_BAR_CLASS,
   CLAIM_STATUS_META,
   type HumiBenefitPlan,
@@ -47,14 +45,13 @@ const TABS: Array<[BenefitsTabKey, string]> = [
   ['claims', 'เบิกค่าใช้จ่าย'],
   ['docs', 'เอกสาร'],
   ['policies', 'นโยบาย'],
-  ['pay', 'สลิปเงินเดือน'],
 ];
 
 const DOCS = [
   { n: 'ลงทะเบียนสวัสดิการปี 2569', k: 'แบบฟอร์ม', d: 'ครบกำหนด 29 เม.ย.', action: 'sign' as const },
   { n: 'ระเบียบการปฏิบัติงาน (ฉบับที่ 4)', k: 'นโยบาย', d: 'รอรับทราบ', action: 'sign' as const },
-  { n: 'หนังสือรับรองภาษี 50 ทวิ — ปี 2568', k: 'ภาษี', d: 'พร้อมดาวน์โหลด', action: 'download' as const },
-  { n: 'หน้าบัญชีธนาคาร (สำเนา)', k: 'การเงิน', d: 'อัปโหลด 12 ก.พ.', action: 'download' as const },
+  { n: 'บัตรประกันสุขภาพกลุ่ม', k: 'สวัสดิการ', d: 'พร้อมดาวน์โหลด', action: 'download' as const },
+  { n: 'แบบฟอร์มเพิ่มผู้ใช้สิทธิ์ร่วม', k: 'สวัสดิการครอบครัว', d: 'อัปเดต 12 ก.พ.', action: 'download' as const },
   { n: 'อบรมความปลอดภัยในการทำงาน', k: 'การฝึกอบรม', d: 'เสร็จสิ้น 8 ม.ค.', action: 'download' as const },
   { n: 'สัญญาจ้างงาน', k: 'เอกสารทางกฎหมาย', d: 'ลงนามเมื่อ ต.ค. 2567', action: 'download' as const },
 ];
@@ -92,7 +89,7 @@ export default function HumiBenefitsHubPage() {
       {/* Page header */}
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <CardEyebrow>เงินเดือนและสวัสดิการ</CardEyebrow>
+          <CardEyebrow>Benefits Hub</CardEyebrow>
           <h1
             className={cn(
               'font-display font-semibold tracking-tight text-ink',
@@ -102,12 +99,9 @@ export default function HumiBenefitsHubPage() {
             สวัสดิการของฉัน
           </h1>
           <p className="max-w-2xl text-body leading-relaxed text-ink-soft">
-            ดูสิทธิ์ เริ่มบริการ และติดตามสถานะจากฮับสวัสดิการ โดยแยกเบิกสวัสดิการ ใบส่งตัว และภาษีออกจากโปรไฟล์
+            ดูสิทธิ์ เริ่มบริการ และติดตามสถานะจากฮับสวัสดิการ โดยหน้านี้รวมเฉพาะบริการสวัสดิการ ไม่ฝังฟอร์มในโปรไฟล์
           </p>
         </div>
-        <Button variant="ghost" leadingIcon={<Download size={14} />}>
-          ดาวน์โหลดสลิปเงินเดือน
-        </Button>
       </header>
 
       <section className="mb-6" aria-label="บริการสวัสดิการ">
@@ -144,7 +138,6 @@ export default function HumiBenefitsHubPage() {
       {activeTab === 'claims' && <ClaimsTab />}
       {activeTab === 'docs' && <DocsTab />}
       {activeTab === 'policies' && <PoliciesTab />}
-      {activeTab === 'pay' && <PayTab />}
     </>
   );
 }
@@ -607,66 +600,5 @@ function PoliciesTab() {
         </Card>
       ))}
     </section>
-  );
-}
-
-// ────────────────────────────────────────────────────────────
-// Tab: Pay
-// ────────────────────────────────────────────────────────────
-
-function PayTab() {
-  return (
-    <Card variant="raised" size="lg">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <CardEyebrow>ทุกสิ้นเดือน · เงินเข้ารอบถัดไป 30 เม.ย.</CardEyebrow>
-          <CardTitle className="mt-1">สลิปเงินเดือน</CardTitle>
-        </div>
-        <span
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1',
-            'text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
-            'bg-accent-soft text-[color:var(--color-accent-ink)]'
-          )}
-        >
-          <Circle size={6} fill="currentColor" aria-hidden />
-          รายได้สะสมปีนี้ ฿294,180.44
-        </span>
-      </div>
-      <ul role="list" className="divide-y divide-hairline">
-        {HUMI_PAYSLIPS.map((p) => (
-          <li
-            key={p.id}
-            className="flex flex-col gap-2 py-3.5 sm:flex-row sm:items-center sm:gap-3"
-          >
-            <span
-              aria-hidden
-              className="flex h-10 w-8 shrink-0 items-center justify-center rounded-[6px] border border-hairline bg-canvas-soft text-ink-muted"
-            >
-              <FileText size={16} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-body font-semibold text-ink">{p.date}</p>
-              <p className="text-small text-ink-muted">
-                {p.hours} · รวมก่อนหัก {p.gross}
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <span
-                className={cn(
-                  'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
-                  'bg-[color:var(--color-success-soft)] text-[color:var(--color-success)]'
-                )}
-              >
-                เงินเข้าแล้ว
-              </span>
-              <Button variant="ghost" size="sm" leadingIcon={<Download size={14} />}>
-                PDF
-              </Button>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Card>
   );
 }

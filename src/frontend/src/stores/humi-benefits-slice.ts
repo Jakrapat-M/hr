@@ -4,7 +4,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type BenefitsTabKey = 'benefits' | 'claims' | 'docs' | 'policies' | 'pay';
+export type BenefitsTabKey = 'benefits' | 'claims' | 'docs' | 'policies';
+
+const BENEFITS_TABS: BenefitsTabKey[] = ['benefits', 'claims', 'docs', 'policies'];
+
+function normalizeBenefitsTab(tab: unknown): BenefitsTabKey {
+  return BENEFITS_TABS.includes(tab as BenefitsTabKey) ? (tab as BenefitsTabKey) : 'benefits';
+}
 
 interface BenefitsState {
   enrolled: Set<string>;
@@ -44,6 +50,7 @@ export const useBenefitsStore = create<BenefitsState>()(
               state: {
                 ...state,
                 enrolled: new Set(state.enrolled ?? []),
+                activeTab: normalizeBenefitsTab(state.activeTab),
               },
             };
           } catch {

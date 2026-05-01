@@ -96,6 +96,9 @@ describe('benefit claim journey canonical route', () => {
     expect(screen.getByRole('heading', { name: 'สำรวจสิทธิ์และเริ่มบริการจาก Benefits Hub' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'ไปที่สิทธิ์ของฉัน' })).toHaveAttribute('href', '/th/profile/me?tab=benefits');
     expect(screen.getByRole('link', { name: 'เบิกสวัสดิการ' })).toHaveAttribute('href', '/th/benefits-hub/reimbursement');
+    expect(screen.queryByRole('tab', { name: 'สลิปเงินเดือน' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /วางแผนภาษี/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Payroll\/Tax|เงินเดือนและสวัสดิการ/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'เริ่มลงทะเบียน' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'สมัคร' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'ยกเลิกสมัคร' })).not.toBeInTheDocument();
