@@ -8,6 +8,7 @@ import {
   type TaxEstimateInput,
   type TaxEstimateResult,
 } from '@/lib/tax-planning';
+import { benefitTaxPlanningRoute } from '@/lib/benefit-routes';
 import type { HumiApprovalStep, RequestStatus } from '@/lib/humi-mock-data';
 
 export { formatTHB };
@@ -208,7 +209,7 @@ export function selectTaxPlanningRequestSummaries(drafts: TaxPlanningDraft[]) {
       sub: `ปีภาษี ${draft.taxYear} · ${draft.maskedTaxId} · ${safeEstimateSummary(draft.estimate)}`,
       submitted: thaiDate(draft.submittedAt ?? draft.updatedAt),
       status: statusToRequestStatus(draft.status) ?? 'pending',
-      href: '/th/profile/me?tab=tax&mode=planning',
+      href: benefitTaxPlanningRoute('th'),
       approvalChain: [
         {
           role: 'Payroll Tax Review',
@@ -227,6 +228,7 @@ export function selectPayrollTaxPlanningInboxRows(drafts: TaxPlanningDraft[]) {
   return drafts
     .filter((draft) => draft.status !== 'draft' && draft.status !== 'estimated' && (draft.status !== 'cancelled' || hasPayrollReviewLineage(draft)))
     .map((draft) => ({
+      id: draft.id,
       workflowId: draft.workflowRequestId,
       employeeId: draft.employeeId,
       employeeName: draft.employeeName,

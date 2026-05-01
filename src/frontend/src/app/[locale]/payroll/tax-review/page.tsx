@@ -9,23 +9,30 @@ import { canAccessModule } from '@/lib/rbac';
 import * as taxPlanning from '@/stores/benefit-tax-planning';
 
 type PayrollTaxAction = (id: string, actor?: PayrollReviewer, note?: string) => unknown;
-
-type PayrollTaxPlanningModule = typeof taxPlanning & {
-  selectPayrollTaxPlanningInboxRows?: (drafts: unknown[]) => PayrollTaxReviewRow[];
-  startPayrollTaxPlanningReview?: PayrollTaxAction;
-  sendBackPayrollTaxPlanningReview?: PayrollTaxAction;
-  approvePayrollTaxPlanningReview?: PayrollTaxAction;
-  rejectPayrollTaxPlanningReview?: PayrollTaxAction;
-  cancelTaxPlanningReview?: PayrollTaxAction;
-};
+type PayrollTaxStoreActionName =
+  | 'startPayrollTaxPlanningReview'
+  | 'sendBackPayrollTaxPlanningReview'
+  | 'approvePayrollTaxPlanningReview'
+  | 'rejectPayrollTaxPlanningReview'
+  | 'cancelTaxPlanningReview';
 
 type PayrollReviewer = {
   role: 'payroll';
   name: string;
 };
 
+type PayrollTaxEstimateSummary = string | {
+  grossAnnualIncome?: number;
+  totalDeductions?: number;
+  taxableIncome?: number;
+  estimatedTax?: number;
+  remainingDue?: number;
+  refund?: number;
+};
+
 type PayrollTaxReviewRow = {
   id: string;
+  workflowId?: string;
   employeeId?: string;
   employeeName: string;
   maskedTaxId?: string;
@@ -34,14 +41,12 @@ type PayrollTaxReviewRow = {
   statusLabel?: string;
   submittedAt?: string;
   updatedAt?: string;
-  estimateSummary?: string;
+  estimateSummary?: PayrollTaxEstimateSummary;
   remainingDue?: string;
   refund?: string;
   reviewerNote?: string;
   employeeVisibleReason?: string;
 };
-
-const payrollTaxPlanning = taxPlanning as PayrollTaxPlanningModule;
 
 const STATUS_LABELS: Record<string, string> = {
   submitted_payroll: 'ส่งให้ Payroll แล้ว',
@@ -57,6 +62,17 @@ const reviewer: PayrollReviewer = {
   name: 'Payroll reviewer',
 };
 
+function describeEstimateSummary(summary: PayrollTaxEstimateSummary | undefined) {
+  if (!summary) return null;
+  if (typeof summary === 'string') return summary;
+  const parts = [
+    typeof summary.estimatedTax === 'number' ? `ภาษีประมาณการ ${taxPlanning.formatTHB(summary.estimatedTax)}` : null,
+    typeof summary.remainingDue === 'number' && summary.remainingDue > 0 ? `ต้องชำระเพิ่ม ${taxPlanning.formatTHB(summary.remainingDue)}` : null,
+    typeof summary.refund === 'number' && summary.refund > 0 ? `คาดว่าจะคืน ${taxPlanning.formatTHB(summary.refund)}` : null,
+  ].filter(Boolean);
+  return parts.join(' · ') || 'สรุปภาษีแสดงเฉพาะผลประมาณการ ไม่รวมรายละเอียด payroll เต็ม';
+}
+
 export default function PayrollTaxReviewPage() {
   const roles = useAuthStore((state) => state.roles);
   const username = useAuthStore((state) => state.username);
@@ -69,7 +85,7 @@ export default function PayrollTaxReviewPage() {
   const canReviewTaxPlanning = canAccessModule(roles, 'payroll-processing');
 
   const rows = useMemo(() => {
-    return payrollTaxPlanning.selectPayrollTaxPlanningInboxRows?.(drafts as unknown[]) ?? [];
+    return taxPlanning.selectPayrollTaxPlanningInboxRows?.(drafts as unknown[]) ?? [];
   }, [drafts]);
 
   if (!canReviewTaxPlanning) {
@@ -88,14 +104,15 @@ export default function PayrollTaxReviewPage() {
     setReasonById((current) => ({ ...current, [id]: value }));
   }
 
-  function runAction(row: PayrollTaxReviewRow, actionName: keyof PayrollTaxPlanningModule, fallbackMessage: string, requireReason = false) {
+  function runAction(row: PayrollTaxReviewRow, actionName: PayrollTaxStoreActionName, fallbackMessage: string, requireReason = false) {
     const note = (reasonById[row.id] ?? '').trim();
     if (requireReason && !note) {
       setMessage('กรุณาระบุเหตุผลก่อนส่งกลับหรือไม่อนุมัติ');
       return;
     }
 
-    const action = payrollTaxPlanning[actionName] as PayrollTaxAction | undefined;
+    const storeActions = taxPlanning.useBenefitTaxPlanningStore.getState() as Record<PayrollTaxStoreActionName, PayrollTaxAction | undefined>;
+    const action = storeActions[actionName];
     if (!action) {
       setMessage('ยังไม่สามารถบันทึกการตรวจแผนภาษีได้ กรุณาลองใหม่อีกครั้ง');
       return;
@@ -176,7 +193,7 @@ export default function PayrollTaxReviewPage() {
                       <div><dt className="font-semibold text-ink">Tax year</dt><dd>{row.taxYear ?? '2026'}</dd></div>
                       <div><dt className="font-semibold text-ink">Updated</dt><dd>{row.submittedAt ?? row.updatedAt ?? 'รอข้อมูลล่าสุด'}</dd></div>
                     </dl>
-                    <p className="mt-3 text-small text-ink">{row.estimateSummary ?? row.remainingDue ?? row.refund ?? 'สรุปภาษีแสดงเฉพาะผลประมาณการ ไม่รวมรายละเอียด payroll เต็ม'}</p>
+                    <p className="mt-3 text-small text-ink">{describeEstimateSummary(row.estimateSummary) ?? row.remainingDue ?? row.refund ?? 'สรุปภาษีแสดงเฉพาะผลประมาณการ ไม่รวมรายละเอียด payroll เต็ม'}</p>
                     {row.employeeVisibleReason && <p className="mt-2 text-small text-ink-muted">เหตุผลที่เห็นโดยพนักงาน: {row.employeeVisibleReason}</p>}
                   </div>
 
