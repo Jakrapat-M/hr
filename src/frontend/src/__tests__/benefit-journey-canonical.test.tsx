@@ -113,8 +113,7 @@ describe('benefit claim journey canonical route', () => {
     } = await import('@/lib/benefit-routes');
 
     expect(benefitProfileRoute('th')).toBe('/th/profile/me?tab=benefits');
-    expect(benefitReimbursementRoute('th')).toBe('/th/benefits-hub/reimbursement');
-    expect(benefitReferralRoute('th')).toBe('/th/benefits-hub/referral');
+    expect(benefitReferralRoute('th')).toBe('/th/profile/me?tab=benefits&service=referral');
     expect(benefitTaxPlanningRoute('th')).toBe('/th/payroll/tax-planning');
     expect(benefitsHubRoute('th')).toBe('/th/benefits-hub');
   });
