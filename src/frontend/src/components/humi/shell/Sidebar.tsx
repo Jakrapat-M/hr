@@ -92,16 +92,40 @@ const NAV: NavSection[] = [
       { id: 'profile', label: 'โปรไฟล์ของฉัน', href: '/th/profile/me', icon: User },
       { id: 'timeoff', label: 'ลางาน', href: '/th/timeoff', icon: Calendar, badge: '2' },
       { id: 'benefits', label: 'สวัสดิการ', href: benefitsHubRoute('th'), icon: Heart, badge: '1' },
-      { id: 'requests', label: 'คำร้องและแบบฟอร์ม', href: '/th/requests', icon: FileText, badge: '1' },
+      {
+        id: 'requests',
+        label: 'คำร้องและแบบฟอร์ม',
+        href: '/th/requests',
+        icon: FileText,
+        badge: '1',
+      },
       { id: 'my-workflows', label: 'คำขอของฉัน', href: '/th/ess/workflows', icon: ClipboardList },
-      { id: 'time-attendance', label: 'เวลา & การเข้างาน', href: 'https://cnext-time.centralgroup.com', icon: Clock, external: true },
+      {
+        id: 'time-attendance',
+        label: 'เวลา & การเข้างาน',
+        href: 'https://cnext-time.centralgroup.com',
+        icon: Clock,
+        external: true,
+      },
     ],
   },
   {
     group: 'กล่องอนุมัติ',
     items: [
-      { id: 'quick-approve', label: 'คำขอรออนุมัติ', href: '/th/quick-approve', icon: ClipboardList, roles: ['manager', 'hr_admin', 'hr_manager'] },
-      { id: 'spd-inbox', label: 'กล่องอนุมัติ SPD', href: '/th/spd/inbox', icon: Inbox, roles: ['spd', 'hr_admin', 'hr_manager'] },
+      {
+        id: 'quick-approve',
+        label: 'คำขอรออนุมัติ',
+        href: '/th/quick-approve',
+        icon: ClipboardList,
+        roles: ['manager', 'hr_admin', 'hr_manager'],
+      },
+      {
+        id: 'spd-inbox',
+        label: 'กล่องอนุมัติ SPD',
+        href: '/th/spd/inbox',
+        icon: Inbox,
+        roles: ['spd', 'hr_admin', 'hr_manager'],
+      },
     ],
   },
   {
@@ -110,7 +134,12 @@ const NAV: NavSection[] = [
       { id: 'goals', label: 'เป้าหมายและผลงาน', href: '/th/goals', icon: Target },
       { id: 'learning', label: 'การเรียนรู้', href: '/th/learning-directory', icon: BookOpen },
       { id: 'directory', label: 'ผังองค์กร', href: '/th/org-chart', icon: Network },
-      { id: 'performance-form', label: 'ประเมินผลงาน', href: '/th/performance-form', icon: Activity },
+      {
+        id: 'performance-form',
+        label: 'ประเมินผลงาน',
+        href: '/th/performance-form',
+        icon: Activity,
+      },
       { id: 'development', label: 'การพัฒนา', href: '/th/development', icon: TrendingUp },
       { id: 'succession', label: 'สายการสืบทอด', href: '/th/succession', icon: Users2 },
     ],
@@ -153,9 +182,10 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
   // user owns at least one matching role.
   const hasRoleFor = (item: NavItem) =>
     !item.roles || item.roles.some((r) => userRoles.includes(r));
-  const visibleSections = NAV
-    .map((section) => ({ ...section, items: section.items.filter(hasRoleFor) }))
-    .filter((section) => section.items.length > 0);
+  const visibleSections = NAV.map((section) => ({
+    ...section,
+    items: section.items.filter(hasRoleFor),
+  })).filter((section) => section.items.length > 0);
   return (
     <aside className={cn('humi-sidebar', className)} aria-label="เมนูหลัก">
       <div className="humi-brand">
@@ -229,10 +259,7 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
                   </span>
                   <span className="humi-nav-text">{item.label}</span>
                   {item.badge && (
-                    <span
-                      className="humi-pill"
-                      aria-label={`${item.badge} รายการใหม่`}
-                    >
+                    <span className="humi-pill" aria-label={`${item.badge} รายการใหม่`}>
                       {item.badge}
                     </span>
                   )}

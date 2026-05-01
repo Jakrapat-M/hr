@@ -13,26 +13,21 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Check, FileText, Download, Pencil, X, FileX } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { benefitsHubRoute } from '@/lib/benefit-routes';
+import {
+  benefitReferralRoute,
+  benefitTaxPlanningRoute,
+  benefitsHubRoute,
+} from '@/lib/benefit-routes';
 import { Button } from '@/components/humi';
 import {
-  BENEFIT_CODE_BY_TYPE,
   BENEFIT_STATUS_LABEL,
-  BENEFIT_TYPE_LABEL,
   selectBenefitRequestSummaries,
   useBenefitClaimsStore,
-  validateBenefitAttachmentRules,
-  type BenefitClaimInput,
-  type BenefitClaimType,
 } from '@/stores/benefit-claims';
-import { BenefitServicesPanel } from '@/components/benefits/BenefitServicesPanel';
-import { ReferralHistoryPanel } from '@/components/benefits/referral/ReferralHistoryPanel';
-import { ReferralRequestPanel } from '@/components/benefits/referral/ReferralRequestPanel';
-import { TaxPlanningPanel } from '@/components/benefits/tax/TaxPlanningPanel';
 import {
   CLAIM_STATUS_META,
   DEPENDENT_RELATION_LABELS,
@@ -133,11 +128,16 @@ const AVATAR_TONE_MAP = {
 
 // Fields that require attachment before submit (Section A/B)
 const ATTACHMENT_REQUIRED_FIELDS = new Set([
-  'salutationTh', 'salutationEn',
-  'firstNameTh', 'firstNameEn',
-  'lastNameTh', 'lastNameEn',
+  'salutationTh',
+  'salutationEn',
+  'firstNameTh',
+  'firstNameEn',
+  'lastNameTh',
+  'lastNameEn',
   'nationalId',
-  'maritalStatus', 'maritalStatusSince', 'spouseName',
+  'maritalStatus',
+  'maritalStatusSince',
+  'spouseName',
 ]);
 
 // Picklist options
@@ -152,7 +152,6 @@ const MILITARY_OPTIONS = ['completed', 'exempted', 'deferred', 'not_applicable']
 // Humi extends with Rh factor (+/-) for clinical completeness — intentional superset.
 // SF cite: qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json BLOODGROUP optionIds AB/A/O/B
 const DISABILITY_OPTIONS = ['none', 'physical', 'visual', 'hearing', 'cognitive', 'other'];
-
 
 // BRD #29: PerPerson personIdExternal — stable SF external ID surfaced alongside generated employee ID
 // SF cite: sf-extract/qas-fields-2026-04-26/sf-qas-PerPerson-2026-04-26.json .d.results[0].personIdExternal
@@ -260,10 +259,14 @@ export function deriveFormValuesFromEmployee(emp: HumiEmployee | null): EditForm
     firstNameEn: emp.firstNameEn ?? FORM_DEFAULTS.firstNameEn,
     lastNameEn: emp.lastNameEn ?? FORM_DEFAULTS.lastNameEn,
     nickname: emp.nickname ?? FORM_DEFAULTS.nickname,
-    maritalStatus: emp.maritalStatus ? (MARITAL_TH[emp.maritalStatus] ?? FORM_DEFAULTS.maritalStatus) : FORM_DEFAULTS.maritalStatus,
+    maritalStatus: emp.maritalStatus
+      ? (MARITAL_TH[emp.maritalStatus] ?? FORM_DEFAULTS.maritalStatus)
+      : FORM_DEFAULTS.maritalStatus,
     religion: emp.religion ?? FORM_DEFAULTS.religion,
     bloodType: emp.bloodType ?? FORM_DEFAULTS.bloodType,
-    nationality: emp.nationality ? (NATIONALITY_TH[emp.nationality] ?? FORM_DEFAULTS.nationality) : FORM_DEFAULTS.nationality,
+    nationality: emp.nationality
+      ? (NATIONALITY_TH[emp.nationality] ?? FORM_DEFAULTS.nationality)
+      : FORM_DEFAULTS.nationality,
     nationalId: maskNationalId(emp.nationalId),
   };
 }
@@ -272,7 +275,7 @@ export function deriveFormValuesFromEmployee(emp: HumiEmployee | null): EditForm
 
 function PendingSectionBadge({ section }: { section: SectionKey }) {
   const pending = useHumiProfileStore((s) =>
-    s.pendingChanges.find((pc) => pc.sectionKey === section && pc.status === 'pending')
+    s.pendingChanges.find((pc) => pc.sectionKey === section && pc.status === 'pending'),
   );
   const tEss = useTranslations('ess');
   if (!pending) return null;
@@ -293,113 +296,6 @@ function PendingSectionBadge({ section }: { section: SectionKey }) {
   );
 }
 
-function BenefitInput({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; type?: string }) {
-  const id = `benefit-${label.replace(/\s+/g, '-')}`;
-  return (
-    <label className="flex flex-col gap-1.5 text-small font-medium text-ink-soft" htmlFor={id}>
-      {label}
-      <input id={id} type={type} value={value} onChange={(event) => onChange(event.target.value)} className="humi-input" />
-    </label>
-  );
-}
-
-function formatBenefitAttachmentSize(file: File) {
-  const sizeMb = file.size / (1024 * 1024);
-  if (sizeMb > 0 && sizeMb < 0.1) return '0.1';
-  return sizeMb.toFixed(1).replace(/\.0$/, '');
-}
-
-function BenefitAttachmentField({
-  label,
-  filename,
-  sizeMb,
-  onFileSelected,
-  onClear,
-}: {
-  label: string;
-  filename: string;
-  sizeMb: string;
-  onFileSelected: (file: File) => void;
-  onClear: () => void;
-}) {
-  const id = `benefit-${label.replace(/\s+/g, '-')}`;
-  const labelId = `${id}-label`;
-  const helperId = `${id}-helper`;
-  const hasFile = filename.trim().length > 0;
-
-  return (
-    <div className="flex flex-col gap-1.5 text-small font-medium text-ink-soft sm:col-span-2">
-      <span id={labelId}>{label}</span>
-      <div
-        data-testid="benefit-attachment-field"
-        className="humi-dropzone flex flex-col items-start gap-3 text-left transition-colors focus-within:border-accent focus-within:ring-4 focus-within:ring-accent-soft"
-      >
-        <input
-          id={id}
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png,.pptx,.xlsx"
-          aria-labelledby={labelId}
-          aria-describedby={helperId}
-          className="sr-only"
-          onChange={(event) => {
-            const file = event.currentTarget.files?.[0];
-            if (!file) return;
-            onFileSelected(file);
-            event.currentTarget.value = '';
-          }}
-        />
-        {hasFile ? (
-          <div className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-hairline bg-surface px-3 py-2 text-ink">
-            <span className="flex min-w-0 items-center gap-2">
-              <FileText className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
-              <span className="min-w-0">
-                <span className="block truncate font-medium">{filename}</span>
-                <span className="block text-xs font-normal text-ink-muted">{sizeMb ? `${sizeMb} MB` : 'พร้อมส่งคำขอ'}</span>
-              </span>
-            </span>
-            <button
-              type="button"
-              aria-label="ลบไฟล์แนบ"
-              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-ink-muted transition-colors hover:bg-canvas-soft hover:text-ink focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent-soft"
-              onClick={onClear}
-            >
-              <X className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex w-full items-center gap-3 rounded-[var(--radius-sm)] border border-dashed border-hairline bg-surface px-3 py-3 text-ink-muted">
-            <FileText className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
-            <span className="font-normal">ยังไม่ได้เลือกไฟล์</span>
-          </div>
-        )}
-        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <span id={helperId} className="text-xs font-normal text-ink-muted">
-            รองรับ .pdf .jpg .jpeg .png .pptx .xlsx
-          </span>
-          <label
-            htmlFor={id}
-            className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[var(--radius-sm)] border border-hairline bg-surface px-3 text-small font-medium text-ink transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent-soft"
-          >
-            เลือกไฟล์
-          </label>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function BenefitSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: Array<[string, string]> }) {
-  const id = `benefit-${label.replace(/\s+/g, '-')}`;
-  return (
-    <label className="flex flex-col gap-1.5 text-small font-medium text-ink-soft" htmlFor={id}>
-      {label}
-      <select id={id} value={value} onChange={(event) => onChange(event.target.value)} className="humi-input">
-        {options.map(([optionValue, optionLabel]) => <option key={optionValue} value={optionValue}>{optionLabel}</option>)}
-      </select>
-    </label>
-  );
-}
-
 export default function HumiProfileMePage() {
   const t = useTranslations('humiProfile');
   const tEdit = useTranslations('profileEdit');
@@ -408,13 +304,23 @@ export default function HumiProfileMePage() {
   const tActivity = useTranslations('activityLog');
   const tEss = useTranslations('ess');
   const params = useParams();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const locale = (params?.locale as string) ?? 'th';
   const p = HUMI_MY_PROFILE;
 
   const {
-    activeTab, isEditing, draft, save, saved, setTab, startEdit, updateDraft, cancelEdit,
-    pendingChanges, attachments,
+    activeTab,
+    isEditing,
+    draft,
+    save,
+    saved,
+    setTab,
+    startEdit,
+    updateDraft,
+    cancelEdit,
+    pendingChanges,
+    attachments,
     submitChangeRequest,
   } = useHumiProfileStore();
 
@@ -434,32 +340,10 @@ export default function HumiProfileMePage() {
   const [modalDate, setModalDate] = useState<string>(''); // ISO yyyy-MM-dd
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const benefitClaims = useBenefitClaimsStore((state) => state.claims);
-  const submitBenefitClaim = useBenefitClaimsStore((state) => state.submitClaim);
-  const hasDuplicateReceipt = useBenefitClaimsStore((state) => state.hasDuplicateReceipt);
-  const [benefitFormOpen, setBenefitFormOpen] = useState(false);
-  const [benefitForm, setBenefitForm] = useState({
-    benefitType: 'medical' as BenefitClaimType,
-    receiptNo: '',
-    receiptDate: '',
-    receiptAmount: '',
-    totalClaimAmount: '',
-    hospitalType: 'private',
-    hospitalName: '',
-    patientTransferDocumentNo: '',
-    diseaseDetails: '',
-    gasolineClaimType: 'actual',
-    dependentName: '',
-    dependentRelationship: '',
-    attachmentName: 'receipt.pdf',
-    attachmentSizeMb: '1',
-  });
-  const [benefitErrors, setBenefitErrors] = useState<string[]>([]);
   const lastAppliedProfileSearchRef = useRef<string | null>(null);
 
   // Derive panel key from slice activeTab
   const panelKey = SLICE_TO_PANEL[activeTab];
-  const benefitService = searchParams?.get('service');
-  const profileMode = searchParams?.get('mode');
   const profileSearchKey = searchParams?.toString() ?? '';
 
   useEffect(() => {
@@ -474,12 +358,25 @@ export default function HumiProfileMePage() {
     }
   }, [activeTab, profileSearchKey, searchParams, setTab]);
 
-  const handleProfileTabClick = useCallback((tab: ProfileTab) => {
-    setTab(tab);
-    if (typeof window !== 'undefined') {
-      window.history.pushState(null, '', profileTabHref(locale, tab));
+  useEffect(() => {
+    if (searchParams?.get('service') === 'referral') {
+      router.replace(benefitReferralRoute(locale));
+      return;
     }
-  }, [locale, setTab]);
+    if (searchParams?.get('tab') === 'tax' && searchParams?.get('mode') === 'planning') {
+      router.replace(benefitTaxPlanningRoute(locale));
+    }
+  }, [locale, router, searchParams]);
+
+  const handleProfileTabClick = useCallback(
+    (tab: ProfileTab) => {
+      setTab(tab);
+      if (typeof window !== 'undefined') {
+        window.history.pushState(null, '', profileTabHref(locale, tab));
+      }
+    },
+    [locale, setTab],
+  );
 
   // ── Toast helper ──────────────────────────────────────────────────────────
 
@@ -539,69 +436,11 @@ export default function HumiProfileMePage() {
 
   const attachmentRequired =
     activeEditField !== null && ATTACHMENT_REQUIRED_FIELDS.has(activeEditField);
-  const saveDisabled =
-    !modalDate || (attachmentRequired && pendingAttachmentIds.length === 0);
+  const saveDisabled = !modalDate || (attachmentRequired && pendingAttachmentIds.length === 0);
 
   const employeeBenefitClaims = benefitClaims.filter((claim) => claim.employeeId === 'EMP001');
   const benefitRequestRows = selectBenefitRequestSummaries(employeeBenefitClaims);
   const sendBackClaims = employeeBenefitClaims.filter((claim) => claim.status === 'send_back');
-
-  function updateBenefitField(field: keyof typeof benefitForm, value: string) {
-    setBenefitForm((prev) => ({ ...prev, [field]: value }));
-    if (benefitErrors.length > 0) setBenefitErrors([]);
-  }
-
-  function handleBenefitSubmit() {
-    const amount = Number(benefitForm.receiptAmount);
-    const claimAmount = Number(benefitForm.totalClaimAmount || benefitForm.receiptAmount);
-    const benefitCode = BENEFIT_CODE_BY_TYPE[benefitForm.benefitType];
-    const attachments = benefitForm.attachmentName.trim()
-      ? [{ id: `att-${Date.now()}`, filename: benefitForm.attachmentName.trim(), sizeMb: Number(benefitForm.attachmentSizeMb || 0) }]
-      : [];
-    const errors: string[] = [];
-    if (!benefitForm.receiptNo.trim()) errors.push('กรุณาระบุเลขที่ใบเสร็จ/เอกสาร');
-    if (!benefitForm.receiptDate) errors.push('กรุณาระบุวันที่ใบเสร็จ/เอกสาร');
-    if (!Number.isFinite(amount) || amount <= 0) errors.push('กรุณาระบุจำนวนเงินตามใบเสร็จ');
-    if (!Number.isFinite(claimAmount) || claimAmount <= 0) errors.push('กรุณาระบุจำนวนเงินที่ขอเบิก');
-    if (benefitForm.benefitType === 'medical' && !benefitForm.hospitalName.trim()) errors.push('กรุณาระบุชื่อโรงพยาบาล/คลินิก');
-    if (benefitForm.benefitType === 'gasoline' && !benefitForm.gasolineClaimType.trim()) errors.push('กรุณาเลือกประเภทการเบิกค่าน้ำมัน');
-    if (benefitForm.benefitType === 'dependent' && (!benefitForm.dependentName.trim() || !benefitForm.dependentRelationship.trim())) errors.push('กรุณาระบุข้อมูลผู้รับสิทธิ์ร่วม');
-    if (hasDuplicateReceipt('EMP001', benefitCode, benefitForm.receiptNo)) errors.push('พบเลขที่ใบเสร็จ/เอกสารซ้ำสำหรับสวัสดิการนี้');
-    errors.push(...validateBenefitAttachmentRules({ benefitType: benefitForm.benefitType, attachments }));
-    if (errors.length > 0) {
-      setBenefitErrors(errors);
-      return;
-    }
-
-    const input: BenefitClaimInput = {
-      employeeId: 'EMP001',
-      employeeName: 'จงรักษ์ ทานากะ',
-      company: 'Central Group',
-      businessUnit: 'People Operations',
-      employeeGroup: 'Monthly',
-      personalGrade: 'PG4',
-      benefitType: benefitForm.benefitType,
-      benefitCode,
-      benefitName: BENEFIT_TYPE_LABEL[benefitForm.benefitType],
-      remainingAmount: 20000,
-      receiptNo: benefitForm.receiptNo.trim(),
-      receiptDate: benefitForm.receiptDate,
-      receiptAmount: amount,
-      totalClaimAmount: claimAmount,
-      hospitalType: benefitForm.hospitalType,
-      hospitalName: benefitForm.hospitalName.trim(),
-      patientTransferDocumentNo: benefitForm.patientTransferDocumentNo.trim(),
-      diseaseDetails: benefitForm.diseaseDetails.trim(),
-      gasolineClaimType: benefitForm.gasolineClaimType,
-      dependentName: benefitForm.dependentName.trim(),
-      dependentRelationship: benefitForm.dependentRelationship.trim(),
-      attachments,
-    };
-    const claim = submitBenefitClaim(input);
-    setBenefitForm((prev) => ({ ...prev, receiptNo: '', receiptDate: '', receiptAmount: '', totalClaimAmount: '', hospitalName: '', patientTransferDocumentNo: '', diseaseDetails: '', dependentName: '', dependentRelationship: '' }));
-    setBenefitFormOpen(false);
-    showToast(`ส่งคำขอ ${claim.workflowRequestId} แล้ว · ติดตามได้ที่ /requests`);
-  }
 
   const tabs: Array<[ProfileTab, string]> = [
     ['personal', t('tabPersonal')],
@@ -694,8 +533,14 @@ export default function HumiProfileMePage() {
 
   function AddressSectionEditor() {
     const addr = draft.addressStructured ?? {
-      houseNo: '', village: '', soi: '', road: '',
-      subdistrict: '', district: '', province: '', postalCode: '',
+      houseNo: '',
+      village: '',
+      soi: '',
+      road: '',
+      subdistrict: '',
+      district: '',
+      province: '',
+      postalCode: '',
     };
     const today = new Date().toISOString().slice(0, 10);
 
@@ -770,8 +615,7 @@ export default function HumiProfileMePage() {
             size="sm"
             onClick={handleSubmit}
             disabled={
-              !isContactArrayValid(phones, 'phone') ||
-              !isContactArrayValid(emails, 'email')
+              !isContactArrayValid(phones, 'phone') || !isContactArrayValid(emails, 'email')
             }
           >
             {tEss('changeRequest.submit')}
@@ -782,7 +626,12 @@ export default function HumiProfileMePage() {
   }
 
   function BankSectionEditor() {
-    const bankData = draft.bank ?? { bankCode: '', accountNo: '', holderName: '', bookAttachmentId: null };
+    const bankData = draft.bank ?? {
+      bankCode: '',
+      accountNo: '',
+      holderName: '',
+      bookAttachmentId: null,
+    };
     const today = new Date().toISOString().slice(0, 10);
 
     function handleSubmit() {
@@ -848,9 +697,7 @@ export default function HumiProfileMePage() {
         open={gateOpen}
         onClose={handleGateClose}
         title={
-          activeEditField
-            ? tEdit(`field.${activeEditField}` as Parameters<typeof tEdit>[0])
-            : ''
+          activeEditField ? tEdit(`field.${activeEditField}` as Parameters<typeof tEdit>[0]) : ''
         }
       >
         <div className="space-y-4">
@@ -875,7 +722,9 @@ export default function HumiProfileMePage() {
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-ink">
               {tEdit('effectiveDate') || 'วันที่มีผล'}
-              <span className="ml-1 text-danger" aria-hidden>*</span>
+              <span className="ml-1 text-danger" aria-hidden>
+                *
+              </span>
             </label>
             <input
               type="date"
@@ -890,15 +739,15 @@ export default function HumiProfileMePage() {
             <div className="space-y-2">
               <p className="text-sm font-medium text-ink">
                 {tEdit('required')}
-                <span className="ml-1 text-danger" aria-hidden>*</span>
+                <span className="ml-1 text-danger" aria-hidden>
+                  *
+                </span>
               </p>
               <FileUploadField
                 label="แนบเอกสารประกอบ"
                 required
                 onUpload={(id) => setPendingAttachmentIds((prev) => [...prev, id])}
-                onRemove={(id) =>
-                  setPendingAttachmentIds((prev) => prev.filter((x) => x !== id))
-                }
+                onRemove={(id) => setPendingAttachmentIds((prev) => prev.filter((x) => x !== id))}
               />
             </div>
           )}
@@ -939,10 +788,7 @@ export default function HumiProfileMePage() {
           // Render all 3 buttons always, toggle visibility via CSS — avoids
           // React mount/unmount flash. Container reserves 2-button width so
           // layout doesn't jump when swapping (Ken UAT 2026-04-22 "กระตุก").
-          <div
-            className="humi-row justify-end"
-            style={{ gap: 8, minWidth: 260 }}
-          >
+          <div className="humi-row justify-end" style={{ gap: 8, minWidth: 260 }}>
             <Button
               variant="primary"
               size="md"
@@ -1006,16 +852,11 @@ export default function HumiProfileMePage() {
           {p.initials}
         </span>
         <div style={{ flex: '1 1 260px', minWidth: 0, position: 'relative' }}>
-          <div
-            className="humi-row"
-            style={{ gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}
-          >
+          <div className="humi-row" style={{ gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
             <h2 className="font-display text-[24px] font-semibold leading-[1.1] tracking-tight text-ink">
               {p.nameTh}
             </h2>
-            <span style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>
-              {p.pronouns}
-            </span>
+            <span style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{p.pronouns}</span>
           </div>
           <div
             style={{
@@ -1038,10 +879,7 @@ export default function HumiProfileMePage() {
       </div>
 
       {/* Tabs — controlled by Zustand slice */}
-      <div
-        className="mb-5 overflow-x-auto"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
+      <div className="mb-5 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div
           className="humi-tabs flex-nowrap"
           role="tablist"
@@ -1084,7 +922,7 @@ export default function HumiProfileMePage() {
                   onEdit={() => handleEditField('salutationTh')}
                   options={SALUTATION_TH}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'salutationTh' && pc.status === 'pending'
+                    (pc) => pc.field === 'salutationTh' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1097,7 +935,7 @@ export default function HumiProfileMePage() {
                   onEdit={() => handleEditField('salutationEn')}
                   options={SALUTATION_EN}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'salutationEn' && pc.status === 'pending'
+                    (pc) => pc.field === 'salutationEn' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1109,7 +947,7 @@ export default function HumiProfileMePage() {
                   onChange={(v) => setFormValues((f) => ({ ...f, firstNameTh: v }))}
                   onEdit={() => handleEditField('firstNameTh')}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'firstNameTh' && pc.status === 'pending'
+                    (pc) => pc.field === 'firstNameTh' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1121,7 +959,7 @@ export default function HumiProfileMePage() {
                   onChange={(v) => setFormValues((f) => ({ ...f, firstNameEn: v }))}
                   onEdit={() => handleEditField('firstNameEn')}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'firstNameEn' && pc.status === 'pending'
+                    (pc) => pc.field === 'firstNameEn' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1133,7 +971,7 @@ export default function HumiProfileMePage() {
                   onChange={(v) => setFormValues((f) => ({ ...f, lastNameTh: v }))}
                   onEdit={() => handleEditField('lastNameTh')}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'lastNameTh' && pc.status === 'pending'
+                    (pc) => pc.field === 'lastNameTh' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1145,7 +983,7 @@ export default function HumiProfileMePage() {
                   onChange={(v) => setFormValues((f) => ({ ...f, lastNameEn: v }))}
                   onEdit={() => handleEditField('lastNameEn')}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'lastNameEn' && pc.status === 'pending'
+                    (pc) => pc.field === 'lastNameEn' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1156,7 +994,7 @@ export default function HumiProfileMePage() {
                   onChange={(v) => setFormValues((f) => ({ ...f, nickname: v }))}
                   onEdit={() => handleEditField('nickname')}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'nickname' && pc.status === 'pending'
+                    (pc) => pc.field === 'nickname' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1168,7 +1006,7 @@ export default function HumiProfileMePage() {
                   onChange={(v) => setFormValues((f) => ({ ...f, preferredName: v }))}
                   onEdit={() => handleEditField('preferredName')}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'preferredName' && pc.status === 'pending'
+                    (pc) => pc.field === 'preferredName' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1180,7 +1018,7 @@ export default function HumiProfileMePage() {
                   onChange={(v) => setFormValues((f) => ({ ...f, secondLastName: v }))}
                   onEdit={() => handleEditField('secondLastName')}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'secondLastName' && pc.status === 'pending'
+                    (pc) => pc.field === 'secondLastName' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1192,7 +1030,7 @@ export default function HumiProfileMePage() {
                   onEdit={() => handleEditField('gender')}
                   options={GENDER_OPTIONS}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'gender' && pc.status === 'pending'
+                    (pc) => pc.field === 'gender' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1204,7 +1042,7 @@ export default function HumiProfileMePage() {
                   onChange={(v) => setFormValues((f) => ({ ...f, dateOfBirth: v }))}
                   onEdit={() => handleEditField('dateOfBirth')}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'dateOfBirth' && pc.status === 'pending'
+                    (pc) => pc.field === 'dateOfBirth' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1215,7 +1053,7 @@ export default function HumiProfileMePage() {
                   onChange={(v) => setFormValues((f) => ({ ...f, nationality: v }))}
                   onEdit={() => handleEditField('nationality')}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'nationality' && pc.status === 'pending'
+                    (pc) => pc.field === 'nationality' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1227,7 +1065,7 @@ export default function HumiProfileMePage() {
                   onChange={(v) => setFormValues((f) => ({ ...f, nationalId: v }))}
                   onEdit={() => handleEditField('nationalId')}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'nationalId' && pc.status === 'pending'
+                    (pc) => pc.field === 'nationalId' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1258,7 +1096,7 @@ export default function HumiProfileMePage() {
                   onEdit={() => handleEditField('maritalStatus')}
                   options={MARITAL_OPTIONS}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'maritalStatus' && pc.status === 'pending'
+                    (pc) => pc.field === 'maritalStatus' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1271,7 +1109,7 @@ export default function HumiProfileMePage() {
                   onChange={(v) => setFormValues((f) => ({ ...f, maritalStatusSince: v }))}
                   onEdit={() => handleEditField('maritalStatusSince')}
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'maritalStatusSince' && pc.status === 'pending'
+                    (pc) => pc.field === 'maritalStatusSince' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1284,7 +1122,7 @@ export default function HumiProfileMePage() {
                     onChange={(v) => setFormValues((f) => ({ ...f, spouseName: v }))}
                     onEdit={() => handleEditField('spouseName')}
                     pendingChange={pendingChanges.find(
-                      (pc) => pc.field === 'spouseName' && pc.status === 'pending'
+                      (pc) => pc.field === 'spouseName' && pc.status === 'pending',
                     )}
                     tPending={tPending}
                     isEditing={isEditing}
@@ -1320,7 +1158,7 @@ export default function HumiProfileMePage() {
                   onEdit={() => handleEditField('personalEmail')}
                   inputType="email"
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'personalEmail' && pc.status === 'pending'
+                    (pc) => pc.field === 'personalEmail' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1332,7 +1170,7 @@ export default function HumiProfileMePage() {
                   onEdit={() => handleEditField('businessPhone')}
                   inputType="tel"
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'businessPhone' && pc.status === 'pending'
+                    (pc) => pc.field === 'businessPhone' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1344,7 +1182,7 @@ export default function HumiProfileMePage() {
                   onEdit={() => handleEditField('personalMobile')}
                   inputType="tel"
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'personalMobile' && pc.status === 'pending'
+                    (pc) => pc.field === 'personalMobile' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1356,7 +1194,7 @@ export default function HumiProfileMePage() {
                   onEdit={() => handleEditField('homePhone')}
                   inputType="tel"
                   pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'homePhone' && pc.status === 'pending'
+                    (pc) => pc.field === 'homePhone' && pc.status === 'pending',
                   )}
                   tPending={tPending}
                   isEditing={isEditing}
@@ -1382,7 +1220,7 @@ export default function HumiProfileMePage() {
                     onEdit={() => handleEditField('religion')}
                     options={RELIGION_OPTIONS}
                     pendingChange={pendingChanges.find(
-                      (pc) => pc.field === 'religion' && pc.status === 'pending'
+                      (pc) => pc.field === 'religion' && pc.status === 'pending',
                     )}
                     tPending={tPending}
                     isEditing={isEditing}
@@ -1394,7 +1232,7 @@ export default function HumiProfileMePage() {
                     onEdit={() => handleEditField('bloodType')}
                     options={BLOOD_TYPES}
                     pendingChange={pendingChanges.find(
-                      (pc) => pc.field === 'bloodType' && pc.status === 'pending'
+                      (pc) => pc.field === 'bloodType' && pc.status === 'pending',
                     )}
                     tPending={tPending}
                     isEditing={isEditing}
@@ -1406,7 +1244,7 @@ export default function HumiProfileMePage() {
                     onEdit={() => handleEditField('militaryStatus')}
                     options={MILITARY_OPTIONS}
                     pendingChange={pendingChanges.find(
-                      (pc) => pc.field === 'militaryStatus' && pc.status === 'pending'
+                      (pc) => pc.field === 'militaryStatus' && pc.status === 'pending',
                     )}
                     tPending={tPending}
                     isEditing={isEditing}
@@ -1420,7 +1258,7 @@ export default function HumiProfileMePage() {
                     onEdit={() => handleEditField('disabilityStatus')}
                     options={DISABILITY_OPTIONS}
                     pendingChange={pendingChanges.find(
-                      (pc) => pc.field === 'disabilityStatus' && pc.status === 'pending'
+                      (pc) => pc.field === 'disabilityStatus' && pc.status === 'pending',
                     )}
                     tPending={tPending}
                     isEditing={isEditing}
@@ -1429,7 +1267,12 @@ export default function HumiProfileMePage() {
               )}
             </div>
           )}
-          <FieldCard eyebrow={t('contactEyebrow')} title={t('contactTitle')} rows={p.contact} labelW={140} />
+          <FieldCard
+            eyebrow={t('contactEyebrow')}
+            title={t('contactTitle')}
+            rows={p.contact}
+            labelW={140}
+          />
         </div>
       )}
 
@@ -1476,12 +1319,18 @@ export default function HumiProfileMePage() {
             <div style={{ fontSize: 14, marginTop: 8 }}>
               {saved.phonesArr?.length
                 ? saved.phonesArr.map((ph, i) => (
-                    <div key={i}>{ph.primary && '★ '}{ph.value}</div>
+                    <div key={i}>
+                      {ph.primary && '★ '}
+                      {ph.value}
+                    </div>
                   ))
                 : saved.phone}
               {saved.emailsArr?.length
                 ? saved.emailsArr.map((em, i) => (
-                    <div key={i}>{em.primary && '★ '}{em.value}</div>
+                    <div key={i}>
+                      {em.primary && '★ '}
+                      {em.value}
+                    </div>
                   ))
                 : saved.personalEmail}
             </div>
@@ -1511,93 +1360,99 @@ export default function HumiProfileMePage() {
       {/* ── Job/Compensation tab ──────────────────────────────────────────── */}
       {panelKey === 'job' && (
         <>
-        <div className="grid gap-4 md:grid-cols-2">
-          <FieldCard eyebrow={t('jobEyebrow')} title={t('jobTitle')} rows={p.job} labelW={160} />
-          <div className="humi-col" style={{ gap: 16 }}>
-            {/* Raw 'ค่าตอบแทน 82,500 / เดือน' card removed — duplicated the
+          <div className="grid gap-4 md:grid-cols-2">
+            <FieldCard eyebrow={t('jobEyebrow')} title={t('jobTitle')} rows={p.job} labelW={160} />
+            <div className="humi-col" style={{ gap: 16 }}>
+              {/* Raw 'ค่าตอบแทน 82,500 / เดือน' card removed — duplicated the
                 BRD #170 CompensationSummary which is the canonical default-masked
                 surface (Ken UAT 2026-04-26: 'salary has double show and it must
                 mark as default'). CompensationSummary lives lower in this same
                 column when bottom panels render. */}
-            <div className="humi-card">
-              <div className="humi-eyebrow">{t('historyEyebrow')}</div>
-              <div className="humi-col" style={{ gap: 14, marginTop: 10 }}>
-                {p.workHistory.map((r) => (
-                  <div key={r.title} className="humi-row">
-                    <div
-                      style={{
-                        width: 6,
-                        alignSelf: 'stretch',
-                        background:
-                          r.tone === 'teal'
-                            ? 'var(--color-accent)'
-                            : r.tone === 'butter'
-                              ? 'var(--color-butter)'
-                              : 'var(--color-sage)',
-                        borderRadius: 3,
-                      }}
-                      aria-hidden
-                    />
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
-                        {r.title}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-                        {r.dates} · {r.loc}
+              <div className="humi-card">
+                <div className="humi-eyebrow">{t('historyEyebrow')}</div>
+                <div className="humi-col" style={{ gap: 14, marginTop: 10 }}>
+                  {p.workHistory.map((r) => (
+                    <div key={r.title} className="humi-row">
+                      <div
+                        style={{
+                          width: 6,
+                          alignSelf: 'stretch',
+                          background:
+                            r.tone === 'teal'
+                              ? 'var(--color-accent)'
+                              : r.tone === 'butter'
+                                ? 'var(--color-butter)'
+                                : 'var(--color-sage)',
+                          borderRadius: 3,
+                        }}
+                        aria-hidden
+                      />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
+                          {r.title}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+                          {r.dates} · {r.loc}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ── การลาออก link — Ken U1: keep as separate page ─────────────── */}
-        <div className="humi-card" style={{ marginTop: 16 }}>
-          <div className="humi-eyebrow">{t('resignationSectionEyebrow')}</div>
-          <div className="humi-row" style={{ marginTop: 10, justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="humi-row" style={{ gap: 10 }}>
-              <FileX className="h-5 w-5 text-ink-muted" aria-hidden />
-              <span style={{ fontSize: 14, color: 'var(--color-ink)' }}>{t('resignationSectionDesc')}</span>
-            </div>
-            <Link
-              href={`/${locale}/resignation`}
-              className="text-sm font-medium text-accent hover:underline"
+          {/* ── การลาออก link — Ken U1: keep as separate page ─────────────── */}
+          <div className="humi-card" style={{ marginTop: 16 }}>
+            <div className="humi-eyebrow">{t('resignationSectionEyebrow')}</div>
+            <div
+              className="humi-row"
+              style={{ marginTop: 10, justifyContent: 'space-between', alignItems: 'center' }}
             >
-              {t('resignationSectionLink')}
-            </Link>
+              <div className="humi-row" style={{ gap: 10 }}>
+                <FileX className="h-5 w-5 text-ink-muted" aria-hidden />
+                <span style={{ fontSize: 14, color: 'var(--color-ink)' }}>
+                  {t('resignationSectionDesc')}
+                </span>
+              </div>
+              <Link
+                href={`/${locale}/resignation`}
+                className="text-sm font-medium text-accent hover:underline"
+              >
+                {t('resignationSectionLink')}
+              </Link>
+            </div>
           </div>
-        </div>
 
-        {/* ── BRD #168: disabilityStatus on employment tab ──────────────────
+          {/* ── BRD #168: disabilityStatus on employment tab ──────────────────
             SF cite: PerPersonal.customString9 disability code
             sf-extract/qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json */}
-        <div className="humi-card" style={{ marginTop: 16 }}>
-          <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
-            {tEdit('field.disabilityStatus')}
+          <div className="humi-card" style={{ marginTop: 16 }}>
+            <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+              {tEdit('field.disabilityStatus')}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 14, color: 'var(--color-ink-soft)' }}>
+                {formValues.disabilityStatus ? formValues.disabilityStatus : '—'}
+              </span>
+              {!isEditing && (
+                <button
+                  type="button"
+                  className="text-sm text-accent hover:underline"
+                  onClick={() => {
+                    startEdit();
+                    handleEditField('disabilityStatus');
+                  }}
+                  aria-label={`แก้ไข ${tEdit('field.disabilityStatus')}`}
+                >
+                  {tEdit('field.disabilityStatus') && '✎'}
+                </button>
+              )}
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 14, color: 'var(--color-ink-soft)' }}>
-              {formValues.disabilityStatus
-                ? formValues.disabilityStatus
-                : '—'}
-            </span>
-            {!isEditing && (
-              <button
-                type="button"
-                className="text-sm text-accent hover:underline"
-                onClick={() => { startEdit(); handleEditField('disabilityStatus'); }}
-                aria-label={`แก้ไข ${tEdit('field.disabilityStatus')}`}
-              >
-                {tEdit('field.disabilityStatus') && '✎'}
-              </button>
-            )}
-          </div>
-        </div>
 
-        {/* ── BRD #170 ESS Compensation Summary ─────────────────────────── */}
-        <CompensationSummary />
+          {/* ── BRD #170 ESS Compensation Summary ─────────────────────────── */}
+          <CompensationSummary />
         </>
       )}
 
@@ -1627,9 +1482,7 @@ export default function HumiProfileMePage() {
                         {c.initials}
                       </span>
                       <div>
-                        <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
-                          {c.name}
-                        </div>
+                        <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>{c.name}</div>
                         <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
                           {c.relation} · {c.phone}
                         </div>
@@ -1671,11 +1524,15 @@ export default function HumiProfileMePage() {
                           {dep.fullNameTh}
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-                          {dep.relation === 'spouse' ? 'คู่สมรส'
-                            : dep.relation === 'child' ? 'บุตร'
-                            : dep.relation === 'father' ? 'บิดา'
-                            : dep.relation === 'mother' ? 'มารดา'
-                            : 'อื่นๆ'}
+                          {dep.relation === 'spouse'
+                            ? 'คู่สมรส'
+                            : dep.relation === 'child'
+                              ? 'บุตร'
+                              : dep.relation === 'father'
+                                ? 'บิดา'
+                                : dep.relation === 'mother'
+                                  ? 'มารดา'
+                                  : 'อื่นๆ'}
                           {dep.dateOfBirth ? ` · เกิด ${dep.dateOfBirth}` : ''}
                         </div>
                       </div>
@@ -1692,7 +1549,10 @@ export default function HumiProfileMePage() {
       {panelKey === 'benefits' && (
         <div className="grid gap-4">
           <div className="humi-card">
-            <div className="humi-row" style={{ justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
+            <div
+              className="humi-row"
+              style={{ justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}
+            >
               <div>
                 <div className="humi-eyebrow">{t('tabBenefits')}</div>
                 <h3 className="mt-2 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
@@ -1705,7 +1565,12 @@ export default function HumiProfileMePage() {
               <Link
                 href={benefitsHubRoute(locale)}
                 className="humi-tag"
-                style={{ padding: '6px 12px', color: 'var(--color-accent)', textDecoration: 'underline', fontSize: 13 }}
+                style={{
+                  padding: '6px 12px',
+                  color: 'var(--color-accent)',
+                  textDecoration: 'underline',
+                  fontSize: 13,
+                }}
               >
                 {t('benefitsHubLink')}
               </Link>
@@ -1713,35 +1578,51 @@ export default function HumiProfileMePage() {
           </div>
           <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="humi-card lg:col-span-2">
-              <div className="humi-row" style={{ justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <div
+                className="humi-row"
+                style={{
+                  justifyContent: 'space-between',
+                  gap: 16,
+                  alignItems: 'flex-start',
+                  flexWrap: 'wrap',
+                }}
+              >
                 <div>
-                  <div className="humi-eyebrow">Employee Self Service · Benefit claim</div>
-                  <h4 className="mt-2 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">เบิกสวัสดิการ</h4>
-                  <p className="mt-1 text-small text-ink-muted">เริ่มคำขอจากแท็บสวัสดิการนี้ แล้วติดตามสถานะได้ใน /requests</p>
+                  <div className="humi-eyebrow">Entitlement summary</div>
+                  <h4 className="mt-2 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+                    ภาพรวมสิทธิ์สวัสดิการ
+                  </h4>
+                  <p className="mt-1 text-small text-ink-muted">
+                    โปรไฟล์แสดงเฉพาะสิทธิ์ วงเงิน ผู้รับสิทธิ์ร่วม และสถานะล่าสุด
+                    เริ่มบริการสวัสดิการจากฮับเท่านั้น
+                  </p>
                 </div>
-                <div className="humi-row" style={{ gap: 10, flexWrap: 'wrap' }}>
-                  <Button variant="secondary" onClick={() => setBenefitFormOpen(true)}>เบิกสวัสดิการ</Button>
-                </div>
-              </div>
-              <div className="mt-4">
-                <BenefitServicesPanel locale={locale} onOpenClaim={() => setBenefitFormOpen(true)} />
+                <Link
+                  href={benefitsHubRoute(locale)}
+                  className="humi-tag"
+                  style={{
+                    padding: '6px 12px',
+                    color: 'var(--color-accent)',
+                    textDecoration: 'underline',
+                    fontSize: 13,
+                  }}
+                >
+                  เริ่มบริการที่ Benefits Hub
+                </Link>
               </div>
               {sendBackClaims.length > 0 && (
                 <div className="mt-4 rounded-md bg-canvas-soft p-3">
-                  <div className="text-small font-semibold text-ink">รายการที่ SPD ส่งกลับให้แก้ไข</div>
+                  <div className="text-small font-semibold text-ink">
+                    รายการที่ SPD ส่งกลับให้แก้ไข
+                  </div>
                   {sendBackClaims.map((claim) => (
-                    <div key={claim.id} className="mt-2 text-small text-ink-muted">{claim.workflowRequestId} · {claim.benefitName} · {claim.correctionReason}</div>
+                    <div key={claim.id} className="mt-2 text-small text-ink-muted">
+                      {claim.workflowRequestId} · {claim.benefitName} · {claim.correctionReason}
+                    </div>
                   ))}
                 </div>
               )}
             </div>
-
-            {benefitService === 'referral' && (
-              <div className="lg:col-span-2 grid gap-4 xl:grid-cols-[1fr_1fr]">
-                <ReferralRequestPanel onSubmitted={(id) => showToast(`ส่งคำขอใบส่งตัว ${id} แล้ว · ติดตามได้ที่ /requests`)} />
-                <ReferralHistoryPanel />
-              </div>
-            )}
 
             <div className="humi-card">
               <h4 className="font-display text-[18px] font-semibold leading-[1.2] tracking-tight text-ink">
@@ -1759,7 +1640,9 @@ export default function HumiProfileMePage() {
                         <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
                           {plan.title}
                         </div>
-                        <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', marginTop: 2 }}>
+                        <div
+                          style={{ fontSize: 12, color: 'var(--color-ink-muted)', marginTop: 2 }}
+                        >
                           {plan.plan}
                         </div>
                       </div>
@@ -1797,10 +1680,16 @@ export default function HumiProfileMePage() {
               </h4>
               <div className="humi-col" style={{ gap: 12, marginTop: 16 }}>
                 {HUMI_CLAIM_ALLOWANCES.map((allowance) => {
-                  const percent = Math.min(100, Math.round((allowance.used / allowance.limit) * 100));
+                  const percent = Math.min(
+                    100,
+                    Math.round((allowance.used / allowance.limit) * 100),
+                  );
                   return (
                     <div key={allowance.id}>
-                      <div className="humi-row" style={{ justifyContent: 'space-between', gap: 10 }}>
+                      <div
+                        className="humi-row"
+                        style={{ justifyContent: 'space-between', gap: 10 }}
+                      >
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-ink)' }}>
                             {allowance.label}
@@ -1809,8 +1698,15 @@ export default function HumiProfileMePage() {
                             {allowance.sub}
                           </div>
                         </div>
-                        <div style={{ fontSize: 13, color: 'var(--color-ink-soft)', whiteSpace: 'nowrap' }}>
-                          ฿{allowance.used.toLocaleString('th-TH')} / ฿{allowance.limit.toLocaleString('th-TH')}
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: 'var(--color-ink-soft)',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          ฿{allowance.used.toLocaleString('th-TH')} / ฿
+                          {allowance.limit.toLocaleString('th-TH')}
                         </div>
                       </div>
                       <div
@@ -1853,7 +1749,8 @@ export default function HumiProfileMePage() {
                         {dep.fullNameTh}
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-                        {DEPENDENT_RELATION_LABELS[dep.relation]} · {dep.hasInsurance ? t('benefitsCovered') : t('benefitsNotCovered')}
+                        {DEPENDENT_RELATION_LABELS[dep.relation]} ·{' '}
+                        {dep.hasInsurance ? t('benefitsCovered') : t('benefitsNotCovered')}
                       </div>
                     </div>
                   </div>
@@ -1869,81 +1766,53 @@ export default function HumiProfileMePage() {
                 {benefitRequestRows.slice(0, 4).map((row) => (
                   <li key={row.id} className="humi-row-item">
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>{row.type}</div>
-                      <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{row.sub} · ส่ง {row.submitted}</div>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
+                        {row.type}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+                        {row.sub} · ส่ง {row.submitted}
+                      </div>
                     </div>
-                    <div className="humi-col" style={{ gap: 6, alignItems: 'flex-end', marginLeft: 'auto' }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>฿{row.claim.totalClaimAmount.toLocaleString('th-TH')}</span>
+                    <div
+                      className="humi-col"
+                      style={{ gap: 6, alignItems: 'flex-end', marginLeft: 'auto' }}
+                    >
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
+                        ฿{row.claim.totalClaimAmount.toLocaleString('th-TH')}
+                      </span>
                       <span className="humi-tag">{BENEFIT_STATUS_LABEL[row.claim.status]}</span>
                     </div>
                   </li>
                 ))}
-                {HUMI_CLAIM_HISTORY.slice(0, Math.max(0, 4 - benefitRequestRows.length)).map((claim) => {
-                  const status = CLAIM_STATUS_META[claim.status];
-                  return (
-                    <li key={claim.id} className="humi-row-item">
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>{claim.type}</div>
-                        <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{claim.date} · {claim.desc}</div>
-                      </div>
-                      <div className="humi-col" style={{ gap: 6, alignItems: 'flex-end', marginLeft: 'auto' }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>{claim.amount}</span>
-                        <span className={cn('humi-tag', status.toneClass)}>{status.label}</span>
-                      </div>
-                    </li>
-                  );
-                })}
+                {HUMI_CLAIM_HISTORY.slice(0, Math.max(0, 4 - benefitRequestRows.length)).map(
+                  (claim) => {
+                    const status = CLAIM_STATUS_META[claim.status];
+                    return (
+                      <li key={claim.id} className="humi-row-item">
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
+                            {claim.type}
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+                            {claim.date} · {claim.desc}
+                          </div>
+                        </div>
+                        <div
+                          className="humi-col"
+                          style={{ gap: 6, alignItems: 'flex-end', marginLeft: 'auto' }}
+                        >
+                          <span
+                            style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}
+                          >
+                            {claim.amount}
+                          </span>
+                          <span className={cn('humi-tag', status.toneClass)}>{status.label}</span>
+                        </div>
+                      </li>
+                    );
+                  },
+                )}
               </ul>
-
-              <Modal open={benefitFormOpen} onClose={() => setBenefitFormOpen(false)} title="เบิกสวัสดิการ" widthClass="max-w-2xl">
-                <div className="space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <BenefitSelect label="ประเภทสวัสดิการ" value={benefitForm.benefitType} onChange={(value) => updateBenefitField('benefitType', value)} options={[['medical','ค่ารักษาพยาบาล'], ['gasoline','ค่าน้ำมัน'], ['mobile','ค่าโทรศัพท์'], ['dependent','ค่ารักษาผู้รับสิทธิ์ร่วม'], ['physical_checkup','ตรวจสุขภาพ']]} />
-                    <BenefitInput label="เลขที่ใบเสร็จ/เอกสาร" value={benefitForm.receiptNo} onChange={(value) => updateBenefitField('receiptNo', value)} />
-                    <BenefitInput label="วันที่ใบเสร็จ/เอกสาร" type="date" value={benefitForm.receiptDate} onChange={(value) => updateBenefitField('receiptDate', value)} />
-                    <BenefitInput label="จำนวนเงินตามใบเสร็จ" value={benefitForm.receiptAmount} onChange={(value) => updateBenefitField('receiptAmount', value)} />
-                    <BenefitInput label="จำนวนเงินที่ขอเบิก" value={benefitForm.totalClaimAmount} onChange={(value) => updateBenefitField('totalClaimAmount', value)} />
-                  </div>
-                  {benefitForm.benefitType === 'medical' && (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <BenefitSelect label="OPD/IPD และประเภทโรงพยาบาล" value={benefitForm.hospitalType} onChange={(value) => updateBenefitField('hospitalType', value)} options={[['private','OPD · โรงพยาบาลเอกชน'], ['public','OPD · โรงพยาบาลรัฐ'], ['ipd','IPD']]} />
-                      <BenefitInput label="ชื่อโรงพยาบาล/คลินิก" value={benefitForm.hospitalName} onChange={(value) => updateBenefitField('hospitalName', value)} />
-                      <BenefitInput label="เลขที่ใบส่งตัว/เอกสารผู้ป่วย" value={benefitForm.patientTransferDocumentNo} onChange={(value) => updateBenefitField('patientTransferDocumentNo', value)} />
-                      <BenefitInput label="รายละเอียดโรค/การรักษา" value={benefitForm.diseaseDetails} onChange={(value) => updateBenefitField('diseaseDetails', value)} />
-                    </div>
-                  )}
-                  {benefitForm.benefitType === 'gasoline' && (
-                    <BenefitSelect label="ประเภทการเบิกค่าน้ำมัน" value={benefitForm.gasolineClaimType} onChange={(value) => updateBenefitField('gasolineClaimType', value)} options={[['actual','ตามใบเสร็จจริง'], ['mileage','ตามระยะทาง'], ['monthly','เหมาจ่ายรายเดือน']]} />
-                  )}
-                  {benefitForm.benefitType === 'dependent' && (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <BenefitInput label="ชื่อผู้รับสิทธิ์ร่วม" value={benefitForm.dependentName} onChange={(value) => updateBenefitField('dependentName', value)} />
-                      <BenefitInput label="ความสัมพันธ์" value={benefitForm.dependentRelationship} onChange={(value) => updateBenefitField('dependentRelationship', value)} />
-                    </div>
-                  )}
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <BenefitAttachmentField
-                      label="ไฟล์แนบ"
-                      filename={benefitForm.attachmentName}
-                      sizeMb={benefitForm.attachmentSizeMb}
-                      onFileSelected={(file) => {
-                        updateBenefitField('attachmentName', file.name);
-                        updateBenefitField('attachmentSizeMb', formatBenefitAttachmentSize(file));
-                      }}
-                      onClear={() => {
-                        updateBenefitField('attachmentName', '');
-                        updateBenefitField('attachmentSizeMb', '');
-                      }}
-                    />
-                    <BenefitInput label="ขนาดไฟล์ (MB, สูงสุด 10)" value={benefitForm.attachmentSizeMb} onChange={(value) => updateBenefitField('attachmentSizeMb', value)} />
-                  </div>
-                  {benefitErrors.length > 0 && <div role="alert" className="rounded-md bg-canvas-soft p-3 text-small text-ink"><ul className="list-disc pl-5">{benefitErrors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
-                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <Button variant="ghost" onClick={() => setBenefitFormOpen(false)}>ยกเลิก</Button>
-                    <Button variant="primary" onClick={handleBenefitSubmit}>ส่งคำขอเบิก</Button>
-                  </div>
-                </div>
-              </Modal>
             </div>
           </div>
         </div>
@@ -1957,62 +1826,65 @@ export default function HumiProfileMePage() {
             <Link
               href={`/${locale}/me/documents`}
               className="humi-tag"
-              style={{ padding: '6px 12px', color: 'var(--color-accent)', textDecoration: 'underline', fontSize: 13 }}
+              style={{
+                padding: '6px 12px',
+                color: 'var(--color-accent)',
+                textDecoration: 'underline',
+                fontSize: 13,
+              }}
               data-testid="profile-me-docs-library-link"
             >
               ดูเอกสารทั้งหมด →
             </Link>
           </div>
-        <div className="humi-card">
-          <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
-            {t('docsTitle')}
-          </h3>
-          <ul className="humi-list mt-2.5" role="list">
-            {[
-              { n: 'สัญญาจ้างงานที่ลงนาม', d: 'ก.พ. 2568' },
-              { n: 'เอกสารรับรองสิทธิทำงาน', d: 'ม.ค. 2568' },
-              { n: 'ใบรับรองการอบรมปฐมนิเทศ', d: 'ธ.ค. 2567' },
-            ].map((d) => (
-              <li key={d.n} className="humi-row-item">
-                <div
-                  style={{
-                    width: 34,
-                    height: 42,
-                    borderRadius: 6,
-                    background: 'var(--color-canvas-soft)',
-                    border: '1px solid var(--color-hairline)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--color-ink-soft)',
-                  }}
-                  aria-hidden
-                >
-                  <FileText size={18} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
-                    {d.n}
+          <div className="humi-card">
+            <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+              {t('docsTitle')}
+            </h3>
+            <ul className="humi-list mt-2.5" role="list">
+              {[
+                { n: 'สัญญาจ้างงานที่ลงนาม', d: 'ก.พ. 2568' },
+                { n: 'เอกสารรับรองสิทธิทำงาน', d: 'ม.ค. 2568' },
+                { n: 'ใบรับรองการอบรมปฐมนิเทศ', d: 'ธ.ค. 2567' },
+              ].map((d) => (
+                <li key={d.n} className="humi-row-item">
+                  <div
+                    style={{
+                      width: 34,
+                      height: 42,
+                      borderRadius: 6,
+                      background: 'var(--color-canvas-soft)',
+                      border: '1px solid var(--color-hairline)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--color-ink-soft)',
+                    }}
+                    aria-hidden
+                  >
+                    <FileText size={18} />
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-                    ยื่นเมื่อ {d.d}
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
+                      {d.n}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+                      ยื่นเมื่อ {d.d}
+                    </div>
                   </div>
-                </div>
-                <Button variant="ghost" size="sm" leadingIcon={<Download size={13} />}>
-                  {t('downloadCta')}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
+                  <Button variant="ghost" size="sm" leadingIcon={<Download size={13} />}>
+                    {t('downloadCta')}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
         </>
       )}
 
       {/* ── Activity tab (tax panel key = activity) — shows pendingChanges ─ */}
       {panelKey === 'tax' && (
         <div className="grid gap-4">
-          {profileMode === 'planning' && <TaxPlanningPanel />}
-
           <div className="humi-card">
             <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink mb-4">
               {tActivity('title')}
@@ -2186,7 +2058,9 @@ function FullEditField({
                 }}
               >
                 {options.map((o) => (
-                  <option key={o} value={o}>{o}</option>
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
                 ))}
               </select>
             ) : (
@@ -2261,17 +2135,9 @@ function PendingChangeCard({
   const pcAttachments = attachments.filter((a) => pc.attachmentIds.includes(a.id));
 
   const statusColor =
-    pc.status === 'approved'
-      ? '#0a6640'
-      : pc.status === 'rejected'
-        ? '#c53030'
-        : '#7c5e00';
+    pc.status === 'approved' ? '#0a6640' : pc.status === 'rejected' ? '#c53030' : '#7c5e00';
   const statusBg =
-    pc.status === 'approved'
-      ? '#e6f9f0'
-      : pc.status === 'rejected'
-        ? '#fff5f5'
-        : '#fffbe6';
+    pc.status === 'approved' ? '#e6f9f0' : pc.status === 'rejected' ? '#fff5f5' : '#fffbe6';
 
   const statusLabel =
     pc.status === 'approved'
@@ -2291,17 +2157,20 @@ function PendingChangeCard({
     >
       <div className="humi-row" style={{ gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}>
+          <div
+            style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}
+          >
             {pc.field}
           </div>
           <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-            {tActivity('changedFrom')}: <b style={{ color: 'var(--color-ink)' }}>{pc.oldValue || '—'}</b>
+            {tActivity('changedFrom')}:{' '}
+            <b style={{ color: 'var(--color-ink)' }}>{pc.oldValue || '—'}</b>
             {' → '}
             {tActivity('changedTo')}: <b style={{ color: 'var(--color-ink)' }}>{pc.newValue}</b>
           </div>
           <div style={{ fontSize: 11, color: 'var(--color-ink-muted)', marginTop: 4 }}>
-            {tActivity('effectiveDate')}: {pc.effectiveDate} ·{' '}
-            {tActivity('requestedAt')}: {new Date(pc.requestedAt).toLocaleDateString('th-TH')}
+            {tActivity('effectiveDate')}: {pc.effectiveDate} · {tActivity('requestedAt')}:{' '}
+            {new Date(pc.requestedAt).toLocaleDateString('th-TH')}
           </div>
         </div>
 
@@ -2351,7 +2220,6 @@ function PendingChangeCard({
           ))}
         </div>
       )}
-
     </li>
   );
 }
@@ -2398,28 +2266,26 @@ function FieldCard({
             );
           }
           return (
-          <div
-            key={l}
-            className="humi-row"
-            style={{
-              borderBottom: '1px solid var(--color-hairline-soft)',
-              paddingBottom: 10,
-            }}
-          >
             <div
+              key={l}
+              className="humi-row"
               style={{
-                fontSize: 13,
-                color: 'var(--color-ink-muted)',
-                width: labelW,
-                flexShrink: 0,
+                borderBottom: '1px solid var(--color-hairline-soft)',
+                paddingBottom: 10,
               }}
             >
-              {l}
+              <div
+                style={{
+                  fontSize: 13,
+                  color: 'var(--color-ink-muted)',
+                  width: labelW,
+                  flexShrink: 0,
+                }}
+              >
+                {l}
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-ink)' }}>{v}</div>
             </div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-ink)' }}>
-              {v}
-            </div>
-          </div>
           );
         })}
       </div>
@@ -2449,7 +2315,11 @@ function EditField({
   return (
     <div
       className="humi-row"
-      style={{ borderBottom: '1px solid var(--color-hairline-soft)', paddingBottom: 10, alignItems: 'center' }}
+      style={{
+        borderBottom: '1px solid var(--color-hairline-soft)',
+        paddingBottom: 10,
+        alignItems: 'center',
+      }}
     >
       <div style={{ fontSize: 13, color: 'var(--color-ink-muted)', width: 140, flexShrink: 0 }}>
         {label}

@@ -13,17 +13,22 @@ export interface HumiCommand {
 }
 
 export const HUMI_COMMANDS: HumiCommand[] = [
-  { id: 'home',               label: 'หน้าหลัก',              route: '/home',               group: 'พื้นที่ทำงานของฉัน' },
-  { id: 'profile',            label: 'โปรไฟล์ของฉัน',         route: '/profile/me',         group: 'พื้นที่ทำงานของฉัน' },
-  { id: 'timeoff',            label: 'ลางาน',                  route: '/timeoff',            group: 'พื้นที่ทำงานของฉัน' },
-  { id: 'benefits',           label: 'สวัสดิการ',              route: BENEFITS_HUB_ROUTE, group: 'พื้นที่ทำงานของฉัน' },
-  { id: 'requests',           label: 'คำร้องและแบบฟอร์ม',      route: '/requests',           group: 'พื้นที่ทำงานของฉัน' },
-  { id: 'goals',              label: 'เป้าหมายและผลงาน',       route: '/goals',              group: 'บุคลากร' },
-  { id: 'learning-directory', label: 'การเรียนรู้',             route: '/learning-directory', group: 'บุคลากร' },
-  { id: 'org-chart',          label: 'ผังองค์กร',              route: '/org-chart',          group: 'บุคลากร' },
-  { id: 'announcements',      label: 'ประกาศ',                 route: '/announcements',      group: 'บริษัท' },
-  { id: 'integrations',       label: 'จัดการระบบ',             route: '/integrations',       group: 'บริษัท' },
-  { id: 'payslip',            label: 'สลิปเงินเดือน',          route: '/payslip',            group: 'พื้นที่ทำงานของฉัน' },
+  { id: 'home', label: 'หน้าหลัก', route: '/home', group: 'พื้นที่ทำงานของฉัน' },
+  { id: 'profile', label: 'โปรไฟล์ของฉัน', route: '/profile/me', group: 'พื้นที่ทำงานของฉัน' },
+  { id: 'timeoff', label: 'ลางาน', route: '/timeoff', group: 'พื้นที่ทำงานของฉัน' },
+  { id: 'benefits', label: 'สวัสดิการ', route: BENEFITS_HUB_ROUTE, group: 'พื้นที่ทำงานของฉัน' },
+  { id: 'requests', label: 'คำร้องและแบบฟอร์ม', route: '/requests', group: 'พื้นที่ทำงานของฉัน' },
+  { id: 'goals', label: 'เป้าหมายและผลงาน', route: '/goals', group: 'บุคลากร' },
+  {
+    id: 'learning-directory',
+    label: 'การเรียนรู้',
+    route: '/learning-directory',
+    group: 'บุคลากร',
+  },
+  { id: 'org-chart', label: 'ผังองค์กร', route: '/org-chart', group: 'บุคลากร' },
+  { id: 'announcements', label: 'ประกาศ', route: '/announcements', group: 'บริษัท' },
+  { id: 'integrations', label: 'จัดการระบบ', route: '/integrations', group: 'บริษัท' },
+  { id: 'payslip', label: 'สลิปเงินเดือน', route: '/payslip', group: 'พื้นที่ทำงานของฉัน' },
 ];
 
 /** Filter commands by query string (case-insensitive, searches label) */

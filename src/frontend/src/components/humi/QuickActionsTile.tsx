@@ -37,10 +37,10 @@ function makeIcon(Icon: LucideIcon) {
 }
 
 export const DEFAULT_ESS_ACTIONS: QuickAction[] = [
-  { icon: makeIcon(CalendarPlus), labelTh: 'ขอลาหยุด',          href: '/th/timeoff'      },
-  { icon: makeIcon(FileText),     labelTh: 'สลิปเงินเดือน',       href: '/th/employees/me/payslip' },
-  { icon: makeIcon(User),         labelTh: 'ดูข้อมูลส่วนตัว',     href: '/th/profile/me'   },
-  { icon: makeIcon(Wallet),       labelTh: 'เบิกสวัสดิการ',       href: benefitReimbursementRoute('th') },
+  { icon: makeIcon(CalendarPlus), labelTh: 'ขอลาหยุด', href: '/th/timeoff' },
+  { icon: makeIcon(FileText), labelTh: 'สลิปเงินเดือน', href: '/th/employees/me/payslip' },
+  { icon: makeIcon(User), labelTh: 'ดูข้อมูลส่วนตัว', href: '/th/profile/me' },
+  { icon: makeIcon(Wallet), labelTh: 'เบิกสวัสดิการ', href: benefitReimbursementRoute('th') },
 ];
 
 // Manager-tier Quick Actions — SF Employee Central pattern (Path C, autopilot
@@ -48,11 +48,15 @@ export const DEFAULT_ESS_ACTIONS: QuickAction[] = [
 // param so the canonical surface filters to the manager's team. Replaces the
 // 7-tab /manager-dashboard landing.
 export const MANAGER_ACTIONS: QuickAction[] = [
-  { icon: makeIcon(Users2),    labelTh: 'ทีมของฉัน',         href: '/th/admin/employees?scope=team'        },
-  { icon: makeIcon(Network),   labelTh: 'แผนผังของทีมฉัน',    href: '/th/org-chart?scope=team'              },
-  { icon: makeIcon(Briefcase), labelTh: 'ตำแหน่งของทีมฉัน',   href: '/th/admin/positions?scope=team'        },
-  { icon: makeIcon(BarChart3), labelTh: 'รายงานของทีมฉัน',    href: '/th/reports?scope=team'                },
-  { icon: makeIcon(Inbox),     labelTh: 'คำขอรออนุมัติ',      href: '/th/quick-approve'                     },
+  { icon: makeIcon(Users2), labelTh: 'ทีมของฉัน', href: '/th/admin/employees?scope=team' },
+  { icon: makeIcon(Network), labelTh: 'แผนผังของทีมฉัน', href: '/th/org-chart?scope=team' },
+  {
+    icon: makeIcon(Briefcase),
+    labelTh: 'ตำแหน่งของทีมฉัน',
+    href: '/th/admin/positions?scope=team',
+  },
+  { icon: makeIcon(BarChart3), labelTh: 'รายงานของทีมฉัน', href: '/th/reports?scope=team' },
+  { icon: makeIcon(Inbox), labelTh: 'คำขอรออนุมัติ', href: '/th/quick-approve' },
 ];
 
 export function QuickActionsTile({
