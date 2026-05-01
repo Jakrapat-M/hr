@@ -9,7 +9,19 @@ import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
 vi.mock('next/link', () => ({
-  default: ({ href, children, ...props }: { href: string; children: React.ReactNode; [k: string]: unknown }) => <a href={href} {...props}>{children}</a>,
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+    [k: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }));
 
 const sourceRoot = path.join(process.cwd(), 'src');
@@ -25,11 +37,17 @@ describe('deferred benefit journey and token compliance', () => {
     useBenefitTaxPlanningStore.getState().clear();
   });
 
-  it('routes referral through the existing shortcut and tax planning through Payroll/Tax instead of /requests duplicate starts', () => {
+  it('routes referral through the dedicated Benefits Hub route and tax planning through Payroll/Tax instead of /requests duplicate starts', () => {
     render(<BenefitServicesPanel locale="th" onOpenClaim={vi.fn()} />);
 
-    expect(screen.getByRole('link', { name: /ขอใบส่งตัว/ })).toHaveAttribute('href', '/th/profile/me?tab=benefits&service=referral');
-    expect(screen.getByRole('link', { name: /วางแผนภาษี/ })).toHaveAttribute('href', '/th/payroll/tax-planning');
+    expect(screen.getByRole('link', { name: /ขอใบส่งตัว/ })).toHaveAttribute(
+      'href',
+      '/th/benefits-hub/referral',
+    );
+    expect(screen.getByRole('link', { name: /วางแผนภาษี/ })).toHaveAttribute(
+      'href',
+      '/th/payroll/tax-planning',
+    );
     expect(screen.queryByRole('link', { name: /requests/i })).not.toBeInTheDocument();
   });
 
@@ -50,7 +68,9 @@ describe('deferred benefit journey and token compliance', () => {
     expect(screen.getByLabelText(/^เหตุผลหรือบริการที่ต้องการพบแพทย์/)).toBeInTheDocument();
     expect(screen.getByLabelText(/^วันที่ต้องการเข้ารับบริการ/)).toBeInTheDocument();
     expect(screen.getByLabelText('หมายเหตุถึง SPD')).toBeInTheDocument();
-    expect(screen.queryByLabelText(/เลขที่ใบเสร็จ|จำนวนเงินที่ขอเบิก|เอกสารแนบเบิกย้อนหลัง/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/เลขที่ใบเสร็จ|จำนวนเงินที่ขอเบิก|เอกสารแนบเบิกย้อนหลัง/),
+    ).not.toBeInTheDocument();
   });
 
   it('renders accessible Humi-style labels and helper copy for tax planning with Payroll review controls', () => {
@@ -59,7 +79,18 @@ describe('deferred benefit journey and token compliance', () => {
     expect(screen.getByText(/ประมาณการส่วนตัวเพื่อวางแผน ไม่ใช่คำแนะนำภาษี/)).toBeInTheDocument();
     expect(screen.getByText(/ไม่อัปเดตเงินเดือน ไม่ยื่นภาษี/)).toBeInTheDocument();
     expect(screen.getByLabelText('รายได้เพิ่มเติมคาดการณ์ทั้งปี')).toBeInTheDocument();
-    for (const label of ['คู่สมรส', 'บุตร', 'บิดามารดา', 'ผู้พิการ', 'ประกันชีวิต', 'กองทุนสำรองเลี้ยงชีพ', 'กองทุนเกษียณ', 'ประกันสังคม', 'เงินบริจาค', 'ค่าลดหย่อนอื่น ๆ']) {
+    for (const label of [
+      'คู่สมรส',
+      'บุตร',
+      'บิดามารดา',
+      'ผู้พิการ',
+      'ประกันชีวิต',
+      'กองทุนสำรองเลี้ยงชีพ',
+      'กองทุนเกษียณ',
+      'ประกันสังคม',
+      'เงินบริจาค',
+      'ค่าลดหย่อนอื่น ๆ',
+    ]) {
       expect(screen.getByLabelText(new RegExp(label))).toBeInTheDocument();
     }
     expect(screen.getByRole('button', { name: 'ส่งให้ Payroll ตรวจแผน' })).toBeDisabled();
