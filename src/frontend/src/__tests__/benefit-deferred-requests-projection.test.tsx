@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
@@ -79,5 +79,46 @@ describe('deferred benefit service request projection', () => {
     expect(screen.queryByText('1100100001001')).not.toBeInTheDocument();
     expect(screen.queryByText(/allowances/i)).not.toBeInTheDocument();
     expect(screen.queryByText(preSubmit.workflowRequestId)).not.toBeInTheDocument();
+  });
+
+  it('/requests keeps tax planning rows stable when claim and referral stores mutate independently', async () => {
+    const submitted = useBenefitTaxPlanningStore.getState().saveDraft({ expectedAdditionalIncome: 32000 });
+    useBenefitTaxPlanningStore.getState().estimateDraft(submitted.id);
+    const payrollReview = useBenefitTaxPlanningStore.getState().submitTaxPlanningForPayrollReview(submitted.id);
+
+    const { default: RequestsPage } = await import('@/app/[locale]/requests/page');
+    render(<RequestsPage />);
+
+    expect(screen.getByText(new RegExp(payrollReview.workflowRequestId))).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'วางแผนภาษี · Payroll review' })).toHaveAttribute('href', '/th/payroll/tax-planning');
+
+    act(() => {
+      useBenefitClaimsStore.getState().submitClaim({
+        employeeId: 'EMP001',
+        employeeName: 'จงรักษ์ ทานากะ',
+        benefitType: 'medical',
+        receiptNo: 'RC-STABLE-001',
+        receiptDate: '2026-05-01',
+        receiptAmount: 900,
+        totalClaimAmount: 900,
+        hospitalName: 'Samitivej',
+        attachments: [{ id: 'stable-a1', filename: 'receipt.pdf', sizeMb: 1 }],
+      });
+      const referral = useBenefitReferralsStore.getState().createReferral({
+        employeeId: 'EMP001',
+        employeeName: 'จงรักษ์ ทานากะ',
+        coveredPersonId: 'EMP001',
+        hospitalId: 'HOSP-BDMS',
+        serviceReason: 'ติดตามอาการ',
+        preferredVisitDate: '2026-05-12',
+      });
+      useBenefitReferralsStore.getState().submitReferral(referral.id);
+      useBenefitClaimsStore.getState().clear();
+      useBenefitReferralsStore.getState().clear();
+    });
+
+    expect(screen.getByText(new RegExp(payrollReview.workflowRequestId))).toBeInTheDocument();
+    expect(screen.getByText(/X-XXXX-XXXXX-01-X/)).toBeInTheDocument();
+    expect(screen.queryByText('RC-STABLE-001')).not.toBeInTheDocument();
   });
 });
