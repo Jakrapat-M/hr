@@ -5,7 +5,7 @@
  * employee / manager / hrbp see no-access state.
  */
 
-import { describe, expect, test, beforeEach } from 'vitest';
+import { describe, expect, test, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 
