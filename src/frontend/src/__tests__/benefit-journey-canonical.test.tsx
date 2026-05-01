@@ -69,8 +69,8 @@ describe('benefit claim journey canonical route', () => {
     const { default: BenefitsHubPage } = await import('@/app/[locale]/benefits-hub/page');
     render(<BenefitsHubPage />);
 
-    const claimStart = screen.getByRole('link', { name: 'เริ่มจากข้อมูลสวัสดิการของฉัน' });
-    expect(claimStart).toHaveAttribute('href', '/th/profile/me?tab=benefits');
+    const claimStart = screen.getByRole('link', { name: 'เริ่มเบิกสวัสดิการ' });
+    expect(claimStart).toHaveAttribute('href', '/th/benefits-hub/reimbursement');
     expect(screen.queryByRole('button', { name: 'สร้างคำขอเบิก' })).not.toBeInTheDocument();
   });
 
@@ -81,8 +81,9 @@ describe('benefit claim journey canonical route', () => {
     const { default: BenefitsHubPage } = await import('@/app/[locale]/benefits-hub/page');
     render(<BenefitsHubPage />);
 
-    expect(screen.getByRole('heading', { name: 'สำรวจแผนสวัสดิการก่อนจัดการสิทธิ์ในโปรไฟล์' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'สวัสดิการของฉัน' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'ไปที่สิทธิ์ของฉัน' })).toHaveAttribute('href', '/th/profile/me?tab=benefits');
+    expect(screen.getByRole('link', { name: 'เบิกสวัสดิการ' })).toHaveAttribute('href', '/th/benefits-hub/reimbursement');
     expect(screen.queryByRole('button', { name: 'เริ่มลงทะเบียน' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'สมัคร' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'ยกเลิกสมัคร' })).not.toBeInTheDocument();
