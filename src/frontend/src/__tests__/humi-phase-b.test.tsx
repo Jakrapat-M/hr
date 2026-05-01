@@ -224,6 +224,7 @@ describe('b4 — i18n routing config (locale redirect)', () => {
     vi.doMock('next/server', () => ({
       NextResponse: { next: () => ({}) },
     }));
+    // Verify middleware module loads at runtime when imported via absolute path
     const mod = await import(
       /* @vite-ignore */ '/Users/tachongrak/Projects/hr/src/frontend/middleware'
     );
