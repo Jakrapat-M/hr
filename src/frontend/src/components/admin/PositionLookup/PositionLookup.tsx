@@ -238,7 +238,7 @@ export default function PositionLookup({
         </label>
         <div
           data-testid="position-chip"
-          className="flex items-start justify-between gap-2 rounded border border-border bg-surface px-3 py-2 max-w-sm"
+          className="flex items-start justify-between gap-2 rounded border border-hairline bg-surface px-3 py-2 max-w-sm"
           role="status"
           aria-label={`ตำแหน่งที่เลือก: ${selected.titleTh}`}
         >
@@ -335,7 +335,7 @@ export default function PositionLookup({
           id={listboxId}
           role="listbox"
           aria-label={`ผลการค้นหา${label}`}
-          className="absolute z-50 mt-1 w-full max-w-sm rounded border border-border bg-white shadow-md max-h-60 overflow-y-auto"
+          className="absolute z-50 mt-1 w-full max-w-sm rounded border border-hairline bg-surface shadow-[var(--shadow-md)] max-h-60 overflow-y-auto"
         >
           {results.length === 0 ? (
             <li

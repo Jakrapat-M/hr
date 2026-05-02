@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import type { Urgency } from '@/lib/quick-approve-api';
 
 const styles: Record<Urgency, string> = {
- urgent:'bg-danger-tint text-danger dark:bg-red-900/30 dark:text-red-300',
+ urgent:'bg-danger-tint text-danger dark:bg-danger/30 dark:text-warning',
  normal:'bg-warning-tint text-warning dark:bg-yellow-900/30 dark:text-yellow-300',
  low:'bg-success-tint text-success dark:bg-green-900/30 dark:text-green-300',
 };

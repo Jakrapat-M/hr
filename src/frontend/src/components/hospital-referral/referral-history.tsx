@@ -9,11 +9,11 @@ import type { HospitalReferral, ReferralStatus } from '@/hooks/use-hospital-refe
 
 const STATUS_CLASSES: Record<ReferralStatus, string> = {
  draft:'bg-surface-raised text-ink ',
- submitted:'bg-accent-tint text-accent dark:bg-blue-900/30 dark:text-blue-300',
+ submitted:'bg-accent-tint text-accent dark:bg-accent-ink/30 dark:text-accent',
  pending_manager:'bg-warning-tint text-warning dark:bg-yellow-900/30 dark:text-yellow-300',
  pending_hr:'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
  approved:'bg-success-tint text-success dark:bg-green-900/30 dark:text-green-300',
- rejected:'bg-danger-tint text-danger dark:bg-red-900/30 dark:text-red-300',
+ rejected:'bg-danger-tint text-danger dark:bg-danger/30 dark:text-warning',
  cancelled:'bg-surface-raised text-ink-muted ',
  letter_issued:'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
 };
@@ -42,7 +42,7 @@ export function ReferralHistory({ referrals, loading, onViewDetail }: ReferralHi
  <div className="-m-5">
  {referrals.length === 0 ? (
  <div className="flex flex-col items-center py-16 text-ink-muted">
- <ClipboardList className="h-12 w-12 mb-3 text-gray-300" />
+ <ClipboardList className="h-12 w-12 mb-3 text-ink-faint" />
  <p className="text-sm font-medium text-ink-muted">{t('noReferrals')}</p>
  <p className="text-xs text-ink-muted mt-1">{t('createFirst')}</p>
  </div>

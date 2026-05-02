@@ -20,13 +20,15 @@
 // - ⌘K kbd: hidden below md
 // ════════════════════════════════════════════════════════════
 
-import { Bell, Menu, Moon, Search, Sun } from 'lucide-react';
+import { Menu, Moon, Search, Sun } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUIStore } from '@/stores/ui-store';
 import { cn } from '@/lib/utils';
 import { getLocaleFromPath, swapLocale, type SupportedLocale } from '@/lib/humi-locale';
 import { PersonaSwitcher } from '@/components/humi/shell/PersonaSwitcher';
+import { NotificationBell } from '@/components/humi/NotificationBell';
+import { ActingBadge } from '@/components/humi/ActingBadge';
 
 export interface TopbarProps {
   /** h2 page title — typically derived from route */
@@ -166,15 +168,8 @@ export function Topbar({
           <Moon size={18} aria-hidden="true" />
         )}
       </button>
-      <button
-        type="button"
-        className="humi-icon-btn"
-        aria-label="การแจ้งเตือน"
-        title="การแจ้งเตือน"
-      >
-        <Bell size={18} aria-hidden="true" />
-        <span className="humi-dot-badge" aria-hidden="true" />
-      </button>
+      <NotificationBell />
+      <ActingBadge />
       <PersonaSwitcher />
       {actions}
     </div>

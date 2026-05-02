@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/humi';
+import { FileUploadField } from '@/components/humi/FileUploadField';
 import {
   BENEFIT_CODE_BY_TYPE,
   BENEFIT_TYPE_LABEL,
@@ -37,7 +38,7 @@ export function ReimbursementRequestPanel({
     hospitalName: '',
     dependentName: '',
     gasolineClaimType: 'actual',
-    attachmentName: 'receipt.pdf',
+    attachmentName: '',
   });
   const [errors, setErrors] = useState<string[]>([]);
   const [lastWorkflowId, setLastWorkflowId] = useState<string | null>(null);
@@ -45,13 +46,13 @@ export function ReimbursementRequestPanel({
   const benefitCode = BENEFIT_CODE_BY_TYPE[form.benefitType];
   const receiptAmount = Number(form.receiptAmount || 0);
   const claimAmount = Number(form.totalClaimAmount || form.receiptAmount || 0);
-  const attachment = useMemo(
-    () => ({
+  const attachments = useMemo(
+    () => form.attachmentName ? [{
       id: 'attachment-1',
-      filename: form.attachmentName || 'receipt.pdf',
+      filename: form.attachmentName,
       sizeMb: 1,
       mimeType: 'application/pdf',
-    }),
+    }] : [],
     [form.attachmentName],
   );
 
@@ -72,7 +73,7 @@ export function ReimbursementRequestPanel({
     }
     nextErrors.push(...validateBenefitAttachmentRules({
       benefitType: form.benefitType,
-      attachments: [attachment],
+      attachments,
     }));
 
     if (nextErrors.length > 0) {
@@ -95,7 +96,7 @@ export function ReimbursementRequestPanel({
       dependentName: form.dependentName,
       dependentRelationship: form.dependentName ? 'ครอบครัว' : undefined,
       gasolineClaimType: form.gasolineClaimType,
-      attachments: [attachment],
+      attachments,
     });
 
     setForm((prev) => ({
@@ -193,15 +194,14 @@ export function ReimbursementRequestPanel({
             />
           )}
         </FormField>
-        <FormField id="claim-attachment-name" label="ชื่อไฟล์แนบ" help="ต้นแบบใช้ mock attachment เพื่อคง projection เดิม">
-          {(controlProps) => (
-            <FormInput
-              {...controlProps}
-              value={form.attachmentName}
-              onChange={(event) => setField('attachmentName', event.target.value)}
-            />
-          )}
-        </FormField>
+        <FileUploadField
+          label="เอกสารแนบเบิกย้อนหลัง"
+          required
+          helperText="แนบใบเสร็จหรือเอกสารประกอบตาม Humi file upload pattern — PDF, JPG, PNG สูงสุด 5 MB"
+          className="sm:col-span-2"
+          onUpload={(_, file) => setField('attachmentName', file?.filename ?? '')}
+          onRemove={() => setField('attachmentName', '')}
+        />
       </div>
 
       {errors.length > 0 && (

@@ -114,7 +114,7 @@ export function TalentPage() {
  {activeTab ==='nineBox' && (
  <Card header={<CardTitle>{t('nineBox.title')}</CardTitle>}>
  <div className="mb-4 flex items-center gap-4 text-xs text-ink-muted">
- <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-gray-300" /> {t('nineBox.performance')} →</span>
+ <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-hairline" /> {t('nineBox.performance')} →</span>
  <span className="flex items-center gap-1">↑ {t('nineBox.potential')}</span>
  </div>
  <div className="grid grid-cols-3 gap-2">

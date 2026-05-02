@@ -172,9 +172,9 @@ export function EmployeePicker({
   return (
     <div ref={containerRef} className="relative">
       {/* Label สำหรับ accessibility */}
-      <label id={labelId} htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+      <label id={labelId} htmlFor={id} className="block text-body font-medium text-ink-soft mb-1">
         ค้นหาพนักงาน (รหัส / ชื่อ)
-        {required && <span className="ml-1 text-red-500" aria-hidden="true">*</span>}
+        {required && <span className="ml-1 text-danger" aria-hidden="true">*</span>}
       </label>
 
       <input
@@ -202,7 +202,7 @@ export function EmployeePicker({
             setIsOpen(results.length > 0)
           }
         }}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full rounded-md border border-hairline px-3 py-2 text-body bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas focus:border-accent"
       />
 
       {/* Dropdown list */}
@@ -212,7 +212,7 @@ export function EmployeePicker({
           id={listboxId}
           role="listbox"
           aria-label="รายการพนักงาน"
-          className="absolute z-50 mt-1 w-full max-h-64 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg"
+          className="absolute z-50 mt-1 w-full max-h-64 overflow-auto rounded-md border border-hairline-soft bg-surface shadow-[var(--shadow-lg)]"
         >
           {filtered.map((emp, idx) => {
             const fullName = `${emp.first_name_th} ${emp.last_name_th}`
@@ -230,18 +230,18 @@ export function EmployeePicker({
                   selectEmployee(emp)
                 }}
                 className={[
-                  'px-3 py-2 text-sm cursor-pointer',
+                  'px-3 py-2 text-body cursor-pointer',
                   isHighlighted
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-accent text-white'
                     : isSelected
-                    ? 'bg-blue-50 text-blue-900'
-                    : 'text-gray-900 hover:bg-gray-100',
+                    ? 'bg-accent-soft text-accent-ink'
+                    : 'text-ink hover:bg-canvas-soft',
                 ].join(' ')}
               >
                 <div className="flex items-center justify-between">
                   <span>
                     <span className="font-medium">{emp.employee_id}</span>
-                    <span className={`mx-1 ${isHighlighted ? 'text-blue-200' : 'text-gray-400'}`}>—</span>
+                    <span className={`mx-1 ${isHighlighted ? 'text-accent' : 'text-ink-faint'}`}>—</span>
                     <span>{fullName}</span>
                   </span>
                   {/* แสดง badge สถานะ */}
@@ -249,15 +249,15 @@ export function EmployeePicker({
                     className={[
                       'ml-2 text-xs px-1.5 py-0.5 rounded-full font-medium',
                       emp.status === 'active'
-                        ? isHighlighted ? 'bg-white text-green-700' : 'bg-green-100 text-green-700'
-                        : isHighlighted ? 'bg-white text-red-700' : 'bg-red-100 text-red-700',
+                        ? isHighlighted ? 'bg-surface text-green-700' : 'bg-green-100 text-green-700'
+                        : isHighlighted ? 'bg-surface text-danger-ink' : 'bg-danger-soft text-danger-ink',
                     ].join(' ')}
                   >
                     {emp.status === 'active' ? 'ทำงานอยู่' : 'ออกแล้ว'}
                   </span>
                 </div>
                 {/* แสดงตำแหน่งเล็กๆ */}
-                <div className={`text-xs mt-0.5 ${isHighlighted ? 'text-blue-200' : 'text-gray-400'}`}>
+                <div className={`text-xs mt-0.5 ${isHighlighted ? 'text-accent' : 'text-ink-faint'}`}>
                   {emp.position_title} · {emp.company}
                 </div>
               </li>
@@ -268,7 +268,7 @@ export function EmployeePicker({
 
       {/* Empty state */}
       {isOpen && filtered.length === 0 && inputText.trim() !== '' && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg px-3 py-4 text-sm text-gray-500 text-center">
+        <div className="absolute z-50 mt-1 w-full rounded-md border border-hairline-soft bg-surface shadow-[var(--shadow-lg)] px-3 py-4 text-body text-ink-muted text-center">
           ไม่พบพนักงานที่ตรงกับคำค้น
         </div>
       )}

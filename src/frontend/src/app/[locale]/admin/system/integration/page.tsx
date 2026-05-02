@@ -12,8 +12,8 @@ type Tab = 'endpoints' | 'teams-viva'
 const STATUS_COLORS: Record<string, string> = {
   active:   'bg-green-100 text-green-700',
   pending:  'bg-amber-100 text-amber-700',
-  failed:   'bg-red-100 text-red-700',
-  inactive: 'bg-gray-100 text-gray-500',
+  failed:   'bg-danger-soft text-danger-ink',
+  inactive: 'bg-canvas-soft text-ink-muted',
 }
 
 export default function IntegrationPage() {
@@ -34,12 +34,12 @@ export default function IntegrationPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-gray-900">การเชื่อมต่อ</h2>
-        <p className="text-sm text-gray-500 mt-1">Integration hub — IC/API Endpoints · Microsoft Teams Viva</p>
+        <h2 className="text-xl font-semibold text-ink">การเชื่อมต่อ</h2>
+        <p className="text-sm text-ink-muted mt-1">Integration hub — IC/API Endpoints · Microsoft Teams Viva</p>
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-hairline-soft">
         {([
           { key: 'endpoints' as Tab, label: 'IC/API Endpoints' },
           { key: 'teams-viva' as Tab, label: 'Microsoft Teams Viva' },
@@ -53,8 +53,8 @@ export default function IntegrationPage() {
             className={[
               'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
               tab === key
-                ? 'border-blue-600 text-blue-700'
-                : 'border-transparent text-gray-500 hover:text-gray-800',
+                ? 'border-accent text-accent-ink'
+                : 'border-transparent text-ink-muted hover:text-ink',
             ].join(' ')}
           >
             {label}
@@ -78,16 +78,16 @@ export default function IntegrationPage() {
             })}
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+          <div className="rounded-lg border border-hairline-soft bg-surface overflow-hidden">
             <table className="min-w-full divide-y divide-gray-100 text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-canvas-soft">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">ชื่อ Endpoint</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">โมดูล</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">ทิศทาง</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Protocol</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Sync ล่าสุด</th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-500">สถานะ</th>
+                  <th className="px-4 py-3 text-left font-medium text-ink-muted">ชื่อ Endpoint</th>
+                  <th className="px-4 py-3 text-left font-medium text-ink-muted">โมดูล</th>
+                  <th className="px-4 py-3 text-left font-medium text-ink-muted">ทิศทาง</th>
+                  <th className="px-4 py-3 text-left font-medium text-ink-muted">Protocol</th>
+                  <th className="px-4 py-3 text-left font-medium text-ink-muted">Sync ล่าสุด</th>
+                  <th className="px-4 py-3 text-center font-medium text-ink-muted">สถานะ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -99,23 +99,23 @@ export default function IntegrationPage() {
                       })
                     : '—'
                   return (
-                    <tr key={ep.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-900 whitespace-nowrap">{ep.name}</td>
-                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{ep.module}</td>
+                    <tr key={ep.id} className="hover:bg-canvas-soft">
+                      <td className="px-4 py-3 text-ink whitespace-nowrap">{ep.name}</td>
+                      <td className="px-4 py-3 text-ink-muted whitespace-nowrap">{ep.module}</td>
                       <td className="px-4 py-3">
                         <span className={[
                           'rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap',
-                          ep.direction === 'inbound' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600',
+                          ep.direction === 'inbound' ? 'bg-accent-soft text-accent' : 'bg-purple-50 text-purple-600',
                         ].join(' ')}>
                           {ep.direction === 'inbound' ? '← inbound' : 'outbound →'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{ep.protocol}</td>
-                      <td className="px-4 py-3 text-gray-400 whitespace-nowrap text-xs">{lastSync}</td>
+                      <td className="px-4 py-3 text-ink-muted whitespace-nowrap">{ep.protocol}</td>
+                      <td className="px-4 py-3 text-ink-faint whitespace-nowrap text-xs">{lastSync}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={[
                           'inline-block rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap',
-                          STATUS_COLORS[ep.status] ?? 'bg-gray-100 text-gray-500',
+                          STATUS_COLORS[ep.status] ?? 'bg-canvas-soft text-ink-muted',
                         ].join(' ')}>
                           {ep.status}
                         </span>
@@ -143,11 +143,11 @@ export default function IntegrationPage() {
             </div>
           )}
 
-          <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4 max-w-lg">
-            <h3 className="text-sm font-semibold text-gray-700">การตั้งค่าการเชื่อมต่อ</h3>
+          <div className="rounded-lg border border-hairline-soft bg-surface p-5 space-y-4 max-w-lg">
+            <h3 className="text-sm font-semibold text-ink-soft">การตั้งค่าการเชื่อมต่อ</h3>
 
             <div>
-              <label className="block text-xs text-gray-500 mb-1" htmlFor="viva-tenant">
+              <label className="block text-xs text-ink-muted mb-1" htmlFor="viva-tenant">
                 Tenant ID
               </label>
               <input
@@ -155,25 +155,25 @@ export default function IntegrationPage() {
                 type="text"
                 value={tenantId}
                 onChange={(e) => setTenantId(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-hairline px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-500 mb-1">สถานะการเชื่อมต่อ</label>
+              <label className="block text-xs text-ink-muted mb-1">สถานะการเชื่อมต่อ</label>
               <span className={[
                 'inline-block rounded-full px-3 py-1 text-xs font-medium',
-                STATUS_COLORS[teamsVivaConfig.status] ?? 'bg-gray-100 text-gray-500',
+                STATUS_COLORS[teamsVivaConfig.status] ?? 'bg-canvas-soft text-ink-muted',
               ].join(' ')}>
                 {teamsVivaConfig.status}
               </span>
             </div>
 
             <div>
-              <label className="block text-xs text-gray-500 mb-2">Fields ที่ Sync</label>
+              <label className="block text-xs text-ink-muted mb-2">Fields ที่ Sync</label>
               <div className="flex flex-wrap gap-2">
                 {teamsVivaConfig.syncFields.map((f) => (
-                  <span key={f} className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs text-gray-600">
+                  <span key={f} className="rounded-full border border-hairline-soft bg-canvas-soft px-2.5 py-0.5 text-xs text-ink-muted">
                     {f}
                   </span>
                 ))}
@@ -181,7 +181,7 @@ export default function IntegrationPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <label className="text-sm text-gray-700" htmlFor="viva-sync">
+              <label className="text-sm text-ink-soft" htmlFor="viva-sync">
                 เปิดใช้งาน Sync
               </label>
               <input
@@ -190,7 +190,7 @@ export default function IntegrationPage() {
                 checked={syncEnabled}
                 onChange={(e) => setSyncEnabled(e.target.checked)}
                 disabled={teamsVivaConfig.baSpecPending}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                className="h-4 w-4 rounded border-hairline text-accent focus:ring-blue-500 disabled:opacity-50"
               />
               {teamsVivaConfig.baSpecPending && (
                 <span className="text-xs text-amber-600">(ปิดใช้งาน — รอ BA Spec)</span>
@@ -201,7 +201,7 @@ export default function IntegrationPage() {
               type="button"
               onClick={handleSaveViva}
               disabled={teamsVivaConfig.baSpecPending}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {savedViva ? <span className="inline-flex items-center gap-1.5"><Check size={16}/>บันทึกแล้ว</span> : 'บันทึกการตั้งค่า'}
             </button>

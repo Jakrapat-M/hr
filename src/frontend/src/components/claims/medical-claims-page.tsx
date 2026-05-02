@@ -499,7 +499,7 @@ export function MedicalClaimsPage() {
  className={`flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed p-6 transition-colors ${
  isDragActive
  ?'border-brand bg-danger-tint'
- :'border-hairline border-hairline hover:border-gray-400 hover:bg-surface-raised/50'
+ :'border-hairline border-hairline hover:border-hairline hover:bg-surface-raised/50'
  }`}
  >
  <Upload className="mb-2 h-6 w-6 text-ink-muted" />
@@ -813,7 +813,7 @@ export function MedicalClaimsPage() {
  {/* Policy check */}
  <div
  className={`flex items-start gap-3 rounded-md border p-4 ${
- withinLimit ?'border-green-200 bg-success-tint' :'border-red-200 bg-danger-tint'
+ withinLimit ?'border-green-200 bg-success-tint' :'border-danger bg-danger-tint'
  }`}
  >
  {withinLimit ? (
@@ -900,7 +900,7 @@ export function MedicalClaimsPage() {
 
  {filteredClaims.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-12 text-center">
- <FileText className="h-12 w-12 text-gray-300 mb-3" />
+ <FileText className="h-12 w-12 text-ink-faint mb-3" />
  <p className="text-sm text-ink-muted">{t('medicalClaims.history.empty')}</p>
  </div>
  ) : (
@@ -1060,7 +1060,7 @@ export function MedicalClaimsPage() {
  <div className="relative ml-3">
  {detailClaim.approvalSteps.map((as, i) => {
  const isLast = i === detailClaim.approvalSteps.length - 1;
- let dotColor ='bg-gray-300';
+ let dotColor ='bg-hairline';
  let icon = null;
 
  if (as.status ==='approved') {
@@ -1119,13 +1119,13 @@ export function MedicalClaimsPage() {
 
  {/* Rejection reason */}
  {detailClaim.rejectionReason && (
- <div className="flex items-start gap-3 rounded-md border border-red-200 bg-danger-tint p-4">
+ <div className="flex items-start gap-3 rounded-md border border-danger bg-danger-tint p-4">
  <AlertCircle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
  <div>
  <p className="text-sm font-medium text-danger">
  {t('medicalClaims.detail.rejectionReason')}
  </p>
- <p className="text-sm text-red-700 mt-1">{detailClaim.rejectionReason}</p>
+ <p className="text-sm text-danger-ink mt-1">{detailClaim.rejectionReason}</p>
  </div>
  </div>
  )}

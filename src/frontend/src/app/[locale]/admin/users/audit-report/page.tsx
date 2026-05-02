@@ -270,7 +270,7 @@ export default function AuditReportPage() {
                       className={[
                         'text-xs px-2 py-0.5 rounded-full whitespace-nowrap',
                         entry.action === 'CREATE' ? 'bg-green-50 text-green-700' :
-                        entry.action === 'DELETE' ? 'bg-red-50 text-red-600' :
+                        entry.action === 'DELETE' ? 'bg-danger-soft text-danger' :
                         entry.action === 'UPDATE' ? 'bg-accent-soft text-accent' :
                         'bg-canvas-soft text-ink-muted',
                       ].join(' ')}

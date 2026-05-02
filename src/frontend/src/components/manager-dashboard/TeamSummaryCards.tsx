@@ -43,7 +43,7 @@ export function TeamSummaryCards({ summary, loading }: TeamSummaryCardsProps) {
     {
       label: t('pending'),
       value: summary?.pendingApprovals ?? '—',
-      href: '/quick-approve',
+      href: '/th/quick-approve',
       icon: <ClipboardList className="h-5 w-5" />,
       tone: 'danger' as const,
     },
@@ -55,7 +55,7 @@ export function TeamSummaryCards({ summary, loading }: TeamSummaryCardsProps) {
         const inner = (
           <div className={cn(
             'rounded-lg bg-surface shadow-card p-4 flex items-start gap-3 transition-shadow',
-            card.href && 'hover:shadow-md cursor-pointer'
+            card.href && 'hover:shadow-[var(--shadow-md)] cursor-pointer'
           )}>
             <div className={cn('w-10 h-10 rounded-md flex items-center justify-center shrink-0', STAT_TONE[card.tone])}>
               {card.icon}

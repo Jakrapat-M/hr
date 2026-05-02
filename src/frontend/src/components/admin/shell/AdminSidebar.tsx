@@ -17,6 +17,7 @@ import {
   ArrowLeft,
   LogOut,
   X,
+  BookOpen,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -50,6 +51,13 @@ const NAV: NavSection[] = [
       { id: 'organization', label: 'หน่วยงาน', href: '/th/admin/organization', icon: Network },
       { id: 'jobs', label: 'งาน/Job', href: '/th/admin/jobs', icon: BriefcaseBusiness },
       { id: 'positions', label: 'ตำแหน่ง', href: '/th/admin/positions', icon: MapPin },
+    ],
+  },
+  {
+    group: 'สวัสดิการ',
+    items: [
+      { id: 'benefits-plans', label: 'แผนสวัสดิการ', href: '/th/admin/benefits/plans', icon: BriefcaseBusiness },
+      { id: 'benefits-rules', label: 'กฎสวัสดิการ', href: '/th/admin/benefits/rules', icon: BookOpen },
     ],
   },
   {

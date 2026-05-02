@@ -81,6 +81,20 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     password: 'rungrote2026',
     roles: ['manager', 'employee'],
   },
+
+  // HRIS Admin — system-config tier (Picklist Centre, BenefitProgram,
+  // BenefitTaxRule, BenefitEnrollmentProcessScreenTemplate, Workflow Config,
+  // RBAC editor). Distinct from HR Admin: HR Admin works with employee
+  // records; HRIS Admin works with the system itself. Per SF probe, only
+  // HRIS Admin can access BenefitProgram / BenefitTaxRule / BenefitEnrollment-
+  // ProcessScreenTemplate (HR Admin sees 0 fields).
+  'hris@humi.test': {
+    id: 'HIS001',
+    name: 'นภัสสร (HRIS Admin)',
+    email: 'hris@humi.test',
+    password: 'hris2026',
+    roles: ['hr_manager', 'employee'],
+  },
 };
 
 // Order used by the switcher UI — employee first (common target), then SF-canonical, admin last.
@@ -90,6 +104,7 @@ export const PERSONA_ORDER: Array<keyof typeof DEMO_USERS> = [
   'hrbp@humi.test',
   'spd@humi.test',
   'admin@humi.test',
+  'hris@humi.test',
   // T7 — SF-canonical (per RBAC V2 matrix)
   'rungrote@humi.test',
   'apinya@humi.test',
@@ -102,16 +117,17 @@ export const PERSONA_ORDER: Array<keyof typeof DEMO_USERS> = [
 // Tone color encodes role family — repetition (2× Manager / 2× HRBP / 2× SPD)
 // is meaningful: same RBAC scope, different person identity for demo coverage.
 export const PERSONA_BADGE: Record<string, { label: string; tone: string }> = {
-  'admin@humi.test':    { label: 'HR Admin', tone: 'humi-tag--ink' },
-  'spd@humi.test':      { label: 'SPD',      tone: 'humi-tag--accent' },
-  'hrbp@humi.test':     { label: 'HRBP',     tone: 'humi-tag--butter' },
-  'manager@humi.test':  { label: 'Manager',  tone: 'humi-tag--sage' },
-  'employee@humi.test': { label: 'Employee', tone: 'humi-tag' },
+  'admin@humi.test':    { label: 'HR Admin',   tone: 'humi-tag--ink' },
+  'spd@humi.test':      { label: 'SPD',        tone: 'humi-tag--accent' },
+  'hrbp@humi.test':     { label: 'HRBP',       tone: 'humi-tag--butter' },
+  'manager@humi.test':  { label: 'Manager',    tone: 'humi-tag--sage' },
+  'employee@humi.test': { label: 'Employee',   tone: 'humi-tag' },
+  'hris@humi.test':     { label: 'HRIS Admin', tone: 'humi-tag--accent-alt' },
   // T7 — SF-canonical badges (same role-acronym pattern as generic above)
-  'ken@humi.test':      { label: 'HR Admin', tone: 'humi-tag--ink' },
-  'apinya@humi.test':   { label: 'HRBP',     tone: 'humi-tag--butter' },
-  'worawee@humi.test':  { label: 'SPD',      tone: 'humi-tag--accent' },
-  'rungrote@humi.test': { label: 'Manager',  tone: 'humi-tag--sage' },
+  'ken@humi.test':      { label: 'HR Admin',   tone: 'humi-tag--ink' },
+  'apinya@humi.test':   { label: 'HRBP',       tone: 'humi-tag--butter' },
+  'worawee@humi.test':  { label: 'SPD',        tone: 'humi-tag--accent' },
+  'rungrote@humi.test': { label: 'Manager',    tone: 'humi-tag--sage' },
 };
 
 // Role-priority landing table — shared with login.
@@ -125,10 +141,10 @@ export const PERSONA_BADGE: Record<string, { label: string; tone: string }> = {
 //   - /manager-dashboard was removed from the App Router; manager personas
 //     land on home to avoid proxy switching into a 404.
 const ROLE_LANDING: Array<[Role, string]> = [
+  ['hr_manager', '/admin/system'],  // HRIS Admin → system-config landing
   ['hr_admin', '/admin'],
-  ['hr_manager', '/admin'],
   ['spd', '/spd/inbox'],
-  ['hrbp', '/admin/employees'],  // HRBP uses admin direct-edit path
+  ['hrbp', '/admin/employees'],     // HRBP uses admin direct-edit path
   ['manager', '/home'],
   ['employee', '/home'],
 ];

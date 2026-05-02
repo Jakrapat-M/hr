@@ -13,7 +13,7 @@ import { useIdp, type ActionStatus } from '@/hooks/use-idp';
 const ACTION_ICON: Record<ActionStatus, React.ReactNode> = {
  completed: <CheckCircle className="h-4 w-4 text-success" />,
  in_progress: <Clock className="h-4 w-4 text-yellow-500" />,
- not_started: <Circle className="h-4 w-4 text-gray-300" />,
+ not_started: <Circle className="h-4 w-4 text-ink-faint" />,
 };
 
 export function IdpPage() {
@@ -44,9 +44,9 @@ export function IdpPage() {
  <Card><div className="text-center"><p className="text-2xl font-bold text-success">{plan.actions.filter((a) => a.status ==='completed').length}/{plan.actions.length}</p><p className="text-xs text-ink-muted">{t('completedActions')}</p></div></Card>
  <Card>
  <div className="flex items-center justify-center gap-2">
- {plan.employeeSignOff ? <CheckCircle className="h-4 w-4 text-success" /> : <Circle className="h-4 w-4 text-gray-300" />}
+ {plan.employeeSignOff ? <CheckCircle className="h-4 w-4 text-success" /> : <Circle className="h-4 w-4 text-ink-faint" />}
  <span className="text-xs">{t('employeeSignOff')}</span>
- {plan.managerSignOff ? <CheckCircle className="h-4 w-4 text-success" /> : <Circle className="h-4 w-4 text-gray-300" />}
+ {plan.managerSignOff ? <CheckCircle className="h-4 w-4 text-success" /> : <Circle className="h-4 w-4 text-ink-faint" />}
  <span className="text-xs">{t('managerSignOff')}</span>
  </div>
  </Card>
@@ -72,7 +72,7 @@ export function IdpPage() {
  </div>
  <div className="w-full bg-surface-raised rounded-full h-2 relative">
  <div className="bg-brand h-2 rounded-full" style={{ width: `${(gap.currentLevel / 5) * 100}%` }} />
- <div className="absolute top-0 h-2 border-r-2 border-dashed border-blue-400" style={{ left: `${(gap.requiredLevel / 5) * 100}%` }} />
+ <div className="absolute top-0 h-2 border-r-2 border-dashed border-accent-soft" style={{ left: `${(gap.requiredLevel / 5) * 100}%` }} />
  </div>
  </div>
  </div>

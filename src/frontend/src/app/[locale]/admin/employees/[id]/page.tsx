@@ -948,7 +948,7 @@ export default function EmployeeDetailPage() {
               <Link
                 key={card.label}
                 href={card.href!}
-                className="humi-card group transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2"
+                className="humi-card group transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2"
                 style={{ padding: 16 }}
               >
                 <div className="humi-row" style={{ gap: 10, alignItems: 'flex-start' }}>

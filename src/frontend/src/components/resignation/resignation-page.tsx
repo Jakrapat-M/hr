@@ -14,6 +14,10 @@ import {
   type TerminationReasonCode,
 } from '@/stores/termination-approvals';
 import { useAuthStore } from '@/stores/auth-store';
+import { Button, FormField, FormInput } from '@/components/humi';
+
+const selectClassName =
+  'h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
 
 function formatDateTh(iso: string): string {
   return new Date(iso).toLocaleDateString('th-TH', {
@@ -194,64 +198,58 @@ export function ResignationPage() {
 
         <div className="space-y-5">
           {/* วันทำงานวันสุดท้าย */}
-          <div>
-            <label htmlFor="lastWorkingDate" className="humi-label">
-              วันทำงานวันสุดท้าย <span className="humi-asterisk">*</span>
-            </label>
-            <input
-              id="lastWorkingDate"
-              type="date"
-              value={lastWorkingDate}
-              onChange={(e) => setLastWorkingDate(e.target.value)}
-              min={new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)}
-              className="humi-input max-w-[220px]"
-            />
-            <p className="text-small text-ink-muted mt-1">
-              กรุณาแจ้งล่วงหน้าอย่างน้อย 30 วัน
-            </p>
-          </div>
+          <FormField id="lastWorkingDate" label="วันทำงานวันสุดท้าย" required help="กรุณาแจ้งล่วงหน้าอย่างน้อย 30 วัน">
+            {(ctrl) => (
+              <FormInput
+                {...ctrl}
+                type="date"
+                value={lastWorkingDate}
+                onChange={(e) => setLastWorkingDate(e.target.value)}
+                min={new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)}
+                className="max-w-[220px]"
+              />
+            )}
+          </FormField>
 
           {/* เหตุผลการลาออก */}
-          <div>
-            <label htmlFor="reasonCode" className="humi-label">
-              เหตุผลการลาออก <span className="humi-asterisk">*</span>
-            </label>
-            <select
-              id="reasonCode"
-              value={reasonCode}
-              onChange={(e) => setReasonCode(e.target.value as TerminationReasonCode | '')}
-              className="humi-input max-w-[360px]"
-            >
-              <option value="">-- เลือกเหตุผล --</option>
-              {(Object.entries(TERMINATION_REASON_LABEL) as [TerminationReasonCode, string][]).map(
-                ([code, label]) => (
-                  <option key={code} value={code}>
-                    {label}
-                  </option>
-                ),
-              )}
-            </select>
-          </div>
+          <FormField id="reasonCode" label="เหตุผลการลาออก" required>
+            {(ctrl) => (
+              <select
+                {...ctrl}
+                value={reasonCode}
+                onChange={(e) => setReasonCode(e.target.value as TerminationReasonCode | '')}
+                className={selectClassName + ' max-w-[360px]'}
+              >
+                <option value="">-- เลือกเหตุผล --</option>
+                {(Object.entries(TERMINATION_REASON_LABEL) as [TerminationReasonCode, string][]).map(
+                  ([code, label]) => (
+                    <option key={code} value={code}>
+                      {label}
+                    </option>
+                  ),
+                )}
+              </select>
+            )}
+          </FormField>
 
           {/* หมายเหตุ */}
-          <div>
-            <label htmlFor="comment" className="humi-label">
-              หมายเหตุเพิ่มเติม <span className="text-small text-ink-muted">(ไม่จำเป็น)</span>
-            </label>
-            <textarea
-              id="comment"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={3}
-              placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"
-              className="humi-input w-full resize-y max-w-[520px]"
-            />
-          </div>
+          <FormField id="comment" label="หมายเหตุเพิ่มเติม" help="ไม่จำเป็น">
+            {(ctrl) => (
+              <textarea
+                {...ctrl}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={3}
+                placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"
+                className="w-full max-w-[520px] resize-y rounded-md border border-hairline bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-faint transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas"
+              />
+            )}
+          </FormField>
 
           {/* เอกสารแนบ */}
           <div>
-            <label htmlFor="attachment" className="humi-label">
-              เอกสารแนบ <span className="text-small text-ink-muted">(ไม่จำเป็น)</span>
+            <label htmlFor="attachment" className="text-small font-medium text-ink">
+              เอกสารแนบ <span className="text-ink-muted">(ไม่จำเป็น)</span>
             </label>
             <input
               id="attachment"
@@ -261,7 +259,7 @@ export function ResignationPage() {
                 const file = e.target.files?.[0];
                 setAttachmentName(file ? file.name : undefined);
               }}
-              className="block text-small text-ink-soft mt-1"
+              className="mt-1 block text-small text-ink-soft"
             />
             {attachmentName && (
               <p className="text-small text-accent mt-1">{attachmentName}</p>
@@ -271,15 +269,13 @@ export function ResignationPage() {
 
         {/* Actions */}
         <div className="flex justify-end gap-2 mt-5">
-          <button
-            type="button"
+          <Button
+            variant="primary"
             onClick={handleSubmit}
             disabled={!isFormValid}
-            className="humi-btn humi-btn--primary"
-            aria-disabled={!isFormValid}
           >
             ส่งคำขอลาออก
-          </button>
+          </Button>
         </div>
       </div>
 

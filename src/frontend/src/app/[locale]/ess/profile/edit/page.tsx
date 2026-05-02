@@ -171,7 +171,7 @@ export default function ProfileEditPage() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed top-4 right-4 z-50 rounded-md bg-accent text-white px-4 py-3 text-sm shadow-lg"
+          className="fixed top-4 right-4 z-50 rounded-md bg-accent text-white px-4 py-3 text-sm shadow-[var(--shadow-lg)]"
         >
           {toast}
         </div>
@@ -706,7 +706,7 @@ export default function ProfileEditPage() {
             gap: 12,
             justifyContent: 'flex-end',
             alignItems: 'center',
-            boxShadow: 'var(--shadow-md)',
+            boxShadow: 'var(--shadow-[var(--shadow-md)])',
           }}
         >
           <Button

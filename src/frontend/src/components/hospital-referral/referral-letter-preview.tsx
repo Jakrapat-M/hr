@@ -165,7 +165,7 @@ export function ReferralLetterPreview({ referral, open, onClose }: ReferralLette
  {/* Letter content — styled for professional look and print */}
  <div className="print:shadow-none print:p-0 font-serif">
  {/* Company Header */}
- <div className="text-center border-b-2 border-gray-800 border-hairline pb-4 mb-6">
+ <div className="text-center border-b-2 border-ink-soft border-hairline pb-4 mb-6">
  <h1 className="text-2xl font-bold text-ink tracking-wide">
  {t('companyName')}
  </h1>
@@ -299,7 +299,7 @@ export function ReferralLetterPreview({ referral, open, onClose }: ReferralLette
  {/* Signature section */}
  <div className="mt-8 grid grid-cols-2 gap-8 text-sm">
  <div className="text-center">
- <div className="border-b border-gray-400 border-hairline pb-1 mb-2 min-h-[48px]" />
+ <div className="border-b border-hairline border-hairline pb-1 mb-2 min-h-[48px]" />
  <p className="text-ink-muted text-xs">{t('approvedBy')}</p>
  {referral.approvedBy && (
  <p className="text-xs text-ink-muted mt-0.5">
@@ -310,7 +310,7 @@ export function ReferralLetterPreview({ referral, open, onClose }: ReferralLette
  )}
  </div>
  <div className="text-center">
- <div className="border-b border-gray-400 border-hairline pb-1 mb-2 min-h-[48px]" />
+ <div className="border-b border-hairline border-hairline pb-1 mb-2 min-h-[48px]" />
  <p className="text-ink-muted text-xs">{t('issuedBy')}</p>
  {referral.issuedBy && (
  <p className="text-xs text-ink-muted mt-0.5">

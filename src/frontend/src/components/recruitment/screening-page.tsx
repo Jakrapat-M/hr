@@ -10,11 +10,11 @@ import { useRecruitment, type ApplicationStatus } from '@/hooks/use-recruitment'
 const STAGES: ApplicationStatus[] = ['applied','screening','interview','offer','hired'];
 const STAGE_COLORS: Record<ApplicationStatus, string> = {
  applied:'bg-surface-raised border-hairline border-hairline',
- screening:'bg-accent-tint border-blue-300 dark:bg-blue-900/20 dark:border-blue-700',
+ screening:'bg-accent-tint border-accent-soft dark:bg-accent-ink/20 dark:border-accent',
  interview:'bg-warning-tint border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700',
  offer:'bg-accent-tint border-purple-300 dark:bg-purple-900/20 dark:border-purple-700',
  hired:'bg-success-tint border-green-300 dark:bg-green-900/20 dark:border-green-700',
- rejected:'bg-danger-tint border-red-300 dark:bg-red-900/20 dark:border-red-700',
+ rejected:'bg-danger-tint border-danger dark:bg-danger/20 dark:border-danger',
 };
 
 export function ScreeningPage() {

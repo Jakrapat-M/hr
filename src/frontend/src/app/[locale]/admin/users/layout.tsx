@@ -5,13 +5,13 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const TOOLS = [
-  { href: '/admin/users',                 label: 'ภาพรวม',                  brd: '' },
-  { href: '/admin/users/data-permissions', label: 'กลุ่มสิทธิ์ข้อมูล',        brd: '#184' },
-  { href: '/admin/users/role-groups',      label: 'กลุ่มสิทธิ์แอปพลิเคชัน', brd: '#185' },
-  { href: '/admin/users/user-assignment',  label: 'กำหนดสิทธิ์ผู้ใช้',        brd: '#186' },
-  { href: '/admin/users/proxy',            label: 'จัดการ Proxy',             brd: '#187' },
-  { href: '/admin/users/foundation-audit', label: 'ประวัติ Foundation',        brd: '#188' },
-  { href: '/admin/users/audit-report',     label: 'รายงาน Audit',             brd: '#189' },
+  { href: '/th/admin/users',                 label: 'ภาพรวม',                  brd: '' },
+  { href: '/th/admin/users/data-permissions', label: 'กลุ่มสิทธิ์ข้อมูล',        brd: '#184' },
+  { href: '/th/admin/users/role-groups',      label: 'กลุ่มสิทธิ์แอปพลิเคชัน', brd: '#185' },
+  { href: '/th/admin/users/user-assignment',  label: 'กำหนดสิทธิ์ผู้ใช้',        brd: '#186' },
+  { href: '/th/admin/users/proxy',            label: 'จัดการ Proxy',             brd: '#187' },
+  { href: '/th/admin/users/foundation-audit', label: 'ประวัติ Foundation',        brd: '#188' },
+  { href: '/th/admin/users/audit-report',     label: 'รายงาน Audit',             brd: '#189' },
 ] as const
 
 function UsersSubNav() {

@@ -182,7 +182,7 @@ function RoleGroupModal({
           {/* ชื่อ */}
           <div>
             <label className="block text-sm font-medium text-ink mb-1">
-              ชื่อกลุ่มสิทธิ์ <span className="text-red-500">*</span>
+              ชื่อกลุ่มสิทธิ์ <span className="text-danger">*</span>
             </label>
             <input
               type="text"
@@ -331,7 +331,7 @@ export default function RoleGroupsPage() {
                       {!role.isSystemRole && (
                         <button
                           onClick={() => deleteRole(role.id)}
-                          className="text-xs text-red-500 hover:underline px-2 py-1"
+                          className="text-xs text-danger hover:underline px-2 py-1"
                           aria-label={`ลบ ${role.name}`}
                         >
                           ลบ

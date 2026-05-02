@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { BenefitServicesPanel } from '@/components/benefits/BenefitServicesPanel';
+import { ReimbursementRequestPanel } from '@/components/benefits/reimbursement/ReimbursementRequestPanel';
 import { ReferralRequestPanel } from '@/components/benefits/referral/ReferralRequestPanel';
 import { TaxPlanningPanel } from '@/components/benefits/tax/TaxPlanningPanel';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
@@ -67,6 +68,14 @@ describe('deferred benefit journey and token compliance', () => {
     expect(
       screen.queryByLabelText(/เลขที่ใบเสร็จ|จำนวนเงินที่ขอเบิก|เอกสารแนบเบิกย้อนหลัง/),
     ).not.toBeInTheDocument();
+  });
+
+  it('uses Humi FileUploadField for reimbursement attachments instead of a filename textbox', () => {
+    render(<ReimbursementRequestPanel />);
+
+    expect(screen.getByRole('button', { name: 'เอกสารแนบเบิกย้อนหลัง' })).toBeInTheDocument();
+    expect(screen.getAllByText(/PDF, JPG, PNG/).length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText('ชื่อไฟล์แนบ')).not.toBeInTheDocument();
   });
 
   it('renders accessible Humi-style labels and helper copy for tax planning with Payroll review controls', () => {

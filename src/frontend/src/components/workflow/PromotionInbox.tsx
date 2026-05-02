@@ -10,7 +10,7 @@ import {
   type PromotionRequest,
 } from '@/stores/promotion-approvals';
 import { useAuthStore } from '@/stores/auth-store';
-import { Button } from '@/components/humi';
+import { Button, FormField } from '@/components/humi';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('th-TH', {
@@ -213,22 +213,25 @@ function PromotionCard({
         </div>
       ) : (
         <div style={{ marginTop: 14, borderTop: '1px solid var(--color-hairline-soft)', paddingTop: 14 }}>
-          <label className="humi-label" htmlFor={`${req.id}-comment`}>
-            {mode === 'approve' ? 'หมายเหตุ (ถ้ามี)' : 'เหตุผลการปฏิเสธ'}
-            {mode === 'reject' && <span className="humi-asterisk ml-1">*</span>}
-          </label>
-          <textarea
+          <FormField
             id={`${req.id}-comment`}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            rows={2}
-            className="humi-input w-full"
-            placeholder={
-              mode === 'approve' ? 'ระบุหมายเหตุ (ถ้ามี)' : 'ระบุเหตุผลที่ปฏิเสธ'
-            }
+            label={mode === 'approve' ? 'หมายเหตุ (ถ้ามี)' : 'เหตุผลการปฏิเสธ'}
             required={mode === 'reject'}
-            autoFocus
-          />
+          >
+            {(ctrl) => (
+              <textarea
+                {...ctrl}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={2}
+                className="w-full rounded-md border border-hairline bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-faint transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas"
+                placeholder={
+                  mode === 'approve' ? 'ระบุหมายเหตุ (ถ้ามี)' : 'ระบุเหตุผลที่ปฏิเสธ'
+                }
+                autoFocus
+              />
+            )}
+          </FormField>
           <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
             <Button
               variant="ghost"

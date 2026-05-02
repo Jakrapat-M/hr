@@ -31,3 +31,15 @@ export type { ModalProps } from './Modal';
 
 export { QuickActionsTile, DEFAULT_ESS_ACTIONS } from './QuickActionsTile';
 export type { QuickActionsTileProps, QuickAction } from './QuickActionsTile';
+
+export { Capability } from './Capability';
+
+export { EmptyState } from './EmptyState';
+export type { EmptyStateProps } from './EmptyState';
+
+export { NotificationBell } from './NotificationBell';
+
+export { ActingBadge } from './ActingBadge';
+
+export { Textarea } from './Textarea';
+export type { TextareaProps } from './Textarea';

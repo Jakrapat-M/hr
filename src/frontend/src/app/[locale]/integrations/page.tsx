@@ -47,12 +47,12 @@ function IntegrationMark({
     <span
       aria-hidden
       className={cn(
-        'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px]',
+        'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-sm)]',
         toneClass
       )}
     >
       {shape === 'square' && (
-        <span className="block h-[18px] w-[18px] rounded-[3px] bg-[color:var(--color-surface)]" />
+        <span className="block h-[18px] w-[18px] rounded-[var(--radius-xs)] bg-[color:var(--color-surface)]" />
       )}
       {shape === 'circle' && (
         <span className="block h-[18px] w-[18px] rounded-full bg-[color:var(--color-surface)]" />
@@ -76,7 +76,7 @@ function IntegrationMark({
       )}
       {shape === 'split' && (
         <span
-          className="block h-5 w-5 rounded-[4px]"
+          className="block h-5 w-5 rounded-[var(--radius-xs)]"
           style={{
             background:
               'linear-gradient(90deg, var(--color-surface) 50%, rgba(255,255,255,0.4) 50%)',
@@ -224,7 +224,7 @@ export default function IntegrationsPage() {
               >
                 <div className="flex items-start gap-3">
                   {/* Logo chip — square ~44px with bg + rounded-md */}
-                  <span aria-hidden className="humi-logo-chip shrink-0 p-0 !gap-0 !font-normal h-11 w-11 justify-center rounded-[12px]">
+                  <span aria-hidden className="humi-logo-chip shrink-0 p-0 !gap-0 !font-normal h-11 w-11 justify-center rounded-[var(--radius-sm)]">
                     <IntegrationMark
                       shape={item.shape}
                       toneClass={item.markToneClass}

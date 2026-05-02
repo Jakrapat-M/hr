@@ -6,7 +6,8 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Download, FileText, Filter } from 'lucide-react';
+import { Download, FileText, Filter, Plus } from 'lucide-react';
+import Link from 'next/link';
 import { HUMI_HR_DOCS, HR_DOC_TYPE_LABELS, type HrDocType, type HumiHrDoc } from '@/lib/humi-mock-data';
 import { formatDate } from '@/lib/date';
 
@@ -31,13 +32,23 @@ export default function MeDocumentsPage() {
 
   return (
     <div data-testid="me-documents-page" className="max-w-3xl mx-auto px-7 py-6">
-      <header className="mb-6">
-        <h1 className="font-display text-2xl font-semibold text-ink mb-1.5">
-          เอกสารส่วนบุคคล
-        </h1>
-        <p className="text-sm text-ink-muted">
-          ดูและดาวน์โหลดเอกสารส่วนบุคคลของคุณ
-        </p>
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-semibold text-ink mb-1.5">
+            เอกสารส่วนบุคคล
+          </h1>
+          <p className="text-sm text-ink-muted">
+            ดูและดาวน์โหลดเอกสารส่วนบุคคลของคุณ
+          </p>
+        </div>
+        <Link
+          href={`/${locale}/me/documents/request`}
+          data-testid="request-doc-cta"
+          className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-small font-semibold text-white transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          <Plus size={15} aria-hidden />
+          ขอเอกสารใหม่
+        </Link>
       </header>
 
       {/* ── Filter ──────────────────────────────────────────────── */}

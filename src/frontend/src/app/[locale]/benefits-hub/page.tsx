@@ -290,7 +290,16 @@ function BenefitsTab() {
               variant="raised"
               size="md"
               className="humi-card-lift cursor-pointer"
+              role="button"
+              tabIndex={0}
+              aria-label={`ดูรายละเอียด ${b.plan}`}
               onClick={() => setDetailPlan(b)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setDetailPlan(b);
+                }
+              }}
             >
               <div className="flex items-start justify-between gap-2">
                 <CardEyebrow>{b.title}</CardEyebrow>
@@ -507,7 +516,7 @@ function ClaimsTab() {
               >
                 <span
                   aria-hidden
-                  className="flex h-10 w-8 shrink-0 items-center justify-center rounded-[6px] border border-hairline bg-canvas-soft text-ink-muted"
+                  className="flex h-10 w-8 shrink-0 items-center justify-center rounded-[var(--radius-xs)] border border-hairline bg-canvas-soft text-ink-muted"
                 >
                   <FileText size={16} />
                 </span>
@@ -568,7 +577,7 @@ function DocsTab() {
           >
             <span
               aria-hidden
-              className="flex h-10 w-8 shrink-0 items-center justify-center rounded-[6px] border border-hairline bg-canvas-soft text-ink-muted"
+              className="flex h-10 w-8 shrink-0 items-center justify-center rounded-[var(--radius-xs)] border border-hairline bg-canvas-soft text-ink-muted"
             >
               <FileText size={16} />
             </span>

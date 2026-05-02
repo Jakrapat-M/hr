@@ -9,25 +9,25 @@ import { useDataManagement } from '@/lib/admin/store/useDataManagement'
 
 const HUBS = [
   {
-    href: '/admin/system/reports',
+    href: '/th/admin/system/reports',
     title: 'รายงาน',
     desc: 'สร้าง กำหนดเวลา และจัดการรายงานทั้งหมดในระบบ',
     Icon: BarChart3,
   },
   {
-    href: '/admin/system/integration',
+    href: '/th/admin/system/integration',
     title: 'การเชื่อมต่อระบบ',
     desc: 'จุดเชื่อมต่อกับระบบภายนอกและแอปพลิเคชันที่ใช้ร่วมกัน',
     Icon: Plug,
   },
   {
-    href: '/admin/system/features',
+    href: '/th/admin/system/system-features',
     title: 'ฟีเจอร์ระบบ',
     desc: 'ภาษา เอกสารอิเล็กทรอนิกส์ การแสดงผล และกฎการแก้ไข',
     Icon: Settings2,
   },
   {
-    href: '/admin/system/security',
+    href: '/th/admin/system/security',
     title: 'ความปลอดภัย',
     desc: 'การยินยอม บันทึกการเข้าถึง การเข้ารหัส และการย้ายข้อมูล',
     Icon: ShieldCheck,
@@ -69,7 +69,7 @@ export default function SystemPage() {
           <Link
             key={hub.href}
             href={hub.href}
-            className="rounded-xl border border-hairline bg-surface p-5 transition-all shadow-sm hover:border-accent hover:shadow-md"
+            className="rounded-xl border border-hairline bg-surface p-5 transition-all shadow-[var(--shadow-sm)] hover:border-accent hover:shadow-[var(--shadow-md)]"
           >
             <div className="mb-3 text-accent" aria-hidden>
               <hub.Icon size={20} strokeWidth={1.75} />

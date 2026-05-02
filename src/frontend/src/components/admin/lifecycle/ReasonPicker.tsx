@@ -99,9 +99,9 @@ export function ReasonPicker({
 
   return (
     <div>
-      <label id={labelId} htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+      <label id={labelId} htmlFor={id} className="block text-body font-medium text-ink-soft mb-1">
         เหตุผล / ประเภทรายการ
-        {required && <span className="ml-1 text-red-500" aria-hidden="true">*</span>}
+        {required && <span className="ml-1 text-danger" aria-hidden="true">*</span>}
       </label>
 
       <select
@@ -112,9 +112,9 @@ export function ReasonPicker({
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
         className={[
-          'w-full rounded-md border px-3 py-2 text-sm bg-white text-gray-900',
-          'focus:outline-none focus:ring-2 focus:ring-blue-500',
-          error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300',
+          'w-full rounded-md border px-3 py-2 text-body bg-surface text-ink',
+          'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas',
+          error ? 'border-danger focus:ring-danger' : 'border-hairline focus:border-accent',
         ].join(' ')}
       >
         <option value="" disabled>
@@ -129,7 +129,7 @@ export function ReasonPicker({
 
       {/* Error message */}
       {error && (
-        <p className="mt-1 text-xs text-red-600" role="alert">
+        <p className="mt-1 text-xs text-danger" role="alert">
           {error}
         </p>
       )}

@@ -71,5 +71,51 @@ describe('RBAC', () => {
  it('defaults to employee for empty list', () => {
  expect(getHighestRole([])).toBe('employee');
  });
+
+ it('resolves spd as its own highest role', () => {
+ expect(getHighestRole(['spd'])).toBe('spd');
+ expect(getHighestRole(['spd','employee'])).toBe('spd');
+ });
+
+ it('resolves hrbp as its own highest role', () => {
+ expect(getHighestRole(['hrbp'])).toBe('hrbp');
+ expect(getHighestRole(['hrbp','employee'])).toBe('hrbp');
+ });
+
+ it('ranks hr_admin above spd and hrbp', () => {
+ expect(getHighestRole(['spd','hr_admin'])).toBe('hr_admin');
+ expect(getHighestRole(['hrbp','hr_admin'])).toBe('hr_admin');
+ });
+
+ it('ranks hrbp above spd in priority', () => {
+ // hierarchy comment: hr_manager > hr_admin > hrbp > spd > manager > employee
+ expect(getHighestRole(['spd','hrbp'])).toBe('hrbp');
+ });
+ });
+
+ describe('MODULE_ACCESS — spd/hrbp gaps', () => {
+ it('spd can access quick-approve', () => {
+ expect(canAccessModule(['spd'],'quick-approve')).toBe(true);
+ });
+
+ it('hrbp can access quick-approve', () => {
+ expect(canAccessModule(['hrbp'],'quick-approve')).toBe(true);
+ });
+
+ it('spd can access spd-management (eponymous-role gap fixed)', () => {
+ expect(canAccessModule(['spd'],'spd-management')).toBe(true);
+ });
+
+ it('hrbp can access hrbp-reports', () => {
+ expect(canAccessModule(['hrbp'],'hrbp-reports')).toBe(true);
+ });
+
+ it('employee cannot access quick-approve', () => {
+ expect(canAccessModule(['employee'],'quick-approve')).toBe(false);
+ });
+
+ it('employee cannot access spd-management', () => {
+ expect(canAccessModule(['employee'],'spd-management')).toBe(false);
+ });
  });
 });

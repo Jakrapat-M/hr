@@ -9,7 +9,7 @@ import { useDataManagement } from '@/lib/admin/store/useDataManagement'
 
 const TOOLS = [
   {
-    href: '/admin/system/security/consent',
+    href: '/th/admin/system/security/consent',
     title: 'Consent Form',
     brd: 'BRD #199',
     description: 'จัดการ PDPA consent — ดูจำนวน signed/pending/expired + ส่ง reminder',
@@ -18,7 +18,7 @@ const TOOLS = [
     alertLabel: 'รออนุมัติ',
   },
   {
-    href: '/admin/system/security/traffic',
+    href: '/th/admin/system/security/traffic',
     title: 'Traffic Report',
     brd: 'BRD #200',
     description: 'ดูรายงาน login activity — date range filter + export CSV',
@@ -27,7 +27,7 @@ const TOOLS = [
     alertLabel: 'login ล้มเหลว (7 วัน)',
   },
   {
-    href: '/admin/system/security/settings',
+    href: '/th/admin/system/security/settings',
     title: 'Security Settings',
     brd: 'BRD #201-204',
     description: 'ตั้งค่าความปลอดภัย, Direct User, Encryption Policy, Session Timeout',
@@ -97,7 +97,7 @@ export default function SecurityPage() {
               key={tool.href}
               href={tool.href}
               role="listitem"
-              className="flex flex-col gap-3 p-5 bg-surface rounded-xl border border-hairline shadow-sm hover:shadow-md hover:border-accent transition-all group"
+              className="flex flex-col gap-3 p-5 bg-surface rounded-xl border border-hairline shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:border-accent transition-all group"
             >
               <div className="flex items-start justify-between">
                 <tool.Icon size={20} strokeWidth={1.75} className="text-ink-muted" aria-hidden="true" />

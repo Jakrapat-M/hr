@@ -61,9 +61,9 @@ const STATUS_BADGE: Record<string, { variant:'success' |'warning' |'info' |'neut
 const EVENT_COLORS: Record<string, string> = {
  leave:'bg-green-400',
  annual_leave:'bg-green-400',
- sick_leave:'bg-red-400',
+ sick_leave:'bg-danger',
  wfh:'bg-purple-400',
- shift:'bg-blue-400',
+ shift:'bg-accent',
  training:'bg-orange-400',
  meeting:'bg-indigo-400',
  holiday:'bg-yellow-400',
@@ -213,7 +213,7 @@ export function ManagerDashboardPage() {
  { label: t('quickStats.totalMembers'), value: stats.totalMembers, icon: <Users className="h-5 w-5 text-accent" />, bg:'bg-accent-tint' },
  { label: t('quickStats.activeToday'), value: stats.activeToday, icon: <UserCheck className="h-5 w-5 text-success" />, bg:'bg-success-tint' },
  { label: t('quickStats.onLeaveToday'), value: stats.onLeaveToday, icon: <CalendarOff className="h-5 w-5 text-warning" />, bg:'bg-warning-tint' },
- { label: t('quickStats.pending'), value: stats.pendingApprovals, icon: <Clock className="h-5 w-5 text-danger" />, bg:'bg-danger-tint', href:'/quick-approve' },
+ { label: t('quickStats.pending'), value: stats.pendingApprovals, icon: <Clock className="h-5 w-5 text-danger" />, bg:'bg-danger-tint', href:'/th/quick-approve' },
  { label: t('quickStats.inProbation'), value: stats.inProbation, icon: <Shield className="h-5 w-5 text-accent" />, bg:'bg-accent-tint' },
  ].map((stat) => {
  const card = (
@@ -232,14 +232,14 @@ export function ManagerDashboardPage() {
  return (
  <div className="space-y-2">
  {visibleAlerts.filter((a) => a.severity ==='critical').map((alert) => (
- <div key={alert.id} className="flex items-start gap-3 bg-danger-tint border border-red-200 rounded-md px-4 py-3" role="alert">
+ <div key={alert.id} className="flex items-start gap-3 bg-danger-tint border border-danger rounded-md px-4 py-3" role="alert">
  <AlertTriangle className="h-5 w-5 text-danger shrink-0 mt-0.5" />
  <div className="flex-1 min-w-0">
  <p className="text-sm font-medium text-danger">{alert.title}</p>
  <p className="text-xs text-danger mt-0.5">{alert.description}</p>
  </div>
  <button onClick={() => dismissAlert(alert.id)} className="p-1 rounded hover:bg-danger-tint transition" aria-label="Dismiss">
- <X className="h-4 w-4 text-red-400" />
+ <X className="h-4 w-4 text-danger" />
  </button>
  </div>
  ))}
@@ -435,7 +435,7 @@ export function ManagerDashboardPage() {
  }
 
  return (
-  <Card header={<><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full"><CardTitle className="flex items-center gap-2"><Network className="h-5 w-5 text-accent" />แผนผังทีม</CardTitle><div className="flex items-center gap-1 rounded-full border border-hairline p-0.5 bg-surface-raised w-fit">{(['สายตรง', 'สายไขว้'] as const).map((mode) => (<button key={mode} onClick={() => setOrgMode(mode)} className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition', orgMode === mode ? 'bg-brand text-white shadow-sm' : 'text-ink-muted hover:text-ink')}>{mode ==='สายตรง' ? <Users className="h-3.5 w-3.5" /> : <GitBranch className="h-3.5 w-3.5" />}{mode}</button>))}</div></div>{orgMode ==='สายไขว้' && (<p className="text-xs text-ink-muted mt-1 flex items-center gap-1"><span className="inline-block w-6 border-t border-dashed border-indigo-400" />หน้าต่างที่มีป้าย <span className="text-indigo-600 font-medium">สายไขว้</span> = มีผู้บังคับบัญชาเพิ่มในโครงสร้าง Matrix</p>)}</>}>
+  <Card header={<><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full"><CardTitle className="flex items-center gap-2"><Network className="h-5 w-5 text-accent" />แผนผังทีม</CardTitle><div className="flex items-center gap-1 rounded-full border border-hairline p-0.5 bg-surface-raised w-fit">{(['สายตรง', 'สายไขว้'] as const).map((mode) => (<button key={mode} onClick={() => setOrgMode(mode)} className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition', orgMode === mode ? 'bg-brand text-white shadow-[var(--shadow-sm)]' : 'text-ink-muted hover:text-ink')}>{mode ==='สายตรง' ? <Users className="h-3.5 w-3.5" /> : <GitBranch className="h-3.5 w-3.5" />}{mode}</button>))}</div></div>{orgMode ==='สายไขว้' && (<p className="text-xs text-ink-muted mt-1 flex items-center gap-1"><span className="inline-block w-6 border-t border-dashed border-indigo-400" />หน้าต่างที่มีป้าย <span className="text-indigo-600 font-medium">สายไขว้</span> = มีผู้บังคับบัญชาเพิ่มในโครงสร้าง Matrix</p>)}</>}>
    {orgChart ? (
     <OrgNodeFull node={orgChart} />
    ) : (
@@ -452,7 +452,7 @@ export function ManagerDashboardPage() {
  ) : (
  <div className="space-y-3">
  {approvals.map((a) => (
- <div key={a.id} className={cn('p-4 rounded-md border', a.urgent &&'border-red-200 bg-danger-tint/50')}>
+ <div key={a.id} className={cn('p-4 rounded-md border', a.urgent &&'border-danger bg-danger-tint/50')}>
  <div className="flex items-start justify-between gap-3">
  <div className="min-w-0">
  <div className="flex items-center gap-2 mb-1">
@@ -593,7 +593,7 @@ export function ManagerDashboardPage() {
  <span className={cn('text-xs', isToday(day) ?'font-bold text-brand' :'text-ink-muted')}>{day}</span>
  <div className="mt-0.5 space-y-0.5">
  {dayEvents.slice(0, 2).map((ev) => (
- <div key={ev.id} className={cn('text-[9px] px-1 py-0.5 rounded truncate text-white', EVENT_COLORS[ev.type] ??'bg-gray-400')} title={`${ev.employeeName}: ${ev.label}`}>
+ <div key={ev.id} className={cn('text-[9px] px-1 py-0.5 rounded truncate text-white', EVENT_COLORS[ev.type] ??'bg-hairline')} title={`${ev.employeeName}: ${ev.label}`}>
  {ev.employeeName.split('')[0]}
  </div>
  ))}
@@ -640,7 +640,7 @@ export function ManagerDashboardPage() {
 
  const MOVEMENT_BADGE: Record<string, { label: string; cls: string }> = {
   joiner:   { label:'เข้าใหม่', cls:'bg-teal-100 text-teal-700 border-teal-300' },
-  leaver:   { label:'ออก',     cls:'bg-red-100 text-red-600 border-red-300' },
+  leaver:   { label:'ออก',     cls:'bg-danger-soft text-danger border-danger' },
   transfer: { label:'ย้าย',    cls:'bg-amber-100 text-amber-700 border-amber-300' },
  };
 

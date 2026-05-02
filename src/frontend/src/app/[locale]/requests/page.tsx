@@ -160,7 +160,7 @@ export default function HumiRequestsPage() {
           aria-live="polite"
           className={cn(
             'fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-[var(--radius-md)] px-4 py-3',
-            'bg-ink text-canvas shadow-lg text-body font-medium'
+            'bg-ink text-canvas shadow-[var(--shadow-lg)] text-body font-medium'
           )}
         >
           <Check size={16} aria-hidden />
@@ -322,7 +322,7 @@ function MineTab({
                 >
                   <span
                     aria-hidden
-                    className="flex h-10 w-8 shrink-0 items-center justify-center rounded-[6px] border border-hairline bg-canvas-soft text-ink-muted"
+                    className="flex h-10 w-8 shrink-0 items-center justify-center rounded-[var(--radius-xs)] border border-hairline bg-canvas-soft text-ink-muted"
                   >
                     <FileText size={16} />
                   </span>
@@ -609,7 +609,7 @@ function CatalogTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
                 <span
                   aria-hidden
                   className={cn(
-                    'inline-flex h-11 w-11 items-center justify-center rounded-[12px]',
+                    'inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-sm)]',
                     ACCENT_ICON_CLASS[f.accent]
                   )}
                 >

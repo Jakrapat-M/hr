@@ -570,7 +570,7 @@ function MockGoalCard({ goal: g }: { goal: HumiGoal }) {
             <span
               aria-hidden
               className={cn(
-                'mt-0.5 inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[6px] border-[1.5px]',
+                'mt-0.5 inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[var(--radius-xs)] border-[1.5px]',
                 k.done
                   ? 'border-accent bg-accent text-white'
                   : 'border-hairline bg-transparent'
@@ -610,7 +610,7 @@ function ReviewsTab() {
           >
             <span
               aria-hidden
-              className="flex h-10 w-8 shrink-0 items-center justify-center rounded-[6px] border border-hairline bg-canvas-soft text-ink-muted"
+              className="flex h-10 w-8 shrink-0 items-center justify-center rounded-[var(--radius-xs)] border border-hairline bg-canvas-soft text-ink-muted"
             >
               <FileText size={16} />
             </span>

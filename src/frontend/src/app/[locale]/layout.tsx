@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { AppShell } from '@/components/humi/AppShell';
 import { ThemeProvider } from '@/components/shared/theme-provider';
+import { assertDemoModeSafe } from '@/lib/demo-mode-guard';
 
 export default async function LocaleLayout({
  children,
@@ -11,6 +12,7 @@ export default async function LocaleLayout({
  children: React.ReactNode;
  params: Promise<{ locale: string }>;
 }) {
+ assertDemoModeSafe();
  const { locale } = await params;
 
  if (!hasLocale(routing.locales, locale)) {

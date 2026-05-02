@@ -13,6 +13,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Star } from 'lucide-react'
+import { useLocale } from 'next-intl'
 import { useTimelines } from '@/lib/admin/store/useTimelines'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
 import { EffectiveDateGate } from '@/components/admin/EffectiveDateGate'
@@ -20,10 +21,17 @@ import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
 import PositionLookup from '@/components/admin/PositionLookup'
 import { ReasonPicker } from '@/components/admin/lifecycle/ReasonPicker'
+import { ApprovalChain } from '@/components/quick-approve/ApprovalChain'
 import { MOCK_POSITION_MASTER } from '@/lib/admin/mock/positions'
 import type { PositionCascade } from '@/lib/admin/types/position'
 import type { MockEmployee } from '@/mocks/employees'
 import type { ActingEvent } from '@hrms/shared/types/timeline'
+import type { ApproverStage } from '@/data/benefits/plan-registry'
+
+// ─── Acting approval chain config (SF FOEventReason routing — event 5589 POSCHG_POSCHG) ──
+const ACTING_CHAIN: ApproverStage[] = ['manager', 'hr_admin']
+// Mock: chain is currently at manager step for HR demo visibility
+const ACTING_CURRENT_STAGE: ApproverStage = 'manager'
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
 
@@ -84,7 +92,7 @@ export default function ActingPage() {
   const params = useParams()
   const router = useRouter()
   const empId = params.id as string
-  const locale = params.locale as string
+  const locale = useLocale()
 
   const employee = useEmployees((s) => s.getById(empId)) ?? null
   const { append, seed } = useTimelines()
@@ -211,6 +219,18 @@ export default function ActingPage() {
 
       {/* Employee snapshot */}
       <EmployeeSnapshot employee={employee} />
+
+      {/* Approval chain (acting: manager nominates, HR Admin confirms) */}
+      <div className="humi-card">
+        <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+          {locale === 'en' ? 'Approval Chain' : 'ขั้นตอนอนุมัติ'}
+        </div>
+        <ApprovalChain
+          chain={ACTING_CHAIN}
+          locale={locale}
+          activeStage={ACTING_CURRENT_STAGE}
+        />
+      </div>
 
       {/* Acting form — gated by effectiveDate (= acting start date) */}
       <EffectiveDateGate

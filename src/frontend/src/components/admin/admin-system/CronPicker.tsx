@@ -85,7 +85,7 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
   return (
     <div className="space-y-3">
       {/* Preset tabs */}
-      <div className="flex gap-1 rounded-lg bg-gray-100 p-1 w-fit">
+      <div className="flex gap-1 rounded-lg bg-canvas-soft p-1 w-fit">
         {(['daily', 'weekly', 'monthly'] as Preset[]).map((p) => (
           <button
             key={p}
@@ -94,8 +94,8 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
             className={[
               'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
               preset === p
-                ? 'bg-white text-blue-700 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700',
+                ? 'bg-surface text-accent-ink shadow-[var(--shadow-sm)]'
+                : 'text-ink-muted hover:text-ink-soft',
             ].join(' ')}
           >
             {p === 'daily' ? 'ทุกวัน' : p === 'weekly' ? 'รายสัปดาห์' : 'รายเดือน'}
@@ -105,7 +105,7 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
 
       {/* Time inputs */}
       <div className="flex items-center gap-2">
-        <label className="text-xs text-gray-500 whitespace-nowrap">เวลา:</label>
+        <label className="text-xs text-ink-muted whitespace-nowrap">เวลา:</label>
         <input
           type="number"
           min={0}
@@ -113,9 +113,9 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
           value={hour}
           onChange={(e) => handleChange({ hour: e.target.value.padStart(2, '0') })}
           aria-label="ชั่วโมง"
-          className="w-14 rounded border border-gray-300 px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-14 rounded border border-hairline px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <span className="text-gray-400">:</span>
+        <span className="text-ink-faint">:</span>
         <input
           type="number"
           min={0}
@@ -123,9 +123,9 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
           value={minute}
           onChange={(e) => handleChange({ minute: e.target.value.padStart(2, '0') })}
           aria-label="นาที"
-          className="w-14 rounded border border-gray-300 px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-14 rounded border border-hairline px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <span className="text-xs text-gray-400">น.</span>
+        <span className="text-xs text-ink-faint">น.</span>
       </div>
 
       {/* Weekly: day picker */}
@@ -139,8 +139,8 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
               className={[
                 'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
                 dayOfWeek === d.value
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-300 text-gray-500 hover:border-gray-400',
+                  ? 'border-accent bg-accent-soft text-accent-ink'
+                  : 'border-hairline text-ink-muted hover:border-hairline',
               ].join(' ')}
             >
               {d.label}
@@ -152,7 +152,7 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
       {/* Monthly: day of month */}
       {preset === 'monthly' && (
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-500 whitespace-nowrap">วันที่:</label>
+          <label className="text-xs text-ink-muted whitespace-nowrap">วันที่:</label>
           <input
             type="number"
             min={1}
@@ -160,17 +160,17 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
             value={dayOfMonth}
             onChange={(e) => handleChange({ dayOfMonth: e.target.value })}
             aria-label="วันที่ของเดือน"
-            className="w-16 rounded border border-gray-300 px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-16 rounded border border-hairline px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <span className="text-xs text-gray-400">ของทุกเดือน</span>
+          <span className="text-xs text-ink-faint">ของทุกเดือน</span>
         </div>
       )}
 
       {/* Human readable + raw cron */}
-      <div className="rounded-md bg-gray-50 border border-gray-200 px-3 py-2">
-        <p className="text-xs text-gray-500">
-          <span className="font-medium text-gray-700">{humanReadable}</span>
-          <span className="ml-2 font-mono text-gray-400">({currentCron})</span>
+      <div className="rounded-md bg-canvas-soft border border-hairline-soft px-3 py-2">
+        <p className="text-xs text-ink-muted">
+          <span className="font-medium text-ink-soft">{humanReadable}</span>
+          <span className="ml-2 font-mono text-ink-faint">({currentCron})</span>
         </p>
       </div>
     </div>

@@ -3,14 +3,127 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Clock, Plus, AlertTriangle } from 'lucide-react';
+import { useLocale } from 'next-intl';
+import { Clock, Plus, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 import { Card, CardTitle, Button, Modal } from '@/components/humi';
 import { Badge } from '@/components/ui/badge';
 import { Tabs } from '@/components/ui/tabs';
 import { FormField } from '@/components/ui/form-field';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useOvertime, type OTStatus, type OTType } from '@/hooks/use-overtime';
+import { useOvertime, type OTStatus, type OTType, type OTRequest } from '@/hooks/use-overtime';
 import { formatCurrency } from '@/lib/date';
+import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
+import type { ApproverStage } from '@/data/benefits/plan-registry';
+
+// Overtime approval chain: manager only
+const OT_CHAIN: ApproverStage[] = ['manager'];
+
+// Mock audit data keyed by OT request ID
+const OT_AUDIT: Record<string, Array<{ actorName: string; action: string; comment?: string; at: string }>> = {
+  OT001: [
+    { actorName: 'สมชาย สุขใจ', action: 'submit', at: '2026-02-17T09:00:00Z' },
+    { actorName: 'Surachai P.', action: 'approve', comment: 'Approved - project critical', at: '2026-02-17T14:00:00Z' },
+  ],
+  OT002: [
+    { actorName: 'สมชาย สุขใจ', action: 'submit', at: '2026-02-20T09:00:00Z' },
+  ],
+  OT003: [
+    { actorName: 'สมชาย สุขใจ', action: 'submit', at: '2026-02-09T09:00:00Z' },
+    { actorName: 'Surachai P.', action: 'approve', at: '2026-02-09T16:00:00Z' },
+  ],
+  OT004: [
+    { actorName: 'สมชาย สุขใจ', action: 'submit', at: '2026-01-27T09:00:00Z' },
+    { actorName: 'Surachai P.', action: 'reject', comment: 'ไม่เป็นไปตามเงื่อนไข OT', at: '2026-01-27T17:00:00Z' },
+  ],
+};
+
+function daysWaiting(submittedAt: string): number {
+  const d = new Date(submittedAt.length === 10 ? submittedAt + 'T00:00:00Z' : submittedAt);
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleDateString('th-TH', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function dotColor(action: string) {
+  if (action === 'approve') return 'bg-success';
+  if (action === 'reject') return 'bg-danger';
+  return 'bg-accent-soft';
+}
+
+function OTRequestRow({ req, locale }: { req: OTRequest; locale: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const t = useTranslations('overtime');
+  const audit = OT_AUDIT[req.id];
+  const days = daysWaiting(req.submittedAt);
+  const activeStage: ApproverStage | undefined = req.status === 'pending' ? 'manager' : undefined;
+
+  const actionLabel = (action: string) => {
+    if (action === 'submit') return locale === 'th' ? 'ส่งคำขอ' : 'Submitted';
+    if (action === 'approve') return locale === 'th' ? 'อนุมัติ' : 'Approved';
+    if (action === 'reject') return locale === 'th' ? 'ปฏิเสธ' : 'Rejected';
+    return action;
+  };
+
+  return (
+    <div className="flex flex-col gap-2 p-3 bg-surface-raised rounded-md">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <p className="text-sm font-medium">{req.date} ({req.startTime} - {req.endTime})</p>
+          <p className="text-xs text-ink-muted">{req.reason}</p>
+        </div>
+        <div className="text-right shrink-0">
+          <Badge variant={STATUS_VARIANT[req.status]}>{t(`status.${req.status}` as never)}</Badge>
+          <p className="text-xs text-ink-muted mt-1">{req.totalHours}h | {formatCurrency(req.estimatedAmount)}</p>
+          {req.status === 'pending' && (
+            <p className={`text-xs font-mono mt-0.5 ${days > 3 ? 'text-amber-600 font-semibold' : 'text-ink-muted'}`}>
+              {days} {locale === 'th' ? 'ด. รอ' : 'd. waiting'}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Approval chain */}
+      <ApprovalChain chain={OT_CHAIN} locale={locale} activeStage={activeStage} size="sm" />
+
+      {/* Audit timeline toggle */}
+      {audit && audit.length > 0 && (
+        <>
+          <button
+            className="flex items-center gap-1 text-xs text-ink-muted hover:text-ink transition-colors"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+          >
+            {expanded ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />}
+            {locale === 'th' ? 'ประวัติการดำเนินการ' : 'Audit history'}
+          </button>
+          {expanded && (
+            <ol className="space-y-2 pl-2">
+              {audit.map((entry, idx) => (
+                <li key={idx} className="flex gap-3 text-xs">
+                  <span className={`w-1.5 h-1.5 rounded-full ${dotColor(entry.action)} mt-1.5 shrink-0`} />
+                  <div>
+                    <span className="font-medium text-ink">{entry.actorName}</span>
+                    {' '}
+                    <span className="text-ink-muted">{actionLabel(entry.action)}</span>
+                    <span className="ml-2 text-ink-faint">{formatDateTime(entry.at)}</span>
+                    {entry.comment && (
+                      <p className="text-ink-muted mt-0.5 italic">&ldquo;{entry.comment}&rdquo;</p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
 const STATUS_VARIANT: Record<OTStatus,'neutral' |'info' |'success' |'warning' |'error'> = {
  pending:'warning', approved:'success', completed:'success', rejected:'error', cancelled:'neutral',
@@ -19,6 +132,7 @@ const STATUS_VARIANT: Record<OTStatus,'neutral' |'info' |'success' |'warning' |'
 export function OvertimePage() {
  const t = useTranslations('overtime');
  const tCommon = useTranslations('common');
+ const locale = useLocale();
  const { requests, loading, stats, submitRequest, cancelRequest } = useOvertime();
  const [activeTab, setActiveTab] = useState('summary');
  const [showCreateModal, setShowCreateModal] = useState(false);
@@ -95,16 +209,7 @@ export function OvertimePage() {
  ) : (
  <div className="space-y-2">
  {requests.slice(0, 5).map((req) => (
- <div key={req.id} className="flex items-center justify-between p-3 bg-surface-raised rounded-md">
- <div>
- <p className="text-sm font-medium">{req.date} ({req.startTime} - {req.endTime})</p>
- <p className="text-xs text-ink-muted">{req.reason}</p>
- </div>
- <div className="text-right">
- <Badge variant={STATUS_VARIANT[req.status]}>{t(`status.${req.status}` as never)}</Badge>
- <p className="text-xs text-ink-muted mt-1">{req.totalHours}h | {formatCurrency(req.estimatedAmount)}</p>
- </div>
- </div>
+ <OTRequestRow key={req.id} req={req} locale={locale} />
  ))}
  </div>
  )}
@@ -113,39 +218,23 @@ export function OvertimePage() {
  )}
 
  {activeTab ==='history' && (
- <Card>
- <div className="p-0">
- <div className="overflow-x-auto">
- <table className="w-full text-sm">
- <thead>
- <tr className="border-b bg-surface-raised border-hairline">
- <th className="text-left py-3 px-4 text-xs font-medium text-ink-muted uppercase">{t('date')}</th>
- <th className="text-center py-3 px-4 text-xs font-medium text-ink-muted uppercase">{t('time')}</th>
- <th className="text-center py-3 px-4 text-xs font-medium text-ink-muted uppercase">{t('totalHours')}</th>
- <th className="text-left py-3 px-4 text-xs font-medium text-ink-muted uppercase">{t('type.weekday')}</th>
- <th className="text-right py-3 px-4 text-xs font-medium text-ink-muted uppercase">{t('amount')}</th>
- <th className="text-center py-3 px-4 text-xs font-medium text-ink-muted uppercase">Status</th>
- <th className="text-center py-3 px-4 text-xs font-medium text-ink-muted uppercase"></th>
- </tr>
- </thead>
- <tbody>
+ <Card header={<CardTitle>{t('history')}</CardTitle>}>
+ {requests.length === 0 ? (
+ <p className="text-sm text-ink-muted text-center py-8">{t('noRequests')}</p>
+ ) : (
+ <div className="space-y-2">
  {requests.map((req) => (
- <tr key={req.id} className="border-b border-hairline last:border-0 hover:bg-surface-raised/30">
- <td className="py-3 px-4">{req.date}</td>
- <td className="py-3 px-4 text-center">{req.startTime} - {req.endTime}</td>
- <td className="py-3 px-4 text-center">{req.totalHours}h</td>
- <td className="py-3 px-4">{t(`type.${req.type}` as never)}</td>
- <td className="py-3 px-4 text-right">{formatCurrency(req.estimatedAmount)}</td>
- <td className="py-3 px-4 text-center"><Badge variant={STATUS_VARIANT[req.status]}>{t(`status.${req.status}` as never)}</Badge></td>
- <td className="py-3 px-4 text-center">
- {req.status ==='pending' && <Button size="sm" variant="ghost" className="text-danger" onClick={() => cancelRequest(req.id)}>{t('cancelRequest')}</Button>}
- </td>
- </tr>
+ <div key={req.id} className="flex flex-col gap-1">
+ <OTRequestRow req={req} locale={locale} />
+ {req.status === 'pending' && (
+ <div className="flex justify-end px-1">
+ <Button size="sm" variant="ghost" className="text-danger" onClick={() => cancelRequest(req.id)}>{t('cancelRequest')}</Button>
+ </div>
+ )}
+ </div>
  ))}
- </tbody>
- </table>
  </div>
- </div>
+ )}
  </Card>
  )}
 

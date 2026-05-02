@@ -7,6 +7,7 @@
 // DEF-01: Add confirmation state after successful submit
 import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Button } from '@/components/humi'
 import { WizardShell } from '@/components/admin/wizard/WizardShell'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
 import { useHireAudit } from '@/stores/hire-audit'
@@ -207,8 +208,8 @@ export default function HirePage() {
             {submittedName && <p className="text-sm text-ink-soft">{submittedName}</p>}
           </div>
           <div className="flex gap-3 justify-center flex-wrap">
-            <button type="button" onClick={handleAddAnother} className="humi-btn humi-btn--secondary">เพิ่มพนักงานใหม่</button>
-            <button type="button" onClick={handleViewEmployee} className="humi-btn humi-btn--primary">ดูรายละเอียดพนักงาน</button>
+            <Button variant="secondary" onClick={handleAddAnother}>เพิ่มพนักงานใหม่</Button>
+            <Button variant="primary" onClick={handleViewEmployee}>ดูรายละเอียดพนักงาน</Button>
           </div>
         </div>
       </div>

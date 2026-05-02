@@ -56,7 +56,7 @@ export function Modal({ open, onClose, title, widthClass = 'max-w-lg', children 
     >
       <div
         className={cn(
-          'relative w-full rounded-[var(--radius-lg)] bg-surface shadow-xl',
+          'relative w-full rounded-[var(--radius-lg)] bg-surface shadow-[var(--shadow-lg)]',
           'border border-hairline',
           'mx-4 sm:mx-auto',
           widthClass

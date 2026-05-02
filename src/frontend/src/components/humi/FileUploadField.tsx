@@ -39,7 +39,7 @@ export interface FileUploadFieldProps {
   /** Max file size in MB. Defaults to 5. */
   maxSizeMB?: number;
   /** Called with the generated attachment id after successful upload. */
-  onUpload?: (id: string) => void;
+  onUpload?: (id: string, file?: { filename: string; size: number; mimeType: string }) => void;
   /** Called with the attachment id when the user removes a file. */
   onRemove?: (id: string) => void;
   /** Extra class on the outer wrapper. */
@@ -67,6 +67,7 @@ export function FileUploadField({
   className,
 }: FileUploadFieldProps) {
   const inputId = useId();
+  const labelId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const addAttachment = useHumiProfileStore((s) => s.addAttachment);
@@ -126,7 +127,11 @@ export function FileUploadField({
           ]);
 
           setStatusMessage(`อัปโหลด ${file.name} สำเร็จ`);
-          onUpload?.(id);
+          onUpload?.(id, {
+            filename: file.name,
+            size: file.size,
+            mimeType: file.type,
+          });
         } catch (err) {
           const msg = 'เกิดข้อผิดพลาดในการบันทึกไฟล์ — กรุณาลองใหม่';
           setError(msg);
@@ -189,7 +194,7 @@ export function FileUploadField({
       {/* Label */}
       {label && (
         <label
-          htmlFor={inputId}
+          id={labelId}
           className="text-small font-medium text-ink leading-[var(--text-small--line-height)]"
         >
           {label}
@@ -204,7 +209,7 @@ export function FileUploadField({
       {/*
        * Unified card container — drop zone + preview list live inside one
        * raised surface so they read as a single visual unit (Humi elevation:
-       * shadow-card on canvas, lifts to shadow-md on dragOver).
+       * shadow-card on canvas, lifts to shadow-[var(--shadow-md)] on dragOver).
        */}
       <div
         className={cn(
@@ -219,7 +224,8 @@ export function FileUploadField({
         <div
           role="button"
           tabIndex={0}
-          aria-label={label ?? 'อัปโหลดไฟล์'}
+          aria-label={label ? undefined : 'อัปโหลดไฟล์'}
+          aria-labelledby={label ? labelId : undefined}
           aria-required={required || undefined}
           onClick={() => inputRef.current?.click()}
           onKeyDown={(e) => {
@@ -339,7 +345,9 @@ export function FileUploadField({
         type="file"
         accept={ALLOWED_EXTENSIONS}
         multiple
+        aria-hidden="true"
         aria-required={required || undefined}
+        tabIndex={-1}
         className="sr-only"
         onChange={handleInputChange}
       />

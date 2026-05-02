@@ -37,13 +37,15 @@ export function BulkActionBar({ count, onApprove, onReject, onClear }: BulkActio
  <XCircle className="h-4 w-4 mr-1.5" />
  {t('bulkBar.rejectAll')}
  </Button>
- <button
+ <Button
+ variant="ghost"
+ size="sm"
  onClick={onClear}
- className="text-sm text-ink-muted hover:text-ink-soft flex items-center gap-1"
+ className="text-ink-muted hover:text-ink-soft"
  >
  <X className="h-3.5 w-3.5" />
  {t('bulkBar.clearSelection')}
- </button>
+ </Button>
  </div>
  </div>
  </div>

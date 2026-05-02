@@ -9,10 +9,10 @@ import { useDataManagement } from '@/lib/admin/store/useDataManagement'
 import { formatCron } from '@/lib/admin/utils/cronFormat'
 
 const REPORT_TOOLS = [
-  { href: '/admin/system/reports/builder',    label: 'สร้างรายงาน',          labelEn: 'Report Builder' },
-  { href: '/admin/system/reports/schedule',   label: 'กำหนดเวลารายงาน',      labelEn: 'Schedule Report' },
-  { href: '/admin/system/reports/automation', label: 'งานอัตโนมัติ',          labelEn: 'Report Automation' },
-  { href: '/admin/system/reports/favourites', label: 'รายงานโปรด',           labelEn: 'Favourite Reports' },
+  { href: '/th/admin/system/reports/builder',    label: 'สร้างรายงาน',          labelEn: 'Report Builder' },
+  { href: '/th/admin/system/reports/schedule',   label: 'กำหนดเวลารายงาน',      labelEn: 'Schedule Report' },
+  { href: '/th/admin/system/reports/automation', label: 'งานอัตโนมัติ',          labelEn: 'Report Automation' },
+  { href: '/th/admin/system/reports/favourites', label: 'รายงานโปรด',           labelEn: 'Favourite Reports' },
 ] as const
 
 export default function ReportsHubPage() {
@@ -25,8 +25,8 @@ export default function ReportsHubPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-gray-900">รายงาน</h2>
-        <p className="mt-1 text-sm text-gray-500">สร้าง กำหนดเวลา และจัดการรายงาน</p>
+        <h2 className="text-xl font-semibold text-ink">รายงาน</h2>
+        <p className="mt-1 text-sm text-ink-muted">สร้าง กำหนดเวลา และจัดการรายงาน</p>
       </div>
 
       {/* Quick links to sub-tools */}
@@ -35,27 +35,27 @@ export default function ReportsHubPage() {
           <Link
             key={tool.href}
             href={tool.href}
-            className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-center hover:bg-blue-100 transition-colors"
+            className="rounded-lg border border-accent-soft bg-accent-soft px-4 py-3 text-center hover:bg-accent-soft transition-colors"
           >
-            <p className="text-sm font-medium text-blue-800">{tool.label}</p>
-            <p className="text-xs text-blue-500">{tool.labelEn}</p>
+            <p className="text-sm font-medium text-accent-ink">{tool.label}</p>
+            <p className="text-xs text-accent">{tool.labelEn}</p>
           </Link>
         ))}
       </div>
 
       {/* Recent reports list */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">รายงานล่าสุด</h3>
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+        <h3 className="text-sm font-semibold text-ink-soft mb-3">รายงานล่าสุด</h3>
+        <div className="rounded-lg border border-hairline-soft bg-surface overflow-hidden">
           <table className="min-w-full divide-y divide-gray-100 text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-canvas-soft">
               <tr>
-                <th className="px-4 py-2 text-left font-medium text-gray-500">ชื่อรายงาน</th>
-                <th className="px-4 py-2 text-left font-medium text-gray-500">ประเภท</th>
-                <th className="px-4 py-2 text-left font-medium text-gray-500">โมดูล</th>
-                <th className="px-4 py-2 text-left font-medium text-gray-500">รันล่าสุด</th>
-                <th className="px-4 py-2 text-center font-medium text-gray-500">โปรด</th>
-                <th className="px-4 py-2 text-left font-medium text-gray-500">กำหนดเวลา</th>
+                <th className="px-4 py-2 text-left font-medium text-ink-muted">ชื่อรายงาน</th>
+                <th className="px-4 py-2 text-left font-medium text-ink-muted">ประเภท</th>
+                <th className="px-4 py-2 text-left font-medium text-ink-muted">โมดูล</th>
+                <th className="px-4 py-2 text-left font-medium text-ink-muted">รันล่าสุด</th>
+                <th className="px-4 py-2 text-center font-medium text-ink-muted">โปรด</th>
+                <th className="px-4 py-2 text-left font-medium text-ink-muted">กำหนดเวลา</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -66,15 +66,15 @@ export default function ReportsHubPage() {
                   ? new Date(rpt.lastRun).toLocaleDateString('th-TH')
                   : '-'
                 return (
-                  <tr key={rpt.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2.5 text-gray-900 whitespace-nowrap">{rpt.name}</td>
+                  <tr key={rpt.id} className="hover:bg-canvas-soft">
+                    <td className="px-4 py-2.5 text-ink whitespace-nowrap">{rpt.name}</td>
                     <td className="px-4 py-2.5">
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 whitespace-nowrap">
+                      <span className="rounded-full bg-canvas-soft px-2 py-0.5 text-xs text-ink-muted whitespace-nowrap">
                         {rpt.type}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">{rpt.module}</td>
-                    <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">{lastRun}</td>
+                    <td className="px-4 py-2.5 text-ink-muted whitespace-nowrap">{rpt.module}</td>
+                    <td className="px-4 py-2.5 text-ink-muted whitespace-nowrap">{lastRun}</td>
                     <td className="px-4 py-2.5 text-center">
                       <button
                         onClick={() => toggleFavourite(rpt.id)}
@@ -84,7 +84,7 @@ export default function ReportsHubPage() {
                         <Star size={16} fill={isFav ? 'currentColor' : 'none'} />
                       </button>
                     </td>
-                    <td className="px-4 py-2.5 text-gray-500 text-xs whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-ink-muted text-xs whitespace-nowrap">
                       {job ? formatCron(job.cron) : '—'}
                     </td>
                   </tr>

@@ -20,7 +20,7 @@ export function PageLayout({ children, module }: PageLayoutProps) {
   if (module && !canAccessModule(roles, module)) {
     return (
       <div className="max-w-lg mx-auto mt-20 text-center">
-        <ShieldOff className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+        <ShieldOff className="h-16 w-16 text-ink-faint mx-auto mb-4" />
         <h1 className="text-xl font-semibold text-ink mb-2">Access Denied</h1>
         <p className="text-ink-muted">
           You do not have permission to access this module.

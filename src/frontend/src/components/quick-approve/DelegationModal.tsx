@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Modal, Button } from '@/components/humi';
+import { Modal, Button, FormField, FormInput } from '@/components/humi';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Plus } from 'lucide-react';
 import type { Delegation } from '@/lib/quick-approve-api';
@@ -102,13 +102,15 @@ export function DelegationModal({
  </div>
  </div>
  {d.status ==='active' && (
- <button
+ <Button
+ variant="ghost"
+ size="sm"
  onClick={() => onRevokeDelegation(d.id)}
- className="p-1.5 rounded hover:bg-danger-tint text-danger transition"
  aria-label={t('revoke')}
+ className="!p-2 hover:bg-danger-tint text-danger"
  >
  <Trash2 className="h-4 w-4" />
- </button>
+ </Button>
  )}
  </li>
  ))}
@@ -121,42 +123,39 @@ export function DelegationModal({
  <div className="border border-hairline rounded-md p-4 space-y-3">
  <h4 className="text-sm font-medium text-ink">{t('createNew')}</h4>
 
- <div>
- <label className="block text-xs font-medium text-ink-muted mb-1">
- {t('delegateTo')}
- </label>
- <input
+ <FormField label={t('delegateTo')}>
+ {(ctrl) => (
+ <FormInput
+ {...ctrl}
  type="text"
  value={delegateTo}
  onChange={(e) => setDelegateTo(e.target.value)}
  placeholder={t('delegateToPlaceholder')}
- className="w-full rounded-md border border-hairline border-hairline px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none"
  />
- </div>
+ )}
+ </FormField>
 
  <div className="grid grid-cols-2 gap-3">
- <div>
- <label className="block text-xs font-medium text-ink-muted mb-1">
- {t('startDate')}
- </label>
- <input
+ <FormField label={t('startDate')}>
+ {(ctrl) => (
+ <FormInput
+ {...ctrl}
  type="date"
  value={startDate}
  onChange={(e) => setStartDate(e.target.value)}
- className="w-full rounded-md border border-hairline border-hairline px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none"
  />
- </div>
- <div>
- <label className="block text-xs font-medium text-ink-muted mb-1">
- {t('endDate')}
- </label>
- <input
+ )}
+ </FormField>
+ <FormField label={t('endDate')}>
+ {(ctrl) => (
+ <FormInput
+ {...ctrl}
  type="date"
  value={endDate}
  onChange={(e) => setEndDate(e.target.value)}
- className="w-full rounded-md border border-hairline border-hairline px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none"
  />
- </div>
+ )}
+ </FormField>
  </div>
 
  <div>
@@ -165,18 +164,16 @@ export function DelegationModal({
  </label>
  <div className="flex flex-wrap gap-2">
  {WORKFLOW_TYPE_OPTIONS.map((wt) => (
- <button
+ <Button
  key={wt}
  type="button"
+ size="sm"
+ variant={selectedTypes.includes(wt) ? 'primary' : 'ghost'}
  onClick={() => toggleType(wt)}
- className={`px-3 py-1 rounded-full text-xs font-medium border transition ${
- selectedTypes.includes(wt)
- ?'bg-brand text-white border-brand'
- :'bg-surface text-ink-muted border-hairline border-hairline hover:border-brand'
- }`}
+ className="rounded-full"
  >
  {wt}
- </button>
+ </Button>
  ))}
  </div>
  </div>

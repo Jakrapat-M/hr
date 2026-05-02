@@ -29,7 +29,7 @@ type OTFilter = {
 };
 
 const SHIFT_COLORS: Record<ShiftDay['shift'], string> = {
- regular:'bg-accent-tint text-blue-700 border-blue-200',
+ regular:'bg-accent-tint text-accent-ink border-accent-soft',
  morning:'bg-emerald-50 text-emerald-700 border-emerald-200',
  evening:'bg-violet-50 text-violet-700 border-violet-200',
  off:'bg-surface-raised text-ink-muted border-hairline',

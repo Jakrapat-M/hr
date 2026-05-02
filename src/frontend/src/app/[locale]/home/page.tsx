@@ -31,6 +31,7 @@ import {
   CalendarPlus,
   Wallet,
   User,
+  FilePlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/humi';
@@ -62,6 +63,7 @@ function toRoleName(role: Role): RoleName {
 // Lucide icon map for adminSelfService QuickActionTile icon strings.
 const ICON_MAP: Record<string, LucideIcon> = {
   FileText,
+  FilePlus,
   MessageSquare,
   ThumbsUp,
   Network,

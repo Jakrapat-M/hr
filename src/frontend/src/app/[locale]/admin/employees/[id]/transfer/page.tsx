@@ -18,6 +18,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRightLeft } from 'lucide-react'
+import { useLocale } from 'next-intl'
 import { useTimelines } from '@/lib/admin/store/useTimelines'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
 import { createClusterWizard } from '@/lib/admin/wizard-template/createClusterWizard'
@@ -26,12 +27,19 @@ import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
 import PositionLookup from '@/components/admin/PositionLookup'
 import { ReasonPicker } from '@/components/admin/lifecycle/ReasonPicker'
+import { ApprovalChain } from '@/components/quick-approve/ApprovalChain'
 import { MOCK_POSITION_MASTER } from '@/lib/admin/mock/positions'
 import { PICKLIST_COMPANY } from '@hrms/shared/picklists'
 import type { CompanyId } from '@hrms/shared/picklists'
 import type { PositionCascade } from '@/lib/admin/types/position'
 import type { MockEmployee } from '@/mocks/employees'
 import type { TransferEvent } from '@hrms/shared/types/timeline'
+import type { ApproverStage } from '@/data/benefits/plan-registry'
+
+// ─── Transfer approval chain config (SF FOEventReason routing — event 5604 TRN_*) ──
+const TRANSFER_CHAIN: ApproverStage[] = ['manager', 'hrbp', 'hr_admin']
+// Mock: chain is currently at HRBP step for HR demo visibility
+const TRANSFER_CURRENT_STAGE: ApproverStage = 'hrbp'
 
 // ─── Form shape ─────────────────────────────────────────────────────────────
 
@@ -143,7 +151,7 @@ export default function TransferPage() {
   const params = useParams()
   const router = useRouter()
   const empId = params.id as string
-  const locale = params.locale as string
+  const locale = useLocale()
 
   const employee = useEmployees((s) => s.getById(empId)) ?? null
 
@@ -311,6 +319,18 @@ export default function TransferPage() {
 
       {/* Employee snapshot */}
       <EmployeeSnapshot employee={employee} />
+
+      {/* Approval chain (SF FOEventReason routing — event 5604 TRN_*: manager → HRBP → HR Admin) */}
+      <div className="humi-card">
+        <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+          {locale === 'en' ? 'Approval Chain' : 'ขั้นตอนอนุมัติ'}
+        </div>
+        <ApprovalChain
+          chain={TRANSFER_CHAIN}
+          locale={locale}
+          activeStage={TRANSFER_CURRENT_STAGE}
+        />
+      </div>
 
       {/* Transfer form */}
       <EffectiveDateGate

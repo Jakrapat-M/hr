@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import { useAdminSelfService } from '@/lib/admin/store/useAdminSelfService'
 import type { EditorName } from '@/lib/admin/types/adminSelfService'
+import { Button } from '@/components/humi'
 import { AuditLogTab } from './AuditLogTab'
 
 interface EditorShellProps {
@@ -37,46 +38,31 @@ export function EditorShell({ editor, titleTh, brd, children }: EditorShellProps
       <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold text-ink whitespace-nowrap">{titleTh}</h1>
-            <span className="text-xs bg-canvas-soft text-ink-muted font-medium px-2 py-0.5 rounded-full">
+            <h1 className="text-[length:var(--text-display-h3)] font-semibold text-ink whitespace-nowrap">{titleTh}</h1>
+            <span className="text-small bg-canvas-soft text-ink-muted font-medium px-2 py-0.5 rounded-full">
               BRD {brd}
             </span>
             {isDirty && (
-              <span className="inline-flex items-center gap-1 text-xs text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-small text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">
                 <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
                 ยังไม่ได้ Publish
               </span>
             )}
           </div>
-          <p className="text-sm text-ink-muted mt-0.5">HRIS Admin</p>
+          <p className="text-small text-ink-muted mt-0.5">HRIS Admin</p>
         </div>
 
         {/* Action buttons (AC-7) */}
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={saveDraft}
-            disabled={!isDirty}
-            className="px-4 py-2 text-sm font-medium rounded-md border border-hairline bg-surface text-ink hover:bg-canvas-soft disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
+          <Button variant="secondary" onClick={saveDraft} disabled={!isDirty}>
             บันทึกร่าง
-          </button>
-          <button
-            type="button"
-            onClick={() => publish(editor)}
-            disabled={!isDirty}
-            className="px-4 py-2 text-sm font-medium rounded-md bg-accent text-white hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
+          </Button>
+          <Button variant="primary" onClick={() => publish(editor)} disabled={!isDirty}>
             เผยแพร่
-          </button>
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={!isDirty}
-            className="px-4 py-2 text-sm font-medium rounded-md border border-red-300 text-red-600 bg-surface hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
+          </Button>
+          <Button variant="danger" onClick={handleReset} disabled={!isDirty}>
             รีเซ็ต
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -91,7 +77,7 @@ export function EditorShell({ editor, titleTh, brd, children }: EditorShellProps
               aria-selected={activeTab === key}
               onClick={() => setActiveTab(key)}
               className={[
-                'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
+                'px-4 py-2.5 text-body font-medium border-b-2 transition-colors',
                 activeTab === key
                   ? 'border-accent text-accent'
                   : 'border-transparent text-ink-muted hover:text-ink hover:border-hairline',

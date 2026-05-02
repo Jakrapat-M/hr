@@ -88,13 +88,13 @@ function NodeCard({
         ? { type: 'button' as const, onClick, 'aria-pressed': highlight }
         : {})}
       className={cn(
-        'inline-flex flex-col items-center rounded-[14px] text-center transition-all',
+        'inline-flex flex-col items-center rounded-[var(--radius-md)] text-center transition-all',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas',
         dims.w,
         dims.pad,
         highlight
           ? 'border border-transparent bg-accent-soft shadow-[0_12px_28px_rgba(14,27,44,0.08)]'
-          : 'border border-hairline bg-surface hover:border-[color:var(--color-accent)] hover:shadow-sm',
+          : 'border border-hairline bg-surface hover:border-[color:var(--color-accent)] hover:shadow-[var(--shadow-sm)]',
         dim && 'opacity-30'
       )}
     >

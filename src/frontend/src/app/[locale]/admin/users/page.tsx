@@ -8,7 +8,7 @@ import { useUsersPermissions } from '@/lib/admin/store/useUsersPermissions'
 
 const TOOLS = [
   {
-    href: '/admin/users/data-permissions',
+    href: '/th/admin/users/data-permissions',
     title: 'กลุ่มสิทธิ์ข้อมูล',
     brd: 'BRD #184',
     description: 'กำหนดขอบเขตข้อมูลที่แต่ละกลุ่มผู้ใช้มีสิทธิ์เข้าถึง ตามโมดูล กลุ่มธุรกิจ บริษัท แผนก หน่วยงาน หรือกลุ่มพนักงาน',
@@ -16,7 +16,7 @@ const TOOLS = [
     actor: 'HRIS Admin / SPD Admin',
   },
   {
-    href: '/admin/users/role-groups',
+    href: '/th/admin/users/role-groups',
     title: 'กลุ่มสิทธิ์แอปพลิเคชัน',
     brd: 'BRD #185',
     description: 'กำหนดสิทธิ์เมนูและสิทธิ์ระดับฟิลด์ (ดู แก้ไข เปิดใช้ ปิดใช้) สำหรับแต่ละกลุ่มผู้ใช้',
@@ -24,7 +24,7 @@ const TOOLS = [
     actor: 'HRIS Admin',
   },
   {
-    href: '/admin/users/user-assignment',
+    href: '/th/admin/users/user-assignment',
     title: 'กำหนดสิทธิ์ผู้ใช้',
     brd: 'BRD #186',
     description: 'มอบหมายผู้ใช้ให้กับกลุ่มสิทธิ์แอปพลิเคชันและกลุ่มสิทธิ์ข้อมูล',
@@ -32,7 +32,7 @@ const TOOLS = [
     actor: 'HRIS Admin',
   },
   {
-    href: '/admin/users/proxy',
+    href: '/th/admin/users/proxy',
     title: 'จัดการตัวแทนดำเนินการ',
     brd: 'BRD #187',
     description: 'มอบสิทธิ์ชั่วคราวให้ผู้อื่นดำเนินการแทน พร้อมบันทึกทุกการใช้งาน',
@@ -40,7 +40,7 @@ const TOOLS = [
     actor: 'Admin (exclusive)',
   },
   {
-    href: '/admin/users/foundation-audit',
+    href: '/th/admin/users/foundation-audit',
     title: 'ประวัติการแก้ไขข้อมูลพื้นฐาน',
     brd: 'BRD #188',
     description: 'ดูประวัติการเปลี่ยนแปลงข้อมูลบริษัท แผนก หน่วยงาน รวมถึงการย้ายตำแหน่งของพนักงาน',
@@ -48,7 +48,7 @@ const TOOLS = [
     actor: 'HRIS Admin',
   },
   {
-    href: '/admin/users/audit-report',
+    href: '/th/admin/users/audit-report',
     title: 'รายงานบันทึกการใช้งาน',
     brd: 'BRD #189',
     description: 'ดูและส่งออกประวัติการเพิ่ม แก้ไข และลบข้อมูลในทุกโมดูลของระบบ',
@@ -105,7 +105,7 @@ export default function UsersPage() {
             key={tool.href}
             href={tool.href}
             role="listitem"
-            className="flex flex-col gap-3 p-5 bg-surface rounded-lg border border-hairline shadow-card hover:shadow-md hover:border-accent transition-all group"
+            className="flex flex-col gap-3 p-5 bg-surface rounded-lg border border-hairline shadow-card hover:shadow-[var(--shadow-md)] hover:border-accent transition-all group"
           >
             <div className="flex items-start justify-between">
               <tool.Icon size={20} strokeWidth={1.75} className="text-ink-muted" aria-hidden="true" />

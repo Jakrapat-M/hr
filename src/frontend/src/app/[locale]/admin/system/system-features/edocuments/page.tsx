@@ -57,8 +57,8 @@ export default function EDocumentsPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">E-Document</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-semibold text-ink">E-Document</h1>
+        <p className="mt-1 text-sm text-ink-muted">
           คลังเอกสารดิจิทัล — ดูและดาวน์โหลดเอกสาร HR ({eDocuments.length} รายการ)
         </p>
       </div>
@@ -68,7 +68,7 @@ export default function EDocumentsPage() {
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
-          className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="text-sm border border-hairline rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
           aria-label="กรองประเภทเอกสาร"
         >
           {DOC_TYPE_OPTIONS.map((t) => (
@@ -80,44 +80,44 @@ export default function EDocumentsPage() {
           placeholder="ค้นหาชื่อเอกสาร หรือ รหัสพนักงาน..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-64"
+          className="text-sm border border-hairline rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-64"
           aria-label="ค้นหาเอกสาร"
         />
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-surface border border-hairline-soft rounded-xl shadow-[var(--shadow-sm)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200" role="table" aria-label="รายการ E-Document">
-            <thead className="bg-gray-50">
+            <thead className="bg-canvas-soft">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">ชื่อเอกสาร</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">ประเภท</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">รหัสพนักงาน</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">สถานะ</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">วันที่สร้าง</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">การดำเนินการ</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">ชื่อเอกสาร</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">ประเภท</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">รหัสพนักงาน</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">สถานะ</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">วันที่สร้าง</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-ink-muted uppercase tracking-wide">การดำเนินการ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-ink-faint">
                     ไม่พบเอกสารที่ตรงกับเงื่อนไข
                   </td>
                 </tr>
               ) : (
                 filtered.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-gray-900 font-medium">{doc.name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{doc.type}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500 font-mono">
-                      {doc.employeeId ?? <span className="text-gray-300">—</span>}
+                  <tr key={doc.id} className="hover:bg-canvas-soft transition-colors">
+                    <td className="px-4 py-3 text-sm text-ink font-medium">{doc.name}</td>
+                    <td className="px-4 py-3 text-sm text-ink-muted whitespace-nowrap">{doc.type}</td>
+                    <td className="px-4 py-3 text-sm text-ink-muted font-mono">
+                      {doc.employeeId ?? <span className="text-ink-faint">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge isTemplate={doc.isTemplate} />
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                    <td className="px-4 py-3 text-sm text-ink-muted whitespace-nowrap">
                       {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('th-TH') : '—'}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -125,7 +125,7 @@ export default function EDocumentsPage() {
                         <button
                           type="button"
                           onClick={() => handleMockAction(doc, 'view')}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:underline"
+                          className="text-xs text-accent hover:text-accent-ink font-medium focus:outline-none focus:underline"
                           aria-label={`ดูเอกสาร ${doc.name}`}
                         >
                           ดู
@@ -146,12 +146,12 @@ export default function EDocumentsPage() {
             </tbody>
           </table>
         </div>
-        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 text-xs text-gray-400">
+        <div className="px-4 py-2 border-t border-hairline-soft bg-canvas-soft text-xs text-ink-faint">
           แสดง {filtered.length} จาก {eDocuments.length} รายการ
         </div>
       </div>
 
-      <p className="mt-4 text-xs text-gray-400">BRD #197 — การดูและดาวน์โหลดเป็น mock action ในระบบนี้</p>
+      <p className="mt-4 text-xs text-ink-faint">BRD #197 — การดูและดาวน์โหลดเป็น mock action ในระบบนี้</p>
     </div>
   )
 }

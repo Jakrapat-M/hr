@@ -117,7 +117,7 @@ function BenefitClaimCard({ claim, onApprove, onReject, onSendBack }: { claim: B
 
       <div style={{ marginTop: 14, borderTop: '1px solid var(--color-hairline-soft)', paddingTop: 14 }}>
         <label className="humi-label" htmlFor={`${claim.id}-benefit-comment`}>เหตุผล (จำเป็นเมื่อปฏิเสธหรือส่งกลับ)</label>
-        <textarea id={`${claim.id}-benefit-comment`} value={comment} onChange={(e) => setComment(e.target.value)} rows={3} className="humi-input" style={{ width: '100%', minHeight: 80 }} />
+        <textarea id={`${claim.id}-benefit-comment`} value={comment} onChange={(e) => setComment(e.target.value)} rows={3} className="w-full rounded-md border border-hairline bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-faint transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas" style={{ minHeight: 80 }} />
         <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
           <Button variant="ghost" size="sm" onClick={() => { onSendBack(comment.trim()); setComment(''); }} disabled={!comment.trim()}><RotateCcw size={14} aria-hidden />ส่งกลับแก้ไข</Button>
           <Button variant="ghost" size="sm" onClick={() => { onReject(comment.trim()); setComment(''); }} disabled={!comment.trim()}><X size={14} aria-hidden />ปฏิเสธ</Button>

@@ -40,7 +40,7 @@ function ApprovalTimeline({ steps }: { steps: ApprovalStep[] }) {
  ?'bg-success-tint0'
  : step.status ==='rejected'
  ?'bg-danger-tint0'
- :'bg-gray-300'
+ :'bg-hairline'
  )}
  />
  <div className="flex items-center gap-2">
@@ -159,7 +159,7 @@ export function RequestSlideOver({
  {/* Panel */}
  <div
  className={cn(
-'fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-surface shadow-xl transform transition-transform duration-300 flex flex-col',
+'fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-surface shadow-[var(--shadow-lg)] transform transition-transform duration-300 flex flex-col',
  open ?'translate-x-0' :'translate-x-full'
  )}
  role="dialog"

@@ -163,7 +163,7 @@ function Combobox({ id, options, value, onChange, placeholder, disabled, loading
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border border-hairline bg-canvas shadow-md">
+        <div className="absolute z-50 mt-1 w-full rounded-md border border-hairline bg-canvas shadow-[var(--shadow-md)]">
           {/* Search input */}
           <div className="border-b border-hairline p-2">
             <input

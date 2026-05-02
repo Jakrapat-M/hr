@@ -198,7 +198,7 @@ export default function AdminDashboardPage() {
               <Link
                 key={section.href}
                 href={section.href}
-                className={`${cardClass} group relative transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2`}
+                className={`${cardClass} group relative transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2`}
               >
                 <div className="humi-row" style={{ alignItems: 'flex-start', gap: 12 }}>
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">

@@ -212,7 +212,7 @@ export function WorkflowDetailModal({
  {actionMode !=='approve' && <span className="text-danger ml-1">*</span>}
  </label>
  <textarea
- className="w-full rounded-md border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
+ className="w-full rounded-md border border-hairline bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-faint transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas resize-none"
  rows={3}
  placeholder={`Enter reason for ${actionLabels[actionMode].toLowerCase()}...`}
  value={reason}

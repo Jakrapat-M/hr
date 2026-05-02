@@ -31,9 +31,9 @@ const ICONS: Record<ToastType, React.ReactNode> = {
 
 const BG: Record<ToastType, string> = {
  success:'bg-success-tint border-green-200 dark:bg-green-900/30 dark:border-green-800',
- error:'bg-danger-tint border-red-200 dark:bg-red-900/30 dark:border-red-800',
+ error:'bg-danger-tint border-danger dark:bg-danger/30 dark:border-danger',
  warning:'bg-warning-tint border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-800',
- info:'bg-accent-tint border-blue-200 dark:bg-blue-900/30 dark:border-blue-800',
+ info:'bg-accent-tint border-accent-soft dark:bg-accent-ink/30 dark:border-accent',
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {

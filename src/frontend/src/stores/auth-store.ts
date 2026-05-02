@@ -25,7 +25,16 @@ interface AuthState {
   isAuthenticated: boolean;
   /** The real signed-in account. Null when not proxying. */
   originalUser: StoredIdentity | null;
-  /** Hydration guard: false until persist rehydrates from localStorage. */
+  /**
+   * Hydration guard — LOAD-BEARING. Do not remove.
+   *
+   * Stays `false` until Zustand's `onRehydrateStorage` callback fires after
+   * localStorage is read. Any UI that reads auth state before this is `true`
+   * risks rendering with stale/default values during SSR or first paint.
+   *
+   * `partialize` intentionally excludes this field so it always resets to
+   * `false` on the next page load, forcing components to wait for rehydration.
+   */
   _hasHydrated: boolean;
   setUser: (user: { id: string; name: string; email: string; roles: Role[] }) => void;
   /** Swap the active persona without losing track of the original account. */
@@ -56,6 +65,10 @@ export const useAuthStore = create<AuthState>()(
           originalUser: null,
         }),
       switchPersona: (user) => {
+        if (process.env.NEXT_PUBLIC_DEMO_MODE !== 'true') {
+          console.warn('switchPersona is demo-only');
+          return;
+        }
         const state = get();
         // Preserve the *first* original user we saw. Swapping between
         // personas while already proxying should not clobber the baseline.

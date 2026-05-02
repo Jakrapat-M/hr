@@ -400,7 +400,7 @@ export default function EmployeesPage() {
               color: 'var(--color-ink)',
               fontSize: 13,
               outline: 'none',
-              boxShadow: 'var(--shadow-sm)',
+              boxShadow: 'var(--shadow-[var(--shadow-sm)])',
               transition: 'border-color 120ms, box-shadow 120ms',
             }}
             onFocus={(e) => {
@@ -409,7 +409,7 @@ export default function EmployeesPage() {
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = 'var(--color-hairline)'
-              e.currentTarget.style.boxShadow = 'var(--shadow-sm)'
+              e.currentTarget.style.boxShadow = 'var(--shadow-[var(--shadow-sm)])'
             }}
           />
         </div>
@@ -426,7 +426,7 @@ export default function EmployeesPage() {
           border: '1px solid var(--color-hairline)',
           background: 'var(--color-surface)',
           overflow: 'hidden',
-          boxShadow: 'var(--shadow-sm)',
+          boxShadow: 'var(--shadow-[var(--shadow-sm)])',
         }}
       >
         {/* Scrollable tbody — virtualized; thead lives inside as sticky so it

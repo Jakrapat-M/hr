@@ -126,16 +126,13 @@ describe('Render — label + drop zone', () => {
   });
 
   // AC-2
-  it('renders hidden file input (sr-only) linked via id', () => {
+  it('keeps the hidden file input out of the accessibility tree', () => {
     render(<FileUploadField label="เอกสาร" />);
-    const label = screen.getByText('เอกสาร');
-    const inputId = label.closest('label')?.getAttribute('for') ?? label.getAttribute('for');
-    expect(inputId).toBeTruthy();
-    // Input exists in DOM
-    const input = document.getElementById(inputId!);
+    const input = document.querySelector('input[type="file"]');
     expect(input).not.toBeNull();
-    expect(input?.tagName).toBe('INPUT');
-    expect(input).toHaveAttribute('type', 'file');
+    expect(input).toHaveAttribute('aria-hidden', 'true');
+    expect(input).toHaveAttribute('tabindex', '-1');
+    expect(screen.getAllByRole('button', { name: 'เอกสาร' })).toHaveLength(1);
   });
 
   it('shows required asterisk when required=true', () => {
@@ -187,7 +184,13 @@ describe('Click-to-browse: file input change → addAttachment called', () => {
       fireEvent.change(input, { target: { files: [makeFile('doc.pdf', 0.2, 'application/pdf')] } });
     });
 
-    expect(onUpload).toHaveBeenCalledWith('returned-att-id');
+    expect(onUpload).toHaveBeenCalledWith(
+      'returned-att-id',
+      expect.objectContaining({
+        filename: 'doc.pdf',
+        mimeType: 'application/pdf',
+      }),
+    );
     restore();
   });
 });

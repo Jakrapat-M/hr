@@ -99,9 +99,9 @@ export function LeaveCalendar({ events, holidays, onDateClick }: LeaveCalendarPr
           <Button variant="ghost" size="sm" onClick={goToPrevMonth}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <button onClick={goToToday} className="text-sm font-medium text-ink min-w-[160px] text-center hover:text-accent transition">
+          <Button variant="ghost" size="sm" onClick={goToToday} className="min-w-[160px] text-center font-medium">
             {monthName}
-          </button>
+          </Button>
           <Button variant="ghost" size="sm" onClick={goToNextMonth}>
             <ChevronRight className="h-4 w-4" />
           </Button>

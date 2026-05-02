@@ -98,8 +98,13 @@ describe('benefit claim journey canonical route', () => {
     expect(screen.getByRole('heading', { name: 'สิทธิ์จากข้อมูล HRMS/EC' })).toBeInTheDocument();
     expect(document.querySelectorAll('[data-benefit-owned-action="true"]')).toHaveLength(2);
     expect(screen.getByRole('link', { name: 'ดูสรุปสิทธิ์ในโปรไฟล์' })).toHaveAttribute('href', '/th/profile/me?tab=benefits');
-    expect(screen.getByRole('link', { name: 'เบิกสวัสดิการ' })).toHaveAttribute('href', '/th/benefits-hub/reimbursement');
-    expect(screen.getByRole('link', { name: 'ขอใบส่งตัว' })).toHaveAttribute('href', '/th/benefits-hub/referral');
+    const reimbursementAction = screen.getByRole('link', { name: 'เบิกสวัสดิการ' });
+    const referralAction = screen.getByRole('link', { name: 'ขอใบส่งตัว' });
+    expect(reimbursementAction).toHaveAttribute('href', '/th/benefits-hub/reimbursement');
+    expect(referralAction).toHaveAttribute('href', '/th/benefits-hub/referral');
+    expect(reimbursementAction.querySelector('button')).toBeNull();
+    expect(referralAction.querySelector('button')).toBeNull();
+    expect(screen.getByRole('button', { name: 'ดูรายละเอียด แพลน Flex Plus · ครอบครัว' })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'สลิปเงินเดือน' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /วางแผนภาษี/ })).not.toBeInTheDocument();
     expect(screen.queryByText(/Payroll\/Tax|เงินเดือนและสวัสดิการ/)).not.toBeInTheDocument();

@@ -86,7 +86,7 @@ export function LeaveDetailModal({ request, onClose, onCancel }: LeaveDetailModa
  </>
  )}
  {request.rejectionReason && (
- <div className="p-3 bg-danger-tint border border-red-100 rounded-md">
+ <div className="p-3 bg-danger-tint border border-danger rounded-md">
  <p className="text-xs text-danger font-medium mb-1">Rejection Reason</p>
  <p className="text-sm text-danger">{request.rejectionReason}</p>
  </div>

@@ -121,7 +121,7 @@ function ScopeBuilder({
       {/* Module — fixed "EC" per BRD #184 */}
       <div>
         <p className="text-xs font-medium text-ink-muted mb-1">Module</p>
-        <span className="px-2.5 py-1 rounded-full text-xs bg-blue-100 text-accent border border-blue-200">
+        <span className="px-2.5 py-1 rounded-full text-xs bg-accent-soft text-accent border border-accent-soft">
           EC (ค่าเริ่มต้น ไม่สามารถเปลี่ยนได้)
         </span>
       </div>
@@ -259,7 +259,7 @@ function DataPermissionModal({
           {/* ชื่อ */}
           <div>
             <label className="block text-sm font-medium text-ink mb-1">
-              ชื่อกลุ่มสิทธิ์ข้อมูล <span className="text-red-500">*</span>
+              ชื่อกลุ่มสิทธิ์ข้อมูล <span className="text-danger">*</span>
             </label>
             <input
               type="text"

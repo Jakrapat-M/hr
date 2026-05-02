@@ -136,7 +136,7 @@ function WeeklyHeatmap({ attendance }: { attendance: AttendanceRecord[] }) {
  {rec?.workHours ? (
  <p className="text-[10px] text-ink-muted mt-0.5">{rec.workHours}h</p>
  ) : (
- <p className="text-[10px] text-gray-300 mt-0.5">-</p>
+ <p className="text-[10px] text-ink-faint mt-0.5">-</p>
  )}
  </div>
  );
@@ -165,11 +165,11 @@ export function TimePage() {
  if (loading) {
  return (
  <div className="space-y-4">
- <Skeleton className="h-64 w-full rounded-2xl" />
+ <Skeleton className="h-64 w-full rounded-[var(--radius-2xl)]" />
  <div className="grid grid-cols-4 gap-3">
  {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-16 w-full rounded-md" />)}
  </div>
- <Skeleton className="h-48 w-full rounded-2xl" />
+ <Skeleton className="h-48 w-full rounded-[var(--radius-2xl)]" />
  </div>
  );
  }
@@ -214,7 +214,7 @@ export function TimePage() {
 
  {/* ===== CLOCK IN/OUT HERO CARD ===== */}
  <div
- className={`relative overflow-hidden rounded-2xl p-6 sm:p-8 mb-6 transition-all duration-500 ${
+ className={`relative overflow-hidden rounded-[var(--radius-2xl)] p-6 sm:p-8 mb-6 transition-all duration-500 ${
  clockStatus.isClockedIn
  ?'bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155]'
  :'bg-gradient-to-br from-gray-50 via-white to-gray-100 border border-hairline dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 border-hairline'
@@ -244,14 +244,14 @@ export function TimePage() {
  <CheckCircle className="h-2.5 w-2.5" /> In Zone
  </span>
  ) : (
- <span className="inline-flex items-center gap-0.5 ml-2 px-1.5 py-0.5 rounded-full bg-danger-tint0/20 text-red-400 text-[10px] font-medium">
+ <span className="inline-flex items-center gap-0.5 ml-2 px-1.5 py-0.5 rounded-full bg-danger-tint0/20 text-danger text-[10px] font-medium">
  <XCircle className="h-2.5 w-2.5" /> Out of Zone
  </span>
  )}
  </div>
 
  {/* Clock In/Out Times */}
- <div className={`flex items-center gap-4 mt-3 text-sm ${clockStatus.isClockedIn ?'text-gray-300' :'text-ink-muted'}`}>
+ <div className={`flex items-center gap-4 mt-3 text-sm ${clockStatus.isClockedIn ?'text-ink-faint' :'text-ink-muted'}`}>
  {clockStatus.clockInTime && (
  <span className="flex items-center gap-1.5">
  <LogIn className="h-3.5 w-3.5 text-emerald-400" />
@@ -275,12 +275,12 @@ export function TimePage() {
  <button
  onClick={handleClockAction}
  className={`
- relative w-full sm:w-36 h-36 rounded-2xl font-bold text-lg
+ relative w-full sm:w-36 h-36 rounded-[var(--radius-2xl)] font-bold text-lg
  transition-all duration-300 active:scale-95
  ${clockAnimating ?'scale-110' :''}
  ${clockStatus.isClockedIn
- ?'bg-gradient-to-br from-brand to-red-700 text-white shadow-2 shadow-red-900/30 hover:shadow-xl hover:shadow-red-900/40'
- :'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-2 shadow-emerald-900/20 hover:shadow-xl hover:shadow-emerald-900/30'
+ ?'bg-gradient-to-br from-brand to-red-700 text-white shadow-2 shadow-red-900/30 hover:shadow-[var(--shadow-lg)] hover:shadow-red-900/40'
+ :'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-2 shadow-emerald-900/20 hover:shadow-[var(--shadow-lg)] hover:shadow-emerald-900/30'
  }
  `}
  >
@@ -298,7 +298,7 @@ export function TimePage() {
  )}
  </div>
  {/* Pulse ring */}
- <div className={`absolute inset-0 rounded-2xl ${clockStatus.isClockedIn ?'bg-brand' :'bg-emerald-500'} animate-ping opacity-20`} />
+ <div className={`absolute inset-0 rounded-[var(--radius-2xl)] ${clockStatus.isClockedIn ?'bg-brand' :'bg-emerald-500'} animate-ping opacity-20`} />
  </button>
  </div>
  </div>
@@ -380,7 +380,7 @@ export function TimePage() {
  flex items-center gap-1.5 px-4 py-2.5 rounded-md text-sm font-medium whitespace-nowrap
  transition-all duration-200 flex-1 justify-center
  ${activeTab === key
- ?'bg-surface text-ink shadow-sm'
+ ?'bg-surface text-ink shadow-[var(--shadow-sm)]'
  :'text-ink-muted hover:text-ink hover:bg-surface/50 hover:bg-surface-raised'
  }
  `}
@@ -533,7 +533,7 @@ export function TimePage() {
  {!isOff && (
  <p className="text-xs text-ink-muted dark:text-ink-muted font-mono mt-0.5">
  {shift.startTime} - {shift.endTime}
- <span className="mx-2 text-gray-300">|</span>
+ <span className="mx-2 text-ink-faint">|</span>
  Break {shift.breakStart}-{shift.breakEnd}
  </p>
  )}
@@ -544,7 +544,7 @@ export function TimePage() {
  {!isOff ? (
  <span className="text-sm font-semibold text-ink">{shift.workHours}h</span>
  ) : (
- <span className="text-xs text-gray-300">OFF</span>
+ <span className="text-xs text-ink-faint">OFF</span>
  )}
  </div>
  </div>
@@ -691,7 +691,7 @@ export function TimePage() {
  <Card header={<CardTitle className="text-base">Correction Requests</CardTitle>}>
  {corrections.length === 0 ? (
  <div className="py-12 text-center">
- <FileEdit className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+ <FileEdit className="h-10 w-10 text-ink-faint mx-auto mb-3" />
  <p className="text-sm text-ink-muted">No correction requests yet</p>
  </div>
  ) : (
@@ -728,7 +728,7 @@ export function TimePage() {
  <p className="text-[10px] text-ink-muted mt-1">Approved by {req.approvedBy}</p>
  )}
  </div>
- <ChevronRight className="h-4 w-4 text-gray-300 flex-shrink-0 mt-3" />
+ <ChevronRight className="h-4 w-4 text-ink-faint flex-shrink-0 mt-3" />
  </div>
  ))}
  </div>

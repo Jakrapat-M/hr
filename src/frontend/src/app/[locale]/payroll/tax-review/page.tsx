@@ -178,7 +178,7 @@ export default function PayrollTaxReviewPage() {
             </div>
           ) : (
             rows.map((row) => (
-              <article key={row.id} className="rounded-[var(--radius-md)] border border-hairline bg-surface p-4 shadow-sm">
+              <article key={row.id} className="rounded-[var(--radius-md)] border border-hairline bg-surface p-4 shadow-[var(--shadow-sm)]">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">

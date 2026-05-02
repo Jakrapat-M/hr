@@ -202,9 +202,9 @@ export default function CompanyTypeahead({
           'w-full rounded-md border px-3 py-2 text-sm',
           'focus:outline-none focus:ring-2 focus:ring-blue-500',
           error
-            ? 'border-red-500 focus:ring-red-500'
-            : 'border-gray-300',
-          disabled ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-900',
+            ? 'border-danger focus:ring-red-500'
+            : 'border-hairline',
+          disabled ? 'bg-canvas-soft text-ink-faint cursor-not-allowed' : 'bg-surface text-ink',
         ].join(' ')}
       />
 
@@ -215,7 +215,7 @@ export default function CompanyTypeahead({
           id={listboxId}
           role="listbox"
           aria-label="รายการบริษัท"
-          className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg"
+          className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-md border border-hairline-soft bg-surface shadow-[var(--shadow-lg)]"
         >
           {filtered.map((company, idx) => (
             <li
@@ -231,16 +231,16 @@ export default function CompanyTypeahead({
               className={[
                 'px-3 py-2 text-sm cursor-pointer',
                 idx === highlightedIdx
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-accent text-white'
                   : company.code === value
-                  ? 'bg-blue-50 text-blue-900'
-                  : 'text-gray-900 hover:bg-gray-100',
+                  ? 'bg-accent-soft text-accent-ink'
+                  : 'text-ink hover:bg-canvas-soft',
               ].join(' ')}
             >
               <span className="font-medium">{company.code}</span>
-              <span className="mx-1 text-gray-400">—</span>
+              <span className="mx-1 text-ink-faint">—</span>
               <span>{company.labelTh}</span>
-              <span className="ml-1 text-xs text-gray-400">({company.country})</span>
+              <span className="ml-1 text-xs text-ink-faint">({company.country})</span>
             </li>
           ))}
         </ul>

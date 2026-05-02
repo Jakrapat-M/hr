@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle, Button } from '@/components/humi';
 import { ChevronDown, ChevronRight, User } from 'lucide-react';
 import type { OrgNode } from '@/lib/manager-dashboard-api';
 import { cn } from '@/lib/utils';
@@ -20,9 +20,11 @@ function OrgNodeItem({ node, depth = 0 }: { node: OrgNode; depth?: number }) {
     <div className={cn(depth > 0 && 'ml-5 pl-3 border-l border-hairline')}>
  <div className="flex items-center gap-2 py-2">
  {hasChildren ? (
- <button
+ <Button
+ variant="ghost"
+ size="sm"
  onClick={() => setExpanded(!expanded)}
-           className="p-0.5 rounded hover:bg-surface-raised transition"
+ className="!p-1"
  aria-label={expanded ?'Collapse' :'Expand'}
  >
  {expanded ? (
@@ -30,7 +32,7 @@ function OrgNodeItem({ node, depth = 0 }: { node: OrgNode; depth?: number }) {
  ) : (
  <ChevronRight className="h-4 w-4 text-ink-muted" />
  )}
- </button>
+ </Button>
  ) : (
  <span className="w-5" />
  )}

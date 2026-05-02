@@ -103,7 +103,7 @@ function ChipSelector({
   options,
   selected,
   onToggle,
-  colorClass = 'bg-blue-100 text-accent',
+  colorClass = 'bg-accent-soft text-accent',
 }: {
   label: string
   options: { id: string; name: string }[]
@@ -245,7 +245,7 @@ export default function UserAssignmentPage() {
                 <p className="text-xs text-ink-muted mt-0.5">
                   แผนก: {selectedUser.department}
                 </p>
-                <p className={['text-xs mt-1', selectedUser.isActive ? 'text-green-600' : 'text-red-500'].join(' ')}>
+                <p className={['text-xs mt-1', selectedUser.isActive ? 'text-green-600' : 'text-danger'].join(' ')}>
                   {selectedUser.isActive ? 'Active' : 'Inactive'}
                 </p>
               </div>

@@ -24,15 +24,15 @@ export default function LanguagePage() {
   return (
     <div className="p-6 max-w-xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">ภาษาระบบ</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-semibold text-ink">ภาษาระบบ</h1>
+        <p className="mt-1 text-sm text-ink-muted">
           เลือกภาษา UI สำหรับผู้ใช้งาน — การเปลี่ยนภาษาจะมีผลทันทีในครั้งถัดไปที่ login
         </p>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+      <div className="bg-surface border border-hairline-soft rounded-xl shadow-[var(--shadow-sm)] overflow-hidden">
+        <div className="px-5 py-3 border-b border-hairline-soft bg-canvas-soft">
+          <span className="text-xs font-medium text-ink-muted uppercase tracking-wide">
             เลือกภาษาที่ต้องการ
           </span>
         </div>
@@ -42,7 +42,7 @@ export default function LanguagePage() {
           {LANG_OPTIONS.map((opt) => (
             <label
               key={opt.value}
-              className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-blue-50 transition-colors"
+              className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-accent-soft transition-colors"
             >
               <input
                 type="radio"
@@ -50,15 +50,15 @@ export default function LanguagePage() {
                 value={opt.value}
                 checked={language === opt.value}
                 onChange={() => handleChange(opt.value)}
-                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                className="w-4 h-4 text-accent border-hairline focus:ring-blue-500"
               />
               <span className="text-xl" aria-hidden="true">{opt.flag}</span>
               <div className="flex-1">
-                <span className="block text-sm font-medium text-gray-900">{opt.label}</span>
-                <span className="block text-xs text-gray-500 mt-0.5">{opt.description}</span>
+                <span className="block text-sm font-medium text-ink">{opt.label}</span>
+                <span className="block text-xs text-ink-muted mt-0.5">{opt.description}</span>
               </div>
               {language === opt.value && (
-                <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                <span className="text-xs font-semibold text-accent bg-accent-soft px-2 py-0.5 rounded-full whitespace-nowrap">
                   ใช้งานอยู่
                 </span>
               )}
@@ -67,7 +67,7 @@ export default function LanguagePage() {
         </fieldset>
       </div>
 
-      <p className="mt-4 text-xs text-gray-400">
+      <p className="mt-4 text-xs text-ink-faint">
         BRD #195 — การเปลี่ยนภาษาจะถูกบันทึกผ่าน audit log โดยอัตโนมัติ
       </p>
     </div>

@@ -87,7 +87,7 @@ export default function DataMigrationPage() {
       </div>
 
       {/* Upload section */}
-      <div className="bg-surface border border-hairline rounded-xl shadow-sm p-5 mb-6">
+      <div className="bg-surface border border-hairline rounded-xl shadow-[var(--shadow-sm)] p-5 mb-6">
         <h2 className="text-sm font-semibold text-ink-soft mb-4">อัปโหลดไฟล์ CSV</h2>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -141,7 +141,7 @@ export default function DataMigrationPage() {
       </div>
 
       {/* Job history */}
-      <div className="bg-surface border border-hairline rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-surface border border-hairline rounded-xl shadow-[var(--shadow-sm)] overflow-hidden">
         <div className="px-5 py-3 border-b border-hairline bg-canvas-soft">
           <h2 className="text-sm font-semibold text-ink-soft">ประวัติ Migration Jobs ({jobs.length})</h2>
         </div>

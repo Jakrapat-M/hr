@@ -35,8 +35,8 @@ export default function ReportAutomationPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">งานอัตโนมัติ</h2>
-          <p className="text-sm text-gray-500 mt-1">Report Automation — BRD #207</p>
+          <h2 className="text-xl font-semibold text-ink">งานอัตโนมัติ</h2>
+          <p className="text-sm text-ink-muted mt-1">Report Automation — BRD #207</p>
         </div>
         <div className="flex gap-3 text-center">
           <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2">
@@ -51,20 +51,20 @@ export default function ReportAutomationPage() {
       </div>
 
       {allJobs.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-          <p className="text-gray-400">ยังไม่มีงานอัตโนมัติ — ไปที่ &quot;กำหนดเวลารายงาน&quot; เพื่อสร้าง</p>
+        <div className="rounded-lg border border-hairline-soft bg-surface p-12 text-center">
+          <p className="text-ink-faint">ยังไม่มีงานอัตโนมัติ — ไปที่ &quot;กำหนดเวลารายงาน&quot; เพื่อสร้าง</p>
         </div>
       ) : (
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+        <div className="rounded-lg border border-hairline-soft bg-surface overflow-hidden">
           <table className="min-w-full divide-y divide-gray-100 text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-canvas-soft">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">รายงาน</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">ความถี่</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">ช่องทาง</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">รันล่าสุด</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-500">สถานะ</th>
-                <th className="px-4 py-3 text-center font-medium text-gray-500">การดำเนินการ</th>
+                <th className="px-4 py-3 text-left font-medium text-ink-muted">รายงาน</th>
+                <th className="px-4 py-3 text-left font-medium text-ink-muted">ความถี่</th>
+                <th className="px-4 py-3 text-left font-medium text-ink-muted">ช่องทาง</th>
+                <th className="px-4 py-3 text-left font-medium text-ink-muted">รันล่าสุด</th>
+                <th className="px-4 py-3 text-center font-medium text-ink-muted">สถานะ</th>
+                <th className="px-4 py-3 text-center font-medium text-ink-muted">การดำเนินการ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -77,11 +77,11 @@ export default function ReportAutomationPage() {
                 const isRunning = job.isActive && !job.isPaused
 
                 return (
-                  <tr key={job.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-900 whitespace-nowrap">{job.reportName}</td>
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{freq}</td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{job.delivery}</td>
-                    <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{lastRun}</td>
+                  <tr key={job.id} className="hover:bg-canvas-soft">
+                    <td className="px-4 py-3 text-ink whitespace-nowrap">{job.reportName}</td>
+                    <td className="px-4 py-3 text-ink-muted whitespace-nowrap">{freq}</td>
+                    <td className="px-4 py-3 text-ink-muted whitespace-nowrap">{job.delivery}</td>
+                    <td className="px-4 py-3 text-ink-faint whitespace-nowrap">{lastRun}</td>
                     <td className="px-4 py-3 text-center">
                       <span
                         className={[

@@ -16,42 +16,42 @@ type EditorCard = {
 
 const EDITORS: EditorCard[] = [
   {
-    href: '/admin/self-service/field-config',
+    href: '/th/admin/self-service/field-config',
     titleTh: 'รายการฟิลด์',
     brd: 'BRD #178',
     descTh: 'เลือกฟิลด์ที่พนักงานจะเห็นและแก้ไขได้ใน Self-Service ของแต่ละ Role',
     Icon: LayoutGrid,
   },
   {
-    href: '/admin/self-service/visibility',
+    href: '/th/admin/self-service/visibility',
     titleTh: 'การมองเห็นฟิลด์',
     brd: 'BRD #179',
     descTh: 'กำหนดว่าฟิลด์ใดแสดงหรือซ่อน ตาม Role และบริบทการใช้งาน',
     Icon: Eye,
   },
   {
-    href: '/admin/self-service/mandatory',
+    href: '/th/admin/self-service/mandatory',
     titleTh: 'ฟิลด์บังคับกรอก',
     brd: 'BRD #180',
     descTh: 'ระบุฟิลด์ที่ต้องกรอกก่อนบันทึก ใช้บังคับมาตรฐานข้อมูล',
     Icon: AlertCircle,
   },
   {
-    href: '/admin/self-service/readonly',
+    href: '/th/admin/self-service/readonly',
     titleTh: 'ฟิลด์อ่านอย่างเดียว',
     brd: 'BRD #181',
     descTh: 'ล็อคฟิลด์ไม่ให้พนักงานแก้ไข เช่นข้อมูลที่ HR เป็นผู้ดูแล',
     Icon: Lock,
   },
   {
-    href: '/admin/self-service/quick-actions',
+    href: '/th/admin/self-service/quick-actions',
     titleTh: 'ทางลัดเมนูด่วน',
     brd: 'BRD #182',
     descTh: 'สร้างปุ่มทางลัดบนหน้าแรกของพนักงาน ระบุชื่อ ไอคอน และปลายทาง',
     Icon: MousePointer2,
   },
   {
-    href: '/admin/self-service/tiles',
+    href: '/th/admin/self-service/tiles',
     titleTh: 'ไทล์หน้าแรก',
     brd: 'BRD #183',
     descTh: 'จัดลำดับและเลือกไทล์ที่พนักงานเห็นบนหน้าแรก ตามกลุ่มผู้ใช้',

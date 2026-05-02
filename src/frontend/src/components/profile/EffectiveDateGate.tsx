@@ -88,11 +88,11 @@ export function EffectiveDateGate({
     >
       {step === 'date' && (
         <div className="space-y-4">
-          <h2 className="text-base font-semibold text-ink">{sectionTitle}</h2>
+          <h2 className="text-[length:var(--text-display-h3)] font-semibold text-ink">{sectionTitle}</h2>
           <div className="space-y-2">
             <label
               htmlFor="effective-date-input"
-              className="block text-sm font-medium text-ink"
+              className="block text-body font-medium text-ink"
             >
               {t('gate.title')}
             </label>
@@ -102,7 +102,7 @@ export function EffectiveDateGate({
               min={today}
               value={selectedDate}
               onChange={handleDateChange}
-              className="w-full rounded-md border border-hairline bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent transition-colors"
+              className="w-full rounded-md border border-hairline bg-surface px-3 py-2 text-body text-ink focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent focus:ring-offset-1 focus:ring-offset-canvas transition-colors"
             />
             {dateError && (
               <p role="alert" className="text-xs text-danger mt-1">

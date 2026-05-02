@@ -20,7 +20,7 @@ export function AuditLogTab({ editor }: AuditLogTabProps) {
 
   if (filtered.length === 0) {
     return (
-      <div className="py-12 text-center text-sm text-ink-muted">
+      <div className="py-12 text-center text-body text-ink-muted">
         ยังไม่มีประวัติการแก้ไขสำหรับ editor นี้
       </div>
     )
@@ -28,7 +28,7 @@ export function AuditLogTab({ editor }: AuditLogTabProps) {
 
   return (
     <div className="overflow-x-auto rounded-lg border border-hairline">
-      <table className="min-w-full text-sm">
+      <table className="min-w-full text-body">
         <thead className="bg-canvas-soft border-b border-hairline">
           <tr>
             <th className="px-4 py-3 text-left font-medium text-ink-muted whitespace-nowrap">เวลา</th>
@@ -53,7 +53,7 @@ export function AuditLogTab({ editor }: AuditLogTabProps) {
                 </code>
               </td>
               <td className="px-4 py-3 text-ink-muted text-xs">
-                <span className="text-red-500">{entry.before ?? '—'}</span>
+                <span className="text-danger">{entry.before ?? '—'}</span>
                 <span className="mx-1.5 text-ink-muted">→</span>
                 <span className="text-green-600">{entry.after ?? '—'}</span>
               </td>

@@ -28,6 +28,7 @@ import { EffectiveDateGate } from '@/components/admin/EffectiveDateGate'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
 import { useAuthStore } from '@/stores/auth-store'
+import { useTerminationApprovals, TERMINATION_REASON_LABEL } from '@/stores/termination-approvals'
 import type { MockEmployee } from '@/mocks/employees'
 import type { TerminateEvent } from '@hrms/shared/types/timeline'
 
@@ -263,6 +264,15 @@ export default function TerminatePage() {
   const userRoles = useAuthStore((s) => s.roles)
   const isSPD = userRoles.includes('spd') || userRoles.includes('hr_manager')
 
+  // ── Resignation cross-reference: show banner if approved ESS resignation exists ──
+  const resignationRequests = useTerminationApprovals((s) => s.requests)
+  const approvedResignation = resignationRequests.find(
+    (r) => r.employeeId === empId && r.status === 'approved',
+  )
+  const pendingResignation = resignationRequests.find(
+    (r) => r.employeeId === empId && (r.status === 'pending_manager' || r.status === 'pending_spd'),
+  )
+
   // ── Factory: per-employee wizard instance (Archetype B, D1 reuse) ─────────
   // Memoized — createClusterWizard creates a Zustand store internally;
   // must NOT be called on every render.
@@ -472,6 +482,41 @@ export default function TerminatePage() {
 
         {/* Employee snapshot */}
         <EmployeeSnapshot employee={employee} />
+
+        {/* Resignation cross-reference: approved or pending ESS resignation */}
+        {approvedResignation && (
+          <div className="humi-card humi-card--success" style={{ padding: '12px 16px' }}>
+            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+              จากคำขอลาออก ESS
+            </div>
+            <div className="text-small text-ink">
+              รหัสคำขอ <strong>{approvedResignation.id}</strong>
+              {' — '}อนุมัติแล้ว วันสุดท้าย{' '}
+              {new Date(approvedResignation.requestedLastDay).toLocaleDateString('th-TH', {
+                year: 'numeric', month: 'short', day: 'numeric',
+              })}
+              {' — '}เหตุผล: {TERMINATION_REASON_LABEL[approvedResignation.reasonCode]}
+            </div>
+          </div>
+        )}
+        {pendingResignation && !approvedResignation && (
+          <div className="humi-card humi-card--info" style={{ padding: '12px 16px' }}>
+            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+              มีคำขอลาออก ESS ที่รออนุมัติ
+            </div>
+            <div className="text-small text-ink">
+              รหัสคำขอ <strong>{pendingResignation.id}</strong>
+              {' — '}
+              {pendingResignation.status === 'pending_manager'
+                ? 'รอ Manager อนุมัติ'
+                : 'รอ SPD อนุมัติ'}
+              {' — '}วันสุดท้ายที่ขอ:{' '}
+              {new Date(pendingResignation.requestedLastDay).toLocaleDateString('th-TH', {
+                year: 'numeric', month: 'short', day: 'numeric',
+              })}
+            </div>
+          </div>
+        )}
 
         {/* BRD #22, #111 — 4-step approval chain stepper (informational) */}
         <ApprovalChainStepper />

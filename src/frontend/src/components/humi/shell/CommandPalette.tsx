@@ -7,7 +7,7 @@
 //
 // Responsive (issue #5):
 // - <sm: full-screen (inset-0, rounded-none) — fills viewport
-// - sm+: centered modal (max-w-lg, rounded-2xl) — original behavior
+// - sm+: centered modal (max-w-lg, rounded-[var(--radius-2xl)]) — original behavior
 // - Input row min-h-[44px] touch target
 // - Each result item min-h-[44px] touch target
 // - Footer hint hidden on mobile (sm:flex)
@@ -107,7 +107,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           // Mobile: fills full screen, no rounding
           'rounded-none',
           // sm+: centered modal with radius + max-width
-          'sm:rounded-2xl sm:max-w-lg sm:h-auto sm:self-start',
+          'sm:rounded-[var(--radius-2xl)] sm:max-w-lg sm:h-auto sm:self-start',
           // On mobile stretch to full height via flex parent
           'flex flex-col',
         )}

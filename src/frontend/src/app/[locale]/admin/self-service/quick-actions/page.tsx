@@ -113,7 +113,7 @@ export default function QuickActionsPage() {
       id:      `qa_new_${Date.now()}`,
       label:   'Quick Action ใหม่',
       icon:    'Star',
-      href:    '/ess/new',
+      href: '/th/ess/new',
       enabled: false,
       order:   quickActions.length + 1,
     }
@@ -127,7 +127,7 @@ export default function QuickActionsPage() {
       <div
         role="alert"
         aria-live="assertive"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg px-4 py-3 bg-red-600 text-white shadow-card text-sm font-medium"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg px-4 py-3 bg-danger text-white shadow-card text-sm font-medium"
       >
         {toast.msg}
       </div>

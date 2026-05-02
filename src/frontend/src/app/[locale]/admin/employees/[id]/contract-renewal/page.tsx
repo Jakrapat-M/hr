@@ -22,13 +22,21 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { RefreshCcw } from 'lucide-react'
+import { useLocale } from 'next-intl'
 import { useTimelines } from '@/lib/admin/store/useTimelines'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
 import { EffectiveDateGate } from '@/components/admin/EffectiveDateGate'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
+import { ApprovalChain } from '@/components/quick-approve/ApprovalChain'
 import type { MockEmployee } from '@/mocks/employees'
 import type { ContractRenewalEvent } from '@hrms/shared/types/timeline'
+import type { ApproverStage } from '@/data/benefits/plan-registry'
+
+// ─── Contract-renewal approval chain config (SF FOEventReason routing) ───────
+const CONTRACT_RENEWAL_CHAIN: ApproverStage[] = ['manager', 'hrbp', 'hr_admin']
+// Mock: chain is currently at HRBP step for HR demo visibility
+const CONTRACT_RENEWAL_CURRENT_STAGE: ApproverStage = 'hrbp'
 
 // ─── Form state ──────────────────────────────────────────────────────────────
 
@@ -134,7 +142,7 @@ export default function ContractRenewalPage() {
   const params = useParams()
   const router = useRouter()
   const empId = params.id as string
-  const locale = params.locale as string
+  const locale = useLocale()
 
   const employee = useEmployees((s) => s.getById(empId)) ?? null
 
@@ -274,6 +282,18 @@ export default function ContractRenewalPage() {
 
       {/* Employee snapshot */}
       <EmployeeSnapshot employee={employee} />
+
+      {/* Approval chain (contract renewal: manager → HRBP → HR Admin) */}
+      <div className="humi-card">
+        <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+          {locale === 'en' ? 'Approval Chain' : 'ขั้นตอนอนุมัติ'}
+        </div>
+        <ApprovalChain
+          chain={CONTRACT_RENEWAL_CHAIN}
+          locale={locale}
+          activeStage={CONTRACT_RENEWAL_CURRENT_STAGE}
+        />
+      </div>
 
       {/* Day-30 info banner (UI hint only — no auto logic) */}
       {/* /** BA validation pending — HR Expert May 1 */ }

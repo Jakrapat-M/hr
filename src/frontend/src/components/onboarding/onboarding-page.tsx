@@ -11,8 +11,8 @@ import { useOnboarding, type ItemStatus } from '@/hooks/use-onboarding';
 const STATUS_ICON: Record<ItemStatus, React.ReactNode> = {
  completed: <CheckCircle className="h-4 w-4 text-success" />,
  in_progress: <Clock className="h-4 w-4 text-yellow-500" />,
- pending: <Circle className="h-4 w-4 text-gray-300" />,
- not_applicable: <Circle className="h-4 w-4 text-gray-200" />,
+ pending: <Circle className="h-4 w-4 text-ink-faint" />,
+ not_applicable: <Circle className="h-4 w-4 text-ink-faint" />,
 };
 
 export function OnboardingPage() {

@@ -8,10 +8,10 @@ import { usePathname } from 'next/navigation'
 import { type ReactNode } from 'react'
 
 const SUB_HUBS = [
-  { href: '/admin/system/reports',     label: 'รายงาน',    labelEn: 'Reporting' },
-  { href: '/admin/system/integration', label: 'การเชื่อมต่อ', labelEn: 'Integration' },
-  { href: '/admin/system/features',    label: 'ฟีเจอร์ระบบ', labelEn: 'System' },
-  { href: '/admin/system/security',    label: 'ความปลอดภัย', labelEn: 'Security' },
+  { href: '/th/admin/system/reports',     label: 'รายงาน',    labelEn: 'Reporting' },
+  { href: '/th/admin/system/integration', label: 'การเชื่อมต่อ', labelEn: 'Integration' },
+  { href: '/th/admin/system/system-features',    label: 'ฟีเจอร์ระบบ', labelEn: 'System' },
+  { href: '/th/admin/system/security',    label: 'ความปลอดภัย', labelEn: 'Security' },
 ] as const
 
 export default function SystemLayout({ children }: { children: ReactNode }) {
@@ -22,7 +22,7 @@ export default function SystemLayout({ children }: { children: ReactNode }) {
       {/* Sub-hub nav */}
       <nav
         aria-label="เมนูย่อยระบบ"
-        className="border-b border-gray-200 bg-white px-6"
+        className="border-b border-hairline-soft bg-surface px-6"
       >
         <ul className="flex gap-1" role="tablist">
           {SUB_HUBS.map((hub) => {
@@ -37,12 +37,12 @@ export default function SystemLayout({ children }: { children: ReactNode }) {
                   className={[
                     'inline-flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                     isActive
-                      ? 'border-blue-600 text-blue-700'
-                      : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300',
+                      ? 'border-accent text-accent-ink'
+                      : 'border-transparent text-ink-muted hover:text-ink hover:border-hairline',
                   ].join(' ')}
                 >
                   {hub.label}
-                  <span className="text-xs text-gray-400 hidden lg:inline">({hub.labelEn})</span>
+                  <span className="text-xs text-ink-faint hidden lg:inline">({hub.labelEn})</span>
                 </Link>
               </li>
             )

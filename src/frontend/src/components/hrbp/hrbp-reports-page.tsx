@@ -111,7 +111,7 @@ export function HRBPReportsPage() {
  </Card>
  <Card>
  <p className="text-xs text-ink-muted uppercase tracking-wide">{t('metrics.leaveUtilization')}</p>
- <p className="text-3xl font-bold text-blue-700 mt-2">{summaryMetrics.leaveUtilization.toFixed(1)}%</p>
+ <p className="text-3xl font-bold text-accent-ink mt-2">{summaryMetrics.leaveUtilization.toFixed(1)}%</p>
  </Card>
  <Card>
  <p className="text-xs text-ink-muted uppercase tracking-wide">{t('metrics.monthlyOTCost')}</p>

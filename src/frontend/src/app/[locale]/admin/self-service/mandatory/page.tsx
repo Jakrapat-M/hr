@@ -143,7 +143,7 @@ export default function MandatoryPage() {
                   <div key={field.id} className="rounded-md border border-hairline bg-canvas-soft px-3 py-2">
                     <div className="flex items-center gap-1 text-xs text-ink-muted">
                       {field.label}
-                      {required && <span className="text-red-500 font-bold">*</span>}
+                      {required && <span className="text-danger font-bold">*</span>}
                     </div>
                     <div className="text-sm text-ink-muted mt-0.5 italic">— ตัวอย่างข้อมูล —</div>
                   </div>

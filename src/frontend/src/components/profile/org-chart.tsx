@@ -42,7 +42,7 @@ function NodeCard({
 'flex items-center gap-3 p-3 rounded-md border transition-all text-left w-full',
  highlight
  ?'border-brand bg-brand/5 ring-1 ring-brand/20'
- :'border-hairline bg-surface hover:border-hairline hover:shadow-sm',
+ :'border-hairline bg-surface hover:border-hairline hover:shadow-[var(--shadow-sm)]',
  searchMatch &&'border-warning bg-warning-tint ring-1 ring-warning/30',
  dimmed &&'opacity-30'
  )}

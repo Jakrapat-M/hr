@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle, Button } from '@/components/humi';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CalendarEvent } from '@/lib/manager-dashboard-api';
 import { cn } from '@/lib/utils';
@@ -72,7 +72,7 @@ export function TeamCalendar({
  day === today.getDate() && month === today.getMonth() + 1 && year === today.getFullYear();
 
  return (
- <Card header={<><CardTitle>{t('calendarView')}</CardTitle><div className="flex items-center gap-2"><button onClick={prevMonth} className="p-1 rounded hover:bg-surface-raised transition" aria-label="Previous month"><ChevronLeft className="h-4 w-4" /></button><span className="text-sm font-medium min-w-[120px] text-center">{MONTHS[month - 1]} {year}</span><button onClick={nextMonth} className="p-1 rounded hover:bg-surface-raised transition" aria-label="Next month"><ChevronRight className="h-4 w-4" /></button></div></>}>
+ <Card header={<><CardTitle>{t('calendarView')}</CardTitle><div className="flex items-center gap-2"><Button variant="ghost" size="sm" onClick={prevMonth} aria-label="Previous month" className="!p-2"><ChevronLeft className="h-4 w-4" /></Button><span className="text-sm font-medium min-w-[120px] text-center">{MONTHS[month - 1]} {year}</span><Button variant="ghost" size="sm" onClick={nextMonth} aria-label="Next month" className="!p-2"><ChevronRight className="h-4 w-4" /></Button></div></>}>
  {loading ? (
  <div className="h-64 bg-surface-raised rounded-md animate-pulse" />
  ) : (

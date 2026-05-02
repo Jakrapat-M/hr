@@ -24,7 +24,7 @@ const buttonVariants = cva(
       variant: {
         primary: [
           'bg-accent text-white',
-          'shadow-sm hover:shadow-md',
+          'shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]',
           'hover:bg-[color-mix(in_oklab,var(--color-accent)_92%,black)]',
           'active:bg-[color-mix(in_oklab,var(--color-accent)_85%,black)]',
         ].join(' '),
@@ -40,7 +40,7 @@ const buttonVariants = cva(
         ].join(' '),
         danger: [
           'bg-danger text-white',
-          'shadow-sm hover:shadow-md',
+          'shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]',
           'hover:bg-[color-mix(in_oklab,var(--color-danger)_92%,black)]',
           'active:bg-[color-mix(in_oklab,var(--color-danger)_85%,black)]',
         ].join(' '),

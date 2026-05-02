@@ -15,6 +15,7 @@ import { TerminationInbox } from '@/components/workflow/TerminationInbox';
 import { PromotionInbox } from '@/components/workflow/PromotionInbox';
 import { BenefitClaimsInbox } from '@/components/workflow/BenefitClaimsInbox';
 import { BenefitReferralInbox } from '@/components/workflow/BenefitReferralInbox';
+import { Capability } from '@/components/humi';
 import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useTerminationApprovals } from '@/stores/termination-approvals';
 import { usePromotionApprovals } from '@/stores/promotion-approvals';
@@ -106,32 +107,67 @@ export default function SPDInboxPage() {
       <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
 
       {/* Detailed action panels — each renders approve/reject UI for its chain */}
-      <ApprovalInbox
-        role="spd"
-        expectedStep="pending_spd"
-        title="Chain 3 — แก้ไขข้อมูลส่วนตัว"
-        subtitle="อนุมัติคำขอแก้ไขข้อมูลส่วนตัวที่พนักงานส่งผ่าน Self-Service (BRD #166)"
-      />
+      <Capability action="approve">
+        <ApprovalInbox
+          role="spd"
+          expectedStep="pending_spd"
+          title="Chain 3 — แก้ไขข้อมูลส่วนตัว"
+          subtitle="อนุมัติคำขอแก้ไขข้อมูลส่วนตัวที่พนักงานส่งผ่าน Self-Service (BRD #166)"
+        />
+      </Capability>
 
       <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
 
-      {/* Benefit reimbursement workflow */}
-      <BenefitClaimsInbox />
+      {/* Benefit reimbursement workflow — gated: BenefitEmployeeClaim visibility */}
+      <Capability entity="BenefitEmployeeClaim">
+        <BenefitClaimsInbox />
+      </Capability>
 
       <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
 
-      {/* Benefit referral workflow */}
-      <BenefitReferralInbox />
+      {/* Benefit referral workflow — gated: BenefitEmployeeClaim visibility */}
+      <Capability entity="BenefitEmployeeClaim">
+        <BenefitReferralInbox />
+      </Capability>
 
       <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
 
       {/* Chain 1 — Termination/Resignation (BRD #172) */}
-      <TerminationInbox />
+      <Capability action="approve">
+        <TerminationInbox />
+      </Capability>
 
       <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
 
       {/* Chain 4 — Promotion (BRD #103) */}
-      <PromotionInbox />
+      <Capability action="approve">
+        <PromotionInbox />
+      </Capability>
+
+      {/* Override / bulk-approve panel visible only when persona has override capability */}
+      <Capability action="override">
+        <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
+        <div>
+          <p className="text-small font-semibold text-ink-muted uppercase tracking-[0.14em]">
+            Override Actions
+          </p>
+          <p className="text-small text-ink-muted mt-1">
+            การดำเนินการ Override — มองเห็นได้เฉพาะ SPD / HRBP / HR Admin
+          </p>
+        </div>
+      </Capability>
+
+      <Capability action="bulkApprove">
+        <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
+        <div>
+          <p className="text-small font-semibold text-ink-muted uppercase tracking-[0.14em]">
+            Bulk Approve
+          </p>
+          <p className="text-small text-ink-muted mt-1">
+            อนุมัติหลายรายการพร้อมกัน — มองเห็นได้เฉพาะ SPD / HRBP / HR Admin
+          </p>
+        </div>
+      </Capability>
     </div>
   );
 }

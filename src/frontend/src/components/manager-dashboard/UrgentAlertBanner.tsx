@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { AlertTriangle, X } from 'lucide-react';
 import type { UrgentAlert } from '@/lib/manager-dashboard-api';
+import { Button } from '@/components/humi';
 
 interface UrgentAlertBannerProps {
   alerts: UrgentAlert[];
@@ -33,13 +34,15 @@ export function UrgentAlertBanner({ alerts }: UrgentAlertBannerProps) {
             <p className="text-sm font-medium text-danger">{alert.title}</p>
             <p className="text-xs text-danger/70 mt-0.5">{alert.message}</p>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => dismiss(alert.id)}
-            className="p-1 rounded hover:bg-danger/10 transition"
             aria-label={t('dismiss') ?? 'Dismiss'}
+            className="!p-2 hover:bg-danger/10 text-danger/60"
           >
-            <X className="h-4 w-4 text-danger/60" />
-          </button>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       ))}
     </div>

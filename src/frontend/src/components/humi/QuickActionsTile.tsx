@@ -2,6 +2,7 @@ import Link from 'next/link';
 import {
   CalendarPlus,
   FileText,
+  FilePlus,
   User,
   Wallet,
   Network,
@@ -41,6 +42,7 @@ export const DEFAULT_ESS_ACTIONS: QuickAction[] = [
   { icon: makeIcon(FileText),     labelTh: 'สลิปเงินเดือน',       href: '/th/profile/me?tab=employment#pay-statements' },
   { icon: makeIcon(User),         labelTh: 'ดูข้อมูลส่วนตัว',     href: '/th/profile/me'   },
   { icon: makeIcon(Wallet),       labelTh: 'เบิกสวัสดิการ',       href: benefitReimbursementRoute('th') },
+  { icon: makeIcon(FilePlus),     labelTh: 'ขอเอกสาร',            href: '/th/me/documents/request' },
 ];
 
 // Manager-tier Quick Actions — SF Employee Central pattern (Path C, autopilot

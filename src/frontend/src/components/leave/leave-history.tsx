@@ -278,7 +278,7 @@ export function LeaveHistory({
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             rows={4}
-            className="w-full rounded-md border border-hairline px-3 py-2 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-accent"
+            className="w-full rounded-md border border-hairline bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-faint transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas"
             placeholder={t('cancellationReasonPlaceholder')}
           />
           <div className="flex justify-end gap-2 pt-2">

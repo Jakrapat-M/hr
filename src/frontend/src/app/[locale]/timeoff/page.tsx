@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Check, X, Heart, Coffee, Sun, Plus, Paperclip, AlertCircle } from 'lucide-react';
+import { Check, X, Heart, Coffee, Sun, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import {
   Avatar,
   Button,
@@ -18,6 +18,64 @@ import {
   type LeaveKind,
 } from '@/lib/humi-mock-data';
 import { useTimeoffStore, type TimeoffHistoryItem, type LeaveStatus } from '@/stores/humi-timeoff-slice';
+import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
+import type { ApproverStage } from '@/data/benefits/plan-registry';
+
+// Timeoff approval chain: manager → hr_admin
+const TIMEOFF_CHAIN: ApproverStage[] = ['manager', 'hr_admin'];
+
+// Extended history item with audit + submittedAt as ISO for days-waiting
+type HistoryItemExtended = TimeoffHistoryItem & {
+  isoSubmittedAt?: string;
+  audit?: Array<{ actorName: string; action: string; comment?: string; at: string }>;
+};
+
+// Seed mock audit data for initial history items
+const AUDIT_MAP: Record<string, HistoryItemExtended['audit']> = {
+  'lh-1': [
+    { actorName: 'สมชาย สุขใจ', action: 'submit', at: '2026-03-10T09:00:00Z' },
+    { actorName: 'กฤตนัย อินทรเดช', action: 'approve', comment: 'อนุมัติ', at: '2026-03-11T10:00:00Z' },
+    { actorName: 'วรินทร์ HR Admin', action: 'approve', at: '2026-03-12T11:00:00Z' },
+  ],
+  'lh-2': [
+    { actorName: 'สมชาย สุขใจ', action: 'submit', at: '2026-02-02T08:00:00Z' },
+    { actorName: 'กฤตนัย อินทรเดช', action: 'approve', at: '2026-02-02T09:30:00Z' },
+    { actorName: 'วรินทร์ HR Admin', action: 'approve', at: '2026-02-02T10:00:00Z' },
+  ],
+  'lh-3': [
+    { actorName: 'สมชาย สุขใจ', action: 'submit', at: '2025-11-05T08:00:00Z' },
+    { actorName: 'กฤตนัย อินทรเดช', action: 'reject', comment: 'ติดประชุมสำคัญ ขอเลื่อนวัน', at: '2025-11-05T14:00:00Z' },
+  ],
+};
+
+const ISO_MAP: Record<string, string> = {
+  'lh-1': '2026-03-10T09:00:00Z',
+  'lh-2': '2026-02-02T08:00:00Z',
+  'lh-3': '2025-11-05T08:00:00Z',
+};
+
+function daysWaiting(isoDate?: string): number {
+  if (!isoDate) return 0;
+  return Math.floor((Date.now() - new Date(isoDate).getTime()) / 86400000);
+}
+
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleDateString('th-TH', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function dotColor(action: string) {
+  if (action === 'approve') return 'bg-success';
+  if (action === 'reject') return 'bg-danger';
+  return 'bg-accent-soft';
+}
+
+function activeStageForStatus(status: LeaveStatus): ApproverStage | undefined {
+  if (status === 'pending') return 'manager';
+  return undefined;
+}
 
 // ════════════════════════════════════════════════════════════
 // /timeoff — Leave request portal
@@ -97,7 +155,7 @@ export default function HumiTimeoffPage() {
           aria-live="polite"
           className={cn(
             'fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-[var(--radius-md)] px-4 py-3',
-            'bg-ink text-canvas shadow-lg',
+            'bg-ink text-canvas shadow-[var(--shadow-lg)]',
             'text-body font-medium'
           )}
         >
@@ -381,7 +439,7 @@ function RequestTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
               <span
                 aria-hidden
                 className={cn(
-                  'inline-flex h-9 w-9 items-center justify-center rounded-[10px]',
+                  'inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)]',
                   opt.tileClass
                 )}
               >
@@ -474,8 +532,96 @@ function RequestTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
 // History tab — reads from Zustand store
 // ────────────────────────────────────────────────────────────
 
+function HistoryRow({ h, locale }: { h: TimeoffHistoryItem; locale: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isoSubmittedAt = ISO_MAP[h.id];
+  const audit = AUDIT_MAP[h.id];
+  const days = daysWaiting(isoSubmittedAt);
+  const activeStage = activeStageForStatus(h.status);
+
+  const actionLabel = (action: string) => {
+    if (action === 'submit') return locale === 'th' ? 'ส่งคำขอ' : 'Submitted';
+    if (action === 'approve') return locale === 'th' ? 'อนุมัติ' : 'Approved';
+    if (action === 'reject') return locale === 'th' ? 'ปฏิเสธ' : 'Rejected';
+    return action;
+  };
+
+  return (
+    <li className="flex flex-col gap-3 py-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <Avatar name={h.kindLabel} tone="teal" size="sm" />
+          <div className="min-w-0 flex-1">
+            <p className="text-body font-semibold text-ink">
+              {h.fromDate}
+              {h.toDate !== h.fromDate ? ` – ${h.toDate}` : ''}
+            </p>
+            <p className="text-small text-ink-muted">
+              {h.kindLabel} · {h.reason}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col items-start gap-1 sm:items-end shrink-0">
+          <span
+            className={cn(
+              'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
+              HISTORY_TONE[h.status]
+            )}
+          >
+            {HISTORY_LABEL[h.status]}
+          </span>
+          {h.status === 'pending' && isoSubmittedAt && (
+            <span className={`text-xs font-mono ${days > 3 ? 'text-amber-600 font-semibold' : 'text-ink-muted'}`}>
+              {days} {locale === 'th' ? 'ด. รอ' : 'd. waiting'}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Approval chain */}
+      <div className="pl-0">
+        <ApprovalChain chain={TIMEOFF_CHAIN} locale={locale} activeStage={activeStage} size="sm" />
+      </div>
+
+      {/* Audit timeline toggle */}
+      {audit && audit.length > 0 && (
+        <>
+          <button
+            className="flex items-center gap-1 text-xs text-ink-muted hover:text-ink transition-colors"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+          >
+            {expanded ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />}
+            {locale === 'th' ? 'ประวัติการดำเนินการ' : 'Audit history'}
+          </button>
+          {expanded && (
+            <ol className="space-y-2 pl-2">
+              {audit.map((entry, idx) => (
+                <li key={idx} className="flex gap-3 text-xs">
+                  <span className={`w-1.5 h-1.5 rounded-full ${dotColor(entry.action)} mt-1.5 shrink-0`} />
+                  <div>
+                    <span className="font-medium text-ink">{entry.actorName}</span>
+                    {' '}
+                    <span className="text-ink-muted">{actionLabel(entry.action)}</span>
+                    <span className="ml-2 text-ink-faint">{formatDateTime(entry.at)}</span>
+                    {entry.comment && (
+                      <p className="text-ink-muted mt-0.5 italic">&ldquo;{entry.comment}&rdquo;</p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </>
+      )}
+    </li>
+  );
+}
+
 function HistoryTab() {
   const history = useTimeoffStore((s) => s.history);
+  const searchParams = useSearchParams();
+  const locale = searchParams.get('locale') ?? 'th';
 
   if (history.length === 0) {
     return (
@@ -488,28 +634,7 @@ function HistoryTab() {
   return (
     <ul role="list" className="divide-y divide-hairline pt-2">
       {history.map((h: TimeoffHistoryItem) => (
-        <li key={h.id} className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <Avatar name={h.kindLabel} tone="teal" size="sm" />
-            <div className="min-w-0 flex-1">
-              <p className="text-body font-semibold text-ink">
-                {h.fromDate}
-                {h.toDate !== h.fromDate ? ` – ${h.toDate}` : ''}
-              </p>
-              <p className="text-small text-ink-muted">
-                {h.kindLabel} · {h.reason}
-              </p>
-            </div>
-          </div>
-          <span
-            className={cn(
-              'self-start rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap sm:self-auto',
-              HISTORY_TONE[h.status]
-            )}
-          >
-            {HISTORY_LABEL[h.status]}
-          </span>
-        </li>
+        <HistoryRow key={h.id} h={h} locale={locale} />
       ))}
     </ul>
   );

@@ -93,10 +93,12 @@
   --max-width-page: 1680px;
 
   /* ── Radius (cream-soft curves) ─────────────────────────── */
+  --radius-xs: 6px;
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 20px;
   --radius-xl: 28px;
+  --radius-2xl: 18px;
 
   /* ── Shadows — warm navy tint on cream ──────────────────── */
   --shadow-sm:   0 1px 0 rgba(14,27,44,0.04), 0 2px 6px  rgba(14,27,44,0.04);

@@ -15,21 +15,21 @@ const LANG_LABELS: Record<string, string> = {
 
 const TOOLS = [
   {
-    href: '/admin/system/system-features/language',
+    href: '/th/admin/system/system-features/language',
     title: 'ภาษาระบบ',
     brd: 'BRD #195',
     description: 'เปลี่ยนภาษาของ UI สำหรับผู้ใช้งาน — รองรับ ไทย / อังกฤษ / เวียดนาม',
     Icon: Globe,
   },
   {
-    href: '/admin/system/system-features/edocuments',
+    href: '/th/admin/system/system-features/edocuments',
     title: 'E-Document',
     brd: 'BRD #197',
     description: 'คลังเอกสารดิจิทัล — สัญญาจ้าง ใบสมัคร โอนย้าย ใบลาออก และเอกสาร HR อื่นๆ',
     Icon: FileText,
   },
   {
-    href: '/admin/system/system-features/data-migration',
+    href: '/th/admin/system/system-features/data-migration',
     title: 'Data Migration',
     brd: 'BRD #198',
     description: 'นำเข้าข้อมูลจากระบบเก่า — อัปโหลด CSV + validate + dry-run ก่อน import จริง',
@@ -66,7 +66,7 @@ export default function SystemFeaturesPage() {
             key={tool.href}
             href={tool.href}
             role="listitem"
-            className="flex flex-col gap-3 p-5 bg-surface rounded-xl border border-hairline shadow-sm hover:shadow-md hover:border-accent transition-all group"
+            className="flex flex-col gap-3 p-5 bg-surface rounded-xl border border-hairline shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:border-accent transition-all group"
           >
             <div className="flex items-start justify-between">
               <span className="text-accent" aria-hidden="true">

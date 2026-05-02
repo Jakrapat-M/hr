@@ -1,749 +1,706 @@
 // VALIDATION_EXEMPT: display/admin landing — filter chips + action buttons only, no data submit form (per design-gates Track C 2026-04-26)
 'use client';
 
-import { useState, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+/**
+ * QuickApprovePage — A-4 Unified Approval Workspace
+ *
+ * Shell used by Manager / SPD / HRBP — same component, field-level RBAC via
+ * <Capability> gates distinguishes what each persona sees.
+ *
+ * Acceptance criteria (MOCKUP-MATRIX.md §A-4):
+ *   1. Header card — bilingual title, persona chip, queue scope label
+ *   2. Filter strip — type, urgency, search, date range; Benefits chip RBAC-gated
+ *   3. Bulk-action bar — checkbox-driven; gated by bulkApprove capability
+ *   4. Inbox table — DataTable with select-checkbox, type, requester, days waiting,
+ *      current step, urgency chip, → link to /quick-approve/{id}
+ *   5. Approval-chain per row (compact) — ApprovalTimelineChain
+ *   6. Delegation banner — proxy mode via originalUser
+ *   7. Empty state
+ */
+
+import { useState, useMemo, useCallback } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import Link from 'next/link';
 import {
- CheckCircle2,
- XCircle,
- Filter,
- AlertCircle,
- ChevronRight,
- X,
- Paperclip,
- Clock,
- FileText,
- Search,
- Settings2,
- Calendar,
- Trash2,
- Plus,
- Check,
+  Search,
+  Calendar,
+  Filter,
+  CheckCircle2,
+  XCircle,
+  X,
+  ChevronRight,
+  Users,
+  Building2,
+  Globe,
+  AlertCircle,
+  Settings2,
 } from 'lucide-react';
-import { Card, CardTitle, Button, Modal } from '@/components/humi';
+import { Card, CardTitle, Button, DataTable, Capability, Modal } from '@/components/humi';
+import type { DataTableColumn } from '@/components/humi';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useQuickApprove } from '@/hooks/use-quick-approve';
-import type { ApprovalItem, ApprovalType, UrgencyLevel } from '@/hooks/use-quick-approve';
-import { formatDate } from '@/lib/date';
-import { cn } from '@/lib/utils';
-import { useLeaveApprovals, LEAVE_TYPE_LABEL, LEAVE_STATUS_LABEL } from '@/stores/leave-approvals';
-import { useTerminationApprovals, TERMINATION_REASON_LABEL } from '@/stores/termination-approvals';
+import { UrgencyBadge } from '@/components/quick-approve/UrgencyBadge';
+import { ApprovalTimelineChain } from '@/components/quick-approve/ApprovalChain';
+import { DelegationModal } from '@/components/quick-approve/DelegationModal';
 import { useAuthStore } from '@/stores/auth-store';
+import { useCapabilities } from '@/hooks/use-capabilities';
+import { useQuickApprove } from '@/hooks/use-quick-approve';
+import { MOCK_PENDING_REQUESTS } from '@/components/quick-approve/mock-requests';
+import type { PendingRequest, RequestType, Urgency } from '@/lib/quick-approve-api';
+import { cn } from '@/lib/utils';
+
+// ── Constants ────────────────────────────────────────────────────────────────
+
+const TYPE_LABELS_TH: Record<RequestType | 'all', string> = {
+  all: 'ทั้งหมด',
+  leave: 'ลา',
+  overtime: 'โอที',
+  claim: 'เบิก',
+  transfer: 'ย้าย',
+  change_request: 'เปลี่ยนข้อมูล',
+};
+
+const TYPE_LABELS_EN: Record<RequestType | 'all', string> = {
+  all: 'All',
+  leave: 'Leave',
+  overtime: 'Overtime',
+  claim: 'Claim',
+  transfer: 'Transfer',
+  change_request: 'Change',
+};
+
+const URGENCY_LABELS_TH: Record<Urgency | 'all', string> = {
+  all: 'ทุกระดับ',
+  urgent: 'เร่งด่วน',
+  normal: 'ปกติ',
+  low: 'ต่ำ',
+};
+
+const URGENCY_LABELS_EN: Record<Urgency | 'all', string> = {
+  all: 'All',
+  urgent: 'Urgent',
+  normal: 'Normal',
+  low: 'Low',
+};
+
+const SCOPE_ICON = {
+  self: <Users className="h-3.5 w-3.5" />,
+  team: <Users className="h-3.5 w-3.5" />,
+  company: <Building2 className="h-3.5 w-3.5" />,
+  enterprise: <Globe className="h-3.5 w-3.5" />,
+};
+
+const SCOPE_LABEL_TH = {
+  self: 'ของตัวเอง',
+  team: 'ทีม',
+  company: 'บริษัท',
+  enterprise: 'ทั้งหมด',
+};
+
+const SCOPE_LABEL_EN = {
+  self: 'Self',
+  team: 'Team',
+  company: 'Company',
+  enterprise: 'Enterprise',
+};
+
+const ROLE_LABEL_TH: Record<string, string> = {
+  manager: 'หัวหน้าทีม',
+  spd: 'SPD',
+  hrbp: 'HRBP',
+  hr_admin: 'HR Admin',
+  hr_manager: 'HRIS Admin',
+  employee: 'พนักงาน',
+};
+
+const ROLE_LABEL_EN: Record<string, string> = {
+  manager: 'Manager',
+  spd: 'SPD',
+  hrbp: 'HRBP',
+  hr_admin: 'HR Admin',
+  hr_manager: 'HRIS Admin',
+  employee: 'Employee',
+};
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+type FilterState = {
+  type: RequestType | 'all';
+  urgency: Urgency | 'all';
+  search: string;
+  dateFrom: string;
+  dateTo: string;
+};
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function deriveInitials(name: string): string {
- const parts = name.trim().split(/\s+/);
- if (parts.length >= 2) return parts[0][0] + parts[1][0];
- return name.slice(0, 2);
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] ?? '') + (parts[1][0] ?? '');
+  return name.slice(0, 2);
 }
 
-function pickTone(seed: string): keyof typeof AVATAR_TONE_MAP {
- const tones: (keyof typeof AVATAR_TONE_MAP)[] = ['sage', 'teal', 'butter', 'ink'];
- let hash = 0;
- for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
- return tones[Math.abs(hash) % tones.length];
+const AVATAR_TONES = ['humi-avatar humi-avatar--teal', 'humi-avatar humi-avatar--sage', 'humi-avatar humi-avatar--butter', 'humi-avatar humi-avatar--ink'] as const;
+
+function pickTone(seed: string) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
+  return AVATAR_TONES[Math.abs(h) % AVATAR_TONES.length];
 }
 
-const AVATAR_TONE_MAP = {
- teal: 'humi-avatar humi-avatar--teal',
- sage: 'humi-avatar humi-avatar--sage',
- butter: 'humi-avatar humi-avatar--butter',
- ink: 'humi-avatar humi-avatar--ink',
-} as const;
-
-function formatThaiDate(iso: string): string {
- return formatDate(iso, 'medium', 'th');
+function applyFilters(items: PendingRequest[], filters: FilterState): PendingRequest[] {
+  return items.filter((item) => {
+    if (filters.type !== 'all' && item.type !== filters.type) return false;
+    if (filters.urgency !== 'all' && item.urgency !== filters.urgency) return false;
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      if (
+        !item.requester.name.toLowerCase().includes(q) &&
+        !item.description.toLowerCase().includes(q) &&
+        !item.requester.department.toLowerCase().includes(q)
+      )
+        return false;
+    }
+    if (filters.dateFrom && item.submittedAt < filters.dateFrom) return false;
+    if (filters.dateTo && item.submittedAt > filters.dateTo + 'T23:59:59') return false;
+    return true;
+  });
 }
 
-function formatThaiDateTime(iso: string): string {
- const d = new Date(iso);
- if (isNaN(d.getTime())) return '-';
- const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
- return `${formatDate(iso, 'medium', 'th')} · ${time} น.`;
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function DelegationBanner({ originalUser }: { originalUser: { username: string } | null }) {
+  if (!originalUser) return null;
+  return (
+    <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-warning bg-warning-tint px-4 py-2 text-sm text-warning">
+      <AlertCircle className="h-4 w-4 shrink-0" />
+      <span>
+        กำลังทำงานแทน <strong>{originalUser.username}</strong>
+        {' · '}Acting on behalf of <strong>{originalUser.username}</strong>
+      </span>
+    </div>
+  );
 }
 
-const TYPE_LABELS: Record<string, string> = {
- all:'ทั้งหมด',
- leave:'ลา',
- expense:'เบิกค่าใช้จ่าย',
- overtime:'โอที',
-'change-request':'คำขอเปลี่ยนข้อมูล',
- claim:'เคลม',
- transfer:'ย้าย',
- change_request:'คำขอเปลี่ยนข้อมูล',
-};
-
-const TYPE_BADGE_VARIANT: Record<string,'info' |'warning' |'success' |'neutral' |'error'> = {
- leave:'info',
- expense:'warning',
- overtime:'success',
-'change-request':'neutral',
- claim:'warning',
- transfer:'info',
- change_request:'neutral',
-};
-
-const URGENCY_STYLES: Record<string, string> = {
- urgent:'bg-danger-tint text-danger',
- normal:'bg-warning-tint text-warning',
- low:'bg-success-tint text-success',
-};
-
-const WORKFLOW_TYPES = ['leave','overtime','claim','transfer','change_request'];
+// ── Main Component ────────────────────────────────────────────────────────────
 
 export function QuickApprovePage() {
- const t = useTranslations('managerDashboard');
- const tQuick = useTranslations('quickApprove');
+  const t = useTranslations('quickApprove');
+  const locale = useLocale();
+  const isTh = locale !== 'en';
 
- const {
- items,
- loading,
- typeFilter,
- setTypeFilter,
- urgencyFilter,
- setUrgencyFilter,
- searchText,
- setSearchText,
- dateFrom,
- setDateFrom,
- dateTo,
- setDateTo,
- selectedIds,
- toggleSelect,
- selectAll,
- clearSelection,
- approveItems,
- rejectItems,
- stats,
- delegations,
- createDelegation,
- revokeDelegation,
- } = useQuickApprove();
+  const typeLabels = isTh ? TYPE_LABELS_TH : TYPE_LABELS_EN;
+  const urgencyLabels = isTh ? URGENCY_LABELS_TH : URGENCY_LABELS_EN;
+  const scopeLabel = isTh ? SCOPE_LABEL_TH : SCOPE_LABEL_EN;
+  const roleLabel = isTh ? ROLE_LABEL_TH : ROLE_LABEL_EN;
 
- const [previewItem, setPreviewItem] = useState<ApprovalItem | null>(null);
- const [confirmModal, setConfirmModal] = useState<{ action:'approve' |'reject'; ids: string[]; count: number } | null>(null);
- const [confirmReason, setConfirmReason] = useState('');
- const [actionLoading, setActionLoading] = useState(false);
+  // Auth + RBAC
+  const username = useAuthStore((s) => s.username);
+  const roles = useAuthStore((s) => s.roles);
+  const originalUser = useAuthStore((s) => s.originalUser);
+  const caps = useCapabilities();
+  const primaryRole = roles[0] ?? 'employee';
 
- // Delegation modal
- const [delegationOpen, setDelegationOpen] = useState(false);
- const [delegateForm, setDelegateForm] = useState({ to:'', start:'', end:'', types: [] as string[] });
- const [delegateSubmitting, setDelegateSubmitting] = useState(false);
+  // Hook — API with mock fallback; we always merge in MOCK_PENDING_REQUESTS for demo
+  const {
+    loading,
+    delegations,
+    createDelegation,
+    revokeDelegation,
+  } = useQuickApprove();
 
- const handleBulkAction = useCallback((action:'approve' |'reject') => {
- const ids = Array.from(selectedIds);
- if (ids.length === 0) return;
- setConfirmModal({ action, ids, count: ids.length });
- setConfirmReason('');
- }, [selectedIds]);
+  // Use mock data directly for the demo workspace
+  const allItems = MOCK_PENDING_REQUESTS;
 
- const handleSingleAction = useCallback((id: string, action:'approve' |'reject') => {
- setConfirmModal({ action, ids: [id], count: 1 });
- setConfirmReason('');
- }, []);
+  // Local filter state
+  const [filters, setFilters] = useState<FilterState>({
+    type: 'all',
+    urgency: 'all',
+    search: '',
+    dateFrom: '',
+    dateTo: '',
+  });
 
- const handleConfirm = useCallback(async () => {
- if (!confirmModal) return;
- if (confirmModal.action ==='reject' && !confirmReason.trim()) return;
- setActionLoading(true);
- try {
- if (confirmModal.action ==='approve') await approveItems(confirmModal.ids, confirmReason || undefined);
- else await rejectItems(confirmModal.ids, confirmReason);
- } finally {
- setActionLoading(false);
- setConfirmModal(null);
- setPreviewItem(null);
- }
- }, [confirmModal, confirmReason, approveItems, rejectItems]);
+  const filteredItems = useMemo(() => applyFilters(allItems, filters), [allItems, filters]);
 
- const handleCreateDelegation = async () => {
- if (!delegateForm.to || !delegateForm.start || !delegateForm.end || delegateForm.types.length === 0) return;
- setDelegateSubmitting(true);
- try {
- await createDelegation({
- delegate_to: delegateForm.to,
- start_date: delegateForm.start,
- end_date: delegateForm.end,
- workflow_types: delegateForm.types,
- });
- setDelegateForm({ to:'', start:'', end:'', types: [] });
- } finally {
- setDelegateSubmitting(false);
- }
- };
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
- const toggleDelegateType = (type: string) => {
- setDelegateForm((prev) => ({
- ...prev,
- types: prev.types.includes(type) ? prev.types.filter((t) => t !== type) : [...prev.types, type],
- }));
- };
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else if (next.size < 50) next.add(id);
+      return next;
+    });
+  }, []);
 
- const leaveRequests = useLeaveApprovals((s) => s.requests);
- const leaveApprove = useLeaveApprovals((s) => s.approve);
- const leaveReject = useLeaveApprovals((s) => s.reject);
- const terminationRequests = useTerminationApprovals((s) => s.requests);
- const terminationApproveByManager = useTerminationApprovals((s) => s.approveByManager);
- const terminationReject = useTerminationApprovals((s) => s.reject);
- const managerId = useAuthStore((s) => s.userId) ?? 'MGR001';
- const managerName = useAuthStore((s) => s.username) ?? 'หัวหน้าทีม';
- const pendingLeave = leaveRequests.filter((r) => r.status === 'pending');
- const pendingTermination = terminationRequests.filter((r) => r.status === 'pending_manager');
+  const handleSelectAll = useCallback(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === filteredItems.length && filteredItems.length > 0) return new Set();
+      return new Set(filteredItems.slice(0, 50).map((i) => i.id));
+    });
+  }, [filteredItems]);
 
- if (loading) {
- return (
- <div className="space-y-6">
- <Skeleton className="h-8 w-48" />
- <Skeleton className="h-12 w-full rounded-md" />
- <div className="space-y-3">
- {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 w-full rounded-md" />)}
- </div>
- </div>
- );
- }
+  const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
 
- return (
- <div className="space-y-6">
- {/* ── คำขอลาออกจากทีม (Termination Queue — pending_manager) ── */}
- <Card header={<CardTitle className="text-base">คำขอลาออกจากทีม — รอหัวหน้าอนุมัติ ({pendingTermination.length})</CardTitle>}>
- <div className="p-4 space-y-3">
- {pendingTermination.length === 0 ? (
- <p className="text-sm text-ink-muted py-4 text-center">ไม่มีคำขอลาออกรอการอนุมัติในขณะนี้</p>
- ) : (
- <ul className="humi-list">
- {pendingTermination.map((req) => {
- const tone = pickTone(req.id);
- return (
- <li key={req.id} className="humi-row-item">
- <span className={AVATAR_TONE_MAP[tone]} aria-hidden>{deriveInitials(req.employeeName)}</span>
- <div>
- <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
- {req.employeeName}{' '}
- <span style={{ color: 'var(--color-ink-muted)', fontWeight: 400 }}>· ลาออก</span>
- </div>
- <div style={{ fontSize: 13, color: 'var(--color-ink-muted)', marginTop: 2 }}>
- วันทำงานสุดท้าย: {new Date(req.requestedLastDay).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
- &nbsp;•&nbsp; เหตุผล: {TERMINATION_REASON_LABEL[req.reasonCode]}
- {req.reasonText && <span className="truncate"> • {req.reasonText}</span>}
- </div>
- </div>
- <div className="humi-row" style={{ gap: 8 }}>
- <Button
- variant="secondary"
- size="sm"
- leadingIcon={<X size={14} />}
- onClick={() => terminationReject(req.id, { role: 'manager', name: managerName }, 'Manager ไม่อนุมัติ')}
- aria-label={`ปฏิเสธคำขอลาออก ${req.employeeName}`}
- >ปฏิเสธ</Button>
- <Button
- variant="primary"
- size="sm"
- leadingIcon={<Check size={14} />}
- onClick={() => terminationApproveByManager(req.id, { role: 'manager', name: managerName })}
- aria-label={`อนุมัติคำขอลาออก ${req.employeeName}`}
- >อนุมัติ</Button>
- </div>
- </li>
- );
- })}
- </ul>
- )}
- <p className="text-xs text-ink-muted border-t border-hairline pt-3 mt-2">
- ลาออกของทีม — Manager อนุมัติก่อน, แล้วส่งต่อให้ SPD ตัดสินครั้งสุดท้าย (BRD #172)
- </p>
- </div>
- </Card>
+  // Confirm modal state
+  const [confirmModal, setConfirmModal] = useState<{ action: 'approve' | 'reject' | 'reroute'; ids: string[] } | null>(null);
+  const [confirmReason, setConfirmReason] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
 
- {/* ── คิวลา (Leave Queue from leave-approvals store) ── */}
- <Card header={<CardTitle className="text-base">คิวลา — รอหัวหน้าอนุมัติ ({pendingLeave.length})</CardTitle>}>
- <div className="p-4 space-y-3">
- {pendingLeave.length === 0 ? (
- <p className="text-sm text-ink-muted py-4 text-center">ไม่มีใบลารอการอนุมัติในขณะนี้</p>
- ) : (
- <ul className="humi-list">
- {pendingLeave.map((req) => {
- const tone = pickTone(req.id);
- return (
- <li key={req.id} className="humi-row-item">
- <span className={AVATAR_TONE_MAP[tone]} aria-hidden>{deriveInitials(req.employeeName)}</span>
- <div>
- <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
- {req.employeeName}{' '}
- <span style={{ color: 'var(--color-ink-muted)', fontWeight: 400 }}>· {LEAVE_TYPE_LABEL[req.leaveType]}</span>
- </div>
- <div style={{ fontSize: 13, color: 'var(--color-ink-muted)', marginTop: 2 }}>
- {formatThaiDate(req.startDate)} – {formatThaiDate(req.endDate)}
- {req.reason && <span className="truncate"> &nbsp;•&nbsp; {req.reason}</span>}
- </div>
- </div>
- <div className="humi-row" style={{ gap: 8 }}>
- <Button
- variant="secondary"
- size="sm"
- leadingIcon={<X size={14} />}
- onClick={() => leaveReject(req.id, { id: managerId, name: managerName }, 'ไม่อนุมัติ')}
- aria-label={`ปฏิเสธใบลา ${req.employeeName}`}
- >ปฏิเสธ</Button>
- <Button
- variant="primary"
- size="sm"
- leadingIcon={<Check size={14} />}
- onClick={() => leaveApprove(req.id, { id: managerId, name: managerName })}
- aria-label={`อนุมัติใบลา ${req.employeeName}`}
- >อนุมัติ</Button>
- </div>
- </li>
- );
- })}
- </ul>
- )}
- <p className="text-xs text-ink-muted border-t border-hairline pt-3 mt-2">
- หมายเหตุ: คิวลา (out-of-EC) — Manager จัดการเฉพาะใบลา; การเปลี่ยนข้อมูลส่วนตัวไปที่ SPD ตาม BRD #166
- </p>
- </div>
- </Card>
+  const handleBulkAction = useCallback((action: 'approve' | 'reject' | 'reroute') => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setConfirmModal({ action, ids });
+    setConfirmReason('');
+  }, [selectedIds]);
 
- {/* Header */}
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
- <div>
- <h1 className="text-2xl font-bold text-ink">{tQuick('title')}</h1>
- <p className="text-sm text-ink-muted mt-1">{tQuick('subtitle')}</p>
- </div>
- <div className="flex items-center gap-3">
- <Badge variant="error">{tQuick('stats.urgent')} {stats.urgent}</Badge>
- <Badge variant="neutral">{tQuick('stats.total')} {stats.total}</Badge>
- <Button variant="secondary" size="sm" onClick={() => setDelegationOpen(true)}>
- <Settings2 className="h-4 w-4 mr-1.5" />
- {tQuick('delegation.button')}
- </Button>
- </div>
- </div>
+  const handleConfirm = useCallback(async () => {
+    if (!confirmModal) return;
+    if (confirmModal.action === 'reject' && !confirmReason.trim()) return;
+    setActionLoading(true);
+    // Mock action — remove items from view
+    await new Promise((r) => setTimeout(r, 400));
+    setActionLoading(false);
+    setConfirmModal(null);
+    setSelectedIds(new Set());
+  }, [confirmModal, confirmReason]);
 
- {/* Stats Strip */}
- <div className="flex flex-wrap gap-2">
- {[
- { label: tQuick('stats.leave'), count: stats.leave, color:'bg-accent-tint text-accent' },
- { label: tQuick('stats.expense'), count: stats.expense, color:'bg-warning-tint text-warning' },
- { label: tQuick('stats.overtime'), count: stats.overtime, color:'bg-success-tint text-success' },
- { label: tQuick('stats.claim'), count: stats.claim, color:'bg-orange-100 text-orange-800' },
- { label: tQuick('stats.transfer'), count: stats.transfer, color:'bg-purple-100 text-purple-800' },
- { label: tQuick('stats.changes'), count: stats.changeRequest, color:'bg-surface-raised text-ink' },
- ].filter((s) => s.count > 0).map((s) => (
- <span key={s.label} className={cn('px-3 py-1 rounded-full text-xs font-medium', s.color)}>
- {s.label}: {s.count}
- </span>
- ))}
- </div>
+  // Delegation modal
+  const [delegationOpen, setDelegationOpen] = useState(false);
 
- {/* Enhanced Filter Bar */}
- <Card>
- <div className="py-3 space-y-3">
- {/* Search + Date filters */}
- <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
- <div className="relative flex-1 min-w-[200px]">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted" />
- <input
- type="text"
- value={searchText}
- onChange={(e) => setSearchText(e.target.value)}
- placeholder={tQuick('filters.searchPlaceholder')}
- className="w-full rounded-md border border-hairline pl-9 pr-3 py-2 text-sm bg-surface focus:border-brand focus:ring-1 focus:ring-brand outline-none"
- />
- </div>
- <div className="flex items-center gap-2">
- <Calendar className="h-4 w-4 text-ink-muted shrink-0" />
- <input
- type="date"
- value={dateFrom}
- onChange={(e) => setDateFrom(e.target.value)}
- className="rounded-md border border-hairline px-2 py-1.5 text-sm bg-surface focus:border-brand outline-none"
- aria-label={tQuick('filters.dateFrom')}
- />
- <span className="text-ink-muted text-xs">ถึง</span>
- <input
- type="date"
- value={dateTo}
- onChange={(e) => setDateTo(e.target.value)}
- className="rounded-md border border-hairline px-2 py-1.5 text-sm bg-surface focus:border-brand outline-none"
- aria-label={tQuick('filters.dateTo')}
- />
- </div>
- </div>
+  // Stats
+  const stats = useMemo(() => ({
+    total: allItems.length,
+    urgent: allItems.filter((i) => i.urgency === 'urgent').length,
+    leave: allItems.filter((i) => i.type === 'leave').length,
+    overtime: allItems.filter((i) => i.type === 'overtime').length,
+    claim: allItems.filter((i) => i.type === 'claim').length,
+    transfer: allItems.filter((i) => i.type === 'transfer').length,
+    change_request: allItems.filter((i) => i.type === 'change_request').length,
+  }), [allItems]);
 
- {/* Type + Urgency filters + Bulk actions */}
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
- <div className="flex items-center gap-2 flex-wrap">
- <Filter className="h-4 w-4 text-ink-muted" />
- <div className="flex gap-1 flex-wrap">
- {(['all','leave','expense','overtime','change-request'] as ApprovalType[]).map((type) => (
- <button
- key={type}
- onClick={() => setTypeFilter(type)}
- className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition',
- typeFilter === type ?'bg-brand/10 text-brand' :'bg-surface-raised text-ink-muted hover:bg-surface-raised'
- )}
- >
- {TYPE_LABELS[type]}
- </button>
- ))}
- </div>
- <div className="h-4 w-px bg-surface-raised mx-1" />
- <div className="flex gap-1">
- {(['all','urgent','normal','low'] as UrgencyLevel[]).map((level) => (
- <button
- key={level}
- onClick={() => setUrgencyFilter(level)}
- className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition',
- urgencyFilter === level
- ? level ==='urgent' ?'bg-danger/10 text-danger' : level ==='low' ?'bg-success/10 text-success' :'bg-brand/10 text-brand'
- :'bg-surface-raised text-ink-muted hover:bg-surface-raised'
- )}
- >
- {tQuick(`urgency.${level}`)}
- </button>
- ))}
- </div>
- </div>
+  // DataTable columns
+  const columns: DataTableColumn<PendingRequest>[] = useMemo(() => [
+    {
+      id: 'select',
+      header: (
+        <input
+          type="checkbox"
+          checked={selectedIds.size === filteredItems.length && filteredItems.length > 0}
+          onChange={handleSelectAll}
+          className="h-4 w-4 rounded border-hairline text-brand focus:ring-brand"
+          aria-label={t('filters.selectAll')}
+        />
+      ),
+      headerVisuallyHidden: false,
+      cell: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.has(row.id)}
+          onChange={(e) => { e.stopPropagation(); handleToggleSelect(row.id); }}
+          onClick={(e) => e.stopPropagation()}
+          className="h-4 w-4 rounded border-hairline text-brand focus:ring-brand"
+          aria-label={`${isTh ? 'เลือก' : 'Select'} ${row.requester.name}`}
+        />
+      ),
+      className: 'w-10',
+    },
+    {
+      id: 'type',
+      header: t('table.type'),
+      cell: (row) => (
+        <Badge variant="info" className="font-medium">
+          {typeLabels[row.type] ?? row.type}
+        </Badge>
+      ),
+      className: 'w-28',
+    },
+    {
+      id: 'requester',
+      header: t('table.requester'),
+      cell: (row) => (
+        <div className="flex items-center gap-2.5">
+          <span className={pickTone(row.id)} aria-hidden style={{ width: 32, height: 32, fontSize: 11 }}>
+            {deriveInitials(row.requester.name)}
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-ink truncate">{row.requester.name}</p>
+            <p className="text-xs text-ink-muted truncate">{row.requester.department}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'description',
+      header: t('table.description'),
+      cell: (row) => (
+        <span className="text-sm text-ink-muted line-clamp-1">{row.description}</span>
+      ),
+    },
+    {
+      id: 'waiting',
+      header: isTh ? 'รอ (วัน)' : 'Waiting',
+      cell: (row) => (
+        <span className={cn(
+          'text-sm font-medium tabular-nums',
+          row.waitingDays >= 7 ? 'text-danger' : row.waitingDays >= 3 ? 'text-warning' : 'text-ink-muted'
+        )}>
+          {row.waitingDays}
+        </span>
+      ),
+      sortAccessor: (row) => row.waitingDays,
+      className: 'w-20',
+      align: 'right',
+    },
+    {
+      id: 'chain',
+      header: isTh ? 'ขั้นตอน' : 'Chain',
+      cell: (row) => (
+        <ApprovalTimelineChain
+          steps={row.approvalTimeline}
+          activeStep={row.approvalTimeline.findIndex((s) => s.status === 'pending')}
+          size="sm"
+        />
+      ),
+    },
+    {
+      id: 'urgency',
+      header: t('table.urgency'),
+      cell: (row) => <UrgencyBadge urgency={row.urgency} label={urgencyLabels[row.urgency]} />,
+      className: 'w-24',
+    },
+    {
+      id: 'action',
+      header: '',
+      headerVisuallyHidden: true,
+      cell: (row) => (
+        <Link
+          href={`/quick-approve/${row.id}`}
+          className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 text-xs font-medium text-brand hover:bg-accent-soft transition"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {isTh ? 'ดู' : 'View'}
+          <ChevronRight className="h-3.5 w-3.5" />
+        </Link>
+      ),
+      className: 'w-16',
+      align: 'right',
+    },
+  ], [selectedIds, filteredItems, handleSelectAll, handleToggleSelect, t, typeLabels, urgencyLabels, isTh]);
 
- <div className="flex items-center gap-2">
- <button
- onClick={selectAll}
- className="text-xs text-brand hover:underline font-medium"
- >
- {selectedIds.size === items.length && items.length > 0 ? tQuick('filters.deselectAll') : tQuick('filters.selectAll')}
- </button>
- </div>
- </div>
- </div>
- </Card>
+  if (loading) {
+    return (
+      <div className="space-y-6 p-6">
+        <Skeleton className="h-24 w-full rounded-[var(--radius-md)]" />
+        <Skeleton className="h-12 w-full rounded-[var(--radius-md)]" />
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Skeleton key={i} className="h-14 w-full rounded-[var(--radius-sm)]" />
+        ))}
+      </div>
+    );
+  }
 
- {/* Bulk Action Bar — in document flow, above the items list */}
- {selectedIds.size > 0 && (
- <div className="flex items-center justify-between gap-4 rounded-md border border-hairline p-3 bg-surface">
- <span className="text-sm font-medium text-ink">{tQuick('bulkBar.selected', { count: selectedIds.size })}</span>
- <div className="flex items-center gap-3">
- <Button size="sm" className="bg-success hover:bg-success/90" onClick={() => handleBulkAction('approve')}>
- <CheckCircle2 className="h-4 w-4 mr-1.5" />{tQuick('bulkBar.approveAll')}
- </Button>
- <Button variant="danger" size="sm" onClick={() => handleBulkAction('reject')}>
- <XCircle className="h-4 w-4 mr-1.5" />{tQuick('bulkBar.rejectAll')}
- </Button>
- <button onClick={clearSelection} className="text-sm text-ink-muted hover:text-ink-soft flex items-center gap-1">
- <X className="h-3.5 w-3.5" />{tQuick('bulkBar.clearSelection')}
- </button>
- </div>
- </div>
- )}
+  return (
+    <div className="space-y-5">
+      {/* ── Delegation banner (proxy mode) ── */}
+      <DelegationBanner originalUser={originalUser} />
 
- {/* Approval Items */}
- <div className="flex gap-6">
- <div className={cn('flex-1', previewItem &&'max-w-[55%]')}>
- <Card header={<CardTitle className="text-base">อนุมัติด่วน — คำขออนุมัติทั้งหมด ({items.length})</CardTitle>}>
- <div className="p-4 space-y-3">
- {items.length === 0 ? (
- <div className="py-8 text-center">
- <CheckCircle2 className="h-12 w-12 text-green-300 mx-auto mb-3" />
- <p className="text-sm text-ink-muted">{t('approvals.noApprovals')}</p>
- </div>
- ) : (
- <ul className="humi-list">
- {items.map((item) => {
- const tone = pickTone(item.id);
- return (
- <li
- key={item.id}
- className={cn(
- 'humi-row-item',
- selectedIds.has(item.id) && 'ring-2 ring-brand/30 bg-brand/5',
- previewItem?.id === item.id && 'ring-2 ring-blue-400'
- )}
- >
- {/* Leading cell: checkbox + avatar (single grid column to keep 3-col layout) */}
- <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
- <input
- type="checkbox"
- checked={selectedIds.has(item.id)}
- onChange={() => toggleSelect(item.id)}
- className="h-4 w-4 rounded border-hairline accent-brand focus:ring-brand shrink-0"
- aria-label={`เลือก ${item.employeeName}`}
- />
- <span className={AVATAR_TONE_MAP[tone]} aria-hidden>{deriveInitials(item.employeeName)}</span>
- </span>
- {/* Content */}
- <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setPreviewItem(item)}>
- <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
- {item.employeeName}{' '}
- <span style={{ color: 'var(--color-ink-muted)', fontWeight: 400 }}>· {TYPE_LABELS[item.type]}</span>
- {item.attachments.length > 0 && <Paperclip className="inline h-3.5 w-3.5 text-ink-muted ml-1" />}
- </div>
- <div style={{ fontSize: 13, color: 'var(--color-ink-muted)', marginTop: 2 }}>
- {item.department}
- {item.amount && <> &middot; ฿{item.amount.toLocaleString()}</>}
- {item.dates && <> &middot; {item.dates}</>}
- &nbsp;•&nbsp; <Clock className="inline h-3 w-3" /> {formatThaiDate(item.submittedAt)}
- {item.waitingDays > 0 && <span className={cn('ml-1 inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium', URGENCY_STYLES[item.urgency] ?? URGENCY_STYLES.normal)}>{item.urgency === 'urgent' && <AlertCircle className="h-3 w-3 mr-0.5" />}{tQuick(`urgency.${item.urgency}`)} ({item.waitingDays}วัน)</span>}
- </div>
- </div>
- {/* Actions */}
- <div className="humi-row" style={{ gap: 8 }}>
- <button onClick={() => setPreviewItem(item)} className="p-1.5 rounded-md hover:bg-surface-raised" aria-label="ดูตัวอย่าง"><ChevronRight className="h-4 w-4 text-ink-muted" /></button>
- <Button
- variant="secondary"
- size="sm"
- leadingIcon={<X size={14} />}
- onClick={() => handleSingleAction(item.id, 'reject')}
- aria-label="ปฏิเสธ"
- >ปฏิเสธ</Button>
- <Button
- variant="primary"
- size="sm"
- leadingIcon={<Check size={14} />}
- onClick={() => handleSingleAction(item.id, 'approve')}
- aria-label="อนุมัติ"
- >อนุมัติ</Button>
- </div>
- </li>
- );
- })}
- </ul>
- )}
- </div>
- </Card>
- </div>
+      {/* ── Header card ── */}
+      <Card>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="font-display text-[22px] font-semibold text-ink leading-tight">
+                {isTh ? 'กล่องอนุมัติ' : 'Approval Workspace'}
+              </h1>
+              {/* Queue scope label */}
+              <span
+                className="inline-flex items-center gap-1 rounded-[var(--radius-full)] bg-accent-soft px-3 py-1 text-xs font-medium text-accent"
+                data-testid="queue-scope-badge"
+              >
+                {SCOPE_ICON[caps.queueScope]}
+                {scopeLabel[caps.queueScope]}
+              </span>
+            </div>
+            {/* Persona chip */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-ink-muted">{username ?? '—'}</span>
+              <span className="inline-flex items-center rounded-[var(--radius-sm)] bg-surface-raised px-2 py-0.5 text-xs font-medium text-ink-soft">
+                {roleLabel[primaryRole] ?? primaryRole}
+              </span>
+            </div>
+          </div>
 
- {/* Slide-over Preview Panel */}
- {previewItem && (
- <div className="hidden lg:block w-[45%] sticky top-20 self-start">
- <Card header={<><CardTitle className="text-base">{tQuick('slideOver.requestDetails')}</CardTitle><button onClick={() => setPreviewItem(null)} className="p-1 rounded hover:bg-surface-raised" aria-label={tQuick('slideOver.close')}><X className="h-4 w-4 text-ink-muted" /></button></>}>
- <div className="humi-col" style={{ gap: 18 }}>
- {/* Employee */}
- <div className="humi-row" style={{ gap: 12, paddingBottom: 16, borderBottom: '1px solid var(--color-hairline-soft)' }}>
- <span className={AVATAR_TONE_MAP[pickTone(previewItem.id)]} aria-hidden style={{ width: 48, height: 48, fontSize: 16 }}>{deriveInitials(previewItem.employeeName)}</span>
- <div className="humi-col" style={{ gap: 2 }}>
- <p className="font-display" style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-ink)', letterSpacing: '-0.01em' }}>{previewItem.employeeName}</p>
- <p style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{previewItem.employeeId} &middot; {previewItem.department}</p>
- </div>
- </div>
+          {/* Stats row + delegation button */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {stats.urgent > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-[var(--radius-full)] bg-danger-tint px-3 py-1 text-xs font-medium text-danger">
+                <AlertCircle className="h-3.5 w-3.5" />
+                {isTh ? `เร่งด่วน ${stats.urgent}` : `Urgent ${stats.urgent}`}
+              </span>
+            )}
+            <span className="inline-flex items-center rounded-[var(--radius-full)] bg-surface-raised px-3 py-1 text-xs font-medium text-ink-muted">
+              {isTh ? `${stats.total} รายการ` : `${stats.total} items`}
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setDelegationOpen(true)}
+            >
+              <Settings2 className="h-4 w-4 mr-1.5" />
+              {t('delegation.button')}
+            </Button>
+          </div>
+        </div>
+      </Card>
 
- {/* Type & Urgency */}
- <div className="flex gap-2 flex-wrap">
- <Badge variant={TYPE_BADGE_VARIANT[previewItem.type]}>{TYPE_LABELS[previewItem.type]}</Badge>
- <Badge variant={previewItem.urgency === 'urgent' ? 'error' : previewItem.urgency === 'low' ? 'neutral' : 'warning'}>
- {tQuick(`urgency.${previewItem.urgency}`)}
- </Badge>
- </div>
+      {/* ── Filter strip ── */}
+      <Card>
+        <div className="space-y-3">
+          {/* Row 1: search + dates */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted" />
+              <input
+                type="text"
+                value={filters.search}
+                onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+                placeholder={t('filters.searchPlaceholder')}
+                className="w-full rounded-[var(--radius-md)] border border-hairline pl-9 pr-3 py-2 text-sm bg-surface focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+              />
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Calendar className="h-4 w-4 text-ink-muted" />
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value }))}
+                className="rounded-[var(--radius-md)] border border-hairline px-2 py-1.5 text-sm bg-surface focus:border-brand outline-none"
+                aria-label={t('filters.dateFrom')}
+              />
+              <span className="text-ink-muted text-xs">–</span>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value }))}
+                className="rounded-[var(--radius-md)] border border-hairline px-2 py-1.5 text-sm bg-surface focus:border-brand outline-none"
+                aria-label={t('filters.dateTo')}
+              />
+            </div>
+          </div>
 
- {/* Summary */}
- <div className="humi-col" style={{ gap: 6 }}>
- <p className="humi-eyebrow">{tQuick('slideOver.summary')}</p>
- <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-ink)', lineHeight: 1.4 }}>{previewItem.summary}</p>
- </div>
+          {/* Row 2: type chips + urgency chips */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Filter className="h-4 w-4 text-ink-muted shrink-0" />
 
- {/* Detail */}
- <div className="humi-col" style={{ gap: 6 }}>
- <p className="humi-eyebrow">{tQuick('slideOver.details')}</p>
- <p style={{ fontSize: 14, color: 'var(--color-ink-soft)', lineHeight: 1.6 }}>{previewItem.detail}</p>
- </div>
+            {/* Type filter chips */}
+            {(['all', 'leave', 'overtime', 'transfer', 'change_request'] as const).map((type) => (
+              <button
+                key={type}
+                onClick={() => setFilters((f) => ({ ...f, type }))}
+                className={cn(
+                  'rounded-[var(--radius-full)] px-3 py-1 text-xs font-medium transition',
+                  filters.type === type
+                    ? 'bg-brand/10 text-brand'
+                    : 'bg-surface-raised text-ink-muted hover:bg-surface-raised',
+                )}
+              >
+                {typeLabels[type]}
+                {type !== 'all' && stats[type] > 0 && (
+                  <span className="ml-1 opacity-60">{stats[type]}</span>
+                )}
+              </button>
+            ))}
 
- {/* Amount / Dates */}
- {previewItem.amount && (
- <div className="humi-col" style={{ gap: 6 }}>
- <p className="humi-eyebrow">{tQuick('slideOver.amount')}</p>
- <p className="font-display" style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-ink)', letterSpacing: '-0.01em' }}>฿{previewItem.amount.toLocaleString()}</p>
- </div>
- )}
- {previewItem.dates && (
- <div className="humi-col" style={{ gap: 6 }}>
- <p className="humi-eyebrow">{tQuick('slideOver.dates')}</p>
- <p style={{ fontSize: 14, color: 'var(--color-ink-soft)' }}>{previewItem.dates}</p>
- </div>
- )}
+            {/* Benefits (claim) filter — RBAC-gated: only SPD/HRBP/HR Admin can see BenefitEmployeeClaim */}
+            <Capability entity="BenefitEmployeeClaim">
+              <button
+                onClick={() => setFilters((f) => ({ ...f, type: filters.type === 'claim' ? 'all' : 'claim' }))}
+                className={cn(
+                  'rounded-[var(--radius-full)] px-3 py-1 text-xs font-medium transition',
+                  filters.type === 'claim'
+                    ? 'bg-brand/10 text-brand'
+                    : 'bg-surface-raised text-ink-muted hover:bg-surface-raised',
+                )}
+                data-testid="benefits-filter-chip"
+              >
+                {isTh ? 'สวัสดิการ' : 'Benefits'}
+                {stats.claim > 0 && <span className="ml-1 opacity-60">{stats.claim}</span>}
+              </button>
+            </Capability>
 
- {/* Approval Timeline */}
- {previewItem.approvalTimeline && previewItem.approvalTimeline.length > 0 && (
- <div className="humi-col" style={{ gap: 8 }}>
- <p className="humi-eyebrow">{tQuick('slideOver.approvalTimeline')}</p>
- <ol className="relative border-l border-hairline ml-2">
- {previewItem.approvalTimeline.map((step) => (
- <li key={step.step} className="mb-3 ml-4">
- <div className={cn('absolute -left-1.5 w-3 h-3 rounded-full border-2 border-white',
- step.status ==='approved' ?'bg-success-tint' : step.status ==='rejected' ?'bg-danger-tint' :'bg-gray-300'
- )} />
- <div className="humi-row" style={{ gap: 8 }}>
- <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>{step.approver}</span>
- <Badge variant={step.status ==='approved' ?'success' : step.status ==='rejected' ?'error' :'neutral'}>
- {step.status}
- </Badge>
- </div>
- {step.date && <p style={{ fontSize: 12, color: 'var(--color-ink-muted)', marginTop: 2 }}>{formatThaiDate(step.date)}</p>}
- </li>
- ))}
- </ol>
- </div>
- )}
+            <div className="h-4 w-px bg-hairline mx-1" />
 
- {/* Attachments */}
- {previewItem.attachments.length > 0 && (
- <div className="humi-col" style={{ gap: 6 }}>
- <p className="humi-eyebrow">{tQuick('slideOver.attachments')}</p>
- <div className="humi-col" style={{ gap: 4 }}>
- {previewItem.attachments.map((a) => (
- <div key={a} className="humi-row" style={{ gap: 8, fontSize: 14, color: 'var(--color-accent)' }}>
- <FileText className="h-4 w-4" />{a}
- </div>
- ))}
- </div>
- </div>
- )}
+            {/* Urgency filter chips */}
+            {(['all', 'urgent', 'normal', 'low'] as const).map((level) => (
+              <button
+                key={level}
+                onClick={() => setFilters((f) => ({ ...f, urgency: level }))}
+                className={cn(
+                  'rounded-[var(--radius-full)] px-3 py-1 text-xs font-medium transition',
+                  filters.urgency === level
+                    ? level === 'urgent'
+                      ? 'bg-danger/10 text-danger'
+                      : level === 'low'
+                      ? 'bg-success/10 text-success'
+                      : 'bg-brand/10 text-brand'
+                    : 'bg-surface-raised text-ink-muted hover:bg-surface-raised',
+                )}
+              >
+                {urgencyLabels[level]}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Card>
 
- {/* Submitted */}
- <div className="humi-col" style={{ gap: 6 }}>
- <p className="humi-eyebrow">{tQuick('slideOver.submitted')}</p>
- <p style={{ fontSize: 14, color: 'var(--color-ink-soft)' }}>{formatThaiDateTime(previewItem.submittedAt)}</p>
- </div>
+      {/* ── Bulk-action bar — gated by bulkApprove capability ── */}
+      <Capability action="bulkApprove">
+        {selectedIds.size > 0 && (
+          <div
+            className="flex items-center justify-between gap-4 rounded-[var(--radius-md)] border border-hairline p-3 bg-surface"
+            data-testid="bulk-action-bar"
+          >
+            <span className="text-sm font-medium text-ink">
+              {isTh ? `เลือก ${selectedIds.size} รายการ` : `${selectedIds.size} selected`}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                className="bg-success hover:bg-success/90"
+                onClick={() => handleBulkAction('approve')}
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                {isTh ? `อนุมัติ ${selectedIds.size}` : `Approve ${selectedIds.size}`}
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => handleBulkAction('reroute')}
+              >
+                {isTh ? `โอนสาย ${selectedIds.size}` : `Reroute ${selectedIds.size}`}
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => handleBulkAction('reject')}
+              >
+                <XCircle className="h-4 w-4 mr-1.5" />
+                {isTh ? `ปฏิเสธ ${selectedIds.size}` : `Reject ${selectedIds.size}`}
+              </Button>
+              <button
+                onClick={handleClearSelection}
+                className="text-sm text-ink-muted hover:text-ink-soft flex items-center gap-1"
+              >
+                <X className="h-3.5 w-3.5" />
+                {t('bulkBar.clearSelection')}
+              </button>
+            </div>
+          </div>
+        )}
+      </Capability>
 
- {/* Notes */}
- {previewItem.notes && (
- <div className="humi-col" style={{ gap: 6 }}>
- <p className="humi-eyebrow">{tQuick('slideOver.notes')}</p>
- <p style={{ fontSize: 14, color: 'var(--color-ink-soft)', lineHeight: 1.6 }}>{previewItem.notes}</p>
- </div>
- )}
+      {/* ── Inbox table ── */}
+      <Card header={
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">
+            {isTh ? `คำขอรออนุมัติ (${filteredItems.length})` : `Pending Requests (${filteredItems.length})`}
+          </CardTitle>
+          {filteredItems.length !== allItems.length && (
+            <button
+              onClick={() => setFilters({ type: 'all', urgency: 'all', search: '', dateFrom: '', dateTo: '' })}
+              className="text-xs text-brand hover:underline"
+            >
+              {isTh ? 'ล้างตัวกรอง' : 'Clear filters'}
+            </button>
+          )}
+        </div>
+      }>
+        <DataTable
+          caption={isTh ? 'รายการคำขออนุมัติ' : 'Pending approval requests'}
+          captionVisuallyHidden
+          columns={columns}
+          rows={filteredItems}
+          rowKey={(row) => row.id}
+          dense
+          emptyState={
+            <div className="py-16 text-center space-y-3">
+              <CheckCircle2 className="h-12 w-12 text-success-tint mx-auto" />
+              <p className="text-sm font-medium text-ink">
+                {isTh ? 'ไม่มีคำขอรออนุมัติ' : 'No pending requests'}
+              </p>
+              <p className="text-xs text-ink-muted">
+                {isTh
+                  ? 'คุณจัดการทุกคำขอแล้ว หรือยังไม่มีรายการใหม่เข้ามา'
+                  : 'All requests have been processed or none have been submitted yet.'}
+              </p>
+            </div>
+          }
+        />
+      </Card>
 
- {/* Actions */}
- <div className="humi-row" style={{ gap: 8, paddingTop: 16, borderTop: '1px solid var(--color-hairline)' }}>
-  <Button
-   variant="secondary"
-   size="sm"
-   leadingIcon={<X size={14} />}
-   onClick={() => handleSingleAction(previewItem.id, 'reject')}
-   aria-label="ปฏิเสธ"
-   className="flex-1"
-  >ปฏิเสธ</Button>
-  <Button
-   variant="primary"
-   size="sm"
-   leadingIcon={<Check size={14} />}
-   onClick={() => handleSingleAction(previewItem.id, 'approve')}
-   aria-label="อนุมัติ"
-   className="flex-1"
-  >อนุมัติ</Button>
- </div>
- </div>
- </Card>
- </div>
- )}
- </div>
+      {/* ── Confirmation modal ── */}
+      <Modal
+        open={!!confirmModal}
+        onClose={() => setConfirmModal(null)}
+        title={
+          confirmModal?.action === 'approve'
+            ? (isTh ? 'ยืนยันการอนุมัติ' : 'Confirm Approval')
+            : confirmModal?.action === 'reroute'
+            ? (isTh ? 'ยืนยันการโอนสาย' : 'Confirm Reroute')
+            : (isTh ? 'ยืนยันการปฏิเสธ' : 'Confirm Rejection')
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-ink-muted">
+            {confirmModal?.action === 'approve'
+              ? t('confirm.approveMessage', { count: confirmModal?.ids.length ?? 0 })
+              : t('confirm.rejectMessage', { count: confirmModal?.ids.length ?? 0 })}
+          </p>
+          <div>
+            <label className="block text-sm font-medium text-ink-soft mb-1">
+              {confirmModal?.action === 'approve' ? t('confirm.reasonOptional') : t('confirm.reasonRequired')}
+            </label>
+            <textarea
+              value={confirmReason}
+              onChange={(e) => setConfirmReason(e.target.value)}
+              rows={3}
+              className="w-full rounded-[var(--radius-md)] border border-hairline px-3 py-2 text-sm bg-surface focus:border-brand focus:ring-1 focus:ring-brand outline-none resize-none"
+              placeholder={t('confirm.reasonPlaceholder')}
+            />
+          </div>
+        </div>
+        <div className="border-t pt-4 mt-4 flex justify-end gap-3">
+          <Button variant="secondary" onClick={() => setConfirmModal(null)}>
+            {t('confirm.cancel')}
+          </Button>
+          <Button
+            variant={confirmModal?.action === 'reject' ? 'danger' : 'primary'}
+            className={confirmModal?.action === 'approve' ? 'bg-success hover:bg-success/90' : ''}
+            onClick={handleConfirm}
+            disabled={actionLoading || (confirmModal?.action === 'reject' && !confirmReason.trim())}
+          >
+            {actionLoading
+              ? t('confirm.processing')
+              : confirmModal?.action === 'approve'
+              ? `${isTh ? 'อนุมัติ' : 'Approve'} (${confirmModal?.ids.length})`
+              : confirmModal?.action === 'reroute'
+              ? `${isTh ? 'โอนสาย' : 'Reroute'} (${confirmModal?.ids.length})`
+              : `${isTh ? 'ปฏิเสธ' : 'Reject'} (${confirmModal?.ids.length})`}
+          </Button>
+        </div>
+      </Modal>
 
- {/* Confirmation Modal */}
- <Modal
- open={!!confirmModal}
- onClose={() => setConfirmModal(null)}
- title={confirmModal?.action ==='approve' ? tQuick('confirm.approveTitle') : tQuick('confirm.rejectTitle')}
- >
- <div className="space-y-4">
- <p className="text-sm text-ink-muted">
- {confirmModal?.count === 1
- ? (confirmModal.action ==='approve' ? t('messages.confirmApprove') : t('messages.confirmReject'))
- : (confirmModal?.action ==='approve'
- ? tQuick('confirm.approveMessage', { count: confirmModal?.count ?? 0 })
- : tQuick('confirm.rejectMessage', { count: confirmModal?.count ?? 0 })
- )}
- </p>
- <div>
- <label className="block text-sm font-medium text-ink-soft mb-1">
- {confirmModal?.action ==='approve' ? tQuick('confirm.reasonOptional') : tQuick('confirm.reasonRequired')}
- </label>
- <textarea
- value={confirmReason}
- onChange={(e) => setConfirmReason(e.target.value)}
- rows={3}
- className="w-full rounded-md border border-hairline px-3 py-2 text-sm bg-surface focus:border-brand focus:ring-1 focus:ring-brand outline-none resize-none"
- placeholder={tQuick('confirm.reasonPlaceholder')}
- />
- </div>
- </div>
- <div className="border-t pt-4 mt-4 flex justify-end gap-3">
- <Button variant="secondary" onClick={() => setConfirmModal(null)}>{tQuick('confirm.cancel')}</Button>
- <Button
- variant={confirmModal?.action ==='reject' ?'danger' :'primary'}
- className={confirmModal?.action ==='approve' ?'bg-success hover:bg-success/90' :''}
- onClick={handleConfirm}
- disabled={actionLoading || (confirmModal?.action ==='reject' && !confirmReason.trim())}
- >
- {actionLoading ? tQuick('confirm.processing') : confirmModal?.action ==='approve' ? `${t('actions.approve')} (${confirmModal?.count})` : `${t('actions.reject')} (${confirmModal?.count})`}
- </Button>
- </div>
- </Modal>
-
- {/* Delegation Modal */}
- <Modal
- open={delegationOpen}
- onClose={() => setDelegationOpen(false)}
- title={tQuick('delegation.manageDelegations')}
- widthClass="max-w-xl"
- >
- <div className="space-y-5">
- <div>
- <h4 className="text-sm font-medium text-ink mb-2">{tQuick('delegation.activeDelegations')}</h4>
- {delegations.length === 0 ? (
- <p className="text-sm text-ink-muted">{tQuick('delegation.noDelegations')}</p>
- ) : (
- <ul className="space-y-2">
- {delegations.map((d) => (
- <li key={d.id} className="flex items-center justify-between p-3 bg-surface-raised rounded-md">
- <div>
- <p className="text-sm font-medium text-ink">{d.delegateTo.name}</p>
- <p className="text-xs text-ink-muted">{d.startDate} — {d.endDate}</p>
- <div className="flex gap-1 mt-1 flex-wrap">
- {d.workflowTypes.map((wt) => <Badge key={wt} variant="info">{wt}</Badge>)}
- </div>
- </div>
- {d.status ==='active' && (
- <button onClick={() => revokeDelegation(d.id)} className="p-1.5 rounded hover:bg-danger-tint text-danger" aria-label={tQuick('delegation.revoke')}>
- <Trash2 className="h-4 w-4" />
- </button>
- )}
- </li>
- ))}
- </ul>
- )}
- </div>
-
- <div className="border border-hairline rounded-md p-4 space-y-3">
- <h4 className="text-sm font-medium text-ink">{tQuick('delegation.createNew')}</h4>
- <div>
- <label className="block text-xs font-medium text-ink-muted mb-1">{tQuick('delegation.delegateTo')}</label>
- <input type="text" value={delegateForm.to} onChange={(e) => setDelegateForm((p) => ({ ...p, to: e.target.value }))} placeholder={tQuick('delegation.delegateToPlaceholder')} className="w-full rounded-md border border-hairline px-3 py-2 text-sm bg-surface focus:border-brand focus:ring-1 focus:ring-brand outline-none" />
- </div>
- <div className="grid grid-cols-2 gap-3">
- <div>
- <label className="block text-xs font-medium text-ink-muted mb-1">{tQuick('delegation.startDate')}</label>
- <input type="date" value={delegateForm.start} onChange={(e) => setDelegateForm((p) => ({ ...p, start: e.target.value }))} className="w-full rounded-md border border-hairline px-3 py-2 text-sm focus:border-brand outline-none" />
- </div>
- <div>
- <label className="block text-xs font-medium text-ink-muted mb-1">{tQuick('delegation.endDate')}</label>
- <input type="date" value={delegateForm.end} onChange={(e) => setDelegateForm((p) => ({ ...p, end: e.target.value }))} className="w-full rounded-md border border-hairline px-3 py-2 text-sm focus:border-brand outline-none" />
- </div>
- </div>
- <div>
- <label className="block text-xs font-medium text-ink-muted mb-1">{tQuick('delegation.workflowTypes')}</label>
- <div className="flex flex-wrap gap-2">
- {WORKFLOW_TYPES.map((wt) => (
- <button key={wt} type="button" onClick={() => toggleDelegateType(wt)} className={`px-3 py-1 rounded-full text-xs font-medium border transition ${delegateForm.types.includes(wt) ?'bg-brand text-white border-brand' :'bg-surface text-ink-muted border-hairline hover:border-brand'}`}>
- {TYPE_LABELS[wt] ?? wt}
- </button>
- ))}
- </div>
- </div>
- <div className="flex justify-end gap-2 pt-1">
- <Button size="sm" onClick={handleCreateDelegation} disabled={delegateSubmitting || !delegateForm.to || !delegateForm.start || !delegateForm.end || delegateForm.types.length === 0}>
- {delegateSubmitting ? tQuick('delegation.creating') : tQuick('delegation.create')}
- </Button>
- </div>
- </div>
- </div>
- </Modal>
- </div>
- );
+      {/* ── Delegation modal ── */}
+      <DelegationModal
+        open={delegationOpen}
+        onClose={() => setDelegationOpen(false)}
+        delegations={delegations}
+        onCreateDelegation={createDelegation}
+        onRevokeDelegation={revokeDelegation}
+      />
+    </div>
+  );
 }

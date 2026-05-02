@@ -34,7 +34,7 @@ const STATUS_BADGE: Record<ProxyStatus, { label: string; cls: string }> = {
   PENDING: { label: 'รออนุมัติ', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
   ACTIVE: { label: 'ใช้งานอยู่', cls: 'bg-green-50 text-green-700 border-green-200' },
   EXPIRED: { label: 'หมดอายุ', cls: 'bg-canvas-soft text-ink-muted border-hairline' },
-  REVOKED: { label: 'ยกเลิกแล้ว', cls: 'bg-red-50 text-red-600 border-red-200' },
+  REVOKED: { label: 'ยกเลิกแล้ว', cls: 'bg-danger-soft text-danger border-danger' },
 }
 
 // -----------------------------------------------------------------------
@@ -105,7 +105,7 @@ function ProxyModal({
           {/* Delegator */}
           <div>
             <label className="block text-sm font-medium text-ink mb-1">
-              ผู้มอบหมาย <span className="text-red-500">*</span>
+              ผู้มอบหมาย <span className="text-danger">*</span>
             </label>
             <select
               value={delegatorId}
@@ -128,7 +128,7 @@ function ProxyModal({
           {/* Delegatee — excludes delegator ตาม AC-6 */}
           <div>
             <label className="block text-sm font-medium text-ink mb-1">
-              ผู้รับมอบหมาย <span className="text-red-500">*</span>
+              ผู้รับมอบหมาย <span className="text-danger">*</span>
             </label>
             <select
               value={delegateeId}
@@ -144,7 +144,7 @@ function ProxyModal({
               ))}
             </select>
             {delegatorId && delegateeOptions.length === 0 && (
-              <p className="text-xs text-red-500 mt-1">ไม่มีผู้ใช้อื่นให้เลือก</p>
+              <p className="text-xs text-danger mt-1">ไม่มีผู้ใช้อื่นให้เลือก</p>
             )}
           </div>
 
@@ -152,7 +152,7 @@ function ProxyModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-ink mb-1">
-                วันเริ่มต้น <span className="text-red-500">*</span>
+                วันเริ่มต้น <span className="text-danger">*</span>
               </label>
               <input
                 type="date"
@@ -165,7 +165,7 @@ function ProxyModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-ink mb-1">
-                วันสิ้นสุด <span className="text-red-500">*</span>
+                วันสิ้นสุด <span className="text-danger">*</span>
               </label>
               <input
                 type="date"

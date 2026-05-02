@@ -29,7 +29,7 @@ export function WizardFooter({
   const primaryClass = cn(
     'inline-flex items-center gap-2 rounded-md px-5 py-2 min-h-[44px] text-body font-semibold transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-canvas',
     isCurrentStepValid
-      ? 'bg-accent text-white shadow-sm hover:shadow-md'
+      ? 'bg-accent text-white shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]'
       : 'cursor-not-allowed bg-canvas-soft text-ink-muted',
   )
 

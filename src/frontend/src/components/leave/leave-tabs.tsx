@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { CalendarDays, ClipboardList, PlusCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/humi';
 
 export type LeaveTabId = 'balances' | 'request' | 'history' | 'calendar';
 
@@ -36,11 +37,13 @@ export function LeaveTabs({ activeTab, onChange }: LeaveTabsProps) {
             const Icon = TAB_ICONS[tab.id];
             const isActive = activeTab === tab.id;
             return (
-              <button
+              <Button
                 key={tab.id}
+                variant="ghost"
+                size="sm"
                 onClick={() => onChange(tab.id)}
                 className={cn(
-                  'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors',
+                  'flex items-center gap-2 px-4 py-3 font-medium border-b-2 whitespace-nowrap rounded-none',
                   isActive
                     ? 'border-accent text-accent'
                     : 'border-transparent text-ink-muted hover:text-ink-soft hover:border-ink-muted'
@@ -48,7 +51,7 @@ export function LeaveTabs({ activeTab, onChange }: LeaveTabsProps) {
               >
                 <Icon className="h-4 w-4" />
                 {tab.label}
-              </button>
+              </Button>
             );
           })}
         </nav>

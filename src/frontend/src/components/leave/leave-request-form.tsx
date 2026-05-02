@@ -238,19 +238,16 @@ export function LeaveRequestForm({
                   <label className="block text-sm font-medium text-ink-soft mb-2">{t('halfDay')}</label>
                   <div className="flex gap-3">
                     {(['none', 'morning', 'afternoon'] as const).map((option) => (
-                      <button
+                      <Button
                         key={option}
                         type="button"
+                        size="sm"
+                        variant={halfDayOption === option ? 'secondary' : 'ghost'}
                         onClick={() => setHalfDayOption(option)}
-                        className={cn(
-                          'px-4 py-2 rounded-md text-sm font-medium border transition',
-                          halfDayOption === option
-                            ? 'border-accent bg-accent-tint text-accent'
-                            : 'border-hairline text-ink-muted hover:border-ink-muted'
-                        )}
+                        className={halfDayOption === option ? 'border-accent text-accent bg-accent-tint' : ''}
                       >
                         {option === 'none' ? t('fullDay') : option === 'morning' ? t('morning') : t('afternoon')}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>

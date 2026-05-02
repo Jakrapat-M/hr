@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Sun, Stethoscope, User, Baby, Users, Sparkles, Shield, FileText } from 'lucide-react';
 import type { LeaveBalance as LeaveBalanceType, LeaveType } from '@/hooks/use-leave';
+import { Button } from '@/components/humi';
 
 const LEAVE_TYPE_COLORS: Record<LeaveType, { bg: string; text: string; bar: string; icon: ReactNode }> = {
   annual: { bg: 'bg-accent-tint', text: 'text-accent', bar: 'bg-accent', icon: <Sun className="h-5 w-5" /> },
@@ -115,18 +116,20 @@ function LeaveBalanceCard({
       </div>
 
       {onRequest && (
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
+          block
           onClick={() => onRequest(balance.type)}
           disabled={balance.remaining <= 0 && balance.type !== 'unpaid'}
           className={cn(
-            'w-full py-2 text-xs font-medium rounded-md transition',
             balance.remaining <= 0 && balance.type !== 'unpaid'
-              ? 'bg-surface-raised text-ink-muted cursor-not-allowed'
+              ? ''
               : cn(colors.bg, colors.text, 'hover:opacity-80')
           )}
         >
           {t('request')}
-        </button>
+        </Button>
       )}
     </div>
   );

@@ -19,14 +19,24 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ClipboardCheck } from 'lucide-react'
+import { useLocale } from 'next-intl'
 import { useTimelines } from '@/lib/admin/store/useTimelines'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
 import { createClusterWizard } from '@/lib/admin/wizard-template/createClusterWizard'
 import { EffectiveDateGate } from '@/components/admin/EffectiveDateGate'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
+import { ApprovalChain } from '@/components/quick-approve/ApprovalChain'
+import { useProbationApprovals, type ProbationOutcome } from '@/stores/probation-approvals'
+import { useAuthStore } from '@/stores/auth-store'
 import type { MockEmployee } from '@/mocks/employees'
 import type { ProbationEvent } from '@hrms/shared/types/timeline'
+import type { ApproverStage } from '@/data/benefits/plan-registry'
+
+// ─── Probation approval chain config (SF FOEventReason routing — probation eval) ──
+const PROBATION_CHAIN: ApproverStage[] = ['manager', 'hr_admin']
+// Mock: chain is currently at manager step for HR demo visibility
+const PROBATION_CURRENT_STAGE: ApproverStage = 'manager'
 
 // ─── Wizard config types ────────────────────────────────────────────────────
 
@@ -246,7 +256,7 @@ export default function ProbationAssessPage() {
   const params = useParams()
   const router = useRouter()
   const empId = params.id as string
-  const locale = params.locale as string
+  const locale = useLocale()
 
   const employee = useEmployees((s) => s.getById(empId)) ?? null
 
@@ -290,6 +300,50 @@ export default function ProbationAssessPage() {
     !!assessment.outcome &&
     !!assessment.effectiveDate &&
     (assessment.outcome !== 'extend' || !!assessment.extendUntil)
+
+  // ── Probation evaluation store (manager→HR Admin queue) ─────────────────
+  const addEvaluation = useProbationApprovals((s) => s.addEvaluation)
+  const existingEval = useProbationApprovals((s) =>
+    s.evaluations.find((e) => e.employeeId === empId && e.status === 'pending_hr'),
+  )
+  const userId = useAuthStore((s) => s.userId) ?? 'admin-current'
+  const userName = useAuthStore((s) => s.username) ?? 'HR Admin'
+
+  // ── Evaluation form state ─────────────────────────────────────────────────
+  const [evalRating, setEvalRating] = useState(0)
+  const [evalStrengths, setEvalStrengths] = useState('')
+  const [evalAreas, setEvalAreas] = useState('')
+  const [evalRecommendation, setEvalRecommendation] = useState('')
+  const [evalExtendUntil, setEvalExtendUntil] = useState('')
+  const [evalExtensionReason, setEvalExtensionReason] = useState('')
+  const [evalSubmitted, setEvalSubmitted] = useState(false)
+
+  const evalIsValid =
+    !!assessment.outcome &&
+    evalRating > 0 &&
+    !!evalStrengths.trim() &&
+    !!evalAreas.trim() &&
+    !!evalRecommendation.trim() &&
+    (assessment.outcome !== 'extend' || (!!evalExtendUntil && !!evalExtensionReason.trim()))
+
+  const handleEvalSubmit = useCallback(() => {
+    if (!employee || !evalIsValid || !assessment.outcome) return
+    addEvaluation({
+      employeeId: empId,
+      employeeName: `${employee.first_name_th} ${employee.last_name_th}`,
+      managerId: userId,
+      managerName: userName,
+      outcome: assessment.outcome as ProbationOutcome,
+      rating: evalRating,
+      strengths: evalStrengths,
+      areasToImprove: evalAreas,
+      recommendation: evalRecommendation,
+      extendUntil: evalExtendUntil || undefined,
+      extensionReason: evalExtensionReason || undefined,
+    })
+    setEvalSubmitted(true)
+  }, [employee, evalIsValid, assessment.outcome, empId, userId, userName, addEvaluation,
+      evalRating, evalStrengths, evalAreas, evalRecommendation, evalExtendUntil, evalExtensionReason])
 
   // ── State ────────────────────────────────────────────────────────────────
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -440,6 +494,18 @@ export default function ProbationAssessPage() {
 
         {/* Employee snapshot */}
         <EmployeeSnapshot employee={employee} />
+
+        {/* Approval chain (probation eval: manager-led, HR Admin closes) */}
+        <div className="humi-card">
+          <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+            {locale === 'en' ? 'Approval Chain' : 'ขั้นตอนอนุมัติ'}
+          </div>
+          <ApprovalChain
+            chain={PROBATION_CHAIN}
+            locale={locale}
+            activeStage={PROBATION_CURRENT_STAGE}
+          />
+        </div>
 
         {/* Assessment form */}
         <EffectiveDateGate
@@ -651,6 +717,173 @@ export default function ProbationAssessPage() {
         </div>
           )}
         </EffectiveDateGate>
+
+        {/* ── EvaluationForm: rating + qualitative fields → probation-approvals queue ── */}
+        {assessment.outcome && (
+          <div className="humi-card">
+            <div className="humi-eyebrow" style={{ marginBottom: 12 }}>
+              {locale === 'en' ? 'Evaluation Details (Manager Queue)' : 'รายละเอียดการประเมิน (คิว Manager)'}
+            </div>
+
+            {existingEval && !evalSubmitted ? (
+              <div
+                style={{
+                  background: 'var(--color-success-soft, #ECFDF5)',
+                  border: '1.5px solid var(--color-success, #10B981)',
+                  borderRadius: 8, padding: '10px 14px', marginBottom: 12,
+                }}
+                className="text-small text-ink"
+              >
+                {locale === 'en'
+                  ? `Evaluation ${existingEval.id} already in HR Admin queue (pending review).`
+                  : `มีการประเมิน ${existingEval.id} ส่งไป HR Admin แล้ว — รอตรวจสอบ`}
+              </div>
+            ) : evalSubmitted ? (
+              <div
+                style={{
+                  background: 'var(--color-success-soft, #ECFDF5)',
+                  border: '1.5px solid var(--color-success, #10B981)',
+                  borderRadius: 8, padding: '10px 14px',
+                }}
+                className="text-small text-ink"
+              >
+                {locale === 'en'
+                  ? 'Evaluation submitted to HR Admin queue successfully.'
+                  : 'ส่งผลการประเมินไปยัง HR Admin แล้ว'}
+              </div>
+            ) : (
+              <>
+                {/* Rating */}
+                <div style={{ marginBottom: 16 }}>
+                  <div className="text-body font-semibold text-ink" style={{ marginBottom: 8 }}>
+                    {locale === 'en' ? 'Rating' : 'คะแนน'}
+                    {' '}<span style={{ color: 'var(--color-danger)' }}>*</span>
+                  </div>
+                  <div className="humi-row" style={{ gap: 4 }} role="radiogroup" aria-label="คะแนนประเมิน">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setEvalRating(n)}
+                        aria-label={`${n} ดาว`}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer', padding: 2,
+                          color: n <= evalRating ? 'var(--color-warning, #F59E0B)' : 'var(--color-hairline)',
+                        }}
+                      >
+                        ★
+                      </button>
+                    ))}
+                    {evalRating > 0 && (
+                      <span className="text-small text-ink-muted" style={{ marginLeft: 4 }}>{evalRating}/5</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Strengths */}
+                <div style={{ marginBottom: 14 }}>
+                  <label htmlFor="prob-strengths" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
+                    {locale === 'en' ? 'Strengths' : 'จุดเด่น'}
+                    {' '}<span style={{ color: 'var(--color-danger)' }}>*</span>
+                  </label>
+                  <textarea
+                    id="prob-strengths"
+                    value={evalStrengths}
+                    onChange={(e) => setEvalStrengths(e.target.value)}
+                    rows={2}
+                    placeholder={locale === 'en' ? 'Key strengths observed…' : 'จุดเด่นที่สังเกตได้...'}
+                    className="humi-input"
+                    style={{ width: '100%', resize: 'vertical' }}
+                  />
+                </div>
+
+                {/* Areas to improve */}
+                <div style={{ marginBottom: 14 }}>
+                  <label htmlFor="prob-areas" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
+                    {locale === 'en' ? 'Areas to Improve' : 'จุดที่ต้องพัฒนา'}
+                    {' '}<span style={{ color: 'var(--color-danger)' }}>*</span>
+                  </label>
+                  <textarea
+                    id="prob-areas"
+                    value={evalAreas}
+                    onChange={(e) => setEvalAreas(e.target.value)}
+                    rows={2}
+                    placeholder={locale === 'en' ? 'Areas needing development…' : 'สิ่งที่ควรปรับปรุง...'}
+                    className="humi-input"
+                    style={{ width: '100%', resize: 'vertical' }}
+                  />
+                </div>
+
+                {/* Recommendation */}
+                <div style={{ marginBottom: 14 }}>
+                  <label htmlFor="prob-recommendation" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
+                    {locale === 'en' ? 'Recommendation' : 'ข้อเสนอแนะ'}
+                    {' '}<span style={{ color: 'var(--color-danger)' }}>*</span>
+                  </label>
+                  <textarea
+                    id="prob-recommendation"
+                    value={evalRecommendation}
+                    onChange={(e) => setEvalRecommendation(e.target.value)}
+                    rows={2}
+                    placeholder={locale === 'en' ? 'Overall recommendation…' : 'ข้อเสนอแนะโดยรวม...'}
+                    className="humi-input"
+                    style={{ width: '100%', resize: 'vertical' }}
+                  />
+                </div>
+
+                {/* Extend-specific fields */}
+                {assessment.outcome === 'extend' && (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ display: 'grid', gap: 12 }}>
+                      <div>
+                        <label htmlFor="prob-extend-until" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
+                          {locale === 'en' ? 'New Probation End Date' : 'วันสิ้นสุดใหม่'}
+                          {' '}<span style={{ color: 'var(--color-danger)' }}>*</span>
+                        </label>
+                        <input
+                          id="prob-extend-until"
+                          type="date"
+                          value={evalExtendUntil}
+                          min={assessment.extendUntil ?? maxEffectiveDate}
+                          onChange={(e) => setEvalExtendUntil(e.target.value)}
+                          className="humi-input"
+                          style={{ maxWidth: 220 }}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="prob-extension-reason" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
+                          {locale === 'en' ? 'Extension Reason' : 'เหตุผลการขยาย'}
+                          {' '}<span style={{ color: 'var(--color-danger)' }}>*</span>
+                        </label>
+                        <textarea
+                          id="prob-extension-reason"
+                          value={evalExtensionReason}
+                          onChange={(e) => setEvalExtensionReason(e.target.value)}
+                          rows={2}
+                          placeholder={locale === 'en' ? 'Reason for extending probation…' : 'เหตุผลที่ขยายระยะทดลองงาน...'}
+                          className="humi-input"
+                          style={{ width: '100%', resize: 'vertical' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="humi-row" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
+                  <button
+                    type="button"
+                    onClick={handleEvalSubmit}
+                    disabled={!evalIsValid}
+                    className="humi-btn humi-btn--primary"
+                    aria-disabled={!evalIsValid}
+                  >
+                    {locale === 'en' ? 'Submit to HR Admin Queue' : 'ส่งให้ HR Admin ตรวจสอบ'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </>
   )

@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle, Button } from '@/components/humi';
 import { UrgencyBadge } from '@/components/quick-approve/UrgencyBadge';
 import { CheckCircle2, XCircle, ArrowRight, Clock, Palmtree, Receipt, ArrowLeftRight, FilePen, ClipboardList } from 'lucide-react';
 import type { PendingRequest } from '@/lib/quick-approve-api';
@@ -56,20 +56,24 @@ export function PendingApprovalsPanel({
  </div>
  <UrgencyBadge urgency={req.urgency} />
  <div className="flex gap-1 shrink-0">
- <button
+ <Button
+ variant="ghost"
+ size="sm"
  onClick={() => onApprove(req.id)}
- className="p-1.5 rounded-md hover:bg-success-tint text-success transition"
  aria-label={t('actions.approve')}
+ className="!p-2 hover:bg-success-tint text-success"
  >
  <CheckCircle2 className="h-4 w-4" />
- </button>
- <button
+ </Button>
+ <Button
+ variant="ghost"
+ size="sm"
  onClick={() => onReject(req.id)}
- className="p-1.5 rounded-md hover:bg-danger-tint text-danger transition"
  aria-label={t('actions.reject')}
+ className="!p-2 hover:bg-danger-tint text-danger"
  >
  <XCircle className="h-4 w-4" />
- </button>
+ </Button>
  </div>
  </li>
  ))}

@@ -20,7 +20,7 @@ const STEP_ICON: Record<string, React.ReactNode> = {
  rejected: <XCircle className="h-5 w-5 text-danger" />,
  sent_back: <RotateCcw className="h-5 w-5 text-yellow-500" />,
  pending: <Clock className="h-5 w-5 text-ink-muted" />,
- skipped: <Clock className="h-5 w-5 text-gray-300" />,
+ skipped: <Clock className="h-5 w-5 text-ink-faint" />,
 };
 
 function StepTimeline({ steps, currentStep }: { steps: WorkflowStep[]; currentStep: number }) {

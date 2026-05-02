@@ -96,20 +96,20 @@ export default function ReportBuilderPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-gray-900">สร้างรายงาน</h2>
-        <p className="text-sm text-gray-500 mt-1">Story Report / Customize Report — BRD #193, #196</p>
+        <h2 className="text-xl font-semibold text-ink">สร้างรายงาน</h2>
+        <p className="text-sm text-ink-muted mt-1">Story Report / Customize Report — BRD #193, #196</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left: Config */}
         <div className="lg:col-span-2 space-y-4">
           {/* Basic info */}
-          <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700">ข้อมูลพื้นฐาน</h3>
+          <div className="rounded-lg border border-hairline-soft bg-surface p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-ink-soft">ข้อมูลพื้นฐาน</h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2">
-                <label className="block text-xs text-gray-500 mb-1" htmlFor="rpt-name">
-                  ชื่อรายงาน <span className="text-red-500">*</span>
+                <label className="block text-xs text-ink-muted mb-1" htmlFor="rpt-name">
+                  ชื่อรายงาน <span className="text-danger">*</span>
                 </label>
                 <input
                   id="rpt-name"
@@ -117,18 +117,18 @@ export default function ReportBuilderPage() {
                   value={reportName}
                   onChange={(e) => setReportName(e.target.value)}
                   placeholder="เช่น รายงานพนักงานประจำเดือน เมษายน"
-                  className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-hairline px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1" htmlFor="rpt-type">
+                <label className="block text-xs text-ink-muted mb-1" htmlFor="rpt-type">
                   ประเภท
                 </label>
                 <select
                   id="rpt-type"
                   value={reportType}
                   onChange={(e) => setReportType(e.target.value as typeof reportType)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-hairline px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {REPORT_TYPES.map((t) => (
                     <option key={t} value={t}>{t}</option>
@@ -137,12 +137,12 @@ export default function ReportBuilderPage() {
               </div>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1" htmlFor="rpt-module">โมดูล</label>
+              <label className="block text-xs text-ink-muted mb-1" htmlFor="rpt-module">โมดูล</label>
               <select
                 id="rpt-module"
                 value={module}
                 onChange={(e) => setModule(e.target.value)}
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-md border border-hairline px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {MODULE_OPTIONS.map((m) => (
                   <option key={m} value={m}>{m}</option>
@@ -152,8 +152,8 @@ export default function ReportBuilderPage() {
           </div>
 
           {/* Columns drag-drop */}
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">คอลัมน์ (ลากเพื่อเรียงลำดับ)</h3>
+          <div className="rounded-lg border border-hairline-soft bg-surface p-4">
+            <h3 className="text-sm font-semibold text-ink-soft mb-3">คอลัมน์ (ลากเพื่อเรียงลำดับ)</h3>
             <div className="flex flex-wrap gap-2 mb-3">
               {ALL_COLUMNS.map((col) => {
                 const isSelected = selectedCols.includes(col)
@@ -165,8 +165,8 @@ export default function ReportBuilderPage() {
                     className={[
                       'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
                       isSelected
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-300 text-gray-500 hover:border-gray-400',
+                        ? 'border-accent bg-accent-soft text-accent-ink'
+                        : 'border-hairline text-ink-muted hover:border-hairline',
                     ].join(' ')}
                   >
                     {col}
@@ -178,7 +178,7 @@ export default function ReportBuilderPage() {
             {/* Ordered selected cols — draggable */}
             {selectedCols.length > 0 && (
               <div>
-                <p className="text-xs text-gray-400 mb-2">ลำดับคอลัมน์ที่เลือก:</p>
+                <p className="text-xs text-ink-faint mb-2">ลำดับคอลัมน์ที่เลือก:</p>
                 <div className="flex flex-wrap gap-2">
                   {selectedCols.map((col) => (
                     <div
@@ -187,7 +187,7 @@ export default function ReportBuilderPage() {
                       onDragStart={() => handleDragStart(col)}
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={() => handleDrop(col)}
-                      className="flex items-center gap-1 rounded border border-blue-300 bg-blue-50 px-2 py-1 text-xs text-blue-700 cursor-grab active:cursor-grabbing"
+                      className="flex items-center gap-1 rounded border border-accent-soft bg-accent-soft px-2 py-1 text-xs text-accent-ink cursor-grab active:cursor-grabbing"
                     >
                       <span aria-hidden>⠿</span>
                       {col}
@@ -199,12 +199,12 @@ export default function ReportBuilderPage() {
           </div>
 
           {/* Filters */}
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">ตัวกรอง</h3>
+          <div className="rounded-lg border border-hairline-soft bg-surface p-4">
+            <h3 className="text-sm font-semibold text-ink-soft mb-3">ตัวกรอง</h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {MOCK_FILTERS.map((f) => (
                 <div key={f.id}>
-                  <label className="block text-xs text-gray-500 mb-1" htmlFor={`filter-${f.id}`}>
+                  <label className="block text-xs text-ink-muted mb-1" htmlFor={`filter-${f.id}`}>
                     {f.label}
                   </label>
                   <select
@@ -213,7 +213,7 @@ export default function ReportBuilderPage() {
                     onChange={(e) =>
                       setActiveFilters((prev) => ({ ...prev, [f.id]: e.target.value }))
                     }
-                    className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-hairline px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">— ทั้งหมด —</option>
                     {f.options.map((o) => (
@@ -228,12 +228,12 @@ export default function ReportBuilderPage() {
 
         {/* Right: Preview panel */}
         <div className="space-y-3">
-          <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700">ตัวอย่างข้อมูล</h3>
+          <div className="rounded-lg border border-hairline-soft bg-surface p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-ink-soft">ตัวอย่างข้อมูล</h3>
             <button
               type="button"
               onClick={() => setShowPreview((p) => !p)}
-              className="w-full rounded-md bg-gray-100 py-1.5 text-sm text-gray-700 hover:bg-gray-200 transition-colors"
+              className="w-full rounded-md bg-canvas-soft py-1.5 text-sm text-ink-soft hover:bg-hairline-soft transition-colors"
             >
               {showPreview ? 'ซ่อน Preview' : 'แสดง Preview'}
             </button>
@@ -241,10 +241,10 @@ export default function ReportBuilderPage() {
             {showPreview && selectedCols.length > 0 && (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-xs divide-y divide-gray-100">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-canvas-soft">
                     <tr>
                       {selectedCols.map((col) => (
-                        <th key={col} className="px-2 py-1.5 text-left font-medium text-gray-500 whitespace-nowrap">
+                        <th key={col} className="px-2 py-1.5 text-left font-medium text-ink-muted whitespace-nowrap">
                           {col}
                         </th>
                       ))}
@@ -252,9 +252,9 @@ export default function ReportBuilderPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {previewRows.map((row, i) => (
-                      <tr key={i} className="hover:bg-gray-50">
+                      <tr key={i} className="hover:bg-canvas-soft">
                         {selectedCols.map((col) => (
-                          <td key={col} className="px-2 py-1.5 text-gray-700 whitespace-nowrap">
+                          <td key={col} className="px-2 py-1.5 text-ink-soft whitespace-nowrap">
                             {row[col] ?? '-'}
                           </td>
                         ))}
@@ -266,7 +266,7 @@ export default function ReportBuilderPage() {
             )}
 
             {showPreview && selectedCols.length === 0 && (
-              <p className="text-xs text-gray-400 text-center py-4">กรุณาเลือกคอลัมน์ก่อน</p>
+              <p className="text-xs text-ink-faint text-center py-4">กรุณาเลือกคอลัมน์ก่อน</p>
             )}
           </div>
 
@@ -274,7 +274,7 @@ export default function ReportBuilderPage() {
             type="button"
             onClick={handleSave}
             disabled={!reportName.trim()}
-            className="w-full rounded-md bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full rounded-md bg-accent py-2 text-sm font-medium text-white hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {saved ? <span className="inline-flex items-center gap-1.5"><Check size={16}/>บันทึกแล้ว</span> : 'บันทึกรายงาน'}
           </button>

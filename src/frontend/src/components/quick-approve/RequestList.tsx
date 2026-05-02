@@ -146,7 +146,7 @@ export function RequestList({
  className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition ${
  filters.type === type
  ?'bg-brand text-white border-brand'
- :'bg-surface text-ink-muted border-hairline border-hairline hover:border-gray-400'
+ :'bg-surface text-ink-muted border-hairline border-hairline hover:border-hairline'
  }`}
  >
  <span>{typeIcons[type] ?? <ClipboardList className="h-4 w-4" />}</span>
@@ -281,7 +281,7 @@ export function RequestList({
  <div className="flex items-center gap-1 mt-1 text-xs text-ink-muted">
  <Clock className="h-3 w-3" />
  {new Date(req.submittedAt).toLocaleDateString()}
- <span className="ml-1 text-gray-300">·</span>
+ <span className="ml-1 text-ink-faint">·</span>
  <span className="text-ink-muted">{req.requester.position}</span>
  </div>
  </div>

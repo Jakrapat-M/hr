@@ -22,12 +22,20 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, UserCheck, AlertTriangle, Info } from 'lucide-react'
+import { useLocale } from 'next-intl'
 import { useTimelines } from '@/lib/admin/store/useTimelines'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
 import { createClusterWizard } from '@/lib/admin/wizard-template/createClusterWizard'
 import { EffectiveDateGate } from '@/components/admin/EffectiveDateGate'
+import { ApprovalChain } from '@/components/quick-approve/ApprovalChain'
 import type { MockEmployee } from '@/mocks/employees'
 import type { RehireEvent } from '@hrms/shared/types/timeline'
+import type { ApproverStage } from '@/data/benefits/plan-registry'
+
+// ─── Rehire approval chain config (SF FOEventReason routing — no manager, external hire) ──
+const REHIRE_CHAIN: ApproverStage[] = ['hrbp', 'hr_admin']
+// Mock: chain is currently at HRBP step for HR demo visibility
+const REHIRE_CURRENT_STAGE: ApproverStage = 'hrbp'
 
 // ─── Form shape ──────────────────────────────────────────────────────────────
 
@@ -188,7 +196,7 @@ export default function RehirePage() {
   const params = useParams()
   const router = useRouter()
   const empId = params.id as string
-  const locale = params.locale as string
+  const locale = useLocale()
 
   const allEmployees = useEmployees((s) => s.all)
   const employee = useEmployees((s) => s.getById(empId)) ?? null
@@ -409,6 +417,18 @@ export default function RehirePage() {
 
       {/* Employee snapshot */}
       <EmployeeSnapshot employee={employee} />
+
+      {/* Approval chain (rehire: no manager — outside team, HRBP initiates) */}
+      <div className="humi-card">
+        <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+          {locale === 'en' ? 'Approval Chain' : 'ขั้นตอนอนุมัติ'}
+        </div>
+        <ApprovalChain
+          chain={REHIRE_CHAIN}
+          locale={locale}
+          activeStage={REHIRE_CURRENT_STAGE}
+        />
+      </div>
 
       {/* Rehire form */}
       <EffectiveDateGate

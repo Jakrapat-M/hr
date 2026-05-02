@@ -100,7 +100,7 @@ export function PersonaSwitcher() {
               minWidth: 260,
               padding: 8,
               zIndex: 50,
-              boxShadow: 'var(--shadow-md)',
+              boxShadow: 'var(--shadow-[var(--shadow-md)])',
             }}
           >
             <div

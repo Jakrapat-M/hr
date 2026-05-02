@@ -29,7 +29,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
  >
  <span
  className={cn(
- 'inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200',
+ 'inline-block h-4 w-4 transform rounded-full bg-surface shadow-[var(--shadow-sm)] transition-transform duration-200',
  checked ? 'translate-x-[18px]' : 'translate-x-0.5'
  )}
  />
