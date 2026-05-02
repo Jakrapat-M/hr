@@ -15,12 +15,6 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     locale: 'en',
   },
-  // NEXT_PUBLIC_DEMO_MODE enables persona-switching in Playwright runs.
-  // next start is a production-NODE_ENV build — .env.development is not loaded
-  // in that mode, so we inject the flag here explicitly.
-  env: {
-    NEXT_PUBLIC_DEMO_MODE: 'true',
-  },
   projects: [
     {
       name: 'chromium',
@@ -38,5 +32,11 @@ export default defineConfig({
         url: 'http://localhost:3000',
         reuseExistingServer: true,
         timeout: 120_000,
+        // NEXT_PUBLIC_DEMO_MODE enables persona-switching in Playwright runs.
+        // next start is a production-NODE_ENV build — .env.development is not loaded
+        // in that mode, so we inject the flag here explicitly.
+        env: {
+          NEXT_PUBLIC_DEMO_MODE: 'true',
+        },
       },
 });
