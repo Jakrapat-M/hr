@@ -639,7 +639,7 @@ export default function OrganizationPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <div>
           <div className="humi-eyebrow">ORGANIZATIONAL STRUCTURE</div>
-          <h1 className="font-display text-[22px] font-semibold text-ink">โครงสร้างหน่วยงาน</h1>
+          <h1 className="font-display text-xl font-semibold text-ink">โครงสร้างหน่วยงาน</h1>
         </div>
         <button
           type="button"
