@@ -80,7 +80,7 @@ export function createCrudPage<TItem extends { id: string }>(
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <div>
             <div className="humi-eyebrow">{config.titleEn.toUpperCase()}</div>
-            <h1 className="font-display text-[22px] font-semibold text-ink">{config.titleTh}</h1>
+            <h1 className="font-display text-xl font-semibold text-ink">{config.titleTh}</h1>
           </div>
           <button
             type="button"
