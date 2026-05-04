@@ -109,7 +109,7 @@ export default function HumiBenefitsHubPage() {
   const totalPending = pendingClaims + pendingReferrals;
 
   return (
-    <div className="mx-auto max-w-[1200px] space-y-8">
+    <div className="space-y-8">
       <header className="flex flex-col gap-1">
         <CardEyebrow>Benefits Hub</CardEyebrow>
         <h1
