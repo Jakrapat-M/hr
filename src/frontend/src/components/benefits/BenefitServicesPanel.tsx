@@ -7,8 +7,7 @@ import { Card, CardEyebrow, CardTitle, buttonVariants } from '@/components/humi'
 import { Capability } from '@/components/humi';
 import {
   benefitReferralRoute,
-  benefitReimbursementRoute,
-  benefitHospitalClaimRoute,
+  benefitClaimRoute,
 } from '@/lib/benefit-routes';
 import { cn } from '@/lib/utils';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
@@ -45,11 +44,9 @@ function planRoute(plan: BenefitPlan, locale: string): string {
   if (plan.recordType === 'records' || plan.recordType === 'info') {
     return `/${locale}/admin/benefits/records/${plan.id}`;
   }
-  if (plan.template === 'hospital-claim') {
-    return benefitHospitalClaimRoute(locale);
-  }
-  // simple-claim, records-dependent claimable (BE-GIF-005)
-  return benefitReimbursementRoute(locale);
+  // Claimable plans (simple-claim, hospital-claim, records-dependent claimable like BE-GIF-005)
+  // route through the unified claim page with the plan id pre-selected.
+  return benefitClaimRoute(locale, plan.id);
 }
 
 // ── Sub-component: one plan chip / card ──────────────────────────────────────
@@ -125,7 +122,7 @@ export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?:
           {/* Quick-access primary actions */}
           <div className="flex flex-col gap-3 sm:flex-row lg:justify-end" aria-label="benefit-owned actions">
             <Link
-              href={benefitReimbursementRoute(locale)}
+              href={benefitClaimRoute(locale)}
               className={cn(
                 buttonVariants({ variant: 'primary', block: true }),
                 'min-h-[44px] sm:min-w-[180px]'
