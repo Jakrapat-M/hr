@@ -130,8 +130,8 @@ export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?:
             </h2>
             <p className="max-w-xl text-body leading-relaxed text-ink-soft">
               {isTh
-                ? 'ส่งคำขอครั้งเดียว — กรอกในหน้าเดียว ไม่ต้องจำหลายขั้นตอน · ทีมสวัสดิการตอบกลับภายใน 30 นาทีในเวลาทำการ'
-                : 'One short form — single page, no multi-step. Benefits team responds within 30 minutes during business hours.'}
+                ? 'ส่งคำขอครั้งเดียว — กรอกในหน้าเดียว ไม่ต้องจำหลายขั้นตอน'
+                : 'One short form — single page, no multi-step.'}
             </p>
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
