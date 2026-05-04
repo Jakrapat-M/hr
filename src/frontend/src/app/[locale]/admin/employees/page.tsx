@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Search, Users2, Lock } from 'lucide-react';
+import { Search, Users2, Lock, Download } from 'lucide-react';
 import { useEmployees } from '@/lib/admin/store/useEmployees';
 import type { MockEmployee } from '@/mocks/employees';
 import { useAuthStore } from '@/stores/auth-store';
@@ -114,6 +114,45 @@ const COLUMNS = [
   { key: 'probation_status', label: 'ทดลองงาน',     width: 110 },
   { key: 'status',           label: 'สถานะ',        width: 90  },
 ]
+
+const CSV_HEADERS = [
+  'employee_id',
+  'name_th',
+  'employee_class',
+  'hire_date',
+  'company',
+  'position_title',
+  'probation_status',
+  'status',
+] as const
+
+function quoteCsvField(value: string) {
+  if (/[",\r\n]/.test(value)) {
+    return `"${value.replaceAll('"', '""')}"`
+  }
+  return value
+}
+
+function buildEmployeesCsv(employees: MockEmployee[]) {
+  const rows = employees.map((employee) => [
+    employee.employee_id,
+    `${employee.first_name_th} ${employee.last_name_th}`,
+    employee.employee_class,
+    employee.hire_date,
+    employee.company,
+    employee.position_title,
+    employee.probation_status,
+    employee.status,
+  ])
+
+  return `\uFEFF${[CSV_HEADERS, ...rows]
+    .map((row) => row.map(quoteCsvField).join(','))
+    .join('\r\n')}`
+}
+
+function getUtcDateStamp() {
+  return new Date().toISOString().slice(0, 10)
+}
 
 // ──────────────────────────────────────────────
 // Row component (memoized — skip re-render unless employee changes)
@@ -234,6 +273,24 @@ export default function EmployeesPage() {
     },
     [router, locale],
   )
+
+  const handleCsvDownload = useCallback(() => {
+    if (filtered.length === 0) return
+
+    const blob = new Blob([buildEmployeesCsv(filtered)], {
+      type: 'text/csv;charset=utf-8',
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+
+    link.href = url
+    link.download = `employees-${getUtcDateStamp()}.csv`
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }, [filtered])
 
   // Virtualizer — row count × fixed row height
   const virtualizer = useVirtualizer({
@@ -371,47 +428,77 @@ export default function EmployeesPage() {
           </span>
         </div>
 
-        {/* Search input */}
-        <div style={{ position: 'relative', maxWidth: 440 }}>
-          <Search
-            size={15}
-            aria-hidden
+        {/* Search input + WYSIWYG export */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', width: 'min(100%, 440px)' }}>
+            <Search
+              size={15}
+              aria-hidden
+              style={{
+                position: 'absolute',
+                left: 12,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'var(--color-ink-muted)',
+                pointerEvents: 'none',
+              }}
+            />
+            <input
+              type="search"
+              placeholder="ค้นหาด้วยชื่อ หรือรหัสพนักงาน..."
+              aria-label="ค้นหาพนักงาน"
+              value={localQuery}
+              onChange={(e) => setLocalQuery(e.target.value)}
+              style={{
+                width: '100%',
+                minHeight: 44,
+                padding: '9px 14px 9px 36px',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--color-hairline)',
+                background: 'var(--color-surface)',
+                color: 'var(--color-ink)',
+                fontSize: 13,
+                outline: 'none',
+                boxShadow: 'var(--shadow-[var(--shadow-sm)])',
+                transition: 'border-color 120ms, box-shadow 120ms',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-accent)'
+                e.currentTarget.style.boxShadow = '0 0 0 3px var(--color-accent-soft)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-hairline)'
+                e.currentTarget.style.boxShadow = 'var(--shadow-[var(--shadow-sm)])'
+              }}
+            />
+          </div>
+          <button
+            type="button"
+            disabled={filtered.length === 0}
+            aria-disabled={filtered.length === 0 ? 'true' : 'false'}
+            onClick={handleCsvDownload}
             style={{
-              position: 'absolute',
-              left: 12,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--color-ink-muted)',
-              pointerEvents: 'none',
-            }}
-          />
-          <input
-            type="search"
-            placeholder="ค้นหาด้วยชื่อ หรือรหัสพนักงาน..."
-            aria-label="ค้นหาพนักงาน"
-            value={localQuery}
-            onChange={(e) => setLocalQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '9px 14px 9px 36px',
+              minHeight: 44,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              padding: '9px 14px',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--color-hairline)',
-              background: 'var(--color-surface)',
-              color: 'var(--color-ink)',
+              background: filtered.length === 0 ? 'var(--color-canvas)' : 'var(--color-accent)',
+              color: filtered.length === 0 ? 'var(--color-ink-muted)' : 'white',
               fontSize: 13,
-              outline: 'none',
+              fontWeight: 700,
+              cursor: filtered.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: filtered.length === 0 ? 0.58 : 1,
               boxShadow: 'var(--shadow-[var(--shadow-sm)])',
               transition: 'border-color 120ms, box-shadow 120ms',
             }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-accent)'
-              e.currentTarget.style.boxShadow = '0 0 0 3px var(--color-accent-soft)'
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-hairline)'
-              e.currentTarget.style.boxShadow = 'var(--shadow-[var(--shadow-sm)])'
-            }}
-          />
+          >
+            <Download size={16} aria-hidden />
+            ดาวน์โหลด CSV
+          </button>
         </div>
       </div>
 
