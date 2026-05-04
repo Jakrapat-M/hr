@@ -2,7 +2,6 @@
 
 import { useState, type KeyboardEvent } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import {
   Download,
@@ -37,6 +36,25 @@ import {
 import { useBenefitsStore, type BenefitsTabKey } from '@/stores/humi-benefits-slice';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { getPlan } from '@/data/benefits/plan-registry';
+import type { ClaimStatus, DependentRelation } from '@/lib/humi-mock-data';
+
+// Local bilingual overrides for shared mock-data labels (the canonical
+// CLAIM_STATUS_META and DEPENDENT_RELATION_LABELS in humi-mock-data are
+// Thai-only and consumed by other pages + tests; we don't reshape them
+// here, just supply the English counterparts).
+const CLAIM_STATUS_LABEL_EN: Record<ClaimStatus, string> = {
+  approved: 'Approved',
+  pending: 'Pending',
+  info: 'Info needed',
+};
+
+const DEPENDENT_RELATION_LABEL_EN: Record<DependentRelation, string> = {
+  spouse: 'Spouse',
+  father: 'Father',
+  mother: 'Mother',
+  child: 'Child',
+  other: 'Other',
+};
 
 // ════════════════════════════════════════════════════════════
 // /benefits-hub — Benefit Work Zone (compact redesign)
@@ -189,10 +207,8 @@ function useEnrolledPlans(): EnrolledPlanView[] {
 
 export default function HumiBenefitsHubPage() {
   const { activeTab, setTab } = useBenefitsStore();
-  const params = useParams<{ locale?: string }>();
-  const locale = typeof params.locale === 'string' ? params.locale : 'th';
-  const reactLocale = useLocale();
-  const isTh = (reactLocale ?? locale) !== 'en';
+  const locale = useLocale();
+  const isTh = locale !== 'en';
 
   const totalUsed = HUMI_CLAIM_ALLOWANCES.reduce((sum, a) => sum + a.used, 0);
   const totalLimit = HUMI_CLAIM_ALLOWANCES.reduce((sum, a) => sum + a.limit, 0);
@@ -208,12 +224,13 @@ export default function HumiBenefitsHubPage() {
   const totalPending = pendingClaims + pendingReferrals;
 
   const handleTabKeyDown = (e: KeyboardEvent<HTMLButtonElement>, idx: number) => {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    let nextIdx: number | null = null;
+    if (e.key === 'ArrowRight') nextIdx = (idx + 1) % TABS.length;
+    else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + TABS.length) % TABS.length;
+    else if (e.key === 'Home') nextIdx = 0;
+    else if (e.key === 'End') nextIdx = TABS.length - 1;
+    if (nextIdx === null) return;
     e.preventDefault();
-    const nextIdx =
-      e.key === 'ArrowRight'
-        ? (idx + 1) % TABS.length
-        : (idx - 1 + TABS.length) % TABS.length;
     const [nextKey] = TABS[nextIdx];
     setTab(nextKey);
     const btn = document.getElementById(`bh-tab-${nextKey}`);
@@ -518,13 +535,16 @@ function BenefitsTab({ locale, isTh }: { locale: string; isTh: boolean }) {
                         <span className="truncate">{x}</span>
                       </li>
                     ))}
-                    {b.itemsTh.length > 2 && (
-                      <li className={cn(EYEBROW_TEXT_CLASS, 'text-ink-muted')}>
-                        {isTh
-                          ? `+ อีก ${b.itemsTh.length - 2} รายการ`
-                          : `+ ${b.itemsTh.length - 2} more`}
-                      </li>
-                    )}
+                    {(() => {
+                      const items = isTh ? b.itemsTh : b.itemsEn;
+                      return items.length > 2 ? (
+                        <li className={cn(EYEBROW_TEXT_CLASS, 'text-ink-muted')}>
+                          {isTh
+                            ? `+ อีก ${items.length - 2} รายการ`
+                            : `+ ${items.length - 2} more`}
+                        </li>
+                      ) : null;
+                    })()}
                   </ul>
                 </div>
 
@@ -594,12 +614,14 @@ function BenefitsTab({ locale, isTh }: { locale: string; isTh: boolean }) {
               key={d.id}
               className="flex items-center gap-4 p-5 transition-colors hover:bg-canvas-soft/60"
             >
-              <Avatar name={d.fullNameTh} tone={d.tone ?? 'ink'} size="md" />
+              <Avatar name={isTh ? d.fullNameTh : d.fullNameEn} tone={d.tone ?? 'ink'} size="md" />
               <div className="min-w-0">
                 <p className="truncate text-body font-semibold leading-tight text-ink">
-                  {d.fullNameTh}
+                  {isTh ? d.fullNameTh : d.fullNameEn}
                 </p>
-                <p className="text-small text-ink-muted">{d.relation}</p>
+                <p className="text-small text-ink-muted">
+                  {isTh ? d.relation : DEPENDENT_RELATION_LABEL_EN[d.relation]}
+                </p>
               </div>
             </div>
           ))}
@@ -767,7 +789,7 @@ function ClaimsTab({ locale, isTh }: { locale: string; isTh: boolean }) {
                             meta.toneClass
                           )}
                         >
-                          {meta.label}
+                          {isTh ? meta.label : CLAIM_STATUS_LABEL_EN[r.status]}
                         </span>
                       </div>
                     </td>
