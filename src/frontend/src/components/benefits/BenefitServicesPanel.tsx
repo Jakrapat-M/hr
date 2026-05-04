@@ -1,82 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  FileText,
-  Fuel,
-  Hospital,
-  Receipt,
-  Shield,
-  Stethoscope,
-} from 'lucide-react';
-import { Card, CardEyebrow, CardTitle, buttonVariants } from '@/components/humi';
-import { Capability } from '@/components/humi';
+import { ArrowRight, Fuel, Hospital, Receipt, Stethoscope } from 'lucide-react';
+import { Card, CardEyebrow, buttonVariants } from '@/components/humi';
 import { benefitReferralRoute, benefitClaimRoute } from '@/lib/benefit-routes';
 import { cn } from '@/lib/utils';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
-import {
-  getEmployeeClaimablePlans,
-  getAdminOnlyPlans,
-  type BenefitPlan,
-  type PlanCategory,
-} from '@/data/benefits/plan-registry';
-
-// ── Filter chip categories (used in collapsed catalog) ───────────────────────
-
-const CLAIMABLE_CATEGORIES: { id: PlanCategory; labelTh: string; labelEn: string }[] = [
-  { id: 'medical',  labelTh: 'ค่ารักษาพยาบาล', labelEn: 'Medical'  },
-  { id: 'dental',   labelTh: 'ทันตกรรม',         labelEn: 'Dental'   },
-  { id: 'physical', labelTh: 'ตรวจสุขภาพ',       labelEn: 'Checkup'  },
-  { id: 'gasoline', labelTh: 'ค่าน้ำมัน',         labelEn: 'Gasoline' },
-  { id: 'toll',     labelTh: 'ค่าผ่านทาง',        labelEn: 'Toll'     },
-  { id: 'parking',  labelTh: 'ค่าจอดรถ',          labelEn: 'Parking'  },
-  { id: 'gift',     labelTh: 'ของเยี่ยม',          labelEn: 'Gifts'    },
-];
-
-const ADMIN_CATEGORIES: { id: PlanCategory; labelTh: string; labelEn: string }[] = [
-  { id: 'funeral',     labelTh: 'ฌาปนกิจ',            labelEn: 'Funeral'     },
-  { id: 'wreath',      labelTh: 'พวงหรีด',             labelEn: 'Wreath'      },
-  { id: 'beneficiary', labelTh: 'ผู้รับผลประโยชน์',    labelEn: 'Beneficiary' },
-  { id: 'life',        labelTh: 'ประกันชีวิต',         labelEn: 'Life'        },
-];
-
-function planRoute(plan: BenefitPlan, locale: string): string {
-  if (plan.recordType === 'records' || plan.recordType === 'info') {
-    return `/${locale}/admin/benefits/records/${plan.id}`;
-  }
-  return benefitClaimRoute(locale, plan.id);
-}
-
-function PlanChip({
-  plan,
-  locale,
-  isTh,
-}: {
-  plan: BenefitPlan;
-  locale: string;
-  isTh: boolean;
-}) {
-  const href = planRoute(plan, locale);
-  return (
-    <Link
-      href={href}
-      className={cn(
-        buttonVariants({ variant: 'ghost', size: 'sm' }),
-        'inline-flex items-center gap-1.5 whitespace-nowrap'
-      )}
-    >
-      <FileText size={13} aria-hidden />
-      {isTh ? plan.nameTh.replace('[Records] ', '') : plan.nameEn.replace('[Records] ', '')}
-      <ArrowRight size={12} aria-hidden />
-    </Link>
-  );
-}
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?: () => void }) {
   const referrals = useBenefitReferralsStore((state) => state.referrals);
@@ -86,28 +15,10 @@ export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?:
 
   const isTh = locale !== 'en';
 
-  const [browseOpen, setBrowseOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<PlanCategory | null>(null);
-
-  const claimablePlans = getEmployeeClaimablePlans();
-  const adminPlans = getAdminOnlyPlans();
-
-  const visibleClaimable = activeCategory
-    ? claimablePlans.filter((p) => p.category === activeCategory)
-    : claimablePlans;
-
-  const visibleAdmin = activeCategory
-    ? adminPlans.filter((p) => p.category === activeCategory)
-    : adminPlans;
-
   return (
     <section aria-labelledby="benefit-services-heading" className="space-y-4">
       {/* HERO — Hospital referral, prioritized for users who may be unwell */}
-      <Card
-        variant="raised"
-        size="lg"
-        className="humi-banner relative overflow-hidden"
-      >
+      <Card variant="raised" size="lg" className="humi-banner relative overflow-hidden">
         <div
           aria-hidden
           className="absolute -right-10 -top-10 h-40 w-32 rounded-full bg-[color:var(--color-butter)] opacity-50 blur-2xl"
@@ -136,10 +47,7 @@ export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?:
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
                 href={benefitReferralRoute(locale)}
-                className={cn(
-                  buttonVariants({ variant: 'primary' }),
-                  'gap-2 text-body'
-                )}
+                className={cn(buttonVariants({ variant: 'primary' }), 'gap-2 text-body')}
               >
                 <Stethoscope size={16} aria-hidden />
                 {isTh ? 'ขอใบส่งตัวตอนนี้' : 'Request referral now'}
@@ -162,10 +70,9 @@ export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?:
         </div>
       </Card>
 
-      {/* Secondary actions — claim entry points */}
+      {/* Secondary actions — claim shortcuts */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <SecondaryAction
-          locale={locale}
           isTh={isTh}
           icon={<Receipt size={20} aria-hidden />}
           titleTh="เบิกค่ารักษา / ทันตกรรม"
@@ -175,7 +82,6 @@ export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?:
           href={benefitClaimRoute(locale, 'BE-MED-001')}
         />
         <SecondaryAction
-          locale={locale}
           isTh={isTh}
           icon={<Fuel size={20} aria-hidden />}
           titleTh="เบิกค่าเดินทาง"
@@ -186,120 +92,21 @@ export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?:
         />
       </div>
 
-      {/* Catalog browse — text link, deliberately understated */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setBrowseOpen((v) => !v)}
-          aria-expanded={browseOpen}
-          aria-controls="benefit-services-browse"
-          className={cn(
-            'inline-flex items-center gap-1.5 text-small font-medium text-ink-soft transition-colors hover:text-accent',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas'
-          )}
+      {/* Single-form catalog link — one page, picker inside */}
+      <p className="text-small text-ink-muted">
+        {isTh ? 'เบิกประเภทอื่น? ' : 'Other benefit types? '}
+        <Link
+          href={benefitClaimRoute(locale)}
+          className="font-semibold text-accent underline-offset-4 transition-colors hover:underline"
         >
-          {browseOpen ? (
-            <ChevronUp size={14} aria-hidden />
-          ) : (
-            <ChevronDown size={14} aria-hidden />
-          )}
-          {isTh
-            ? `ดูสวัสดิการทั้งหมด (${claimablePlans.length} แผน)`
-            : `View all benefits (${claimablePlans.length} plans)`}
-        </button>
-
-        {browseOpen && (
-          <Card
-            variant="raised"
-            size="md"
-            id="benefit-services-browse"
-            className="mt-3 space-y-4 bg-canvas-soft"
-          >
-            <div>
-              <p className="mb-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-                {isTh ? 'กรองตามหมวดหมู่' : 'Filter by category'}
-              </p>
-              <div
-                role="group"
-                aria-label={isTh ? 'หมวดหมู่สวัสดิการ' : 'Benefit categories'}
-                className="flex flex-wrap gap-2"
-              >
-                <CategoryChip
-                  active={activeCategory === null}
-                  onClick={() => setActiveCategory(null)}
-                  label={isTh ? 'ทั้งหมด' : 'All'}
-                />
-                {CLAIMABLE_CATEGORIES.map((cat) => {
-                  if (!claimablePlans.some((p) => p.category === cat.id)) return null;
-                  return (
-                    <CategoryChip
-                      key={cat.id}
-                      active={activeCategory === cat.id}
-                      onClick={() =>
-                        setActiveCategory(cat.id === activeCategory ? null : cat.id)
-                      }
-                      label={isTh ? cat.labelTh : cat.labelEn}
-                    />
-                  );
-                })}
-                <Capability action="edit">
-                  {ADMIN_CATEGORIES.map((cat) => {
-                    if (!adminPlans.some((p) => p.category === cat.id)) return null;
-                    return (
-                      <CategoryChip
-                        key={cat.id}
-                        active={activeCategory === cat.id}
-                        onClick={() =>
-                          setActiveCategory(cat.id === activeCategory ? null : cat.id)
-                        }
-                        label={isTh ? cat.labelTh : cat.labelEn}
-                        icon={<Shield size={11} aria-hidden className="opacity-60" />}
-                      />
-                    );
-                  })}
-                </Capability>
-              </div>
-            </div>
-
-            {visibleClaimable.length > 0 && (
-              <div>
-                <p className="mb-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-                  {isTh ? 'สิทธิ์เบิกได้' : 'Employee claimable'}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {visibleClaimable.map((plan) => (
-                    <PlanChip key={plan.id} plan={plan} locale={locale} isTh={isTh} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <Capability action="edit">
-              {visibleAdmin.length > 0 && (
-                <div className="rounded-[var(--radius-md)] border border-hairline bg-surface p-4">
-                  <p className="mb-2 flex items-center gap-1.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-                    <Shield size={13} aria-hidden />
-                    {isTh ? 'บันทึกโดย HR เท่านั้น' : 'HR records only'}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {visibleAdmin.map((plan) => (
-                      <PlanChip key={plan.id} plan={plan} locale={locale} isTh={isTh} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Capability>
-          </Card>
-        )}
-      </div>
+          {isTh ? 'เปิดฟอร์มเดียวที่เลือกประเภทได้ทุกแผน →' : 'Open the unified claim form →'}
+        </Link>
+      </p>
     </section>
   );
 }
 
-// ── Sub-component: secondary action card ──────────────────────────────────────
-
 function SecondaryAction({
-  locale: _locale,
   isTh,
   icon,
   titleTh,
@@ -308,7 +115,6 @@ function SecondaryAction({
   subtitleEn,
   href,
 }: {
-  locale: string;
   isTh: boolean;
   icon: React.ReactNode;
   titleTh: string;
@@ -339,37 +145,5 @@ function SecondaryAction({
         className="shrink-0 text-ink-muted transition-all group-hover:translate-x-0.5 group-hover:text-accent"
       />
     </Link>
-  );
-}
-
-// ── Sub-component: category filter chip ──────────────────────────────────────
-
-function CategoryChip({
-  active,
-  onClick,
-  label,
-  icon,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full border border-hairline px-3 py-1 text-small font-medium transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
-        active
-          ? 'border-accent bg-accent text-white'
-          : 'bg-surface text-ink-soft hover:bg-canvas-soft hover:text-ink'
-      )}
-    >
-      {icon}
-      {label}
-    </button>
   );
 }

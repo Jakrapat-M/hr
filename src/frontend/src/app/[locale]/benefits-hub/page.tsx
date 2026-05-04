@@ -36,6 +36,7 @@ import {
   type HumiBenefitPlan,
 } from '@/lib/humi-mock-data';
 import { useBenefitsStore, type BenefitsTabKey } from '@/stores/humi-benefits-slice';
+import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 
 // ════════════════════════════════════════════════════════════
 // /benefits-hub — Benefit Work Zone (compact redesign)
@@ -94,49 +95,99 @@ export default function HumiBenefitsHubPage() {
   const params = useParams<{ locale?: string }>();
   const locale = typeof params.locale === 'string' ? params.locale : 'th';
 
+  const totalUsed = HUMI_CLAIM_ALLOWANCES.reduce((sum, a) => sum + a.used, 0);
+  const totalLimit = HUMI_CLAIM_ALLOWANCES.reduce((sum, a) => sum + a.limit, 0);
+  const usedPct = totalLimit > 0 ? Math.round((totalUsed / totalLimit) * 100) : 0;
+  const totalRemaining = totalLimit - totalUsed;
+
+  const pendingClaims = HUMI_CLAIM_HISTORY.filter((c) => c.status !== 'approved').length;
+  const pendingReferrals = useBenefitReferralsStore((s) =>
+    s.referrals.filter((r) =>
+      ['pending_spd', 'spd_reviewing', 'send_back', 'approved'].includes(r.status)
+    ).length
+  );
+  const totalPending = pendingClaims + pendingReferrals;
+
   return (
     <div className="mx-auto max-w-[1200px] space-y-8">
-      {/* Page header + status pills */}
-      <header className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex flex-col gap-1">
-          <CardEyebrow>Benefits Hub</CardEyebrow>
-          <h1
+      <header className="flex flex-col gap-1">
+        <CardEyebrow>Benefits Hub</CardEyebrow>
+        <h1
+          className={cn(
+            'font-display font-semibold tracking-tight text-ink',
+            'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
+          )}
+        >
+          ศูนย์รวมสวัสดิการ
+        </h1>
+        <p className="max-w-xl text-body leading-relaxed text-ink-soft">
+          จัดการสิทธิ์ ติดตามสถานะการเบิก และอ่านนโยบายสวัสดิการล่าสุดจากที่นี่
+        </p>
+      </header>
+
+      {/* Prominent stat cards */}
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2" aria-label="ภาพรวมงานสวัสดิการ">
+        <Card variant="raised" size="md">
+          <CardEyebrow>สถานะวงเงิน · ปี 2569</CardEyebrow>
+          <p
             className={cn(
-              'font-display font-semibold tracking-tight text-ink',
-              'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
+              'mt-1 font-display font-semibold tabular-nums text-ink whitespace-nowrap',
+              'text-[length:var(--text-display-h2)] leading-[var(--text-display-h2--line-height)]'
             )}
           >
-            ศูนย์รวมสวัสดิการ
-          </h1>
-          <p className="max-w-xl text-body leading-relaxed text-ink-soft">
-            จัดการสิทธิ์ ติดตามสถานะการเบิก และอ่านนโยบายสวัสดิการล่าสุดจากที่นี่
+            ฿{totalUsed.toLocaleString()}
+            <span className="ml-1 text-body font-normal text-ink-muted">
+              / ฿{totalLimit.toLocaleString()}
+            </span>
           </p>
-        </div>
+          <div
+            role="progressbar"
+            aria-valuenow={usedPct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="วงเงินที่ใช้ไป"
+            className="mt-3 h-2 w-full overflow-hidden rounded-full bg-hairline-soft"
+          >
+            <div className="h-full rounded-full bg-accent" style={{ width: `${usedPct}%` }} />
+          </div>
+          <p className="mt-2 text-small text-ink-muted">
+            ใช้ไป {usedPct}% · เหลือ ฿{totalRemaining.toLocaleString()} จนถึงสิ้นปี
+          </p>
+        </Card>
 
-        <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-hairline bg-surface px-4 py-2.5 shadow-[var(--shadow-sm)]">
-            <span aria-hidden className="h-2 w-2 rounded-full bg-accent" />
-            <div className="flex flex-col">
-              <span className={cn(EYEBROW_TEXT_CLASS, 'text-ink-muted leading-none')}>
-                สถานะวงเงิน
+        <Card variant="raised" size="md" className="flex flex-col justify-between">
+          <div>
+            <CardEyebrow>คำขอที่ต้องตามผล</CardEyebrow>
+            <p
+              className={cn(
+                'mt-1 font-display font-semibold tabular-nums text-ink whitespace-nowrap',
+                'text-[length:var(--text-display-h2)] leading-[var(--text-display-h2--line-height)]'
+              )}
+            >
+              {totalPending}
+              <span className="ml-1 text-body font-normal text-ink-muted">
+                {totalPending === 1 ? 'รายการ' : 'รายการ'}
               </span>
-              <span className="text-small font-semibold text-ink">ใช้ไป 32% (฿19,200)</span>
-            </div>
+            </p>
+            <p className="mt-1 text-small text-ink-muted">
+              {pendingReferrals > 0 && `${pendingReferrals} ใบส่งตัว`}
+              {pendingReferrals > 0 && pendingClaims > 0 && ' · '}
+              {pendingClaims > 0 && `${pendingClaims} คำขอเบิก`}
+              {totalPending === 0 && 'ไม่มีคำขอที่ค้างอยู่'}
+            </p>
           </div>
           <Link
             href={`/${locale}/requests`}
-            className="flex items-center gap-2 rounded-[var(--radius-md)] border border-hairline bg-surface px-4 py-2.5 shadow-[var(--shadow-sm)] transition-colors hover:bg-canvas-soft"
+            className={cn(
+              'mt-4 inline-flex items-center gap-1.5 self-start text-small font-semibold text-accent transition-colors hover:text-ink',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2'
+            )}
           >
-            <Clock size={14} className="text-accent" aria-hidden />
-            <div className="flex flex-col">
-              <span className={cn(EYEBROW_TEXT_CLASS, 'text-ink-muted leading-none')}>
-                คำขอที่ค้างอยู่
-              </span>
-              <span className="text-small font-semibold text-ink">ติดตามสถานะเบิก</span>
-            </div>
+            <Clock size={14} aria-hidden />
+            ดูสถานะทั้งหมด →
           </Link>
-        </div>
-      </header>
+        </Card>
+      </section>
 
       {/* Primary work zone */}
       <section aria-label="บริการสวัสดิการ">
