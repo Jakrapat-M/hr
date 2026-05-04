@@ -199,7 +199,7 @@ export default function HumiBenefitsHubPage() {
         <nav
           role="tablist"
           aria-label="มุมมองสวัสดิการ"
-          className="flex w-full gap-1 overflow-x-auto border-b border-hairline"
+          className="flex w-full flex-wrap gap-1 border-b border-hairline"
         >
           {TABS.map(([k, l]) => (
             <button
@@ -209,7 +209,8 @@ export default function HumiBenefitsHubPage() {
               aria-selected={activeTab === k}
               onClick={() => setTab(k)}
               className={cn(
-                '-mb-px border-b-2 px-5 py-3.5 text-body font-medium transition-colors whitespace-nowrap',
+                '-mb-px border-b-2 px-5 py-3.5 font-medium transition-colors whitespace-nowrap',
+                'text-[length:var(--text-body)] leading-[var(--text-body--line-height)]',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
                 activeTab === k
                   ? 'border-accent text-ink'
