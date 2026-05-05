@@ -266,6 +266,10 @@ function useWorkflowStatus(instanceId: string | null, fallback: BenefitWorkflowS
   const [status, setStatus] = useState<BenefitWorkflowStatus | null>(null);
   useEffect(() => {
     if (!instanceId) return;
+    // Synthetic demo IDs (seeded historical data) have no live Camunda
+    // counterpart — polling would 404 every 30s. Trust the persisted
+    // `workflowStatus` fallback instead.
+    if (instanceId.startsWith('demo-')) return;
     let cancelled = false;
     const poll = async () => {
       try {
@@ -403,14 +407,22 @@ function MineTab({
                     ) : null}
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span
-                      className={cn(
-                        'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
-                        meta.toneClass
-                      )}
-                    >
-                      {meta.label}
-                    </span>
+                    {/*
+                      Legacy approval chip — hidden when the row carries a
+                      workflow link, so WorkflowStatusBadge (rendered above)
+                      is the single source of truth and avoids a confusing
+                      "paid · pending" double-badge.
+                    */}
+                    {!r.workflowInstanceId ? (
+                      <span
+                        className={cn(
+                          'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
+                          meta.toneClass
+                        )}
+                      >
+                        {meta.label}
+                      </span>
+                    ) : null}
                     <button
                       type="button"
                       aria-label={`ดูรายละเอียดการอนุมัติ ${r.id}`}
