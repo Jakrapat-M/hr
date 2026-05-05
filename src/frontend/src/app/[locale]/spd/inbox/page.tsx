@@ -4,12 +4,15 @@
 //   • Chain 3: ESS personal-info change requests (BRD #166)
 //   • Chain 1: ESS termination/resignation requests (BRD #172)
 //   • Chain 4: Promotion requests (BRD #103)
+//   • Benefit reimbursement claims
+//   • Hospital referral letters
 //
-// BRD #134 — Refactored to use WorkflowRequestInbox as outer shell.
-// Per-store action UIs (approve/reject) are still rendered by the existing
-// specialised inboxes — WorkflowRequestInbox provides the unified frame + KPI chip.
+// BRD #134 redesign: unified Humi section layout, no double-render.
+// Each domain has ONE place where its data appears (the per-domain inbox).
+// A KPI strip at the top shows pending counts and anchors to each section.
 
-import { WorkflowRequestInbox, type StoreSlot } from '@/components/workflow/WorkflowRequestInbox';
+import { useId } from 'react';
+import { Clock } from 'lucide-react';
 import { ApprovalInbox } from '@/components/workflow/ApprovalInbox';
 import { TerminationInbox } from '@/components/workflow/TerminationInbox';
 import { PromotionInbox } from '@/components/workflow/PromotionInbox';
@@ -19,134 +22,195 @@ import { Capability } from '@/components/humi';
 import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useTerminationApprovals } from '@/stores/termination-approvals';
 import { usePromotionApprovals } from '@/stores/promotion-approvals';
-import { BENEFIT_STATUS_LABEL, selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
-import { BENEFIT_REFERRAL_STATUS_LABEL, selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
-import { STEP_LABEL } from '@/stores/workflow-approvals';
-import { TERMINATION_STEP_LABEL } from '@/stores/termination-approvals';
-import { PROMOTION_STEP_LABEL } from '@/stores/promotion-approvals';
-import type { WorkflowRow } from '@/components/workflow/WorkflowRequestInbox';
+import { useBenefitClaimsStore } from '@/stores/benefit-claims';
+import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 
-function useSPDStoreSlots(): StoreSlot[] {
-  const wfRequests   = useWorkflowApprovals((s) => s.requests);
-  const termRequests = useTerminationApprovals((s) => s.requests);
-  const promRequests = usePromotionApprovals((s) => s.requests);
-  const benefitClaims = useBenefitClaimsStore((s) => s.claims);
-  const benefitReferrals = useBenefitReferralsStore((s) => s.referrals);
+// ── KPI strip ──────────────────────────────────────────────────────────────────
 
-  const wfRows: WorkflowRow[] = wfRequests.map((r) => ({
-    id: r.id,
-    requestType: 'แก้ไขข้อมูลส่วนตัว',
-    requestedBy: r.employeeName,
-    requestedOn: r.submittedAt,
-    currentStep: STEP_LABEL[r.status],
-    status: r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : 'pending',
-  }));
-
-  const termRows: WorkflowRow[] = termRequests.map((r) => ({
-    id: r.id,
-    requestType: 'คำขอลาออก',
-    requestedBy: r.employeeName,
-    requestedOn: r.submittedAt,
-    currentStep: TERMINATION_STEP_LABEL[r.status],
-    status: r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : 'pending',
-  }));
-
-  const promRows: WorkflowRow[] = promRequests.map((r) => ({
-    id: r.id,
-    requestType: 'คำขอเลื่อนตำแหน่ง',
-    requestedBy: r.employeeName,
-    requestedOn: r.submittedAt,
-    currentStep: PROMOTION_STEP_LABEL[r.status],
-    status: r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : 'pending',
-  }));
-
-  const benefitRows: WorkflowRow[] = selectBenefitRequestSummaries(benefitClaims).map((r) => ({
-    id: r.id,
-    requestType: r.type,
-    requestedBy: r.claim.employeeName,
-    requestedOn: r.claim.submittedAt,
-    currentStep: BENEFIT_STATUS_LABEL[r.claim.status],
-    status: r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : 'pending',
-  }));
-
-  const referralRows: WorkflowRow[] = selectBenefitReferralRequestSummaries(benefitReferrals).map((r) => ({
-    id: r.id,
-    requestType: r.type,
-    requestedBy: r.referral.employeeName,
-    requestedOn: r.referral.submittedAt ?? r.referral.updatedAt,
-    currentStep: BENEFIT_REFERRAL_STATUS_LABEL[r.referral.status],
-    status: r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : 'pending',
-  }));
-
-  return [
-    { name: 'Benefit Reimbursement', rows: benefitRows },
-    { name: 'Hospital Referral / ขอใบส่งตัว', rows: referralRows },
-    { name: 'แก้ไขข้อมูลส่วนตัว (BRD #166)', rows: wfRows },
-    { name: 'คำขอลาออก (BRD #172)',           rows: termRows },
-    { name: 'คำขอเลื่อนตำแหน่ง (BRD #103)',   rows: promRows },
-  ];
+interface KpiChipProps {
+  label: string;
+  count: number;
+  href: string;
 }
 
+function KpiChip({ label, count, href }: KpiChipProps) {
+  const hasPending = count > 0;
+  return (
+    <a
+      href={href}
+      className="humi-card humi-card--cream"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        padding: '10px 16px',
+        minWidth: 160,
+        textDecoration: 'none',
+        cursor: 'pointer',
+        transition: 'box-shadow var(--dur-base) var(--ease-spring)',
+      }}
+      aria-label={`${label}: ${count} รอ`}
+    >
+      <span className="humi-eyebrow" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <Clock size={10} aria-hidden />
+        {label}
+      </span>
+      <span
+        className="text-body font-semibold"
+        style={{ color: hasPending ? 'var(--color-ink)' : 'var(--color-ink-muted)' }}
+      >
+        {count} รอ
+      </span>
+    </a>
+  );
+}
+
+// ── Section wrapper ────────────────────────────────────────────────────────────
+
+interface DomainSectionProps {
+  id: string;
+  eyebrow: string;
+  children: React.ReactNode;
+}
+
+function DomainSection({ id, eyebrow, children }: DomainSectionProps) {
+  return (
+    <section
+      id={id}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        scrollMarginTop: 80,
+      }}
+      aria-labelledby={`${id}-heading`}
+    >
+      <div className="humi-eyebrow" id={`${id}-heading`} style={{ marginBottom: 2 }}>
+        {eyebrow}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// ── Hairline divider ───────────────────────────────────────────────────────────
+
+function Divider() {
+  return <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />;
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────────
+
 export default function SPDInboxPage() {
-  const slots = useSPDStoreSlots();
+  // Pending counts for KPI strip — each store is read once, here only.
+  const wfPending      = useWorkflowApprovals((s) =>
+    s.requests.filter((r) => r.status === 'pending_spd').length,
+  );
+  const termPending    = useTerminationApprovals((s) =>
+    s.requests.filter((r) => r.status === 'pending_spd').length,
+  );
+  const promPending    = usePromotionApprovals((s) =>
+    s.requests.filter((r) => r.status === 'pending_spd').length,
+  );
+  const claimPending   = useBenefitClaimsStore((s) =>
+    s.claims.filter((c) => c.status === 'pending_spd').length,
+  );
+  const referralPending = useBenefitReferralsStore((s) =>
+    s.referrals.filter((r) => r.status === 'pending_spd' || r.status === 'spd_reviewing').length,
+  );
+
+  // Stable section IDs
+  const prefix = useId().replace(/:/g, '');
+  const ids = {
+    claims:   `${prefix}-claims`,
+    referral: `${prefix}-referral`,
+    wf:       `${prefix}-wf`,
+    term:     `${prefix}-term`,
+    promo:    `${prefix}-promo`,
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-      {/* Unified inbox header + KPI chip */}
+
+      {/* ── Page header ─────────────────────────────────────── */}
       <div>
-        <h1 className="font-display text-[22px] font-semibold text-ink">กล่องอนุมัติ — SPD</h1>
+        <h1 className="font-display text-[22px] font-semibold text-ink">
+          กล่องอนุมัติ — SPD
+        </h1>
         <p className="text-small text-ink-muted mt-1">
           อนุมัติคำขอทั้งหมดที่พนักงานส่งผ่าน Self-Service (BRD #134)
         </p>
-        <p className="text-small text-ink-muted mt-1">กล่องอนุมัติคำขอเบิกสวัสดิการ</p>
       </div>
 
-      <WorkflowRequestInbox stores={slots} persona="spd" />
+      {/* ── KPI strip ───────────────────────────────────────── */}
+      <nav
+        aria-label="ประเภทคำขอ"
+        className="humi-row"
+        style={{ gap: 10, flexWrap: 'wrap' }}
+      >
+        <KpiChip label="Benefit Reimbursement" count={claimPending}    href={`#${ids.claims}`}   />
+        <KpiChip label="Hospital Referral"      count={referralPending} href={`#${ids.referral}`} />
+        <KpiChip label="แก้ไขข้อมูลส่วนตัว"     count={wfPending}      href={`#${ids.wf}`}       />
+        <KpiChip label="ลาออก"                  count={termPending}    href={`#${ids.term}`}     />
+        <KpiChip label="เลื่อนตำแหน่ง"          count={promPending}    href={`#${ids.promo}`}    />
+      </nav>
 
-      {/* Divider */}
-      <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
+      <Divider />
 
-      {/* Detailed action panels — each renders approve/reject UI for its chain */}
-      <Capability action="approve">
-        <ApprovalInbox
-          role="spd"
-          expectedStep="pending_spd"
-          title="Chain 3 — แก้ไขข้อมูลส่วนตัว"
-          subtitle="อนุมัติคำขอแก้ไขข้อมูลส่วนตัวที่พนักงานส่งผ่าน Self-Service (BRD #166)"
-        />
-      </Capability>
-
-      <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
-
-      {/* Benefit reimbursement workflow — gated: BenefitEmployeeClaim visibility */}
+      {/* ── Domain 1: Benefit Reimbursement ─────────────────── */}
       <Capability entity="BenefitEmployeeClaim">
-        <BenefitClaimsInbox />
+        <DomainSection id={ids.claims} eyebrow={`Benefit Reimbursement${claimPending > 0 ? ` · ${claimPending} รอ` : ''}`}>
+          <p className="text-small text-ink-muted" style={{ marginTop: -4, marginBottom: 4 }}>
+            กล่องอนุมัติคำขอเบิกสวัสดิการ
+          </p>
+          <BenefitClaimsInbox />
+        </DomainSection>
       </Capability>
 
-      <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
+      <Divider />
 
-      {/* Benefit referral workflow — gated: BenefitEmployeeClaim visibility */}
+      {/* ── Domain 2: Hospital Referral ──────────────────────── */}
       <Capability entity="BenefitEmployeeClaim">
-        <BenefitReferralInbox />
+        <DomainSection id={ids.referral} eyebrow={`Hospital Referral / ขอใบส่งตัว${referralPending > 0 ? ` · ${referralPending} รอ` : ''}`}>
+          <BenefitReferralInbox />
+        </DomainSection>
       </Capability>
 
-      <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
+      <Divider />
 
-      {/* Chain 1 — Termination/Resignation (BRD #172) */}
+      {/* ── Domain 3: Personal-info change-request ───────────── */}
       <Capability action="approve">
-        <TerminationInbox />
+        <DomainSection id={ids.wf} eyebrow={`แก้ไขข้อมูลส่วนตัว (BRD #166)${wfPending > 0 ? ` · ${wfPending} รอ` : ''}`}>
+          <ApprovalInbox
+            role="spd"
+            expectedStep="pending_spd"
+            title="Chain 3 — แก้ไขข้อมูลส่วนตัว"
+            subtitle="อนุมัติคำขอแก้ไขข้อมูลส่วนตัวที่พนักงานส่งผ่าน Self-Service (BRD #166)"
+          />
+        </DomainSection>
       </Capability>
 
-      <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
+      <Divider />
 
-      {/* Chain 4 — Promotion (BRD #103) */}
+      {/* ── Domain 4: Termination / Resignation ─────────────── */}
       <Capability action="approve">
-        <PromotionInbox />
+        <DomainSection id={ids.term} eyebrow={`ลาออก (BRD #172)${termPending > 0 ? ` · ${termPending} รอ` : ''}`}>
+          <TerminationInbox />
+        </DomainSection>
       </Capability>
 
-      {/* Override / bulk-approve panel visible only when persona has override capability */}
+      <Divider />
+
+      {/* ── Domain 5: Promotion ──────────────────────────────── */}
+      <Capability action="approve">
+        <DomainSection id={ids.promo} eyebrow={`เลื่อนตำแหน่ง (BRD #103)${promPending > 0 ? ` · ${promPending} รอ` : ''}`}>
+          <PromotionInbox />
+        </DomainSection>
+      </Capability>
+
+      {/* ── Override / Bulk-approve panels ──────────────────── */}
       <Capability action="override">
-        <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
+        <Divider />
         <div>
           <p className="text-small font-semibold text-ink-muted uppercase tracking-[0.14em]">
             Override Actions
@@ -158,7 +222,7 @@ export default function SPDInboxPage() {
       </Capability>
 
       <Capability action="bulkApprove">
-        <div style={{ borderTop: '1px solid var(--color-hairline-soft)' }} />
+        <Divider />
         <div>
           <p className="text-small font-semibold text-ink-muted uppercase tracking-[0.14em]">
             Bulk Approve
@@ -168,6 +232,7 @@ export default function SPDInboxPage() {
           </p>
         </div>
       </Capability>
+
     </div>
   );
 }
