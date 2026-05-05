@@ -56,6 +56,7 @@ import {
   usePromotionApprovals,
 } from '@/stores/promotion-approvals';
 import { completeTask, listPendingTasks, type PendingTaskSummary } from '@/lib/workflow-api';
+import { useToast } from '@/components/ui/toast';
 import {
   countByDomain,
   filterApprovalRows,
@@ -182,64 +183,6 @@ export default function ApprovalsInboxPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-      {/* ─── Editorial header ──────────────────────────────────────────── */}
-      <header style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span className="humi-eyebrow" style={{ letterSpacing: '0.18em' }}>
-          {t('eyebrow')}
-        </span>
-        <h1 className="font-display text-[26px] font-semibold text-ink" style={{ lineHeight: 1.15 }}>
-          {t('title')}
-        </h1>
-        <p className="text-small text-ink-muted" style={{ maxWidth: 640 }}>
-          {t('subtitle')}
-        </p>
-
-        {/* Persona "byline" — narrow, italicised marker like a magazine lede. */}
-        <div
-          className="humi-row"
-          style={{
-            gap: 10,
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            marginTop: 14,
-            paddingTop: 12,
-            borderTop: '1px solid var(--color-hairline-soft)',
-          }}
-        >
-          <span
-            className="humi-row"
-            style={{
-              gap: 6,
-              alignItems: 'center',
-              padding: '4px 10px',
-              borderRadius: 999,
-              background: 'var(--color-canvas-soft)',
-              border: '1px solid var(--color-hairline)',
-            }}
-          >
-            <UserCog size={12} aria-hidden style={{ opacity: 0.7 }} />
-            <span className="text-small text-ink-muted">{t('viewingAs')}</span>
-            <span className="text-small font-semibold text-ink">
-              {t(`role.${primaryRole}`)}
-            </span>
-            {username && (
-              <span className="text-small text-ink-muted" style={{ fontStyle: 'italic' }}>
-                · {username}
-              </span>
-            )}
-          </span>
-          <span
-            className="humi-row"
-            style={{ gap: 6, alignItems: 'center', color: 'var(--color-ink-muted)' }}
-          >
-            <Clock size={12} aria-hidden />
-            <span className="text-small">
-              {t('totalPending', { count: totalPending })}
-            </span>
-          </span>
-        </div>
-      </header>
-
       {/* ─── Domain pulse strip ───────────────────────────────────────── */}
       <nav
         aria-label={t('filter.domain.label')}
@@ -365,7 +308,7 @@ export default function ApprovalsInboxPage() {
           >
             {visibleRows.map((row) => (
               <li key={row.key}>
-                <ApprovalRowItem row={row} domainLabels={domainLabels} />
+                <ApprovalRowItem row={row} domainLabels={domainLabels} onRefreshCamunda={refreshCamunda} />
               </li>
             ))}
           </ul>
@@ -484,9 +427,11 @@ function StatusChip({
 function ApprovalRowItem({
   row,
   domainLabels,
+  onRefreshCamunda,
 }: {
   row: ApprovalRow;
   domainLabels: DomainLabels;
+  onRefreshCamunda?: () => Promise<void>;
 }) {
   const t = useTranslations('approvalsInbox');
 
@@ -645,7 +590,7 @@ function ApprovalRowItem({
           background: 'var(--color-canvas-soft)',
         }}
       >
-        <ExpandedDetail row={row} />
+        <ExpandedDetail row={row} onRefreshCamunda={onRefreshCamunda} />
       </div>
 
       {/* Tiny inline rule: rotate chevron when open. Kept inline so we don't
@@ -665,9 +610,10 @@ function ApprovalRowItem({
 // directly to the relevant store mutator or completeTask (Camunda).
 // Read-only rows (approved/rejected): RequestSummaryCard with audit timeline.
 
-function ExpandedDetail({ row }: { row: ApprovalRow }) {
+function ExpandedDetail({ row, onRefreshCamunda }: { row: ApprovalRow; onRefreshCamunda?: () => Promise<void> }) {
   const actorName = useAuthStore((s) => s.username) ?? 'SPD';
   const actor = { role: 'spd' as const, name: actorName };
+  const { toast } = useToast();
 
   // Benefit mock lane
   const approveClaim = useBenefitClaimsStore((s) => s.approveClaim);
@@ -709,8 +655,40 @@ function ExpandedDetail({ row }: { row: ApprovalRow }) {
       return (
         <CamundaTaskCard
           task={row.payload}
-          onApprove={(note) => void completeTask(row.payload.id, { approved: true, reviewerComment: note })}
-          onReject={(reason) => void completeTask(row.payload.id, { approved: false, reviewerComment: reason })}
+          onApprove={async (note) => {
+            try {
+              await completeTask(row.payload.id, { approved: true, reviewerComment: note });
+              await onRefreshCamunda?.();
+              toast('success', 'อนุมัติเรียบร้อย');
+            } catch (err) {
+              const errorMsg = err instanceof Error ? err.message : String(err);
+              let userMsg = 'ไม่สามารถอนุมัติได้ กรุณาลองใหม่';
+              if (errorMsg.includes('TASK_NOT_FOUND')) userMsg = 'ใบนี้ถูกประมวลผลแล้ว กรุณา refresh';
+              else if (errorMsg.includes('TASK_ALREADY_RESOLVED')) userMsg = 'ใบนี้ถูกอนุมัติ/ปฏิเสธไปแล้ว';
+              else if (errorMsg.includes('CAMUNDA_UNAVAILABLE')) userMsg = 'ระบบ workflow ไม่ตอบสนอง กรุณาลองใหม่ภายหลัง';
+              toast('error', userMsg);
+              console.error('[approvals] completeTask approve failed:', err);
+              await onRefreshCamunda?.();
+            }
+          }}
+          onReject={async (reason) => {
+            try {
+              await completeTask(row.payload.id, { approved: false, reviewerComment: reason });
+              await onRefreshCamunda?.();
+              toast('success', 'ปฏิเสธเรียบร้อย');
+            } catch (err) {
+              const errorMsg = err instanceof Error ? err.message : String(err);
+              let userMsg = 'ไม่สามารถปฏิเสธได้ กรุณาลองใหม่';
+              if (errorMsg.includes('TASK_NOT_FOUND') || errorMsg.includes('TASK_ALREADY_RESOLVED')) {
+                userMsg = 'ใบนี้ถูกประมวลผลแล้ว กรุณา refresh';
+              } else if (errorMsg.includes('CAMUNDA_UNAVAILABLE')) {
+                userMsg = 'ระบบ workflow ไม่ตอบสนอง กรุณาลองใหม่ภายหลัง';
+              }
+              toast('error', userMsg);
+              console.error('[approvals] completeTask reject failed:', err);
+              await onRefreshCamunda?.();
+            }
+          }}
         />
       );
 
@@ -784,11 +762,31 @@ function RequestSummaryCard({ row }: { row: ApprovalRow }) {
       return [];
     })();
 
+  // Pull Camunda flow id (process-instance-id) from the row payload when
+  // available. Lets reviewers correlate a closed claim back to the workflow
+  // run in /history or Cockpit.
+  const flowId =
+    row.domain === 'benefit'
+      ? row.payload.workflowInstanceId ?? null
+      : row.domain === 'benefitCamunda'
+        ? row.payload.instanceId
+        : null;
+
   return (
     <div className="humi-card humi-card--cream" style={{ padding: 18 }}>
       <div className="humi-row" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>{row.rawId}</div>
+          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>
+            {row.rawId}
+            {flowId && (
+              <>
+                {' · '}
+                <span style={{ fontFamily: 'var(--font-mono, ui-monospace, monospace)', textTransform: 'none', letterSpacing: 0 }}>
+                  flow {flowId.slice(0, 8)}
+                </span>
+              </>
+            )}
+          </div>
           <div className="text-body font-semibold text-ink">{row.title}</div>
           <div className="text-small text-ink-muted mt-0.5">
             {row.requesterName}
