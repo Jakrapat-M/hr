@@ -173,13 +173,63 @@ export function BenefitClaimsInbox() {
           <div className="humi-eyebrow" style={{ marginBottom: 10 }}>ประวัติล่าสุด</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {history.map((claim) => (
-              <div key={claim.id} className="humi-card humi-card--cream" style={{ padding: '10px 14px' }}>
-                <div className="humi-row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <details
+                key={claim.id}
+                className="humi-card humi-card--cream"
+                style={{ padding: '10px 14px' }}
+              >
+                <summary
+                  className="humi-row"
+                  style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', cursor: 'pointer', listStyle: 'none' }}
+                >
                   <span className="text-small font-medium text-ink" style={{ flex: 1 }}>{claim.workflowRequestId} — {claim.employeeName} — {claim.benefitName}</span>
                   <span className="humi-tag">{BENEFIT_STATUS_LABEL[claim.status]}</span>
                   <span className="text-small text-ink-muted">{formatDate(claim.updatedAt)}</span>
+                </summary>
+                <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--color-hairline)', display: 'grid', gap: 12 }}>
+                  <div className="humi-row" style={{ gap: 16, flexWrap: 'wrap' }}>
+                    <div>
+                      <div className="humi-eyebrow">เลขที่ใบเสร็จ</div>
+                      <div className="text-small font-medium text-ink">{claim.receiptNo || '—'}</div>
+                    </div>
+                    <div>
+                      <div className="humi-eyebrow">จำนวนเงินเบิก</div>
+                      <div className="text-small font-medium text-ink">฿{claim.totalClaimAmount.toLocaleString('th-TH')}</div>
+                    </div>
+                    <div>
+                      <div className="humi-eyebrow">ส่งเมื่อ</div>
+                      <div className="text-small font-medium text-ink">{formatDate(claim.submittedAt)}</div>
+                    </div>
+                    {claim.attachments.length > 0 && (
+                      <div>
+                        <div className="humi-eyebrow">ไฟล์แนบ</div>
+                        <div className="text-small text-ink-muted">{claim.attachments.length} ไฟล์</div>
+                      </div>
+                    )}
+                  </div>
+                  {claim.correctionReason && (
+                    <div>
+                      <div className="humi-eyebrow">เหตุผล</div>
+                      <div className="text-small text-ink-muted">{claim.correctionReason}</div>
+                    </div>
+                  )}
+                  {claim.audit.length > 0 && (
+                    <div>
+                      <div className="humi-eyebrow" style={{ marginBottom: 6 }}>Timeline</div>
+                      <ol style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingLeft: 0, listStyle: 'none' }}>
+                        {claim.audit.map((entry, idx) => (
+                          <li key={`${claim.id}-audit-${idx}`} className="text-small">
+                            <span className="text-ink-muted" style={{ marginRight: 6 }}>{formatDate(entry.at)}</span>
+                            <span className="font-medium text-ink">{entry.actorName}</span>
+                            <span className="text-ink-muted"> · {entry.action}</span>
+                            {entry.note && <span className="text-ink-muted"> — {entry.note}</span>}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
                 </div>
-              </div>
+              </details>
             ))}
           </div>
         </section>
