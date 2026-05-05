@@ -21,6 +21,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   Avatar,
   Button,
@@ -29,6 +30,8 @@ import {
   CardTitle,
   Modal,
 } from '@/components/humi';
+import { Badge } from '@/components/ui/badge';
+import type { BenefitWorkflowStatus } from '@/stores/benefit-claims';
 import { cn } from '@/lib/utils';
 import {
   HUMI_REQUEST_CATALOG,
@@ -236,7 +239,34 @@ export default function HumiRequestsPage() {
 // Tab: Mine — with filter chips
 // ────────────────────────────────────────────────────────────
 
-type MineRow = { id: string; type: string; sub: string; submitted: string; status: RequestStatus; approvalChain: HumiApprovalStep[]; href?: string };
+type MineRow = {
+  id: string;
+  type: string;
+  sub: string;
+  submitted: string;
+  status: RequestStatus;
+  approvalChain: HumiApprovalStep[];
+  href?: string;
+  workflowInstanceId?: string | null;
+  workflowStatus?: BenefitWorkflowStatus;
+};
+
+const WORKFLOW_BADGE_VARIANT: Record<BenefitWorkflowStatus, 'warning' | 'info' | 'success' | 'error'> = {
+  pending: 'warning',
+  approved: 'info',
+  paid: 'success',
+  rejected: 'error',
+};
+
+function WorkflowStatusBadge({ instanceId, status }: { instanceId: string; status: BenefitWorkflowStatus }) {
+  const t = useTranslations('benefitWorkflow.status');
+  const truncated = instanceId.length > 8 ? `${instanceId.slice(0, 8)}…` : instanceId;
+  return (
+    <Badge variant={WORKFLOW_BADGE_VARIANT[status]} title={instanceId}>
+      {t(status)} · {truncated}
+    </Badge>
+  );
+}
 
 function MineTab({
   summary,
@@ -338,6 +368,11 @@ function MineTab({
                     <p className="text-small text-ink-muted">
                       {r.sub} · ส่ง {r.submitted}
                     </p>
+                    {r.workflowInstanceId && r.workflowStatus ? (
+                      <div className="mt-1.5">
+                        <WorkflowStatusBadge instanceId={r.workflowInstanceId} status={r.workflowStatus} />
+                      </div>
+                    ) : null}
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <span

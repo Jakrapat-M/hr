@@ -4623,5 +4623,17 @@
     "submitEvalBtn": "ส่งผลการประเมิน",
     "daysRemaining": "{days} วัน",
     "probationDue": "ครบกำหนด"
+  },
+  "benefitWorkflow": {
+    "status": {
+      "pending": "รอการอนุมัติ",
+      "approved": "อนุมัติแล้ว",
+      "paid": "จ่ายแล้ว",
+      "rejected": "ปฏิเสธ"
+    },
+    "errors": {
+      "submitFailed": "ส่งคำขอไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+      "networkError": "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้"
+    }
   }
 }

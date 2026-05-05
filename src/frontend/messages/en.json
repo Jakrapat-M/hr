@@ -4623,5 +4623,17 @@
     "submitEvalBtn": "Submit Evaluation",
     "daysRemaining": "{days} days",
     "probationDue": "Due"
+  },
+  "benefitWorkflow": {
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "paid": "Paid",
+      "rejected": "Rejected"
+    },
+    "errors": {
+      "submitFailed": "Failed to submit request. Please try again.",
+      "networkError": "Cannot reach workflow server."
+    }
   }
 }

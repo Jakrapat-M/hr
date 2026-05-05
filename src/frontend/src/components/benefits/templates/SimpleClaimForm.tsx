@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/humi';
 import { FileUploadField } from '@/components/humi/FileUploadField';
 import { Capability } from '@/components/humi';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
+import { submitBenefitRequest, type WorkflowBenefitType } from '@/lib/workflow-api';
+import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,6 +17,19 @@ export interface BenefitTemplateProps {
   onSubmitted?: (workflowRequestId: string) => void;
   defaultEmployeeId?: string;
   className?: string;
+}
+
+/**
+ * Map a plan to the hr-workflow gateway's benefitType discriminator.
+ * Defaults to medical-reimbursement — the gateway only accepts three values
+ * and most benefit plans (OPD, dental, checkup, etc.) reduce to medical.
+ * Refine here when training and travel-allowance plans get distinct ids.
+ */
+export function mapPlanToWorkflowType(plan: BenefitPlan): WorkflowBenefitType {
+  const id = plan.id.toLowerCase();
+  if (id.includes('train')) return 'training';
+  if (id.includes('travel')) return 'travel-allowance';
+  return 'medical-reimbursement';
 }
 
 // ── SimpleClaimForm ───────────────────────────────────────────────────────────
@@ -29,6 +44,8 @@ export function SimpleClaimForm({
 }: BenefitTemplateProps) {
   const locale = useLocale();
   const isTh = locale !== 'en';
+  const tWorkflow = useTranslations('benefitWorkflow');
+  const submitClaim = useBenefitClaimsStore((s) => s.submitClaim);
 
   const planName = isTh ? plan.nameTh : plan.nameEn;
   const requiredDocs = isTh ? plan.requiredDocsTh : plan.requiredDocsEn;
@@ -42,6 +59,7 @@ export function SimpleClaimForm({
   });
   const [errors, setErrors] = useState<string[]>([]);
   const [lastWorkflowId, setLastWorkflowId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const setField = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -49,7 +67,7 @@ export function SimpleClaimForm({
     if (lastWorkflowId) setLastWorkflowId(null);
   };
 
-  const submit = () => {
+  const submit = async () => {
     const nextErrors: string[] = [];
     if (!form.receiptNo.trim()) {
       nextErrors.push(isTh ? 'กรุณาระบุเลขที่ใบเสร็จ' : 'Receipt number is required');
@@ -65,11 +83,41 @@ export function SimpleClaimForm({
       setErrors(nextErrors);
       return;
     }
-    const wfId = `WF-${Date.now()}`;
-    setLastWorkflowId(wfId);
-    setForm({ receiptNo: '', receiptDate: '', receiptAmount: '', claimAmount: '', attachmentName: '' });
-    setErrors([]);
-    onSubmitted?.(wfId);
+    setIsSubmitting(true);
+    try {
+      const benefitType = mapPlanToWorkflowType(plan);
+      const response = await submitBenefitRequest({
+        // TODO(track-b): derive requesterId/managerId from session/org-chart
+        // helpers when those wire-ups land. Stub IDs match hr-workflow happy
+        // path until then.
+        requesterId: 'EMP001',
+        managerId: 'mgr-default',
+        benefitType,
+        amount,
+        description: `${planName} · ${form.receiptNo}`,
+      });
+      // Mirror the claim into the local Zustand store so /requests can show it.
+      submitClaim({
+        receiptNo: form.receiptNo,
+        receiptDate: form.receiptDate,
+        receiptAmount: amount,
+        claimAmount: Number(form.claimAmount) || amount,
+        workflowInstanceId: response.id,
+        workflowStatus: 'pending',
+      });
+      setLastWorkflowId(response.id);
+      setForm({ receiptNo: '', receiptDate: '', receiptAmount: '', claimAmount: '', attachmentName: '' });
+      setErrors([]);
+      onSubmitted?.(response.id);
+    } catch (err) {
+      // Surface the network/4xx failure inline via the existing errors box.
+      const networkLike = err instanceof TypeError;
+      setErrors([
+        networkLike ? tWorkflow('errors.networkError') : tWorkflow('errors.submitFailed'),
+      ]);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -168,8 +216,10 @@ export function SimpleClaimForm({
             {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
           </Button>
         }>
-          <Button variant="primary" onClick={submit}>
-            {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
+          <Button variant="primary" onClick={submit} disabled={isSubmitting}>
+            {isSubmitting
+              ? (isTh ? 'กำลังส่ง…' : 'Submitting…')
+              : (isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim')}
           </Button>
         </Capability>
       </div>

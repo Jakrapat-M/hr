@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/humi';
 import { FileUploadField } from '@/components/humi/FileUploadField';
 import { Capability } from '@/components/humi';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
-import type { BenefitTemplateProps } from './SimpleClaimForm';
+import { mapPlanToWorkflowType, type BenefitTemplateProps } from './SimpleClaimForm';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
+import { submitBenefitRequest } from '@/lib/workflow-api';
+import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 
 // Mock dependent list — Sprint 2 will wire to real API
 const MOCK_DEPENDENTS = [
@@ -30,6 +32,8 @@ export function HospitalClaimForm({
 }: BenefitTemplateProps) {
   const locale = useLocale();
   const isTh = locale !== 'en';
+  const tWorkflow = useTranslations('benefitWorkflow');
+  const submitClaim = useBenefitClaimsStore((s) => s.submitClaim);
 
   const planName = isTh ? plan.nameTh : plan.nameEn;
   const requiredDocs = isTh ? plan.requiredDocsTh : plan.requiredDocsEn;
@@ -46,6 +50,7 @@ export function HospitalClaimForm({
   });
   const [errors, setErrors] = useState<string[]>([]);
   const [lastWorkflowId, setLastWorkflowId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const setField = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -53,7 +58,7 @@ export function HospitalClaimForm({
     if (lastWorkflowId) setLastWorkflowId(null);
   };
 
-  const submit = () => {
+  const submit = async () => {
     const nextErrors: string[] = [];
     if (!form.hospitalName.trim()) {
       nextErrors.push(isTh ? 'กรุณาระบุชื่อโรงพยาบาล' : 'Hospital name is required');
@@ -77,11 +82,42 @@ export function HospitalClaimForm({
       setErrors(nextErrors);
       return;
     }
-    const wfId = `WF-${Date.now()}`;
-    setLastWorkflowId(wfId);
-    setForm({ admissionType: 'ipd', hospitalName: '', transferDocNo: '', dependentId: '', receiptNo: '', receiptDate: '', receiptAmount: '', attachmentName: '' });
-    setErrors([]);
-    onSubmitted?.(wfId);
+    const amountForWorkflow = plan.requiresReceipt ? Number(form.receiptAmount) : 0;
+    setIsSubmitting(true);
+    try {
+      const response = await submitBenefitRequest({
+        // TODO(track-b): wire requesterId/managerId to session/org-chart.
+        requesterId: 'EMP001',
+        managerId: 'mgr-default',
+        benefitType: mapPlanToWorkflowType(plan),
+        amount: amountForWorkflow,
+        description: `${planName} · ${form.hospitalName} · ${form.admissionType.toUpperCase()}`,
+      });
+      // Mirror to the local Zustand store so the /requests page can render it.
+      submitClaim({
+        benefitType: 'medical',
+        receiptNo: form.receiptNo || `HOSP-${Date.now()}`,
+        receiptDate: form.receiptDate || new Date().toISOString().slice(0, 10),
+        receiptAmount: amountForWorkflow,
+        totalClaimAmount: amountForWorkflow,
+        hospitalName: form.hospitalName,
+        opdIpd: form.admissionType,
+        patientTransferDocumentNo: form.transferDocNo || undefined,
+        workflowInstanceId: response.id,
+        workflowStatus: 'pending',
+      });
+      setLastWorkflowId(response.id);
+      setForm({ admissionType: 'ipd', hospitalName: '', transferDocNo: '', dependentId: '', receiptNo: '', receiptDate: '', receiptAmount: '', attachmentName: '' });
+      setErrors([]);
+      onSubmitted?.(response.id);
+    } catch (err) {
+      const networkLike = err instanceof TypeError;
+      setErrors([
+        networkLike ? tWorkflow('errors.networkError') : tWorkflow('errors.submitFailed'),
+      ]);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -233,8 +269,10 @@ export function HospitalClaimForm({
             {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
           </Button>
         }>
-          <Button variant="primary" onClick={submit}>
-            {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
+          <Button variant="primary" onClick={submit} disabled={isSubmitting}>
+            {isSubmitting
+              ? (isTh ? 'กำลังส่ง…' : 'Submitting…')
+              : (isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim')}
           </Button>
         </Capability>
       </div>

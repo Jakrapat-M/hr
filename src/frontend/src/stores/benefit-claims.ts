@@ -5,6 +5,12 @@ import type { HumiApprovalStep, RequestStatus } from '@/lib/humi-mock-data';
 export type BenefitClaimStatus = 'pending_spd' | 'send_back' | 'approved' | 'rejected';
 export type BenefitClaimType = 'medical' | 'gasoline' | 'mobile' | 'physical_checkup' | 'dependent';
 
+/**
+ * Camunda-side workflow status for a claim wired through the hr-workflow
+ * Fastify gateway. Distinct from BenefitClaimStatus, which tracks SPD review.
+ */
+export type BenefitWorkflowStatus = 'pending' | 'approved' | 'rejected' | 'paid';
+
 export interface BenefitAttachment {
   id: string;
   /** Canonical display name used by the benefit module. */
@@ -63,6 +69,18 @@ export interface BenefitClaimRequest {
   correctionReason?: string;
   version: number;
   previousVersions: Array<Pick<BenefitClaimRequest, 'receiptNo' | 'receiptAmount' | 'totalClaimAmount' | 'updatedAt' | 'version'>>;
+  /**
+   * Camunda process-instance id returned by hr-workflow when a claim is
+   * routed through the Fastify gateway. Null for legacy / mock claims that
+   * predate the wiring.
+   */
+  workflowInstanceId: string | null;
+  /**
+   * Last known workflow status. Persisted on the record because the
+   * `/workflows/benefit-request/:id/status` polling endpoint is not yet
+   * implemented; defaults to 'pending' on create.
+   */
+  workflowStatus: BenefitWorkflowStatus;
 }
 
 export interface BenefitClaimInput {
@@ -93,6 +111,9 @@ export interface BenefitClaimInput {
   dependentName?: string;
   dependentRelationship?: string;
   attachments?: BenefitAttachment[];
+  /** Camunda process-instance id from hr-workflow. */
+  workflowInstanceId?: string | null;
+  workflowStatus?: BenefitWorkflowStatus;
 }
 
 export type BenefitClaimDraftInput = BenefitClaimInput;
@@ -194,6 +215,10 @@ export function selectBenefitRequestSummaries(claims: BenefitClaimRequest[]) {
       },
     ] satisfies HumiApprovalStep[],
     claim,
+    // Track-B: surface the Camunda link so the /requests page can render a
+    // workflow-status Badge per claim. Null for legacy / pre-migration rows.
+    workflowInstanceId: claim.workflowInstanceId ?? null,
+    workflowStatus: claim.workflowStatus ?? 'pending',
   }));
 }
 
@@ -236,6 +261,8 @@ const initialClaims: BenefitClaimRequest[] = [
     audit: [{ at: '2026-04-15T09:20:00.000Z', actorRole: 'employee', actorName: 'จงรักษ์ ทานากะ', action: 'submit', note: 'ส่งคำขอเบิกสวัสดิการ' }],
     version: 1,
     previousVersions: [],
+    workflowInstanceId: null,
+    workflowStatus: 'pending',
   },
 ];
 
@@ -282,6 +309,8 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
           audit: [{ at, actorRole: 'employee', actorName: input.employeeName ?? 'จงรักษ์ ทานากะ', action: 'submit', note: 'ส่งคำขอเบิกสวัสดิการ' }],
           version: 1,
           previousVersions: [],
+          workflowInstanceId: input.workflowInstanceId ?? null,
+          workflowStatus: input.workflowStatus ?? 'pending',
         };
         set((s) => ({ claims: [claim, ...s.claims] }));
         return claim;
@@ -309,9 +338,40 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
         get().claims.some((claim) => claim.id !== excludingId && claim.employeeId === employeeId && claim.benefitCode === benefitCode && claim.receiptNo.trim().toLowerCase() === receiptNo.trim().toLowerCase()),
       clear: () => set({ claims: [] }),
     }),
-    { name: 'humi-benefit-claims' },
+    {
+      name: 'humi-benefit-claims',
+      // Bumped from implicit v0 → v1 (Track B) when workflowInstanceId +
+      // workflowStatus were added to BenefitClaimRequest. The migrate
+      // function below back-fills both fields onto pre-v1 persisted claims.
+      version: 1,
+      migrate: migrateBenefitClaimsPersist as never,
+    },
   ),
 );
+
+/**
+ * Persisted-state migrator. Exported so unit tests can exercise the v0 → v1
+ * transition without touching the live `persist` middleware.
+ *
+ * v0 → v1: every claim gains `workflowInstanceId: null` and
+ * `workflowStatus: 'pending'`. Earlier mock data did not have a Camunda link,
+ * so legacy claims surface as "no badge" on /requests.
+ */
+export function migrateBenefitClaimsPersist(
+  persistedState: unknown,
+  version: number,
+): BenefitClaimsState {
+  const state = (persistedState ?? {}) as { claims?: BenefitClaimRequest[] } & Record<string, unknown>;
+  if (version < 1) {
+    const claims = (state.claims ?? []).map((claim) => ({
+      ...claim,
+      workflowInstanceId: claim.workflowInstanceId ?? null,
+      workflowStatus: claim.workflowStatus ?? 'pending',
+    }));
+    return { ...(state as object), claims } as unknown as BenefitClaimsState;
+  }
+  return state as unknown as BenefitClaimsState;
+}
 
 function updateClaim(
   claims: BenefitClaimRequest[],
