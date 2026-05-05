@@ -10,6 +10,7 @@ import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
 import { submitBenefitRequest, type WorkflowBenefitType } from '@/lib/workflow-api';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { useAuthStore } from '@/stores/auth-store';
+import { lookupManagerId, lookupName } from '@/lib/demo-org-chart';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -47,7 +48,10 @@ export function SimpleClaimForm({
   const isTh = locale !== 'en';
   const tWorkflow = useTranslations('benefitWorkflow');
   const submitClaim = useBenefitClaimsStore((s) => s.submitClaim);
-  const requesterId = useAuthStore((s) => s.userId ?? 'EMP001');
+  const rawUserId = useAuthStore((s) => s.userId);
+  // Default to 'emp-042' (Wichai Thamdee) for stable demo persona when no user is logged in
+  // or when the legacy placeholder 'EMP001' is set.
+  const requesterId = (!rawUserId || rawUserId === 'EMP001') ? 'emp-042' : rawUserId;
 
   const planName = isTh ? plan.nameTh : plan.nameEn;
   const requiredDocs = isTh ? plan.requiredDocsTh : plan.requiredDocsEn;
@@ -89,9 +93,8 @@ export function SimpleClaimForm({
     try {
       const benefitType = mapPlanToWorkflowType(plan);
       const response = await submitBenefitRequest({
-        // managerId: org-chart lookup not yet available; stub until Sprint 3
         requesterId,
-        managerId: 'mgr-default',
+        managerId: lookupManagerId(requesterId),
         benefitType,
         amount,
         description: `${planName} · ${form.receiptNo}`,
@@ -207,6 +210,7 @@ export function SimpleClaimForm({
       {lastWorkflowId && (
         <div role="status" className="mt-4 rounded-[var(--radius-md)] bg-success-soft p-3 text-small font-medium text-ink">
           {tWorkflow('success.submitted', { id: lastWorkflowId })}
+          {' · '}{lookupName(requesterId, isTh ? 'th' : 'en')}
         </div>
       )}
 

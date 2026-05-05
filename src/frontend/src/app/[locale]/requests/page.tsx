@@ -53,6 +53,7 @@ import { selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/b
 import { getBenefitRequestStatus } from '@/lib/workflow-api';
 import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { selectTaxPlanningRequestSummaries, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
+import { seedDemoClaimsIfNeeded } from '@/lib/seed-demo-claims';
 
 // ════════════════════════════════════════════════════════════
 // /requests — Forms/requests tracker
@@ -117,6 +118,8 @@ function useToast() {
 export default function HumiRequestsPage() {
   const [tab, setTab] = useState<TabKey>('mine');
   const { toast, show: showToast } = useToast();
+
+  useEffect(() => { seedDemoClaimsIfNeeded(); }, []);
 
   const { submissions, filter } = useRequestsStore();
   const benefitClaims = useBenefitClaimsStore((state) => state.claims);
