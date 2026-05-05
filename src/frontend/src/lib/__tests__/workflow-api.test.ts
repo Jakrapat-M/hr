@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { submitBenefitRequest, getBenefitRequestStatus } from '@/lib/workflow-api';
+import {
+  submitBenefitRequest,
+  getBenefitRequestStatus,
+  listPendingTasks,
+  completeTask,
+} from '@/lib/workflow-api';
 
 // next-auth/react is imported transitively via _request.ts; stub getSession
 // so the helper does not try to hit /api/auth/session in jsdom.
@@ -102,5 +107,73 @@ describe('workflow-api', () => {
     ) as unknown as typeof fetch;
 
     await expect(getBenefitRequestStatus('pi-unknown')).rejects.toThrow(/404/);
+  });
+
+  // -------------------------------------------------------------------------
+  // listPendingTasks + completeTask (Humi-styled manager approval page)
+  // -------------------------------------------------------------------------
+
+  it('listPendingTasks GETs /workflows/tasks with assignee querystring and parses array result', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      expect(url).toBe('http://localhost:3001/workflows/tasks?assignee=mgr-default');
+      expect(init?.method).toBe('GET');
+      const headers = init?.headers as Record<string, string>;
+      expect(headers['Authorization']).toBe('Bearer test-token');
+      return new Response(
+        JSON.stringify([
+          {
+            id: 'task-1',
+            name: 'Approve benefit request',
+            created: '2026-05-04T09:00:00.000Z',
+            assignee: 'mgr-default',
+            instanceId: 'pi-001',
+            processDefinitionKey: 'benefit-request',
+            variables: {
+              requesterId: 'emp-042',
+              managerId: 'mgr-default',
+              benefitType: 'medical-reimbursement',
+              amount: 3000,
+              description: 'Dentist visit',
+            },
+          },
+        ]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      );
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const tasks = await listPendingTasks({ assignee: 'mgr-default' });
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].id).toBe('task-1');
+    expect(tasks[0].variables.amount).toBe(3000);
+    expect(tasks[0].processDefinitionKey).toBe('benefit-request');
+  });
+
+  it('completeTask POSTs the approval decision and resolves on 204', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      expect(url).toBe('http://localhost:3001/workflows/tasks/task-1/complete');
+      expect(init?.method).toBe('POST');
+      expect(JSON.parse(init?.body as string)).toEqual({
+        approved: true,
+        reviewerComment: 'LGTM',
+      });
+      return new Response(null, { status: 204 });
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(
+      completeTask('task-1', { approved: true, reviewerComment: 'LGTM' }),
+    ).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('completeTask throws when the gateway responds with an error', async () => {
+    global.fetch = vi.fn(async () =>
+      new Response('task already completed', { status: 409 }),
+    ) as unknown as typeof fetch;
+
+    await expect(
+      completeTask('task-x', { approved: false }),
+    ).rejects.toThrow(/409/);
   });
 });
