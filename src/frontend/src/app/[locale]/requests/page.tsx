@@ -21,7 +21,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   Avatar,
   Button,
@@ -300,6 +300,7 @@ function MineTab({
   summary: { total: number; pending: number; approved: number; rejected: number; info: number };
   filtered: MineRow[];
 }) {
+  const locale = useLocale();
   const { filter, setFilter } = useRequestsStore();
   const [selected, setSelected] = useState<MineRow | null>(null);
 
@@ -383,7 +384,9 @@ function MineTab({
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-body font-semibold text-ink">
-                      {r.href ? (
+                      {r.workflowInstanceId ? (
+                        <Link href={`/${locale}/requests/${r.workflowInstanceId}`} className="hover:text-accent">{r.type}</Link>
+                      ) : r.href ? (
                         <Link href={r.href} className="hover:text-accent">{r.type}</Link>
                       ) : r.type}{' '}
                       <span className="font-mono text-small font-normal text-ink-muted">

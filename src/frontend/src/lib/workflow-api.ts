@@ -135,3 +135,41 @@ export async function completeTask(
     throw new Error(`workflow-api completeTask failed (${res.status}): ${text}`);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Benefit-request timeline (detail page).
+// ---------------------------------------------------------------------------
+
+export interface TimelineEvent {
+  activityId: string;
+  activityName: string;
+  activityType: 'startEvent' | 'userTask' | 'serviceTask' | 'endEvent' | string;
+  startTime: string;
+  endTime: string | null;
+  durationMs: number | null;
+  taskId: string | null;
+}
+
+export interface BenefitRequestTimeline {
+  instanceId: string;
+  status: 'pending' | 'approved' | 'rejected' | 'paid';
+  submittedAt: string;
+  completedAt: string | null;
+  variables: Record<string, unknown>;
+  timeline: TimelineEvent[];
+}
+
+export async function getBenefitRequestTimeline(
+  instanceId: string,
+): Promise<BenefitRequestTimeline> {
+  const headers = await buildAuthHeaders();
+  const res = await fetch(
+    `${BASE_URL}/workflows/benefit-request/${encodeURIComponent(instanceId)}/timeline`,
+    { method: 'GET', headers },
+  );
+  if (!res.ok) {
+    const text = await readErrorText(res);
+    throw new Error(`workflow-api getBenefitRequestTimeline failed (${res.status}): ${text}`);
+  }
+  return res.json() as Promise<BenefitRequestTimeline>;
+}

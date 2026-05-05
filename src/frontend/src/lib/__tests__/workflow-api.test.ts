@@ -4,6 +4,7 @@ import {
   getBenefitRequestStatus,
   listPendingTasks,
   completeTask,
+  getBenefitRequestTimeline,
 } from '@/lib/workflow-api';
 
 // next-auth/react is imported transitively via _request.ts; stub getSession
@@ -175,5 +176,56 @@ describe('workflow-api', () => {
     await expect(
       completeTask('task-x', { approved: false }),
     ).rejects.toThrow(/409/);
+  });
+
+  it('getBenefitRequestTimeline GETs the timeline URL and returns parsed response', async () => {
+    const sampleTimeline = {
+      instanceId: 'pi-abc-123',
+      status: 'approved',
+      submittedAt: '2026-05-01T09:00:00Z',
+      completedAt: '2026-05-02T10:30:00Z',
+      variables: { requesterId: 'emp-042', amount: 3000 },
+      timeline: [
+        {
+          activityId: 'start_event_submit',
+          activityName: 'Submit Request',
+          activityType: 'startEvent',
+          startTime: '2026-05-01T09:00:00Z',
+          endTime: '2026-05-01T09:00:01Z',
+          durationMs: 1000,
+          taskId: null,
+        },
+        {
+          activityId: 'user_task_manager_review',
+          activityName: 'Manager Review',
+          activityType: 'userTask',
+          startTime: '2026-05-01T09:01:00Z',
+          endTime: '2026-05-02T10:30:00Z',
+          durationMs: 92340000,
+          taskId: 'task-1',
+        },
+      ],
+    };
+
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      expect(url).toBe('http://localhost:3001/workflows/benefit-request/pi-abc-123/timeline');
+      expect(init?.method).toBe('GET');
+      const headers = init?.headers as Record<string, string>;
+      expect(headers['Authorization']).toBe('Bearer test-token');
+      return new Response(JSON.stringify(sampleTimeline), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const result = await getBenefitRequestTimeline('pi-abc-123');
+    expect(result.instanceId).toBe('pi-abc-123');
+    expect(result.status).toBe('approved');
+    expect(result.timeline).toHaveLength(2);
+    expect(result.timeline[0].activityId).toBe('start_event_submit');
+    expect(result.timeline[1].taskId).toBe('task-1');
+    expect(result.variables).toEqual({ requesterId: 'emp-042', amount: 3000 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
