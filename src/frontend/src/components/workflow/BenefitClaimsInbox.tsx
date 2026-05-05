@@ -20,14 +20,19 @@ import {
   type BenefitInboxRow,
 } from './benefitInboxMerge';
 
-// Polling cadence for live Camunda benefit-request tasks. 12s mirrors what the
-// (now-deleted) /admin/benefits/approvals page used and stays well below the
-// gateway's rate-limit budget.
+// Polling cadence for live Camunda benefit-request tasks.
 const CAMUNDA_POLL_MS = 12_000;
-// TODO(phase-2): gate this lane on a real RBAC check
-// (session.user.role === 'manager' / 'spd-benefits'). For the demo we simply
-// surface every Camunda task with candidate group 'managers'.
-const CAMUNDA_CANDIDATE_GROUPS = 'managers';
+// Demo fallback assignee — used when the auth store has no userId.
+// Matches Camunda Run's default `demo` user, who is also the managerId
+// hardcoded in seeded benefit-request instances.
+//
+// Camunda task semantics: when a user task has `assignee` set, the engine
+// considers it "claimed" — querying by `candidateGroups` then returns 0
+// results. So we filter by assignee = current logged-in user instead.
+//
+// TODO(phase-2): also fetch unclaimed tasks where current user is in the
+// candidate group, so a manager can pick up a colleague's overflow.
+const CAMUNDA_FALLBACK_ASSIGNEE = 'demo';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -47,13 +52,14 @@ export function BenefitClaimsInbox() {
   const rejectClaim = useBenefitClaimsStore((s) => s.rejectClaim);
   const sendBackClaim = useBenefitClaimsStore((s) => s.sendBackClaim);
   const actorName = useAuthStore((s) => s.username) ?? 'SPD Benefits';
+  const camundaAssignee = useAuthStore((s) => s.userId) ?? CAMUNDA_FALLBACK_ASSIGNEE;
 
   const [camundaTasks, setCamundaTasks] = useState<PendingTaskSummary[]>([]);
   const [camundaError, setCamundaError] = useState<string | null>(null);
 
   const refreshCamunda = useCallback(async () => {
     try {
-      const next = await listPendingTasks({ candidateGroups: CAMUNDA_CANDIDATE_GROUPS });
+      const next = await listPendingTasks({ assignee: camundaAssignee });
       setCamundaTasks(next);
       setCamundaError(null);
     } catch (e) {
@@ -61,7 +67,7 @@ export function BenefitClaimsInbox() {
       // keep the legacy mock lane usable.
       setCamundaError(e instanceof Error ? e.message : String(e));
     }
-  }, []);
+  }, [camundaAssignee]);
 
   useEffect(() => {
     let cancelled = false;
