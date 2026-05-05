@@ -55,7 +55,7 @@ export function BenefitReferralInbox() {
   );
 }
 
-function ReferralCard({ referral, onStartReview, onApprove, onReject, onSendBack, onIssue }: { referral: BenefitReferralRequest; onStartReview: (note?: string) => void; onApprove: (note?: string) => void; onReject: (reason: string) => void; onSendBack: (reason: string) => void; onIssue: () => void }) {
+export function ReferralCard({ referral, onStartReview, onApprove, onReject, onSendBack, onIssue }: { referral: BenefitReferralRequest; onStartReview: (note?: string) => void; onApprove: (note?: string) => void; onReject: (reason: string) => void; onSendBack: (reason: string) => void; onIssue: () => void }) {
   const [comment, setComment] = useState('');
   return (
     <Card variant="raised" size="lg">

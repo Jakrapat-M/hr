@@ -244,7 +244,7 @@ export function BenefitClaimsInbox() {
   );
 }
 
-function BenefitClaimCard({ claim, onApprove, onReject, onSendBack }: { claim: BenefitClaimRequest; onApprove: (note?: string) => void; onReject: (reason: string) => void; onSendBack: (reason: string) => void }) {
+export function BenefitClaimCard({ claim, onApprove, onReject, onSendBack }: { claim: BenefitClaimRequest; onApprove: (note?: string) => void; onReject: (reason: string) => void; onSendBack: (reason: string) => void }) {
   const [comment, setComment] = useState('');
 
   return (
@@ -291,7 +291,7 @@ function BenefitClaimCard({ claim, onApprove, onReject, onSendBack }: { claim: B
   );
 }
 
-function CamundaTaskCard({ task, onApprove, onReject }: { task: PendingTaskSummary; onApprove: (note?: string) => void; onReject: (reason: string) => void }) {
+export function CamundaTaskCard({ task, onApprove, onReject }: { task: PendingTaskSummary; onApprove: (note?: string) => void; onReject: (reason: string) => void }) {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
 

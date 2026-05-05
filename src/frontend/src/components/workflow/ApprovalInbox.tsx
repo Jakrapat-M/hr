@@ -129,7 +129,7 @@ export function ApprovalInbox({ expectedStep, role, title, subtitle }: ApprovalI
 }
 
 // ── Individual request card with inline approve/reject form ──
-function RequestCard({
+export function RequestCard({
   req,
   onApprove,
   onReject,

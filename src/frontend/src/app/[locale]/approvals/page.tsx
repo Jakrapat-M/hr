@@ -31,11 +31,11 @@ import {
   Workflow,
 } from 'lucide-react';
 
-import { ApprovalInbox } from '@/components/workflow/ApprovalInbox';
-import { TerminationInbox } from '@/components/workflow/TerminationInbox';
-import { PromotionInbox } from '@/components/workflow/PromotionInbox';
-import { BenefitClaimsInbox } from '@/components/workflow/BenefitClaimsInbox';
-import { BenefitReferralInbox } from '@/components/workflow/BenefitReferralInbox';
+import { BenefitClaimCard, CamundaTaskCard } from '@/components/workflow/BenefitClaimsInbox';
+import { ReferralCard } from '@/components/workflow/BenefitReferralInbox';
+import { RequestCard } from '@/components/workflow/ApprovalInbox';
+import { TerminationCard } from '@/components/workflow/TerminationInbox';
+import { PromotionCard } from '@/components/workflow/PromotionInbox';
 import { useAuthStore } from '@/stores/auth-store';
 import {
   BENEFIT_STATUS_LABEL,
@@ -55,7 +55,7 @@ import {
   PROMOTION_STEP_LABEL,
   usePromotionApprovals,
 } from '@/stores/promotion-approvals';
-import { listPendingTasks, type PendingTaskSummary } from '@/lib/workflow-api';
+import { completeTask, listPendingTasks, type PendingTaskSummary } from '@/lib/workflow-api';
 import {
   countByDomain,
   filterApprovalRows,
@@ -659,37 +659,106 @@ function ApprovalRowItem({
   );
 }
 
-// ── Expanded detail — reuses existing per-domain inbox components ────────────
+// ── Expanded detail — renders EXACTLY ONE card for the specific row ──────────
 //
-// We render the entire domain inbox inside the panel rather than extracting
-// the per-row card, because the inbox components own their own data hooks
-// and approve/reject handlers. Rendering twice in the same view is the
-// pragmatic compromise the spec calls out: once filtered to the row the
-// user clicked, the inbox surfaces only the matching item plus any sibling
-// pending items the persona has access to. Wrapping in <Capability> would
-// hide them entirely from non-SPD personas, so we render unconditionally
-// and rely on per-row handlers to enforce action-level RBAC.
+// Pending rows: action card with approve/reject/send-back buttons, wired
+// directly to the relevant store mutator or completeTask (Camunda).
+// Read-only rows (approved/rejected): RequestSummaryCard with audit timeline.
 
 function ExpandedDetail({ row }: { row: ApprovalRow }) {
+  const actorName = useAuthStore((s) => s.username) ?? 'SPD';
+  const actor = { role: 'spd' as const, name: actorName };
+
+  // Benefit mock lane
+  const approveClaim = useBenefitClaimsStore((s) => s.approveClaim);
+  const rejectClaim = useBenefitClaimsStore((s) => s.rejectClaim);
+  const sendBackClaim = useBenefitClaimsStore((s) => s.sendBackClaim);
+
+  // Referral lane
+  const startReferralReview = useBenefitReferralsStore((s) => s.startReferralReview);
+  const approveReferral = useBenefitReferralsStore((s) => s.approveReferral);
+  const rejectReferral = useBenefitReferralsStore((s) => s.rejectReferral);
+  const sendBackReferral = useBenefitReferralsStore((s) => s.sendBackReferral);
+  const issueReferralLetter = useBenefitReferralsStore((s) => s.issueReferralLetter);
+
+  // PersonalInfo lane
+  const approvePersonalInfo = useWorkflowApprovals((s) => s.approve);
+  const rejectPersonalInfo = useWorkflowApprovals((s) => s.reject);
+
+  // Termination lane
+  const approveTermination = useTerminationApprovals((s) => s.approve);
+  const rejectTermination = useTerminationApprovals((s) => s.reject);
+
+  // Promotion lane
+  const approvePromotion = usePromotionApprovals((s) => s.approve);
+  const rejectPromotion = usePromotionApprovals((s) => s.reject);
+
   switch (row.domain) {
     case 'benefit':
-    case 'benefitCamunda':
-      return <BenefitClaimsInbox />;
-    case 'referral':
-      return <BenefitReferralInbox />;
-    case 'personalInfo':
+      if (row.status !== 'pending') return <RequestSummaryCard row={row} />;
       return (
-        <ApprovalInbox
-          role="spd"
-          expectedStep="pending_spd"
-          title="แก้ไขข้อมูลส่วนตัว"
-          subtitle="คำขอแก้ไขข้อมูลส่วนตัวที่รอการอนุมัติ (BRD #166)"
+        <BenefitClaimCard
+          claim={row.payload}
+          onApprove={(note) => approveClaim(row.payload.id, actor, note)}
+          onReject={(reason) => rejectClaim(row.payload.id, actor, reason)}
+          onSendBack={(reason) => sendBackClaim(row.payload.id, actor, reason)}
         />
       );
+
+    case 'benefitCamunda':
+      return (
+        <CamundaTaskCard
+          task={row.payload}
+          onApprove={(note) => void completeTask(row.payload.id, { approved: true, reviewerComment: note })}
+          onReject={(reason) => void completeTask(row.payload.id, { approved: false, reviewerComment: reason })}
+        />
+      );
+
+    case 'referral': {
+      if (row.status !== 'pending') return <RequestSummaryCard row={row} />;
+      const ref = row.payload;
+      return (
+        <ReferralCard
+          referral={ref}
+          onStartReview={(note) => startReferralReview(ref.id, actor, note)}
+          onApprove={(note) => approveReferral(ref.id, actor, note)}
+          onReject={(reason) => rejectReferral(ref.id, actor, reason)}
+          onSendBack={(reason) => sendBackReferral(ref.id, actor, reason)}
+          onIssue={() => issueReferralLetter(ref.id, actor)}
+        />
+      );
+    }
+
+    case 'personalInfo':
+      if (row.status !== 'pending') return <RequestSummaryCard row={row} />;
+      return (
+        <RequestCard
+          req={row.payload}
+          onApprove={(comment) => approvePersonalInfo(row.payload.id, actor, comment)}
+          onReject={(reason) => rejectPersonalInfo(row.payload.id, actor, reason)}
+        />
+      );
+
     case 'termination':
-      return <TerminationInbox />;
+      if (row.status !== 'pending') return <RequestSummaryCard row={row} />;
+      return (
+        <TerminationCard
+          req={row.payload}
+          onApprove={(comment) => approveTermination(row.payload.id, actor, comment)}
+          onReject={(reason) => rejectTermination(row.payload.id, actor, reason)}
+        />
+      );
+
     case 'promotion':
-      return <PromotionInbox />;
+      if (row.status !== 'pending') return <RequestSummaryCard row={row} />;
+      return (
+        <PromotionCard
+          req={row.payload}
+          onApprove={(comment) => approvePromotion(row.payload.id, actor, comment)}
+          onReject={(reason) => rejectPromotion(row.payload.id, actor, reason)}
+        />
+      );
+
     default: {
       // Exhaustiveness guard — TypeScript will fail this branch if a new
       // domain is added without a render-case above.
@@ -697,4 +766,72 @@ function ExpandedDetail({ row }: { row: ApprovalRow }) {
       return null;
     }
   }
+}
+
+// ── Read-only summary card for approved / rejected rows ───────────────────────
+
+function RequestSummaryCard({ row }: { row: ApprovalRow }) {
+  const statusColor =
+    row.status === 'approved'
+      ? 'var(--color-mint, #4a9d6c)'
+      : 'var(--color-clay, #b56556)';
+
+  // Collect audit entries from the payload if available.
+  const audit: Array<{ at: string; actorName: string; action: string; note?: string }> =
+    (() => {
+      const p = row.payload as Record<string, unknown>;
+      if (Array.isArray(p['audit'])) return p['audit'] as typeof audit;
+      return [];
+    })();
+
+  return (
+    <div className="humi-card humi-card--cream" style={{ padding: 18 }}>
+      <div className="humi-row" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>{row.rawId}</div>
+          <div className="text-body font-semibold text-ink">{row.title}</div>
+          <div className="text-small text-ink-muted mt-0.5">
+            {row.requesterName}
+            {row.requesterId ? ` · ${row.requesterId}` : ''}
+            {row.highlight ? ` · ${row.highlight}` : ''}
+          </div>
+        </div>
+        <span
+          style={{
+            padding: '3px 10px',
+            borderRadius: 999,
+            background: 'var(--color-canvas-soft)',
+            border: `1px solid ${statusColor}`,
+            fontSize: 11,
+            color: statusColor,
+            fontWeight: 600,
+            alignSelf: 'center',
+          }}
+        >
+          {row.rawStatusLabel}
+        </span>
+      </div>
+
+      {audit.length > 0 && (
+        <div style={{ marginTop: 14, borderTop: '1px solid var(--color-hairline-soft)', paddingTop: 14 }}>
+          <div className="humi-eyebrow" style={{ marginBottom: 8 }}>Timeline</div>
+          <ol style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingLeft: 0, listStyle: 'none' }}>
+            {audit.map((entry, idx) => (
+              <li key={`audit-${idx}`} className="text-small">
+                <span className="text-ink-muted" style={{ marginRight: 6 }}>
+                  {new Date(entry.at).toLocaleDateString('th-TH', {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit',
+                  })}
+                </span>
+                <span className="font-medium text-ink">{entry.actorName}</span>
+                <span className="text-ink-muted"> · {entry.action}</span>
+                {entry.note && <span className="text-ink-muted"> — {entry.note}</span>}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+    </div>
+  );
 }

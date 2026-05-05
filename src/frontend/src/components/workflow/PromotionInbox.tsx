@@ -110,7 +110,7 @@ export function PromotionInbox() {
   );
 }
 
-function PromotionCard({
+export function PromotionCard({
   req,
   onApprove,
   onReject,
