@@ -471,7 +471,7 @@ function StatusChip({
         fontSize: 12,
         fontWeight: active ? 600 : 500,
         cursor: 'pointer',
-        textDecoration: active ? 'none' : 'underline',
+        textDecorationLine: active ? 'none' : 'underline',
         textDecorationColor: 'transparent',
         transition: 'background var(--dur-fast) var(--ease-out)',
       }}
