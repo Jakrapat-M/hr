@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   Plus,
@@ -50,6 +50,7 @@ import {
   type RequestSubmission,
 } from '@/stores/humi-requests-slice';
 import { selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
+import { getBenefitRequestStatus } from '@/lib/workflow-api';
 import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { selectTaxPlanningRequestSummaries, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
@@ -258,8 +259,29 @@ const WORKFLOW_BADGE_VARIANT: Record<BenefitWorkflowStatus, 'warning' | 'info' |
   rejected: 'error',
 };
 
-function WorkflowStatusBadge({ instanceId, status }: { instanceId: string; status: BenefitWorkflowStatus }) {
+function useWorkflowStatus(instanceId: string | null, fallback: BenefitWorkflowStatus | undefined): BenefitWorkflowStatus | undefined {
+  const [status, setStatus] = useState<BenefitWorkflowStatus | null>(null);
+  useEffect(() => {
+    if (!instanceId) return;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const result = await getBenefitRequestStatus(instanceId);
+        if (!cancelled) setStatus(result.status as BenefitWorkflowStatus);
+      } catch {
+        // network error: keep last known status
+      }
+    };
+    void poll();
+    const id = setInterval(() => { void poll(); }, 30_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [instanceId]);
+  return status ?? fallback;
+}
+
+function WorkflowStatusBadge({ instanceId, status: fallbackStatus }: { instanceId: string; status: BenefitWorkflowStatus }) {
   const t = useTranslations('benefitWorkflow.status');
+  const status = useWorkflowStatus(instanceId, fallbackStatus) ?? fallbackStatus;
   const truncated = instanceId.length > 8 ? `${instanceId.slice(0, 8)}…` : instanceId;
   return (
     <Badge variant={WORKFLOW_BADGE_VARIANT[status]} title={instanceId}>

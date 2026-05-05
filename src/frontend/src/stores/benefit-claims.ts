@@ -361,15 +361,26 @@ export function migrateBenefitClaimsPersist(
   persistedState: unknown,
   version: number,
 ): BenefitClaimsState {
-  const state = (persistedState ?? {}) as { claims?: BenefitClaimRequest[] } & Record<string, unknown>;
+  let state = (persistedState ?? {}) as { claims?: BenefitClaimRequest[] } & Record<string, unknown>;
+
   if (version < 1) {
-    const claims = (state.claims ?? []).map((claim) => ({
-      ...claim,
-      workflowInstanceId: claim.workflowInstanceId ?? null,
-      workflowStatus: claim.workflowStatus ?? 'pending',
-    }));
-    return { ...(state as object), claims } as unknown as BenefitClaimsState;
+    state = {
+      ...state,
+      claims: (state.claims ?? []).map((c) => ({
+        ...c,
+        workflowInstanceId: c.workflowInstanceId ?? null,
+        workflowStatus: c.workflowStatus ?? 'pending',
+      })),
+    };
   }
+  // future: if (version < 2) { ... } // step-by-step pattern
+
+  if (version > /* current */ 1) {
+    console.warn(
+      `[benefit-claims] persisted version ${version} > current 1; possible app downgrade. Treating as current.`,
+    );
+  }
+
   return state as unknown as BenefitClaimsState;
 }
 

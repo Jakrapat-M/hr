@@ -76,9 +76,13 @@ describe('workflow-api', () => {
     ).rejects.toThrow(/400/);
   });
 
-  it('getBenefitRequestStatus calls the per-instance status URL', async () => {
-    const fetchMock = vi.fn(async (url: string) => {
+  it('getBenefitRequestStatus GETs the per-instance status URL with auth header', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
       expect(url).toBe('http://localhost:3001/workflows/benefit-request/pi-abc-123/status');
+      expect(init?.method).toBe('GET');
+      const headers = init?.headers as Record<string, string>;
+      expect(headers['Content-Type']).toBe('application/json');
+      expect(headers['Authorization']).toBe('Bearer test-token');
       return new Response(
         JSON.stringify({ status: 'approved', lastUpdate: '2026-05-04T01:23:45Z' }),
         { status: 200, headers: { 'Content-Type': 'application/json' } },
@@ -88,6 +92,15 @@ describe('workflow-api', () => {
 
     const res = await getBenefitRequestStatus('pi-abc-123');
     expect(res.status).toBe('approved');
+    expect(res.lastUpdate).toBe('2026-05-04T01:23:45Z');
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('getBenefitRequestStatus throws an Error containing the status when server returns 404', async () => {
+    global.fetch = vi.fn(async () =>
+      new Response('instance not found', { status: 404 }),
+    ) as unknown as typeof fetch;
+
+    await expect(getBenefitRequestStatus('pi-unknown')).rejects.toThrow(/404/);
   });
 });

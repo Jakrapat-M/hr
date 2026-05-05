@@ -58,10 +58,6 @@ export async function submitBenefitRequest(
   return res.json() as Promise<WorkflowStartResponse>;
 }
 
-// TODO(hr-workflow): the GET /workflows/benefit-request/:id/status endpoint is
-// not yet implemented in the Fastify gateway — calls will 404 until that
-// service ships its read-side. Frontend polling is intentionally not wired in
-// this phase; the /requests page renders status from the Zustand record.
 export async function getBenefitRequestStatus(
   instanceId: string,
 ): Promise<WorkflowStatusResponse> {

@@ -1,4 +1,4 @@
-import { getSession } from 'next-auth/react';
+import { buildAuthHeaders } from './_request';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ??'http://localhost:4000/api';
 const MAX_RETRIES = 2;
@@ -10,17 +10,6 @@ export interface ApiError {
  details?: unknown;
 }
 
-async function getAuthHeaders(): Promise<HeadersInit> {
- const session = await getSession();
- const headers: HeadersInit = {
-'Content-Type':'application/json',
- };
- if (session?.accessToken) {
- headers['Authorization'] = `Bearer ${session.accessToken}`;
- }
- return headers;
-}
-
 async function request<T>(
  method: string,
  path: string,
@@ -28,7 +17,7 @@ async function request<T>(
  retries = MAX_RETRIES
 ): Promise<T> {
  const url = `${BASE_URL}${path}`;
- const headers = await getAuthHeaders();
+ const headers = await buildAuthHeaders();
 
  const init: RequestInit = { method, headers };
  if (body) {

@@ -4634,6 +4634,13 @@
     "errors": {
       "submitFailed": "Failed to submit request. Please try again.",
       "networkError": "Cannot reach workflow server."
+    },
+    "success": {
+      "submitted": "Request submitted — id: {id}"
+    },
+    "actions": {
+      "submit": "Submit",
+      "submitting": "Submitting..."
     }
   }
 }

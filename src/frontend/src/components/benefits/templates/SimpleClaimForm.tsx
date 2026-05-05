@@ -9,6 +9,7 @@ import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
 import { submitBenefitRequest, type WorkflowBenefitType } from '@/lib/workflow-api';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
+import { useAuthStore } from '@/stores/auth-store';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ export function SimpleClaimForm({
   const isTh = locale !== 'en';
   const tWorkflow = useTranslations('benefitWorkflow');
   const submitClaim = useBenefitClaimsStore((s) => s.submitClaim);
+  const requesterId = useAuthStore((s) => s.userId ?? 'EMP001');
 
   const planName = isTh ? plan.nameTh : plan.nameEn;
   const requiredDocs = isTh ? plan.requiredDocsTh : plan.requiredDocsEn;
@@ -87,10 +89,8 @@ export function SimpleClaimForm({
     try {
       const benefitType = mapPlanToWorkflowType(plan);
       const response = await submitBenefitRequest({
-        // TODO(track-b): derive requesterId/managerId from session/org-chart
-        // helpers when those wire-ups land. Stub IDs match hr-workflow happy
-        // path until then.
-        requesterId: 'EMP001',
+        // managerId: org-chart lookup not yet available; stub until Sprint 3
+        requesterId,
         managerId: 'mgr-default',
         benefitType,
         amount,
@@ -206,20 +206,18 @@ export function SimpleClaimForm({
       )}
       {lastWorkflowId && (
         <div role="status" className="mt-4 rounded-[var(--radius-md)] bg-success-soft p-3 text-small font-medium text-ink">
-          {isTh ? `ส่งคำขอ ${lastWorkflowId} แล้ว · ติดตามได้ที่ /requests` : `Submitted ${lastWorkflowId} · track at /requests`}
+          {tWorkflow('success.submitted', { id: lastWorkflowId })}
         </div>
       )}
 
       <div className="mt-4 flex justify-end">
         <Capability action="edit" fallback={
           <Button variant="primary" disabled>
-            {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
+            {tWorkflow('actions.submit')}
           </Button>
         }>
           <Button variant="primary" onClick={submit} disabled={isSubmitting}>
-            {isSubmitting
-              ? (isTh ? 'กำลังส่ง…' : 'Submitting…')
-              : (isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim')}
+            {isSubmitting ? tWorkflow('actions.submitting') : tWorkflow('actions.submit')}
           </Button>
         </Capability>
       </div>
