@@ -4668,33 +4668,5 @@
       "submit": "ส่งคำขอ",
       "submitting": "กำลังส่ง..."
     }
-  },
-  "adminBenefits": {
-    "title": "อนุมัติสวัสดิการ",
-    "subtitle": "คำขอสวัสดิการที่รอการอนุมัติของคุณ",
-    "empty": "ไม่มีคำขอที่รออนุมัติในขณะนี้",
-    "column": {
-      "requester": "ผู้ขอ",
-      "amount": "จำนวนเงิน",
-      "benefitType": "ประเภท",
-      "description": "รายละเอียด",
-      "actions": "การดำเนินการ"
-    },
-    "action": {
-      "approve": "อนุมัติ",
-      "reject": "ปฏิเสธ"
-    },
-    "modal": {
-      "approveTitle": "อนุมัติคำขอ",
-      "rejectTitle": "ปฏิเสธคำขอ",
-      "commentLabel": "ความคิดเห็น (ไม่บังคับ)",
-      "commentPlaceholder": "เพิ่มหมายเหตุถึงผู้ขอ",
-      "confirm": "ยืนยัน",
-      "cancel": "ยกเลิก"
-    },
-    "toast": {
-      "approved": "อนุมัติคำขอแล้ว",
-      "rejected": "ปฏิเสธคำขอแล้ว"
-    }
   }
 }

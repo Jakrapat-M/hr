@@ -4668,33 +4668,5 @@
       "submit": "Submit",
       "submitting": "Submitting..."
     }
-  },
-  "adminBenefits": {
-    "title": "Benefit approvals",
-    "subtitle": "Pending benefit requests assigned to you",
-    "empty": "No pending requests right now",
-    "column": {
-      "requester": "Requester",
-      "amount": "Amount",
-      "benefitType": "Type",
-      "description": "Description",
-      "actions": "Actions"
-    },
-    "action": {
-      "approve": "Approve",
-      "reject": "Reject"
-    },
-    "modal": {
-      "approveTitle": "Approve request",
-      "rejectTitle": "Reject request",
-      "commentLabel": "Comment (optional)",
-      "commentPlaceholder": "Add a note for the requester",
-      "confirm": "Confirm",
-      "cancel": "Cancel"
-    },
-    "toast": {
-      "approved": "Request approved",
-      "rejected": "Request rejected"
-    }
   }
 }
