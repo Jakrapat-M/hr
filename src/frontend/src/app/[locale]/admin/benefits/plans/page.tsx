@@ -3,7 +3,16 @@
 import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
+
+// Benefits with DB-driven eligibility editor — matches rules/[benefitKey] pages
+const ELIGIBILITY_MANAGED_BENEFIT_KEYS = new Set([
+  'fuel-allowance',
+  'medical-reimbursement',
+  'training',
+  'travel-allowance',
+]);
 import { Card, CardEyebrow, CardTitle, Button, DataTable, FormField, FormInput, Modal } from '@/components/humi';
+import { updateBenefitPlan } from '@/lib/workflow-api';
 import { Capability } from '@/components/humi';
 import { BENEFIT_PLAN_REGISTRY, type BenefitPlan, type PlanCategory, type RecordType, isV2Plan } from '@/data/benefits/plan-registry';
 
@@ -71,19 +80,29 @@ function EditPlanModal({
   plan,
   onClose,
   isTh,
+  locale,
 }: {
   plan: BenefitPlan;
   onClose: () => void;
   isTh: boolean;
+  locale: string;
 }) {
   const [name, setName] = useState(isTh ? plan.nameTh : plan.nameEn);
   const [limit, setLimit] = useState(plan.annualLimitThb != null ? String(plan.annualLimitThb) : '');
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    // Mock — no real save
-    setSaved(true);
-    setTimeout(onClose, 1200);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateBenefitPlan(plan.id, { display_name: name });
+      setSaved(true);
+      setTimeout(onClose, 1200);
+    } catch (err) {
+      console.warn('[EditPlanModal] updateBenefitPlan failed:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -178,17 +197,25 @@ function EditPlanModal({
               {isTh ? 'กฎเงื่อนไขสิทธิ์' : 'Eligibility rule'}
             </p>
             <Link
-              href={`/th/admin/benefits/rules?rule=${encodeURIComponent(plan.eligibility.eligibilityRuleId)}`}
+              href={`/${locale}/admin/benefits/rules?rule=${encodeURIComponent(plan.eligibility.eligibilityRuleId)}`}
               className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-accent-soft px-2 py-1 text-[length:var(--text-eyebrow)] font-mono font-semibold text-accent hover:bg-accent/10 transition-colors duration-[var(--dur-fast)]"
             >
               {plan.eligibility.eligibilityRuleId}
             </Link>
+            {ELIGIBILITY_MANAGED_BENEFIT_KEYS.has(plan.id) && (
+              <Link
+                href={`/${locale}/admin/benefits/rules/${plan.id}`}
+                className="ml-2 inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-hairline bg-canvas px-2 py-1 text-[length:var(--text-eyebrow)] font-semibold text-ink hover:border-accent hover:text-accent transition-colors duration-[var(--dur-fast)]"
+              >
+                {isTh ? 'ตั้งค่าฐานข้อมูล →' : 'DB editor →'}
+              </Link>
+            )}
           </div>
         )}
 
         {saved && (
           <div role="status" className="rounded-[var(--radius-md)] bg-success-soft p-3 text-small font-medium text-ink">
-            {isTh ? 'บันทึกแล้ว (ตัวอย่าง)' : 'Saved (mock)'}
+            {isTh ? 'บันทึกแล้ว' : 'Saved'}
           </div>
         )}
 
@@ -197,8 +224,8 @@ function EditPlanModal({
           <Capability action="edit" fallback={
             <Button variant="primary" disabled>{isTh ? 'บันทึก' : 'Save'}</Button>
           }>
-            <Button variant="primary" onClick={handleSave}>
-              {isTh ? 'บันทึก (ตัวอย่าง)' : 'Save (mock)'}
+            <Button variant="primary" onClick={handleSave} disabled={saving}>
+              {saving ? (isTh ? 'กำลังบันทึก…' : 'Saving…') : (isTh ? 'บันทึก' : 'Save')}
             </Button>
           </Capability>
         </div>
@@ -445,6 +472,7 @@ export default function BenefitPlansPage() {
           plan={editingPlan}
           onClose={() => setEditingPlan(null)}
           isTh={isTh}
+          locale={locale}
         />
       )}
     </div>
