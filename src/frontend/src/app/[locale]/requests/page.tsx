@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   Plus,
   FileText,
   ArrowRight,
+  ChevronDown,
   Search,
   Download,
   Calendar,
@@ -21,6 +22,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import {
   Avatar,
   Button,
@@ -44,11 +46,7 @@ import {
 import {
   useRequestsStore,
   type RequestFilterKey,
-  type RequestSubmission,
 } from '@/stores/humi-requests-slice';
-import { selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
-import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
-import { selectTaxPlanningRequestSummaries, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
 // ════════════════════════════════════════════════════════════
 // /requests — Forms/requests tracker
@@ -79,7 +77,14 @@ const FILTER_CHIPS: Array<{ key: RequestFilterKey; label: string }> = [
   { key: 'info', label: 'ขอข้อมูลเพิ่ม' },
 ];
 
-const REQUEST_FORM_CATALOG = HUMI_REQUEST_CATALOG.filter((form) => form.id !== 'claim');
+const REQUEST_PAGE_FORM_IDS = ['leave', 'cert-emp', 'cert-salary'] as const;
+const REQUEST_FORM_CATALOG = HUMI_REQUEST_CATALOG.filter((form) =>
+  (REQUEST_PAGE_FORM_IDS as readonly string[]).includes(form.id)
+);
+
+const BENEFIT_TYPE_KEYWORDS = ['เบิก', 'สวัสดิการ', 'เบี้ยเลี้ยง'] as const;
+const isBenefitType = (type: string): boolean =>
+  BENEFIT_TYPE_KEYWORDS.some((keyword) => type.includes(keyword));
 
 // Template-specific form fields definition
 type TemplateField = { id: string; label: string; placeholder: string; type?: 'text' | 'textarea' };
@@ -90,10 +95,17 @@ const TEMPLATE_FIELDS: Record<string, TemplateField[]> = {
     { id: 'leave-dates', label: 'วันที่', placeholder: 'เช่น 28 เม.ย. – 2 พ.ค.' },
     { id: 'leave-reason', label: 'เหตุผล', placeholder: 'ระบุเหตุผลโดยย่อ', type: 'textarea' },
   ],
-  ot: [
-    { id: 'ot-date', label: 'วันที่ทำโอที', placeholder: 'เช่น เสาร์ 19 เม.ย.' },
-    { id: 'ot-hours', label: 'จำนวนชั่วโมง', placeholder: 'เช่น 4' },
-    { id: 'ot-reason', label: 'เหตุผล', placeholder: 'ระบุงานที่ต้องทำ', type: 'textarea' },
+  'cert-emp': [
+    { id: 'cert-emp-purpose', label: 'วัตถุประสงค์', placeholder: 'เช่น ยื่นวีซ่า / สมัครงาน / อื่นๆ' },
+    { id: 'cert-emp-language', label: 'ภาษา', placeholder: 'เช่น ไทย / อังกฤษ' },
+    { id: 'cert-emp-copies', label: 'จำนวนชุด', placeholder: 'เช่น 1 ชุด' },
+    { id: 'cert-emp-note', label: 'หมายเหตุ', placeholder: 'รายละเอียดเพิ่มเติม (ถ้ามี)', type: 'textarea' },
+  ],
+  'cert-salary': [
+    { id: 'cert-salary-purpose', label: 'วัตถุประสงค์', placeholder: 'เช่น ยื่นกู้ / ทำวีซ่า / เปิดบัญชี' },
+    { id: 'cert-salary-period', label: 'ช่วงเดือนเงินเดือน', placeholder: 'เช่น 3 เดือนล่าสุด / 6 เดือนล่าสุด' },
+    { id: 'cert-salary-language', label: 'ภาษา', placeholder: 'เช่น ไทย / อังกฤษ' },
+    { id: 'cert-salary-note', label: 'หมายเหตุ', placeholder: 'รายละเอียดเพิ่มเติม (ถ้ามี)', type: 'textarea' },
   ],
   default: [
     { id: 'detail', label: 'รายละเอียด', placeholder: 'ระบุรายละเอียดคำร้อง', type: 'textarea' },
@@ -115,12 +127,11 @@ export default function HumiRequestsPage() {
   const { toast, show: showToast } = useToast();
 
   const { submissions, filter } = useRequestsStore();
-  const benefitClaims = useBenefitClaimsStore((state) => state.claims);
-  const benefitReferrals = useBenefitReferralsStore((state) => state.referrals);
-  const taxPlanningDrafts = useBenefitTaxPlanningStore((state) => state.drafts);
 
   const allMine = useMemo(() => {
-    const base = HUMI_MY_REQUESTS.map((r) => ({ ...r }));
+    const base = HUMI_MY_REQUESTS
+      .filter((r) => !isBenefitType(r.type))
+      .map((r) => ({ ...r }));
     const store = submissions.map((s) => ({
       id: s.id,
       type: s.type,
@@ -131,11 +142,8 @@ export default function HumiRequestsPage() {
         { role: 'หัวหน้างาน', name: 'ปรีชา วัฒนกุล', initials: 'ปว', tone: 'teal' as const, status: 'pending' as const, when: 'รอดำเนินการ' },
       ] satisfies HumiApprovalStep[],
     }));
-    const benefitRows = selectBenefitRequestSummaries(benefitClaims);
-    const referralRows = selectBenefitReferralRequestSummaries(benefitReferrals);
-    const taxRows = selectTaxPlanningRequestSummaries(taxPlanningDrafts);
-    return [...referralRows, ...taxRows, ...benefitRows, ...store, ...base];
-  }, [benefitClaims, benefitReferrals, taxPlanningDrafts, submissions]);
+    return [...store, ...base];
+  }, [submissions]);
 
   const filtered = useMemo(() => {
     if (filter === 'all') return allMine;
@@ -171,14 +179,14 @@ export default function HumiRequestsPage() {
       {/* Page header */}
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1">
-          <CardEyebrow>คำร้องและแบบฟอร์ม</CardEyebrow>
+          <CardEyebrow>ลาและขอเอกสาร</CardEyebrow>
           <h1
             className={cn(
               'font-display font-semibold tracking-tight text-ink',
               'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
             )}
           >
-            ส่งคำขอ ติดตามสถานะ และอนุมัติคำร้อง
+            ยื่นลา ขอหนังสือรับรอง ติดตามสถานะ
           </h1>
         </div>
         <Button
@@ -236,7 +244,16 @@ export default function HumiRequestsPage() {
 // Tab: Mine — with filter chips
 // ────────────────────────────────────────────────────────────
 
-type MineRow = { id: string; type: string; sub: string; submitted: string; status: RequestStatus; approvalChain: HumiApprovalStep[]; href?: string };
+type MineRow = {
+  id: string;
+  type: string;
+  sub: string;
+  submitted: string;
+  status: RequestStatus;
+  approvalChain: HumiApprovalStep[];
+  href?: string;
+  workflowInstanceId?: string | null;
+};
 
 function MineTab({
   summary,
@@ -245,8 +262,18 @@ function MineTab({
   summary: { total: number; pending: number; approved: number; rejected: number; info: number };
   filtered: MineRow[];
 }) {
+  const locale = useLocale();
   const { filter, setFilter } = useRequestsStore();
   const [selected, setSelected] = useState<MineRow | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpand = useCallback((id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   const summaryCards: Array<{ l: string; n: number; tone: 'accent' | 'warn' | 'sage' | 'butter' }> = [
     { l: 'ส่งทั้งหมด', n: summary.total, tone: 'accent' },
@@ -315,48 +342,104 @@ function MineTab({
           <ul role="list" className="divide-y divide-hairline">
             {filtered.map((r) => {
               const meta = REQUEST_STATUS_META[r.status];
+              const isOpen = expanded.has(r.id);
               return (
-                <li
-                  key={r.id}
-                  className="flex flex-col gap-2 py-3.5 sm:flex-row sm:items-center sm:gap-3"
-                >
-                  <span
-                    aria-hidden
-                    className="flex h-10 w-8 shrink-0 items-center justify-center rounded-[var(--radius-xs)] border border-hairline bg-canvas-soft text-ink-muted"
-                  >
-                    <FileText size={16} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-body font-semibold text-ink">
-                      {r.href ? (
-                        <Link href={r.href} className="hover:text-accent">{r.type}</Link>
-                      ) : r.type}{' '}
-                      <span className="font-mono text-small font-normal text-ink-muted">
-                        · {r.id}
-                      </span>
-                    </p>
-                    <p className="text-small text-ink-muted">
-                      {r.sub} · ส่ง {r.submitted}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                <li key={r.id} className="py-3.5">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                     <span
-                      className={cn(
-                        'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
-                        meta.toneClass
-                      )}
+                      aria-hidden
+                      className="flex h-10 w-8 shrink-0 items-center justify-center rounded-[var(--radius-xs)] border border-hairline bg-canvas-soft text-ink-muted"
                     >
-                      {meta.label}
+                      <FileText size={16} />
                     </span>
-                    <button
-                      type="button"
-                      aria-label={`ดูรายละเอียดการอนุมัติ ${r.id}`}
-                      onClick={() => setSelected(r)}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-full text-ink-muted hover:bg-canvas-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-                    >
-                      <ArrowRight size={14} aria-hidden />
-                    </button>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-body font-semibold text-ink">
+                        {r.workflowInstanceId ? (
+                          <Link href={`/${locale}/requests/${r.workflowInstanceId}`} className="hover:text-accent">{r.type}</Link>
+                        ) : r.href ? (
+                          <Link href={r.href} className="hover:text-accent">{r.type}</Link>
+                        ) : r.type}{' '}
+                        <span className="font-mono text-small font-normal text-ink-muted">
+                          · {r.id}
+                        </span>
+                      </p>
+                      <p className="text-small text-ink-muted">
+                        {r.sub} · ส่ง {r.submitted}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {!r.workflowInstanceId ? (
+                        <span
+                          className={cn(
+                            'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
+                            meta.toneClass
+                          )}
+                        >
+                          {meta.label}
+                        </span>
+                      ) : null}
+                      <button
+                        type="button"
+                        aria-label={isOpen ? `ซ่อนรายละเอียด ${r.id}` : `แสดงรายละเอียด ${r.id}`}
+                        aria-expanded={isOpen}
+                        onClick={() => toggleExpand(r.id)}
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-full text-ink-muted hover:bg-canvas-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                      >
+                        <ChevronDown
+                          size={16}
+                          aria-hidden
+                          className={cn('transition-transform', isOpen && 'rotate-180')}
+                        />
+                      </button>
+                    </div>
                   </div>
+                  {isOpen ? (
+                    <div className="mt-3 ml-11 rounded-[var(--radius-sm)] border border-hairline bg-canvas-soft p-4">
+                      {r.approvalChain && r.approvalChain.length > 0 ? (
+                        <div className="mb-3">
+                          <p className="text-eyebrow font-semibold uppercase tracking-[0.14em] text-ink-muted">
+                            ขั้นตอนการอนุมัติ
+                          </p>
+                          <ol className="mt-2 space-y-1.5 text-small">
+                            {r.approvalChain.map((step, idx) => (
+                              <li key={`${r.id}-step-${idx}`} className="flex items-start gap-2">
+                                <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-canvas font-mono text-[10px] text-ink-muted">
+                                  {idx + 1}
+                                </span>
+                                <div>
+                                  <span className="font-medium text-ink">{step.role}</span>
+                                  <span className="text-ink-muted"> · {step.name}</span>
+                                  {step.when ? (
+                                    <span className="text-ink-muted"> · {step.when}</span>
+                                  ) : null}
+                                  {step.note ? (
+                                    <p className="text-ink-muted">{step.note}</p>
+                                  ) : null}
+                                </div>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      ) : null}
+                      <div className="flex flex-wrap items-center gap-3 text-small">
+                        {r.workflowInstanceId ? (
+                          <Link
+                            href={`/${locale}/requests/${r.workflowInstanceId}`}
+                            className="text-accent underline hover:no-underline"
+                          >
+                            ดู timeline เต็ม →
+                          </Link>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => setSelected(r)}
+                          className="text-ink-muted underline hover:text-ink hover:no-underline"
+                        >
+                          เปิดรายละเอียดในกล่อง
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                 </li>
               );
             })}
@@ -575,21 +658,6 @@ function CatalogTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
         </Card>
       )}
 
-      <Card variant="raised" size="md" className="mb-4 border border-accent/30">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardEyebrow>สวัสดิการ</CardEyebrow>
-            <CardTitle>เบิกสวัสดิการ</CardTitle>
-            <p className="mt-1 text-small text-ink-muted">
-              เริ่มคำขอจากข้อมูลสิทธิ์ในโปรไฟล์ เพื่อไม่ให้เกิดแบบฟอร์มซ้ำใน Requests
-            </p>
-          </div>
-          <Link href="/th/profile/me?tab=benefits" className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-canvas-soft px-4 text-small font-semibold text-ink hover:bg-hairline-soft">
-            ไปที่สวัสดิการของฉัน <ArrowRight size={14} className="ml-2" />
-          </Link>
-        </div>
-      </Card>
-
       {/* Catalog grid */}
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {REQUEST_FORM_CATALOG.map((f) => {
@@ -625,21 +693,15 @@ function CatalogTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
               <p className="mt-1 text-small text-ink-soft leading-relaxed">
                 {f.subtitle}
               </p>
-              {f.id === 'claim' ? (
-                <Link href="/th/profile/me?tab=benefits" className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center rounded-full bg-canvas-soft px-4 py-2.5 text-small font-semibold text-ink hover:bg-accent-soft">
-                  ไปที่โปรไฟล์เพื่อเบิกสวัสดิการ
-                </Link>
-              ) : (
-                <Button
-                  variant={isSelected ? 'secondary' : 'ghost'}
-                  block
-                  className="mt-4"
-                  trailingIcon={<ArrowRight size={13} />}
-                  onClick={() => setSelectedTemplate(isSelected ? null : f.id)}
-                >
-                  {isSelected ? 'กำลังกรอก' : 'เริ่มกรอก'}
-                </Button>
-              )}
+              <Button
+                variant={isSelected ? 'secondary' : 'ghost'}
+                block
+                className="mt-4"
+                trailingIcon={<ArrowRight size={13} />}
+                onClick={() => setSelectedTemplate(isSelected ? null : f.id)}
+              >
+                {isSelected ? 'กำลังกรอก' : 'เริ่มกรอก'}
+              </Button>
             </Card>
           );
         })}

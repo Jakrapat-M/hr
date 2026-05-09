@@ -493,6 +493,52 @@
     "comments": "ความคิดเห็น",
     "noCalibration": "ไม่มีข้อมูล Calibration สุดท้าย"
   },
+  "approvalsInbox": {
+    "eyebrow": "กล่องอนุมัติ · รวมศูนย์",
+    "title": "คำขอที่รอคุณดำเนินการ",
+    "subtitle": "รวมทุกคำขอจาก 5 โดเมนไว้ที่เดียว — Manager และ SPD ใช้กล่องเดียวกัน เห็นเฉพาะรายการที่เกี่ยวข้องกับบทบาทของคุณ",
+    "viewingAs": "กำลังเข้าถึงในฐานะ:",
+    "totalPending": "{count, plural, =0 {ไม่มีคำขอรอ} other {รอ # รายการ}}",
+    "listLabel": "รายการคำขอที่รอดำเนินการ",
+    "empty": "ไม่มีคำขอตรงตามตัวกรองที่เลือก",
+    "emptyHint": "ลองเปลี่ยนสถานะ ลบคำค้น หรือสลับไปดู \"ทั้งหมด\"",
+    "expand": "ขยาย",
+    "collapse": "ย่อ",
+    "phaseTwoHint": "เฟส 2: จะกรองตามผู้ใต้บังคับบัญชาของ Manager และตามขอบเขตของ HRBP / SPD โดยอัตโนมัติ",
+    "camundaOffline": "Workflow gateway: {error}",
+    "filter": {
+      "domain": {
+        "label": "เลือกโดเมน",
+        "all": "ทั้งหมด",
+        "benefit": "Benefit",
+        "referral": "ใบส่งตัว",
+        "personalInfo": "ข้อมูลส่วนตัว",
+        "termination": "ลาออก",
+        "promotion": "เลื่อนตำแหน่ง"
+      },
+      "status": {
+        "label": "สถานะ",
+        "all": "ทั้งหมด",
+        "pending": "รอ",
+        "approved": "อนุมัติ",
+        "rejected": "ปฏิเสธ"
+      }
+    },
+    "search": {
+      "placeholder": "ค้นหาชื่อ / รหัสพนักงาน / รหัสคำขอ"
+    },
+    "badge": {
+      "camunda": "Workflow"
+    },
+    "role": {
+      "employee": "พนักงาน",
+      "manager": "Manager",
+      "hrbp": "HRBP",
+      "spd": "SPD",
+      "hr_admin": "HR Admin",
+      "hr_manager": "HR Manager"
+    }
+  },
   "workflow": {
     "title": "คำขอที่รอดำเนินการ",
     "myRequests": "คำขอของฉัน",
@@ -4623,5 +4669,50 @@
     "submitEvalBtn": "ส่งผลการประเมิน",
     "daysRemaining": "{days} วัน",
     "probationDue": "ครบกำหนด"
+  },
+  "requestDetail": {
+    "title": "รายละเอียดคำขอ",
+    "timeline": "ประวัติการดำเนินการ",
+    "variables": "ข้อมูลทางเทคนิค",
+    "reviewerComment": "ความเห็นผู้พิจารณา",
+    "notFound": "ไม่พบคำขอที่ระบุ",
+    "statusUnknown": "ไม่ทราบสถานะ",
+    "activityName": {
+      "startEvent": {
+        "submit": "ส่งคำขอ"
+      },
+      "serviceTask": {
+        "validateAmount": "ตรวจวงเงินคงเหลือ",
+        "hrAudit": "HR audit ledger",
+        "financePayout": "Finance payout",
+        "notify": "ส่งการแจ้งเตือน"
+      },
+      "userTask": {
+        "managerReview": "ผู้จัดการพิจารณา"
+      },
+      "endEvent": {
+        "done": "คำขอเสร็จสมบูรณ์",
+        "rejected": "คำขอถูกปฏิเสธ"
+      }
+    }
+  },
+  "benefitWorkflow": {
+    "status": {
+      "pending": "รอการอนุมัติ",
+      "approved": "อนุมัติแล้ว",
+      "paid": "จ่ายแล้ว",
+      "rejected": "ปฏิเสธ"
+    },
+    "errors": {
+      "submitFailed": "ส่งคำขอไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+      "networkError": "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้"
+    },
+    "success": {
+      "submitted": "ส่งคำขอสำเร็จ — รหัสคำขอ: {id}"
+    },
+    "actions": {
+      "submit": "ส่งคำขอ",
+      "submitting": "กำลังส่ง..."
+    }
   }
 }

@@ -115,7 +115,7 @@ export function TerminationInbox() {
   );
 }
 
-function TerminationCard({
+export function TerminationCard({
   req,
   onApprove,
   onReject,

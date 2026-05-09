@@ -4,6 +4,7 @@ import {
   useBenefitClaimsStore,
   type BenefitClaimDraftInput,
 } from '@/stores/benefit-claims';
+import { useAuthStore } from '@/stores/auth-store';
 
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn().mockReturnValue('/th/requests'),
@@ -52,6 +53,7 @@ describe('benefit workflow surfaces', () => {
   beforeEach(() => {
     localStorage.clear();
     useBenefitClaimsStore.setState({ claims: [] });
+    useAuthStore.setState({ userId: null, username: null, email: null, roles: [] });
   });
 
   it('/requests renders submitted benefit claims from the benefit projection', async () => {
@@ -65,13 +67,15 @@ describe('benefit workflow surfaces', () => {
   });
 
   it('/spd/inbox renders a Benefit Reimbursement lane and pending claim', async () => {
+    useAuthStore.setState({ userId: 'spd-1', username: 'SPD User', email: 'spd@test.com', roles: ['spd'] });
     useBenefitClaimsStore.getState().submitClaim(claimInput);
     const { default: SPDInboxPage } = await import('@/app/[locale]/spd/inbox/page');
 
     render(<SPDInboxPage />);
 
     expect(screen.getAllByText(/Benefit Reimbursement/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/เบิกสวัสดิการ · ค่ารักษาพยาบาล/).length).toBeGreaterThan(0);
+    // BenefitClaimsInbox renders the pending claim card as "BENEFIT_TYPE_LABEL — employeeName"
+    expect(screen.getAllByText(/ค่ารักษาพยาบาล/).length).toBeGreaterThan(0);
     expect(screen.getByText('กล่องอนุมัติคำขอเบิกสวัสดิการ')).toBeInTheDocument();
   });
 

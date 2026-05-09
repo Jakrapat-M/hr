@@ -5,6 +5,12 @@ import path from 'path';
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    // Workspace root — npm workspace places node_modules at hr/, not src/frontend/.
+    // Explicit setting silences the "multiple lockfiles" warning that otherwise
+    // mis-selects /Users/tachongrak/Projects/package-lock.json as root.
+    root: path.resolve(__dirname, '../..'),
+  },
   async redirects() {
     return [
       {
@@ -30,6 +36,8 @@ const nextConfig: NextConfig = {
       { source: '/:locale(th|en)/hrbp-reports', destination: '/:locale/reports?scope=hrbp', permanent: false },
       // Hire / onboarding
       { source: '/:locale(th|en)/onboarding', destination: '/:locale/admin/hire', permanent: false },
+      // Legacy /spd/inbox → unified /approvals (one inbox for all roles, not just SPD)
+      { source: '/:locale(th|en)/spd/inbox', destination: '/:locale/approvals', permanent: false },
     ];
   },
   webpack(config) {

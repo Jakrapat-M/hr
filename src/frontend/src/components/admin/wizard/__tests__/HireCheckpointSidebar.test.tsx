@@ -1,0 +1,128 @@
+/**
+ * HireCheckpointSidebar.test.tsx
+ * Covers: render count, navigation clicks, locked step guard, validity badge.
+ */
+
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { HireCheckpointSidebar } from '../HireCheckpointSidebar'
+
+vi.mock('lucide-react', () => {
+  const stub = (name: string) => ({ 'aria-hidden': _h, ...rest }: Record<string, unknown>) =>
+    <span data-icon={name} {...rest} />
+  return {
+    Fingerprint: stub('Fingerprint'),
+    User2: stub('User2'),
+    Phone: stub('Phone'),
+    AlertCircle: stub('AlertCircle'),
+    Globe: stub('Globe'),
+    FileText: stub('FileText'),
+    Users: stub('Users'),
+    Briefcase: stub('Briefcase'),
+    Building2: stub('Building2'),
+    Wallet: stub('Wallet'),
+    ClipboardList: stub('ClipboardList'),
+    CheckCircle2: stub('CheckCircle2'),
+  }
+})
+
+vi.mock('@/lib/utils', () => ({
+  cn: (...args: unknown[]) => (args as string[]).filter(Boolean).join(' '),
+}))
+
+const mockJumpTo = vi.fn()
+const mockSetSectionCollapsed = vi.fn()
+
+const defaultState = {
+  currentStep: 1,
+  maxUnlockedStep: 3,
+  stepValidity: {
+    identity: false, biographical: false, contact: false,
+    emergencyContacts: false, employeeInfo: false, job: false,
+    compensation: false, globalInfo: false, workPermit: false, dependents: false,
+  },
+  jumpTo: mockJumpTo,
+  setSectionCollapsed: mockSetSectionCollapsed,
+}
+
+let stateOverride: Partial<typeof defaultState> = {}
+
+vi.mock('@/lib/admin/store/useHireWizard', () => ({
+  useHireWizard: (selector: (s: typeof defaultState) => unknown) =>
+    selector({ ...defaultState, ...stateOverride }),
+}))
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  stateOverride = {}
+  vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => { cb(0); return 0 })
+  const fakeEl = document.createElement('div')
+  fakeEl.scrollIntoView = vi.fn()
+  vi.spyOn(document, 'getElementById').mockReturnValue(fakeEl)
+})
+
+describe('HireCheckpointSidebar — render', () => {
+  it('renders 11 section buttons: 7 who + 3 job + 1 review', () => {
+    render(<HireCheckpointSidebar />)
+    expect(screen.getAllByRole('button')).toHaveLength(11)
+    expect(screen.getByText('ระบุตัวตน')).toBeTruthy()
+    expect(screen.getByText('ประเภทการจ้างงาน')).toBeTruthy()
+    expect(screen.getByText('สรุปและยืนยัน')).toBeTruthy()
+  })
+})
+
+describe('HireCheckpointSidebar — navigation', () => {
+  it('click unlocked who section calls jumpTo(1) and setSectionCollapsed(id, false)', () => {
+    render(<HireCheckpointSidebar />)
+    fireEvent.click(screen.getByText('ระบุตัวตน'))
+    expect(mockJumpTo).toHaveBeenCalledWith(1)
+    expect(mockSetSectionCollapsed).toHaveBeenCalledWith('who.identity', false)
+  })
+
+  it('click review section (step=3) calls jumpTo(3) but NOT setSectionCollapsed', () => {
+    render(<HireCheckpointSidebar />)
+    fireEvent.click(screen.getByText('สรุปและยืนยัน'))
+    expect(mockJumpTo).toHaveBeenCalledWith(3)
+    expect(mockSetSectionCollapsed).not.toHaveBeenCalled()
+  })
+})
+
+describe('HireCheckpointSidebar — locked step', () => {
+  it('step=2 section buttons are disabled and have tooltip when maxUnlockedStep=1', () => {
+    stateOverride = { maxUnlockedStep: 1 }
+    render(<HireCheckpointSidebar />)
+    const jobBtn = screen.getByText('ประเภทการจ้างงาน').closest('button') as HTMLButtonElement
+    expect(jobBtn.disabled).toBe(true)
+    expect(jobBtn.title).toBe('ต้องผ่านขั้นตอนก่อนหน้าก่อน')
+  })
+
+  it('click on locked section does not call jumpTo or setSectionCollapsed', () => {
+    stateOverride = { maxUnlockedStep: 1 }
+    render(<HireCheckpointSidebar />)
+    fireEvent.click(screen.getByText('ประเภทการจ้างงาน').closest('button')!)
+    expect(mockJumpTo).not.toHaveBeenCalled()
+    expect(mockSetSectionCollapsed).not.toHaveBeenCalled()
+  })
+})
+
+describe('HireCheckpointSidebar — validity badge', () => {
+  it('shows CheckCircle2 only when stepValidity[key] === true', () => {
+    stateOverride = {
+      stepValidity: { ...defaultState.stepValidity, identity: true, biographical: false },
+    }
+    render(<HireCheckpointSidebar />)
+    expect(screen.getByText('ระบุตัวตน').closest('button')!
+      .querySelector('[data-icon="CheckCircle2"]')).toBeTruthy()
+    expect(screen.getByText('ข้อมูลส่วนตัว').closest('button')!
+      .querySelector('[data-icon="CheckCircle2"]')).toBeNull()
+  })
+
+  it('does NOT show badge when validity key is undefined', () => {
+    stateOverride = {
+      stepValidity: { ...defaultState.stepValidity, identity: undefined as unknown as boolean },
+    }
+    render(<HireCheckpointSidebar />)
+    expect(screen.getByText('ระบุตัวตน').closest('button')!
+      .querySelector('[data-icon="CheckCircle2"]')).toBeNull()
+  })
+})

@@ -493,6 +493,52 @@
     "comments": "Comments",
     "noCalibration": "No final calibration data available"
   },
+  "approvalsInbox": {
+    "eyebrow": "Approvals · Unified Inbox",
+    "title": "Items waiting for you",
+    "subtitle": "Every approval across all five domains, in one place. Managers and SPD now share the same inbox — you only see what is yours to action.",
+    "viewingAs": "Viewing as:",
+    "totalPending": "{count, plural, =0 {No pending items} one {# pending} other {# pending}}",
+    "listLabel": "Pending requests list",
+    "empty": "Nothing matches the current filters",
+    "emptyHint": "Try a different status, clear the search, or switch to \"All\"",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "phaseTwoHint": "Phase 2: rows will auto-filter by Manager direct-reports and HRBP / SPD scope.",
+    "camundaOffline": "Workflow gateway: {error}",
+    "filter": {
+      "domain": {
+        "label": "Filter by domain",
+        "all": "All",
+        "benefit": "Benefit",
+        "referral": "Referral",
+        "personalInfo": "Personal info",
+        "termination": "Termination",
+        "promotion": "Promotion"
+      },
+      "status": {
+        "label": "Status",
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
+    },
+    "search": {
+      "placeholder": "Search name / employee id / request id"
+    },
+    "badge": {
+      "camunda": "Workflow"
+    },
+    "role": {
+      "employee": "Employee",
+      "manager": "Manager",
+      "hrbp": "HRBP",
+      "spd": "SPD",
+      "hr_admin": "HR Admin",
+      "hr_manager": "HR Manager"
+    }
+  },
   "workflow": {
     "title": "Pending Workflows",
     "myRequests": "My Requests",
@@ -4623,5 +4669,50 @@
     "submitEvalBtn": "Submit Evaluation",
     "daysRemaining": "{days} days",
     "probationDue": "Due"
+  },
+  "requestDetail": {
+    "title": "Request Detail",
+    "timeline": "Timeline",
+    "variables": "Technical data",
+    "reviewerComment": "Reviewer comment",
+    "notFound": "Request not found",
+    "statusUnknown": "Unknown status",
+    "activityName": {
+      "startEvent": {
+        "submit": "Submit request"
+      },
+      "serviceTask": {
+        "validateAmount": "Validate annual limit",
+        "hrAudit": "HR audit ledger",
+        "financePayout": "Finance payout",
+        "notify": "Send notification"
+      },
+      "userTask": {
+        "managerReview": "Manager review"
+      },
+      "endEvent": {
+        "done": "Request completed",
+        "rejected": "Request rejected"
+      }
+    }
+  },
+  "benefitWorkflow": {
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "paid": "Paid",
+      "rejected": "Rejected"
+    },
+    "errors": {
+      "submitFailed": "Failed to submit request. Please try again.",
+      "networkError": "Cannot reach workflow server."
+    },
+    "success": {
+      "submitted": "Request submitted — id: {id}"
+    },
+    "actions": {
+      "submit": "Submit",
+      "submitting": "Submitting..."
+    }
   }
 }

@@ -1,292 +1,149 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, FileText, Hospital, Shield } from 'lucide-react';
-import { Card, CardEyebrow, CardTitle, buttonVariants } from '@/components/humi';
-import { Capability } from '@/components/humi';
-import {
-  benefitReferralRoute,
-  benefitReimbursementRoute,
-  benefitHospitalClaimRoute,
-} from '@/lib/benefit-routes';
+import { ArrowRight, Fuel, Hospital, Receipt, Stethoscope } from 'lucide-react';
+import { Card, CardEyebrow, buttonVariants } from '@/components/humi';
+import { benefitReferralRoute, benefitClaimRoute } from '@/lib/benefit-routes';
 import { cn } from '@/lib/utils';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
-import {
-  BENEFIT_PLAN_REGISTRY,
-  getEmployeeClaimablePlans,
-  getAdminOnlyPlans,
-  type BenefitPlan,
-  type PlanCategory,
-} from '@/data/benefits/plan-registry';
-
-// ── Category definitions for filter chips ────────────────────────────────────
-
-const CLAIMABLE_CATEGORIES: { id: PlanCategory; labelTh: string; labelEn: string }[] = [
-  { id: 'medical',    labelTh: 'ค่ารักษาพยาบาล', labelEn: 'Medical'     },
-  { id: 'dental',     labelTh: 'ทันตกรรม',        labelEn: 'Dental'      },
-  { id: 'physical',   labelTh: 'ตรวจสุขภาพ',      labelEn: 'Checkup'     },
-  { id: 'gasoline',   labelTh: 'ค่าน้ำมัน',        labelEn: 'Gasoline'    },
-  { id: 'toll',       labelTh: 'ค่าผ่านทาง',       labelEn: 'Toll'        },
-  { id: 'parking',    labelTh: 'ค่าจอดรถ',         labelEn: 'Parking'     },
-  { id: 'gift',       labelTh: 'ของเยี่ยม',         labelEn: 'Gifts'       },
-];
-
-const ADMIN_CATEGORIES: { id: PlanCategory; labelTh: string; labelEn: string }[] = [
-  { id: 'funeral',     labelTh: 'ฌาปนกิจ',            labelEn: 'Funeral'     },
-  { id: 'wreath',      labelTh: 'พวงหรีด',             labelEn: 'Wreath'      },
-  { id: 'beneficiary', labelTh: 'ผู้รับผลประโยชน์',    labelEn: 'Beneficiary' },
-  { id: 'life',        labelTh: 'ประกันชีวิต',         labelEn: 'Life'        },
-];
-
-// ── Route resolver — maps a plan to its target URL ───────────────────────────
-
-function planRoute(plan: BenefitPlan, locale: string): string {
-  if (plan.recordType === 'records' || plan.recordType === 'info') {
-    return `/${locale}/admin/benefits/records/${plan.id}`;
-  }
-  if (plan.template === 'hospital-claim') {
-    return benefitHospitalClaimRoute(locale);
-  }
-  // simple-claim, records-dependent claimable (BE-GIF-005)
-  return benefitReimbursementRoute(locale);
-}
-
-// ── Sub-component: one plan chip / card ──────────────────────────────────────
-
-function PlanChip({
-  plan,
-  locale,
-  isTh,
-}: {
-  plan: BenefitPlan;
-  locale: string;
-  isTh: boolean;
-}) {
-  const href = planRoute(plan, locale);
-  const isHospital = plan.template === 'hospital-claim';
-  return (
-    <Link
-      href={href}
-      className={cn(
-        buttonVariants({ variant: isHospital ? 'secondary' : 'ghost', size: 'sm' }),
-        'inline-flex items-center gap-1.5 whitespace-nowrap'
-      )}
-    >
-      {isHospital ? <Hospital size={13} aria-hidden /> : <FileText size={13} aria-hidden />}
-      {isTh ? plan.nameTh.replace('[Records] ', '') : plan.nameEn.replace('[Records] ', '')}
-      <ArrowRight size={12} aria-hidden />
-    </Link>
-  );
-}
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 export function BenefitServicesPanel({ locale }: { locale: string; onOpenClaim?: () => void }) {
   const referrals = useBenefitReferralsStore((state) => state.referrals);
   const pendingReferralCount = referrals.filter((item) =>
     ['pending_spd', 'spd_reviewing', 'send_back', 'approved'].includes(item.status)
   ).length;
-  const issuedReferralCount = referrals.filter((item) => item.status === 'letter_issued').length;
 
   const isTh = locale !== 'en';
 
-  // Active category filter — null = show all claimable
-  const [activeCategory, setActiveCategory] = useState<PlanCategory | null>(null);
-
-  const claimablePlans = getEmployeeClaimablePlans();
-  const adminPlans = getAdminOnlyPlans();
-
-  const visibleClaimable = activeCategory
-    ? claimablePlans.filter((p) => p.category === activeCategory)
-    : claimablePlans;
-
-  const visibleAdmin = activeCategory
-    ? adminPlans.filter((p) => p.category === activeCategory)
-    : adminPlans;
-
   return (
-    <section aria-labelledby="benefit-services-heading">
-      <Card variant="raised" size="lg" className="border-accent-soft bg-canvas-soft">
-        {/* Header row */}
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-          <div>
-            <CardEyebrow>{isTh ? 'งานสวัสดิการ · เลือกแผน' : 'Benefits · Choose a plan'}</CardEyebrow>
-            <CardTitle id="benefit-services-heading" className="mt-1">
-              {isTh ? 'เลือกสวัสดิการที่ต้องการ' : 'Select a benefit to get started'}
-            </CardTitle>
-            <p className="mt-2 max-w-2xl text-body text-ink-soft leading-relaxed">
+    <section aria-labelledby="benefit-services-heading" className="space-y-4">
+      {/* HERO — Hospital referral, prioritized for users who may be unwell */}
+      <Card variant="raised" size="lg" className="humi-banner relative overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute -right-10 -top-10 h-40 w-32 rounded-full bg-[color:var(--color-butter)] opacity-50 blur-2xl"
+        />
+        <div
+          aria-hidden
+          className="absolute right-32 top-20 h-24 w-20 rounded-full bg-[color:var(--color-sage)] opacity-40 blur-2xl"
+        />
+        <div className="relative grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+          <div className="space-y-3">
+            <CardEyebrow>{isTh ? 'เริ่มต้นที่นี่ · ทำเร็วสุด' : 'Start here · fastest path'}</CardEyebrow>
+            <h2
+              id="benefit-services-heading"
+              className={cn(
+                'font-display font-semibold tracking-tight text-ink',
+                'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
+              )}
+            >
+              {isTh ? 'ไม่สบายใช่ไหม? ขอใบส่งตัวเข้าโรงพยาบาล' : 'Feeling unwell? Request a hospital referral'}
+            </h2>
+            <p className="max-w-xl text-body leading-relaxed text-ink-soft">
               {isTh
-                ? 'เลือกหมวดหมู่เพื่อกรองแผน จากนั้นคลิกที่ชื่อแผนเพื่อไปยังแบบฟอร์ม'
-                : 'Filter by category then click a plan name to open the form.'}
+                ? 'ส่งคำขอครั้งเดียว — กรอกในหน้าเดียว ไม่ต้องจำหลายขั้นตอน'
+                : 'One short form — single page, no multi-step.'}
             </p>
-          </div>
-
-          {/* Quick-access primary actions */}
-          <div className="flex flex-col gap-3 sm:flex-row lg:justify-end" aria-label="benefit-owned actions">
-            <Link
-              href={benefitReimbursementRoute(locale)}
-              className={cn(
-                buttonVariants({ variant: 'primary', block: true }),
-                'min-h-[44px] sm:min-w-[180px]'
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Link
+                href={benefitReferralRoute(locale)}
+                className={cn(buttonVariants({ variant: 'primary' }), 'gap-2 text-body')}
+              >
+                <Stethoscope size={16} aria-hidden />
+                {isTh ? 'ขอใบส่งตัวตอนนี้' : 'Request referral now'}
+                <ArrowRight size={14} aria-hidden />
+              </Link>
+              {pendingReferralCount > 0 && (
+                <span className="text-small text-ink-muted">
+                  {isTh
+                    ? `คุณมี ${pendingReferralCount} ใบส่งตัวที่กำลังดำเนินการ`
+                    : `You have ${pendingReferralCount} pending referral${pendingReferralCount === 1 ? '' : 's'}`}
+                </span>
               )}
-              data-benefit-owned-action="true"
-            >
-              <FileText size={16} aria-hidden />
-              <span>{isTh ? 'เบิกสวัสดิการ' : 'Reimbursement'}</span>
-              <ArrowRight size={14} aria-hidden />
-            </Link>
-            <Link
-              href={benefitReferralRoute(locale)}
-              className={cn(
-                buttonVariants({ variant: 'secondary', block: true }),
-                'min-h-[44px] sm:min-w-[180px]'
-              )}
-              data-benefit-owned-action="true"
-            >
-              <Hospital size={16} aria-hidden />
-              <span>{isTh ? 'ขอใบส่งตัว' : 'Hospital referral'}</span>
-              <ArrowRight size={14} aria-hidden />
-            </Link>
-          </div>
-        </div>
-
-        {/* ── Category filter chips ─────────────────────────────────────────── */}
-        <div className="mt-5 border-t border-hairline pt-4">
-          <p className="mb-2.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-            {isTh ? 'กรองตามหมวดหมู่' : 'Filter by category'}
-          </p>
-          <div
-            role="group"
-            aria-label={isTh ? 'หมวดหมู่สวัสดิการ' : 'Benefit categories'}
-            className="flex flex-wrap gap-2"
-          >
-            {/* "All" chip */}
-            <button
-              type="button"
-              onClick={() => setActiveCategory(null)}
-              aria-pressed={activeCategory === null}
-              className={cn(
-                'inline-flex items-center rounded-full px-3 py-1 text-small font-medium transition-colors',
-                'border border-hairline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
-                activeCategory === null
-                  ? 'bg-accent text-white border-accent'
-                  : 'bg-surface text-ink-soft hover:bg-canvas-soft hover:text-ink'
-              )}
-            >
-              {isTh ? 'ทั้งหมด' : 'All'}
-            </button>
-
-            {/* Claimable category chips */}
-            {CLAIMABLE_CATEGORIES.map((cat) => {
-              const hasPlans = claimablePlans.some((p) => p.category === cat.id);
-              if (!hasPlans) return null;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setActiveCategory(cat.id === activeCategory ? null : cat.id)}
-                  aria-pressed={activeCategory === cat.id}
-                  className={cn(
-                    'inline-flex items-center rounded-full px-3 py-1 text-small font-medium transition-colors',
-                    'border border-hairline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
-                    activeCategory === cat.id
-                      ? 'bg-accent text-white border-accent'
-                      : 'bg-surface text-ink-soft hover:bg-canvas-soft hover:text-ink'
-                  )}
-                >
-                  {isTh ? cat.labelTh : cat.labelEn}
-                </button>
-              );
-            })}
-
-            {/* Admin category chips — gated */}
-            <Capability action="edit">
-              {ADMIN_CATEGORIES.map((cat) => {
-                const hasPlans = adminPlans.some((p) => p.category === cat.id);
-                if (!hasPlans) return null;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setActiveCategory(cat.id === activeCategory ? null : cat.id)}
-                    aria-pressed={activeCategory === cat.id}
-                    className={cn(
-                      'inline-flex items-center gap-1 rounded-full px-3 py-1 text-small font-medium transition-colors',
-                      'border border-hairline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
-                      activeCategory === cat.id
-                        ? 'bg-accent text-white border-accent'
-                        : 'bg-surface text-ink-muted hover:bg-canvas-soft hover:text-ink'
-                    )}
-                  >
-                    <Shield size={11} aria-hidden className="opacity-60" />
-                    {isTh ? cat.labelTh : cat.labelEn}
-                  </button>
-                );
-              })}
-            </Capability>
-          </div>
-        </div>
-
-        {/* ── Plan picker — claimable plans ─────────────────────────────────── */}
-        {visibleClaimable.length > 0 && (
-          <div className="mt-4">
-            <p className="mb-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-              {isTh ? 'สิทธิ์เบิกได้' : 'Employee claimable'}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {visibleClaimable.map((plan) => (
-                <PlanChip key={plan.id} plan={plan} locale={locale} isTh={isTh} />
-              ))}
             </div>
           </div>
-        )}
-
-        {/* ── Plan picker — admin/HR-only plans (gated) ────────────────────── */}
-        <Capability action="edit">
-          {visibleAdmin.length > 0 && (
-            <div className="mt-4 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-4 py-3">
-              <div className="mb-2 flex items-center gap-1.5">
-                <Shield size={13} className="text-ink-muted" aria-hidden />
-                <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-                  {isTh ? 'บันทึกโดย HR เท่านั้น' : 'HR records only'}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {visibleAdmin.map((plan) => (
-                  <PlanChip key={plan.id} plan={plan} locale={locale} isTh={isTh} />
-                ))}
-              </div>
+          <div className="hidden shrink-0 md:block">
+            <div className="flex h-28 w-28 items-center justify-center rounded-full bg-surface text-accent shadow-[var(--shadow-md)]">
+              <Hospital size={56} aria-hidden strokeWidth={1.5} />
             </div>
-          )}
-        </Capability>
-
-        {/* ── Footer context strip ──────────────────────────────────────────── */}
-        <div className="mt-5 grid gap-3 border-t border-hairline pt-4 text-small text-ink-muted sm:grid-cols-2">
-          <div className="flex items-start gap-2">
-            <FileText size={16} className="mt-0.5 text-accent" aria-hidden />
-            <p>
-              <span className="font-semibold text-ink">
-                {isTh ? 'เบิกสวัสดิการ' : 'Reimbursement'}
-              </span>{' '}
-              {isTh
-                ? 'ใช้ข้อมูลสิทธิ์และวงเงินจากโปรไฟล์/HRMS แต่ส่งคำขอในเส้นทางเฉพาะ'
-                : 'Uses entitlement and limit data from your profile / HRMS.'}
-            </p>
-          </div>
-          <div className="flex items-start gap-2">
-            <Hospital size={16} className="mt-0.5 text-accent" aria-hidden />
-            <p>
-              <span className="font-semibold text-ink">
-                {isTh ? 'ใบส่งตัว' : 'Referral'}
-              </span>{' '}
-              {isTh
-                ? `สำหรับ ePatient ก่อนเข้ารับบริการ · รอ ${pendingReferralCount} · ออกแล้ว ${issuedReferralCount}`
-                : `ePatient before visit · pending ${pendingReferralCount} · issued ${issuedReferralCount}`}
-            </p>
           </div>
         </div>
       </Card>
+
+      {/* Secondary actions — claim shortcuts */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <SecondaryAction
+          isTh={isTh}
+          icon={<Receipt size={20} aria-hidden />}
+          titleTh="เบิกค่ารักษา / ทันตกรรม"
+          titleEn="Medical & dental claim"
+          subtitleTh="ส่งใบเสร็จย้อนหลัง — กรอกหน้าเดียว"
+          subtitleEn="Submit receipts on a single form"
+          href={benefitClaimRoute(locale, 'BE-MED-001')}
+        />
+        <SecondaryAction
+          isTh={isTh}
+          icon={<Fuel size={20} aria-hidden />}
+          titleTh="เบิกค่าเดินทาง"
+          titleEn="Transport claim"
+          subtitleTh="น้ำมัน · ทางด่วน · ที่จอดรถ"
+          subtitleEn="Gas · Tolls · Parking"
+          href={benefitClaimRoute(locale, 'BE-GAS-001')}
+        />
+      </div>
+
+      {/* Single-form catalog link — one page, picker inside */}
+      <p className="text-small text-ink-muted">
+        {isTh ? 'เบิกประเภทอื่น? ' : 'Other benefit types? '}
+        <Link
+          href={benefitClaimRoute(locale)}
+          className="font-semibold text-accent underline-offset-4 transition-colors hover:underline"
+        >
+          {isTh ? 'เปิดฟอร์มเดียวที่เลือกประเภทได้ทุกแผน →' : 'Open the unified claim form →'}
+        </Link>
+      </p>
     </section>
+  );
+}
+
+function SecondaryAction({
+  isTh,
+  icon,
+  titleTh,
+  titleEn,
+  subtitleTh,
+  subtitleEn,
+  href,
+}: {
+  isTh: boolean;
+  icon: React.ReactNode;
+  titleTh: string;
+  titleEn: string;
+  subtitleTh: string;
+  subtitleEn: string;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'group flex items-center gap-4 rounded-[var(--radius-md)] border border-hairline bg-surface px-5 py-4',
+        'shadow-[var(--shadow-sm)] transition-all hover:border-accent hover:shadow-[var(--shadow-md)]',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2'
+      )}
+    >
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-accent-soft text-accent">
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-body font-semibold text-ink">{isTh ? titleTh : titleEn}</p>
+        <p className="text-small text-ink-muted">{isTh ? subtitleTh : subtitleEn}</p>
+      </div>
+      <ArrowRight
+        size={16}
+        aria-hidden
+        className="shrink-0 text-ink-muted transition-all group-hover:translate-x-0.5 group-hover:text-accent"
+      />
+    </Link>
   );
 }

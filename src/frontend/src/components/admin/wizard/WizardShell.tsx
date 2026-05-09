@@ -44,6 +44,8 @@ interface WizardShellProps {
   flowTitleTh?: string
   /** aria-label สำหรับ stepper nav — defaults to "ขั้นตอน Hire Wizard". */
   stepperLabel?: string
+  /** Optional section-level checkpoint nav rendered below the Stepper in the left aside. */
+  sidebarContent?: React.ReactNode
 }
 
 function formatTime(ts: number): string {
@@ -67,6 +69,7 @@ export function WizardShell({
   flowEyebrow = 'Hire Workflow',
   flowTitleTh = 'เพิ่มพนักงานใหม่',
   stepperLabel,
+  sidebarContent,
 }: WizardShellProps) {
   const step = steps[currentStep - 1] ?? steps[0]
 
@@ -114,6 +117,12 @@ export function WizardShell({
             onStepClick={onStepClick}
             stepperLabel={stepperLabel}
           />
+          {sidebarContent && (
+            <>
+              <div className="my-3 border-t border-hairline" />
+              {sidebarContent}
+            </>
+          )}
         </aside>
 
         {/* Mobile progress bar */}

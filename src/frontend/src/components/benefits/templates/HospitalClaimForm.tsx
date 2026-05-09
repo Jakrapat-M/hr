@@ -1,13 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/humi';
 import { FileUploadField } from '@/components/humi/FileUploadField';
 import { Capability } from '@/components/humi';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
-import type { BenefitTemplateProps } from './SimpleClaimForm';
+import { mapPlanToWorkflowType, type BenefitTemplateProps } from './SimpleClaimForm';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
+import { submitBenefitRequest } from '@/lib/workflow-api';
+import { useBenefitClaimsStore } from '@/stores/benefit-claims';
+import { useAuthStore } from '@/stores/auth-store';
+import { lookupManagerId, lookupName } from '@/lib/demo-org-chart';
 
 // Mock dependent list — Sprint 2 will wire to real API
 const MOCK_DEPENDENTS = [
@@ -30,6 +34,12 @@ export function HospitalClaimForm({
 }: BenefitTemplateProps) {
   const locale = useLocale();
   const isTh = locale !== 'en';
+  const tWorkflow = useTranslations('benefitWorkflow');
+  const submitClaim = useBenefitClaimsStore((s) => s.submitClaim);
+  const rawUserId = useAuthStore((s) => s.userId);
+  // Default to 'emp-042' (Wichai Thamdee) for stable demo persona when no user is logged in
+  // or when the legacy placeholder 'EMP001' is set.
+  const requesterId = (!rawUserId || rawUserId === 'EMP001') ? 'emp-042' : rawUserId;
 
   const planName = isTh ? plan.nameTh : plan.nameEn;
   const requiredDocs = isTh ? plan.requiredDocsTh : plan.requiredDocsEn;
@@ -46,6 +56,7 @@ export function HospitalClaimForm({
   });
   const [errors, setErrors] = useState<string[]>([]);
   const [lastWorkflowId, setLastWorkflowId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const setField = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -53,7 +64,7 @@ export function HospitalClaimForm({
     if (lastWorkflowId) setLastWorkflowId(null);
   };
 
-  const submit = () => {
+  const submit = async () => {
     const nextErrors: string[] = [];
     if (!form.hospitalName.trim()) {
       nextErrors.push(isTh ? 'กรุณาระบุชื่อโรงพยาบาล' : 'Hospital name is required');
@@ -77,11 +88,41 @@ export function HospitalClaimForm({
       setErrors(nextErrors);
       return;
     }
-    const wfId = `WF-${Date.now()}`;
-    setLastWorkflowId(wfId);
-    setForm({ admissionType: 'ipd', hospitalName: '', transferDocNo: '', dependentId: '', receiptNo: '', receiptDate: '', receiptAmount: '', attachmentName: '' });
-    setErrors([]);
-    onSubmitted?.(wfId);
+    const amountForWorkflow = plan.requiresReceipt ? Number(form.receiptAmount) : 0;
+    setIsSubmitting(true);
+    try {
+      const response = await submitBenefitRequest({
+        requesterId,
+        managerId: lookupManagerId(requesterId),
+        benefitType: mapPlanToWorkflowType(plan),
+        amount: amountForWorkflow,
+        description: `${planName} · ${form.hospitalName} · ${form.admissionType.toUpperCase()}`,
+      });
+      // Mirror to the local Zustand store so the /requests page can render it.
+      submitClaim({
+        benefitType: 'medical',
+        receiptNo: form.receiptNo || `HOSP-${Date.now()}`,
+        receiptDate: form.receiptDate || new Date().toISOString().slice(0, 10),
+        receiptAmount: amountForWorkflow,
+        totalClaimAmount: amountForWorkflow,
+        hospitalName: form.hospitalName,
+        opdIpd: form.admissionType,
+        patientTransferDocumentNo: form.transferDocNo || undefined,
+        workflowInstanceId: response.id,
+        workflowStatus: 'pending',
+      });
+      setLastWorkflowId(response.id);
+      setForm({ admissionType: 'ipd', hospitalName: '', transferDocNo: '', dependentId: '', receiptNo: '', receiptDate: '', receiptAmount: '', attachmentName: '' });
+      setErrors([]);
+      onSubmitted?.(response.id);
+    } catch (err) {
+      const networkLike = err instanceof TypeError;
+      setErrors([
+        networkLike ? tWorkflow('errors.networkError') : tWorkflow('errors.submitFailed'),
+      ]);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -223,18 +264,19 @@ export function HospitalClaimForm({
       )}
       {lastWorkflowId && (
         <div role="status" className="mt-4 rounded-[var(--radius-md)] bg-success-soft p-3 text-small font-medium text-ink">
-          {isTh ? `ส่งคำขอ ${lastWorkflowId} แล้ว · ติดตามได้ที่ /requests` : `Submitted ${lastWorkflowId} · track at /requests`}
+          {tWorkflow('success.submitted', { id: lastWorkflowId })}
+          {' · '}{lookupName(requesterId, isTh ? 'th' : 'en')}
         </div>
       )}
 
       <div className="mt-4 flex justify-end">
         <Capability action="edit" fallback={
           <Button variant="primary" disabled>
-            {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
+            {tWorkflow('actions.submit')}
           </Button>
         }>
-          <Button variant="primary" onClick={submit}>
-            {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
+          <Button variant="primary" onClick={submit} disabled={isSubmitting}>
+            {isSubmitting ? tWorkflow('actions.submitting') : tWorkflow('actions.submit')}
           </Button>
         </Capability>
       </div>

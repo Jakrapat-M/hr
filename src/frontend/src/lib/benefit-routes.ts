@@ -4,6 +4,7 @@ export const BENEFIT_REIMBURSEMENT_ROUTE = '/benefits-hub/reimbursement';
 export const BENEFIT_HOSPITAL_CLAIM_ROUTE = '/benefits-hub/hospital-claim';
 export const BENEFIT_REFERRAL_ROUTE = '/benefits-hub/referral';
 export const BENEFIT_TAX_PLANNING_ROUTE = '/payroll/tax-planning';
+export const BENEFIT_CLAIM_ROUTE = '/benefits-hub/claim';
 
 function localizedRoute(locale: string | null | undefined, route: string) {
   return `/${locale || 'th'}${route}`;
@@ -31,4 +32,9 @@ export function benefitTaxPlanningRoute(locale: string | null | undefined) {
 
 export function benefitsHubRoute(locale: string | null | undefined) {
   return localizedRoute(locale, BENEFITS_HUB_ROUTE);
+}
+
+export function benefitClaimRoute(locale: string | null | undefined, planId?: string) {
+  const base = localizedRoute(locale, BENEFIT_CLAIM_ROUTE);
+  return planId ? `${base}?planId=${encodeURIComponent(planId)}` : base;
 }

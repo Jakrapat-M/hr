@@ -17,6 +17,7 @@ import { useHireWizard } from '@/lib/admin/store/useHireWizard'
 
 export default function ClusterWho() {
   const setStepValidity = useHireWizard((s) => s.setStepValidity)
+  const stepValidity = useHireWizard((s) => s.stepValidity)
   const sectionCollapse = useHireWizard((s) => s.sectionCollapse)
   const toggleSection = useHireWizard((s) => s.toggleSection)
   // Stable callbacks — required, otherwise child useEffect deps change every render and loop
@@ -33,6 +34,7 @@ export default function ClusterWho() {
         id="who.identity"
         collapsed={sectionCollapse['who.identity'] ?? false}
         onToggle={() => toggleSection('who.identity')}
+        isValid={stepValidity['identity']}
           icon={Fingerprint}
           eyebrow="ระบุตัวตน"
           title="ข้อมูลระบุตัวตน"
@@ -43,8 +45,9 @@ export default function ClusterWho() {
 
       <CollapsibleSectionCard
         id="who.biographical"
-        collapsed={sectionCollapse['who.biographical'] ?? false}
+        collapsed={sectionCollapse['who.biographical'] ?? true}
         onToggle={() => toggleSection('who.biographical')}
+        isValid={stepValidity['biographical']}
           icon={User2}
           eyebrow="ประวัติส่วนตัว"
           title="ข้อมูลส่วนตัว"
@@ -55,7 +58,7 @@ export default function ClusterWho() {
 
       <CollapsibleSectionCard
         id="who.contact"
-        collapsed={sectionCollapse['who.contact'] ?? false}
+        collapsed={sectionCollapse['who.contact'] ?? true}
         onToggle={() => toggleSection('who.contact')}
           icon={Phone}
           eyebrow="ข้อมูลติดต่อ"
@@ -67,8 +70,9 @@ export default function ClusterWho() {
 
       <CollapsibleSectionCard
         id="who.emergencyContacts"
-        collapsed={sectionCollapse['who.emergencyContacts'] ?? false}
+        collapsed={sectionCollapse['who.emergencyContacts'] ?? true}
         onToggle={() => toggleSection('who.emergencyContacts')}
+        isValid={stepValidity['emergencyContacts']}
           icon={AlertCircle}
           eyebrow="ผู้ติดต่อฉุกเฉิน"
           title="ผู้ติดต่อฉุกเฉิน / Emergency Contacts"
@@ -79,8 +83,9 @@ export default function ClusterWho() {
 
       <CollapsibleSectionCard
         id="who.globalInfo"
-        collapsed={sectionCollapse['who.globalInfo'] ?? false}
+        collapsed={sectionCollapse['who.globalInfo'] ?? true}
         onToggle={() => toggleSection('who.globalInfo')}
+        isValid={stepValidity['globalInfo']}
           icon={Globe}
           eyebrow="ข้อมูลทั่วไป"
           title="ข้อมูลทั่วไป / Global Information"
@@ -91,8 +96,9 @@ export default function ClusterWho() {
 
       <CollapsibleSectionCard
         id="who.workPermit"
-        collapsed={sectionCollapse['who.workPermit'] ?? false}
+        collapsed={sectionCollapse['who.workPermit'] ?? true}
         onToggle={() => toggleSection('who.workPermit')}
+        isValid={stepValidity['workPermit']}
           icon={FileText}
           eyebrow="ใบอนุญาตทำงาน"
           title="ใบอนุญาตทำงาน / Work Permit"
@@ -103,8 +109,9 @@ export default function ClusterWho() {
 
       <CollapsibleSectionCard
         id="who.dependents"
-        collapsed={sectionCollapse['who.dependents'] ?? false}
+        collapsed={sectionCollapse['who.dependents'] ?? true}
         onToggle={() => toggleSection('who.dependents')}
+        isValid={stepValidity['dependents']}
           icon={Users}
           eyebrow="บุคคลในอุปการะ"
           title="บุคคลในอุปการะ / Dependents"
