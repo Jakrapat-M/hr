@@ -2,20 +2,29 @@
 // Reads SF JSON dumps at test time and asserts mapper contract.
 // Passes today (all stubs PENDING) and enforces real rules as Phase 1.3+ flips mappers to CREATE/UPSERT.
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { mappers, buildAll } from '../lib/admin/hire/sfMapper'
 import type { FormData } from '../lib/admin/store/useHireWizard'
 
 // ---------------------------------------------------------------------------
 // Path resolution
-// __dirname = /Users/tachongrak/Projects/hr/src/frontend/src/__tests__
-// 6 levels up → /Users/tachongrak
+// Tests may run from a secondary git worktree under /tmp, so do not derive
+// the external SF dump location only from __dirname. Prefer an explicit env,
+// then the user's stable stark checkout, and keep the legacy relative fallback.
 // ---------------------------------------------------------------------------
-const SF_DUMP_DIR = resolve(
-  __dirname,
-  '../../../../../../stark/projects/hr-platform-replacement/sf-extract/qas-fields-2026-04-25',
-)
+const SF_DUMP_DIR_CANDIDATES = [
+  process.env.SF_DUMP_DIR,
+  process.env.HOME
+    ? resolve(process.env.HOME, 'stark/projects/hr-platform-replacement/sf-extract/qas-fields-2026-04-25')
+    : undefined,
+  resolve(__dirname, '../../../../../../stark/projects/hr-platform-replacement/sf-extract/qas-fields-2026-04-25'),
+].filter((value): value is string => Boolean(value))
+
+const SF_DUMP_DIR =
+  SF_DUMP_DIR_CANDIDATES.find((candidate) =>
+    existsSync(resolve(candidate, 'sf-qas-ec-fields-FULL-2026-04-25.json')),
+  ) ?? SF_DUMP_DIR_CANDIDATES[SF_DUMP_DIR_CANDIDATES.length - 1]
 
 // ---------------------------------------------------------------------------
 // SF dump type definitions
@@ -65,6 +74,7 @@ const minimalFormData: FormData = {
     age: null, employeeId: '', nationalIdCardType: null,
     country: null, nationalId: '', issueDate: null, expiryDate: null,
     isPrimary: null, vnIssuePlace: '', salutationLocal: null,
+    attachmentName: null,
   },
   biographical: {
     otherTitleTh: '', firstNameLocal: '', lastNameLocal: '',
@@ -140,6 +150,7 @@ const minimalFormData: FormData = {
     otFlag: '', standardWeeklyHours: 0, dailyWorkingHours: 0,
     workingDaysPerWeek: 0, fte: 0, holidayCalendar: '', timeProfile: '',
     timeRecordingVariant: '',
+    attachmentName: null,
     // Phase 3 new fields
     department: null, division: null, divisionLabel: null,
     costCenter: null, jobFunction: null, jobFunctionLabel: null,

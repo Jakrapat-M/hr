@@ -3297,9 +3297,9 @@
   },
   "spd_management": {
     "title": "SPD Case Management",
-    "titleTh": "การจัดการเคส SPD",
+    "titleTh": "SPD case management",
     "subtitle": "Case-load overview, escalations queue and override audit trail",
-    "subtitleTh": "ภาพรวมเคส คิวการยกระดับ และประวัติการ Override",
+    "subtitleTh": "Case-load overview, escalation queue, and override audit history",
     "persona": "SPD Specialist",
     "kpi": {
       "activeCases": "Active Cases",
@@ -3309,7 +3309,7 @@
     },
     "escalations": {
       "title": "Escalations Queue",
-      "titleTh": "คิวการยกระดับ",
+      "titleTh": "Escalations queue",
       "subtitle": "Approval requests escalated beyond normal SLA",
       "caseId": "Case ID",
       "type": "Type",
@@ -3322,7 +3322,7 @@
     },
     "overridePanel": {
       "title": "Recent Override Actions",
-      "titleTh": "รายการ Override ล่าสุด",
+      "titleTh": "Recent override actions",
       "subtitle": "Audit trail for all override actions taken by this account",
       "caseId": "Case ID",
       "action": "Action",
