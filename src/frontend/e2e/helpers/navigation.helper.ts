@@ -51,13 +51,11 @@ export async function switchLanguage(
   page: Page,
   lang: 'en' | 'th',
 ): Promise<void> {
-  const switcher = page.locator('[data-testid="language-switcher"], button:has-text("EN"), button:has-text("TH")').first();
-  await switcher.click();
-  const option = page.getByRole('option', { name: lang === 'th' ? /thai|ไทย/i : /eng|english/i }).first();
-  if (await option.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await option.click();
-  }
-  await page.waitForURL(`**/${lang}/**`, { timeout: 5000 }).catch(() => {});
+  const label = lang === 'th' ? /^ไทย$/ : /^EN$/;
+  const button = page.getByRole('button', { name: label }).first();
+  await expect(button).toBeVisible({ timeout: 5_000 });
+  await button.click();
+  await page.waitForURL(new RegExp(`/${lang}(/|$)`), { timeout: 5_000 });
 }
 
 /**

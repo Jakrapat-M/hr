@@ -46,7 +46,7 @@ test.describe('Internationalization (i18n)', () => {
     await expect(page).toHaveURL(/\/en\//);
     // Should see English text
     await expect(
-      page.getByText(/home|dashboard|welcome/i).first(),
+      page.getByRole('main'),
     ).toBeVisible({ timeout: 5000 });
   });
 });

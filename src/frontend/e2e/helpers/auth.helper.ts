@@ -12,37 +12,37 @@ interface TestUser {
 
 const TEST_USERS: Record<UserRole, TestUser> = {
   employee: {
-    username: 'emp.test@central.co.th',
-    password: 'Test1234!',
-    name: 'Somchai Jaidee',
+    username: 'employee@humi.test',
+    password: 'employee2026',
+    name: 'สมชาย ใจดี',
     employeeId: 'EMP001',
     roles: ['employee'],
   },
   manager: {
-    username: 'mgr.test@central.co.th',
-    password: 'Test1234!',
-    name: 'Siriporn Sukjai',
+    username: 'manager@humi.test',
+    password: 'manager2026',
+    name: 'พิชญ์ ม. (หัวหน้าทีม)',
     employeeId: 'MGR001',
-    roles: ['employee', 'manager'],
+    roles: ['manager', 'employee'],
   },
   hr_admin: {
-    username: 'hr.admin@central.co.th',
-    password: 'Test1234!',
-    name: 'Narong Prasert',
-    employeeId: 'HRA001',
-    roles: ['employee', 'hr_admin'],
+    username: 'admin@humi.test',
+    password: 'admin2026',
+    name: 'ผู้ดูแลระบบ HR',
+    employeeId: 'ADM001',
+    roles: ['hr_admin', 'hr_manager', 'spd', 'hrbp', 'manager', 'employee'],
   },
   hr_manager: {
-    username: 'hr.mgr@central.co.th',
-    password: 'Test1234!',
-    name: 'Wipada Thongchai',
-    employeeId: 'HRM001',
-    roles: ['employee', 'hr_admin', 'hr_manager'],
+    username: 'hris@humi.test',
+    password: 'hris2026',
+    name: 'นภัสสร (HRIS Admin)',
+    employeeId: 'HIS001',
+    roles: ['hr_manager', 'employee'],
   },
   spd: {
     username: 'spd@humi.test',
     password: 'spd2026',
-    name: 'SPD Approver',
+    name: 'ดารณี ล. (SPD)',
     employeeId: 'SPD001',
     roles: ['spd', 'employee'],
   },
@@ -53,11 +53,11 @@ const TEST_USERS: Record<UserRole, TestUser> = {
  */
 export async function loginAs(page: Page, role: UserRole): Promise<TestUser> {
   const user = TEST_USERS[role];
-  await page.goto('/auth/signin');
+  await page.goto('/en/login');
   await page.getByLabel(/email|username/i).fill(user.username);
   await page.getByLabel(/password/i).fill(user.password);
-  await page.getByRole('button', { name: /sign in|log in/i }).click();
-  await page.waitForURL('**/en/**', { timeout: 10_000 });
+  await page.locator('form button[type="submit"]').click();
+  await page.waitForURL(/\/(en|th)\/(home|admin|spd)/, { timeout: 10_000 });
   return user;
 }
 

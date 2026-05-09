@@ -402,6 +402,29 @@ export default function HumiProfileMePage({
     }
   }, [panelKey, isEditing, cancelEdit]);
 
+  // Accessibility: when entering inline edit mode, move focus into the first
+  // visible editable control instead of leaving it on a hidden/replaced Edit
+  // button. The timeout runs after the edit controls have mounted.
+  useEffect(() => {
+    if (!isEditing || panelKey !== 'personal') return;
+
+    const timeoutId = window.setTimeout(() => {
+      const controls = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          'main input:not([type="hidden"]), main select, main textarea',
+        ),
+      );
+      const firstVisibleControl = controls.find((control) => {
+        const rect = control.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && !control.closest('.hidden');
+      });
+
+      firstVisibleControl?.focus();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [panelKey, isEditing]);
+
   // Show success toast after save
   function handleSave() {
     save();
