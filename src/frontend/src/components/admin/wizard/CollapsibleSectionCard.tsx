@@ -31,7 +31,7 @@ export function CollapsibleSectionCard({
   const contentId = `${id}-content`
 
   return (
-    <section className="humi-card" aria-labelledby={`${id}-title`}>
+    <section id={id} className="humi-card" aria-labelledby={`${id}-title`}>
       <div className="flex items-start justify-between gap-3">
         <div id={`${id}-title`} className="min-w-0 flex-1">
           <SectionHeader icon={icon} eyebrow={eyebrow} title={title} sub={sub} />
