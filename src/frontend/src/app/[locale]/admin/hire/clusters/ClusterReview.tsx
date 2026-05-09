@@ -42,9 +42,19 @@ interface ClusterReviewProps {
 export default function ClusterReview({ hrbpError = false }: ClusterReviewProps) {
   const t = useTranslations('hireForm.review')
   const { formData } = useHireWizard()
-  const id  = formData.identity
-  const bio = formData.biographical
-  const rev = formData.review
+  // Defensive defaults — persisted localStorage from older app versions may be
+  // missing slices added later. Default to {}/[] so reads below never throw
+  // on stale state. (TODO: add a store-level rehydrate migration that fills
+  // missing slices from initial state instead of patching at consumer sites.)
+  const id           = formData.identity          ?? ({} as typeof formData.identity)
+  const bio          = formData.biographical      ?? ({} as typeof formData.biographical)
+  const rev          = formData.review            ?? ({} as typeof formData.review)
+  const compensation = formData.compensation      ?? ({} as typeof formData.compensation)
+  const contact      = formData.contact           ?? ({ emails: [] } as typeof formData.contact)
+  const employeeInfo = formData.employeeInfo      ?? ({} as typeof formData.employeeInfo)
+  const job          = formData.job               ?? ({} as typeof formData.job)
+  const emergencyContacts = formData.emergencyContacts ?? []
+  const dependents   = formData.dependents             ?? []
   const allEmployees = useEmployees((s) => s.all)
 
   // ── BA Personal Info rows 6-9 — EN name readonly mirror จาก Identity ─────
@@ -64,17 +74,17 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
   const identityOk     = sliceValid.identity(formData)
   const biographicalOk = sliceValid.biographical(formData)
 
-  const salary = formData.compensation.baseSalary
-    ? `${formData.compensation.baseSalary.toLocaleString('th-TH')} ${t('salarySuffix')}`
+  const salary = compensation.baseSalary
+    ? `${compensation.baseSalary.toLocaleString('th-TH')} ${t('salarySuffix')}`
     : '—'
 
   // Phase 5: derive username using same logic as User mapper (Q5 decision: from primary email)
-  const primaryEmail = formData.contact.emails.find((e) => e.isPrimary)?.value
+  const primaryEmail = (contact.emails ?? []).find((e) => e.isPrimary)?.value
   const derivedUserId = deriveUserId(id.employeeId || '')
   const derivedUsername = deriveUsername(primaryEmail, derivedUserId)
 
   return (
-    <div className="space-y-5">
+    <div id="review" className="space-y-5">
       {/* ── ยืนยันชื่อ (EN) — 4 readonly mirror fields in 2-col grid ─── */}
       <div className="humi-card">
         <SectionHeader
@@ -196,8 +206,8 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
           <SummaryRow label={t('summaryBloodType')}       value={bio.bloodType ?? '—'}          ok={biographicalOk} />
           <SummaryRow label={t('summaryMaritalStatus')}   value={bio.maritalStatus ?? '—'}      ok={biographicalOk} />
           {/* Job summary */}
-          <SummaryRow label={t('summaryEmployeeClass')}   value={formData.employeeInfo.employeeClass ?? '—'} ok={sliceValid.employeeInfo(formData)} />
-          <SummaryRow label={t('summaryPosition')}        value={formData.job.position || '—'}  ok={sliceValid.job(formData)} />
+          <SummaryRow label={t('summaryEmployeeClass')}   value={employeeInfo.employeeClass ?? '—'} ok={sliceValid.employeeInfo(formData)} />
+          <SummaryRow label={t('summaryPosition')}        value={job.position || '—'}  ok={sliceValid.job(formData)} />
           <SummaryRow label={t('summaryCompensation')}    value={salary}                        ok={sliceValid.compensation(formData)} />
           {/* HRBP assignment (mockup stub) */}
           <SummaryRow label={t('summaryHrbp')}            value={hrbpAssignee || t('summaryNotSelected')} ok={!!hrbpAssignee} />
@@ -205,16 +215,16 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
       </div>
 
       {/* ── ผู้ติดต่อฉุกเฉิน (Phase 1.4) — read-only mirror ─────────────── */}
-      {formData.emergencyContacts && formData.emergencyContacts.length > 0 && (
+      {emergencyContacts && emergencyContacts.length > 0 && (
         <div className="humi-card">
           <SectionHeader
             icon={PhoneCall}
             eyebrow="ผู้ติดต่อฉุกเฉิน"
             title="ผู้ติดต่อฉุกเฉิน / Emergency Contacts"
-            sub={`${formData.emergencyContacts.length} รายการ`}
+            sub={`${emergencyContacts.length} รายการ`}
           />
           <div className="humi-step-section space-y-3">
-            {formData.emergencyContacts.map((ec, idx) => (
+            {emergencyContacts.map((ec, idx) => (
               <div
                 key={idx}
                 className="rounded border border-hairline-soft bg-surface-muted px-4 py-3 text-sm space-y-1"
@@ -244,16 +254,16 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
       )}
 
       {/* ── บุคคลในอุปการะ (Phase 5b-4) — read-only mirror ──────────────── */}
-      {formData.dependents && formData.dependents.length > 0 && (
+      {dependents && dependents.length > 0 && (
         <div className="humi-card">
           <SectionHeader
             icon={Users}
             eyebrow="บุคคลในอุปการะ"
             title="บุคคลในอุปการะ / Dependents"
-            sub={`${formData.dependents.length} รายการ`}
+            sub={`${dependents.length} รายการ`}
           />
           <div className="humi-step-section space-y-3">
-            {formData.dependents.map((dep, idx) => {
+            {dependents.map((dep, idx) => {
               const nameEn = [dep.salutationEn, dep.firstNameEn, dep.lastNameEn].filter(Boolean).join(' ')
               const nameLocal = [dep.salutationLocal, dep.firstNameLocal, dep.lastNameLocal].filter(Boolean).join(' ')
               return (

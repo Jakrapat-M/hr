@@ -5,12 +5,12 @@ import {
   Users, Briefcase, Building2, Wallet, ClipboardList,
   CheckCircle2,
 } from 'lucide-react'
-import { useHireWizard } from '@/lib/admin/store/useHireWizard'
+import { useHireWizard, type StepValidity } from '@/lib/admin/store/useHireWizard'
 import { cn } from '@/lib/utils'
 
 interface SectionDef {
   id: string
-  validityKey: string | null
+  validityKey: keyof StepValidity | null
   icon: React.ElementType
   labelTh: string
 }
@@ -26,22 +26,22 @@ const CHECKPOINT_GROUPS: StepGroup[] = [
     step: 1,
     labelTh: 'ข้อมูลบุคคล',
     sections: [
-      { id: 'who.identity',        validityKey: 'identity',        icon: Fingerprint,  labelTh: 'ระบุตัวตน' },
-      { id: 'who.biographical',    validityKey: 'biographical',    icon: User2,        labelTh: 'ข้อมูลส่วนตัว' },
-      { id: 'who.contact',         validityKey: 'contact',         icon: Phone,        labelTh: 'ข้อมูลติดต่อ' },
-      { id: 'who.emergencyContacts', validityKey: 'emergencyContacts', icon: AlertCircle, labelTh: 'ผู้ติดต่อฉุกเฉิน' },
-      { id: 'who.globalInfo',      validityKey: 'globalInfo',      icon: Globe,        labelTh: 'ข้อมูลทั่วไป' },
-      { id: 'who.workPermit',      validityKey: 'workPermit',      icon: FileText,     labelTh: 'ใบอนุญาตทำงาน' },
-      { id: 'who.dependents',      validityKey: 'dependents',      icon: Users,        labelTh: 'บุคคลในอุปการะ' },
+      { id: 'who.identity',          validityKey: 'identity',          icon: Fingerprint,  labelTh: 'ระบุตัวตน' },
+      { id: 'who.biographical',      validityKey: 'biographical',      icon: User2,        labelTh: 'ข้อมูลส่วนตัว' },
+      { id: 'who.contact',           validityKey: 'contact',           icon: Phone,        labelTh: 'ข้อมูลติดต่อ' },
+      { id: 'who.emergencyContacts', validityKey: 'emergencyContacts', icon: AlertCircle,  labelTh: 'ผู้ติดต่อฉุกเฉิน' },
+      { id: 'who.globalInfo',        validityKey: 'globalInfo',        icon: Globe,        labelTh: 'ข้อมูลทั่วไป' },
+      { id: 'who.workPermit',        validityKey: 'workPermit',        icon: FileText,     labelTh: 'ใบอนุญาตทำงาน' },
+      { id: 'who.dependents',        validityKey: 'dependents',        icon: Users,        labelTh: 'บุคคลในอุปการะ' },
     ],
   },
   {
     step: 2,
     labelTh: 'ข้อมูลงาน',
     sections: [
-      { id: 'job.employeeInfo',  validityKey: 'employeeInfo', icon: Briefcase,  labelTh: 'ประเภทการจ้างงาน' },
-      { id: 'job.assignment',    validityKey: 'job',          icon: Building2,  labelTh: 'ตำแหน่งและสังกัด' },
-      { id: 'job.compensation',  validityKey: 'compensation', icon: Wallet,     labelTh: 'ค่าตอบแทน' },
+      { id: 'job.employeeInfo', validityKey: 'employeeInfo', icon: Briefcase, labelTh: 'ประเภทการจ้างงาน' },
+      { id: 'job.assignment',   validityKey: 'job',          icon: Building2, labelTh: 'ตำแหน่งและสังกัด' },
+      { id: 'job.compensation', validityKey: 'compensation', icon: Wallet,    labelTh: 'ค่าตอบแทน' },
     ],
   },
   {
@@ -52,6 +52,19 @@ const CHECKPOINT_GROUPS: StepGroup[] = [
     ],
   },
 ]
+
+// Retry scroll via rAF until element mounts (handles cross-step navigation where
+// the new cluster renders asynchronously after jumpTo triggers a state update).
+function tryScroll(sectionId: string, attempts = 0): void {
+  const el = document.getElementById(sectionId)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    return
+  }
+  if (attempts < 10) {
+    requestAnimationFrame(() => tryScroll(sectionId, attempts + 1))
+  }
+}
 
 export function HireCheckpointSidebar() {
   const currentStep = useHireWizard((s) => s.currentStep)
@@ -66,11 +79,7 @@ export function HireCheckpointSidebar() {
     if (step !== 3) {
       setSectionCollapsed(sectionId, false)
     }
-    // Wait one frame for the cluster to render before scrolling
-    setTimeout(() => {
-      const el = document.getElementById(sectionId)
-      el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 80)
+    requestAnimationFrame(() => tryScroll(sectionId))
   }
 
   return (
@@ -122,7 +131,7 @@ export function HireCheckpointSidebar() {
               {group.sections.map((section) => {
                 const isValid =
                   section.validityKey != null
-                    ? (stepValidity as unknown as Record<string, boolean>)[section.validityKey]
+                    ? stepValidity[section.validityKey]
                     : undefined
                 const Icon = section.icon
 
@@ -132,6 +141,7 @@ export function HireCheckpointSidebar() {
                     type="button"
                     onClick={() => handleSectionClick(group.step, section.id)}
                     disabled={locked}
+                    title={locked ? 'ต้องผ่านขั้นตอนก่อนหน้าก่อน' : undefined}
                     className={cn(
                       'flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs transition-colors',
                       locked
@@ -145,7 +155,7 @@ export function HireCheckpointSidebar() {
                       <CheckCircle2
                         size={11}
                         className="shrink-0 text-success"
-                        aria-label="ครบถ้วน"
+                        aria-label="ส่วนนี้ครบถ้วน"
                       />
                     )}
                   </button>
@@ -158,5 +168,3 @@ export function HireCheckpointSidebar() {
     </nav>
   )
 }
-
-HireCheckpointSidebar.displayName = 'HireCheckpointSidebar'
