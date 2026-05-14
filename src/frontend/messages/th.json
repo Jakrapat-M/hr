@@ -3970,6 +3970,49 @@
     "title": "เลื่อนตำแหน่ง",
     "submit": "ส่งคำขอเลื่อนตำแหน่ง"
   },
+  "admin": {
+    "payRateChange": {
+      "title": "ปรับเงินเดือน",
+      "subtitle": "ปรับเงินเดือนนอกเหนือจากการเลื่อนตำแหน่ง",
+      "sectionCompensation": "ข้อมูลค่าตอบแทน",
+      "fields": {
+        "effectiveDate": "วันที่มีผลบังคับใช้",
+        "event": "Event",
+        "eventValue": "Pay Rate Change",
+        "eventReason": "เหตุผล (Event Reason)",
+        "reasonForSalaryAdjust": "เหตุผลการปรับเงินเดือน",
+        "reasonForSalaryAdjustHelp": "เปิดใช้งานเฉพาะเมื่อ Event Reason = Salary Adjust",
+        "payGroup": "Pay Group",
+        "payrollId": "Payroll ID",
+        "amount": "จำนวน",
+        "amountTypePercent": "%",
+        "amountTypeFlat": "THB (จำนวนคงที่)",
+        "currency": "สกุลเงิน",
+        "frequency": "ความถี่",
+        "frequencyValue": "Monthly",
+        "recurringPayments": "รายการจ่ายประจำ",
+        "notes": "หมายเหตุ"
+      },
+      "buttons": {
+        "addRecurring": "เพิ่มรายการ",
+        "removeRecurring": "ลบ",
+        "cancel": "ยกเลิก",
+        "submit": "บันทึกการปรับเงินเดือน"
+      },
+      "errors": {
+        "amountPercentRange": "ระบุ 0–50 เท่านั้น",
+        "amountFlatPositive": "ระบุจำนวนเงินที่มากกว่า 0",
+        "payGroupRequired": "ต้องเลือก Pay Group",
+        "payrollIdRequired": "ต้องระบุ Payroll ID",
+        "currencyRequired": "ต้องเลือกสกุลเงิน",
+        "reasonRequired": "ต้องเลือก Event Reason",
+        "salaryAdjustReasonRequired": "ต้องเลือกเหตุผลการปรับเงินเดือน"
+      },
+      "banner": {
+        "success": "บันทึกการปรับเงินเดือนเรียบร้อยแล้ว — รอ SPD อนุมัติ"
+      }
+    }
+  },
   "hireForm": {
     "identity": {
       "sectionTitle": "ข้อมูลระบุตัวตน",

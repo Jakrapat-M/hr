@@ -4,7 +4,7 @@
 
 export type ActionKey =
   | 'probation' | 'edit' | 'transfer' | 'terminate'
-  | 'contract_renewal' | 'rehire' | 'change_type' | 'promotion' | 'acting'
+  | 'contract_renewal' | 'rehire' | 'change_type' | 'promotion' | 'payRateChange' | 'acting'
 
 export interface EmployeeStatusFacts {
   status: 'active' | 'inactive' | 'terminated'
@@ -57,6 +57,12 @@ export function actionAvailability(
       : isTerminated ? { ok: false, reason: terminated_reason }
       : { ok: false, reason: inactive_reason },
     promotion: passedProb
+      ? { ok: true }
+      : isTerminated ? { ok: false, reason: terminated_reason }
+      : isInactive ? { ok: false, reason: inactive_reason }
+      : { ok: false, reason: 'รอให้ผ่านทดลองงานก่อน' },
+    // STA-24: pay-rate change shares the same probation gate as promotion
+    payRateChange: passedProb
       ? { ok: true }
       : isTerminated ? { ok: false, reason: terminated_reason }
       : isInactive ? { ok: false, reason: inactive_reason }

@@ -4091,6 +4091,49 @@
     "title": "Promotion",
     "submit": "Submit Promotion Request"
   },
+  "admin": {
+    "payRateChange": {
+      "title": "Pay Rate Change",
+      "subtitle": "Adjust compensation outside of a promotion event",
+      "sectionCompensation": "Compensation Information",
+      "fields": {
+        "effectiveDate": "Effective date",
+        "event": "Event",
+        "eventValue": "Pay Rate Change",
+        "eventReason": "Event Reason",
+        "reasonForSalaryAdjust": "Reason for Salary Adjust",
+        "reasonForSalaryAdjustHelp": "Enabled only when Event Reason = Salary Adjust",
+        "payGroup": "Pay Group",
+        "payrollId": "Payroll ID",
+        "amount": "Amount",
+        "amountTypePercent": "%",
+        "amountTypeFlat": "THB (flat)",
+        "currency": "Currency",
+        "frequency": "Frequency",
+        "frequencyValue": "Monthly",
+        "recurringPayments": "Recurring Payments",
+        "notes": "Notes"
+      },
+      "buttons": {
+        "addRecurring": "Add row",
+        "removeRecurring": "Remove",
+        "cancel": "Cancel",
+        "submit": "Submit Pay Rate Change"
+      },
+      "errors": {
+        "amountPercentRange": "Please enter a value between 0 and 50",
+        "amountFlatPositive": "Please enter a positive amount",
+        "payGroupRequired": "Pay Group is required",
+        "payrollIdRequired": "Payroll ID is required",
+        "currencyRequired": "Currency is required",
+        "reasonRequired": "Event Reason is required",
+        "salaryAdjustReasonRequired": "Reason for Salary Adjust is required"
+      },
+      "banner": {
+        "success": "Pay rate change saved — awaiting SPD approval"
+      }
+    }
+  },
   "hireForm": {
     "identity": {
       "sectionTitle": "Identity",

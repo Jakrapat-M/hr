@@ -338,10 +338,12 @@ export default function PromotionPage() {
 
             {/* ── เหตุผลการเลื่อนตำแหน่ง (required) — BRD #95 event 5587 PRCHG group ── */}
             {/* SF source: jq '.foEventReason[] | select(.event=="5587")' sf-qas-workflow-2026-04-25.json */}
+            {/* STA-24: restrictTo=['PRCHG_PROMO'] — other PRCHG reasons live under /pay-rate-change */}
             <div style={{ marginBottom: 20 }}>
               <ReasonPicker
                 id="promotion-event-reason"
                 event="5587"
+                restrictTo={['PRCHG_PROMO']}
                 value={eventReason}
                 onChange={(code) => { setEventReason(code); setReasonError('') }}
                 required

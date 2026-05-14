@@ -30,6 +30,7 @@ import {
   Briefcase,
   RefreshCw,
   TrendingUp,
+  Wallet,
   MapPin,
   Network,
   Star,
@@ -327,6 +328,15 @@ export default function EmployeeDetailPage() {
       href: `/${locale}/admin/employees/${empId}/promotion`,
       locked: !avail.promotion.ok,
       lockReason: avail.promotion.reason,
+    },
+    {
+      // STA-24: pay-rate-change sibling CTA (split from promotion)
+      icon: Wallet,
+      label: 'ปรับเงินเดือน / Pay Rate Change',
+      desc: 'Merit Increase, Adjust Position, Salary Adjust, Salary Cuts',
+      href: `/${locale}/admin/employees/${empId}/pay-rate-change`,
+      locked: !avail.payRateChange.ok,
+      lockReason: avail.payRateChange.reason,
     },
     {
       icon: Star,
