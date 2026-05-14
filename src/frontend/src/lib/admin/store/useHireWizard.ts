@@ -499,7 +499,7 @@ const initialFormData: FormData = {
 }
 
 // Per-step Zod validity flags — populated by each Step component via onValidChange
-interface StepValidity {
+export interface StepValidity {
   identity: boolean
   biographical: boolean
   contact: boolean
@@ -572,11 +572,13 @@ const sliceValid = {
     // Only gate on the still-required fields: otherTitleTh, firstNameLocal,
     // lastNameLocal, nationality. maritalStatusSince is conditional (AUDIT #7) but
     // not required when maritalStatus is absent/SINGLE.
+    // Defensive ?? '' for stale persisted state where fields may be undefined.
+    const b = d.biographical ?? ({} as typeof d.biographical)
     return !!(
-      d.biographical.otherTitleTh.trim() &&
-      d.biographical.firstNameLocal.trim() &&
-      d.biographical.lastNameLocal.trim() &&
-      d.biographical.nationality
+      (b.otherTitleTh ?? '').trim() &&
+      (b.firstNameLocal ?? '').trim() &&
+      (b.lastNameLocal ?? '').trim() &&
+      b.nationality
     )
   },
   review: (_d: FormData) => true,

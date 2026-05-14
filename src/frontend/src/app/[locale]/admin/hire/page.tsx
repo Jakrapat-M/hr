@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/humi'
 import { WizardShell } from '@/components/admin/wizard/WizardShell'
+import { HireCheckpointSidebar } from '@/components/admin/wizard/HireCheckpointSidebar'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
 import { useHireAudit } from '@/stores/hire-audit'
 import { useAuthStore } from '@/stores/auth-store'
@@ -251,6 +252,7 @@ export default function HirePage() {
         onBack={handleBack}
         onNext={handleNext}
         onSubmit={handleSubmit}
+        sidebarContent={<HireCheckpointSidebar />}
       >
         {currentStep === 1 && <ClusterWho />}
         {currentStep === 2 && <ClusterJob />}
