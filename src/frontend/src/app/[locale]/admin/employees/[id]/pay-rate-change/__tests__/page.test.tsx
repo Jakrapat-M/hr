@@ -120,6 +120,8 @@ describe('STA-24: /pay-rate-change form renders 7 required fields', () => {
     expect(screen.getByLabelText(/Pay Group/i)).toBeInTheDocument()
     // Payroll ID
     expect(screen.getByLabelText(/Payroll ID/i)).toBeInTheDocument()
+    // Pay Component (top-level, ref-2 spec row)
+    expect(screen.getByLabelText(/^Pay Component/i)).toBeInTheDocument()
     // Amount type radios
     expect(screen.getByRole('radio', { name: 'percent' })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'flat' })).toBeInTheDocument()
@@ -189,6 +191,23 @@ describe('STA-24: Currency defaults to THB', () => {
     render(<PayRateChangePage />)
     const currency = screen.getByLabelText(/Currency/i) as HTMLSelectElement
     expect(currency.value).toBe('THB')
+  })
+})
+
+describe('STA-24: top-level Pay Component LOV has a default and is selectable', () => {
+  beforeEach(() => {
+    usePayRateApprovals.getState().clear()
+  })
+
+  it('renders with a non-empty default and accepts a new selection', () => {
+    render(<PayRateChangePage />)
+    const payComponent = screen.getByLabelText(/^Pay Component/i) as HTMLSelectElement
+    // Default is first PAY_COMPONENTS entry — non-empty
+    expect(payComponent.value).not.toBe('')
+    // Switching to another option works
+    const target = 'Transport Allowance'
+    fireEvent.change(payComponent, { target: { value: target } })
+    expect(payComponent.value).toBe(target)
   })
 })
 

@@ -180,6 +180,7 @@ export default function PayRateChangePage() {
   const [reasonForSalaryAdjust, setReasonForSalaryAdjust] = useState<string>('')
   const [payGroup, setPayGroup] = useState<string>('')
   const [payrollId, setPayrollId] = useState<string>('')
+  const [payComponent, setPayComponent] = useState<string>(PAY_COMPONENTS[0])
   const [amountType, setAmountType] = useState<PayRateAmountType>('percent')
   const [amount, setAmount] = useState<string>('')
   const [currency, setCurrency] = useState<string>('THB')
@@ -207,6 +208,7 @@ export default function PayRateChangePage() {
     (!isSalaryAdjust || !!reasonForSalaryAdjust) &&
     !!payGroup &&
     !!payrollId.trim() &&
+    !!payComponent &&
     amountValid &&
     !!currency
 
@@ -239,9 +241,7 @@ export default function PayRateChangePage() {
       reasonForSalaryAdjustCode: isSalaryAdjust ? reasonForSalaryAdjust : undefined,
       payGroup,
       payrollId: payrollId.trim(),
-      // TODO(STA-24): payComponent is part of Recurring Payments rows for now;
-      // top-level payComponent kept as empty string for shape compatibility.
-      payComponent: '',
+      payComponent,
       amountType,
       amount: amountNum,
       currency,
@@ -257,7 +257,7 @@ export default function PayRateChangePage() {
     )
   }, [
     employee, isFormValid, effectiveDate, eventReason, amountValid, amountType, amountNum,
-    isSalaryAdjust, reasonForSalaryAdjust, payGroup, payrollId, currency, recurring, notes,
+    isSalaryAdjust, reasonForSalaryAdjust, payGroup, payrollId, payComponent, currency, recurring, notes,
     addPayRateRequest, empId, actorId, actorName, router, locale,
   ])
 
@@ -338,7 +338,7 @@ export default function PayRateChangePage() {
         onEffectiveDateChange={(date) => setEffectiveDate(date)}
       >
         {() => (
-          <div className="humi-card">
+          <div className="humi-card ring-1 ring-accent-soft">
             <div className="humi-eyebrow" style={{ marginBottom: 16 }}>Compensation Information</div>
 
             {/* ── Event (read-only chip) ── */}
@@ -455,6 +455,33 @@ export default function PayRateChangePage() {
                 className="humi-input"
                 style={{ maxWidth: 320 }}
               />
+            </div>
+
+            {/* ── Pay Component (required, top-level per STA-24 spec) ── */}
+            <div style={{ marginBottom: 20 }}>
+              <label
+                htmlFor="payComponent"
+                className="text-body font-semibold text-ink"
+                style={{ display: 'block', marginBottom: 6 }}
+              >
+                Pay Component <span className="text-danger" aria-hidden>*</span>
+              </label>
+              <select
+                id="payComponent"
+                value={payComponent}
+                onChange={(e) => setPayComponent(e.target.value)}
+                aria-required
+                className={[
+                  'w-full rounded-md border px-3 py-2 text-body bg-surface text-ink',
+                  'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas',
+                  'border-hairline focus:border-accent',
+                ].join(' ')}
+                style={{ maxWidth: 320 }}
+              >
+                {PAY_COMPONENTS.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </div>
 
             {/* ── Amount type toggle + Amount (required) ── */}
