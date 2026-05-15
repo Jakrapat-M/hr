@@ -10,12 +10,38 @@ export type ProbationStatus =
   | 'extended'
   | 'escalated_ceo';
 
+// STA-23 PO v2 — outcome / decision types
+export type ProbationOutcome =
+  | 'pass_normal'
+  | 'fail_normal'
+  | 'pass_before_due'
+  | 'fail_before_due'
+  | 'extend';
+
+export type ProbationFailReason =
+  | 'performance'
+  | 'attitude'
+  | 'policy'
+  | 'skill_mismatch'
+  | 'other';
+
+export interface ProbationDecisionInput {
+  outcome: ProbationOutcome;
+  effectiveDate?: string; // ISO date — required for *_before_due + extend
+  failReason?: ProbationFailReason; // required only when outcome === 'fail_normal'
+  comment: string; // section comments
+}
+
 export interface ProbationTimelineEntry {
   actor: string;
   actorRole: string;
   action: string;
   date: string;
   comment?: string;
+  // STA-23: extended fields stored on timeline entries
+  outcome?: ProbationOutcome;
+  effectiveDate?: string;
+  failReason?: ProbationFailReason;
 }
 
 export interface ProbationCase {
@@ -357,6 +383,7 @@ export function useProbationCase(id: string) {
     }, 200);
   }, [id]);
 
+  // @deprecated use submitDecision
   const approve = useCallback(
     (comment: string) => {
       if (!probationCase) return;
@@ -382,6 +409,7 @@ export function useProbationCase(id: string) {
     [probationCase],
   );
 
+  // @deprecated use submitDecision
   const reject = useCallback((comment: string) => {
     if (!probationCase) return;
     setProbationCase({
@@ -395,5 +423,66 @@ export function useProbationCase(id: string) {
     });
   }, [probationCase]);
 
-  return { probationCase, loading, approve, reject };
+  const submitDecision = useCallback(
+    (input: ProbationDecisionInput) => {
+      if (!probationCase) return;
+      const now = new Date().toISOString();
+      const { outcome, effectiveDate, failReason, comment } = input;
+
+      const isPass = outcome === 'pass_normal' || outcome === 'pass_before_due';
+      const isFail = outcome === 'fail_normal' || outcome === 'fail_before_due';
+      const isExtend = outcome === 'extend';
+
+      let nextStatus: ProbationStatus;
+      if (isExtend) {
+        nextStatus = 'extended';
+      } else if (isPass) {
+        nextStatus = 'approved';
+      } else {
+        // isFail
+        nextStatus = 'rejected';
+      }
+
+      const actionLabel = isExtend
+        ? 'ขยายเวลาทดลองงาน'
+        : isPass
+          ? 'อนุมัติ — ผ่านทดลองงาน'
+          : 'ปฏิเสธ — ไม่ผ่านทดลองงาน';
+
+      const timelineEntry: ProbationTimelineEntry = {
+        actor: 'You',
+        actorRole: 'Manager',
+        action: actionLabel,
+        date: now,
+        comment: comment || undefined,
+        outcome,
+        effectiveDate: effectiveDate || undefined,
+        failReason: failReason || undefined,
+      };
+
+      setProbationCase({
+        ...probationCase,
+        status: nextStatus,
+        managerRemarks: comment || probationCase.managerRemarks,
+        decidedAt: now,
+        timeline: [
+          ...probationCase.timeline,
+          timelineEntry,
+          {
+            actor: 'ระบบ',
+            actorRole: 'System',
+            action: isExtend
+              ? `ขยาย probation → ถึงวันที่ ${effectiveDate ?? 'TBD'}`
+              : isPass
+                ? 'อัพเดทสถานะ → พนักงานประจำ'
+                : 'อัพเดทสถานะ → ไม่ผ่านทดลองงาน',
+            date: now,
+          },
+        ],
+      });
+    },
+    [probationCase],
+  );
+
+  return { probationCase, loading, approve, reject, submitDecision };
 }

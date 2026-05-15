@@ -14,75 +14,53 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  Clock,
   Download,
+  Send,
   Shield,
   User,
   Wallet,
-  X,
 } from 'lucide-react';
-import { useProbationCase } from '@/hooks/use-probation';
+import { useProbationCase, type ProbationOutcome, type ProbationFailReason, type ProbationDecisionInput } from '@/hooks/use-probation';
 import { formatDate } from '@/lib/date';
 
-// Humi production design hand-off — see /tmp/humi-design/hrms/project/prod-probation.jsx
-// ProbationApprove() (lines 173–428). All raw red hex from the prototype is substituted
-// with the Humi danger/warning tokens per the NO-RED guardrail in CLAUDE.md.
+// STA-23 PO v2 — Manager Approve page
+// Spec: Linear STA-23 PO comment 2026-05-15 08:32 UTC, Mockup 2 + Mockup 3
 
-type Outcome = 'pass' | 'extend' | 'no_pass';
+// ---------------------------------------------------------------------------
+// Types + LOVs
+// ---------------------------------------------------------------------------
 
-type OutcomeMeta = {
-  value: Outcome;
-  label: string;
-  sub: string;
-  icon: typeof Check;
-  // Tailwind tokens — selected border + icon-square color
-  borderClass: string;
-  iconBgSelected: string;
-  iconColorIdle: string;
-};
-
-const OUTCOMES: OutcomeMeta[] = [
-  {
-    value: 'pass',
-    label: 'ผ่านทดลองงาน',
-    sub: 'พนักงานจะถูกบรรจุเป็น Permanent',
-    icon: Check,
-    borderClass: 'border-accent',
-    iconBgSelected: 'bg-accent text-white',
-    iconColorIdle: 'text-accent',
-  },
-  {
-    value: 'extend',
-    label: 'ขยายเวลา',
-    sub: 'ทดลองต่ออีก 30–60 วัน',
-    icon: Clock,
-    borderClass: 'border-warning',
-    iconBgSelected: 'bg-warning text-white',
-    iconColorIdle: 'text-warning',
-  },
-  {
-    value: 'no_pass',
-    label: 'ไม่ผ่าน',
-    sub: 'พนักงานจะสิ้นสภาพหลังบันทึก',
-    icon: X,
-    borderClass: 'border-danger',
-    iconBgSelected: 'bg-danger text-white',
-    iconColorIdle: 'text-danger',
-  },
+// TODO(STA-23): replace fail reason LOV with real values from BA/HR
+const FAIL_REASON_OPTIONS: { value: ProbationFailReason; labelEn: string; labelTh: string }[] = [
+  { value: 'performance', labelEn: 'Performance below standard', labelTh: 'ผลงานต่ำกว่ามาตรฐาน' },
+  { value: 'attitude', labelEn: 'Attitude / Behavior issue', labelTh: 'ทัศนคติ / พฤติกรรม' },
+  { value: 'policy', labelEn: 'Policy violation', labelTh: 'ฝ่าฝืนระเบียบบริษัท' },
+  { value: 'skill_mismatch', labelEn: 'Skill mismatch', labelTh: 'ทักษะไม่ตรงกับตำแหน่ง' },
+  { value: 'other', labelEn: 'Other', labelTh: 'อื่นๆ' },
 ];
 
-const RATING_TIERS = [
-  '',
-  'ต่ำกว่ามาตรฐาน',
-  'ใกล้มาตรฐาน',
-  'ตามมาตรฐาน',
-  'เกินมาตรฐาน',
-  'ดีเยี่ยม',
-] as const;
+const OUTCOME_OPTIONS: { value: ProbationOutcome; labelEn: string; labelTh: string }[] = [
+  { value: 'pass_normal', labelEn: 'Pass probation (Normal case)', labelTh: 'ผ่านทดลองงาน (ปกติ)' },
+  { value: 'fail_normal', labelEn: 'Fail probation (Normal case)', labelTh: 'ไม่ผ่านทดลองงาน (ปกติ)' },
+  { value: 'pass_before_due', labelEn: 'Pass probation before Due (Special case)', labelTh: 'ผ่านทดลองงานก่อนกำหนด (กรณีพิเศษ)' },
+  { value: 'fail_before_due', labelEn: 'Fail probation before Due (Special case)', labelTh: 'ไม่ผ่านทดลองงานก่อนกำหนด (กรณีพิเศษ)' },
+  { value: 'extend', labelEn: 'Extend probation (Special case)', labelTh: 'ขยายเวลาทดลองงาน (กรณีพิเศษ)' },
+];
+
+// Outcomes that require effectiveDate
+const OUTCOMES_WITH_EFFECTIVE_DATE: ProbationOutcome[] = [
+  'pass_before_due',
+  'fail_before_due',
+  'extend',
+];
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function eyebrow(text: string) {
   return (
-    <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-muted">
+    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted">
       {text}
     </div>
   );
@@ -100,12 +78,22 @@ function FieldHint({ children }: { children: ReactNode }) {
   return <p className="mt-1 text-xs text-ink-muted">{children}</p>;
 }
 
+function FieldError({ children }: { children: ReactNode }) {
+  return <p className="mt-1 text-xs text-danger">{children}</p>;
+}
+
 const FIELD_INPUT_CLASS =
   'w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent-soft';
 
 const FIELD_TEXTAREA_CLASS = `${FIELD_INPUT_CLASS} resize-y min-h-[64px]`;
 
-// --- Approval chain step ---
+const FIELD_INPUT_ERROR_CLASS =
+  'w-full rounded-[var(--radius-md)] border border-danger bg-surface px-3 py-2.5 text-sm text-ink outline-none transition focus:border-danger focus:ring-2 focus:ring-danger-soft';
+
+// ---------------------------------------------------------------------------
+// Approval chain
+// ---------------------------------------------------------------------------
+
 type ApprovalStepStatus = 'done' | 'current' | 'pending';
 
 interface ApprovalStep {
@@ -115,13 +103,7 @@ interface ApprovalStep {
   icon: typeof User;
 }
 
-function ApprovalChainStep({
-  step,
-  isLast,
-}: {
-  step: ApprovalStep;
-  isLast: boolean;
-}) {
+function ApprovalChainStep({ step, isLast }: { step: ApprovalStep; isLast: boolean }) {
   const { status, icon: Icon } = step;
   const isCurrent = status === 'current';
   const isDone = status === 'done';
@@ -145,16 +127,10 @@ function ApprovalChainStep({
         {!isLast && <div className={`w-0.5 flex-1 min-h-[28px] -my-px ${connectorClass}`} />}
       </div>
       <div className="min-w-0 flex-1 pb-[18px]">
-        <div
-          className={`text-sm font-semibold ${
-            isCurrent ? 'text-accent' : 'text-ink'
-          }`}
-        >
+        <div className={`text-sm font-semibold ${isCurrent ? 'text-accent' : 'text-ink'}`}>
           {step.label}
           {isCurrent && (
-            <span className="humi-tag humi-tag--accent ml-1.5 text-[10px]">
-              กำลังดำเนินการ
-            </span>
+            <span className="humi-tag humi-tag--accent ml-1.5 text-xs">กำลังดำเนินการ</span>
           )}
         </div>
         <div className="mt-0.5 text-xs text-ink-muted">{step.sub}</div>
@@ -163,7 +139,10 @@ function ApprovalChainStep({
   );
 }
 
-// --- Days remaining computation ---
+// ---------------------------------------------------------------------------
+// Utils
+// ---------------------------------------------------------------------------
+
 function daysUntil(iso: string): number {
   const ms = new Date(iso).getTime() - Date.now();
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
@@ -176,26 +155,66 @@ function initials(name: string): string {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
+/** Returns Day-120 default for extend: one day after probationEndDate */
+function defaultExtendDate(probationEndDate?: string): string {
+  if (!probationEndDate) return '';
+  const d = new Date(probationEndDate);
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default function ProbationDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const pathname = usePathname();
   const locale = pathname.startsWith('/th') ? 'th' : 'en';
-  const { probationCase: c, loading } = useProbationCase(id);
+  const { probationCase: c, loading, submitDecision } = useProbationCase(id);
 
-  const [outcome, setOutcome] = useState<Outcome>('pass');
-  const [rating, setRating] = useState<number>(4);
-  const [strengths, setStrengths] = useState('');
-  const [improvements, setImprovements] = useState('');
-  const [recommendation, setRecommendation] = useState('');
-  const [extendDate, setExtendDate] = useState('');
-  const [extendDuration, setExtendDuration] = useState('30 วัน');
+  // Form state — PO v2 fields
+  const [outcome, setOutcome] = useState<ProbationOutcome | ''>('');
   const [effectiveDate, setEffectiveDate] = useState('');
-  const [allowance, setAllowance] = useState('');
+  const [failReason, setFailReason] = useState<ProbationFailReason | ''>('');
+  const [comment, setComment] = useState('');
+
+  // Attachment (keep from previous implementation)
   const [attachedFileName, setAttachedFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Compute days remaining + total filled-fields (for the autosave hint).
+  // Derive conditional visibility
+  const showEffectiveDate = outcome !== '' && OUTCOMES_WITH_EFFECTIVE_DATE.includes(outcome as ProbationOutcome);
+  const showFailReason = outcome === 'fail_normal';
+
+  // Effective date validation
+  const effectiveDateError = useMemo<string | null>(() => {
+    if (!showEffectiveDate || !effectiveDate || !c?.probationEndDate) return null;
+    const eff = new Date(effectiveDate).getTime();
+    const end = new Date(c.probationEndDate).getTime();
+    if (outcome === 'pass_before_due' || outcome === 'fail_before_due') {
+      if (eff >= end) return locale === 'th'
+        ? 'วันที่มีผลต้องอยู่ก่อนวันสิ้นสุดทดลองงานปกติ'
+        : 'Effective date must be BEFORE the normal pass date';
+    }
+    if (outcome === 'extend') {
+      if (eff <= end) return locale === 'th'
+        ? 'วันที่มีผลต้องอยู่หลังวันสิ้นสุดทดลองงานปกติ'
+        : 'Effective date must be AFTER the normal pass date';
+    }
+    return null;
+  }, [showEffectiveDate, effectiveDate, outcome, c?.probationEndDate, locale]);
+
+  // Submit disabled logic
+  const submitDisabled = useMemo(() => {
+    if (!outcome) return true;
+    if (showEffectiveDate && (!effectiveDate || !!effectiveDateError)) return true;
+    if (showFailReason && !failReason) return true;
+    return false;
+  }, [outcome, showEffectiveDate, effectiveDate, effectiveDateError, showFailReason, failReason]);
+
+  // Days remaining + SLA banner
   const days = useMemo(() => {
     if (!c) return 0;
     return daysUntil(c.slaDeadline ?? c.probationEndDate);
@@ -203,36 +222,34 @@ export default function ProbationDetailPage() {
 
   const showBanner = days <= 14;
 
-  const filledCount = useMemo(() => {
-    const baseFilled = [
-      outcome,
-      rating > 0,
-      strengths.trim(),
-      improvements.trim(),
-      recommendation.trim(),
-      attachedFileName,
-    ].filter(Boolean).length;
-    if (outcome === 'extend') {
-      return baseFilled + [extendDate, extendDuration].filter(Boolean).length;
+  const handleOutcomeChange = (val: ProbationOutcome) => {
+    setOutcome(val);
+    // When switching to extend, seed effectiveDate default
+    if (val === 'extend' && c?.probationEndDate) {
+      setEffectiveDate(defaultExtendDate(c.probationEndDate));
+    } else if (val !== outcome) {
+      // Reset effectiveDate on outcome change (except extend keeps its default)
+      if (val !== 'extend') setEffectiveDate('');
     }
-    if (outcome === 'pass') {
-      return baseFilled + [effectiveDate, allowance].filter(Boolean).length;
-    }
-    return baseFilled;
-  }, [
-    outcome,
-    rating,
-    strengths,
-    improvements,
-    recommendation,
-    attachedFileName,
-    extendDate,
-    extendDuration,
-    effectiveDate,
-    allowance,
-  ]);
+    if (val !== 'fail_normal') setFailReason('');
+  };
 
-  const totalFields = outcome === 'no_pass' ? 6 : 8;
+  const handleSubmit = () => {
+    if (!outcome || submitDisabled) return;
+    const input: ProbationDecisionInput = {
+      outcome: outcome as ProbationOutcome,
+      effectiveDate: showEffectiveDate ? effectiveDate : undefined,
+      failReason: showFailReason ? (failReason as ProbationFailReason) : undefined,
+      comment,
+    };
+    submitDecision(input);
+  };
+
+  const handleFilePick = (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setAttachedFileName(f.name);
+    // TODO: wire up real upload backend (document-service).
+  };
 
   if (loading) {
     return (
@@ -251,16 +268,6 @@ export default function ProbationDetailPage() {
       </div>
     );
   }
-
-  const handleFilePick = (e: ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f) setAttachedFileName(f.name);
-    // TODO: wire up real upload backend (document-service).
-  };
-
-  const tenure = c.submittedAt
-    ? formatDate(c.hireDate, 'medium', locale)
-    : formatDate(c.hireDate, 'medium', locale);
 
   const effectiveCutoff = c.probationEndDate
     ? formatDate(c.probationEndDate, 'long', locale)
@@ -295,127 +302,21 @@ export default function ProbationDetailPage() {
       timestamp: `${formatDate(entry.date, 'medium', locale)} · ${
         isSystem ? 'ระบบ Auto' : entry.actor
       }`,
-      dotClass: isWarn
-        ? 'bg-warning'
-        : isSystem
-          ? 'bg-ink-faint'
-          : 'bg-accent',
+      dotClass: isWarn ? 'bg-warning' : isSystem ? 'bg-ink-faint' : 'bg-accent',
     };
   });
 
-  // --- Outcome selector card ---
-  const renderOutcomeCard = () => (
-    <div className="humi-card">
-      <div className="mb-2">{eyebrow('ขั้นที่ 1 จาก 3')}</div>
-      <h3 className="mb-3.5 font-display text-lg font-semibold tracking-tight text-ink">
-        ผลการประเมิน <span className="text-accent">*</span>
-      </h3>
-
-      <div
-        role="radiogroup"
-        aria-label="ผลการประเมิน"
-        className="grid grid-cols-3 gap-2.5"
-      >
-        {OUTCOMES.map((o) => {
-          const Icon = o.icon;
-          const selected = outcome === o.value;
-          return (
-            <label
-              key={o.value}
-              className={`flex cursor-pointer flex-col gap-2 rounded-[var(--radius-lg)] border-[1.5px] p-4 transition ${
-                selected
-                  ? `${o.borderClass} bg-canvas-soft`
-                  : 'border-hairline bg-surface hover:border-hairline-soft'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] ${
-                    selected
-                      ? o.iconBgSelected
-                      : `bg-canvas-soft ${o.iconColorIdle}`
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                </div>
-                <input
-                  type="radio"
-                  name="outcome"
-                  value={o.value}
-                  checked={selected}
-                  onChange={() => setOutcome(o.value)}
-                  aria-label={o.label}
-                  className="h-4 w-4 cursor-pointer accent-accent"
-                />
-              </div>
-              <div>
-                <div className="text-sm font-semibold tracking-tight text-ink">
-                  {o.label}
-                </div>
-                <div className="mt-1 text-xs leading-snug text-ink-muted">{o.sub}</div>
-              </div>
-            </label>
-          );
-        })}
-      </div>
-
-      {outcome === 'extend' && (
-        <div className="mt-4 rounded-[var(--radius-md)] border border-warning bg-warning-soft p-3.5">
-          <div className="grid grid-cols-2 gap-3.5">
-            <div>
-              <FieldLabel required>ขยายถึงวันที่</FieldLabel>
-              <input
-                type="date"
-                value={extendDate}
-                onChange={(e) => setExtendDate(e.target.value)}
-                className={FIELD_INPUT_CLASS}
-              />
-              <FieldHint>ต้องไม่เกินวันเริ่มงาน + 119 วัน</FieldHint>
-            </div>
-            <div>
-              <FieldLabel required>ระยะเวลา</FieldLabel>
-              <select
-                value={extendDuration}
-                onChange={(e) => setExtendDuration(e.target.value)}
-                className={FIELD_INPUT_CLASS}
-              >
-                <option>30 วัน</option>
-                <option>45 วัน</option>
-                <option>60 วัน</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {outcome === 'pass' && (
-        <div className="mt-4 grid grid-cols-2 gap-3.5">
-          <div>
-            <FieldLabel required>วันที่บรรจุ (effective)</FieldLabel>
-            <input
-              type="date"
-              value={effectiveDate}
-              onChange={(e) => setEffectiveDate(e.target.value)}
-              className={FIELD_INPUT_CLASS}
-            />
-          </div>
-          <div>
-            <FieldLabel>Allowance (ถ้ามี)</FieldLabel>
-            <input
-              type="number"
-              value={allowance}
-              onChange={(e) => setAllowance(e.target.value)}
-              placeholder="0"
-              className={FIELD_INPUT_CLASS}
-            />
-            <FieldHint>จะส่ง Payroll อัตโนมัติ</FieldHint>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const isNoPass = outcome === 'no_pass';
+  // Effective date help text
+  const effectiveDateHelp = (() => {
+    if (outcome === 'extend') {
+      return locale === 'th'
+        ? 'กรณีขยายเวลา: ระบุวันที่หลังจากวันสิ้นสุดทดลองงานปกติ (ค่าเริ่มต้น = วันที่ 120)'
+        : 'Extend probation: please specify a date AFTER the normal pass date (default Day 120)';
+    }
+    return locale === 'th'
+      ? 'กรณีพิเศษ: ระบุวันที่ก่อนวันสิ้นสุดทดลองงานปกติ'
+      : 'Special case: please specify a date BEFORE the normal pass date';
+  })();
 
   return (
     <div className="pb-8">
@@ -449,12 +350,10 @@ export default function ProbationDetailPage() {
         >
           <AlertCircle className="h-5 w-5 flex-shrink-0" />
           <div>
-            <div className="text-sm font-semibold">
-              ใกล้ครบกำหนด — เหลือ {days} วัน
-            </div>
+            <div className="text-sm font-semibold">ใกล้ครบกำหนด — เหลือ {days} วัน</div>
             <div className="mt-0.5 text-xs">
-              กรุณาบันทึกการประเมินก่อนวันที่ {effectiveCutoff} · หลังจากนั้นระบบจะ
-              auto-pass อัตโนมัติ
+              กรุณาบันทึกการประเมินก่อนวันที่ {effectiveCutoff} · หลังจากนั้นระบบจะ auto-pass
+              อัตโนมัติ
             </div>
           </div>
         </div>
@@ -464,7 +363,7 @@ export default function ProbationDetailPage() {
       <div className="grid grid-cols-[1.6fr_1fr] gap-5">
         {/* LEFT — main form */}
         <div className="flex flex-col gap-5">
-          {/* 3a. Employee snapshot */}
+          {/* Employee snapshot */}
           <div className="humi-card humi-card--cream">
             <div className="flex items-start gap-3.5">
               <div className="humi-avatar humi-avatar--teal flex h-14 w-14 flex-shrink-0 items-center justify-center text-base">
@@ -490,88 +389,121 @@ export default function ProbationDetailPage() {
                 </div>
               </div>
               <div>
-                {eyebrow('อายุงาน')}
-                <div className="mt-1 text-sm font-semibold text-ink">{tenure}</div>
+                {eyebrow('ครบทดลองงาน')}
+                <div className="mt-1 text-sm font-semibold text-ink">
+                  {formatDate(c.probationEndDate, 'medium', locale)}
+                </div>
               </div>
               <div>
                 {eyebrow('หัวหน้าโดยตรง')}
-                <div className="mt-1 text-sm font-semibold text-ink">
-                  {c.manager.name}
-                </div>
+                <div className="mt-1 text-sm font-semibold text-ink">{c.manager.name}</div>
               </div>
             </div>
           </div>
 
-          {/* 3b. Outcome selector */}
-          {renderOutcomeCard()}
-
-          {/* 3c. Evaluation */}
+          {/* Decision form — PO v2 */}
           <div className="humi-card">
-            <div className="mb-2">{eyebrow('ขั้นที่ 2 จาก 3')}</div>
-            <h3 className="mb-3.5 font-display text-lg font-semibold tracking-tight text-ink">
-              ผลการประเมินเชิงคุณภาพ
+            {eyebrow('ผลการตัดสินใจ')}
+            <h3 className="mt-1 mb-4 font-display text-lg font-semibold tracking-tight text-ink">
+              บันทึกผลทดลองงาน
             </h3>
 
-            <div className="mb-4">
-              <FieldLabel required>คะแนนรวม</FieldLabel>
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setRating(n)}
-                    aria-label={`ให้คะแนน ${n} จาก 5`}
-                    className={`cursor-pointer border-0 bg-transparent p-0.5 text-2xl leading-none ${
-                      n <= rating ? 'text-warning' : 'text-hairline'
-                    }`}
-                  >
-                    ★
-                  </button>
-                ))}
-                <span className="ml-2 text-sm text-ink-muted">
-                  {rating}/5 — {RATING_TIERS[rating] ?? ''}
-                </span>
+            <div className="flex flex-col gap-4">
+              {/* Field 1: Final Probation Result */}
+              <div>
+                <FieldLabel required>
+                  {locale === 'th' ? 'ผลการทดลองงาน' : 'Final Probation Result'}
+                </FieldLabel>
+                <select
+                  value={outcome}
+                  onChange={(e) => handleOutcomeChange(e.target.value as ProbationOutcome)}
+                  aria-label={locale === 'th' ? 'ผลการทดลองงาน' : 'Final Probation Result'}
+                  className={FIELD_INPUT_CLASS}
+                >
+                  <option value="">
+                    {locale === 'th' ? 'เลือกผลการประเมิน...' : 'Select an outcome...'}
+                  </option>
+                  {OUTCOME_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {locale === 'th' ? o.labelTh : o.labelEn}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-3.5">
+              {/* Field 2: Effective Date (conditional — hidden for pass_normal + fail_normal) */}
+              {showEffectiveDate && (
+                <div>
+                  <FieldLabel required>
+                    {locale === 'th' ? 'วันที่มีผล' : 'Effective Date'}
+                  </FieldLabel>
+                  <input
+                    type="date"
+                    value={effectiveDate}
+                    onChange={(e) => setEffectiveDate(e.target.value)}
+                    aria-label={locale === 'th' ? 'วันที่มีผล' : 'Effective Date'}
+                    placeholder={locale === 'th' ? 'เช่น 31/12/2026' : 'e.g. 31/12/2026'}
+                    className={effectiveDateError ? FIELD_INPUT_ERROR_CLASS : FIELD_INPUT_CLASS}
+                  />
+                  {effectiveDateError ? (
+                    <FieldError>{effectiveDateError}</FieldError>
+                  ) : (
+                    <FieldHint>{effectiveDateHelp}</FieldHint>
+                  )}
+                </div>
+              )}
+
+              {/* Field 3: Reason for Fail Probation (only when outcome = fail_normal) */}
+              {showFailReason && (
+                <div>
+                  <FieldLabel required>
+                    {locale === 'th'
+                      ? 'เหตุผลการไม่ผ่านทดลองงาน (ใช้ภายในบริษัท)'
+                      : "Reason for Fail Probation (company use only)"}
+                  </FieldLabel>
+                  <select
+                    value={failReason}
+                    onChange={(e) => setFailReason(e.target.value as ProbationFailReason)}
+                    aria-label={
+                      locale === 'th'
+                        ? 'เหตุผลการไม่ผ่านทดลองงาน'
+                        : 'Reason for Fail Probation'
+                    }
+                    className={FIELD_INPUT_CLASS}
+                  >
+                    <option value="">
+                      {locale === 'th' ? 'เลือกเหตุผล...' : 'Select a reason...'}
+                    </option>
+                    {FAIL_REASON_OPTIONS.map((r) => (
+                      <option key={r.value} value={r.value}>
+                        {locale === 'th' ? r.labelTh : r.labelEn}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Field 4: Section Comments */}
               <div>
-                <FieldLabel required>จุดเด่น</FieldLabel>
+                <FieldLabel>
+                  {locale === 'th' ? "ความคิดเห็นของผู้จัดการ" : "Manager's Comments"}
+                </FieldLabel>
                 <textarea
-                  rows={2}
-                  value={strengths}
-                  onChange={(e) => setStrengths(e.target.value)}
-                  placeholder="เช่น ทำงานเร็ว ใส่ใจลูกค้า · ขายเข้าทีมได้ดี"
-                  className={FIELD_TEXTAREA_CLASS}
-                />
-              </div>
-              <div>
-                <FieldLabel required>จุดที่ต้องพัฒนา</FieldLabel>
-                <textarea
-                  rows={2}
-                  value={improvements}
-                  onChange={(e) => setImprovements(e.target.value)}
-                  placeholder="เช่น การจัดการสต็อกหลังร้าน · ต้องอบรมระบบ POS เพิ่ม"
-                  className={FIELD_TEXTAREA_CLASS}
-                />
-              </div>
-              <div>
-                <FieldLabel required>ข้อเสนอแนะ</FieldLabel>
-                <textarea
-                  rows={2}
-                  value={recommendation}
-                  onChange={(e) => setRecommendation(e.target.value)}
-                  placeholder="ข้อเสนอแนะโดยรวมต่อ HR..."
+                  rows={3}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder={locale === 'th' ? 'ระบุความเห็นเพิ่มเติม...' : 'Enter additional comments...'}
+                  aria-label={locale === 'th' ? "ความคิดเห็นของผู้จัดการ" : "Manager's Comments"}
                   className={FIELD_TEXTAREA_CLASS}
                 />
               </div>
             </div>
           </div>
 
-          {/* 3d. Attachment */}
+          {/* Attachment */}
           <div className="humi-card">
-            <div className="mb-2">{eyebrow('ขั้นที่ 3 จาก 3')}</div>
-            <h3 className="mb-3.5 font-display text-lg font-semibold tracking-tight text-ink">
+            {eyebrow('เอกสารแนบ')}
+            <h3 className="mt-1 mb-3.5 font-display text-base font-semibold tracking-tight text-ink">
               เอกสารแนบ (ถ้ามี)
             </h3>
             <button
@@ -605,7 +537,7 @@ export default function ProbationDetailPage() {
 
         {/* RIGHT — sidebar */}
         <div className="flex flex-col gap-5">
-          {/* 4a. Approval chain */}
+          {/* Approval chain */}
           <div className="humi-card">
             <div className="mb-3">{eyebrow('ขั้นตอนอนุมัติ')}</div>
             <div className="flex flex-col">
@@ -619,7 +551,7 @@ export default function ProbationDetailPage() {
             </div>
           </div>
 
-          {/* 4b. History */}
+          {/* History */}
           <div className="humi-card humi-card--cream">
             <div className="mb-2.5">{eyebrow('ประวัติเคส')}</div>
             <div className="flex flex-col gap-3">
@@ -635,15 +567,13 @@ export default function ProbationDetailPage() {
             </div>
           </div>
 
-          {/* 4c. Policy ink-card */}
+          {/* Policy ink-card */}
           <div className="humi-card humi-card--ink relative overflow-hidden">
             <div
               className="humi-blob humi-blob--teal"
               style={{ width: 80, height: 100, right: -25, bottom: -30, opacity: 0.5 }}
             />
-            <div
-              className="text-[11px] font-semibold uppercase tracking-[0.08em] text-accent"
-            >
+            <div className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
               เกณฑ์อ้างอิง
             </div>
             <h4 className="mt-2 font-display text-base font-semibold text-canvas-soft">
@@ -672,36 +602,32 @@ export default function ProbationDetailPage() {
         style={{ boxShadow: '0 -6px 20px rgba(14,27,44,0.05)' }}
       >
         <div className="text-xs text-ink-muted">
-          บันทึกร่างอัตโนมัติ ·{' '}
-          {new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} ·
-          กรอก {filledCount} จาก {totalFields} ช่อง
+          {submitDisabled
+            ? locale === 'th'
+              ? 'กรุณากรอกข้อมูลที่จำเป็นให้ครบก่อนส่ง'
+              : 'Please complete all required fields before submitting'
+            : locale === 'th'
+              ? 'พร้อมส่งผลการทดลองงาน'
+              : 'Ready to submit probation result'}
         </div>
         <div className="flex-1" />
-        <Link
-          href={`/${locale}/workflows/probation`}
-          className="humi-button humi-button--ghost"
-        >
+        <Link href={`/${locale}/workflows/probation`} className="humi-button humi-button--ghost">
           ยกเลิก
         </Link>
-        {/* TODO: persist draft to localStorage */}
-        <button type="button" className="humi-button humi-button--ghost">
-          บันทึกร่าง
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={submitDisabled}
+          aria-label={
+            locale === 'th'
+              ? 'ส่งผลทดลองงานไปยัง HRBP'
+              : 'Submit Probation Result to HRBP'
+          }
+          className="humi-button humi-button--primary disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Send className="h-3.5 w-3.5" />
+          {locale === 'th' ? 'ส่งผลทดลองงานไปยัง HRBP' : 'Submit Probation Result to HRBP'}
         </button>
-        {isNoPass ? (
-          <button
-            type="button"
-            className="humi-button"
-            style={{ background: 'var(--color-danger)', color: '#fff' }}
-          >
-            <X className="h-3.5 w-3.5" />
-            ยืนยัน ไม่ผ่านทดลองงาน
-          </button>
-        ) : (
-          <button type="button" className="humi-button humi-button--primary">
-            <Check className="h-3.5 w-3.5" />
-            อนุมัติและส่งให้ HR Admin
-          </button>
-        )}
       </div>
     </div>
   );
