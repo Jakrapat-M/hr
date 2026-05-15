@@ -13,7 +13,11 @@ export type HireAuditEntry = {
   position: string;
   company: string;
   hireDate: string;      // ISO date YYYY-MM-DD
+  directManagerId: string;          // BRD #109 Chain 2 — SH4 approver (position code)
+  directManagerEmail: string;
   hrbpEmail: string;
+  notificationRecipients: string[]; // all addresses notified for this hire (DM + HRBP)
+  approvalStep: string;             // current chain step, e.g. 'direct-manager'
   hrAdminName: string;
   hrAdminId: string;
   sentAt: string;        // ISO timestamp

@@ -282,12 +282,16 @@ export interface FormData {
     jobGradeLabel: string | null
     storeBranchCode: string | null
     hrDistrict: string | null
+    supervisorId: string | null         // Direct Manager position code — derived from job-code cascade
+    supervisorLabel: string | null
     // Time Information (Area C — SF Image 15)
     workSchedule: string
     holidayTypeCondition: string
     timeManagementStatus: string
     otFlag: string
     standardWeeklyHours: number
+    overrideStandardWeeklyHours: boolean
+    dayOffType: string
     dailyWorkingHours: number
     workingDaysPerWeek: number
     fte: number
@@ -448,12 +452,16 @@ const initialFormData: FormData = {
     jobGradeLabel: null,
     storeBranchCode: null,
     hrDistrict: null,
+    supervisorId: null,
+    supervisorLabel: null,
     // Time Information (Area C — SF Image 15)
     workSchedule: '',
     holidayTypeCondition: '',
     timeManagementStatus: '',
     otFlag: '',
     standardWeeklyHours: 40,
+    overrideStandardWeeklyHours: false,
+    dayOffType: '',
     dailyWorkingHours: 8,
     workingDaysPerWeek: 5,
     fte: 1,
@@ -869,7 +877,7 @@ export const useHireWizard = create<HireWizardState>()(
         if (!fd.job || typeof fd.job !== 'object') {
           fd.job = {}
         }
-        const jobDefaults: Record<string, null | ''> = {
+        const jobDefaults: Record<string, null | '' | boolean> = {
           department: null, division: null, divisionLabel: null,
           costCenter: null, jobFunction: null, jobFunctionLabel: null,
           corporateTitle: null, payScaleType: null, payScaleArea: null,
@@ -878,6 +886,8 @@ export const useHireWizard = create<HireWizardState>()(
           zone: null, contractEndDate: null, probationEndDate: null,
           emplStatus: null, event: null, employmentType: null,
           attachmentName: null,
+          supervisorId: null, supervisorLabel: null,
+          overrideStandardWeeklyHours: false, dayOffType: '',
         }
         for (const [k, v] of Object.entries(jobDefaults)) {
           if (!(k in fd.job)) fd.job[k] = v

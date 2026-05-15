@@ -3985,7 +3985,10 @@
       "requiredHint": "Required fields",
       "isPrimaryHint": "Is Primary = main identity document — select \"No\" only for dual-company employment (secondary card)",
       "nationalIdChecksumError": "National ID checksum invalid (mod-11 failed)",
-      "forwardDateWarning": "A future hire date requires SPD pre-approval before activation (BRD #101)"
+      "forwardDateWarning": "A future hire date requires SPD pre-approval before activation (BRD #101)",
+      "dvtPreviousId": "Previous Employee ID (DVT)",
+      "dvtPreviousIdPlaceholder": "Enter if previously an intern/DVT",
+      "dvtPreviousIdHelp": "Used to look up previous intern records and prefill matching data when available"
     },
     "biographical": {
       "sectionTitle": "Personal Information",
@@ -4099,6 +4102,7 @@
       "sectionTitle": "Job Information",
       "sectionSubtitle": "Position, branch, grade, working hours",
       "position": "Position",
+      "supervisorId": "Supervisor",
       "businessUnit": "Business Unit",
       "branch": "Store-Branch Code",
       "jobCode": "Job Code",

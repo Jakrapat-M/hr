@@ -1,7 +1,7 @@
 'use client'
 
 // StepIdentity.tsx — Cluster 1 "Who"
-// BA rows 1-19 + Personal Info row 1 = 19 input fields.
+// BA rows 1-19 + Personal Info row 1, with DVT previous ID surfaced first for rehire/intern lookup.
 // (BA row 12 employeeId is system-generated per BRD #102:2267 — NOT an input,
 // assigned on submit, surfaced on Review cluster + post-save.)
 // 12 mandatory (*), 7 optional per BA-EC-SUMMARY.md
@@ -11,8 +11,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
-import { useEmployees } from '@/lib/admin/store/useEmployees'
-import { nextEmployeeCode } from '@/lib/admin/utils/employeeCode'
 import { stepIdentitySchema, calcAge } from '@/lib/admin/validation/hireSchema'
 // BRD #14: mod-11 Thai National ID checksum — validated at UI layer to avoid blocking schema parse
 import { validateThaiNationalIdMod11, requiresThaiMod11 } from '@/lib/admin/validation/thaiNationalId'
@@ -64,20 +62,16 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
   const { formData, setStepData } = useHireWizard()
   const id = formData.identity
   const nationality = formData.biographical?.nationality ?? ''
-  const allEmployees = useEmployees((s) => s.all)
 
   // BRD #178-181 PILOT — self-service config bus: read mandatory matrix.
   // HR Admin role is 'SPD' in RoleName (CapCase). Pilot: national_id field.
   const selfServiceConfig = useSelfServiceConfig()
   const nationalIdMandatory = selfServiceConfig.isMandatory('national_id', 'SPD')
 
-  // employeeId is system-generated per BRD #102 line 2267 (Invariant I1)
-  const generatedEmployeeId = useMemo(
-    () => id.employeeId || nextEmployeeCode(allEmployees),
-    [allEmployees, id.employeeId]
-  )
-
   // ── Local field state ───────────────────────────────────────────────────────
+  const [showBirthDetails,  setShowBirthDetails]  = useState(false)
+
+  const [dvtPreviousId,     setDvtPreviousId]     = useState(formData.employeeInfo.dvtPreviousId ?? '')
   const [hireDate,          setHireDate]          = useState(id.hireDate ?? todayISO())
   const [companyCode,       setCompanyCode]       = useState(id.companyCode ?? '')
   const [eventReason,       setEventReason]       = useState(id.eventReason ?? '')
@@ -88,7 +82,7 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
   const [dateOfBirth,       setDateOfBirth]       = useState(id.dateOfBirth ?? '')
   const [countryOfBirth,    setCountryOfBirth]    = useState(id.countryOfBirth ?? '')
   const [regionOfBirth,     setRegionOfBirth]     = useState(id.regionOfBirth ?? '')
-  const [employeeId,        setEmployeeId]        = useState(id.employeeId || generatedEmployeeId)
+  const employeeId = id.employeeId ?? ''
   const [nationalIdCardType,setNationalIdCardType]= useState(id.nationalIdCardType ?? '')
   const [country,           setCountry]           = useState(id.country ?? '')
   const [nationalId,        setNationalId]        = useState(id.nationalId ?? '')
@@ -138,7 +132,7 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
       dateOfBirth:        dateOfBirth  || undefined,
       countryOfBirth:     countryOfBirth || null,
       regionOfBirth,
-      employeeId:         employeeId   || undefined,
+      employeeId:         employeeId   || '',
       nationalIdCardType: nationalIdCardType || undefined,
       country:            country      || undefined,
       nationalId:         nationalId   || undefined,
@@ -182,6 +176,11 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
 
   useEffect(() => { validate() }, [validate])
 
+  // Surface DVT Previous Employee ID on Step 1 so it is available before later sections render.
+  useEffect(() => {
+    setStepData('employeeInfo', { dvtPreviousId })
+  }, [dvtPreviousId, setStepData])
+
   // sync hireDate default ครั้งแรก
   useEffect(() => {
     if (!id.hireDate && hireDate) setStepData('identity', { hireDate })
@@ -203,6 +202,22 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+      {/* DVT Previous Employee ID — placed first to support previous internship/rehire lookup. */}
+      <fieldset className="md:col-span-2">
+        <label htmlFor="dvt-prev-id" className="humi-label">
+          {t('dvtPreviousId')}
+        </label>
+        <input
+          id="dvt-prev-id"
+          type="text"
+          value={dvtPreviousId}
+          onChange={(e) => setDvtPreviousId(e.target.value)}
+          placeholder={t('dvtPreviousIdPlaceholder')}
+          className="humi-input w-full"
+        />
+        <p className="mt-1 text-xs text-ink-faint">{t('dvtPreviousIdHelp')}</p>
+      </fieldset>
+
       {/* ─── BA row 1 — Hire Date * ─── */}
       <fieldset>
         <label htmlFor="hire-date" className="humi-label">
@@ -341,40 +356,56 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
         )}
       </fieldset>
 
-      {/* ─── BA row 9 — Country of Birth — optional ─── */}
-      <fieldset>
-        <label htmlFor="country-of-birth" className="humi-label">
-          {t('countryOfBirth')}
-        </label>
-        <select id="country-of-birth"
-          value={countryOfBirth}
-          onChange={(e) => setCountryOfBirth(e.target.value)}
-          className="humi-select w-full">
-          <option value="">{t('selectCountryPlaceholder')}</option>
-          {PICKLIST_COUNTRY_ISO.filter((c) => c.active).map((c) => (
-            <option key={c.id} value={c.id}>{c.labelTh}</option>
-          ))}
-        </select>
-      </fieldset>
+      {/* ─── BA row 9+10 — Country/Region of Birth — collapsible optional ─── */}
+      <div className="md:col-span-2">
+        <button
+          type="button"
+          onClick={() => setShowBirthDetails(v => !v)}
+          className="mb-2 inline-flex rounded-full border border-accent-soft bg-accent-soft/50 px-3 py-1 text-small font-medium text-accent transition-colors hover:bg-accent-soft"
+        >
+          {showBirthDetails ? 'ซ่อนรายละเอียดเพิ่มเติม' : 'รายละเอียดเพิ่มเติม (ประเทศที่เกิด)'}
+        </button>
+        {showBirthDetails && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+            <fieldset>
+              <label htmlFor="country-of-birth" className="humi-label">
+                {t('countryOfBirth')}
+              </label>
+              <select id="country-of-birth"
+                value={countryOfBirth}
+                onChange={(e) => setCountryOfBirth(e.target.value)}
+                className="humi-select w-full">
+                <option value="">{t('selectCountryPlaceholder')}</option>
+                {PICKLIST_COUNTRY_ISO.filter((c) => c.active).map((c) => (
+                  <option key={c.id} value={c.id}>{c.labelTh}</option>
+                ))}
+              </select>
+            </fieldset>
 
-      {/* ─── BA row 10 — Region of Birth — optional ─── */}
-      <fieldset>
-        <label htmlFor="region-of-birth" className="humi-label">
-          {t('regionOfBirth')}
-        </label>
-        <input id="region-of-birth" type="text" placeholder={t('regionOfBirthPlaceholder')}
-          value={regionOfBirth}
-          onChange={(e) => setRegionOfBirth(e.target.value)}
-          className="humi-input w-full" />
-      </fieldset>
+            <fieldset>
+              <label htmlFor="region-of-birth" className="humi-label">
+                {t('regionOfBirth')}
+              </label>
+              <input id="region-of-birth" type="text" placeholder={t('regionOfBirthPlaceholder')}
+                value={regionOfBirth}
+                onChange={(e) => setRegionOfBirth(e.target.value)}
+                className="humi-input w-full" />
+            </fieldset>
+          </div>
+        )}
+      </div>
 
       {/* BA row 12 — Employee ID: system-generated per BRD #102:2267 — readonly display */}
       <fieldset>
         <label className="humi-label">
           {t('employeeId')} <span className="text-xs text-ink-muted ml-1">({t('employeeIdAutoGenerated')})</span>
         </label>
-        <div className="humi-readonly-display px-3 py-2 bg-canvas-soft border border-hairline rounded text-ink font-mono" aria-readonly="true" aria-label={t('employeeId')}>
-          {employeeId}
+        <div
+          className="flex min-h-11 w-full items-center rounded-md border border-hairline bg-canvas-soft px-3 py-2 font-mono text-sm text-ink"
+          aria-readonly="true"
+          aria-label={t('employeeId')}
+        >
+          {employeeId || 'สร้างหลัง Submit'}
         </div>
       </fieldset>
 
@@ -460,27 +491,30 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
         )}
       </fieldset>
 
-      {/* ─── BA row 16 — Issue Date — optional ─── */}
-      <fieldset>
-        <label htmlFor="issue-date" className="humi-label">
-          {t('issueDate')}
-        </label>
-        <input id="issue-date" type="date"
-          value={issueDate}
-          onChange={(e) => setIssueDate(e.target.value)}
-          className="humi-input w-full" />
-      </fieldset>
+      {/* ─── BA row 16+17 — Issue Date + Expiry Date — hidden for NATIONAL_ID ─── */}
+      {nationalIdCardType !== 'NATIONAL_ID' && (
+        <>
+          <fieldset>
+            <label htmlFor="issue-date" className="humi-label">
+              {t('issueDate')}
+            </label>
+            <input id="issue-date" type="date"
+              value={issueDate}
+              onChange={(e) => setIssueDate(e.target.value)}
+              className="humi-input w-full" />
+          </fieldset>
 
-      {/* ─── BA row 17 — Expiry Date — optional ─── */}
-      <fieldset>
-        <label htmlFor="expiry-date" className="humi-label">
-          {t('expiryDate')}
-        </label>
-        <input id="expiry-date" type="date"
-          value={expiryDate}
-          onChange={(e) => setExpiryDate(e.target.value)}
-          className="humi-input w-full" />
-      </fieldset>
+          <fieldset>
+            <label htmlFor="expiry-date" className="humi-label">
+              {t('expiryDate')}
+            </label>
+            <input id="expiry-date" type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              className="humi-input w-full" />
+          </fieldset>
+        </>
+      )}
 
       {/* ─── BA row 18 — Is Primary * ─── */}
       <fieldset>

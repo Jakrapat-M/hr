@@ -7,6 +7,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { HireCheckpointSidebar } from '../HireCheckpointSidebar'
 
+const mockRouterPush = vi.fn()
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: mockRouterPush }),
+  usePathname: () => '/th/admin/hire',
+  useSearchParams: () => new URLSearchParams('step=1&candidateId=CAN001'),
+}))
+
 vi.mock('lucide-react', () => {
   const stub = (name: string) => ({ 'aria-hidden': _h, ...rest }: Record<string, unknown>) =>
     <span data-icon={name} {...rest} />
@@ -36,6 +44,11 @@ const mockSetSectionCollapsed = vi.fn()
 const defaultState = {
   currentStep: 1,
   maxUnlockedStep: 3,
+  formData: {
+    biographical: { nationality: null as string | null },
+    workPermit: { documentType: '', country: '', documentNumber: '', issueDate: null, expiryDate: null, arrivalDateVisa: null, ninetyDayReportVisa: null, attachmentName: '' },
+    dependents: [] as Array<{ relationshipType: string }>,
+  },
   stepValidity: {
     identity: false, biographical: false, contact: false,
     emergencyContacts: false, employeeInfo: false, job: false,
@@ -62,12 +75,40 @@ beforeEach(() => {
 })
 
 describe('HireCheckpointSidebar — render', () => {
-  it('renders 11 section buttons: 7 who + 3 job + 1 review', () => {
+  it('renders only always-applicable section buttons by default: 5 who + 3 job + 3 review', () => {
     render(<HireCheckpointSidebar />)
     expect(screen.getAllByRole('button')).toHaveLength(11)
     expect(screen.getByText('ระบุตัวตน')).toBeTruthy()
     expect(screen.getByText('ประเภทการจ้างงาน')).toBeTruthy()
-    expect(screen.getByText('สรุปและยืนยัน')).toBeTruthy()
+    expect(screen.getByText('ชื่อ-นามสกุลภาษาอังกฤษ')).toBeTruthy()
+    expect(screen.getByText('อนุมัติโดย Direct Manager + HRBP')).toBeTruthy()
+    expect(screen.getByText('สรุปข้อมูลก่อนส่ง')).toBeTruthy()
+    expect(screen.queryByText('ใบอนุญาตทำงาน')).toBeNull()
+    expect(screen.queryByText('บุคคลในอุปการะ')).toBeNull()
+  })
+
+  it('shows Work Permit checkpoint only for non-Thai nationality', () => {
+    stateOverride = {
+      formData: {
+        ...defaultState.formData,
+        biographical: { nationality: 'USA' },
+      },
+    }
+    render(<HireCheckpointSidebar />)
+    expect(screen.getByText('ใบอนุญาตทำงาน')).toBeTruthy()
+    expect(screen.queryByText('บุคคลในอุปการะ')).toBeNull()
+  })
+
+  it('shows Dependents checkpoint only when dependent rows exist', () => {
+    stateOverride = {
+      formData: {
+        ...defaultState.formData,
+        dependents: [{ relationshipType: 'Child' }],
+      },
+    }
+    render(<HireCheckpointSidebar />)
+    expect(screen.queryByText('ใบอนุญาตทำงาน')).toBeNull()
+    expect(screen.getByText('บุคคลในอุปการะ')).toBeTruthy()
   })
 })
 
@@ -77,31 +118,34 @@ describe('HireCheckpointSidebar — navigation', () => {
     fireEvent.click(screen.getByText('ระบุตัวตน'))
     expect(mockJumpTo).toHaveBeenCalledWith(1)
     expect(mockSetSectionCollapsed).toHaveBeenCalledWith('who.identity', false)
+    expect(mockRouterPush).toHaveBeenCalledWith('/th/admin/hire?step=1&candidateId=CAN001', { scroll: false })
   })
 
   it('click review section (step=3) calls jumpTo(3) but NOT setSectionCollapsed', () => {
     render(<HireCheckpointSidebar />)
-    fireEvent.click(screen.getByText('สรุปและยืนยัน'))
+    fireEvent.click(screen.getByText('สรุปข้อมูลก่อนส่ง'))
     expect(mockJumpTo).toHaveBeenCalledWith(3)
     expect(mockSetSectionCollapsed).not.toHaveBeenCalled()
+    expect(mockRouterPush).toHaveBeenCalledWith('/th/admin/hire?step=3&candidateId=CAN001', { scroll: false })
   })
 })
 
-describe('HireCheckpointSidebar — locked step', () => {
-  it('step=2 section buttons are disabled and have tooltip when maxUnlockedStep=1', () => {
+describe('HireCheckpointSidebar — free navigation', () => {
+  it('step=2 section buttons remain enabled when maxUnlockedStep=1', () => {
     stateOverride = { maxUnlockedStep: 1 }
     render(<HireCheckpointSidebar />)
     const jobBtn = screen.getByText('ประเภทการจ้างงาน').closest('button') as HTMLButtonElement
-    expect(jobBtn.disabled).toBe(true)
-    expect(jobBtn.title).toBe('ต้องผ่านขั้นตอนก่อนหน้าก่อน')
+    expect(jobBtn.disabled).toBe(false)
+    expect(jobBtn.title).toBe('')
   })
 
-  it('click on locked section does not call jumpTo or setSectionCollapsed', () => {
+  it('click on a future section navigates and opens that section', () => {
     stateOverride = { maxUnlockedStep: 1 }
     render(<HireCheckpointSidebar />)
     fireEvent.click(screen.getByText('ประเภทการจ้างงาน').closest('button')!)
-    expect(mockJumpTo).not.toHaveBeenCalled()
-    expect(mockSetSectionCollapsed).not.toHaveBeenCalled()
+    expect(mockJumpTo).toHaveBeenCalledWith(2)
+    expect(mockSetSectionCollapsed).toHaveBeenCalledWith('job.employeeInfo', false)
+    expect(mockRouterPush).toHaveBeenCalledWith('/th/admin/hire?step=2&candidateId=CAN001', { scroll: false })
   })
 })
 

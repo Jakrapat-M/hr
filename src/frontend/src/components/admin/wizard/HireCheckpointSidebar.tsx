@@ -1,5 +1,6 @@
 'use client'
 
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   Fingerprint, User2, Phone, AlertCircle, Globe, FileText,
   Users, Briefcase, Building2, Wallet, ClipboardList,
@@ -7,6 +8,10 @@ import {
 } from 'lucide-react'
 import { useHireWizard, type StepValidity } from '@/lib/admin/store/useHireWizard'
 import { cn } from '@/lib/utils'
+import {
+  shouldShowDependentsSection,
+  shouldShowWorkPermitSection,
+} from '@/lib/admin/hire/conditional-sections'
 
 interface SectionDef {
   id: string
@@ -48,7 +53,9 @@ const CHECKPOINT_GROUPS: StepGroup[] = [
     step: 3,
     labelTh: 'ตรวจสอบและส่ง',
     sections: [
-      { id: 'review', validityKey: null, icon: ClipboardList, labelTh: 'สรุปและยืนยัน' },
+      { id: 'review.enName', validityKey: null, icon: User2, labelTh: 'ชื่อ-นามสกุลภาษาอังกฤษ' },
+      { id: 'review.hrbp', validityKey: null, icon: User2, labelTh: 'อนุมัติโดย Direct Manager + HRBP' },
+      { id: 'review.summary', validityKey: null, icon: ClipboardList, labelTh: 'สรุปข้อมูลก่อนส่ง' },
     ],
   },
 ]
@@ -67,15 +74,25 @@ function tryScroll(sectionId: string, attempts = 0): void {
 }
 
 export function HireCheckpointSidebar() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const currentStep = useHireWizard((s) => s.currentStep)
-  const maxUnlockedStep = useHireWizard((s) => s.maxUnlockedStep)
   const stepValidity = useHireWizard((s) => s.stepValidity)
+  const formData = useHireWizard((s) => s.formData)
   const jumpTo = useHireWizard((s) => s.jumpTo)
   const setSectionCollapsed = useHireWizard((s) => s.setSectionCollapsed)
 
+  const mirrorStepToUrl = (step: 1 | 2 | 3) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('step', String(step))
+    const query = params.toString()
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }
+
   const handleSectionClick = (step: 1 | 2 | 3, sectionId: string) => {
-    if (step > maxUnlockedStep) return
     jumpTo(step)
+    mirrorStepToUrl(step)
     if (step !== 3) {
       setSectionCollapsed(sectionId, false)
     }
@@ -85,32 +102,24 @@ export function HireCheckpointSidebar() {
   return (
     <nav
       aria-label="หัวข้อการกรอกข้อมูล"
-      className="mt-3 space-y-3 px-1"
+      className="mt-4 space-y-4 px-1"
     >
-      <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-ink-muted">
-        Checkpoints
+      <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
+        หัวข้อย่อย
       </p>
 
       {CHECKPOINT_GROUPS.map((group) => {
-        const locked = group.step > maxUnlockedStep
         const isCurrentStep = group.step === currentStep
 
         return (
-          <div key={group.step} className="space-y-0.5">
+          <div key={group.step} className="space-y-1">
             {/* Step group label */}
-            <div
-              className={cn(
-                'flex items-center gap-1.5 px-1 py-0.5',
-                locked && 'opacity-40',
-              )}
-            >
+            <div className="flex items-center gap-2 px-1 py-0.5">
               <span
                 className={cn(
                   'flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold',
                   isCurrentStep
                     ? 'bg-accent text-white'
-                    : locked
-                    ? 'bg-canvas-soft text-ink-muted'
                     : 'bg-accent/20 text-accent',
                 )}
               >
@@ -118,7 +127,7 @@ export function HireCheckpointSidebar() {
               </span>
               <span
                 className={cn(
-                  'text-[10px] font-semibold uppercase tracking-wide',
+                  'text-[11px] font-semibold tracking-wide',
                   isCurrentStep ? 'text-accent' : 'text-ink-soft',
                 )}
               >
@@ -127,8 +136,12 @@ export function HireCheckpointSidebar() {
             </div>
 
             {/* Section items */}
-            <div className="ml-3 space-y-0.5 border-l border-hairline pl-2">
-              {group.sections.map((section) => {
+            <div className="ml-3 space-y-1 border-l border-hairline pl-2.5">
+              {group.sections.filter((section) => {
+                if (section.id === 'who.workPermit') return shouldShowWorkPermitSection(formData)
+                if (section.id === 'who.dependents') return shouldShowDependentsSection(formData)
+                return true
+              }).map((section) => {
                 const isValid =
                   section.validityKey != null
                     ? stepValidity[section.validityKey]
@@ -140,13 +153,9 @@ export function HireCheckpointSidebar() {
                     key={section.id}
                     type="button"
                     onClick={() => handleSectionClick(group.step, section.id)}
-                    disabled={locked}
-                    title={locked ? 'ต้องผ่านขั้นตอนก่อนหน้าก่อน' : undefined}
                     className={cn(
-                      'flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs transition-colors',
-                      locked
-                        ? 'cursor-not-allowed opacity-40'
-                        : 'cursor-pointer text-ink-soft hover:bg-canvas-soft hover:text-ink',
+                      'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition-colors',
+                      'cursor-pointer text-ink-soft hover:bg-canvas-soft hover:text-ink',
                     )}
                   >
                     <Icon size={11} className="shrink-0 text-ink-muted" aria-hidden />

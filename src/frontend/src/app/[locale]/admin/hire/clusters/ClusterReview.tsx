@@ -1,19 +1,16 @@
 'use client'
 
-// ClusterReview.tsx — Cluster 3 of 3 (Review + HRBP assign)
+// ClusterReview.tsx — Cluster 3 of 3 (Review + Direct Manager approval + HRBP notify)
 // - EN name confirmation (BA Personal Info rows 6-9) readonly mirror จาก Identity
-// - HRBP assignee + mail notify (audit #14, BRD #109) — mockup stub
+// - Direct Manager approval + HRBP notification (audit #14, BRD #109)
 // - Summary aggregating all clusters (Thai-primary labels)
 // Attachment ย้ายไป StepBiographical (Step 1) ใน PR #35 — ไม่ต้องซ้ำที่นี่
 // DEF-04: hrbpAssignee lifted from local state into Zustand store (BRD #109 gate)
-import { useState } from 'react'
+import type { ElementType } from 'react'
 import { useTranslations } from 'next-intl'
 import { useHireWizard, sliceValid } from '@/lib/admin/store/useHireWizard'
-import { useEmployees } from '@/lib/admin/store/useEmployees'
-import { nextEmployeeCode } from '@/lib/admin/utils/employeeCode'
 import { useHrbpRoster } from '@/lib/admin/store/hrbpRoster'
 import { deriveUserId, deriveUsername } from '@/lib/admin/hire/sfMapper/derivedRules'
-import { SectionHeader } from '@/components/admin/wizard/SectionHeader'
 import { ClipboardCheck, Check, AlertCircle, UserCheck, PhoneCall, Users } from 'lucide-react'
 
 function SummaryRow({ label, value, ok }: { label: string; value: string; ok: boolean }) {
@@ -30,6 +27,28 @@ function SummaryRow({ label, value, ok }: { label: string; value: string; ok: bo
       <span style={{ flex: 1, fontSize: 14, color: ok ? 'var(--color-ink)' : 'var(--color-ink-muted)', fontWeight: ok ? 500 : 400 }}>
         {value}
       </span>
+    </div>
+  )
+}
+
+function ReviewCheckpointHeader({
+  icon: Icon,
+  title,
+  sub,
+}: {
+  icon: ElementType
+  title: string
+  sub?: string
+}) {
+  return (
+    <div className="mb-4 flex items-start gap-2.5">
+      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+        <Icon size={14} aria-hidden />
+      </div>
+      <div className="min-w-0">
+        <h3 className="font-display text-[16px] font-semibold leading-tight text-ink">{title}</h3>
+        {sub && <p className="mt-1 text-small text-ink-muted">{sub}</p>}
+      </div>
     </div>
   )
 }
@@ -55,7 +74,6 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
   const job          = formData.job               ?? ({} as typeof formData.job)
   const emergencyContacts = formData.emergencyContacts ?? []
   const dependents   = formData.dependents             ?? []
-  const allEmployees = useEmployees((s) => s.all)
 
   // ── BA Personal Info rows 6-9 — EN name readonly mirror จาก Identity ─────
   const salutationEnReview = rev.salutationEnReview  ?? id.salutationEn  ?? ''
@@ -63,12 +81,14 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
   const lastNameEnReview   = rev.lastNameEnReview    || id.lastNameEn    || ''
   const middleNameEnReview = rev.middleNameEnReview  || id.middleNameEn  || ''
 
-  // ── HRBP assignee — BRD #109: lifted to Zustand store so wizard gate can check it
+  // ── Direct Manager approver + HRBP assignee — BRD #109
   // TODO Sprint 3: replace roster with real GET /hrbp-roster backend call
   const hrbpRoster = useHrbpRoster()
   const hrbpAssignee    = useHireWizard((s) => s.hrbpAssignee)
   const setHrbpAssignee = useHireWizard((s) => s.setHrbpAssignee)
-  const [notifyHrbp, setNotifyHrbp] = useState(true)
+  const directManagerValue = job.supervisorId
+    ? `${job.supervisorId}${job.supervisorLabel ? ` — ${job.supervisorLabel}` : ''}`
+    : t('summaryNotSelected')
 
   // ── Summary data ──────────────────────────────────────────────────────────
   const identityOk     = sliceValid.identity(formData)
@@ -82,14 +102,14 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
   const primaryEmail = (contact.emails ?? []).find((e) => e.isPrimary)?.value
   const derivedUserId = deriveUserId(id.employeeId || '')
   const derivedUsername = deriveUsername(primaryEmail, derivedUserId)
+  const employeeGroupValue = [employeeInfo.employeeGroup, employeeInfo.employeeSubGroup].filter(Boolean).join(' / ') || '—'
 
   return (
     <div id="review" className="space-y-5">
       {/* ── ยืนยันชื่อ (EN) — 4 readonly mirror fields in 2-col grid ─── */}
-      <div className="humi-card">
-        <SectionHeader
+      <div id="review.enName" className="humi-card scroll-mt-6">
+        <ReviewCheckpointHeader
           icon={UserCheck}
-          eyebrow={t('enNameSectionEyebrow')}
           title={t('enNameSectionTitle')}
           sub={t('enNameSectionSub')}
         />
@@ -124,15 +144,28 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
         </div>
       </div>
 
-      {/* ── HRBP assignee — audit #14 / BRD #109 (mockup stub) ─────────── */}
-      <div className="humi-card">
-        <SectionHeader
+      {/* ── Direct Manager approval + HRBP notification — audit #14 / BRD #109 ─────────── */}
+      <div id="review.hrbp" className="humi-card scroll-mt-6">
+        <ReviewCheckpointHeader
           icon={UserCheck}
-          eyebrow={t('hrbpSectionEyebrow')}
           title={t('hrbpSectionTitle')}
           sub={t('hrbpSectionSub')}
         />
         <div className="humi-step-section grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
+          <fieldset>
+            <label htmlFor="direct-manager-approver" className="humi-label">
+              {t('directManagerApprover')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            </label>
+            <input
+              id="direct-manager-approver"
+              type="text"
+              readOnly
+              value={directManagerValue}
+              className="humi-input w-full bg-surface-muted cursor-not-allowed"
+            />
+            <p className="mt-1 text-xs text-ink-faint">{t('directManagerHelp')}</p>
+          </fieldset>
+
           <fieldset>
             <label htmlFor="hrbp-assignee" className="humi-label">
               {t('hrbpAssignee')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
@@ -157,11 +190,11 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
             )}
           </fieldset>
 
-          <fieldset className="md:pt-7">
-            <label className="humi-row" style={{ gap: 8, cursor: 'pointer' }}>
+          <fieldset className="md:col-span-2">
+            <label className="humi-row" style={{ gap: 8 }}>
               <input type="checkbox"
-                checked={notifyHrbp}
-                onChange={(e) => setNotifyHrbp(e.target.checked)}
+                checked
+                readOnly
                 className="h-4 w-4" />
               <span className="text-body text-ink">{t('notifyHrbpLabel')}</span>
             </label>
@@ -171,10 +204,9 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
       </div>
 
       {/* ── สรุปข้อมูลก่อนส่ง ─────────────────────────────────────────── */}
-      <div className="humi-card humi-card--cream">
-        <SectionHeader
+      <div id="review.summary" className="humi-card humi-card--cream scroll-mt-6">
+        <ReviewCheckpointHeader
           icon={ClipboardCheck}
-          eyebrow={t('summarySectionEyebrow')}
           title={t('summarySectionTitle')}
           sub={t('summarySectionSub')}
         />
@@ -188,7 +220,7 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
             value={[id.salutationEn, id.firstNameEn, id.middleNameEn, id.lastNameEn].filter(Boolean).join(' ') || '—'}
             ok={identityOk} />
           <SummaryRow label={t('summaryDateOfBirth')}     value={id.dateOfBirth ?? '—'}         ok={identityOk} />
-          <SummaryRow label={t('summaryEmployeeId')}      value={id.employeeId || nextEmployeeCode(allEmployees) || '—'} ok={true} />
+          <SummaryRow label={t('summaryEmployeeId')}      value={id.employeeId || 'สร้างหลัง Submit'} ok={true} />
           {/* Phase 5: auto-derived username (Q5 decision: from primary email, fallback to employeeId) */}
           <SummaryRow label="Username" value={derivedUsername || '—'} ok={!!derivedUsername} />
           <SummaryRow label={t('summaryIdCardType')}      value={id.nationalIdCardType ?? '—'}  ok={identityOk} />
@@ -206,10 +238,10 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
           <SummaryRow label={t('summaryBloodType')}       value={bio.bloodType ?? '—'}          ok={biographicalOk} />
           <SummaryRow label={t('summaryMaritalStatus')}   value={bio.maritalStatus ?? '—'}      ok={biographicalOk} />
           {/* Job summary */}
-          <SummaryRow label={t('summaryEmployeeClass')}   value={employeeInfo.employeeClass ?? '—'} ok={sliceValid.employeeInfo(formData)} />
+          <SummaryRow label={t('summaryEmployeeClass')}   value={employeeGroupValue} ok={sliceValid.employeeInfo(formData)} />
           <SummaryRow label={t('summaryPosition')}        value={job.position || '—'}  ok={sliceValid.job(formData)} />
           <SummaryRow label={t('summaryCompensation')}    value={salary}                        ok={sliceValid.compensation(formData)} />
-          {/* HRBP assignment (mockup stub) */}
+          <SummaryRow label={t('summaryDirectManager')}    value={directManagerValue}             ok={!!job.supervisorId} />
           <SummaryRow label={t('summaryHrbp')}            value={hrbpAssignee || t('summaryNotSelected')} ok={!!hrbpAssignee} />
         </div>
       </div>
@@ -217,9 +249,8 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
       {/* ── ผู้ติดต่อฉุกเฉิน (Phase 1.4) — read-only mirror ─────────────── */}
       {emergencyContacts && emergencyContacts.length > 0 && (
         <div className="humi-card">
-          <SectionHeader
+          <ReviewCheckpointHeader
             icon={PhoneCall}
-            eyebrow="ผู้ติดต่อฉุกเฉิน"
             title="ผู้ติดต่อฉุกเฉิน / Emergency Contacts"
             sub={`${emergencyContacts.length} รายการ`}
           />
@@ -256,9 +287,8 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
       {/* ── บุคคลในอุปการะ (Phase 5b-4) — read-only mirror ──────────────── */}
       {dependents && dependents.length > 0 && (
         <div className="humi-card">
-          <SectionHeader
+          <ReviewCheckpointHeader
             icon={Users}
-            eyebrow="บุคคลในอุปการะ"
             title="บุคคลในอุปการะ / Dependents"
             sub={`${dependents.length} รายการ`}
           />
