@@ -104,19 +104,13 @@ function GateCard({ label, instructions, min, max, onConfirm, inputId }: GateCar
   const [value, setValue] = useState('')
   const [error, setError] = useState('')
 
-  const today = todayISO()
-
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value
     setValue(v)
-    if (v && v < today) {
-      setError('วันที่ต้องไม่อยู่ในอดีต กรุณาเลือกวันที่ตั้งแต่วันนี้เป็นต้นไป')
-    } else {
-      setError('')
-    }
-  }, [today])
+    setError('')
+  }, [])
 
-  const isValid = value.length === 10 && value >= today
+  const isValid = value.length === 10
 
   function handleConfirm() {
     if (!isValid) return

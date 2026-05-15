@@ -321,12 +321,13 @@ export default function EmployeeDetailPage() {
       lockReason: avail.change_type.reason,
     },
     {
+      // STA-24: collapsed tile — promotion + pay-rate-change → single canonical route
       icon: TrendingUp,
-      label: 'เลื่อนตำแหน่ง',
+      label: 'เลื่อนตำแหน่ง / ปรับเงินเดือน',
       desc: 'เลื่อนระดับ ปรับตำแหน่ง หรือปรับเงินเดือน',
-      href: `/${locale}/admin/employees/${empId}/promotion`,
-      locked: !avail.promotion.ok,
-      lockReason: avail.promotion.reason,
+      href: `/${locale}/admin/employees/${empId}/pay-rate-change`,
+      locked: !avail.payRateChange.ok,
+      lockReason: avail.payRateChange.reason,
     },
     {
       icon: Star,

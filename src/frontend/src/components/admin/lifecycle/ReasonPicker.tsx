@@ -80,6 +80,8 @@ interface ReasonPickerProps {
   id?: string
   /** mode='ess-voluntary': แสดงเฉพาะ 4 RESIGN_* codes (employee self-service). Default 'admin' = 17 TERM_* codes. */
   mode?: 'admin' | 'ess-voluntary'
+  /** STA-24: optional whitelist — intersect event's reason list with these codes. Backward-compatible (undefined = no filter). */
+  restrictTo?: string[]
 }
 
 export function ReasonPicker({
@@ -90,11 +92,15 @@ export function ReasonPicker({
   error,
   id = 'reason-picker',
   mode = 'admin',
+  restrictTo,
 }: ReasonPickerProps) {
   const allOptions = EVENT_REASONS[event] ?? []
-  const options = mode === 'ess-voluntary' && event === '5597'
-    ? ESS_VOLUNTARY_CODES
+  const modeOptions = mode === 'ess-voluntary' && event === '5597'
+    ? (ESS_VOLUNTARY_CODES as readonly string[])
     : allOptions
+  const options = restrictTo && restrictTo.length > 0
+    ? modeOptions.filter((code) => restrictTo.includes(code))
+    : modeOptions
   const labelId = `${id}-label`
 
   return (
