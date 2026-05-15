@@ -153,7 +153,7 @@ describe('I3 — gate rejects empty or invalid date on confirm', () => {
     expect(screen.queryByTestId('child-form')).toBeNull()
   })
 
-  it('past date keeps confirm disabled (I3)', () => {
+  it('past date is now accepted — confirm button enabled (STA-24: past+future unlock)', () => {
     render(
       <EffectiveDateGate>
         {({ effectiveDate }) => <ChildFixture effectiveDate={effectiveDate} />}
@@ -162,10 +162,10 @@ describe('I3 — gate rejects empty or invalid date on confirm', () => {
     const input = document.querySelector('input[type="date"]') as HTMLInputElement
     fireEvent.change(input, { target: { value: yesterdayStr() } })
     const btn = screen.getByRole('button', { name: /ยืนยันวันที่มีผล/i })
-    expect(btn).toBeDisabled()
+    expect(btn).not.toBeDisabled()
   })
 
-  it('past date shows validation error message (I3)', () => {
+  it('past date does NOT show a validation error (STA-24: past+future unlock)', () => {
     render(
       <EffectiveDateGate>
         {({ effectiveDate }) => <ChildFixture effectiveDate={effectiveDate} />}
@@ -173,8 +173,7 @@ describe('I3 — gate rejects empty or invalid date on confirm', () => {
     )
     const input = document.querySelector('input[type="date"]') as HTMLInputElement
     fireEvent.change(input, { target: { value: yesterdayStr() } })
-    expect(screen.getByRole('alert')).toBeInTheDocument()
-    expect(screen.getByRole('alert').textContent).toMatch(/ย้อนหลัง|อดีต|ตั้งแต่วันนี้/i)
+    expect(screen.queryByRole('alert')).toBeNull()
   })
 })
 
@@ -376,5 +375,63 @@ describe('I8 — child data preserved across gate reopen', () => {
 
     // Ribbon updated to new date
     expect(screen.getByTestId('effective-date-ribbon')).toBeInTheDocument()
+  })
+})
+
+// ─── STA-24: Past + future date picker unlock ─────────────────
+
+describe('STA-24 — effective date picker accepts past and future dates', () => {
+  it('no minDate restriction — picker.props.min is undefined when no min prop passed', () => {
+    render(
+      <EffectiveDateGate>
+        {({ effectiveDate }) => <ChildFixture effectiveDate={effectiveDate} />}
+      </EffectiveDateGate>,
+    )
+    const input = document.querySelector('input[type="date"]') as HTMLInputElement
+    expect(input.getAttribute('min')).toBeNull()
+  })
+
+  it('past date (2020-01-01) is accepted — confirm button enabled', () => {
+    render(
+      <EffectiveDateGate>
+        {({ effectiveDate }) => <ChildFixture effectiveDate={effectiveDate} />}
+      </EffectiveDateGate>,
+    )
+    const input = document.querySelector('input[type="date"]') as HTMLInputElement
+    fireEvent.change(input, { target: { value: '2020-01-01' } })
+    const btn = screen.getByRole('button', { name: /ยืนยันวันที่มีผล/i })
+    expect(btn).not.toBeDisabled()
+  })
+
+  it('past date (2020-01-01) confirmed — child mounts with correct effectiveDate', () => {
+    render(
+      <EffectiveDateGate>
+        {({ effectiveDate }) => <ChildFixture effectiveDate={effectiveDate} />}
+      </EffectiveDateGate>,
+    )
+    confirmGate('2020-01-01')
+    expect(screen.getByTestId('received-date').textContent).toBe('2020-01-01')
+  })
+
+  it('future date (2027-12-31) is accepted — confirm button enabled', () => {
+    render(
+      <EffectiveDateGate>
+        {({ effectiveDate }) => <ChildFixture effectiveDate={effectiveDate} />}
+      </EffectiveDateGate>,
+    )
+    const input = document.querySelector('input[type="date"]') as HTMLInputElement
+    fireEvent.change(input, { target: { value: '2027-12-31' } })
+    const btn = screen.getByRole('button', { name: /ยืนยันวันที่มีผล/i })
+    expect(btn).not.toBeDisabled()
+  })
+
+  it('future date (2027-12-31) confirmed — child mounts with correct effectiveDate', () => {
+    render(
+      <EffectiveDateGate>
+        {({ effectiveDate }) => <ChildFixture effectiveDate={effectiveDate} />}
+      </EffectiveDateGate>,
+    )
+    confirmGate('2027-12-31')
+    expect(screen.getByTestId('received-date').textContent).toBe('2027-12-31')
   })
 })

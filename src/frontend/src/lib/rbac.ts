@@ -42,6 +42,7 @@ const MODULE_ACCESS: Record<string, Role[]> = {
 'org-chart': ['employee','manager','hr_admin','hr_manager'],
  positions: ['hr_admin','hr_manager'],
 'transfer-request': ['hr_admin','hr_manager'],
+'pay-rate-change': ['hrbp','spd','hr_admin','hr_manager'],
  locations: ['hr_admin','hr_manager'],
  overtime: ['hr_admin','hr_manager'],
 'benefits': ['employee','manager','hr_admin','hr_manager'],

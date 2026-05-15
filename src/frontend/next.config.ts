@@ -30,6 +30,8 @@ const nextConfig: NextConfig = {
       { source: '/:locale(th|en)/hrbp-reports', destination: '/:locale/reports?scope=hrbp', permanent: false },
       // Hire / onboarding
       { source: '/:locale(th|en)/onboarding', destination: '/:locale/admin/hire', permanent: false },
+      // Promotion → pay-rate-change canonical route
+      { source: '/:locale(en|th)/admin/employees/:id/promotion/:path*', destination: '/:locale/admin/employees/:id/pay-rate-change/:path*', permanent: false },
     ];
   },
   webpack(config) {

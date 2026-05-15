@@ -11,14 +11,17 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { ArrowLeft, Wallet, Clock, Plus, Trash2 } from 'lucide-react'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
 import { usePayRateApprovals, PAY_RATE_STEP_LABEL, type PayRateAmountType, type PayRateRecurringPayment } from '@/stores/pay-rate-approvals'
+import { usePromotionApprovals } from '@/stores/promotion-approvals'
 import { useAuthStore } from '@/stores/auth-store'
 import { EffectiveDateGate } from '@/components/admin/EffectiveDateGate'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
 import { ReasonPicker } from '@/components/admin/lifecycle/ReasonPicker'
+import { routeToStore, type EventReason } from '@/lib/workflows/route-to-store'
 import type { MockEmployee } from '@/mocks/employees'
 
 // ─── Date helpers ────────────────────────────────────────────────────────────
@@ -64,13 +67,21 @@ const PAY_GROUPS = [
 // STA-24: Currency picklist. TODO(STA-24): confirm full ISO list with backend.
 const CURRENCIES = ['THB', 'USD', 'EUR', 'JPY', 'SGD'] as const
 
-// STA-24: Recurring Payments pay components. TODO(STA-24): backend payroll-component master.
-const PAY_COMPONENTS = [
+// STA-24: Pay Component sets — full list for PRCHG_PROMO; subset for PRCHG_SALADJ.
+const PAY_COMPONENTS_PROMO_SET = [
   'Basic',
   'Position Allowance',
   'Transport Allowance',
   'Meal Allowance',
 ] as const
+
+const PAY_COMPONENTS_SALADJ_SUBSET = [
+  'Basic',
+  'Position Allowance',
+] as const
+
+// All components union for recurring payments table (always full list)
+const PAY_COMPONENTS = PAY_COMPONENTS_PROMO_SET
 
 // ─── Employee snapshot (readonly) ────────────────────────────────────────────
 
@@ -160,7 +171,8 @@ export function isFlatAmountValid(amt: number): boolean {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-const PRCHG_OPTIONS = ['PRCHG_MERINC', 'PRCHG_ADJPOS', 'PRCHG_SALADJ', 'PRCHG_SALCUT']
+// STA-24: Show ALL PRCHG reasons including PRCHG_PROMO — form handles both via Event Reason switching.
+// routeToStore() in doSubmit decides which store gets the approval entry.
 
 export default function PayRateChangePage() {
   const params = useParams()
@@ -170,7 +182,9 @@ export default function PayRateChangePage() {
 
   const employee = useEmployees((s) => s.getById(empId)) ?? null
 
+  const t = useTranslations('admin.promotionPayChange')
   const addPayRateRequest = usePayRateApprovals((s) => s.addRequest)
+  const addPromotionRequest = usePromotionApprovals((s) => s.addRequest)
   const actorId = useAuthStore((s) => s.userId) ?? 'ADM001'
   const actorName = useAuthStore((s) => s.username) ?? 'HR Admin'
 
@@ -195,6 +209,11 @@ export default function PayRateChangePage() {
   }, [employee, payrollId])
 
   const isSalaryAdjust = eventReason === 'PRCHG_SALADJ'
+  const isPromo = eventReason === 'PRCHG_PROMO'
+  // Pay Component LOV: SALADJ uses filtered subset; all other reasons use full set
+  const payComponentOptions: readonly string[] = isSalaryAdjust
+    ? PAY_COMPONENTS_SALADJ_SUBSET
+    : PAY_COMPONENTS_PROMO_SET
 
   // Validate amount based on type
   const amountNum = amount !== '' ? parseFloat(amount) : NaN
@@ -233,23 +252,38 @@ export default function PayRateChangePage() {
     }
 
     const empName = `${employee.first_name_th} ${employee.last_name_th}`
-    addPayRateRequest({
-      employeeId: empId,
-      employeeName: empName,
-      effectiveDate,
-      eventReasonCode: eventReason as 'PRCHG_MERINC' | 'PRCHG_ADJPOS' | 'PRCHG_SALADJ' | 'PRCHG_SALCUT',
-      reasonForSalaryAdjustCode: isSalaryAdjust ? reasonForSalaryAdjust : undefined,
-      payGroup,
-      payrollId: payrollId.trim(),
-      payComponent,
-      amountType,
-      amount: amountNum,
-      currency,
-      frequency: 'Monthly', // TODO(STA-24): derive from payroll-component relation
-      recurringPayments: recurring,
-      notes: notes.trim() || undefined,
-      submittedBy: { id: actorId, name: actorName, role: 'hr_admin' },
-    })
+    const targetStore = routeToStore(eventReason as EventReason)
+
+    if (targetStore === 'promotion-approvals') {
+      addPromotionRequest({
+        employeeId: empId,
+        employeeName: empName,
+        fromPosition: employee.position_title ?? '',
+        toPosition: employee.position_title ?? '',
+        effectiveDate,
+        salaryDelta: amountType === 'percent' ? amountNum : undefined,
+        notes: notes.trim() || undefined,
+        submittedBy: { id: actorId, name: actorName, role: 'hr_admin' },
+      })
+    } else {
+      addPayRateRequest({
+        employeeId: empId,
+        employeeName: empName,
+        effectiveDate,
+        eventReasonCode: eventReason as 'PRCHG_MERINC' | 'PRCHG_ADJPOS' | 'PRCHG_SALADJ' | 'PRCHG_SALCUT',
+        reasonForSalaryAdjustCode: isSalaryAdjust ? reasonForSalaryAdjust : undefined,
+        payGroup,
+        payrollId: payrollId.trim(),
+        payComponent,
+        amountType,
+        amount: amountNum,
+        currency,
+        frequency: 'Monthly', // TODO(STA-24): derive from payroll-component relation
+        recurringPayments: recurring,
+        notes: notes.trim() || undefined,
+        submittedBy: { id: actorId, name: actorName, role: 'hr_admin' },
+      })
+    }
 
     setSubmitted(true)
     router.push(
@@ -258,7 +292,7 @@ export default function PayRateChangePage() {
   }, [
     employee, isFormValid, effectiveDate, eventReason, amountValid, amountType, amountNum,
     isSalaryAdjust, reasonForSalaryAdjust, payGroup, payrollId, payComponent, currency, recurring, notes,
-    addPayRateRequest, empId, actorId, actorName, router, locale,
+    addPayRateRequest, addPromotionRequest, empId, actorId, actorName, router, locale,
   ])
 
   if (!employee) {
@@ -363,52 +397,46 @@ export default function PayRateChangePage() {
               </span>
             </div>
 
-            {/* ── Event Reason (required) — restrictTo excludes PRCHG_PROMO ── */}
+            {/* ── Event Reason (required) — all PRCHG reasons including PRCHG_PROMO ── */}
             <div style={{ marginBottom: 20 }}>
               <ReasonPicker
                 id="pay-rate-event-reason"
                 event="5587"
-                restrictTo={PRCHG_OPTIONS}
                 value={eventReason}
-                onChange={(code) => setEventReason(code)}
+                onChange={(code) => { setEventReason(code); setReasonForSalaryAdjust('') }}
                 required
               />
             </div>
 
-            {/* ── Reason for Salary Adjust (conditional, required only if PRCHG_SALADJ) ── */}
-            <div style={{ marginBottom: 20 }}>
-              <label
-                htmlFor="reasonForSalaryAdjust"
-                className="text-body font-semibold text-ink"
-                style={{ display: 'block', marginBottom: 6 }}
-              >
-                Reason for Salary Adjust
-                {isSalaryAdjust && <span className="ml-1 text-danger" aria-hidden>*</span>}
-              </label>
-              <select
-                id="reasonForSalaryAdjust"
-                value={reasonForSalaryAdjust}
-                onChange={(e) => setReasonForSalaryAdjust(e.target.value)}
-                disabled={!isSalaryAdjust}
-                aria-required={isSalaryAdjust}
-                aria-disabled={!isSalaryAdjust}
-                className={[
-                  'w-full rounded-md border px-3 py-2 text-body bg-surface text-ink',
-                  'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas',
-                  'border-hairline focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed',
-                ].join(' ')}
-              >
-                <option value="" disabled>— เลือกเหตุผล —</option>
-                {SALARY_ADJUST_REASONS.map((r) => (
-                  <option key={r.code} value={r.code}>{r.label}</option>
-                ))}
-              </select>
-              {!isSalaryAdjust && (
-                <p className="text-small text-ink-muted" style={{ marginTop: 4 }}>
-                  เปิดใช้งานเฉพาะเมื่อ Event Reason = Salary Adjust
-                </p>
-              )}
-            </div>
+            {/* ── Reason for Salary Adjust (conditional — absent from DOM unless PRCHG_SALADJ) ── */}
+            {isSalaryAdjust && (
+              <div style={{ marginBottom: 20 }}>
+                <label
+                  htmlFor="reasonForSalaryAdjust"
+                  className="text-body font-semibold text-ink"
+                  style={{ display: 'block', marginBottom: 6 }}
+                >
+                  Reason for Salary Adjust
+                  <span className="ml-1 text-danger" aria-hidden>*</span>
+                </label>
+                <select
+                  id="reasonForSalaryAdjust"
+                  value={reasonForSalaryAdjust}
+                  onChange={(e) => setReasonForSalaryAdjust(e.target.value)}
+                  aria-required
+                  className={[
+                    'w-full rounded-md border px-3 py-2 text-body bg-surface text-ink',
+                    'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas',
+                    'border-hairline focus:border-accent',
+                  ].join(' ')}
+                >
+                  <option value="" disabled>— เลือกเหตุผล —</option>
+                  {SALARY_ADJUST_REASONS.map((r) => (
+                    <option key={r.code} value={r.code}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* ── Pay Group (required) ── */}
             <div style={{ marginBottom: 20 }}>
@@ -457,7 +485,7 @@ export default function PayRateChangePage() {
               />
             </div>
 
-            {/* ── Pay Component (required, top-level per STA-24 spec) ── */}
+            {/* ── Pay Component (required, LOV filtered by Event Reason) ── */}
             <div style={{ marginBottom: 20 }}>
               <label
                 htmlFor="payComponent"
@@ -478,10 +506,19 @@ export default function PayRateChangePage() {
                 ].join(' ')}
                 style={{ maxWidth: 320 }}
               >
-                {PAY_COMPONENTS.map((c) => (
+                {payComponentOptions.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
+              {isSalaryAdjust && (
+                <p
+                  data-testid="pay-component-filter-helper"
+                  className="text-small text-content-muted"
+                  style={{ marginTop: 4 }}
+                >
+                  {t('helper.salaryAdjustFilter')}
+                </p>
+              )}
             </div>
 
             {/* ── Amount type toggle + Amount (required) ── */}
@@ -516,7 +553,7 @@ export default function PayRateChangePage() {
                   <span className="text-body text-ink">THB (flat)</span>
                 </label>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <input
                   id="amount"
                   type="number"
@@ -531,8 +568,21 @@ export default function PayRateChangePage() {
                   aria-label="amount value"
                   aria-required
                 />
-                <span className="text-body text-ink-muted">
-                  {amountType === 'percent' ? '%' : 'THB'}
+                {/* THB currency chip — inline suffix */}
+                <span
+                  data-testid="currency-thb-chip"
+                  className="text-small font-medium bg-surface-subtle text-content-muted"
+                  style={{ padding: '4px 10px', borderRadius: 999, display: 'inline-block' }}
+                >
+                  THB
+                </span>
+                {/* Frequency Monthly chip — inline suffix */}
+                <span
+                  data-testid="frequency-monthly-chip"
+                  className="text-small font-medium bg-surface-subtle text-content-muted"
+                  style={{ padding: '4px 10px', borderRadius: 999, display: 'inline-block' }}
+                >
+                  Monthly
                 </span>
               </div>
               {amount !== '' && !amountValid && (
