@@ -4058,6 +4058,7 @@
       "sectionTitle": "ข้อมูลตำแหน่งงาน",
       "sectionSubtitle": "ตำแหน่ง สาขา เกรด เวลาทำงาน",
       "position": "ตำแหน่ง",
+      "supervisorId": "หัวหน้างาน",
       "businessUnit": "หน่วยธุรกิจ",
       "branch": "สาขา/สถานที่",
       "jobCode": "รหัสงาน",

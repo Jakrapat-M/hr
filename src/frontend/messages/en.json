@@ -4102,6 +4102,7 @@
       "sectionTitle": "Job Information",
       "sectionSubtitle": "Position, branch, grade, working hours",
       "position": "Position",
+      "supervisorId": "Supervisor",
       "businessUnit": "Business Unit",
       "branch": "Store-Branch Code",
       "jobCode": "Job Code",
