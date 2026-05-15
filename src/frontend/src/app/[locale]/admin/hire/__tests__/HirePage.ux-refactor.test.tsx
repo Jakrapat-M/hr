@@ -84,21 +84,21 @@ describe('HirePage UX refactor navigation and candidate context', () => {
     render(<HirePage />)
 
     await waitFor(() => {
-      expect(replace).toHaveBeenCalledWith('/th/admin/hire?step=1')
+      expect(replace).toHaveBeenCalledWith('/th/admin/hire?step=1', { scroll: false })
     })
     expect(screen.getByTestId('current-step')).toHaveTextContent('1')
   })
 
-  it('does not unlock a direct URL to a locked step', async () => {
+  it('honors a direct URL to any wizard step without treating navigation as validation', async () => {
     currentSearch = 'step=3&candidateId=CAN001'
 
     render(<HirePage />)
 
     await waitFor(() => {
-      expect(replace).toHaveBeenCalledWith('/th/admin/hire?step=1&candidateId=CAN001')
+      expect(useHireWizard.getState().currentStep).toBe(3)
     })
-    expect(useHireWizard.getState().currentStep).toBe(1)
     expect(useHireWizard.getState().maxUnlockedStep).toBe(1)
+    expect(replace).not.toHaveBeenCalledWith('/th/admin/hire?step=1&candidateId=CAN001', { scroll: false })
   })
 
   it('mirrors Next and Stepper actions to the URL after store navigation resolves', async () => {
@@ -108,11 +108,11 @@ describe('HirePage UX refactor navigation and candidate context', () => {
 
     await user.click(screen.getByRole('button', { name: 'Next' }))
     expect(useHireWizard.getState().currentStep).toBe(2)
-    expect(push).toHaveBeenLastCalledWith('/th/admin/hire?step=2&candidateId=CAN001')
+    expect(push).toHaveBeenLastCalledWith('/th/admin/hire?step=2&candidateId=CAN001', { scroll: false })
 
     await user.click(screen.getByRole('button', { name: 'Next' }))
     expect(useHireWizard.getState().currentStep).toBe(3)
-    expect(push).toHaveBeenLastCalledWith('/th/admin/hire?step=3&candidateId=CAN001')
+    expect(push).toHaveBeenLastCalledWith('/th/admin/hire?step=3&candidateId=CAN001', { scroll: false })
   })
 
   it('freezes candidate context once and preserves it when the URL candidate changes', async () => {
@@ -135,6 +135,6 @@ describe('HirePage UX refactor navigation and candidate context', () => {
     rerender(<HirePage />)
 
     expect(useHireWizard.getState().candidateContext?.candidateId).toBe('CAN001')
-    expect(await screen.findByText(/stored draft context was preserved/i)).toBeInTheDocument()
+    expect(await screen.findByText(/existing draft snapshot was not overwritten/i)).toBeInTheDocument()
   })
 })

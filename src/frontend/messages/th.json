@@ -3941,7 +3941,10 @@
       "requiredHint": "ช่องที่บังคับกรอก",
       "isPrimaryHint": "บัตรหลัก = เอกสารยืนยันตัวตนหลัก — เลือก \"ไม่ใช่\" เฉพาะกรณีการจ้างคู่ในเครือ (บัตรรอง)",
       "nationalIdChecksumError": "เลขบัตรประชาชนไม่ถูกต้อง (checksum mod-11 ไม่ผ่าน) / National ID checksum invalid",
-      "forwardDateWarning": "วันที่เริ่มงานล่วงหน้าต้องผ่านการอนุมัติจาก SPD ก่อนเปิดใช้งาน (BRD #101)"
+      "forwardDateWarning": "วันที่เริ่มงานล่วงหน้าต้องผ่านการอนุมัติจาก SPD ก่อนเปิดใช้งาน (BRD #101)",
+      "dvtPreviousId": "รหัสพนักงานเดิม (DVT)",
+      "dvtPreviousIdPlaceholder": "กรอกถ้าเคยฝึกงาน/เคยเป็น DVT",
+      "dvtPreviousIdHelp": "ใช้ค้นประวัติเดิมและเติมข้อมูลอัตโนมัติเมื่อพบข้อมูลพนักงานฝึกงานเดิม"
     },
     "biographical": {
       "sectionTitle": "ข้อมูลส่วนตัว",

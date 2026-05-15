@@ -80,12 +80,15 @@ export default function StepJob({ onValidChange }: StepJobProps) {
   const [timeManagementStatus,setTimeManagementStatus]= useState<string>(job.timeManagementStatus ?? '')
   const [otFlag,              setOtFlag]              = useState<string>(job.otFlag ?? '')
   const [standardWeeklyHours, setStandardWeeklyHours] = useState<number>(job.standardWeeklyHours ?? 40)
+  const [overrideStandardWeeklyHours, setOverrideStandardWeeklyHours] = useState<boolean>(job.overrideStandardWeeklyHours ?? false)
+  const [dayOffType,          setDayOffType]          = useState<string>(job.dayOffType ?? '')
   const [dailyWorkingHours,   setDailyWorkingHours]   = useState<number>(job.dailyWorkingHours ?? 8)
   const [workingDaysPerWeek,  setWorkingDaysPerWeek]  = useState<number>(job.workingDaysPerWeek ?? 5)
   const [fte,                 setFte]                 = useState<number>(job.fte ?? 1)
   const [holidayCalendar,     setHolidayCalendar]     = useState<string>(job.holidayCalendar ?? '')
   const [timeProfile,         setTimeProfile]         = useState<string>(job.timeProfile ?? '')
   const [timeRecordingVariant,setTimeRecordingVariant]= useState<string>(job.timeRecordingVariant ?? '')
+  const [showAdvanced,        setShowAdvanced]        = useState(false)
 
   // Phase 3: Job Org fields
   const [department,       setDepartment]       = useState<string>(job.department ?? '')
@@ -93,12 +96,6 @@ export default function StepJob({ onValidChange }: StepJobProps) {
   const [costCenter,       setCostCenter]       = useState<string>(job.costCenter ?? '')
   const [jobFunction,      setJobFunction]      = useState<string>(job.jobFunction ?? '')
   const [corporateTitle,   setCorporateTitle]   = useState<string>(job.corporateTitle ?? '')
-
-  // Phase 3: Compensation Org fields
-  const [payScaleType,  setPayScaleType]  = useState<string>(job.payScaleType ?? '')
-  const [payScaleArea,  setPayScaleArea]  = useState<string>(job.payScaleArea ?? '')
-  const [payScaleGroup, setPayScaleGroup] = useState<string>(job.payScaleGroup ?? '')
-  const [payScaleLevel, setPayScaleLevel] = useState<string>(job.payScaleLevel ?? '')
 
   // Phase 3: Classification fields
   const [policyProfile,     setPolicyProfile]     = useState<string>(job.policyProfile ?? '')
@@ -127,6 +124,8 @@ export default function StepJob({ onValidChange }: StepJobProps) {
       timeManagementStatus,
       otFlag,
       standardWeeklyHours,
+      overrideStandardWeeklyHours,
+      dayOffType,
       dailyWorkingHours,
       workingDaysPerWeek,
       fte,
@@ -135,8 +134,8 @@ export default function StepJob({ onValidChange }: StepJobProps) {
       timeRecordingVariant,
     })
   }, [workSchedule, holidayTypeCondition, timeManagementStatus, otFlag, standardWeeklyHours,
-      dailyWorkingHours, workingDaysPerWeek, fte, holidayCalendar, timeProfile, timeRecordingVariant,
-      setStepData])
+      overrideStandardWeeklyHours, dayOffType, dailyWorkingHours, workingDaysPerWeek, fte,
+      holidayCalendar, timeProfile, timeRecordingVariant, setStepData])
 
   // Sync Phase 3 Job Org fields to store
   useEffect(() => {
@@ -148,16 +147,6 @@ export default function StepJob({ onValidChange }: StepJobProps) {
       corporateTitle: corporateTitle || null,
     })
   }, [department, division, costCenter, jobFunction, corporateTitle, setStepData])
-
-  // Sync Phase 3 Compensation Org fields to store
-  useEffect(() => {
-    setStepData('job', {
-      payScaleType: payScaleType || null,
-      payScaleArea: payScaleArea || null,
-      payScaleGroup: payScaleGroup || null,
-      payScaleLevel: payScaleLevel || null,
-    })
-  }, [payScaleType, payScaleArea, payScaleGroup, payScaleLevel, setStepData])
 
   // Sync Phase 3 Classification fields to store
   useEffect(() => {
@@ -209,6 +198,8 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           jobGrade: null,
           jobGradeLabel: null,
           hrDistrict: null,
+          supervisorId: null,
+          supervisorLabel: null,
         })
         return
       }
@@ -226,6 +217,8 @@ export default function StepJob({ onValidChange }: StepJobProps) {
         jobGrade: cascade.jobGrade,
         jobGradeLabel: cascade.jobGradeLabel,
         hrDistrict: cascade.hrDistrict ?? null,
+        supervisorId: cascade.managerPositionCode ?? null,
+        supervisorLabel: cascade.managerPositionLabel ?? null,
       })
     },
     [setStepData],
@@ -342,6 +335,19 @@ export default function StepJob({ onValidChange }: StepJobProps) {
         </select>
       </fieldset>
 
+      {/* Supervisor ID — auto-derived from Position FO reporting line */}
+      <fieldset>
+        <label className="humi-label">
+          {t('supervisorId')}
+          <span className="text-xs text-ink-muted ml-1">{t('fromPosition')}</span>
+        </label>
+        <div className="humi-input w-full bg-canvas-soft text-ink-muted">
+          {job.supervisorId
+            ? `${job.supervisorId}${job.supervisorLabel ? ` — ${job.supervisorLabel}` : ''}`
+            : '—'}
+        </div>
+      </fieldset>
+
       {/* ── Phase 3: Job Organisation (SF EmpJob mandatory) ─────────────────────── */}
       <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
         <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">
@@ -450,71 +456,231 @@ export default function StepJob({ onValidChange }: StepJobProps) {
         </div>
       </fieldset>
 
-      {/* ── Phase 3: Compensation Organisation ──────────────────────────────────── */}
-      <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
-        <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">
-          Compensation Organisation / โครงสร้างเงินเดือน
-        </legend>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+      {/* ── ตั้งค่าขั้นสูง toggle ── */}
+      <div className="md:col-span-2 mt-2">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(v => !v)}
+          className="text-small text-accent underline-offset-2 hover:underline flex items-center gap-1 mb-3"
+        >
+          {showAdvanced ? 'ซ่อนการตั้งค่าขั้นสูง' : 'ดูการตั้งค่าขั้นสูง (Time, FTE)'}
+        </button>
+        {showAdvanced && (
+          <>
+            {/* ── Time Information (Area C — SF Image 15) ────────────────────────── */}
+            <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
+              <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">{t('timeInfoSection')}</legend>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
 
-          <fieldset>
-            <label htmlFor="pay-scale-type" className="humi-label">
-              Pay Scale Type<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <input
-              id="pay-scale-type"
-              type="text"
-              value={payScaleType}
-              onChange={(e) => setPayScaleType(e.target.value)}
-              placeholder="เช่น TH01"
-              className="humi-input w-full"
-            />
-          </fieldset>
+                {/* ตารางการทำงาน */}
+                <fieldset>
+                  <label htmlFor="work-schedule" className="humi-label">
+                    {t('workSchedule')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                  </label>
+                  <select
+                    id="work-schedule"
+                    value={workSchedule}
+                    onChange={(e) => setWorkSchedule(e.target.value)}
+                    className="humi-select w-full"
+                  >
+                    <option value="">{t('selectWorkSchedule')}</option>
+                    <option value="D05H0800">D05H0800 (มาตรฐาน 5 วัน × 8 ชั่วโมง)</option>
+                    <option value="D06H0700">D06H0700 (6 วัน × 7 ชั่วโมง)</option>
+                    <option value="D05H0900">D05H0900 (5 วัน × 9 ชั่วโมง)</option>
+                  </select>
+                </fieldset>
 
-          <fieldset>
-            <label htmlFor="pay-scale-area" className="humi-label">
-              Pay Scale Area<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <input
-              id="pay-scale-area"
-              type="text"
-              value={payScaleArea}
-              onChange={(e) => setPayScaleArea(e.target.value)}
-              placeholder="เช่น 01"
-              className="humi-input w-full"
-            />
-          </fieldset>
+                {/* ประเภทวันหยุด */}
+                <fieldset>
+                  <label htmlFor="holiday-type" className="humi-label">
+                    {t('holidayTypeCondition')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                  </label>
+                  <select
+                    id="holiday-type"
+                    value={holidayTypeCondition}
+                    onChange={(e) => setHolidayTypeCondition(e.target.value)}
+                    className="humi-select w-full"
+                  >
+                    <option value="">{t('selectHolidayType')}</option>
+                    <option value="HO">HO (ปฏิทินสำนักงานใหญ่)</option>
+                    <option value="STORE">STORE (ปฏิทินสาขา)</option>
+                    <option value="CALL_CENTER">CALL_CENTER (ปฏิทิน call center)</option>
+                  </select>
+                </fieldset>
 
-          <fieldset>
-            <label htmlFor="pay-scale-group" className="humi-label">
-              Pay Scale Group<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <input
-              id="pay-scale-group"
-              type="text"
-              value={payScaleGroup}
-              onChange={(e) => setPayScaleGroup(e.target.value)}
-              placeholder="เช่น TH_MGMT"
-              className="humi-input w-full"
-            />
-          </fieldset>
+                {/* สถานะจัดการเวลา */}
+                <fieldset>
+                  <label htmlFor="time-mgmt-status" className="humi-label">
+                    {t('timeManagementStatus')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                  </label>
+                  <select
+                    id="time-mgmt-status"
+                    value={timeManagementStatus}
+                    onChange={(e) => setTimeManagementStatus(e.target.value)}
+                    className="humi-select w-full"
+                  >
+                    <option value="">{t('selectTimeManagement')}</option>
+                    <option value="9">9 — Time Eval (มาตรฐาน)</option>
+                    <option value="7">7 — PDC</option>
+                    <option value="0">0 — ไม่มี</option>
+                  </select>
+                </fieldset>
 
-          <fieldset>
-            <label htmlFor="pay-scale-level" className="humi-label">
-              Pay Scale Level<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <input
-              id="pay-scale-level"
-              type="text"
-              value={payScaleLevel}
-              onChange={(e) => setPayScaleLevel(e.target.value)}
-              placeholder="เช่น 08"
-              className="humi-input w-full"
-            />
-          </fieldset>
+                {/* สถานะ OT */}
+                <fieldset>
+                  <label htmlFor="ot-flag" className="humi-label">
+                    {t('otFlag')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                  </label>
+                  <select
+                    id="ot-flag"
+                    value={otFlag}
+                    onChange={(e) => setOtFlag(e.target.value)}
+                    className="humi-select w-full"
+                  >
+                    <option value="">{t('selectOtFlag')}</option>
+                    <option value="YES">{t('otYes')}</option>
+                    <option value="NO">{t('otNo')}</option>
+                  </select>
+                </fieldset>
 
-        </div>
-      </fieldset>
+                {/* ชั่วโมงทำงานต่อสัปดาห์ */}
+                <fieldset>
+                  <label htmlFor="weekly-hours" className="humi-label">{t('standardWeeklyHours')}</label>
+                  <input
+                    id="weekly-hours"
+                    type="number"
+                    min={0}
+                    max={168}
+                    value={standardWeeklyHours}
+                    onChange={(e) => setStandardWeeklyHours(Number(e.target.value))}
+                    className="humi-input w-full"
+                  />
+                </fieldset>
+
+                {/* Override Standard Weekly Hours */}
+                <fieldset>
+                  <label htmlFor="override-weekly-hours" className="humi-label">{t('overrideStandardWeeklyHours')}</label>
+                  <select
+                    id="override-weekly-hours"
+                    value={overrideStandardWeeklyHours ? 'YES' : 'NO'}
+                    onChange={(e) => setOverrideStandardWeeklyHours(e.target.value === 'YES')}
+                    className="humi-select w-full"
+                  >
+                    <option value="NO">{t('overrideNo')}</option>
+                    <option value="YES">{t('overrideYes')}</option>
+                  </select>
+                </fieldset>
+
+                {/* Day off Type */}
+                <fieldset>
+                  <label htmlFor="day-off-type" className="humi-label">{t('dayOffType')}</label>
+                  <select
+                    id="day-off-type"
+                    value={dayOffType}
+                    onChange={(e) => setDayOffType(e.target.value)}
+                    className="humi-select w-full"
+                  >
+                    <option value="">{t('selectDayOffType')}</option>
+                    <option value="FIXED">{t('dayOffFixed')}</option>
+                    <option value="SHIFT">{t('dayOffShift')}</option>
+                    <option value="ROTATION">{t('dayOffRotation')}</option>
+                  </select>
+                </fieldset>
+
+                {/* ชั่วโมงทำงานต่อวัน (SF: EmpJob.customDouble1 — Daily Working Hours) */}
+                <fieldset>
+                  <label htmlFor="daily-hours" className="humi-label">{t('dailyWorkingHours')}</label>
+                  <input
+                    id="daily-hours"
+                    type="number"
+                    min={0}
+                    max={24}
+                    value={dailyWorkingHours}
+                    onChange={(e) => setDailyWorkingHours(Number(e.target.value))}
+                    className="humi-input w-full"
+                  />
+                </fieldset>
+
+                {/* วันทำงานต่อสัปดาห์ */}
+                <fieldset>
+                  <label htmlFor="work-days" className="humi-label">{t('workingDaysPerWeek')}</label>
+                  <input
+                    id="work-days"
+                    type="number"
+                    min={0}
+                    max={7}
+                    value={workingDaysPerWeek}
+                    onChange={(e) => setWorkingDaysPerWeek(Number(e.target.value))}
+                    className="humi-input w-full"
+                  />
+                </fieldset>
+
+                {/* FTE (computed) */}
+                <fieldset>
+                  <label htmlFor="fte" className="humi-label">
+                    {t('fte')} <span className="text-xs text-ink-muted ml-1">{t('fteHint')}</span>
+                  </label>
+                  <input
+                    id="fte"
+                    type="number"
+                    value={fte}
+                    readOnly
+                    className="humi-input w-full bg-canvas-soft"
+                  />
+                </fieldset>
+
+                {/* ปฏิทินวันหยุด */}
+                <fieldset>
+                  <label htmlFor="holiday-cal" className="humi-label">{t('holidayCalendar')}</label>
+                  <select
+                    id="holiday-cal"
+                    value={holidayCalendar}
+                    onChange={(e) => setHolidayCalendar(e.target.value)}
+                    className="humi-select w-full"
+                  >
+                    <option value="">{t('selectHolidayCalendar')}</option>
+                    <option value="TH_PUBLIC">ปฏิทินวันหยุดราชการไทย</option>
+                    <option value="CG_CORP">ปฏิทิน Central Group Corporate</option>
+                  </select>
+                </fieldset>
+
+                {/* Time Profile */}
+                <fieldset>
+                  <label htmlFor="time-profile" className="humi-label">{t('timeProfile')}</label>
+                  <select
+                    id="time-profile"
+                    value={timeProfile}
+                    onChange={(e) => setTimeProfile(e.target.value)}
+                    className="humi-select w-full"
+                  >
+                    <option value="">{t('selectTimeProfile')}</option>
+                    <option value="TP_STD">TP_STD — มาตรฐาน</option>
+                    <option value="TP_FLEX">TP_FLEX — Flexible</option>
+                    <option value="TP_SHIFT">TP_SHIFT — กะ</option>
+                  </select>
+                </fieldset>
+
+                {/* รูปแบบการบันทึกเวลา */}
+                <fieldset>
+                  <label htmlFor="time-variant" className="humi-label">{t('timeRecordingVariant')}</label>
+                  <select
+                    id="time-variant"
+                    value={timeRecordingVariant}
+                    onChange={(e) => setTimeRecordingVariant(e.target.value)}
+                    className="humi-select w-full"
+                  >
+                    <option value="">{t('selectTimeVariant')}</option>
+                    <option value="01">01 — ระบบสแกนนิ้ว</option>
+                    <option value="02">02 — Clock-in app</option>
+                    <option value="03">03 — Manual</option>
+                  </select>
+                </fieldset>
+
+              </div>
+            </fieldset>
+          </>
+        )}
+      </div>
 
       {/* ── Phase 3: Classification / Identifiers ───────────────────────────────── */}
       <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
@@ -674,188 +840,6 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               onChange={(e) => setProbationEndDate(e.target.value)}
               className="humi-input w-full"
             />
-          </fieldset>
-
-        </div>
-      </fieldset>
-
-      {/* ── Time Information (Area C — SF Image 15) ────────────────────────── */}
-      <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
-        <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">{t('timeInfoSection')}</legend>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-
-          {/* ตารางการทำงาน */}
-          <fieldset>
-            <label htmlFor="work-schedule" className="humi-label">
-              {t('workSchedule')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <select
-              id="work-schedule"
-              value={workSchedule}
-              onChange={(e) => setWorkSchedule(e.target.value)}
-              className="humi-select w-full"
-            >
-              <option value="">{t('selectWorkSchedule')}</option>
-              <option value="D05H0800">D05H0800 (มาตรฐาน 5 วัน × 8 ชั่วโมง)</option>
-              <option value="D06H0700">D06H0700 (6 วัน × 7 ชั่วโมง)</option>
-              <option value="D05H0900">D05H0900 (5 วัน × 9 ชั่วโมง)</option>
-            </select>
-          </fieldset>
-
-          {/* ประเภทวันหยุด */}
-          <fieldset>
-            <label htmlFor="holiday-type" className="humi-label">
-              {t('holidayTypeCondition')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <select
-              id="holiday-type"
-              value={holidayTypeCondition}
-              onChange={(e) => setHolidayTypeCondition(e.target.value)}
-              className="humi-select w-full"
-            >
-              <option value="">{t('selectHolidayType')}</option>
-              <option value="HO">HO (ปฏิทินสำนักงานใหญ่)</option>
-              <option value="STORE">STORE (ปฏิทินสาขา)</option>
-              <option value="CALL_CENTER">CALL_CENTER (ปฏิทิน call center)</option>
-            </select>
-          </fieldset>
-
-          {/* สถานะจัดการเวลา */}
-          <fieldset>
-            <label htmlFor="time-mgmt-status" className="humi-label">
-              {t('timeManagementStatus')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <select
-              id="time-mgmt-status"
-              value={timeManagementStatus}
-              onChange={(e) => setTimeManagementStatus(e.target.value)}
-              className="humi-select w-full"
-            >
-              <option value="">{t('selectTimeManagement')}</option>
-              <option value="9">9 — Time Eval (มาตรฐาน)</option>
-              <option value="7">7 — PDC</option>
-              <option value="0">0 — ไม่มี</option>
-            </select>
-          </fieldset>
-
-          {/* สถานะ OT */}
-          <fieldset>
-            <label htmlFor="ot-flag" className="humi-label">
-              {t('otFlag')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
-            </label>
-            <select
-              id="ot-flag"
-              value={otFlag}
-              onChange={(e) => setOtFlag(e.target.value)}
-              className="humi-select w-full"
-            >
-              <option value="">{t('selectOtFlag')}</option>
-              <option value="YES">{t('otYes')}</option>
-              <option value="NO">{t('otNo')}</option>
-            </select>
-          </fieldset>
-
-          {/* ชั่วโมงทำงานต่อสัปดาห์ */}
-          <fieldset>
-            <label htmlFor="weekly-hours" className="humi-label">{t('standardWeeklyHours')}</label>
-            <input
-              id="weekly-hours"
-              type="number"
-              min={0}
-              max={168}
-              value={standardWeeklyHours}
-              onChange={(e) => setStandardWeeklyHours(Number(e.target.value))}
-              className="humi-input w-full"
-            />
-          </fieldset>
-
-          {/* ชั่วโมงทำงานต่อวัน (SF: EmpJob.customDouble1 — Daily Working Hours) */}
-          <fieldset>
-            <label htmlFor="daily-hours" className="humi-label">{t('dailyWorkingHours')}</label>
-            <input
-              id="daily-hours"
-              type="number"
-              min={0}
-              max={24}
-              value={dailyWorkingHours}
-              onChange={(e) => setDailyWorkingHours(Number(e.target.value))}
-              className="humi-input w-full"
-            />
-          </fieldset>
-
-          {/* วันทำงานต่อสัปดาห์ */}
-          <fieldset>
-            <label htmlFor="work-days" className="humi-label">{t('workingDaysPerWeek')}</label>
-            <input
-              id="work-days"
-              type="number"
-              min={0}
-              max={7}
-              value={workingDaysPerWeek}
-              onChange={(e) => setWorkingDaysPerWeek(Number(e.target.value))}
-              className="humi-input w-full"
-            />
-          </fieldset>
-
-          {/* FTE (computed) */}
-          <fieldset>
-            <label htmlFor="fte" className="humi-label">
-              {t('fte')} <span className="text-xs text-ink-muted ml-1">{t('fteHint')}</span>
-            </label>
-            <input
-              id="fte"
-              type="number"
-              value={fte}
-              readOnly
-              className="humi-input w-full bg-canvas-soft"
-            />
-          </fieldset>
-
-          {/* ปฏิทินวันหยุด */}
-          <fieldset>
-            <label htmlFor="holiday-cal" className="humi-label">{t('holidayCalendar')}</label>
-            <select
-              id="holiday-cal"
-              value={holidayCalendar}
-              onChange={(e) => setHolidayCalendar(e.target.value)}
-              className="humi-select w-full"
-            >
-              <option value="">{t('selectHolidayCalendar')}</option>
-              <option value="TH_PUBLIC">ปฏิทินวันหยุดราชการไทย</option>
-              <option value="CG_CORP">ปฏิทิน Central Group Corporate</option>
-            </select>
-          </fieldset>
-
-          {/* Time Profile */}
-          <fieldset>
-            <label htmlFor="time-profile" className="humi-label">{t('timeProfile')}</label>
-            <select
-              id="time-profile"
-              value={timeProfile}
-              onChange={(e) => setTimeProfile(e.target.value)}
-              className="humi-select w-full"
-            >
-              <option value="">{t('selectTimeProfile')}</option>
-              <option value="TP_STD">TP_STD — มาตรฐาน</option>
-              <option value="TP_FLEX">TP_FLEX — Flexible</option>
-              <option value="TP_SHIFT">TP_SHIFT — กะ</option>
-            </select>
-          </fieldset>
-
-          {/* รูปแบบการบันทึกเวลา */}
-          <fieldset>
-            <label htmlFor="time-variant" className="humi-label">{t('timeRecordingVariant')}</label>
-            <select
-              id="time-variant"
-              value={timeRecordingVariant}
-              onChange={(e) => setTimeRecordingVariant(e.target.value)}
-              className="humi-select w-full"
-            >
-              <option value="">{t('selectTimeVariant')}</option>
-              <option value="01">01 — ระบบสแกนนิ้ว</option>
-              <option value="02">02 — Clock-in app</option>
-              <option value="03">03 — Manual</option>
-            </select>
           </fieldset>
 
         </div>
