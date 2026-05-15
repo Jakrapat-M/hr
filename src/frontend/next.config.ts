@@ -30,7 +30,8 @@ const nextConfig: NextConfig = {
       { source: '/:locale(th|en)/hrbp-reports', destination: '/:locale/reports?scope=hrbp', permanent: false },
       // Hire / onboarding
       { source: '/:locale(th|en)/onboarding', destination: '/:locale/admin/hire', permanent: false },
-      // Promotion → pay-rate-change canonical route
+      // Promotion → pay-rate-change canonical route (both bare and with trailing path)
+      { source: '/:locale(en|th)/admin/employees/:id/promotion', destination: '/:locale/admin/employees/:id/pay-rate-change', permanent: false },
       { source: '/:locale(en|th)/admin/employees/:id/promotion/:path*', destination: '/:locale/admin/employees/:id/pay-rate-change/:path*', permanent: false },
     ];
   },

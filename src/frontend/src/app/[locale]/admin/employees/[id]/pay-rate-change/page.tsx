@@ -209,7 +209,6 @@ export default function PayRateChangePage() {
   }, [employee, payrollId])
 
   const isSalaryAdjust = eventReason === 'PRCHG_SALADJ'
-  const isPromo = eventReason === 'PRCHG_PROMO'
   // Pay Component LOV: SALADJ uses filtered subset; all other reasons use full set
   const payComponentOptions: readonly string[] = isSalaryAdjust
     ? PAY_COMPONENTS_SALADJ_SUBSET
