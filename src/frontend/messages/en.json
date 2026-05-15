@@ -3441,7 +3441,34 @@
     "confirmRejectTitle": "Confirm probation rejection",
     "confirmApproveBody": "Submit approval for this probation request? This will update the request status to Approved.",
     "confirmRejectBody": "Submit rejection for this probation request? The rejection reason will be saved with the audit trail.",
-    "company": "Company"
+    "company": "Company",
+    "outcomeLabel": "Final Probation Result",
+    "outcomePlaceholder": "Select an outcome...",
+    "outcome": {
+      "pass_normal": "Pass probation (Normal case)",
+      "fail_normal": "Fail probation (Normal case)",
+      "pass_before_due": "Pass probation before Due (Special case)",
+      "fail_before_due": "Fail probation before Due (Special case)",
+      "extend": "Extend probation (Special case)"
+    },
+    "effectiveDateLabel": "Effective Date",
+    "effectiveDatePlaceholder": "e.g. 31/12/2026",
+    "effectiveDateHelpExtend": "Extend probation: please specify a date AFTER the normal pass date (default Day 120)",
+    "effectiveDateHelpBeforeDue": "Special case: please specify a date BEFORE the normal pass date",
+    "effectiveDateErrorMustBeBefore": "Effective date must be BEFORE the normal pass date",
+    "effectiveDateErrorMustBeAfter": "Effective date must be AFTER the normal pass date",
+    "failReasonLabel": "Reason for Fail Probation (company use only)",
+    "failReasonPlaceholder": "Select a reason...",
+    "failReason": {
+      "performance": "Performance below standard",
+      "attitude": "Attitude / Behavior issue",
+      "policy": "Policy violation",
+      "skill_mismatch": "Skill mismatch",
+      "other": "Other"
+    },
+    "sectionComments": "Manager's Comments",
+    "submitToHrbp": "Submit Probation Result to HRBP",
+    "submitDisabledHint": "Please complete all required fields before submitting"
   },
   "personHero": {
     "probation": "Probation",

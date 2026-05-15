@@ -3397,7 +3397,34 @@
     "confirmRejectTitle": "ยืนยันการปฏิเสธ Probation",
     "confirmApproveBody": "ต้องการส่งผลอนุมัติรายการ Probation นี้หรือไม่ สถานะจะเปลี่ยนเป็น Approved",
     "confirmRejectBody": "ต้องการส่งผลปฏิเสธรายการ Probation นี้หรือไม่ เหตุผลจะถูกบันทึกในประวัติการอนุมัติ",
-    "company": "บริษัท"
+    "company": "บริษัท",
+    "outcomeLabel": "ผลการทดลองงาน",
+    "outcomePlaceholder": "เลือกผลการประเมิน...",
+    "outcome": {
+      "pass_normal": "ผ่านทดลองงาน (ปกติ)",
+      "fail_normal": "ไม่ผ่านทดลองงาน (ปกติ)",
+      "pass_before_due": "ผ่านทดลองงานก่อนกำหนด (กรณีพิเศษ)",
+      "fail_before_due": "ไม่ผ่านทดลองงานก่อนกำหนด (กรณีพิเศษ)",
+      "extend": "ขยายเวลาทดลองงาน (กรณีพิเศษ)"
+    },
+    "effectiveDateLabel": "วันที่มีผล",
+    "effectiveDatePlaceholder": "เช่น 31/12/2026",
+    "effectiveDateHelpExtend": "กรณีขยายเวลา: ระบุวันที่หลังจากวันสิ้นสุดทดลองงานปกติ (ค่าเริ่มต้น = วันที่ 120)",
+    "effectiveDateHelpBeforeDue": "กรณีพิเศษ: ระบุวันที่ก่อนวันสิ้นสุดทดลองงานปกติ",
+    "effectiveDateErrorMustBeBefore": "วันที่มีผลต้องอยู่ก่อนวันสิ้นสุดทดลองงานปกติ",
+    "effectiveDateErrorMustBeAfter": "วันที่มีผลต้องอยู่หลังวันสิ้นสุดทดลองงานปกติ",
+    "failReasonLabel": "เหตุผลการไม่ผ่านทดลองงาน (ใช้ภายในบริษัท)",
+    "failReasonPlaceholder": "เลือกเหตุผล...",
+    "failReason": {
+      "performance": "ผลงานต่ำกว่ามาตรฐาน",
+      "attitude": "ทัศนคติ / พฤติกรรม",
+      "policy": "ฝ่าฝืนระเบียบบริษัท",
+      "skill_mismatch": "ทักษะไม่ตรงกับตำแหน่ง",
+      "other": "อื่นๆ"
+    },
+    "sectionComments": "ความคิดเห็นของผู้จัดการ",
+    "submitToHrbp": "ส่งผลทดลองงานไปยัง HRBP",
+    "submitDisabledHint": "กรุณากรอกข้อมูลที่จำเป็นให้ครบก่อนส่ง"
   },
   "personHero": {
     "probation": "ทดลองงาน",
