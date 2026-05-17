@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Card, CardEyebrow, CardTitle } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
 import { TaxPlanningPanel } from '@/components/benefits/tax/TaxPlanningPanel';
 
 export default function PayrollTaxPlanningPage() {
@@ -22,6 +22,8 @@ export default function PayrollTaxPlanningPage() {
           ไปคิว Payroll review
         </a>
       </header>
+
+      <DemoValuesDisclaimer />
 
       <Card variant="flat" size="md" tone="accent">
         <CardTitle>Payroll/Tax context</CardTitle>

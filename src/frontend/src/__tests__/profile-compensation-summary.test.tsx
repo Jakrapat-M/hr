@@ -42,6 +42,7 @@ vi.mock('lucide-react', () => ({
   EyeOff: () => null,
   ExternalLink: () => null,
   FileText: () => null,
+  Info: () => null,
 }))
 
 import CompensationSummary from '@/components/profile/CompensationSummary'

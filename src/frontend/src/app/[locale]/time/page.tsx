@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Clock, CalendarOff, Timer, CheckSquare } from 'lucide-react';
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
 
 const TILES = [
   {
@@ -65,6 +65,8 @@ export default function TimeLandingPage() {
             : 'Log hours, request leave, submit overtime, and approve team requests — all in one place.'}
         </p>
       </div>
+
+      <DemoValuesDisclaimer />
 
       {/* 4-tile grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

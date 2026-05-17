@@ -16,6 +16,7 @@ import {
   Card,
   CardEyebrow,
   CardTitle,
+  DemoValuesDisclaimer,
   buttonVariants,
   Modal,
 } from '@/components/humi';
@@ -106,6 +107,8 @@ export default function HumiBenefitsHubPage() {
           </p>
         </div>
       </header>
+
+      <DemoValuesDisclaimer className="mb-6" />
 
       <section className="mb-6" aria-label="บริการสวัสดิการ">
         <BenefitServicesPanel locale={locale} />

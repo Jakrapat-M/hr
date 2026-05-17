@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { useLocale } from 'next-intl';
 import { Download } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card, DemoValuesDisclaimer } from '@/components/humi';
 import { useDirectReports } from '@/hooks/use-direct-reports';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getMonthlySpendByReport, csvExport } from '@/lib/manager-reports-mock';
@@ -61,6 +61,8 @@ export function TeamSpendReport() {
 
   return (
     <div className="flex flex-col gap-6">
+      <DemoValuesDisclaimer />
+
       {/* Summary tile */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="col-span-1 flex flex-col gap-1 p-5 sm:col-span-1">

@@ -9,7 +9,7 @@ import { EmptyValue } from '@/components/ui/empty-value';
 import { formatDate } from '@/lib/date';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatChip } from '@/components/ui/stat-chip';
-import { Card } from '@/components/humi';
+import { Card, DemoValuesDisclaimer } from '@/components/humi';
 
 interface BenefitsTabProps {
  employee: Record<string, unknown> | null;
@@ -39,6 +39,8 @@ export function BenefitsTab({ employee, loading }: BenefitsTabProps) {
 
  return (
  <div className="space-y-6">
+ <DemoValuesDisclaimer />
+
  {/* Plan Details Summary */}
  {planDetails && (
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

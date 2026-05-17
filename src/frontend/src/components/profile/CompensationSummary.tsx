@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Wallet, Eye, EyeOff, ExternalLink, FileText } from 'lucide-react';
+import { DemoValuesDisclaimer } from '@/components/humi/DemoValuesDisclaimer';
 import { HUMI_MY_PROFILE } from '@/lib/humi-mock-data';
 
 // Mask currency '฿ 82,500' → '฿ ••••2,500' (last 4 visible: '2,500')
@@ -60,6 +61,8 @@ export default function CompensationSummary() {
           {isMasked ? 'แสดง' : 'ซ่อน'}
         </button>
       </header>
+
+      <DemoValuesDisclaimer compact className="mb-4" />
 
       <div style={{ marginBottom: 18 }} data-testid="comp-base">
         <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', marginBottom: 4 }}>เงินเดือนปัจจุบัน</div>

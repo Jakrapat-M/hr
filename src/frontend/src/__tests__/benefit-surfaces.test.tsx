@@ -1,8 +1,12 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BenefitClaimsInbox } from '@/components/workflow/BenefitClaimsInbox';
 import { useBenefitClaimsStore, type BenefitClaimSubmitInput } from '@/stores/benefit-claims';
+
+vi.mock('next-intl', () => ({
+  useLocale: () => 'th',
+}));
 
 const input: BenefitClaimSubmitInput = {
   employeeId: 'EMP001',
@@ -53,13 +57,14 @@ describe('benefit workflow/admin surfaces', () => {
     render(<AdminBenefitsPage />);
 
     expect(screen.getByText('Benefit master data')).toBeInTheDocument();
+    expect(screen.getByRole('note', { name: 'Demo values disclaimer' })).toHaveTextContent('Demo values are illustrative until backend integration.');
     expect(screen.getByText('Eligibility rules')).toBeInTheDocument();
     expect(screen.getByText('Benefit Special Privilege and EBO reporting')).toBeInTheDocument();
     expect(screen.getByText('Amount rules')).toBeInTheDocument();
     expect(screen.getByText('Field configuration')).toBeInTheDocument();
     expect(screen.getByText('Workflow and cutoff schedule')).toBeInTheDocument();
     expect(screen.getByText('Benefit claim report fields')).toBeInTheDocument();
-    expect(screen.getByText('Read-only payment period status')).toBeInTheDocument();
+    expect(screen.getByText(/Read-only payment period status/)).toBeInTheDocument();
     expect(screen.getByText('Data permission group editing')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Export CSV disabled' })).toBeDisabled();
   });

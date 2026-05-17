@@ -5,7 +5,7 @@ import { CreditCard, Receipt } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/field-group';
 import { Field } from '@/components/ui/field';
 import { StatChip } from '@/components/ui/stat-chip';
-import { Card } from '@/components/humi';
+import { Card, DemoValuesDisclaimer } from '@/components/humi';
 import { maskValue, formatCurrency } from '@/lib/date';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -42,6 +42,8 @@ export function CompensationTab({ employee, loading }: CompensationTabProps) {
 
  return (
  <div className="space-y-6">
+ <DemoValuesDisclaimer />
+
  {/* ข้อมูลการจ่ายเงิน */}
  {paymentInfo && (
  <FieldGroup title={t('compensation.paymentInfo')} icon={<CreditCard className="h-5 w-5" />}>

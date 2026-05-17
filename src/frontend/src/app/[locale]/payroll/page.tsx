@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { DollarSign, Calculator, BarChart3, Calendar, ShieldCheck } from 'lucide-react';
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
 import { canAccessModule } from '@/lib/rbac';
 
@@ -54,6 +54,8 @@ export default function PayrollLandingPage() {
  <h1 className="text-2xl font-bold text-ink">{t('payroll.title')}</h1>
  <p className="text-ink-muted mt-1">{t('payroll.subtitle')}</p>
  </div>
+
+ <DemoValuesDisclaimer className="mb-6" />
 
  {/* Quick Stats */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

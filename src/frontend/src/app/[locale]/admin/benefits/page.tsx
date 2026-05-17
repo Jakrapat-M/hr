@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
-import { Card, CardEyebrow, CardTitle, Button } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle, Button, DemoValuesDisclaimer } from '@/components/humi';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { REFERRAL_HOSPITALS, useBenefitReferralsStore } from '@/stores/benefit-referrals';
 
@@ -68,6 +68,8 @@ export default function AdminBenefitsPage() {
         </div>
       </header>
 
+      <DemoValuesDisclaimer />
+
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <Summary label="Pending claims" value={pending} />
         <Summary label="Approved claims" value={approved} />
@@ -117,7 +119,7 @@ export default function AdminBenefitsPage() {
       </Card>
 
       <Card variant="raised" size="md" className="mt-6">
-        <CardEyebrow>BE-27 · Payment Integration</CardEyebrow>
+        <CardEyebrow>BE-27 · Payment Integration · Read-only payment period status</CardEyebrow>
         <CardTitle>{isTh ? 'การจ่ายสวัสดิการ' : 'Benefit Payment'}</CardTitle>
         <p className="mt-2 text-small text-ink-muted">
           {isTh ? 'ดูแดชบอร์ดการจ่าย (อ่านอย่างเดียว)' : 'View payment dashboard (read-only)'}

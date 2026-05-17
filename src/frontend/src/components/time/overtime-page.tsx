@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import { Clock, Plus, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
-import { Card, CardTitle, Button, Modal } from '@/components/humi';
+import { Card, CardTitle, Button, Modal, DemoValuesDisclaimer } from '@/components/humi';
 import { Badge } from '@/components/ui/badge';
 import { Tabs } from '@/components/ui/tabs';
 import { FormField } from '@/components/ui/form-field';
@@ -173,6 +173,8 @@ export function OvertimePage() {
  <Plus className="h-4 w-4 mr-2" />{t('newRequest')}
  </Button>
  </div>
+
+ <DemoValuesDisclaimer className="mb-6" />
 
  <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} className="mb-6" />
 

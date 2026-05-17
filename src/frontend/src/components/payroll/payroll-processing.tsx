@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { CheckCircle, AlertTriangle, ArrowLeft, ArrowRight, Download, ChevronUp, ChevronDown } from 'lucide-react';
-import { Card, CardTitle, Button } from '@/components/humi';
+import { Card, CardTitle, Button, DemoValuesDisclaimer } from '@/components/humi';
 import { FormField } from '@/components/ui/form-field';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -98,6 +98,7 @@ export function PayrollProcessing() {
 
  return (
  <div className="space-y-6">
+ <DemoValuesDisclaimer />
  <Stepper currentStage={stage} stages={STAGES} t={t} />
 
  {/* Stage 1: Period Selection */}
