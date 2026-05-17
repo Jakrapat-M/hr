@@ -98,6 +98,16 @@ describe('ProbationDetailPage — STA-23 PO v2 Manager Approve', () => {
     expect(values).toContain('extend');
   });
 
+  // June feedback: fields not in list must not render on manager approve view.
+  it('does not render attachment upload controls or copy', async () => {
+    await renderLoaded();
+
+    expect(screen.queryByText('เอกสารแนบ')).not.toBeInTheDocument();
+    expect(screen.queryByText(/ลากเอกสารมาวาง/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/เลือกไฟล์/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('เลือกไฟล์เอกสารแนบ')).not.toBeInTheDocument();
+  });
+
   // Test 2: Effective Date NOT in DOM for pass_normal
   it('does NOT render Effective Date when outcome is pass_normal', async () => {
     await renderLoaded();
