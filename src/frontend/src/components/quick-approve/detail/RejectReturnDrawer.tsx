@@ -17,49 +17,45 @@ interface RejectReturnDrawerProps {
 
 const REJECT_REASONS_TH = [
   'ข้อมูลไม่ครบถ้วน',
-  'เกินวงเงินที่ได้รับอนุมัติ',
+  'เอกสารไม่ถูกต้อง',
   'ไม่เป็นไปตามนโยบายบริษัท',
-  'ใบเสร็จ/เอกสารไม่ถูกต้อง',
-  'ผ่านกำหนดระยะเวลายื่น',
+  'วันที่มีผลไม่ถูกต้อง',
   'ซ้ำกับคำขอที่ยื่นไปแล้ว',
   'ไม่ผ่านเงื่อนไขสิทธิ์',
   'ขัดแย้งกับตารางงาน',
-  'อยู่ระหว่างช่วงห้ามลา',
   'อื่น ๆ (โปรดระบุในความคิดเห็น)',
 ];
 
 const REJECT_REASONS_EN = [
   'Incomplete information',
-  'Exceeds approved budget',
+  'Invalid document',
   'Does not comply with company policy',
-  'Invalid receipt / document',
-  'Submission past deadline',
+  'Effective date issue',
   'Duplicate of existing request',
   'Eligibility criteria not met',
   'Conflicts with work schedule',
-  'Blackout period restriction',
   'Other (please specify in comments)',
 ];
 
 const RETURN_REASONS_TH = [
-  'ต้องการข้อมูลเพิ่มเติม',
-  'แนบเอกสารประกอบไม่ครบ',
-  'รายละเอียดไม่ชัดเจน',
-  'ต้องได้รับการยืนยันจากผู้บังคับบัญชาก่อน',
+  'ข้อมูลไม่ครบถ้วน',
+  'เอกสารไม่ถูกต้อง',
+  'ไม่เป็นไปตามนโยบายบริษัท',
   'วันที่มีผลไม่ถูกต้อง',
-  'กรุณาแก้ไขและยื่นใหม่',
-  'รอการตรวจสอบจากฝ่าย HR',
+  'ซ้ำกับคำขอที่ยื่นไปแล้ว',
+  'ไม่ผ่านเงื่อนไขสิทธิ์',
+  'ขัดแย้งกับตารางงาน',
   'อื่น ๆ (โปรดระบุในความคิดเห็น)',
 ];
 
 const RETURN_REASONS_EN = [
-  'Additional information required',
-  'Supporting documents incomplete',
-  'Details unclear',
-  'Manager pre-approval required first',
-  'Effective date incorrect',
-  'Please amend and resubmit',
-  'Pending HR verification',
+  'Incomplete information',
+  'Invalid document',
+  'Does not comply with company policy',
+  'Effective date issue',
+  'Duplicate of existing request',
+  'Eligibility criteria not met',
+  'Conflicts with work schedule',
   'Other (please specify in comments)',
 ];
 

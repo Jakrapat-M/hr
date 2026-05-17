@@ -217,3 +217,31 @@ describe('independent approvals — immutability of untouched items', () => {
     expect(c3).toBe(beforeC3);
   });
 });
+
+describe('withdrawPendingChange', () => {
+  it('allows employee withdrawal only while pending and keeps history row', () => {
+    const id = seedChange({ field: 'บัญชีธนาคาร', sectionKey: 'bank' });
+
+    useHumiProfileStore.getState().withdrawPendingChange(id);
+
+    const change = useHumiProfileStore.getState().pendingChanges.find((pc) => pc.id === id)!;
+    expect(change.status).toBe('withdrawn');
+    expect(change.approvedAt).toBeTruthy();
+    expect(change.reason).toContain('withdrew pending change');
+  });
+
+  it('does not withdraw approved or rejected history', () => {
+    const id = seedChange({ field: 'ชื่อเล่น', sectionKey: 'personal' });
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    useHumiProfileStore.getState().adminApprove(id);
+    useHumiProfileStore.getState().withdrawPendingChange(id);
+
+    const change = useHumiProfileStore.getState().pendingChanges.find((pc) => pc.id === id)!;
+    expect(change.status).toBe('approved');
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('withdrawPendingChange: change is not pending'),
+      id,
+    );
+  });
+});

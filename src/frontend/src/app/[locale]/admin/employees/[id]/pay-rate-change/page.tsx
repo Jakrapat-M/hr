@@ -364,6 +364,15 @@ export default function PayRateChangePage() {
       {/* SPD Approval Chain Banner */}
       <ApprovalChainBanner employeeId={empId} />
 
+      <div className="humi-card humi-card--cream">
+        <div className="humi-eyebrow" style={{ marginBottom: 6 }}>STA-41 demo boundary</div>
+        <p className="text-small text-ink-soft">
+          HR Admin submits promotion/pay-rate changes to Comp/SPD review with a required effective date.
+          Amounts and pay components are sensitive demo data; this screen does not post payroll,
+          write SuccessFactors, create audit evidence, or configure a workflow engine.
+        </p>
+      </div>
+
       {/* Form — gated by effectiveDate */}
       <EffectiveDateGate
         min={employee.hire_date || undefined}

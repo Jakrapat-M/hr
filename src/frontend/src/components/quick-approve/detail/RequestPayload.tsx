@@ -118,6 +118,74 @@ function TransferPayload({ details, t }: { details: TransferDetails; t: ReturnTy
   );
 }
 
+function maskValue(field: string, value: unknown) {
+  const text = String(value ?? '—');
+  const sensitive = /bank|account|salary|compensation|national|tax|dependent|document|payroll/i.test(field);
+  if (!sensitive) return text;
+  if (text.includes('***') || text === '—') return text;
+  return `•••• ${text.slice(-4)}`;
+}
+
+function ChangeRequestPayload({
+  details,
+}: {
+  details: Record<string, unknown>;
+}) {
+  const fieldDiffs = Array.isArray(details.fieldDiffs)
+    ? details.fieldDiffs as Array<{ field: string; label: string; before: unknown; after: unknown; sensitive?: boolean }>
+    : [
+        {
+          field: String(details.field ?? details.changeType ?? 'change'),
+          label: String(details.changeType ?? details.field ?? 'Change'),
+          before: details.oldValue ?? details.currentValue ?? '—',
+          after: details.newValue ?? details.accountNumber ?? '—',
+          sensitive: true,
+        },
+      ];
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-3 text-small text-ink-soft">
+        Manager view shows only what is needed to decide. Salary, bank, national ID, Tax ID,
+        dependent identifiers, and document contents stay masked in this demo.
+      </div>
+      <dl>
+        {typeof details.approvalState === 'string' && <Row label="สถานะ" value={details.approvalState} />}
+        {typeof details.reason === 'string' && <Row label="เหตุผล" value={details.reason} />}
+        {typeof details.effectiveDate === 'string' && (
+          <Row label="วันที่มีผลสำหรับ demo" value={details.effectiveDate} />
+        )}
+      </dl>
+      <div>
+        <h4 className="mb-2 text-small font-semibold text-ink">ก่อน / หลัง — decision preview only</h4>
+        <div className="overflow-hidden rounded-[var(--radius-md)] border border-hairline">
+          <div className="grid grid-cols-[1.2fr_1fr_1fr] bg-canvas-soft px-3 py-2 text-small font-semibold text-ink">
+            <span>Field</span>
+            <span>ก่อน</span>
+            <span>หลัง</span>
+          </div>
+          {fieldDiffs.map((diff) => (
+            <div
+              key={`${diff.field}-${diff.label}`}
+              className="grid grid-cols-[1.2fr_1fr_1fr] border-t border-hairline px-3 py-2 text-small text-ink"
+            >
+              <span>
+                {diff.label}
+                {diff.sensitive && <span className="ml-2 text-ink-muted">(masked)</span>}
+              </span>
+              <span>{diff.sensitive ? maskValue(diff.field, diff.before) : String(diff.before ?? '—')}</span>
+              <span>{diff.sensitive ? maskValue(diff.field, diff.after) : String(diff.after ?? '—')}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 text-small text-ink-muted">
+          Attachments are mock previews only; this is not audit-grade history or document storage.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 interface RequestPayloadProps {
@@ -137,6 +205,8 @@ export function RequestPayload({ request }: RequestPayloadProps) {
         return <ClaimPayload details={request.details as ClaimDetails} t={t} />;
       case 'transfer':
         return <TransferPayload details={request.details as TransferDetails} t={t} />;
+      case 'change_request':
+        return <ChangeRequestPayload details={request.details as Record<string, unknown>} />;
       default:
         return (
           <dl>

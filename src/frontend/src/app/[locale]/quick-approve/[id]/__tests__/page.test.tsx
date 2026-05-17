@@ -6,6 +6,7 @@ import { render, screen, act } from '@testing-library/react';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
+  useParams: () => ({ locale: 'th' }),
 }));
 
 vi.mock('next-intl', () => ({
@@ -129,5 +130,12 @@ describe('QuickApproveDetailPage', () => {
   it('renders approval history timeline', async () => {
     await renderPage('WF-004');
     expect(screen.getByText('quick_approve_detail.approvalHistory')).toBeInTheDocument();
+  });
+
+  it('renders STA-41 masked field diff for change requests', async () => {
+    await renderPage('WF-2026-016');
+    expect(screen.getByText(/Manager view shows only what is needed/)).toBeInTheDocument();
+    expect(screen.getAllByText(/ก่อน/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/masked/).length).toBeGreaterThan(0);
   });
 });

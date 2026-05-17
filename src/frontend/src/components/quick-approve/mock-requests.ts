@@ -233,11 +233,21 @@ export const MOCK_PENDING_REQUESTS: PendingRequest[] = [
     id: 'WF-2026-016',
     type: 'change_request',
     requester: { id: 'EMP-033', name: 'ศิริพร วงศ์ทอง', position: 'Marketing Executive', department: 'Marketing' },
-    description: 'แก้ไขข้อมูลบัญชีธนาคาร — กสิกรไทย → SCB',
+    description: 'แก้ไขข้อมูลบัญชีธนาคาร — masked diff, pending-only withdrawal',
     submittedAt: '2026-04-27T13:00:00',
     urgency: 'normal',
     waitingDays: 5,
-    details: { field: 'bank_account', oldValue: 'KBank ***1234', newValue: 'SCB ***5678', reason: 'เปลี่ยนธนาคารหลัก' },
+    details: {
+      changeType: 'Bank account',
+      reason: 'เปลี่ยนธนาคารหลัก',
+      effectiveDate: '2026-05-15',
+      approvalState: 'รออนุมัติ — employee may withdraw before decision',
+      fieldDiffs: [
+        { field: 'bankName', label: 'ธนาคาร', before: 'KBank', after: 'SCB', sensitive: false },
+        { field: 'bank_account', label: 'เลขที่บัญชี', before: 'KBank ***1234', after: 'SCB ***5678', sensitive: true },
+        { field: 'document', label: 'สำเนาสมุดบัญชี', before: 'เอกสารเดิม (masked)', after: 'mock preview only', sensitive: true },
+      ],
+    },
     approvalTimeline: chain('SPD'),
   },
   {

@@ -11,6 +11,7 @@ import { RequestPayload } from '@/components/quick-approve/detail/RequestPayload
 import { HistoryTimeline } from '@/components/quick-approve/detail/HistoryTimeline';
 import { ActionPanel } from '@/components/quick-approve/detail/ActionPanel';
 import { RejectReturnDrawer, type DrawerMode } from '@/components/quick-approve/detail/RejectReturnDrawer';
+import { MOCK_PENDING_REQUESTS } from '@/components/quick-approve/mock-requests';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 
 // ── Mock data (15 items, at least 3 claims) ──────────────────────────────────
@@ -408,6 +409,8 @@ const MOCK_REQUESTS: PendingRequest[] = [
   },
 ];
 
+const DETAIL_REQUESTS = [...MOCK_REQUESTS, ...MOCK_PENDING_REQUESTS];
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 interface PageProps {
@@ -431,7 +434,7 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
     // No-op in demo — production would dispatch to API here.
   }
 
-  const request = MOCK_REQUESTS.find((r) => r.id === id);
+  const request = DETAIL_REQUESTS.find((r) => r.id === id);
 
   if (!request) {
     return (

@@ -330,6 +330,7 @@ export default function HumiProfileMePage({
     pendingChanges,
     attachments,
     submitChangeRequest,
+    withdrawPendingChange,
   } = useHumiProfileStore();
 
   const [toast, setToast] = useState<string | null>(null);
@@ -1915,6 +1916,7 @@ export default function HumiProfileMePage({
                     attachments={attachments}
                     tPending={tPending}
                     tActivity={tActivity}
+                    onWithdraw={withdrawPendingChange}
                   />
                 ))}
               </ul>
@@ -2138,33 +2140,33 @@ function PendingChangeCard({
   attachments,
   tPending,
   tActivity,
+  onWithdraw,
 }: {
   pc: PendingChange;
   attachments: ReturnType<typeof useHumiProfileStore.getState>['attachments'];
   tPending: ReturnType<typeof useTranslations>;
   tActivity: ReturnType<typeof useTranslations>;
+  onWithdraw: (id: string) => void;
 }) {
   const pcAttachments = attachments.filter((a) => pc.attachmentIds.includes(a.id));
 
-  const statusColor =
+  const statusTone =
     pc.status === 'approved'
-      ? 'var(--color-success)'
+      ? { color: 'var(--color-success)', background: 'var(--color-success-soft)' }
       : pc.status === 'rejected'
-        ? 'var(--color-danger)'
-        : 'var(--color-danger-ink)';
-  const statusBg =
-    pc.status === 'approved'
-      ? 'var(--color-success-soft)'
-      : pc.status === 'rejected'
-        ? 'var(--color-danger-soft)'
-        : 'var(--color-warning-soft)';
+        ? { color: 'var(--color-danger-ink)', background: 'var(--color-danger-soft)' }
+        : pc.status === 'withdrawn'
+          ? { color: 'var(--color-ink-muted)', background: 'var(--color-hairline-soft)' }
+          : { color: 'var(--color-warning)', background: 'var(--color-warning-soft)' };
 
   const statusLabel =
     pc.status === 'approved'
       ? tPending('approved')
       : pc.status === 'rejected'
         ? tPending('rejected')
-        : tPending('badge');
+        : pc.status === 'withdrawn'
+          ? 'ถอนคำขอแล้ว / Withdrawn'
+          : tPending('badge');
 
   return (
     <li
@@ -2183,6 +2185,7 @@ function PendingChangeCard({
             {pc.field}
           </div>
           <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+            {pc.sectionKey === 'bank' || pc.field.toLowerCase().includes('bank') ? 'ข้อมูลอ่อนไหว — แสดงแบบปิดบังสำหรับผู้อนุมัติ · ' : ''}
             {tActivity('changedFrom')}:{' '}
             <b style={{ color: 'var(--color-ink)' }}>{pc.oldValue || '—'}</b>
             {' → '}
@@ -2198,8 +2201,8 @@ function PendingChangeCard({
           style={{
             fontSize: 11,
             fontWeight: 700,
-            background: statusBg,
-            color: statusColor,
+            background: statusTone.background,
+            color: statusTone.color,
             borderRadius: 5,
             padding: '2px 8px',
             whiteSpace: 'nowrap',
@@ -2208,6 +2211,23 @@ function PendingChangeCard({
         >
           {statusLabel}
         </span>
+      </div>
+
+      <div className="humi-row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+        <span className="text-small text-ink-muted">
+          {pc.status === 'pending'
+            ? 'รออนุมัติ — ถอนคำขอได้ก่อนผู้อนุมัติตัดสินเท่านั้น'
+            : 'ประวัติคำขอแบบอ่านอย่างเดียวหลังมีผลการตัดสิน'}
+        </span>
+        {pc.status === 'pending' && (
+          <button
+            type="button"
+            onClick={() => onWithdraw(pc.id)}
+            className="rounded-[var(--radius-sm)] border border-hairline bg-surface px-2 py-1 text-small font-medium text-accent hover:bg-accent-soft"
+          >
+            ถอนคำขอ / Withdraw request
+          </button>
+        )}
       </div>
 
       {/* Attachment thumbnails */}

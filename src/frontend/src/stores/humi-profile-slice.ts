@@ -102,7 +102,7 @@ export interface PendingChange {
   effectiveDate: string;       // ISO-8601 date e.g. "2026-05-01"
   attachmentIds: string[];     // refs into attachments[]
   requestedAt: string;         // ISO-8601
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'withdrawn';
   approvedAt?: string;         // ISO-8601, set on approve/reject
   sectionKey?: SectionKey;     // NEW v2 — discriminates section-level CRs from single-field CRs
   reason?: string;             // NEW #54 — captured at approve/reject time; undefined if no reason given
@@ -144,6 +144,7 @@ interface ProfileState {
   adminReject: (changeId: string) => void;
   adminApproveWithReason: (changeId: string, reason?: string) => void;  // NEW #54
   adminRejectWithReason: (changeId: string, reason?: string) => void;   // NEW #54
+  withdrawPendingChange: (changeId: string) => void;
   toggleAdminMode: () => void;
 }
 
@@ -263,6 +264,31 @@ export const useHumiProfileStore = create<ProfileState>()(
 
       adminReject: (changeId) => {
         get().adminRejectWithReason(changeId, undefined);
+      },
+
+      withdrawPendingChange: (changeId) => {
+        const { pendingChanges } = get();
+        const change = pendingChanges.find((pc) => pc.id === changeId);
+        if (!change) {
+          console.warn('[humi-profile-slice] withdrawPendingChange: change not found', changeId);
+          return;
+        }
+        if (change.status !== 'pending') {
+          console.warn('[humi-profile-slice] withdrawPendingChange: change is not pending', changeId);
+          return;
+        }
+        set((s) => ({
+          pendingChanges: s.pendingChanges.map((pc) =>
+            pc.id === changeId
+              ? {
+                  ...pc,
+                  status: 'withdrawn',
+                  approvedAt: new Date().toISOString(),
+                  reason: 'Employee withdrew pending change before approval decision',
+                }
+              : pc,
+          ),
+        }));
       },
 
       toggleAdminMode: () => set((s) => ({ adminMode: !s.adminMode })),

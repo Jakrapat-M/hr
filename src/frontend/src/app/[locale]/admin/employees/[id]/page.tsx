@@ -901,6 +901,11 @@ export default function EmployeeDetailPage() {
         <div className="humi-eyebrow" style={{ marginBottom: 14 }}>
           การดำเนินการ
         </div>
+        <div className="mb-4 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-3 text-small text-ink-soft">
+          Employee Center demo แสดง 9 core lifecycle surfaces พร้อม promotion เป็น candidate/bonus surface.
+          Promotion และ pay-rate change ใช้ route เดียวเพื่อเล่า chain HR Admin → Comp/SPD review;
+          compensation values remain masked/sensitive and are not payroll-ready.
+        </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {ACTION_CARDS.map((card) => {
             const Icon = card.icon

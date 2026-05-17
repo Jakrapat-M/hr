@@ -618,6 +618,19 @@ export function QuickApprovePage() {
       {/* ── HRBP/SPD scope transparency banner — STA-27 PR-A (AC-7) ── */}
       <HrbpScopeBanner persona={primaryRole} isTh={isTh} locale={locale} />
 
+      <Card>
+        <div className="space-y-1 text-small text-ink-soft">
+          <p className="font-semibold text-ink">
+            {isTh ? 'สถานะการอนุมัติและข้อมูลอ่อนไหว' : 'Approval state and sensitive data'}
+          </p>
+          <p>
+            {isTh
+              ? 'คิวนี้เป็น demo/client state เท่านั้น ผู้จัดการเห็นเฉพาะข้อมูลที่จำเป็นต่อการอนุมัติ; เงินเดือน ธนาคาร เลขบัตรประชาชน เลขภาษี ผู้พึ่งพิง และเอกสารจะแสดงแบบปิดบัง'
+              : 'This queue is demo/client state only. Managers see only what is needed to approve; salary, bank, national ID, Tax ID, dependents, and documents stay masked.'}
+          </p>
+        </div>
+      </Card>
+
       {/* ── Smart Tabs — STA-28 PR-B v2 (AC-4) ── */}
       <SmartTabs
         activeTab={activeTab}
