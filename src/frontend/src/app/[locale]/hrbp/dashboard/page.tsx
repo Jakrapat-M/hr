@@ -33,17 +33,17 @@ import {
 // ─── Mock HRBP KPIs (company-wide scope) ──────────────────────────────────
 
 const HRBP_KPIS = [
-  { id: 'pending',    labelKey: 'kpiPending',    value: '23',    tone: 'coral'  as const },
+  { id: 'pending',    labelKey: 'kpiPending',    value: '23',    tone: 'warning' as const },
   { id: 'headcount',  labelKey: 'kpiHeadcount',  value: '1,284', tone: 'teal'   as const },
   { id: 'weekReview', labelKey: 'kpiWeekReview', value: '11',    tone: 'butter' as const },
   { id: 'timeSaved',  labelKey: 'kpiTimeSaved',  value: '12.5h', tone: 'accent' as const },
 ];
 
 const KPI_TONE_STYLES: Record<string, { bg: string; text: string }> = {
-  coral:  { bg: 'var(--color-coral-soft,  #fff0ee)', text: 'var(--color-coral,  #e55a4e)' },
-  teal:   { bg: 'var(--color-teal-soft,   #edfaf7)', text: 'var(--color-teal,   #0aaa82)' },
-  butter: { bg: 'var(--color-butter-soft, #fffbee)', text: 'var(--color-warning, #c59000)' },
-  accent: { bg: 'var(--color-accent-soft, #edf0ff)', text: 'var(--color-accent,  #4b56f0)' },
+  warning: { bg: 'var(--color-warning-soft)', text: 'var(--color-danger-ink)' },
+  teal:    { bg: 'var(--color-accent-soft)', text: 'var(--color-accent)' },
+  butter:  { bg: 'var(--color-butter-soft)', text: 'var(--color-danger-ink)' },
+  accent:  { bg: 'var(--color-accent-alt-soft)', text: 'var(--color-accent-alt)' },
 };
 
 const SEVERITY_LABELS: Record<string, string> = {
@@ -56,7 +56,7 @@ const SEVERITY_LABELS: Record<string, string> = {
 const SEVERITY_TONES: Record<string, string> = {
   'leave-vacation': 'humi-tag',
   'leave-sick':     'humi-tag',
-  expense:          'humi-tag humi-tag--coral',
+  expense:          'humi-tag humi-tag--butter',
   overtime:         'humi-tag',
 };
 
@@ -69,7 +69,7 @@ const AVATAR_TONE_MAP = {
 } as const;
 
 const ACTIVITY_DOT: Record<string, string> = {
-  success: 'var(--color-success, #28a745)',
+  success: 'var(--color-success)',
   accent:  'var(--color-accent)',
   warning: 'var(--color-warning)',
   muted:   'var(--color-hairline)',
@@ -228,7 +228,7 @@ export default function HRBPDashboardPage() {
               </h2>
             </div>
             <span
-              className="humi-tag humi-tag--coral"
+              className="humi-tag humi-tag--butter"
               style={{ marginLeft: 'auto' }}
             >
               {queueItems.length} {t('queueBadge')}

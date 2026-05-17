@@ -687,13 +687,13 @@ export default function HumiProfileMePage({
             bottom: 24,
             right: 24,
             background: showToastOk ? 'var(--color-accent)' : 'var(--color-danger)',
-            color: '#fff',
+            color: 'var(--color-canvas)',
             borderRadius: 10,
             padding: '10px 18px',
             fontSize: 14,
             fontWeight: 500,
             zIndex: 9999,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            boxShadow: 'var(--shadow-md)',
           }}
         >
           {toast}
@@ -2035,7 +2035,7 @@ function FullEditField({
               fontSize: 10,
               fontWeight: 600,
               background: 'var(--color-butter)',
-              color: '#7c5e00',
+              color: 'var(--color-danger-ink)',
               borderRadius: 4,
               padding: '1px 6px',
               whiteSpace: 'nowrap',
@@ -2143,9 +2143,17 @@ function PendingChangeCard({
   const pcAttachments = attachments.filter((a) => pc.attachmentIds.includes(a.id));
 
   const statusColor =
-    pc.status === 'approved' ? '#0a6640' : pc.status === 'rejected' ? '#c53030' : '#7c5e00';
+    pc.status === 'approved'
+      ? 'var(--color-success)'
+      : pc.status === 'rejected'
+        ? 'var(--color-danger)'
+        : 'var(--color-danger-ink)';
   const statusBg =
-    pc.status === 'approved' ? '#e6f9f0' : pc.status === 'rejected' ? '#fff5f5' : '#fffbe6';
+    pc.status === 'approved'
+      ? 'var(--color-success-soft)'
+      : pc.status === 'rejected'
+        ? 'var(--color-danger-soft)'
+        : 'var(--color-warning-soft)';
 
   const statusLabel =
     pc.status === 'approved'
@@ -2216,7 +2224,7 @@ function PendingChangeCard({
                 padding: '4px 8px',
                 borderRadius: 6,
                 border: '1px solid var(--color-hairline)',
-                background: '#fff',
+                background: 'var(--color-surface)',
                 color: 'var(--color-accent)',
                 textDecoration: 'none',
                 whiteSpace: 'nowrap',

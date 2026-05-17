@@ -85,7 +85,7 @@ function ShiftProgress({ clockIn, shiftStart, shiftEnd, breakStart, breakEnd }: 
  className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000"
  style={{
  width: `${pct}%`,
- background: pct > 100 ?'#C8102E' :'linear-gradient(90deg, #1a1a2e 0%, #C8102E 100%)',
+ background: 'linear-gradient(90deg, var(--color-ink) 0%, var(--color-accent) 100%)',
  }}
  />
  {/* Clock-in marker */}
@@ -114,8 +114,8 @@ function WeeklyHeatmap({ attendance }: { attendance: AttendanceRecord[] }) {
  switch (status) {
  case'present': return'bg-emerald-500';
  case'late': return'bg-amber-400';
- case'absent': return'bg-danger-tint0';
- case'leave': return'bg-sky-400';
+ case'absent': return'bg-danger-soft';
+ case'leave': return'bg-info';
  case'weekend': case'holiday': return'bg-surface-raised ';
  default: return'bg-surface-raised border border-dashed border-hairline border-hairline';
  }
@@ -216,8 +216,8 @@ export function TimePage() {
  <div
  className={`relative overflow-hidden rounded-[var(--radius-2xl)] p-6 sm:p-8 mb-6 transition-all duration-500 ${
  clockStatus.isClockedIn
- ?'bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155]'
- :'bg-gradient-to-br from-gray-50 via-white to-gray-100 border border-hairline dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 border-hairline'
+ ?'bg-ink text-canvas shadow-[var(--shadow-card)]'
+ :'bg-canvas-soft border border-hairline shadow-[var(--shadow-card)]'
  }`}
  >
  {/* Decorative background elements */}
@@ -231,7 +231,7 @@ export function TimePage() {
  <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
  {/* Left: Time & Status */}
  <div>
- <div className={clockStatus.isClockedIn ?'text-white' :'text-ink'}>
+ <div className={clockStatus.isClockedIn ?'text-canvas' :'text-ink'}>
  <LiveClock />
  </div>
 
@@ -244,7 +244,7 @@ export function TimePage() {
  <CheckCircle className="h-2.5 w-2.5" /> In Zone
  </span>
  ) : (
- <span className="inline-flex items-center gap-0.5 ml-2 px-1.5 py-0.5 rounded-full bg-danger-tint0/20 text-danger text-[10px] font-medium">
+ <span className="inline-flex items-center gap-0.5 ml-2 px-1.5 py-0.5 rounded-full bg-danger-soft text-danger text-[10px] font-medium">
  <XCircle className="h-2.5 w-2.5" /> Out of Zone
  </span>
  )}
@@ -279,8 +279,8 @@ export function TimePage() {
  transition-all duration-300 active:scale-95
  ${clockAnimating ?'scale-110' :''}
  ${clockStatus.isClockedIn
- ?'bg-gradient-to-br from-brand to-red-700 text-white shadow-2 shadow-red-900/30 hover:shadow-[var(--shadow-lg)] hover:shadow-red-900/40'
- :'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-2 shadow-emerald-900/20 hover:shadow-[var(--shadow-lg)] hover:shadow-emerald-900/30'
+ ?'bg-accent text-canvas shadow-[var(--shadow-card)] hover:bg-accent/90'
+ :'bg-success text-canvas shadow-[var(--shadow-card)] hover:bg-success/90'
  }
  `}
  >
@@ -298,7 +298,7 @@ export function TimePage() {
  )}
  </div>
  {/* Pulse ring */}
- <div className={`absolute inset-0 rounded-[var(--radius-2xl)] ${clockStatus.isClockedIn ?'bg-brand' :'bg-emerald-500'} animate-ping opacity-20`} />
+ <div className={`absolute inset-0 rounded-[var(--radius-2xl)] ${clockStatus.isClockedIn ?'bg-accent' :'bg-success'} animate-ping opacity-20`} />
  </button>
  </div>
  </div>
@@ -327,8 +327,8 @@ export function TimePage() {
  <div className="flex items-center gap-3 text-[10px] text-ink-muted">
  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500" /> On Time</span>
  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-amber-400" /> Late</span>
- <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-danger-tint0" /> Absent</span>
- <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-sky-400" /> Leave</span>
+ <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-danger-soft" /> Absent</span>
+ <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-info" /> Leave</span>
  </div>
  </div>
  <WeeklyHeatmap attendance={attendance} />
@@ -574,7 +574,7 @@ export function TimePage() {
  <div className="space-y-4">
  {/* Summary Row */}
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
- <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-md p-4 text-white">
+ <div className="bg-ink rounded-md p-4 text-canvas">
  <p className="text-2xl font-bold">{summary.totalWorkHours}h</p>
  <p className="text-[10px] text-ink-muted mt-0.5">{t('totalHours')}</p>
  </div>
