@@ -2,9 +2,7 @@
 
 import {
   useMemo,
-  useRef,
   useState,
-  type ChangeEvent,
   type ReactNode,
 } from 'react';
 import { useParams, usePathname } from 'next/navigation';
@@ -14,7 +12,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  Download,
   Send,
   Shield,
   User,
@@ -180,10 +177,6 @@ export default function ProbationDetailPage() {
   const [failReason, setFailReason] = useState<ProbationFailReason | ''>('');
   const [comment, setComment] = useState('');
 
-  // Attachment (keep from previous implementation)
-  const [attachedFileName, setAttachedFileName] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   // Derive conditional visibility
   const showEffectiveDate = outcome !== '' && OUTCOMES_WITH_EFFECTIVE_DATE.includes(outcome as ProbationOutcome);
   const showFailReason = outcome === 'fail_normal';
@@ -243,12 +236,6 @@ export default function ProbationDetailPage() {
       comment,
     };
     submitDecision(input);
-  };
-
-  const handleFilePick = (e: ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f) setAttachedFileName(f.name);
-    // TODO: wire up real upload backend (document-service).
   };
 
   if (loading) {
@@ -500,39 +487,6 @@ export default function ProbationDetailPage() {
             </div>
           </div>
 
-          {/* Attachment */}
-          <div className="humi-card">
-            {eyebrow('เอกสารแนบ')}
-            <h3 className="mt-1 mb-3.5 font-display text-base font-semibold tracking-tight text-ink">
-              เอกสารแนบ (ถ้ามี)
-            </h3>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full rounded-[var(--radius-md)] border-[1.5px] border-dashed border-hairline bg-canvas-soft px-4 py-5 text-center text-ink-muted transition hover:border-accent-soft"
-            >
-              <div className="text-sm font-semibold text-ink-soft">
-                ลากเอกสารมาวาง หรือ <span className="text-accent">เลือกไฟล์</span>
-              </div>
-              <div className="mt-1 text-xs">
-                เช่น บันทึกการสนทนา · ผลงาน · PDF / JPG / PNG · ไม่เกิน 10 MB
-              </div>
-              {attachedFileName && (
-                <div className="mt-2 inline-flex items-center gap-1 text-xs text-accent">
-                  <Download className="h-3 w-3" /> {attachedFileName}
-                </div>
-              )}
-            </button>
-            {/* TODO: wire to document-service upload endpoint */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              hidden
-              onChange={handleFilePick}
-              accept=".pdf,.jpg,.jpeg,.png"
-              aria-label="เลือกไฟล์เอกสารแนบ"
-            />
-          </div>
         </div>
 
         {/* RIGHT — sidebar */}

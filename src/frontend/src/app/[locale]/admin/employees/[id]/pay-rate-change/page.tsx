@@ -354,7 +354,7 @@ export default function PayRateChangePage() {
         </div>
         <div>
           <div className="humi-eyebrow">การดำเนินการ</div>
-          <h1 className="font-display text-xl font-semibold text-ink">ปรับเงินเดือน / Pay Rate Change</h1>
+          <h1 className="font-display text-xl font-semibold text-ink">{t('pageTitle')}</h1>
         </div>
       </div>
 
@@ -375,7 +375,6 @@ export default function PayRateChangePage() {
 
       {/* Form — gated by effectiveDate */}
       <EffectiveDateGate
-        min={employee.hire_date || undefined}
         initialEffectiveDate={effectiveDate ?? undefined}
         onEffectiveDateChange={(date) => setEffectiveDate(date)}
       >

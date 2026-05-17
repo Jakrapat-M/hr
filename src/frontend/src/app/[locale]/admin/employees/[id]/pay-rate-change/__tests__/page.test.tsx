@@ -22,7 +22,9 @@ vi.mock('next/navigation', () => ({
 
 // ─── Mock next-intl ──────────────────────────────────────────────────────────
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string) => (
+    key === 'pageTitle' ? 'ข้อมูลการเลื่อนตำแหน่ง/ปรับเงินเดือน' : key
+  ),
 }))
 
 // ─── Mock auth store ─────────────────────────────────────────────────────────
@@ -61,16 +63,29 @@ vi.mock('@/lib/admin/store/useEmployees', () => {
 })
 
 // ─── Mock EffectiveDateGate — bypass modal; pre-seed effective date ───────────
+const effectiveGateProps = vi.hoisted(() => [] as Array<{
+  min?: string
+  max?: string
+  initialEffectiveDate?: string
+}>)
+
 vi.mock('@/components/admin/EffectiveDateGate', async () => {
   const React = await import('react')
   return {
     EffectiveDateGate: ({
       children,
       onEffectiveDateChange,
+      min,
+      max,
+      initialEffectiveDate,
     }: {
       children: (ctx: { effectiveDate: string }) => React.ReactNode
       onEffectiveDateChange?: (d: string) => void
+      min?: string
+      max?: string
+      initialEffectiveDate?: string
     }) => {
+      effectiveGateProps.push({ min, max, initialEffectiveDate })
       React.useEffect(() => {
         if (onEffectiveDateChange) onEffectiveDateChange('2026-06-01')
       }, [onEffectiveDateChange])
@@ -119,6 +134,7 @@ describe.each([
 ])('STA-24: Event Reason $label ($reason)', ({ reason }) => {
   beforeEach(() => {
     usePayRateApprovals.getState().clear()
+    effectiveGateProps.length = 0
   })
 
   it('renders required fields and effective date gate', () => {
@@ -131,6 +147,19 @@ describe.each([
     expect(screen.getByLabelText(/amount value/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Currency/i)).toBeInTheDocument()
     expect(screen.getByTestId('add-recurring-row')).toBeInTheDocument()
+  })
+
+  it('does not constrain EffectiveDateGate by employee hire date', () => {
+    render(<PayRateChangePage />)
+    expect(effectiveGateProps.length).toBeGreaterThan(0)
+    expect(effectiveGateProps.every((props) => props.min === undefined)).toBe(true)
+  })
+
+  it('renders the Thai promotion/pay change page title', () => {
+    render(<PayRateChangePage />)
+    expect(screen.getByRole('heading', {
+      name: 'ข้อมูลการเลื่อนตำแหน่ง/ปรับเงินเดือน',
+    })).toBeInTheDocument()
   })
 
   it('Reason for Salary Adjust is absent from DOM when reason is not PRCHG_SALADJ initially', () => {
