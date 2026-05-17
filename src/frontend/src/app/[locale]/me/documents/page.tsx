@@ -10,6 +10,7 @@ import { Download, FileText, Filter, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { HUMI_HR_DOCS, HR_DOC_TYPE_LABELS, type HrDocType, type HumiHrDoc } from '@/lib/humi-mock-data';
 import { formatDate } from '@/lib/date';
+import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 
 type FilterValue = 'all' | HrDocType;
 
@@ -39,6 +40,9 @@ export default function MeDocumentsPage() {
           </h1>
           <p className="text-sm text-ink-muted">
             ดูและดาวน์โหลดเอกสารส่วนบุคคลของคุณ
+          </p>
+          <p className="mt-2 max-w-2xl text-small text-ink-muted" data-testid="document-boundary-notice">
+            {DOCUMENT_STORYBOARD_BOUNDARY_TH}
           </p>
         </div>
         <Link

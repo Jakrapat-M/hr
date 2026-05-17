@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Modal, Button } from '@/components/humi';
 import { Printer, Download } from 'lucide-react';
+import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import type { HospitalReferral } from '@/hooks/use-hospital-referral';
 
 interface ReferralLetterPreviewProps {
@@ -330,7 +331,10 @@ export function ReferralLetterPreview({ referral, open, onClose }: ReferralLette
  </p>
  </div>
  </div>
- <div className="border-t pt-4 flex justify-end gap-2 print:hidden">
+ <p className="border-t pt-4 text-small text-ink-muted print:hidden">
+ {DOCUMENT_STORYBOARD_BOUNDARY_TH}
+ </p>
+ <div className="pt-4 flex justify-end gap-2 print:hidden">
  <Button variant="secondary" size="sm" onClick={handleDownload}>
  <Download className="h-4 w-4 mr-2" />
  {t('downloadLetter')}

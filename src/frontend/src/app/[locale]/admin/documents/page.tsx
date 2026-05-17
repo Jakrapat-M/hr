@@ -10,6 +10,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { FileText, Printer, Filter, Clock, CheckCircle, PackageCheck, Send } from 'lucide-react';
 import { Button } from '@/components/humi';
 import { useToast } from '@/components/ui/toast';
+import { DOCUMENT_STORYBOARD_BOUNDARY_EN, DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import {
   DOCUMENT_TEMPLATES,
   MOCK_DOC_REQUESTS,
@@ -122,6 +123,9 @@ export default function AdminDocumentsPage() {
             {t('adminTitle')}
           </h1>
           <p className="text-sm text-ink-muted mt-1">{t('adminSubtitle')}</p>
+          <p className="mt-2 max-w-2xl text-small text-ink-muted" data-testid="document-boundary-notice">
+            {locale === 'th' ? DOCUMENT_STORYBOARD_BOUNDARY_TH : DOCUMENT_STORYBOARD_BOUNDARY_EN}
+          </p>
         </div>
         {pendingCount > 0 && (
           <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-accent px-2 text-small font-semibold text-white">

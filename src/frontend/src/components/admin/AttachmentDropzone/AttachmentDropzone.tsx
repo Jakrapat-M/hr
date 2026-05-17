@@ -6,6 +6,7 @@
 
 import { useRef, useState, useCallback, useId, useMemo } from 'react'
 import { Paperclip, Upload, X } from 'lucide-react'
+import { DOCUMENT_UPLOAD_HELPER_TH } from '@/lib/document-boundary'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -297,7 +298,7 @@ export function AttachmentDropzone({
 
       {/* Hint */}
       <p className="mt-1 text-small text-ink-muted">
-        รองรับทุกประเภทไฟล์ · สูงสุด {maxSizeMB} MB ต่อไฟล์ · แนบได้สูงสุด {maxFiles} ไฟล์
+        รองรับทุกประเภทไฟล์ · สูงสุด {maxSizeMB} MB ต่อไฟล์ · แนบได้สูงสุด {maxFiles} ไฟล์ · {DOCUMENT_UPLOAD_HELPER_TH}
       </p>
     </div>
   )

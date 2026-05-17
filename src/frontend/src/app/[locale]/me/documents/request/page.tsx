@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { Button } from '@/components/humi';
 import { useToast } from '@/components/ui/toast';
 import { DOCUMENT_TEMPLATES, type DeliveryMode, type DocumentTemplate } from '@/data/documents/templates';
+import { DOCUMENT_STORYBOARD_BOUNDARY_EN, DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 
 type Step = 'template' | 'details';
 
@@ -66,6 +67,9 @@ export default function DocumentRequestPage() {
           {t('title')}
         </h1>
         <p className="text-sm text-ink-muted">{t('subtitle')}</p>
+        <p className="mt-2 text-small text-ink-muted" data-testid="document-boundary-notice">
+          {locale === 'th' ? DOCUMENT_STORYBOARD_BOUNDARY_TH : DOCUMENT_STORYBOARD_BOUNDARY_EN}
+        </p>
       </header>
 
       {step === 'template' && (

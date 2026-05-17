@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from '@/components/humi';
 import { cn } from '@/lib/utils';
+import { DOCUMENT_UPLOAD_HELPER_TH } from '@/lib/document-boundary';
 import {
   HUMI_LEAVE_BALANCES,
   HUMI_LEAVE_PENDING,
@@ -513,6 +514,9 @@ function RequestTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
         <Paperclip size={14} aria-hidden />
         <span>แนบเอกสารประกอบ (ถ้ามี)</span>
       </button>
+      <p className="mt-1 text-small text-ink-muted" data-testid="timeoff-attachment-boundary">
+        {DOCUMENT_UPLOAD_HELPER_TH}
+      </p>
 
       {/* Actions */}
       <div className="mt-5 flex flex-wrap items-center gap-3">

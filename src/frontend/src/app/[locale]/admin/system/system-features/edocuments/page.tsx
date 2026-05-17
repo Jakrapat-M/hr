@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import { useDataManagement } from '@/lib/admin/store/useDataManagement'
 import type { EDocument } from '@/lib/admin/types/dataManagement'
+import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary'
 
 const DOC_TYPE_OPTIONS = [
   'ทั้งหมด',
@@ -61,6 +62,9 @@ export default function EDocumentsPage() {
         <p className="mt-1 text-sm text-ink-muted">
           คลังเอกสารดิจิทัล — ดูและดาวน์โหลดเอกสาร HR ({eDocuments.length} รายการ)
         </p>
+        <p className="mt-2 max-w-2xl text-small text-ink-muted" data-testid="document-boundary-notice">
+          {DOCUMENT_STORYBOARD_BOUNDARY_TH}
+        </p>
       </div>
 
       {/* Filters */}
@@ -68,7 +72,7 @@ export default function EDocumentsPage() {
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
-          className="text-sm border border-hairline rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="text-sm border border-hairline rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-accent"
           aria-label="กรองประเภทเอกสาร"
         >
           {DOC_TYPE_OPTIONS.map((t) => (
@@ -80,7 +84,7 @@ export default function EDocumentsPage() {
           placeholder="ค้นหาชื่อเอกสาร หรือ รหัสพนักงาน..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="text-sm border border-hairline rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-64"
+          className="text-sm border border-hairline rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-accent min-w-64"
           aria-label="ค้นหาเอกสาร"
         />
       </div>
@@ -147,7 +151,7 @@ export default function EDocumentsPage() {
           </table>
         </div>
         <div className="px-4 py-2 border-t border-hairline-soft bg-canvas-soft text-xs text-ink-faint">
-          แสดง {filtered.length} จาก {eDocuments.length} รายการ
+          แสดง {filtered.length} จาก {eDocuments.length} รายการ · การดู/ดาวน์โหลดเป็น mock action ไม่ใช่ storage หรือ audit production
         </div>
       </div>
 

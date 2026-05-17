@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/humi';
+import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import { validateBenefitReferralInput, useBenefitReferralsStore } from '@/stores/benefit-referrals';
 
 export function ReferralRequestPanel({ onSubmitted }: { onSubmitted?: (workflowRequestId: string) => void }) {
@@ -42,6 +43,9 @@ export function ReferralRequestPanel({ onSubmitted }: { onSubmitted?: (workflowR
       <CardEyebrow>Hospital referral · ไม่ใช่ reimbursement claim</CardEyebrow>
       <CardTitle>ขอใบส่งตัว / ePatient referral</CardTitle>
       <p className="mt-2 text-small text-ink-muted">กรอกข้อมูลใบส่งตัวโดยไม่ต้องใช้เลขใบเสร็จ จำนวนเงิน หรือเอกสารแนบเบิกย้อนหลัง</p>
+      <p className="mt-2 text-small text-ink-muted" data-testid="referral-document-boundary">
+        {DOCUMENT_STORYBOARD_BOUNDARY_TH}
+      </p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <FormField id="referral-covered-person" label="ผู้ใช้สิทธิ์" required>
           {(controlProps) => (

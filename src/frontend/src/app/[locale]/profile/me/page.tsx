@@ -17,6 +17,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Check, FileText, Download, Pencil, X, FileX } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import {
   benefitReferralRoute,
   benefitTaxPlanningRoute,
@@ -1849,6 +1850,9 @@ export default function HumiProfileMePage({
             <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
               {t('docsTitle')}
             </h3>
+            <p className="mt-2 text-small text-ink-muted" data-testid="profile-documents-boundary">
+              {DOCUMENT_STORYBOARD_BOUNDARY_TH}
+            </p>
             <ul className="humi-list mt-2.5" role="list">
               {[
                 { n: 'สัญญาจ้างงานที่ลงนาม', d: 'ก.พ. 2568' },

@@ -2,6 +2,7 @@
 
 import { Button, Card, CardEyebrow, CardTitle, Modal } from '@/components/humi';
 import { buildMockEPatientLetterPayload } from '@/lib/benefit-referral-adapters';
+import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import type { BenefitReferralRequest } from '@/stores/benefit-referrals';
 
 export function ReferralLetterPreview({ referral, open, onClose }: { referral: BenefitReferralRequest | null; open: boolean; onClose: () => void }) {
@@ -23,6 +24,9 @@ export function ReferralLetterPreview({ referral, open, onClose }: { referral: B
           <Info label="ePatient reference" value={payload.ePatientReference ?? '-'} />
           <Info label="สถานะ ePatient" value={payload.integrationStatus} />
         </dl>
+        <p className="mt-4 text-small text-ink-muted">
+          {DOCUMENT_STORYBOARD_BOUNDARY_TH}
+        </p>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>ปิด</Button>
           <Button variant="secondary" disabled={!referral.letter}>ดาวน์โหลด PDF (ยังไม่เปิดใช้)</Button>

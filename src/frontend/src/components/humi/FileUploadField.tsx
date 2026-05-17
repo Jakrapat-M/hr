@@ -15,6 +15,7 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import { FileText, ImageIcon, UploadCloud, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DOCUMENT_UPLOAD_HELPER_TH } from '@/lib/document-boundary';
 import { useHumiProfileStore } from '@/stores/humi-profile-slice';
 
 // ── Allowed MIME types (mirrors accept attribute) ──────────────────────────
@@ -368,8 +369,10 @@ export function FileUploadField({
       )}
 
       {/* Helper text (shown when no error) */}
-      {!error && helperText && (
-        <p className="text-small text-ink-muted">{helperText}</p>
+      {!error && (
+        <p className="text-small text-ink-muted">
+          {helperText ? `${helperText} · ${DOCUMENT_UPLOAD_HELPER_TH}` : DOCUMENT_UPLOAD_HELPER_TH}
+        </p>
       )}
     </div>
   );

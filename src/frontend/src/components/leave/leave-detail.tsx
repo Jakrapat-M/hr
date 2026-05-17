@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { CheckCircle, Clock, XCircle, FileText } from 'lucide-react';
 import type { LeaveRequest, LeaveStatus } from '@/hooks/use-leave';
+import { DOCUMENT_UPLOAD_HELPER_TH } from '@/lib/document-boundary';
 
 const STATUS_VARIANTS: Record<LeaveStatus, 'warning' | 'success' | 'error' | 'neutral'> = {
   pending: 'warning',
@@ -136,9 +137,12 @@ export function LeaveDetail({ request, open, onClose, onCancel }: LeaveDetailPro
 
         {/* Attachment */}
         {request.attachmentUrl && (
-          <div className="flex items-center gap-2 text-sm text-accent">
-            <FileText className="h-4 w-4" />
-            <span>{t('medicalCert')}</span>
+          <div className="text-sm">
+            <div className="flex items-center gap-2 text-accent">
+              <FileText className="h-4 w-4" />
+              <span>{t('medicalCert')}</span>
+            </div>
+            <p className="mt-1 text-small text-ink-muted">{DOCUMENT_UPLOAD_HELPER_TH}</p>
           </div>
         )}
 
