@@ -159,7 +159,7 @@ describe('useLifecycleWizard — setStepData', () => {
 
     // เรียก setStepData ด้วย flow ที่ไม่ตรง — ต้อง no-op
     act(() => {
-      // @ts-expect-error — ตั้งใจ test flow mismatch
+      // @ts-ignore — ตั้งใจ test flow mismatch at runtime
       result.current.setStepData('transfer', 1, { selectedEmployee: mockActiveEmployee })
     })
 

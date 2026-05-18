@@ -567,9 +567,10 @@ export default function ManagerProbationsPage() {
                       </button>
                     )}
 
-                    {/* Link to admin profile */}
+                    {/* Link to admin profile — keep inbox/list entry separate from the
+                        employee-specific probation action form. */}
                     <Link
-                      href={`/${locale}/admin/employees/${emp.employee_id}/probation`}
+                      href={`/${locale}/admin/employees/${emp.employee_id}`}
                       aria-label={`${isTh ? 'ดูรายละเอียด' : 'View details'} ${emp.first_name_th}`}
                       style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'center',

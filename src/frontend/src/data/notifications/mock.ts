@@ -100,7 +100,7 @@ export const MOCK_IN_APP_NOTIFICATIONS: InAppNotification[] = [
     titleEn: 'Probation Period Due',
     bodyTh: 'อนุชา พงษ์ไพร สิ้นสุดทดลองงานในวันที่ 15 พ.ค. 2026',
     bodyEn: 'Anucha Phongphai probation ends 15 May 2026',
-    href: '/th/admin/employees/EMP006/probation',
+    href: '/th/workflows/probation/PB-001',
     read: true,
     createdAt: '2026-04-30T09:00:00Z',
   },

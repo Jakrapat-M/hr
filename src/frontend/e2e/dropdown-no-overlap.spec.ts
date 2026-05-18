@@ -15,7 +15,7 @@ const EMP_ID = 'EMP001'
 const PAGE_URL = `/th/admin/employees/${EMP_ID}/pay-rate-change`
 
 test.beforeEach(async ({ page }) => {
-  await mockAuthSession(page)
+  await mockAuthSession(page, 'hr_admin')
   await page.goto(PAGE_URL, { waitUntil: 'networkidle' })
   // Unlock form by setting effective date
   const dateInput = page.locator('input[type="date"]').first()

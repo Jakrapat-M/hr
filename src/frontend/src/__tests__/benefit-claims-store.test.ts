@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  BENEFIT_CLAIMS_PERSIST_VERSION,
   BENEFIT_STATUS_LABEL,
+  migrateBenefitClaimsPersistedState,
   selectBenefitRequestSummaries,
   useBenefitClaimsStore,
   validateBenefitAttachmentRules,
@@ -73,5 +75,15 @@ describe('benefit claim store', () => {
       'ชนิดไฟล์ไม่รองรับ: receipt.exe',
       'ไฟล์เกิน 10 MB: receipt.exe',
     ]);
+  });
+
+  it('provides a persist migration for stored benefit-claims snapshots', () => {
+    expect(BENEFIT_CLAIMS_PERSIST_VERSION).toBeGreaterThan(0);
+
+    const migrated = migrateBenefitClaimsPersistedState({ claims: [] });
+    expect(migrated.claims).toEqual([]);
+
+    const fallback = migrateBenefitClaimsPersistedState({ stale: true });
+    expect(fallback.claims?.length).toBeGreaterThan(0);
   });
 });

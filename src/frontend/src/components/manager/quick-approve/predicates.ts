@@ -55,7 +55,7 @@ export function isActionRequired(
   personaGroup: PersonaGroup,
   currentUserId: string,
 ): boolean {
-  const assigneeId = (row.assigneeId as string | undefined) ?? row.requester.id;
+  const assigneeId = row.assigneeId as string | undefined;
   const escalatedToHR = (row.escalatedToHR as boolean | undefined) ?? false;
   const slaOverrun = (row.slaOverrun as boolean | undefined) ?? false;
   // Derive pending status from approval timeline
@@ -63,7 +63,10 @@ export function isActionRequired(
 
   switch (personaGroup) {
     case 'manager':
-      return assigneeId === currentUserId && isPending;
+      // Demo/mock requests predate explicit assignment metadata. Treat rows with
+      // no assigneeId as actionable for the manager inbox instead of falling
+      // back to requester.id, which is an employee id and hides all rows.
+      return (!assigneeId || assigneeId === currentUserId) && isPending;
     case 'hrbp_spd':
       // partneredDepts not in mock data — default to true (all items visible)
       return !escalatedToHR && isPending;
@@ -81,15 +84,16 @@ export function isWatching(
   personaGroup: PersonaGroup,
   currentUserId: string,
 ): boolean {
-  const assigneeId = (row.assigneeId as string | undefined) ?? row.requester.id;
+  const assigneeId = row.assigneeId as string | undefined;
   const escalatedToHR = (row.escalatedToHR as boolean | undefined) ?? false;
   const isPending = row.approvalTimeline.some((s) => s.status === 'pending');
 
   switch (personaGroup) {
     case 'manager':
       // Direct reports' indirect items — rows not directly assigned to this manager
-      // but still pending. In mock data: items where assignee != currentUserId but pending.
-      return assigneeId !== currentUserId && isPending;
+      // but still pending. Rows without assigneeId are legacy/demo action items,
+      // not watching-only items.
+      return !!assigneeId && assigneeId !== currentUserId && isPending;
     case 'hrbp_spd':
       // Full visibility across partnered depts (all pending, including escalated)
       return isPending;
@@ -109,7 +113,7 @@ export function isHistory(
   currentUserId: string,
 ): boolean {
   if (!isWithin90Days(row.submittedAt)) return false;
-  const assigneeId = (row.assigneeId as string | undefined) ?? row.requester.id;
+  const assigneeId = row.assigneeId as string | undefined;
   // Determine resolved status from timeline
   const allResolved = row.approvalTimeline.every((s) => s.status !== 'pending');
   const anyHistorical = row.approvalTimeline.some((s) => isHistorical(s.status));
@@ -117,7 +121,7 @@ export function isHistory(
 
   switch (personaGroup) {
     case 'manager':
-      return assigneeId === currentUserId && isDone;
+      return (!assigneeId || assigneeId === currentUserId) && isDone;
     case 'hrbp_spd':
       return isDone;
     case 'hr_admin_manager':

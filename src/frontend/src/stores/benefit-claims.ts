@@ -450,6 +450,21 @@ const initialClaims: BenefitClaimRequest[] = [
   },
 ];
 
+export const BENEFIT_CLAIMS_PERSIST_VERSION = 1;
+
+export function migrateBenefitClaimsPersistedState(
+  persistedState: unknown,
+): Partial<BenefitClaimsState> {
+  if (
+    persistedState &&
+    typeof persistedState === 'object' &&
+    Array.isArray((persistedState as { claims?: unknown }).claims)
+  ) {
+    return persistedState as Partial<BenefitClaimsState>;
+  }
+  return { claims: initialClaims };
+}
+
 export const useBenefitClaimsStore = create<BenefitClaimsState>()(
   persist(
     (set, get) => ({
@@ -566,7 +581,11 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
         }),
       clear: () => set({ claims: [] }),
     }),
-    { name: 'humi-benefit-claims' },
+    {
+      name: 'humi-benefit-claims',
+      version: BENEFIT_CLAIMS_PERSIST_VERSION,
+      migrate: (persistedState) => migrateBenefitClaimsPersistedState(persistedState),
+    },
   ),
 );
 

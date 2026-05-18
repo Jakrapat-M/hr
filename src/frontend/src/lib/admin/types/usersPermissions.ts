@@ -5,6 +5,21 @@
 // Capability Codes — รหัสสิทธิ์ที่แต่ละ role สามารถมีได้
 // -----------------------------------------------------------------------
 
+export type EcCapabilityMenu =
+  | 'EC.EmpJob'
+  | 'EC.Compensation'
+  | 'EC.Employment'
+  | 'EC.PersonalInfo'
+  | 'EC.JobInfo'
+  | 'EC.Position'
+  | 'EC.OrgAssignment'
+  | 'EC.EmploymentDetails'
+  | 'EC.WorkPermit'
+  | 'EC.Termination'
+
+export type EcCapabilityAction = 'VIEW' | 'EDIT' | 'ENABLE' | 'DISABLE'
+export type EcCapabilityCode = `${EcCapabilityMenu}_${EcCapabilityAction}`
+
 export type CapabilityCode =
   // Employee self-service
   | 'ESS_VIEW_OWN'         // ดูข้อมูลตัวเอง
@@ -31,6 +46,8 @@ export type CapabilityCode =
   // System Admin
   | 'SYS_FULL_ACCESS'      // สิทธิ์สูงสุด — System Admin เท่านั้น
   | 'SYS_MANAGE_INTEGRATION' // จัดการ integrations และ API
+  // Application role-group matrix capabilities (BRD #185)
+  | EcCapabilityCode
 
 // -----------------------------------------------------------------------
 // Role Group — BRD #185 Application Role Groups

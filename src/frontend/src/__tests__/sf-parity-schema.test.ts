@@ -64,7 +64,7 @@ const minimalFormData: FormData = {
     dateOfBirth: null, countryOfBirth: null, regionOfBirth: '',
     age: null, employeeId: '', nationalIdCardType: null,
     country: null, nationalId: '', issueDate: null, expiryDate: null,
-    isPrimary: null, vnIssuePlace: '', salutationLocal: null,
+    isPrimary: null, vnIssuePlace: '', attachmentName: null, salutationLocal: null,
   },
   biographical: {
     otherTitleTh: '', firstNameLocal: '', lastNameLocal: '',
@@ -136,8 +136,10 @@ const minimalFormData: FormData = {
     position: '', businessUnit: null, businessUnitLabel: null,
     branch: null, branchLabel: null, jobCode: null, jobLabel: null,
     jobGrade: null, jobGradeLabel: null, storeBranchCode: null, hrDistrict: null,
+    supervisorId: null, supervisorLabel: null,
     workSchedule: '', holidayTypeCondition: '', timeManagementStatus: '',
-    otFlag: '', standardWeeklyHours: 0, dailyWorkingHours: 0,
+    otFlag: '', standardWeeklyHours: 0, overrideStandardWeeklyHours: false,
+    dayOffType: '', dailyWorkingHours: 0,
     workingDaysPerWeek: 0, fte: 0, holidayCalendar: '', timeProfile: '',
     timeRecordingVariant: '',
     // Phase 3 new fields
@@ -148,6 +150,7 @@ const minimalFormData: FormData = {
     ssoLocation: null, groupCompanyGroup: null, contractType: null,
     zone: null, contractEndDate: null, probationEndDate: null,
     emplStatus: null, event: null, employmentType: null,
+    attachmentName: null,
   },
   compensation: { baseSalary: null },
 }

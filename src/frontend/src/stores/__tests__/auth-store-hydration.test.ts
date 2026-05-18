@@ -45,7 +45,7 @@ beforeEach(() => {
     isAuthenticated: false,
     originalUser: null,
     _hasHydrated: false,
-  } as Parameters<typeof useAuthStore.setState>[0]);
+  } as unknown as Parameters<typeof useAuthStore.setState>[0]);
 });
 
 describe('auth-store hydration gate', () => {

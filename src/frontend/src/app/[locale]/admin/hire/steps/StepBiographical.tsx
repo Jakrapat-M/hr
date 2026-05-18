@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { useHireWizard } from '@/lib/admin/store/useHireWizard'
+import { useHireWizard, type FormData } from '@/lib/admin/store/useHireWizard'
 import { stepBiographicalSchema } from '@/lib/admin/validation/hireSchema'
 import {
   AttachmentDropzone,
@@ -79,7 +79,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
   const t = useTranslations('hireForm.biographical')
   const { formData, setStepData } = useHireWizard()
   const bio = formData.biographical
-  const reviewAttachmentName = formData.review.attachmentName
+  const reviewAttachmentName = formData.review?.attachmentName ?? null
 
   // ── Local field state ───────────────────────────────────────────────────────
   const [otherTitleTh,     setOtherTitleTh]     = useState(bio.otherTitleTh ?? '')
@@ -157,8 +157,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
         if (spouseNameTh)       extra.spouseNameTh = spouseNameTh
         if (nativePreferredLang) extra.nativePreferredLang = nativePreferredLang
         if (religion)           extra.religion = religion
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setStepData('biographical', extra as any)
+        setStepData('biographical', extra as Partial<FormData['biographical']>)
       }
       onValidChange?.(true)
     } else {
@@ -177,13 +176,19 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
     nativePreferredLang, religion, setStepData, onValidChange,
   ])
 
-  useEffect(() => { validate() }, [validate])
+  useEffect(() => {
+    // Existing step validation syncs local field errors and wizard validity.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    validate()
+  }, [validate])
 
   // A2 — Auto-derive foreigner from nationality (SF rule XX-XXX-EIM-OI-SetFlagForeigner)
   // SF: PerPersonal.customString13 = 1 when nationality !== TH (Thai picklist id = 'TH')
   useEffect(() => {
     if (!nationality) return
     const derived = nationality !== 'TH' ? 'YES' : 'NO'
+    // Keep derived foreigner flag aligned with nationality selection.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setForeigner((prev) => (prev === derived ? prev : derived))
   }, [nationality])
 

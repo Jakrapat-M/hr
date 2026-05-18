@@ -816,7 +816,9 @@ export const useHireWizard = create<HireWizardState>()(
       // Version 7 adds: Phase 5 compensation.recurringComponents + bank/payment fields.
       // Version 8 adds BA attachment fields across remaining hire sections.
       // Version 9 adds frozen candidate context + persisted section collapse.
-      version: 9,
+      // Version 10 backfills the review slice for drafts persisted by builds
+      // that accidentally omitted it, preventing Personal Information crashes.
+      version: 10,
       partialize: (state) => ({
         currentStep: state.currentStep,
         maxUnlockedStep: state.maxUnlockedStep,
@@ -942,7 +944,27 @@ export const useHireWizard = create<HireWizardState>()(
         if (!('paymentAttachmentName' in fd.compensation)) {
           fd.compensation.paymentAttachmentName = null
         }
-        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v9`)
+        if (!fd.review || typeof fd.review !== 'object') {
+          fd.review = {
+            salutationEnReview: null,
+            firstNameEnReview: '',
+            lastNameEnReview: '',
+            middleNameEnReview: '',
+            attachmentName: null,
+          }
+        } else {
+          const reviewDefaults = {
+            salutationEnReview: null,
+            firstNameEnReview: '',
+            lastNameEnReview: '',
+            middleNameEnReview: '',
+            attachmentName: null,
+          }
+          for (const [k, v] of Object.entries(reviewDefaults)) {
+            if (!(k in fd.review)) fd.review[k] = v
+          }
+        }
+        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v10`)
         return p
       },
     },

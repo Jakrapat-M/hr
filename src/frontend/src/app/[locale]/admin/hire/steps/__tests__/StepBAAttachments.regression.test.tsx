@@ -93,6 +93,22 @@ beforeEach(() => {
 })
 
 describe('hire wizard BA attachment rows beyond Work Permit', () => {
+  it('Personal Information tolerates stale drafts without the review slice', () => {
+    act(() => {
+      useHireWizard.setState((state) => {
+        const formDataWithoutReview = { ...state.formData } as Partial<typeof state.formData>
+        delete formDataWithoutReview.review
+        return {
+          formData: formDataWithoutReview as typeof state.formData,
+        }
+      })
+    })
+
+    render(<StepBiographical />)
+
+    expect(screen.getByRole('button', { name: 'พื้นที่แนบไฟล์' })).toBeInTheDocument()
+  })
+
   it.each(candidateSections)('$name does not expose a legacy filename textbox', (section) => {
     const source = sourceFor(section)
 

@@ -40,6 +40,7 @@ vi.mock('next/link', () => ({
 }));
 
 vi.mock('next-intl', () => ({
+  useLocale: () => 'th',
   useTranslations: () => (key: string) => {
     const map: Record<string, string> = {
       'benefits.activeEnrollments': 'สวัสดิการที่ใช้งานอยู่',
@@ -94,7 +95,7 @@ describe('benefit claim journey canonical route', () => {
     render(<BenefitsHubPage />);
 
     expect(screen.getByRole('heading', { name: 'งานสวัสดิการ' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'เลือกงานที่ต้องการทำ' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'เลือกสวัสดิการที่ต้องการ' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'สิทธิ์จากข้อมูล HRMS/EC' })).toBeInTheDocument();
     expect(document.querySelectorAll('[data-benefit-owned-action="true"]')).toHaveLength(2);
     expect(screen.getByRole('link', { name: 'ดูสรุปสิทธิ์ในโปรไฟล์' })).toHaveAttribute('href', '/th/profile/me?tab=benefits');
@@ -210,12 +211,12 @@ describe('benefit claim journey canonical route', () => {
     expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/profile/me?tab=employment#pay-statements');
   });
 
-  it('/hospital-referral redirects to the dedicated Benefits Hub referral route', async () => {
+  it('/hospital-referral renders the dedicated referral history and links new requests to Benefits Hub', async () => {
     const { default: HospitalReferralPage } = await import('@/app/[locale]/hospital-referral/page');
 
-    await expect(
-      HospitalReferralPage({ params: Promise.resolve({ locale: 'th' }) } as never),
-    ).rejects.toThrow('NEXT_REDIRECT:/th/benefits-hub/referral');
-    expect(navigationMocks.redirect).toHaveBeenCalledWith('/th/benefits-hub/referral');
+    const { container } = render(<HospitalReferralPage />);
+
+    expect(screen.getByRole('heading', { level: 1, name: /ขอใบส่งตัว|Hospital Referral/i })).toBeInTheDocument();
+    expect(container.querySelector('a[href="/th/benefits-hub/referral"]')).toBeTruthy();
   });
 });

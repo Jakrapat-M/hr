@@ -298,7 +298,7 @@ export default function BenefitPaymentPage() {
           caption={isTh ? 'การแมปรอบการจ่าย' : 'Payment period mapping'}
           columns={periodCols(isTh)}
           rows={MOCK_PERIOD_MAPPING}
-          rowKey={(r) => `${r.company}-${r.periodId}`}
+          rowKey={(r) => `${r.company}-${r.periodId}-${r.plan}`}
           dense
         />
       </section>
