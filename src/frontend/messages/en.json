@@ -4683,8 +4683,6 @@
     "colCategory": "Category",
     "colRecordType": "Type",
     "colTemplate": "Template",
-    "colLimit": "Annual limit",
-    "colApproval": "Approval chain",
     "colActions": "Actions",
     "empty": "No plans match the selected filters.",
     "disclaimerEyebrow": "Note",
