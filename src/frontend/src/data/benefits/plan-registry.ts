@@ -121,6 +121,19 @@ export interface BenefitPlanV1 {
    * Optional; defaults to undefined/false. Read-only registry hint, no behavior change for callers that ignore it.
    */
   dvtVariant?: boolean;
+  /**
+   * STA-70 — Country scope. Optional; existing seeds default to 'TH' at use sites.
+   */
+  country?: 'TH' | 'VN';
+  /**
+   * STA-70 — Active/Inactive flag. Optional; existing seeds default to 'active' at use sites.
+   */
+  status?: 'active' | 'inactive';
+  /**
+   * STA-70 — Top-level benefit-type grouping for configurator. Distinct from the
+   * nested `coverage.benefitType` string. Optional; use-site default derives from `recordType`.
+   */
+  benefitTypeGroup?: 'reimbursement-employee-hr' | 'reimbursement-hr' | 'info' | 'record';
 }
 
 // ── A3 hybrid plan shape (v2) ─────────────────────────────────────────────
@@ -155,6 +168,12 @@ export interface BenefitPlanV2 {
    * Optional; defaults to undefined/false.
    */
   dvtVariant?: boolean;
+  /** STA-70 — Country scope. Optional; existing seeds default to 'TH' at use sites. */
+  country?: 'TH' | 'VN';
+  /** STA-70 — Active/Inactive flag. Optional; existing seeds default to 'active' at use sites. */
+  status?: 'active' | 'inactive';
+  /** STA-70 — Top-level benefit-type grouping. Optional; use-site default derives from `recordType`. */
+  benefitTypeGroup?: 'reimbursement-employee-hr' | 'reimbursement-hr' | 'info' | 'record';
 }
 
 export type BenefitPlan = BenefitPlanV1 | BenefitPlanV2;

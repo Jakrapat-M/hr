@@ -3,6 +3,10 @@
 import { FormField, FormInput } from '@/components/humi';
 import { type PlanCategory, type WorkflowTemplate } from '@/data/benefits/plan-registry';
 
+export type CountryCode = 'TH' | 'VN';
+export type PlanStatus = 'active' | 'inactive';
+export type BenefitTypeGroup = 'reimbursement-employee-hr' | 'reimbursement-hr' | 'info' | 'record';
+
 export interface Tab1IdentityValues {
   ttt: string;
   planKey: string;
@@ -14,6 +18,10 @@ export interface Tab1IdentityValues {
   template: WorkflowTemplate;
   effectiveFrom: string;
   effectiveTo: string;
+  // STA-70 additions
+  country: CountryCode;
+  status: PlanStatus;
+  benefitTypeGroup: BenefitTypeGroup;
 }
 
 export interface Tab1IdentityFieldsProps {
@@ -282,6 +290,85 @@ export function Tab1IdentityFields({
               value={values.effectiveTo}
               onChange={(e) => onChange('effectiveTo', e.target.value)}
             />
+          )}
+        </FormField>
+      </div>
+
+      {/* ── STA-70 Benefit info section ─────────────────────────────────── */}
+      <div className="border-t border-hairline pt-5">
+        <h3 className="mb-3 text-small font-semibold uppercase tracking-wider text-ink-muted">
+          {isTh ? 'ข้อมูลสวัสดิการ (Benefit info)' : 'Benefit info'}
+        </h3>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* 10. Country */}
+          <FormField
+            id="tab1-country"
+            label={isTh ? 'ประเทศ (Country)' : 'Country'}
+            required
+          >
+            {(cp) => (
+              <select
+                {...cp}
+                value={values.country}
+                onChange={(e) => onChange('country', e.target.value as CountryCode)}
+                className={selectClass}
+              >
+                <option value="TH">{isTh ? 'ไทย (TH)' : 'Thailand (TH)'}</option>
+                <option value="VN">{isTh ? 'เวียดนาม (VN)' : 'Vietnam (VN)'}</option>
+              </select>
+            )}
+          </FormField>
+
+          {/* 11. Status */}
+          <FormField
+            id="tab1-status"
+            label={isTh ? 'สถานะ (Status)' : 'Status'}
+            required
+          >
+            {(cp) => (
+              <select
+                {...cp}
+                value={values.status}
+                onChange={(e) => onChange('status', e.target.value as PlanStatus)}
+                className={selectClass}
+              >
+                <option value="active">{isTh ? 'ใช้งาน (Active)' : 'Active'}</option>
+                <option value="inactive">{isTh ? 'ไม่ใช้งาน (Inactive)' : 'Inactive'}</option>
+              </select>
+            )}
+          </FormField>
+        </div>
+      </div>
+
+      {/* ── STA-70 Benefit type / group section ─────────────────────────── */}
+      <div className="border-t border-hairline pt-5">
+        <h3 className="mb-3 text-small font-semibold uppercase tracking-wider text-ink-muted">
+          {isTh ? 'ประเภท / กลุ่มสวัสดิการ (Benefit type / group)' : 'Benefit type / group'}
+        </h3>
+
+        {/* 12. Benefit type */}
+        <FormField
+          id="tab1-benefitTypeGroup"
+          label={isTh ? 'ประเภทสวัสดิการ (Benefit type)' : 'Benefit type'}
+          required
+        >
+          {(cp) => (
+            <select
+              {...cp}
+              value={values.benefitTypeGroup}
+              onChange={(e) => onChange('benefitTypeGroup', e.target.value as BenefitTypeGroup)}
+              className={selectClass}
+            >
+              <option value="reimbursement-employee-hr">
+                {isTh ? 'Reimbursement: Employee/HR' : 'Reimbursement: Employee/HR'}
+              </option>
+              <option value="reimbursement-hr">
+                {isTh ? 'Reimbursement: HR' : 'Reimbursement: HR'}
+              </option>
+              <option value="info">{isTh ? 'Info.' : 'Info.'}</option>
+              <option value="record">{isTh ? 'Record' : 'Record'}</option>
+            </select>
           )}
         </FormField>
       </div>
