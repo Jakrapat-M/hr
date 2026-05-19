@@ -1,10 +1,18 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { Card, CardEyebrow, CardTitle, Button, DemoValuesDisclaimer } from '@/components/humi';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { REFERRAL_HOSPITALS, useBenefitReferralsStore } from '@/stores/benefit-referrals';
+
+// STA-62 — turn the Admin root from a read-only preview into a working hub.
+// Each previously-disabled control resolves to one of three states:
+//   (a) deep-link to an existing child page that already does the work
+//   (b) mock action that fires a toast (export-CSV preview download)
+//   (c) explicit roadmap callout copy with "planned post-backend" in TH + EN
+// No fake-disabled buttons remain.
 
 const masterData = [
   ['BEN-MED-OPD', 'Medical reimbursement', 'Medical', 'Reimbursement', 'INC-MED', '2026-01-01', '2026-12-31', 'Active'],
@@ -52,19 +60,64 @@ export default function AdminBenefitsPage() {
   const remainingAmount = claims.reduce((sum, c) => sum + c.remainingAmount, 0);
   const activeReferrals = referrals.filter((referral) => !['draft', 'cancelled'].includes(referral.status)).length;
 
+  // STA-62 — toast for mock actions
+  const [toast, setToast] = useState<string | null>(null);
+  const flashToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2400);
+  };
+
+  // STA-62 — mock Export-CSV action: generate a 1-row preview CSV blob and download
+  const handleExportCsvPreview = () => {
+    const header = 'employee_id,benefit_code,receipt_no,receipt_date,claim_amount,approved_amount,payment_period,status\n';
+    const sample = 'EMP-0042,BEN-MED-OPD,RCP-2026-04-0042,2026-04-12,3500,3500,PP-2026-04,approved\n';
+    const blob = new Blob([header + sample], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `benefit-claims-preview-mock.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    flashToast(isTh ? 'ดาวน์โหลด CSV ตัวอย่าง (จำลอง) แล้ว' : 'Mock CSV preview downloaded');
+  };
+
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <CardEyebrow>Benefits admin · EC/BRD-derived read-only first pass</CardEyebrow>
-          <h1 className="font-display text-[28px] font-semibold text-ink">Benefits governance and service operations</h1>
-          <p className="mt-2 text-small text-ink-muted">Master data, eligibility, Benefit Special Privilege, EBO reporting, SPD workflows, payment export status, and hospital integration previews. Payroll/Tax review stays outside Benefits Admin.</p>
+          <CardEyebrow>{isTh ? 'สวัสดิการ · หน้าหลักของผู้ดูแล' : 'Benefits admin · operations hub'}</CardEyebrow>
+          <h1 className="font-display text-3xl font-semibold text-ink">Benefits governance and service operations</h1>
+          <p className="mt-2 text-small text-ink-muted">
+            {isTh
+              ? 'Master data, eligibility, Benefit Special Privilege, EBO reporting, SPD workflows, payment export status, and hospital integration previews. Payroll/Tax review stays outside Benefits Admin. (STA-62 — actions deep-link to working child pages or fire mock previews; no fake disabled buttons remain.)'
+              : 'Master data, eligibility, Benefit Special Privilege, EBO reporting, SPD workflows, payment export status, and hospital integration previews. Payroll/Tax review stays outside Benefits Admin. (STA-62 — actions deep-link to working child pages or fire mock previews; no fake disabled buttons remain.)'}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" disabled>Edit disabled</Button>
-          <Button variant="secondary" disabled>Import disabled</Button>
-          <Button variant="secondary" disabled>Export disabled</Button>
-          <Button variant="secondary" disabled>Export CSV disabled</Button>
+          {/* STA-62 — Edit → deep-link to plans (configurator lives there) */}
+          <Link href={`/${locale}/admin/benefits/plans`}>
+            <Button variant="secondary">
+              {isTh ? 'แก้ไขแผน' : 'Edit plans'} →
+            </Button>
+          </Link>
+          {/* STA-62 — Import → deep-link to existing /import child route */}
+          <Link href={`/${locale}/admin/benefits/import`}>
+            <Button variant="secondary">
+              {isTh ? 'นำเข้าข้อมูล' : 'Import'} →
+            </Button>
+          </Link>
+          {/* STA-62 — Export → deep-link to reports child route */}
+          <Link href={`/${locale}/admin/benefits/reports`}>
+            <Button variant="secondary">
+              {isTh ? 'รายงาน / Export' : 'Reports / Export'} →
+            </Button>
+          </Link>
+          {/* STA-62 — Export CSV → mock action: download a preview CSV blob */}
+          <Button variant="secondary" onClick={handleExportCsvPreview}>
+            {isTh ? 'Export CSV (จำลอง)' : 'Export CSV (mock)'}
+          </Button>
         </div>
       </header>
 
@@ -103,19 +156,46 @@ export default function AdminBenefitsPage() {
 
       <Card variant="raised" size="lg">
         <CardEyebrow>Service integrations</CardEyebrow>
-        <CardTitle>Read-only admin actions</CardTitle>
+        <CardTitle>{isTh ? 'การดำเนินการของผู้ดูแล' : 'Admin operations'}</CardTitle>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant="secondary" disabled>Hospital import disabled</Button>
-          <Button variant="secondary" disabled>ePatient sync disabled</Button>
-          <Button variant="secondary" disabled>Finance export disabled</Button>
-          <Button variant="secondary" disabled>Bank file generation disabled</Button>
+          {/* STA-62 — Hospital import → deep-link to /admin/benefits/import */}
+          <Link href={`/${locale}/admin/benefits/import`}>
+            <Button variant="secondary">
+              {isTh ? 'นำเข้าโรงพยาบาล' : 'Hospital import'} →
+            </Button>
+          </Link>
+          {/* STA-62 — ePatient sync → roadmap callout (no integration in mockup phase) */}
+          <Button variant="ghost" disabled title={isTh ? 'วางแผนหลังเปิดใช้ Backend' : 'Planned post-backend'}>
+            {isTh ? 'ePatient sync — วางแผนหลังเปิดใช้ Backend' : 'ePatient sync — planned post-backend'}
+          </Button>
+          {/* STA-62 — Finance export → deep-link to payment lifecycle page (handles export now) */}
+          <Link href={`/${locale}/admin/benefits/payment`}>
+            <Button variant="secondary">
+              {isTh ? 'ส่งบัญชี (Payment)' : 'Finance export (Payment)'} →
+            </Button>
+          </Link>
+          {/* STA-62 — Bank file generation → deep-link to payment lifecycle page (payload preview) */}
+          <Link href={`/${locale}/admin/benefits/payment`}>
+            <Button variant="secondary">
+              {isTh ? 'สร้างไฟล์ธนาคาร (Payment)' : 'Bank file (Payment)'} →
+            </Button>
+          </Link>
         </div>
+        <p className="mt-3 text-[length:var(--text-eyebrow)] uppercase tracking-[0.12em] text-ink-muted">
+          {isTh
+            ? 'หมายเหตุ: Finance/Bank export ทำผ่านหน้าจ่ายสวัสดิการ (STA-67). ePatient sync วางแผนหลังเปิดใช้ Backend จริง.'
+            : 'Note: Finance/Bank export runs through the Payment lifecycle page (STA-67). ePatient sync is planned post-backend.'}
+        </p>
       </Card>
 
       <Card variant="raised" size="lg">
         <CardEyebrow>Benefit claim report fields</CardEyebrow>
         <CardTitle>CSV export shape preview</CardTitle>
-        <p className="mt-2 text-small text-ink-muted">Preview columns: employee_id, benefit_code, receipt_no, receipt_date, claim_amount, approved_amount, payment_period, status. Actual CSV/Excel export remains disabled.</p>
+        <p className="mt-2 text-small text-ink-muted">
+          {isTh
+            ? 'คอลัมน์ตัวอย่าง: employee_id, benefit_code, receipt_no, receipt_date, claim_amount, approved_amount, payment_period, status. ใช้ปุ่ม “Export CSV (จำลอง)” ด้านบนเพื่อดาวน์โหลดไฟล์ตัวอย่าง 1 แถว. CSV/Excel ตัวจริงเปิดใช้หลัง Backend integration.'
+            : 'Preview columns: employee_id, benefit_code, receipt_no, receipt_date, claim_amount, approved_amount, payment_period, status. Use the "Export CSV (mock)" button above to download a 1-row sample. Real CSV/Excel export ships with backend integration.'}
+        </p>
       </Card>
 
       <Card variant="raised" size="md" className="mt-6">
@@ -135,8 +215,23 @@ export default function AdminBenefitsPage() {
       <Card variant="raised" size="lg">
         <CardEyebrow>BE User Management deferred</CardEyebrow>
         <CardTitle>Data permission group editing</CardTitle>
-        <p className="mt-2 text-small text-ink-muted">Application role group and user assignment editing stay deferred until real admin RBAC integration is in scope.</p>
+        <p className="mt-2 text-small text-ink-muted">
+          {isTh
+            ? 'การจัดการกลุ่มสิทธิ์และการกำหนดผู้ใช้ — วางแผนหลังเปิดใช้ Backend RBAC จริง.'
+            : 'Application role group and user assignment editing — planned post-backend (real admin RBAC integration).'}
+        </p>
       </Card>
+
+      {/* Toast */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-50 rounded-[var(--radius-md)] border border-accent/30 bg-accent-soft px-4 py-2 text-small font-medium text-accent shadow-md"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
