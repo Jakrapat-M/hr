@@ -134,6 +134,16 @@ export interface BenefitPlanV1 {
    * nested `coverage.benefitType` string. Optional; use-site default derives from `recordType`.
    */
   benefitTypeGroup?: 'reimbursement-employee-hr' | 'reimbursement-hr' | 'info' | 'record';
+  /** STA-70 follow-up — Enrolment mode. */
+  enrolment?: 'auto' | 'manual';
+  /** STA-70 follow-up — Claim period grouping. */
+  claimPeriod?: 'year' | 'month' | 'quarter' | 'one-time' | 'lifetime';
+  /** STA-70 follow-up — Entitlement-amount calculation method. */
+  entitlementCalcMethod?: 'full' | 'prorate';
+  /** STA-70 follow-up — Eligible-claim-date threshold. */
+  eligibleClaimDate?: '30' | '60' | '90' | 'none';
+  /** STA-70 follow-up — Legal-entity company (free text). */
+  company?: string;
 }
 
 // ── A3 hybrid plan shape (v2) ─────────────────────────────────────────────
@@ -174,6 +184,16 @@ export interface BenefitPlanV2 {
   status?: 'active' | 'inactive';
   /** STA-70 — Top-level benefit-type grouping. Optional; use-site default derives from `recordType`. */
   benefitTypeGroup?: 'reimbursement-employee-hr' | 'reimbursement-hr' | 'info' | 'record';
+  /** STA-70 follow-up — Enrolment mode. */
+  enrolment?: 'auto' | 'manual';
+  /** STA-70 follow-up — Claim period grouping. */
+  claimPeriod?: 'year' | 'month' | 'quarter' | 'one-time' | 'lifetime';
+  /** STA-70 follow-up — Entitlement-amount calculation method. */
+  entitlementCalcMethod?: 'full' | 'prorate';
+  /** STA-70 follow-up — Eligible-claim-date threshold. */
+  eligibleClaimDate?: '30' | '60' | '90' | 'none';
+  /** STA-70 follow-up — Legal-entity company (free text). */
+  company?: string;
 }
 
 export type BenefitPlan = BenefitPlanV1 | BenefitPlanV2;

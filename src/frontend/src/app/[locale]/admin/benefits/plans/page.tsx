@@ -116,6 +116,12 @@ function editPlanDefaultIdentity(plan: BenefitPlan, isTh: boolean): Tab1Identity
     country: plan.country ?? 'TH',
     status: plan.status ?? 'active',
     benefitTypeGroup: derivedBenefitTypeGroup,
+    // STA-70 follow-up defaults
+    enrolment: plan.enrolment ?? 'auto',
+    claimPeriod: plan.claimPeriod ?? 'year',
+    entitlementCalcMethod: plan.entitlementCalcMethod ?? 'full',
+    eligibleClaimDate: plan.eligibleClaimDate ?? '30',
+    company: plan.company ?? '',
   };
 }
 
@@ -282,6 +288,12 @@ function CreatePlanModal({
     country: 'TH',
     status: 'active',
     benefitTypeGroup: 'reimbursement-employee-hr',
+    // STA-70 follow-up defaults for new-plan creation
+    enrolment: 'auto',
+    claimPeriod: 'year',
+    entitlementCalcMethod: 'full',
+    eligibleClaimDate: '30',
+    company: '',
   };
 
   const [tab1Values, setTab1Values] = useState<Tab1IdentityValues>(defaultTab1);
