@@ -20,9 +20,12 @@ import { Tab1IdentityFields, type Tab1IdentityValues } from '@/components/benefi
 
 // ── Plan catalog — CRUD-style mockup ─────────────────────────────────────────
 // Reads all 28 plans from BENEFIT_PLAN_REGISTRY.
-// Columns: id, ttt, name, category, recordType chip, template, annualLimitThb, approvalChain.
+// Columns: id, ttt, name, category, recordType chip, template.
 // Filters: category + recordType.
 // "Edit Plan" opens Modal with mock form — no save.
+// STA-69: annualLimitThb and approvalChain remain on the schema (still used by
+//   downstream limits enforcement + approval routing) but are no longer shown
+//   in this list table. They remain visible on the plan detail/edit configurator.
 
 const CATEGORY_LABELS_TH: Record<PlanCategory, string> = {
   medical:     'การรักษาพยาบาล',
@@ -455,33 +458,6 @@ export default function BenefitPlansPage() {
       ),
       sortAccessor: (p: BenefitPlan) => p.template,
       className: 'w-40',
-    },
-    {
-      id: 'limit',
-      header: t('colLimit'),
-      cell: (p: BenefitPlan) => (
-        <span className="tabular-nums text-small text-ink">
-          {p.annualLimitThb != null
-            ? `฿${p.annualLimitThb.toLocaleString('th-TH')}`
-            : <span className="text-ink-muted">—</span>}
-        </span>
-      ),
-      sortAccessor: (p: BenefitPlan) => p.annualLimitThb ?? -1,
-      align: 'right' as const,
-      className: 'w-32',
-    },
-    {
-      id: 'approvalChain',
-      header: t('colApproval'),
-      cell: (p: BenefitPlan) =>
-        p.approvalChain.length === 0 ? (
-          <span className="text-small text-ink-muted">—</span>
-        ) : (
-          <span className="text-small text-ink">
-            {p.approvalChain.map((s) => s.toUpperCase()).join(' → ')}
-          </span>
-        ),
-      className: 'w-48',
     },
     {
       id: 'actions',

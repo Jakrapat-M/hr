@@ -4588,8 +4588,6 @@
     "colCategory": "หมวดหมู่",
     "colRecordType": "ประเภท",
     "colTemplate": "เทมเพลต",
-    "colLimit": "วงเงินต่อปี",
-    "colApproval": "ขั้นตอนอนุมัติ",
     "colActions": "การดำเนินการ",
     "empty": "ไม่พบแผนที่ตรงกับตัวกรองที่เลือก",
     "disclaimerEyebrow": "หมายเหตุ",
