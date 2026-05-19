@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { ArrowLeft, Info } from 'lucide-react';
@@ -16,6 +17,15 @@ export default function BeneficiaryPage() {
   const isTh = locale !== 'en';
 
   const plan = getPlan(PLAN_ID);
+
+  // STA-63 — replace console.log with user-visible success state.
+  // Beneficiary changes are HR-recorded only (no claim store), so we surface a
+  // pending-HR-review status card. Real audit hook lives behind backend.
+  const [lastRecordId, setLastRecordId] = useState<string | null>(null);
+  const handleSubmitted = (recordId: string) => {
+    setLastRecordId(recordId);
+    setTimeout(() => setLastRecordId(null), 8000);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -56,10 +66,22 @@ export default function BeneficiaryPage() {
         </div>
       </Card>
 
+      {/* STA-63 — success card replaces prior console.log */}
+      {lastRecordId && (
+        <Card variant="raised" size="md" className="border-success/30 bg-success-soft">
+          <CardEyebrow>{isTh ? 'ส่งคำขอแล้ว — รอ HR ตรวจสอบ' : 'Submitted — pending HR review'}</CardEyebrow>
+          <p className="mt-2 text-small text-success">
+            {isTh
+              ? `บันทึกหมายเลข ${lastRecordId} — HR/SPD จะเห็นในรายการตรวจสอบและจะติดต่อกลับเมื่อยืนยันแล้ว`
+              : `Record ${lastRecordId} saved — HR/SPD will see it in the review queue and confirm with you.`}
+          </p>
+        </Card>
+      )}
+
       {plan ? (
         <RecordsFlatForm
           plan={plan}
-          onSubmitted={(id) => console.log('record saved', id)}
+          onSubmitted={handleSubmitted}
         />
       ) : (
         <p className="text-small text-ink-muted">

@@ -8,6 +8,7 @@ import { Card, CardEyebrow, Button, buttonVariants } from '@/components/humi';
 import { HospitalClaimForm } from '@/components/benefits/templates';
 import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry';
 import { benefitsHubRoute } from '@/lib/benefit-routes';
+import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 
 const HOSPITAL_PLANS = BENEFIT_PLAN_REGISTRY.filter(
   (p) => p.template === 'hospital-claim' && p.recordType === 'claimable',
@@ -18,6 +19,23 @@ export default function HospitalClaimPage() {
   const isTh = locale !== 'en';
   const [selectedId, setSelectedId] = useState(HOSPITAL_PLANS[0]?.id ?? '');
   const selected = HOSPITAL_PLANS.find((p) => p.id === selectedId) ?? HOSPITAL_PLANS[0];
+  const submitClaim = useBenefitClaimsStore((s) => s.submitClaim);
+  const [lastClaim, setLastClaim] = useState<{ id: string; workflowRequestId: string } | null>(null);
+
+  // STA-63 — persist into the claims store (visible at /requests, /quick-approve, /admin/benefits/records)
+  const handleSubmitted = (wfId: string) => {
+    if (!selected) return;
+    const claim = submitClaim({
+      benefitCode: selected.id,
+      benefitName: isTh ? selected.nameTh : selected.nameEn,
+      benefitType: 'medical',
+      receiptNo: wfId,
+      receiptDate: new Date().toISOString().slice(0, 10),
+      receiptAmount: 0,
+    });
+    setLastClaim({ id: claim.id, workflowRequestId: claim.workflowRequestId });
+    setTimeout(() => setLastClaim(null), 6000);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -64,11 +82,29 @@ export default function HospitalClaimPage() {
         </div>
       </Card>
 
+      {/* STA-63 — success card replaces prior console.log */}
+      {lastClaim && (
+        <Card variant="raised" size="md" className="border-success/30 bg-success-soft">
+          <CardEyebrow>{isTh ? 'ส่งคำขอสำเร็จ' : 'Claim submitted'}</CardEyebrow>
+          <p className="mt-2 text-small text-success">
+            {isTh
+              ? `บันทึกคำขอ ${lastClaim.workflowRequestId} แล้ว — ติดตามที่หน้า "คำขอของฉัน" และ SPD จะเห็นในคิวอนุมัติ`
+              : `Saved request ${lastClaim.workflowRequestId} — visible in "My requests" and the SPD approval queue.`}
+          </p>
+          <Link
+            href={`/${locale}/requests`}
+            className="mt-3 inline-block text-small font-semibold text-success underline"
+          >
+            {isTh ? 'ไปยังคำขอของฉัน →' : 'Go to my requests →'}
+          </Link>
+        </Card>
+      )}
+
       {/* Hospital claim form — mounts appropriate template */}
       {selected && (
         <HospitalClaimForm
           plan={selected}
-          onSubmitted={(id) => console.log('submitted workflow', id)}
+          onSubmitted={handleSubmitted}
         />
       )}
     </div>
