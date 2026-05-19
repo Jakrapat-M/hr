@@ -98,6 +98,12 @@ function editPlanDefaultIdentity(plan: BenefitPlan, isTh: boolean): Tab1Identity
     plan.recordType === 'records' ? 'records'
     : plan.recordType === 'info'   ? 'info'
     : 'none';
+  // STA-70: derive default benefitTypeGroup from recordType when plan has no explicit value
+  const derivedBenefitTypeGroup: 'reimbursement-employee-hr' | 'reimbursement-hr' | 'info' | 'record' =
+    plan.benefitTypeGroup
+      ?? (plan.recordType === 'records' ? 'record'
+        : plan.recordType === 'info'    ? 'info'
+        : 'reimbursement-employee-hr');
   return {
     ttt: plan.ttt,
     planKey: plan.id,
@@ -109,6 +115,16 @@ function editPlanDefaultIdentity(plan: BenefitPlan, isTh: boolean): Tab1Identity
     template: plan.template,
     effectiveFrom: '',
     effectiveTo: '',
+    // STA-70 defaults — plan-registry fields are optional; fall back to sensible UI defaults
+    country: plan.country ?? 'TH',
+    status: plan.status ?? 'active',
+    benefitTypeGroup: derivedBenefitTypeGroup,
+    // STA-70 follow-up defaults
+    enrolment: plan.enrolment ?? 'auto',
+    claimPeriod: plan.claimPeriod ?? 'year',
+    entitlementCalcMethod: plan.entitlementCalcMethod ?? 'full',
+    eligibleClaimDate: plan.eligibleClaimDate ?? '30',
+    company: plan.company ?? '',
   };
 }
 
@@ -271,6 +287,16 @@ function CreatePlanModal({
     template: 'simple-claim',
     effectiveFrom: '',
     effectiveTo: '',
+    // STA-70 defaults for new-plan creation
+    country: 'TH',
+    status: 'active',
+    benefitTypeGroup: 'reimbursement-employee-hr',
+    // STA-70 follow-up defaults for new-plan creation
+    enrolment: 'auto',
+    claimPeriod: 'year',
+    entitlementCalcMethod: 'full',
+    eligibleClaimDate: '30',
+    company: '',
   };
 
   const [tab1Values, setTab1Values] = useState<Tab1IdentityValues>(defaultTab1);

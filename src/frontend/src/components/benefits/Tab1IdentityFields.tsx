@@ -3,6 +3,15 @@
 import { FormField, FormInput } from '@/components/humi';
 import { type PlanCategory, type WorkflowTemplate } from '@/data/benefits/plan-registry';
 
+export type CountryCode = 'TH' | 'VN';
+export type PlanStatus = 'active' | 'inactive';
+export type BenefitTypeGroup = 'reimbursement-employee-hr' | 'reimbursement-hr' | 'info' | 'record';
+// STA-70 follow-up (spec expanded with Enrolment / Claim condition / Legal entity sections)
+export type EnrolmentMode = 'auto' | 'manual';
+export type ClaimPeriod = 'year' | 'month' | 'quarter' | 'one-time' | 'lifetime';
+export type EntitlementCalcMethod = 'full' | 'prorate';
+export type EligibleClaimDate = '30' | '60' | '90' | 'none';
+
 export interface Tab1IdentityValues {
   ttt: string;
   planKey: string;
@@ -14,6 +23,18 @@ export interface Tab1IdentityValues {
   template: WorkflowTemplate;
   effectiveFrom: string;
   effectiveTo: string;
+  // STA-70 — Benefit info + Benefit type/group
+  country: CountryCode;
+  status: PlanStatus;
+  benefitTypeGroup: BenefitTypeGroup;
+  // STA-70 follow-up — Enrolment
+  enrolment: EnrolmentMode;
+  // STA-70 follow-up — Claim condition
+  claimPeriod: ClaimPeriod;
+  entitlementCalcMethod: EntitlementCalcMethod;
+  eligibleClaimDate: EligibleClaimDate;
+  // STA-70 follow-up — Legal entity
+  company: string;
 }
 
 export interface Tab1IdentityFieldsProps {
@@ -281,6 +302,206 @@ export function Tab1IdentityFields({
               type="date"
               value={values.effectiveTo}
               onChange={(e) => onChange('effectiveTo', e.target.value)}
+            />
+          )}
+        </FormField>
+      </div>
+
+      {/* ── STA-70 Benefit info section ─────────────────────────────────── */}
+      <div className="border-t border-hairline pt-5">
+        <h3 className="mb-3 text-small font-semibold uppercase tracking-wider text-ink-muted">
+          {isTh ? 'ข้อมูลสวัสดิการ (Benefit info)' : 'Benefit info'}
+        </h3>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* 10. Country */}
+          <FormField
+            id="tab1-country"
+            label={isTh ? 'ประเทศ (Country)' : 'Country'}
+            required
+          >
+            {(cp) => (
+              <select
+                {...cp}
+                value={values.country}
+                onChange={(e) => onChange('country', e.target.value as CountryCode)}
+                className={selectClass}
+              >
+                <option value="TH">{isTh ? 'ไทย (TH)' : 'Thailand (TH)'}</option>
+                <option value="VN">{isTh ? 'เวียดนาม (VN)' : 'Vietnam (VN)'}</option>
+              </select>
+            )}
+          </FormField>
+
+          {/* 11. Status */}
+          <FormField
+            id="tab1-status"
+            label={isTh ? 'สถานะ (Status)' : 'Status'}
+            required
+          >
+            {(cp) => (
+              <select
+                {...cp}
+                value={values.status}
+                onChange={(e) => onChange('status', e.target.value as PlanStatus)}
+                className={selectClass}
+              >
+                <option value="active">{isTh ? 'ใช้งาน (Active)' : 'Active'}</option>
+                <option value="inactive">{isTh ? 'ไม่ใช้งาน (Inactive)' : 'Inactive'}</option>
+              </select>
+            )}
+          </FormField>
+        </div>
+      </div>
+
+      {/* ── STA-70 Benefit type / group section ─────────────────────────── */}
+      <div className="border-t border-hairline pt-5">
+        <h3 className="mb-3 text-small font-semibold uppercase tracking-wider text-ink-muted">
+          {isTh ? 'ประเภท / กลุ่มสวัสดิการ (Benefit type / group)' : 'Benefit type / group'}
+        </h3>
+
+        {/* 12. Benefit type */}
+        <FormField
+          id="tab1-benefitTypeGroup"
+          label={isTh ? 'ประเภทสวัสดิการ (Benefit type)' : 'Benefit type'}
+          required
+        >
+          {(cp) => (
+            <select
+              {...cp}
+              value={values.benefitTypeGroup}
+              onChange={(e) => onChange('benefitTypeGroup', e.target.value as BenefitTypeGroup)}
+              className={selectClass}
+            >
+              <option value="reimbursement-employee-hr">
+                {isTh ? 'Reimbursement: Employee/HR' : 'Reimbursement: Employee/HR'}
+              </option>
+              <option value="reimbursement-hr">
+                {isTh ? 'Reimbursement: HR' : 'Reimbursement: HR'}
+              </option>
+              <option value="info">{isTh ? 'Info.' : 'Info.'}</option>
+              <option value="record">{isTh ? 'Record' : 'Record'}</option>
+            </select>
+          )}
+        </FormField>
+      </div>
+
+      {/* ── STA-70 Enrolment section ────────────────────────────────────── */}
+      <div className="border-t border-hairline pt-5">
+        <h3 className="mb-3 text-small font-semibold uppercase tracking-wider text-ink-muted">
+          {isTh ? 'การลงทะเบียน (Enrolment)' : 'Enrolment'}
+        </h3>
+
+        {/* 13. Enrolment mode */}
+        <FormField
+          id="tab1-enrolment"
+          label={isTh ? 'รูปแบบการลงทะเบียน (Enrolment)' : 'Enrolment'}
+          required
+        >
+          {(cp) => (
+            <select
+              {...cp}
+              value={values.enrolment}
+              onChange={(e) => onChange('enrolment', e.target.value as EnrolmentMode)}
+              className={selectClass}
+            >
+              <option value="auto">{isTh ? 'Auto Enrolment (อัตโนมัติ)' : 'Auto Enrolment'}</option>
+              <option value="manual">{isTh ? 'Manual Enrolment (ลงทะเบียนเอง)' : 'Manual Enrolment'}</option>
+            </select>
+          )}
+        </FormField>
+      </div>
+
+      {/* ── STA-70 Claim condition section ──────────────────────────────── */}
+      <div className="border-t border-hairline pt-5">
+        <h3 className="mb-3 text-small font-semibold uppercase tracking-wider text-ink-muted">
+          {isTh ? 'เงื่อนไขการเบิก (Claim condition)' : 'Claim condition'}
+        </h3>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* 14. Claim period */}
+          <FormField
+            id="tab1-claimPeriod"
+            label={isTh ? 'รอบการเบิก (Claim period)' : 'Claim period'}
+            required
+          >
+            {(cp) => (
+              <select
+                {...cp}
+                value={values.claimPeriod}
+                onChange={(e) => onChange('claimPeriod', e.target.value as ClaimPeriod)}
+                className={selectClass}
+              >
+                <option value="year">{isTh ? 'รายปี (Year)' : 'Year'}</option>
+                <option value="month">{isTh ? 'รายเดือน (Month)' : 'Month'}</option>
+                <option value="quarter">{isTh ? 'รายไตรมาส (Quarter)' : 'Quarter'}</option>
+                <option value="one-time">{isTh ? 'ครั้งเดียว (One-time)' : 'One-time'}</option>
+                <option value="lifetime">{isTh ? 'ตลอดชีพ (Lifetime)' : 'Lifetime'}</option>
+              </select>
+            )}
+          </FormField>
+
+          {/* 15. Entitlement calculation method */}
+          <FormField
+            id="tab1-entitlementCalcMethod"
+            label={isTh ? 'วิธีคำนวณวงเงิน (Entitlement calc)' : 'Entitlement calc method'}
+            required
+          >
+            {(cp) => (
+              <select
+                {...cp}
+                value={values.entitlementCalcMethod}
+                onChange={(e) => onChange('entitlementCalcMethod', e.target.value as EntitlementCalcMethod)}
+                className={selectClass}
+              >
+                <option value="full">{isTh ? 'เต็มจำนวน (Full)' : 'Full'}</option>
+                <option value="prorate">{isTh ? 'ตามสัดส่วน (Prorate)' : 'Prorate'}</option>
+              </select>
+            )}
+          </FormField>
+        </div>
+
+        {/* 16. Eligible claim date */}
+        <div className="mt-4">
+          <FormField
+            id="tab1-eligibleClaimDate"
+            label={isTh ? 'วันเริ่มเบิกได้ (Eligible claim date)' : 'Eligible claim date'}
+            required
+          >
+            {(cp) => (
+              <select
+                {...cp}
+                value={values.eligibleClaimDate}
+                onChange={(e) => onChange('eligibleClaimDate', e.target.value as EligibleClaimDate)}
+                className={selectClass}
+              >
+                <option value="30">{isTh ? '30 วัน' : '30 days'}</option>
+                <option value="60">{isTh ? '60 วัน' : '60 days'}</option>
+                <option value="90">{isTh ? '90 วัน' : '90 days'}</option>
+                <option value="none">{isTh ? 'ไม่จำกัด (No eligible claim date)' : 'No eligible claim date'}</option>
+              </select>
+            )}
+          </FormField>
+        </div>
+      </div>
+
+      {/* ── STA-70 Legal Entity section ─────────────────────────────────── */}
+      <div className="border-t border-hairline pt-5">
+        <h3 className="mb-3 text-small font-semibold uppercase tracking-wider text-ink-muted">
+          {isTh ? 'นิติบุคคล (Legal Entity)' : 'Legal Entity'}
+        </h3>
+
+        {/* 17. Company */}
+        <FormField
+          id="tab1-company"
+          label={isTh ? 'บริษัท (Company)' : 'Company'}
+        >
+          {(cp) => (
+            <FormInput
+              {...cp}
+              value={values.company}
+              onChange={(e) => onChange('company', e.target.value)}
+              placeholder={isTh ? 'เช่น Central Group' : 'e.g. Central Group'}
             />
           )}
         </FormField>
