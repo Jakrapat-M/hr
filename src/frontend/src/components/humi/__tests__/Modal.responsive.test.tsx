@@ -8,6 +8,7 @@
  *   2. widthClass prop applied (default max-w-lg)
  *   3. Custom widthClass renders correct token
  *   4. No regression: Portal + Esc handler + backdrop click
+ *   5. Long modal content remains viewport-contained and scrollable
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -78,6 +79,33 @@ describe('AC-5 — Modal widthClass default max-w-lg', () => {
       .join(' ');
 
     expect(allClasses).toContain('max-w-xl');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Benefit-plan configurator regression — long forms must not clip header/footer
+// ─────────────────────────────────────────────────────────────────────────────
+describe('Modal long-content regression', () => {
+  it('keeps the dialog inside the viewport and scrolls the body content', () => {
+    const { baseElement } = render(
+      <Modal open={true} onClose={() => {}} title="Long form" widthClass="max-w-3xl">
+        <div>
+          {Array.from({ length: 40 }).map((_, i) => (
+            <p key={i}>Field {i + 1}</p>
+          ))}
+        </div>
+      </Modal>
+    );
+
+    const dialog = baseElement.querySelector('[role="dialog"]');
+    const panel = dialog?.firstElementChild as HTMLElement | null;
+    const body = panel?.querySelector('.overflow-y-auto');
+
+    expect(panel?.className).toContain('max-h-[calc(100dvh-2rem)]');
+    expect(panel?.className).toContain('overflow-hidden');
+    expect(panel?.className).toContain('flex-col');
+    expect(body?.className).toContain('min-h-0');
+    expect(body?.className).toContain('overflow-y-auto');
   });
 });
 

@@ -56,7 +56,7 @@ export function Modal({ open, onClose, title, widthClass = 'max-w-lg', children 
     >
       <div
         className={cn(
-          'relative w-full rounded-[var(--radius-lg)] bg-surface shadow-[var(--shadow-lg)]',
+          'relative flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-[var(--radius-lg)] bg-surface shadow-[var(--shadow-lg)]',
           'border border-hairline',
           'mx-4 sm:mx-auto',
           widthClass
@@ -85,7 +85,7 @@ export function Modal({ open, onClose, title, widthClass = 'max-w-lg', children 
         )}
 
         {/* Body */}
-        <div className="px-6 py-5">{children}</div>
+        <div className="min-h-0 overflow-y-auto px-6 py-5">{children}</div>
       </div>
     </div>,
     document.body
