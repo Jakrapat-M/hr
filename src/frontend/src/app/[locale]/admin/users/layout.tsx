@@ -26,8 +26,8 @@ function UsersSubNav() {
         {TOOLS.map((tool) => {
           // exact match สำหรับ hub, startsWith สำหรับ sub-routes
           const isActive =
-            tool.href === '/admin/users'
-              ? pathname === '/admin/users'
+            tool.href === '/th/admin/users'
+              ? pathname === '/th/admin/users'
               : pathname.startsWith(tool.href)
 
           return (
