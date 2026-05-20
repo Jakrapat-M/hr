@@ -32,7 +32,7 @@ export default function SelfServiceLayout({ children }: { children: React.ReactN
         <ul className="flex gap-1 px-4 whitespace-nowrap">
           {SS_EDITORS.map(({ href, labelTh, brd }) => {
             // exact match สำหรับ overview, prefix match สำหรับ editors
-            const isActive = href === '/admin/self-service'
+            const isActive = href === '/th/admin/self-service'
               ? pathname === href
               : pathname.startsWith(href)
             return (
