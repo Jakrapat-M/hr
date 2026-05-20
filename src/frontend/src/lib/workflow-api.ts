@@ -251,18 +251,38 @@ export async function listAllEligibilityRules(): Promise<EligibilityRule[]> {
 }
 
 export async function listEligibilityRules(benefitKey: string): Promise<EligibilityRule[]> {
-  const headers = await buildAuthHeaders();
-  const res = await fetch(
-    `${BASE_URL}/admin/benefits/${encodeURIComponent(benefitKey)}/eligibility`,
-    { method: 'GET', headers },
-  );
-  if (!res.ok) {
-    const text = await readErrorText(res);
-    throw new Error(`workflow-api listEligibilityRules failed (${res.status}): ${text}`);
+  // UI-mockup-phase fallback: when the workflow gateway is unavailable (no backend
+  // in this phase), return the mock seed so /admin/benefits/rules has visible
+  // example rows. Real gateway response takes precedence when available.
+  //
+  // 1500 ms hard cap via AbortController prevents the 75-second per-request
+  // connection-timeout that browsers wait for an unreachable host. Without this
+  // the page would hang for minutes per benefit key before showing mock data.
+  const mockFallback = async () => {
+    const mod = await import('@/data/benefits/mock-eligibility-rules');
+    return mod.mockEligibilityRulesByKey(benefitKey) as unknown as EligibilityRule[];
+  };
+  try {
+    const headers = await buildAuthHeaders();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
+    let res: Response;
+    try {
+      res = await fetch(
+        `${BASE_URL}/admin/benefits/${encodeURIComponent(benefitKey)}/eligibility`,
+        { method: 'GET', headers, signal: controller.signal },
+      );
+    } finally {
+      clearTimeout(timeoutId);
+    }
+    if (!res.ok) return mockFallback();
+    const body = (await res.json()) as { benefitKey: string; rules: EligibilityRule[] };
+    const rules = Array.isArray(body) ? (body as unknown as EligibilityRule[]) : (body.rules ?? []);
+    return rules.length > 0 ? rules : mockFallback();
+  } catch {
+    // Network error / abort / fetch threw → return mock seed
+    return mockFallback();
   }
-  // Gateway shape: { benefitKey, rules: EligibilityRule[] }
-  const body = (await res.json()) as { benefitKey: string; rules: EligibilityRule[] };
-  return Array.isArray(body) ? (body as unknown as EligibilityRule[]) : (body.rules ?? []);
 }
 
 export async function addEligibilityRule(
@@ -302,17 +322,46 @@ export async function getEligibilityRuleHistory(
   benefitKey: string,
   ruleId: string,
 ): Promise<EligibilityRule[]> {
-  const headers = await buildAuthHeaders();
-  const res = await fetch(
-    `${BASE_URL}/admin/benefits/${encodeURIComponent(benefitKey)}/eligibility/${ruleId}/history`,
-    { method: 'GET', headers },
-  );
-  if (!res.ok) {
-    const text = await readErrorText(res);
-    throw new Error(`workflow-api getEligibilityRuleHistory failed (${res.status}): ${text}`);
+  // UI-mockup-phase fallback: 1500ms hard cap + mock history seed (current
+  // version + one synthetic prior version with effective_to 2025-12-31).
+  const mockFallback = async (): Promise<EligibilityRule[]> => {
+    const mod = await import('@/data/benefits/mock-eligibility-rules');
+    const current = mod.MOCK_ELIGIBILITY_RULES.find(
+      (r) => r.id === ruleId && r.benefit_key === benefitKey,
+    );
+    if (!current) return [];
+    const prior = {
+      ...current,
+      id: `${current.id}-prev`,
+      effective_from: '2025-01-01',
+      effective_to: '2025-12-31',
+      entitlement_amount:
+        current.entitlement_amount !== null ? Math.floor(current.entitlement_amount * 0.8) : null,
+      max_per_year:
+        current.max_per_year !== null ? Math.floor(current.max_per_year * 0.8) : null,
+      created_by: 'system-seed',
+    };
+    return [current, prior] as unknown as EligibilityRule[];
+  };
+  try {
+    const headers = await buildAuthHeaders();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
+    let res: Response;
+    try {
+      res = await fetch(
+        `${BASE_URL}/admin/benefits/${encodeURIComponent(benefitKey)}/eligibility/${ruleId}/history`,
+        { method: 'GET', headers, signal: controller.signal },
+      );
+    } finally {
+      clearTimeout(timeoutId);
+    }
+    if (!res.ok) return mockFallback();
+    const body = (await res.json()) as { ruleId: string; history: EligibilityRule[] };
+    return body.history ?? [];
+  } catch {
+    return mockFallback();
   }
-  const body = (await res.json()) as { ruleId: string; history: EligibilityRule[] };
-  return body.history ?? [];
 }
 
 export async function deleteEligibilityRule(benefitKey: string, ruleId: string): Promise<void> {
