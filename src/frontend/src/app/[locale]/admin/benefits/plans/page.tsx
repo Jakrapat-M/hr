@@ -11,12 +11,10 @@ const ELIGIBILITY_MANAGED_BENEFIT_KEYS = new Set([
   'training',
   'travel-allowance',
 ]);
-import { Card, CardEyebrow, CardTitle, Button, DataTable, FormField, FormInput, Modal } from '@/components/humi';
-import { updateBenefitPlan, createBenefitPlan } from '@/lib/workflow-api';
+import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal } from '@/components/humi';
 import { Capability } from '@/components/humi';
 import {
   BENEFIT_PLAN_REGISTRY,
-  deriveRecordTypeFromBenefitTypeGroup,
   type BenefitPlan,
   type BenefitTypeGroup,
   type PlanCategory,
@@ -25,6 +23,7 @@ import {
 } from '@/data/benefits/plan-registry';
 import { PlanConfiguratorShell, type PlanConfiguratorTab } from '@/components/benefits/PlanConfiguratorShell';
 import { Tab1IdentityFields, type Tab1IdentityValues } from '@/components/benefits/Tab1IdentityFields';
+import { applyIdentityToPlan, buildPlanFromCreate } from './plan-builders';
 
 // ── Plan catalog — CRUD-style mockup ─────────────────────────────────────────
 // Reads all 28 plans from BENEFIT_PLAN_REGISTRY.
@@ -166,11 +165,13 @@ function buildTabs(
 function EditPlanModal({
   plan,
   onClose,
+  onSubmit,
   isTh,
   locale,
 }: {
   plan: BenefitPlan;
   onClose: () => void;
+  onSubmit: (updated: BenefitPlan) => void;
   isTh: boolean;
   locale: string;
 }) {
@@ -199,22 +200,13 @@ function EditPlanModal({
 
   const tabs = buildTabs(tab1Panel, isTh);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setSaving(true);
-    try {
-      console.log('[EditPlanModal] Tab1 values:', tab1Values);
-      await updateBenefitPlan(plan.id, {
-        display_name: tab1Values.nameTh,
-        recordType: deriveRecordTypeFromBenefitTypeGroup(tab1Values.benefitTypeGroup),
-        benefitTypeGroup: tab1Values.benefitTypeGroup,
-      });
-      setSaved(true);
-      setTimeout(onClose, 1200);
-    } catch (err) {
-      console.warn('[EditPlanModal] updateBenefitPlan failed:', err);
-    } finally {
-      setSaving(false);
-    }
+    // In-session mutation only — no backend POST/PUT in this mockup phase.
+    onSubmit(applyIdentityToPlan(plan, tab1Values));
+    setSaving(false);
+    setSaved(true);
+    setTimeout(onClose, 1200);
   };
 
   return (
@@ -278,9 +270,13 @@ function EditPlanModal({
 
 function CreatePlanModal({
   onClose,
+  onSubmit,
+  existingIds,
   isTh,
 }: {
   onClose: () => void;
+  onSubmit: (created: BenefitPlan) => void;
+  existingIds: Set<string>;
   isTh: boolean;
 }) {
   const defaultTab1: Tab1IdentityValues = {
@@ -320,34 +316,20 @@ function CreatePlanModal({
 
   const isValid = tab1Values.planKey.trim() && tab1Values.nameTh.trim() && tab1Values.nameEn.trim();
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!isValid) return;
-    setSaving(true);
     setError(null);
-    try {
-      console.log('[CreatePlanModal] Tab1 values:', tab1Values);
-      await createBenefitPlan({
-        key: tab1Values.planKey.trim(),
-        displayNameTh: tab1Values.nameTh.trim(),
-        displayNameEn: tab1Values.nameEn.trim(),
-        category: tab1Values.category,
-        recordType: deriveRecordTypeFromBenefitTypeGroup(tab1Values.benefitTypeGroup),
-        benefitTypeGroup: tab1Values.benefitTypeGroup,
-        annualLimitThb: null,
-        eligibilityRuleId: null,
-      });
-      setSaved(true);
-      // Plans come from a static registry import — reload so the new plan appears in the table.
-      setTimeout(() => {
-        onClose();
-        if (typeof window !== 'undefined') window.location.reload();
-      }, 1200);
-    } catch (err) {
-      console.warn('[CreatePlanModal] createBenefitPlan failed:', err);
-      setError(err instanceof Error ? err.message : 'Create failed');
-    } finally {
-      setSaving(false);
+    const key = tab1Values.planKey.trim();
+    if (existingIds.has(key)) {
+      setError(isTh ? `รหัสแผน "${key}" มีอยู่แล้ว` : `Plan ID "${key}" already exists`);
+      return;
     }
+    setSaving(true);
+    // In-session mutation only — no backend POST in this mockup phase.
+    onSubmit(buildPlanFromCreate(tab1Values));
+    setSaving(false);
+    setSaved(true);
+    setTimeout(onClose, 1200);
   };
 
   const tab1Panel = (
@@ -413,13 +395,27 @@ export default function BenefitPlansPage() {
   const [editingPlan, setEditingPlan] = useState<BenefitPlan | null>(null);
   const [creatingPlan, setCreatingPlan] = useState(false);
 
+  // In-session plan list — seeded from the static registry. Create/Edit mutate
+  // this list so changes appear without a backend (out of scope this phase).
+  const [plans, setPlans] = useState<BenefitPlan[]>(() => [...BENEFIT_PLAN_REGISTRY]);
+
+  const handleCreatePlan = (created: BenefitPlan) => {
+    setPlans((prev) => [created, ...prev]);
+  };
+
+  const handleUpdatePlan = (updated: BenefitPlan) => {
+    setPlans((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  };
+
+  const existingIds = useMemo(() => new Set(plans.map((p) => p.id)), [plans]);
+
   const filteredPlans = useMemo(() => {
-    return BENEFIT_PLAN_REGISTRY.filter((p) => {
+    return plans.filter((p) => {
       if (filterCategory !== 'all' && p.category !== filterCategory) return false;
       if (filterRecordType !== 'all' && p.recordType !== filterRecordType) return false;
       return true;
     });
-  }, [filterCategory, filterRecordType]);
+  }, [plans, filterCategory, filterRecordType]);
 
   const columns = useMemo(() => [
     {
@@ -533,10 +529,10 @@ export default function BenefitPlansPage() {
       {/* Stats bar */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: t('statTotal'),     value: BENEFIT_PLAN_REGISTRY.length },
-          { label: t('statClaimable'), value: BENEFIT_PLAN_REGISTRY.filter((p) => p.recordType === 'claimable').length },
-          { label: t('statRecords'),   value: BENEFIT_PLAN_REGISTRY.filter((p) => p.recordType === 'records').length },
-          { label: t('statLifecycle'), value: BENEFIT_PLAN_REGISTRY.filter((p) => p.category === 'lifecycle').length },
+          { label: t('statTotal'),     value: plans.length },
+          { label: t('statClaimable'), value: plans.filter((p) => p.recordType === 'claimable').length },
+          { label: t('statRecords'),   value: plans.filter((p) => p.recordType === 'records').length },
+          { label: t('statLifecycle'), value: plans.filter((p) => p.category === 'lifecycle').length },
         ].map((stat) => (
           <Card key={stat.label} variant="raised" size="md">
             <CardEyebrow>{stat.label}</CardEyebrow>
@@ -592,7 +588,7 @@ export default function BenefitPlansPage() {
         )}
 
         <span className="ml-auto self-center text-small text-ink-muted">
-          {isTh ? `แสดง ${filteredPlans.length} / ${BENEFIT_PLAN_REGISTRY.length} แผน` : `Showing ${filteredPlans.length} of ${BENEFIT_PLAN_REGISTRY.length} plans`}
+          {isTh ? `แสดง ${filteredPlans.length} / ${plans.length} แผน` : `Showing ${filteredPlans.length} of ${plans.length} plans`}
         </span>
       </div>
 
@@ -621,6 +617,7 @@ export default function BenefitPlansPage() {
         <EditPlanModal
           plan={editingPlan}
           onClose={() => setEditingPlan(null)}
+          onSubmit={handleUpdatePlan}
           isTh={isTh}
           locale={locale}
         />
@@ -630,6 +627,8 @@ export default function BenefitPlansPage() {
       {creatingPlan && (
         <CreatePlanModal
           onClose={() => setCreatingPlan(false)}
+          onSubmit={handleCreatePlan}
+          existingIds={existingIds}
           isTh={isTh}
         />
       )}

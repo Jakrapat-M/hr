@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import { Card, CardEyebrow, Button } from '@/components/humi';
 import { Capability } from '@/components/humi';
 import { LifecycleAdminForm } from '@/components/benefits/templates/LifecycleAdminForm';
 import { getPlan } from '@/data/benefits/plan-registry';
+import { mockProgress } from '@/lib/mock-async';
 
 // ── Benefit Lifecycle — วงจรสวัสดิการ — 4-tab admin surface ─────────────────
 // Tabs: On-board (BE-CYC-002) / Change (BE-CYC-003) / Off-board (BE-CYC-004)
@@ -28,6 +30,21 @@ export default function BenefitLifecyclePage() {
 
   const [activeTab, setActiveTab] = useState<TabId>('onboard');
 
+  // "Run All" — mock orchestration of the 4 lifecycle operations. No backend
+  // this phase; advances a visible progress bar + completion banner.
+  const [running, setRunning] = useState(false);
+  const [runStep, setRunStep] = useState(0);
+  const [runDone, setRunDone] = useState(false);
+
+  const handleRunAll = async () => {
+    setRunDone(false);
+    setRunning(true);
+    setRunStep(0);
+    await mockProgress(TABS.length, (s) => setRunStep(s), 500);
+    setRunning(false);
+    setRunDone(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -46,9 +63,51 @@ export default function BenefitLifecyclePage() {
         <Capability action="editFoundation" fallback={
           <Button variant="secondary" disabled>{t('runAllDisabled')}</Button>
         }>
-          <Button variant="secondary" disabled>{t('runAll')}</Button>
+          <Button
+            variant="secondary"
+            onClick={handleRunAll}
+            disabled={running}
+            className="flex items-center gap-2"
+          >
+            {running && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+            {running ? (isTh ? 'กำลังรัน…' : 'Running…') : t('runAll')}
+          </Button>
         </Capability>
       </header>
+
+      {/* Run All — progress + completion feedback */}
+      {(running || runDone) && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-4 space-y-2"
+        >
+          <div className="flex items-center justify-between text-small">
+            <span className="font-medium text-ink">
+              {runDone
+                ? (isTh ? 'รันวงจรสวัสดิการครบทุกขั้นตอนแล้ว' : 'All lifecycle operations completed')
+                : isTh
+                  ? `กำลังรัน ${TABS[runStep - 1]?.labelTh ?? ''}…`
+                  : `Running ${TABS[runStep - 1]?.labelEn ?? ''}…`}
+            </span>
+            <span className="text-ink-muted tabular-nums">{runStep}/{TABS.length}</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full border border-hairline bg-surface">
+            <div
+              className="h-full bg-accent transition-all duration-300"
+              style={{ width: `${(runStep / TABS.length) * 100}%` }}
+            />
+          </div>
+          {runDone && (
+            <div className="flex items-center gap-2 pt-1 text-small text-success-ink">
+              <CheckCircle2 className="h-4 w-4 text-success" aria-hidden />
+              {isTh
+                ? 'รันรับเข้างาน, เปลี่ยนแปลง, ลาออก และลงทะเบียนประจำปีเรียบร้อย'
+                : 'On-boarding, change, off-boarding, and annual enrollment all run'}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tab nav */}
       <div role="tablist" aria-label={t('tabsLabel')} className="flex gap-1 overflow-x-auto rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-1">
