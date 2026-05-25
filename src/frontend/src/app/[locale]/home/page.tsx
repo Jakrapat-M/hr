@@ -30,13 +30,16 @@ import {
   Wallet,
   User,
   FilePlus,
+  Clock,
+  Inbox,
+  Bell,
+  Users2,
+  GraduationCap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/humi';
 import { QuickActionsTile, DEFAULT_ESS_ACTIONS, type QuickAction } from '@/components/humi/QuickActionsTile';
 import { useAdminSelfService } from '@/lib/admin/store/useAdminSelfService';
-import type { RoleName } from '@/lib/admin/types/adminSelfService';
-import type { Role } from '@/lib/rbac';
 import {
   HUMI_PENDING_REQUESTS,
   HUMI_EMPLOYEES,
@@ -45,17 +48,6 @@ import {
   HUMI_ANNOUNCEMENTS,
   HUMI_WEEK_RECOGNITION,
 } from '@/lib/humi-mock-data';
-
-// Map lowercase Role → RoleName (CapCase) used by adminSelfService matrices.
-function toRoleName(role: Role): RoleName {
-  const map: Partial<Record<Role, RoleName>> = {
-    employee: 'Employee',
-    manager:  'Manager',
-    hrbp:     'HRBP',
-    spd:      'SPD',
-  };
-  return map[role] ?? 'Employee';
-}
 
 // Lucide icon map for adminSelfService QuickActionTile icon strings.
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -68,6 +60,11 @@ const ICON_MAP: Record<string, LucideIcon> = {
   CalendarPlus,
   Wallet,
   User,
+  Clock,
+  Inbox,
+  Bell,
+  Users2,
+  GraduationCap,
 };
 
 function makeAdminQuickActions(
@@ -106,7 +103,6 @@ export default function HumiHomePage() {
   const t = useTranslations('humiHero');
   const router = useRouter();
   const username = useAuthStore((s) => s.username);
-  const roles    = useAuthStore((s) => s.roles);
   const greeting = getTimeGreeting();
 
   // BRD #182 — Quick Actions from admin config bus.
@@ -115,14 +111,6 @@ export default function HumiHomePage() {
   const quickActions: QuickAction[] = publishedQuickActions.length > 0
     ? makeAdminQuickActions(publishedQuickActions)
     : DEFAULT_ESS_ACTIONS;
-
-  // BRD #183 — tile pool filtered by current role.
-  const publishedTiles = useAdminSelfService((s) => s.published.tiles);
-  const primaryRole = roles[0] ?? 'employee';
-  const roleName = toRoleName(primaryRole);
-  const visibleTiles = publishedTiles.filter(
-    (tile) => tile.enabled && tile.visibleTo.includes(roleName),
-  );
 
   const top2 = HUMI_PENDING_REQUESTS.slice(0, 2);
   const feed = HUMI_ANNOUNCEMENTS.slice(0, 2);
@@ -280,21 +268,9 @@ export default function HumiHomePage() {
         </div>
       </div>
 
-      {/* Row 1.5 — Quick Actions (BRD #182: from admin config bus, per-role BRD #183) */}
+      {/* Row 1.5 — Quick Actions (BRD #182: from admin config bus) */}
       <div style={{ marginTop: 20 }}>
         <QuickActionsTile actions={quickActions} />
-        {/* BRD #183 tile visibility debug — visibleTiles is computed above and
-            available for future tile widget rendering. Currently tiles render as
-            a row of chips below the quick-actions; full tile widgets are Sprint 3+. */}
-        {visibleTiles.length > 0 && (
-          <div className="humi-row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-            {visibleTiles.map((tile) => (
-              <span key={tile.id} className="humi-tag humi-tag--cream" style={{ fontSize: 12 }}>
-                {tile.label}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Row 2 — approvals + docs */}

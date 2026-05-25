@@ -72,16 +72,20 @@ describe('LoginAsRibbon — Req2 acting band', () => {
     expect(band.className).not.toContain('bg-warning-tint');
   });
 
-  it('AC2.1: renders the TH acting copy', () => {
+  it('AC2.1: renders the TH acting copy (you-are + acting-as + on-profile)', () => {
     render(<LoginAsRibbon />);
-    expect(screen.getByText('กำลังดูในชื่อ')).toBeInTheDocument();
+    expect(screen.getByText('คุณคือ')).toBeInTheDocument();
+    expect(screen.getByText('สวมบทบาทเป็น')).toBeInTheDocument();
+    expect(screen.getByText('ทำงานบนโปรไฟล์')).toBeInTheDocument();
     expect(screen.getByText('กลับสู่ผู้ดูแลระบบ')).toBeInTheDocument();
   });
 
   it('AC2.1: renders the EN acting copy under /en', () => {
     paramsMock.locale = 'en';
     render(<LoginAsRibbon />);
-    expect(screen.getByText('Acting as')).toBeInTheDocument();
+    expect(screen.getByText('You are')).toBeInTheDocument();
+    expect(screen.getByText('acting as')).toBeInTheDocument();
+    expect(screen.getByText('on profile')).toBeInTheDocument();
     expect(screen.getByText('Switch back to admin')).toBeInTheDocument();
   });
 

@@ -123,6 +123,12 @@ function railTab(fullLabel: string) {
   return screen.getByRole('tab', { name: new RegExp(RAIL_SHORT_TH[fullLabel]) });
 }
 
+/** Like railTab but returns null instead of throwing when the group is not
+ *  rendered — inaccessible groups are now removed entirely (not shown locked). */
+function queryRailTab(fullLabel: string) {
+  return screen.queryByRole('tab', { name: new RegExp(RAIL_SHORT_TH[fullLabel]) });
+}
+
 /** Open/select a group by clicking its rail tab. */
 function clickGroup(fullLabel: string) {
   fireEvent.click(railTab(fullLabel));
@@ -143,43 +149,43 @@ describe('Blueprint sidebar — group structure', () => {
     expect(screen.getByRole('complementary', { name: 'เมนูหลัก' })).toBeInTheDocument();
   });
 
-  it('always renders all 4 group rail tabs (workspace, team, hr, system)', () => {
+  it('renders only the groups the persona can access (plain employee → workspace only)', () => {
     render(<Sidebar />);
     expect(railTab(GROUP_WORKSPACE)).toBeInTheDocument();
-    expect(railTab(GROUP_TEAM)).toBeInTheDocument();
-    expect(railTab(GROUP_HR)).toBeInTheDocument();
-    expect(railTab(GROUP_SYSTEM)).toBeInTheDocument();
+    // team / hr / system have no employee-accessible leaves → removed entirely
+    // (not shown locked) so the menu never implies access the role lacks.
+    expect(queryRailTab(GROUP_TEAM)).not.toBeInTheDocument();
+    expect(queryRailTab(GROUP_HR)).not.toBeInTheDocument();
+    expect(queryRailTab(GROUP_SYSTEM)).not.toBeInTheDocument();
   });
 
-  it('renders the static tenant line CENTRAL · BANGKOK 03', () => {
+  it('does not render the static tenant line (removed per design)', () => {
     render(<Sidebar />);
-    expect(screen.getByText('CENTRAL · BANGKOK 03')).toBeInTheDocument();
+    expect(screen.queryByText('CENTRAL · BANGKOK 03')).not.toBeInTheDocument();
   });
 });
 
-// ─── Locked groups: zero visible leaves → disabled rail tab (.locked) ─────────
+// ─── Inaccessible groups: zero accessible leaves → removed entirely ───────────
 
-describe('Blueprint sidebar — locked groups for a plain employee', () => {
-  it('workspace group is unlocked (enabled rail tab)', () => {
+describe('Blueprint sidebar — inaccessible groups are removed for a plain employee', () => {
+  it('workspace group is rendered + enabled', () => {
     render(<Sidebar />);
+    expect(railTab(GROUP_WORKSPACE)).toBeInTheDocument();
     expect(railTab(GROUP_WORKSPACE)).not.toBeDisabled();
   });
 
-  it('team / hr / system groups are locked (disabled rail tabs) for an employee', () => {
+  it('team / hr / system groups are NOT rendered (removed, not locked) for an employee', () => {
     render(<Sidebar />);
-    expect(railTab(GROUP_TEAM)).toBeDisabled();
-    expect(railTab(GROUP_HR)).toBeDisabled();
-    expect(railTab(GROUP_SYSTEM)).toBeDisabled();
+    expect(queryRailTab(GROUP_TEAM)).not.toBeInTheDocument();
+    expect(queryRailTab(GROUP_HR)).not.toBeInTheDocument();
+    expect(queryRailTab(GROUP_SYSTEM)).not.toBeInTheDocument();
   });
 
-  it('locked group rail tabs carry the .locked class', () => {
-    // SF-parity intent preserved: a group with zero leaves for the persona is
-    // VISIBLY marked locked. The old test asserted the accordion "—" count glyph;
-    // the rail/panel has no count chrome, so the same locked semantic is now
-    // carried by the .locked class (+ disabled, asserted above). Mechanic changed,
-    // behavior (locked groups are shown-but-unenterable) unchanged.
+  it('no rendered rail tab is in a locked/disabled state', () => {
+    // Product rule: we never render a disabled/locked menu entry — every visible
+    // group is fully enterable.
     render(<Sidebar />);
-    expect(railTab(GROUP_TEAM)).toHaveClass('locked');
+    screen.getAllByRole('tab').forEach((tab) => expect(tab).not.toBeDisabled());
   });
 });
 
@@ -238,13 +244,13 @@ describe('Blueprint sidebar — workspace leaves (ESS, all personas)', () => {
 // ─── Role gating: manager + HR-admin + HR-manager views ───────────────────────
 
 describe('Blueprint sidebar — role-gated views', () => {
-  it('manager unlocks the team group but not HR admin', () => {
+  it('manager sees the team group but not HR / system', () => {
     asRoles(['manager', 'employee']);
     render(<Sidebar />);
-    expect(railTab(GROUP_TEAM)).not.toBeDisabled();
-    expect(railTab(GROUP_HR)).toBeDisabled();
-    // manager has no system-group leaf → system stays locked
-    expect(railTab(GROUP_SYSTEM)).toBeDisabled();
+    expect(railTab(GROUP_TEAM)).toBeInTheDocument();
+    // manager has no HR / system leaves → those groups are removed entirely
+    expect(queryRailTab(GROUP_HR)).not.toBeInTheDocument();
+    expect(queryRailTab(GROUP_SYSTEM)).not.toBeInTheDocument();
   });
 
   it('manager team leaves include the merged inbox·approvals + reports + perf with correct hrefs', () => {

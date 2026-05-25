@@ -178,12 +178,19 @@
 /* Legibility — HR users repeatedly report text is hard to read, so the base
    font runs a notch larger than the 16px norm. Scales all rem-based (Tailwind
    text-*) type app-wide; px chrome (sidebar/topbar) is sized up explicitly. */
+/* Site-wide 125% scale — equivalent to browser zoom 125%. Uses CSS `zoom` so the
+   px-heavy inline styles scale uniformly too (a root font-size bump would only
+   touch rem/Tailwind type). --app-zoom is reused by the full-viewport-height
+   shells below: CSS `zoom` does NOT rescale `vh` for descendants, so 100vh boxes
+   are divided by the zoom to stay exactly one screen tall. */
+:root { --app-zoom: 1.25; }
+body { zoom: var(--app-zoom); }
 html { font-size: 17.5px; }
 
 .humi-app {
   display: grid;
   grid-template-columns: 1fr;
-  min-height: 100vh;
+  min-height: calc(100vh / var(--app-zoom));
   background: var(--color-canvas);
 }
 
@@ -201,7 +208,7 @@ html { font-size: 17.5px; }
     padding: 22px 16px 18px;
     position: sticky;
     top: 0;
-    height: 100vh;
+    height: calc(100vh / var(--app-zoom));
     display: none;
     flex-direction: column;
     gap: 6px;
@@ -235,7 +242,7 @@ html { font-size: 17.5px; }
   position: fixed;
   inset: 0 auto 0 0;
   width: 280px;
-  height: 100vh;
+  height: calc(100vh / var(--app-zoom));
   z-index: 50;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -800,7 +807,10 @@ html { font-size: 17.5px; }
 .humi-main {
   padding: 0 16px 48px;
   min-width: 0;
-  overflow-x: hidden;
+  /* `clip` (not `hidden`) clips horizontal overflow WITHOUT creating a scroll
+     container — otherwise overflow-x:hidden forces overflow-y:auto and silently
+     breaks the sticky .humi-topbar (topbar would scroll away). */
+  overflow-x: clip;
 }
 @media (min-width: 640px) {
   .humi-main { padding: 0 36px 48px; }
@@ -1081,11 +1091,11 @@ html { font-size: 17.5px; }
    of existing token so usage inside Topbar doesn't require a new
    global utility class. */
 .humi-eyebrow {
-  font-size: 11px;
+  font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--color-ink-muted);
-  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--color-ink-soft);
+  font-weight: 700;
 }
 
 /* Ported from styles.css:395 (.spacer) */

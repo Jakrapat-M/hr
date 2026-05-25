@@ -25,8 +25,6 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
-import { PERSONA_BADGE } from '@/lib/demo-users';
-import { personaTiers } from '@/lib/persona-tiers';
 
 export function LoginAsRibbon() {
   const router = useRouter();
@@ -35,9 +33,7 @@ export function LoginAsRibbon() {
   const isTh = locale !== 'en';
 
   const username = useAuthStore((s) => s.username);
-  const email = useAuthStore((s) => s.email);
   const userId = useAuthStore((s) => s.userId);
-  const roles = useAuthStore((s) => s.roles);
   const originalUser = useAuthStore((s) => s.originalUser);
   const exitPersona = useAuthStore((s) => s.exitPersona);
   const hasHydrated = useAuthStore((s) => s._hasHydrated);
@@ -46,13 +42,6 @@ export function LoginAsRibbon() {
   if (!hasHydrated) return null;
   // Band shows ONLY during impersonation; otherwise nothing.
   if (!originalUser || !username) return null;
-
-  const badge = email ? PERSONA_BADGE[email] : null;
-  const tiers = personaTiers(roles);
-  // SCOPE band text mirrors the prototype: "SCOPE · A + B" (access tiers joined
-  // by " + "); falls back to the persona label when no tiers are present.
-  const scopeLabel = badge?.label ?? (isTh ? 'พนักงาน' : 'Employee');
-  const scope = tiers.length ? tiers.join(' + ') : scopeLabel;
 
   function handleExit() {
     exitPersona();
@@ -75,46 +64,49 @@ export function LoginAsRibbon() {
         fontSize: 12.5,
       }}
     >
-      {/* label */}
-      <span
-        style={{
-          color: 'color-mix(in srgb, var(--imp-fg) 75%, transparent)',
-          fontWeight: 500,
-        }}
-      >
-        {isTh ? 'กำลังดูในชื่อ' : 'Acting as'}
+      {/* 1. Who you really are (the real admin behind the session) */}
+      <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+        <span style={{ color: 'color-mix(in srgb, var(--imp-fg) 70%, transparent)', fontWeight: 500 }}>
+          {isTh ? 'คุณคือ' : 'You are'}
+        </span>
+        <span className="truncate" style={{ color: 'white', fontWeight: 600 }}>
+          {originalUser.username}
+        </span>
       </span>
 
-      {/* target — pure-white name + muted mono empId */}
-      <span className="min-w-0 truncate" style={{ color: 'white', fontWeight: 600 }}>
-        {username}
+      <span aria-hidden style={{ color: 'color-mix(in srgb, var(--imp-fg) 40%, transparent)' }}>·</span>
+
+      {/* 2. Who you are acting as */}
+      <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+        <span style={{ color: 'color-mix(in srgb, var(--imp-fg) 70%, transparent)', fontWeight: 500 }}>
+          {isTh ? 'สวมบทบาทเป็น' : 'acting as'}
+        </span>
+        <span className="truncate" style={{ color: 'white', fontWeight: 600 }}>
+          {username}
+        </span>
+      </span>
+
+      <span aria-hidden className="hidden sm:inline" style={{ color: 'color-mix(in srgb, var(--imp-fg) 40%, transparent)' }}>·</span>
+
+      {/* 3. Whose profile you are working on (the persona's record) */}
+      <span className="hidden sm:inline-flex" style={{ alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+        <span style={{ color: 'color-mix(in srgb, var(--imp-fg) 70%, transparent)', fontWeight: 500 }}>
+          {isTh ? 'ทำงานบนโปรไฟล์' : 'on profile'}
+        </span>
+        <span className="truncate" style={{ color: 'white', fontWeight: 600 }}>
+          {username}
+        </span>
         <small
           style={{
             fontWeight: 400,
             color: 'color-mix(in srgb, var(--imp-fg) 65%, transparent)',
             fontSize: 11.5,
             fontFamily: 'var(--font-mono)',
-            marginLeft: 6,
             letterSpacing: '.02em',
           }}
         >
           EMP-{userId}
         </small>
-      </span>
-
-      {/* scope — mono, uppercase, dimmed */}
-      <span
-        className="hidden sm:inline"
-        style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: 10,
-          letterSpacing: '.12em',
-          textTransform: 'uppercase',
-          color: 'color-mix(in srgb, var(--imp-fg) 55%, transparent)',
-          marginLeft: 8,
-        }}
-      >
-        SCOPE · {scope}
       </span>
 
       {/* exit — underlined text link pushed right (no pill) */}

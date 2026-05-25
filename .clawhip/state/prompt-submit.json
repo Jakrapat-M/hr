@@ -1,0 +1,8 @@
+{
+  "observed_at": "2026-05-25T10:01:12.487Z",
+  "provider": "codex",
+  "event_name": "UserPromptSubmit",
+  "session_id": "019e5dd3-00ca-7321-bbab-e4a9d63a7611",
+  "turn_id": "019e5e94-aa3d-7c30-ab43-145606f57bc5",
+  "prompt_summary": "pls clean storage"
+}

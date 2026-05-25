@@ -203,7 +203,8 @@ export const useAdminSelfService = create<AdminSelfServiceState>()(
       setCurrentEditor: (editor) => set({ currentEditor: editor }),
     }),
     {
-      name: 'admin-ss-config-v1',      // localStorage key (AC-6)
+      // v2 bump: reseeds quick actions to the 12 canonical module shortcuts (discards stale v1 localStorage)
+      name: 'admin-ss-config-v2',      // localStorage key (AC-6)
       storage: createJSONStorage(() => {
         // guard สำหรับ SSR — Next.js render บน server ไม่มี localStorage (Rule C6)
         if (typeof window === 'undefined') {

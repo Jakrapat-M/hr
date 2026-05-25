@@ -23,8 +23,8 @@
 // Behaviours ported:
 //  - single-open accordion: ONE openGroup id; clicking the open one closes it.
 //  - .bp-nav-panel grid-template-rows 0fr→1fr collapse transition (CSS).
-//  - groups with zero visible leaves for the persona render `locked`
-//    (disabled, count "—").
+//  - groups with zero accessible leaves for the persona are NOT rendered
+//    (removed entirely — never shown as locked/disabled).
 //  - active leaf highlighted via .is-active derived from pathname.
 //
 // Adaptations for Next.js:
@@ -207,6 +207,10 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
   const searchParams = useSearchParams();
   const userRoles = useAuthStore((s) => s.roles);
   const username = useAuthStore((s) => s.username);
+  // Footer = the identity you are currently operating as. While impersonating
+  // that is the persona you stepped into ("คนที่เราไปสวมบท"); the top
+  // LoginAsRibbon carries the real-admin + acting-as context.
+  const userId = useAuthStore((s) => s.userId);
   const barePath = stripLocale(pathname);
   const currentLocale = pathname.match(/^\/(th|en)/)?.[1] ?? 'th';
   const isTh = currentLocale === 'th';
@@ -236,10 +240,13 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
   // Default selection follows the active route's group; a rail click overrides
   // it for browsing, and the next navigation (pathname change) resets back to
   // following the route. Derived from pathname so SSR + first paint match.
+  // A group with zero accessible leaves for this persona is NOT rendered at all.
+  // Product rule: don't show locked/disabled menu items — remove them entirely so
+  // we never imply access a role doesn't have ("ไม่ใช่แค่ซ่อน, กันเข้าใจผิด").
   const visibleGroups = MODULES.map((m) => ({
     ...m,
     shownLeaves: m.leaves.filter((l) => leafVisible(l, userRoles)),
-  }));
+  })).filter((g) => g.shownLeaves.length > 0);
   const activeGroupId = visibleGroups.find((g) =>
     g.shownLeaves.some((l) => isActive(leafBareHref(l))),
   )?.id;
@@ -271,7 +278,6 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
         </div>
         <div className="bp-rail-groups" role="tablist" aria-label="กลุ่มเมนู">
           {visibleGroups.map((m) => {
-            const locked = m.shownLeaves.length === 0;
             const active = shownGroupId === m.id;
             const RailIcon = m.icon;
             const short = RAIL_SHORT[m.id] ?? { th: m.labelTh, en: m.label };
@@ -281,9 +287,8 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
                 type="button"
                 role="tab"
                 aria-selected={active}
-                className={cn('bp-rail-item', active && 'is-active', locked && 'locked')}
-                disabled={locked}
-                onClick={() => !locked && setSelectedGroup(m.id)}
+                className={cn('bp-rail-item', active && 'is-active')}
+                onClick={() => setSelectedGroup(m.id)}
                 title={navLabel(m, isTh)}
               >
                 <span className="bp-rail-icon" aria-hidden="true">
@@ -309,7 +314,6 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
       {/* ── Col 2: leaves of the selected group ── */}
       <div className="bp-panel">
         <div className="bp-panel-head">
-          <div className="bp-tenant">CENTRAL · BANGKOK 03</div>
           <div className="bp-panel-title">{shownGroup ? navLabel(shownGroup, isTh) : ''}</div>
         </div>
         <nav
@@ -347,11 +351,16 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
           aria-label="ออกจากระบบและกลับไปหน้าเข้าสู่ระบบ"
         >
           <div className="bp-av" aria-hidden="true">
-            จท
+            {(username || 'จงรักษ์ ทานากะ')
+              .trim()
+              .split(/\s+/)
+              .map((w) => w[0])
+              .slice(0, 2)
+              .join('')}
           </div>
           <div style={{ minWidth: 0 }}>
             <div className="bp-nm">{username || 'จงรักษ์ ทานากะ'}</div>
-            <div className="bp-rl">EMP-04821</div>
+            <div className="bp-rl">{userId || 'EMP-04821'}</div>
           </div>
         </Link>
       </div>
