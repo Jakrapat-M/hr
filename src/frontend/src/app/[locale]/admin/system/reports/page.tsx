@@ -4,9 +4,10 @@
 // BRD #193, #196, #206, #207, #164 — Part E Wave 2a
 
 import Link from 'next/link'
-import { Star } from 'lucide-react'
+import { Star, ClipboardCheck } from 'lucide-react'
 import { useDataManagement } from '@/lib/admin/store/useDataManagement'
 import { formatCron } from '@/lib/admin/utils/cronFormat'
+import { useSelectPendingApprovals } from '@/lib/approval-registry'
 
 const REPORT_TOOLS = [
   { href: '/th/admin/system/reports/builder',    label: 'สร้างรายงาน',          labelEn: 'Report Builder' },
@@ -17,6 +18,10 @@ const REPORT_TOOLS = [
 
 export default function ReportsHubPage() {
   const { reports, favouriteReports, scheduledJobs, toggleFavourite } = useDataManagement()
+  // PR-2 (AC-2.2): live pending-approvals figure derived from the canonical
+  // approval queue. Decrements in-session when a request is approved/rejected
+  // in /quick-approve (StatePropagationVerified).
+  const pendingApprovals = useSelectPendingApprovals().filter((q) => q.status === 'pending').length
 
   const recentReports = [...reports]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
@@ -27,6 +32,18 @@ export default function ReportsHubPage() {
       <div>
         <h2 className="text-xl font-semibold text-ink">รายงาน</h2>
         <p className="mt-1 text-sm text-ink-muted">สร้าง กำหนดเวลา และจัดการรายงาน</p>
+      </div>
+
+      {/* Live operational figures */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="rounded-lg border border-hairline-soft bg-surface px-4 py-3">
+          <div className="flex items-center gap-2 text-ink-muted">
+            <ClipboardCheck size={16} />
+            <p className="text-xs font-medium">คำขอรออนุมัติ</p>
+          </div>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">{pendingApprovals}</p>
+          <p className="text-xs text-ink-muted">Pending Approvals</p>
+        </div>
       </div>
 
       {/* Quick links to sub-tools */}

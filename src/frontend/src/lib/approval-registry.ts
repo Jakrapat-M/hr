@@ -341,3 +341,173 @@ export function getPendingApprovals(): QueueApproval[] {
     transfers: useTransferApprovals.getState().entries,
   });
 }
+
+// ── PR-2: cross-persona projections ────────────────────────────────────────────
+// The unified queue is the canonical truth: when a manager approves/rejects in
+// /quick-approve the source store flips, `selectPendingApprovals()` re-derives, and
+// every employee/admin surface that PROJECTS from this selector reflects the new
+// status LIVE in-session (StatePropagationVerified). These mappers stay pure so the
+// page call sites stay dumb — same idiom as toQueueItem/selectPendingApprovals.
+
+/**
+ * Per-RequestType display labels for projected rows. Kept here so the projections
+ * read one canonical label source (the registry adapters' own labels).
+ */
+function queueTypeLabel(type: RequestType, locale: 'th' | 'en'): string {
+  return APPROVAL_REGISTRY[type].labels[locale];
+}
+
+/**
+ * Project a QueueApproval into the /requests "my requests" row shape (MineRow in
+ * requests/page.tsx). The collapsed QueueStatus is already a RequestStatus subset
+ * (pending|approved|rejected — never `info`), so it maps 1:1.
+ */
+export interface QueueRequestRow {
+  id: string;
+  type: string;
+  sub: string;
+  submitted: string;
+  status: QueueStatus;
+  approvalChain: {
+    role: string;
+    name: string;
+    initials: string;
+    tone: 'teal' | 'sage' | 'butter' | 'ink';
+    status: 'approved' | 'pending' | 'rejected' | 'skipped';
+    when?: string;
+    note?: string;
+  }[];
+}
+
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2);
+  return (parts[0][0] ?? '') + (parts[1][0] ?? '');
+}
+
+/** Map a QueueApproval → /requests MineRow projection. */
+export function queueApprovalToRequestRow(q: QueueApproval, locale: 'th' | 'en' = 'th'): QueueRequestRow {
+  const submitted = new Date(q.row.submittedAt).toLocaleDateString(
+    locale === 'th' ? 'th-TH' : 'en-US',
+    { day: 'numeric', month: 'short', year: 'numeric' },
+  );
+  const stepStatus: 'approved' | 'pending' | 'rejected' =
+    q.status === 'approved' ? 'approved' : q.status === 'rejected' ? 'rejected' : 'pending';
+  return {
+    id: q.row.id,
+    type: queueTypeLabel(q.row.type, locale),
+    sub: q.row.description,
+    submitted,
+    status: q.status,
+    approvalChain: [
+      {
+        role: locale === 'th' ? 'หัวหน้างาน' : 'Manager',
+        name: q.row.requester.name,
+        initials: initialsOf(q.row.requester.name),
+        tone: 'teal',
+        status: q.awaitingNext ? 'approved' : stepStatus,
+        when:
+          q.status === 'pending'
+            ? locale === 'th'
+              ? 'รอดำเนินการ'
+              : 'Pending'
+            : undefined,
+      },
+    ],
+  };
+}
+
+/**
+ * Reactive projection for /requests — the SAME canonical rows the manager queue
+ * shows, in the employee tracker's row shape. Subscribing here means an approval
+ * in /quick-approve flips the matching row's status with no refresh (AC-2.1).
+ */
+export function useQueueRequestRows(locale: 'th' | 'en' = 'th'): QueueRequestRow[] {
+  const queue = useSelectPendingApprovals();
+  return queue.map((q) => queueApprovalToRequestRow(q, locale));
+}
+
+/**
+ * Project a QueueApproval into the /workflows row shape (WorkflowItem in
+ * use-workflows.ts). The 4-state workflow status maps from the collapsed queue
+ * status; an awaitingNext claim stays `pending` (it is awaiting the next approver).
+ */
+export interface QueueWorkflowRow {
+  id: string;
+  type: RequestType;
+  typeLabel: string;
+  requesterName: string;
+  requesterId: string;
+  department: string;
+  description: string;
+  submittedDate: string;
+  urgency: 'low' | 'normal' | 'high' | 'critical';
+  status: 'pending' | 'approved' | 'rejected' | 'sent_back';
+  currentStep: number;
+  totalSteps: number;
+  steps: {
+    step: number;
+    approverName: string;
+    approverId: string;
+    status: 'pending' | 'approved' | 'rejected' | 'sent_back' | 'skipped';
+    actionDate?: string;
+    comment?: string;
+  }[];
+}
+
+const QUEUE_URGENCY_TO_WORKFLOW: Record<Urgency, 'low' | 'normal' | 'high'> = {
+  low: 'low',
+  normal: 'normal',
+  urgent: 'high',
+};
+
+/** Map a QueueApproval → /workflows WorkflowItem projection. */
+export function queueApprovalToWorkflowRow(q: QueueApproval, locale: 'th' | 'en' = 'en'): QueueWorkflowRow {
+  const timeline = q.row.approvalTimeline ?? [];
+  const total = Math.max(timeline.length, 1);
+  // Derive step statuses from the collapsed queue status. Approved/rejected mark
+  // the whole chain terminal; pending keeps the chain's own seeded step states.
+  const steps = (timeline.length > 0 ? timeline : [{ step: 1, approver: q.row.requester.name, status: 'pending' as const }]).map((s) => {
+    const stepStatus: 'pending' | 'approved' | 'rejected' =
+      q.status === 'approved'
+        ? 'approved'
+        : q.status === 'rejected'
+        ? 'rejected'
+        : (s.status as 'pending' | 'approved' | 'rejected');
+    return {
+      step: s.step,
+      approverName: s.approver,
+      approverId: `APR-${s.step}`,
+      status: stepStatus,
+      actionDate: stepStatus === 'pending' ? undefined : new Date().toISOString(),
+      comment: undefined,
+    };
+  });
+  const approvedCount = steps.filter((s) => s.status === 'approved').length;
+  return {
+    id: q.row.id,
+    type: q.row.type,
+    typeLabel: queueTypeLabel(q.row.type, locale),
+    requesterName: q.row.requester.name,
+    requesterId: q.row.requester.id,
+    department: q.row.requester.department,
+    description: q.row.description,
+    submittedDate: q.row.submittedAt,
+    urgency: QUEUE_URGENCY_TO_WORKFLOW[q.row.urgency],
+    status: q.status,
+    currentStep: q.status === 'pending' ? Math.min(approvedCount + 1, total) : total,
+    totalSteps: total,
+    steps,
+  };
+}
+
+/**
+ * Reactive projection for /workflows — replaces the disconnected MOCK_WORKFLOWS
+ * useState (7th parallel mock) with the canonical queue rows. An approval in
+ * /quick-approve now flips the matching workflow row's status live (AC-2.1).
+ */
+export function useQueueWorkflowRows(locale: 'th' | 'en' = 'en'): QueueWorkflowRow[] {
+  const queue = useSelectPendingApprovals();
+  return queue.map((q) => queueApprovalToWorkflowRow(q, locale));
+}

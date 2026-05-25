@@ -1,6 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import {
+  APPROVAL_REGISTRY,
+  useQueueWorkflowRows,
+  type QueueWorkflowRow,
+} from '@/lib/approval-registry';
+
+// use-workflows — PR-2 (clickable-HRMS) ORPHAN2 bridge.
+//
+// This hook used to own a 7th parallel mock (MOCK_WORKFLOWS in a local useState),
+// disconnected from the 6 approval stores. It now derives the workflow list from
+// the SAME canonical source as /quick-approve (useQueueWorkflowRows over
+// selectPendingApprovals), and routes approve/reject through APPROVAL_REGISTRY so
+// an approval in the manager queue flips the matching workflow row's status LIVE,
+// no refresh (AC-2.1). The page's existing UI/return contract is preserved.
 
 export type WorkflowType =
  |'leave'
@@ -41,370 +55,106 @@ export interface WorkflowItem {
  changes?: { field: string; oldValue: string; newValue: string }[];
 }
 
-function buildDefaultWorkflowSteps(type: WorkflowType, hasDocument = false): WorkflowStep[] {
- switch (type) {
- case'leave':
- return [
- { step: 1, approverName:'Rungrote Amnuaysopon', approverId:'MGR001', status:'pending' },
- {
- step: 2,
- approverName: hasDocument ?'Anchalee Thammarat' :'Kamolwan Srisuk',
- approverId: hasDocument ?'HRBP001' :'HR001',
- status:'pending',
- },
- ];
- case'overtime':
- return [
- { step: 1, approverName:'Rungrote Amnuaysopon', approverId:'MGR001', status:'pending' },
- { step: 2, approverName:'Kamolwan Srisuk', approverId:'HR001', status:'pending' },
- ];
- case'time_correction':
- return [{ step: 1, approverName:'Rungrote Amnuaysopon', approverId:'MGR001', status:'pending' }];
- case'transfer':
- return [
- { step: 1, approverName:'Rungrote Amnuaysopon', approverId:'MGR001', status:'pending' },
- { step: 2, approverName:'Kamolwan Srisuk', approverId:'HR001', status:'pending' },
- { step: 3, approverName:'Thanaporn Kittisak', approverId:'HRMGR001', status:'pending' },
- ];
- default:
- return [{ step: 1, approverName:'Kamolwan Srisuk', approverId:'HR001', status:'pending' }];
- }
+// The canonical queue uses the 6 RequestType values. Map them onto the wider
+// WorkflowType union the page renders (personal_info covers change_request).
+const QUEUE_TYPE_TO_WORKFLOW_TYPE: Record<QueueWorkflowRow['type'], WorkflowType> = {
+  leave: 'leave',
+  overtime: 'overtime',
+  claim: 'payroll_change',
+  transfer: 'transfer',
+  change_request: 'personal_info',
+  probation: 'personal_info',
+};
+
+function queueRowToWorkflowItem(row: QueueWorkflowRow): WorkflowItem {
+  return {
+    id: row.id,
+    type: QUEUE_TYPE_TO_WORKFLOW_TYPE[row.type],
+    typeLabel: row.typeLabel,
+    requesterName: row.requesterName,
+    requesterId: row.requesterId,
+    department: row.department,
+    description: row.description,
+    submittedDate: row.submittedDate,
+    urgency: row.urgency,
+    status: row.status,
+    currentStep: row.currentStep,
+    totalSteps: row.totalSteps,
+    steps: row.steps.map((s) => ({
+      step: s.step,
+      approverName: s.approverName,
+      approverId: s.approverId,
+      status: s.status,
+      actionDate: s.actionDate,
+      comment: s.comment,
+    })),
+  };
 }
 
-const MOCK_WORKFLOWS: WorkflowItem[] = [
- {
- id:'WF-001',
- type:'leave',
- typeLabel:'Leave Request',
- requesterName:'Somchai Jaidee',
- requesterId:'EMP001',
- department:'Engineering',
- description:'Annual Leave: Mar 10-14, 2026 (5 days)',
- submittedDate:'2026-02-15T09:00:00Z',
- effectiveDate:'2026-03-10',
- urgency:'normal',
- status:'pending',
- currentStep: 1,
- totalSteps: 2,
- steps: [
- { step: 1, approverName:'Rungrote Amnuaysopon', approverId:'MGR001', status:'pending' },
- { step: 2, approverName:'Kamolwan Srisuk', approverId:'HR001', status:'pending' },
- ],
- details: { leaveType:'Annual Leave', startDate:'2026-03-10', endDate:'2026-03-14', days:'5' },
- },
- {
- id:'WF-002',
- type:'transfer',
- typeLabel:'Transfer Request',
- requesterName:'Naruechon Woraphatphawan',
- requesterId:'EMP002',
- department:'Information Technology',
- description:'Transfer from IT Dept to Product Dept',
- submittedDate:'2026-02-10T14:00:00Z',
- effectiveDate:'2026-04-01',
- urgency:'high',
- status:'pending',
- currentStep: 1,
- totalSteps: 3,
- steps: [
- { step: 1, approverName:'Rungrote Amnuaysopon', approverId:'MGR001', status:'pending' },
- { step: 2, approverName:'Kamolwan Srisuk', approverId:'HR001', status:'pending' },
- { step: 3, approverName:'Thanaporn Kittisak', approverId:'HRMGR001', status:'pending' },
- ],
- details: { fromDepartment:'IT Department', toDepartment:'Product Department', effectiveDate:'2026-04-01' },
- changes: [
- { field:'Department', oldValue:'IT Department', newValue:'Product Department' },
- { field:'Position', oldValue:'Software Engineer', newValue:'Product Engineer' },
- ],
- },
- {
- id:'WF-003',
- type:'personal_info',
- typeLabel:'Personal Info Change',
- requesterName:'Punnapa Thianchai',
- requesterId:'EMP003',
- department:'Finance',
- description:'Address change request – please review supporting documents',
- submittedDate:'2026-02-18T10:30:00Z',
- effectiveDate:'2026-02-20',
- urgency:'low',
- status:'sent_back',
- currentStep: 1,
- totalSteps: 1,
- steps: [
- {
- step: 1,
- approverName:'Kamolwan Srisuk',
- approverId:'HR001',
- status:'sent_back',
- actionDate:'2026-02-19T09:00:00Z',
- comment:'Please provide supporting documents (utility bill or government ID)',
- },
- ],
- details: { field:'Current Address', oldValue:'123 Sukhumvit Rd', newValue:'456 Ratchadaphisek Rd' },
- changes: [
- { field:'Current Address', oldValue:'123 Sukhumvit Rd, Watthana, Bangkok 10110', newValue:'456 Ratchadaphisek Rd, Din Daeng, Bangkok 10400' },
- ],
- },
- {
- id:'WF-004',
- type:'leave',
- typeLabel:'Leave Request',
- requesterName:'Wichai Prasert',
- requesterId:'EMP004',
- department:'Sales',
- description:'Sick Leave: Feb 5, 2026 (1 day)',
- submittedDate:'2026-02-05T07:30:00Z',
- effectiveDate:'2026-02-05',
- urgency:'normal',
- status:'approved',
- currentStep: 2,
- totalSteps: 2,
- steps: [
- {
- step: 1,
- approverName:'Rungrote Amnuaysopon',
- approverId:'MGR001',
- status:'approved',
- actionDate:'2026-02-05T08:00:00Z',
- comment:'Approved. Get well soon.',
- },
- {
- step: 2,
- approverName:'Kamolwan Srisuk',
- approverId:'HR001',
- status:'approved',
- actionDate:'2026-02-05T09:00:00Z',
- },
- ],
- details: { leaveType:'Sick Leave', date:'2026-02-05', days:'1' },
- },
- {
- id:'WF-005',
- type:'overtime',
- typeLabel:'Overtime Request',
- requesterName:'Ananya Kaewkham',
- requesterId:'EMP005',
- department:'Marketing',
- description:'Overtime: Feb 20, 2026 (3 hours) – Project deadline',
- submittedDate:'2026-02-19T16:00:00Z',
- effectiveDate:'2026-02-20',
- urgency:'normal',
- status:'pending',
- currentStep: 1,
- totalSteps: 2,
- steps: [
- { step: 1, approverName:'Rungrote Amnuaysopon', approverId:'MGR001', status:'pending' },
- { step: 2, approverName:'Kamolwan Srisuk', approverId:'HR001', status:'pending' },
- ],
- details: { date:'2026-02-20', hours:'3', reason:'Project deadline', rate:'1.5x' },
- },
- {
- id:'WF-006',
- type:'resignation',
- typeLabel:'Resignation',
- requesterName:'Teerapat Wongsawat',
- requesterId:'EMP006',
- department:'Operations',
- description:'Resignation effective Apr 1, 2026',
- submittedDate:'2026-02-01T09:00:00Z',
- effectiveDate:'2026-04-01',
- urgency:'critical',
- status:'pending',
- currentStep: 2,
- totalSteps: 3,
- steps: [
- {
- step: 1,
- approverName:'Rungrote Amnuaysopon',
- approverId:'MGR001',
- status:'approved',
- actionDate:'2026-02-02T10:00:00Z',
- comment:'Acknowledged. Will arrange knowledge transfer.',
- },
- { step: 2, approverName:'Kamolwan Srisuk', approverId:'HR001', status:'pending' },
- { step: 3, approverName:'Thanaporn Kittisak', approverId:'HRMGR001', status:'pending' },
- ],
- details: { lastWorkingDay:'2026-03-31', noticePeriod:'60 days', reason:'Personal reasons' },
- },
- {
- id:'WF-007',
- type:'payroll_change',
- typeLabel:'Salary Adjustment',
- requesterName:'Siriporn Nakwilai',
- requesterId:'EMP007',
- department:'Human Resources',
- description:'Annual merit increase – Performance cycle 2025',
- submittedDate:'2026-01-28T11:00:00Z',
- effectiveDate:'2026-03-01',
- urgency:'high',
- status:'approved',
- currentStep: 3,
- totalSteps: 3,
- steps: [
- {
- step: 1,
- approverName:'Rungrote Amnuaysopon',
- approverId:'MGR001',
- status:'approved',
- actionDate:'2026-01-29T09:00:00Z',
- },
- {
- step: 2,
- approverName:'Kamolwan Srisuk',
- approverId:'HR001',
- status:'approved',
- actionDate:'2026-01-30T10:00:00Z',
- },
- {
- step: 3,
- approverName:'Thanaporn Kittisak',
- approverId:'HRMGR001',
- status:'approved',
- actionDate:'2026-01-31T14:00:00Z',
- comment:'Approved. Effective from March payroll.',
- },
- ],
- changes: [
- { field:'Base Salary', oldValue:'45,000 THB', newValue:'49,500 THB' },
- { field:'Grade', oldValue:'G5', newValue:'G6' },
- ],
- details: { increasePercent:'10%', effectiveDate:'2026-03-01', cycle:'2025 Annual Merit' },
- },
- {
- id:'WF-008',
- type:'personal_info',
- typeLabel:'Personal Info Change',
- requesterName:'Montree Bunyasarn',
- requesterId:'EMP008',
- department:'Legal',
- description:'Bank account update for payroll',
- submittedDate:'2026-02-20T13:30:00Z',
- effectiveDate:'2026-03-01',
- urgency:'normal',
- status:'pending',
- currentStep: 1,
- totalSteps: 2,
- steps: [
- { step: 1, approverName:'Kamolwan Srisuk', approverId:'HR001', status:'pending' },
- { step: 2, approverName:'Thanaporn Kittisak', approverId:'HRMGR001', status:'pending' },
- ],
- changes: [
- { field:'Bank', oldValue:'Bangkok Bank', newValue:'Kasikorn Bank' },
- { field:'Account Number', oldValue:'***-**-1234', newValue:'***-**-5678' },
- ],
- details: { bank:'Kasikorn Bank', reason:'Bank account closed by bank' },
- },
- {
- id:'WF-009',
- type:'time_correction',
- typeLabel:'Time Correction Request',
- requesterName:'Kittipong Siriphan',
- requesterId:'EMP009',
- department:'Retail Operations',
- description:'Missing check-in correction for Mar 3, 2026',
- submittedDate:'2026-03-04T11:20:00Z',
- effectiveDate:'2026-03-03',
- urgency:'normal',
- status:'pending',
- currentStep: 1,
- totalSteps: 1,
- steps: [{ step: 1, approverName:'Rungrote Amnuaysopon', approverId:'MGR001', status:'pending' }],
- details: { date:'2026-03-03', type:'missing-checkin', correctedTime:'09:00', reason:'Fingerprint scanner unavailable' },
- },
-];
+const MANAGER_NAME = 'Manager';
 
 export function useWorkflows() {
- const [workflows, setWorkflows] = useState<WorkflowItem[]>([]);
- const [loading, setLoading] = useState(true);
- const [error, setError] = useState<string | null>(null);
+ // Canonical source — same rows /quick-approve renders. Live via Zustand subscribe.
+ const queueRows = useQueueWorkflowRows('en');
+ // Locally-created rows + sent_back overlay: the canonical model has no create /
+ // sent_back path (only approve/reject), so these stay UI-only so the page's
+ // Create modal + Sent-Back tab keep working without inventing store schema.
+ const [localItems, setLocalItems] = useState<WorkflowItem[]>([]);
+ const [sentBackIds, setSentBackIds] = useState<Set<string>>(() => new Set());
 
- useEffect(() => {
- async function fetchData() {
- setLoading(true);
- setError(null);
- try {
- await new Promise((r) => setTimeout(r, 400));
- setWorkflows(MOCK_WORKFLOWS);
- } catch {
- setError('Failed to load workflows');
- } finally {
- setLoading(false);
- }
- }
- fetchData();
+ const workflows = useMemo<WorkflowItem[]>(() => {
+   const derived = queueRows.map(queueRowToWorkflowItem).map((w) =>
+     sentBackIds.has(w.id) && w.status === 'pending' ? { ...w, status: 'sent_back' as const } : w,
+   );
+   return [...localItems, ...derived];
+ }, [queueRows, localItems, sentBackIds]);
+
+ const approveWorkflow = useCallback(async (id: string, comment?: string): Promise<void> => {
+   const row = queueRows.find((r) => r.id === id);
+   if (row) {
+     void comment;
+     await APPROVAL_REGISTRY[row.type].approve(id, { name: MANAGER_NAME, role: 'spd' });
+     return;
+   }
+   // Locally-created row (no canonical store) — flip in the overlay.
+   setLocalItems((prev) =>
+     prev.map((w) =>
+       w.id === id
+         ? { ...w, status: 'approved' as const, steps: w.steps.map((s) => ({ ...s, status: 'approved' as const })) }
+         : w,
+     ),
+   );
+ }, [queueRows]);
+
+ const rejectWorkflow = useCallback(async (id: string, comment?: string): Promise<void> => {
+   const row = queueRows.find((r) => r.id === id);
+   if (row) {
+     await APPROVAL_REGISTRY[row.type].reject(id, { name: MANAGER_NAME, role: 'spd' }, comment ?? 'ปฏิเสธจาก workflows');
+     return;
+   }
+   setLocalItems((prev) =>
+     prev.map((w) => (w.id === id ? { ...w, status: 'rejected' as const } : w)),
+   );
+ }, [queueRows]);
+
+ const sendBackWorkflow = useCallback(async (id: string, comment?: string): Promise<void> => {
+   void comment;
+   // No canonical sent_back state — record an in-session overlay so the row moves
+   // to the Sent-Back tab without mutating the source store.
+   setSentBackIds((prev) => {
+     const next = new Set(prev);
+     next.add(id);
+     return next;
+   });
+   setLocalItems((prev) =>
+     prev.map((w) => (w.id === id ? { ...w, status: 'sent_back' as const } : w)),
+   );
  }, []);
 
- const approveWorkflow = useCallback(async (id: string, comment?: string) => {
- await new Promise((r) => setTimeout(r, 300));
- setWorkflows((prev) =>
- prev.map((w) => {
- if (w.id !== id) return w;
- const updatedSteps = w.steps.map((s, i) =>
- i === w.currentStep - 1
- ? { ...s, status:'approved' as const, actionDate: new Date().toISOString(), comment }
- : s
- );
- const allApproved = updatedSteps.every((s) => s.status ==='approved');
- return {
- ...w,
- steps: updatedSteps,
- currentStep: allApproved ? w.totalSteps : w.currentStep + 1,
- status: allApproved ? ('approved' as const) : ('pending' as const),
- };
- })
- );
- }, []);
-
- const rejectWorkflow = useCallback(async (id: string, comment?: string) => {
- await new Promise((r) => setTimeout(r, 300));
- setWorkflows((prev) =>
- prev.map((w) => {
- if (w.id !== id) return w;
- const updatedSteps = w.steps.map((s, i) =>
- i === w.currentStep - 1
- ? { ...s, status:'rejected' as const, actionDate: new Date().toISOString(), comment }
- : s
- );
- return { ...w, steps: updatedSteps, status:'rejected' as const };
- })
- );
- }, []);
-
- const sendBackWorkflow = useCallback(async (id: string, comment?: string) => {
- await new Promise((r) => setTimeout(r, 300));
- setWorkflows((prev) =>
- prev.map((w) => {
- if (w.id !== id) return w;
- const updatedSteps = w.steps.map((s, i) =>
- i === w.currentStep - 1
- ? { ...s, status:'sent_back' as const, actionDate: new Date().toISOString(), comment }
- : s
- );
- return { ...w, steps: updatedSteps, status:'sent_back' as const };
- })
- );
- }, []);
-
- const createWorkflow = useCallback(async (item: WorkflowItem) => {
- await new Promise((r) => setTimeout(r, 300));
- const hasDocument = item.type ==='leave' && item.details?.hasDocument ==='true';
- const shouldForceDefault = item.type ==='time_correction' || (item.type ==='leave' && hasDocument);
- const normalizedSteps =
- shouldForceDefault
- ? buildDefaultWorkflowSteps(item.type, hasDocument)
- : item.steps.length > 0
- ? item.steps
- : buildDefaultWorkflowSteps(item.type);
-
- const workflowToInsert: WorkflowItem = {
- ...item,
- steps: normalizedSteps,
- totalSteps: normalizedSteps.length,
- currentStep: Math.min(Math.max(item.currentStep, 1), normalizedSteps.length),
- };
-
- setWorkflows((prev) => [workflowToInsert, ...prev]);
+ const createWorkflow = useCallback(async (item: WorkflowItem): Promise<void> => {
+   // Create stays UI-only (the canonical queue is manager-inbound). Prepend so the
+   // new request shows immediately in the For-Approval tab.
+   setLocalItems((prev) => [{ ...item, status: 'pending' as const }, ...prev]);
  }, []);
 
  const pending = workflows.filter((w) => w.status ==='pending');
@@ -418,8 +168,8 @@ export function useWorkflows() {
  sentBack,
  approved,
  rejected,
- loading,
- error,
+ loading: false,
+ error: null as string | null,
  approveWorkflow,
  rejectWorkflow,
  sendBackWorkflow,
