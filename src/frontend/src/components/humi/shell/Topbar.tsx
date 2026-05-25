@@ -20,7 +20,7 @@
 // - ⌘K kbd: hidden below md
 // ════════════════════════════════════════════════════════════
 
-import { Menu, Moon, Search, Sun } from 'lucide-react';
+import { Menu, Moon, PanelLeft, Search, Sun } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUIStore } from '@/stores/ui-store';
@@ -47,7 +47,8 @@ export function Topbar({
   actions,
   onSearchClick,
 }: TopbarProps) {
-  const { theme, setTheme, toggleMobileMenu, mobileMenuOpen } = useUIStore();
+  const { theme, setTheme, toggleMobileMenu, mobileMenuOpen, sidebarOpen, toggleSidebar } =
+    useUIStore();
   const isDark = theme === 'dark';
   const [scrolled, setScrolled] = useState(false);
   const topbarRef = useRef<HTMLDivElement>(null);
@@ -88,6 +89,19 @@ export function Topbar({
       >
         <Menu size={18} aria-hidden="true" />
         <span>เมนู</span>
+      </button>
+
+      {/* Desktop sidebar collapse toggle — lg+ only (mobile uses the drawer).
+          Lets the user hide the sidebar to reclaim workspace width. */}
+      <button
+        type="button"
+        className="humi-icon-btn !hidden lg:!inline-flex"
+        aria-label={sidebarOpen ? 'ซ่อนเมนูด้านข้าง' : 'แสดงเมนูด้านข้าง'}
+        aria-pressed={!sidebarOpen}
+        title={sidebarOpen ? 'ซ่อนเมนูด้านข้าง' : 'แสดงเมนูด้านข้าง'}
+        onClick={toggleSidebar}
+      >
+        <PanelLeft size={18} aria-hidden="true" />
       </button>
 
       {/* Title block — min-w-0 lets it shrink below content; whitespace-nowrap +

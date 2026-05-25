@@ -1,21 +1,40 @@
 /**
- * sf-parity-sidebar.test.tsx — SF UI Parity: Sidebar Nav (issue #7)
+ * sf-parity-sidebar.test.tsx — Blueprint sidebar IA structure + behaviour
  * Framework: Vitest + @testing-library/react + jsdom
  *
- * AC-4: Sidebar shows 16 total items across 3 groups
- *        (10 existing + 6 new SF-equivalent modules; T&A external link = 1 item)
- * AC-5: T&A link ("เวลา & การเข้างาน") has target="_blank" + rel includes "noopener"
+ * Rewritten 2026-05-25 (Blueprint port): the sidebar was re-ported 1:1 from the
+ * HRMS Blueprint shell (MODULES tree + single-open accordion). The previous
+ * "4 role-gated section" assertions no longer apply. The new IA is:
+ *
+ *   A. พื้นที่ทำงานของฉัน (workspace) — 9 ESS leaves, visible to everyone
+ *   B. การจัดการทีม (team)            — manager/HR/SPD tools (role-gated)
+ *   C. งานบุคคล (hr)                  — HR-admin destinations (role-gated)
+ *   D. ตั้งค่าระบบ (system)            — HRIS / sysadmin settings (role-gated)
+ *
+ * KEY BEHAVIOURS asserted here:
+ *  - All 4 group triggers ALWAYS render. A group with zero visible leaves for
+ *    the persona is `locked` (disabled trigger, count "—").
+ *  - Single-open accordion: ONE group open at a time; clicking a trigger opens
+ *    it and closes the others; clicking the open one collapses it.
+ *  - Leaves render as <Link>; active leaf derived from pathname (.is-active).
+ *  - Persona→Role gating (PERSONA_ROLE in Sidebar.tsx):
+ *      employee → workspace only.
+ *      manager  → unlocks team (perf/roster/swap/probation + approvals/reports).
+ *      hr_admin → unlocks team + hr + system (hradmin appears in several
+ *                 system-group leaf `show` lists, e.g. Regularization Queue).
+ *      hr_manager (HRIS tier) → unlocks all four groups.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 const navigationMocks = vi.hoisted(() => ({
   pathname: '/th/home',
   searchParams: new URLSearchParams(),
 }));
 
-// Sidebar uses usePathname + useRouter from next/navigation
+const authMock = vi.hoisted(() => ({ roles: [] as string[] }));
+
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => navigationMocks.pathname),
   useSearchParams: vi.fn(() => navigationMocks.searchParams),
@@ -29,7 +48,12 @@ vi.mock('next/navigation', () => ({
   })),
 }));
 
-// Mock next/link — render as plain <a> in jsdom
+vi.mock('@/stores/auth-store', () => ({
+  useAuthStore: vi.fn((selector: (s: { roles: string[]; username: string | null }) => unknown) =>
+    selector({ roles: authMock.roles, username: 'จงรักษ์ ทานากะ' }),
+  ),
+}));
+
 vi.mock('next/link', () => ({
   default: ({
     href,
@@ -42,7 +66,6 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-// Mock next/image — renders as <img> in jsdom
 vi.mock('next/image', () => ({
   default: ({
     src,
@@ -66,235 +89,252 @@ vi.mock('next/image', () => ({
 
 import { Sidebar } from '../humi/shell/Sidebar';
 
+/** Set the active user's roles for the next render. */
+function asRoles(roles: string[]) {
+  authMock.roles = roles;
+}
+
+/** Group trigger labels (TH, since default locale = th). */
+const GROUP_WORKSPACE = 'พื้นที่ทำงานของฉัน';
+const GROUP_TEAM = 'การจัดการทีม';
+const GROUP_HR = 'งานบุคคล';
+const GROUP_SYSTEM = 'ตั้งค่าระบบ';
+
+/** Open a group by clicking its trigger button. */
+function clickGroup(label: string) {
+  fireEvent.click(screen.getByRole('button', { name: new RegExp(label) }));
+}
+
 beforeEach(() => {
   navigationMocks.pathname = '/th/home';
   navigationMocks.searchParams = new URLSearchParams();
+  authMock.roles = []; // default = plain employee (no extra roles)
+  localStorage.clear();
 });
 
-// ─── AC-4: Total NAV items = 16 ───────────────────────────────────────────────
+// ─── Structure: all 4 group triggers always present ──────────────────────────
 
-// AC-4: Sidebar shows 17 total nav items across 3 groups
-describe('AC-4: Sidebar — 17 total nav items', () => {
-  it('renders <aside> with aria-label เมนูหลัก (AC-4)', () => {
+describe('Blueprint sidebar — group structure', () => {
+  it('renders <aside> with aria-label เมนูหลัก', () => {
     render(<Sidebar />);
     expect(screen.getByRole('complementary', { name: 'เมนูหลัก' })).toBeInTheDocument();
   });
 
-  it('renders exactly 3 nav section group labels (AC-4)', () => {
+  it('always renders all 4 group triggers (workspace, team, hr, system)', () => {
     render(<Sidebar />);
-    expect(screen.getByText('พื้นที่ทำงานของฉัน')).toBeInTheDocument();
-    expect(screen.getByText('บุคลากร')).toBeInTheDocument();
-    expect(screen.getByText('บริษัท')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_TEAM) })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_HR) })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_SYSTEM) })).toBeInTheDocument();
   });
 
-  it('renders exactly 19 clickable nav items total (links + external anchor) (AC-4)', () => {
+  it('renders the static tenant line CENTRAL · BANGKOK 03', () => {
     render(<Sidebar />);
-    // All nav items render as <a> (Next Link mock + external <a>)
-    // Updated 2026-04-24: 17 → 19 items after 5-persona worktree merge added
-    // /th/ess/workflows sidebar entry + role-gated entries.
-    // Updated 2026-05-17: /th/spd/inbox entry removed per [[unified-approval-inbox]]
-    // rule (SPD merged into 'คำขอรออนุมัติ'). Count stays 19 because spd-inbox
-    // was role-gated and invisible to the default (roles:[]) test user anyway.
-    const nav = screen.getByRole('navigation', { name: 'เมนูหลัก' });
-    const allLinks = within(nav).getAllByRole('link');
-    expect(allLinks).toHaveLength(19);
+    expect(screen.getByText('CENTRAL · BANGKOK 03')).toBeInTheDocument();
+  });
+});
+
+// ─── Locked groups: zero visible leaves → disabled trigger + "—" count ────────
+
+describe('Blueprint sidebar — locked groups for a plain employee', () => {
+  it('workspace group is unlocked (enabled trigger)', () => {
+    render(<Sidebar />);
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).not.toBeDisabled();
   });
 
-  it('พื้นที่ทำงานของฉัน group has 6 items (5 internal + 1 T&A external) (AC-4)', () => {
+  it('team / hr / system groups are locked (disabled triggers) for an employee', () => {
     render(<Sidebar />);
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_TEAM) })).toBeDisabled();
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_HR) })).toBeDisabled();
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_SYSTEM) })).toBeDisabled();
+  });
+
+  it('locked group triggers show the "—" count placeholder', () => {
+    render(<Sidebar />);
+    const teamTrigger = screen.getByRole('button', { name: new RegExp(GROUP_TEAM) });
+    expect(within(teamTrigger).getByText('—')).toBeInTheDocument();
+  });
+});
+
+// ─── Workspace leaves (visible to everyone) ───────────────────────────────────
+
+describe('Blueprint sidebar — workspace leaves (ESS, all personas)', () => {
+  beforeEach(() => {
+    navigationMocks.pathname = '/th/home'; // active route lives in workspace → group open
+  });
+
+  it('surfaces all 9 ESS workspace leaves', () => {
+    render(<Sidebar />);
+    [
+      'หน้าหลัก',
+      'โปรไฟล์ของฉัน',
+      'ลงเวลา',
+      'ใบลา',
+      'สลิปเงินเดือน',
+      'สวัสดิการ',
+      'เอกสาร',
+      'ใบคำขอ',
+      'ประกาศ',
+    ].forEach((label) => expect(screen.getByText(label)).toBeInTheDocument());
+  });
+
+  it('maps leaves to the expected app routes', () => {
+    render(<Sidebar />);
+    expect(screen.getByText('หน้าหลัก').closest('a')).toHaveAttribute('href', '/th/home');
+    expect(screen.getByText('โปรไฟล์ของฉัน').closest('a')).toHaveAttribute('href', '/th/profile/me');
+    expect(screen.getByText('ใบลา').closest('a')).toHaveAttribute('href', '/th/timeoff');
+    expect(screen.getByText('สลิปเงินเดือน').closest('a')).toHaveAttribute('href', '/th/payslip');
+    expect(screen.getByText('เอกสาร').closest('a')).toHaveAttribute('href', '/th/me/documents');
+    expect(screen.getByText('ประกาศ').closest('a')).toHaveAttribute('href', '/th/announcements');
+  });
+
+  it('benefits leaf points at the Benefits Hub', () => {
+    render(<Sidebar />);
+    expect(screen.getByText('สวัสดิการ').closest('a')).toHaveAttribute('href', '/th/benefits-hub');
+  });
+
+  it('renders the "ใบลา" badge (Blueprint badge=3)', () => {
+    render(<Sidebar />);
+    const leaveLink = screen.getByText('ใบลา').closest('a')!;
+    expect(within(leaveLink).getByText('3')).toBeInTheDocument();
+  });
+
+  it('plain employee cannot reach HR-admin leaves (employees register hidden)', () => {
+    render(<Sidebar />);
+    // hr group is locked → its leaves are never rendered
+    expect(screen.queryByText('ทะเบียนพนักงาน')).not.toBeInTheDocument();
+    expect(screen.queryByText('สรรหา')).not.toBeInTheDocument();
+  });
+});
+
+// ─── Role gating: manager + HR-admin + HR-manager views ───────────────────────
+
+describe('Blueprint sidebar — role-gated views', () => {
+  it('manager unlocks the team group but not HR admin', () => {
+    asRoles(['manager', 'employee']);
+    render(<Sidebar />);
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_TEAM) })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_HR) })).toBeDisabled();
+    // manager has no system-group leaf → system stays locked
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_SYSTEM) })).toBeDisabled();
+  });
+
+  it('manager team leaves include approvals + reports + perf with correct hrefs', () => {
+    asRoles(['manager', 'employee']);
+    navigationMocks.pathname = '/th/quick-approve'; // open team group
+    render(<Sidebar />);
+    expect(screen.getByText('อนุมัติ').closest('a')).toHaveAttribute('href', '/th/quick-approve');
+    expect(screen.getByText('รายงาน').closest('a')).toHaveAttribute('href', '/th/reports');
+    expect(screen.getByText('ผลงานทีม').closest('a')).toHaveAttribute('href', '/th/performance-form');
+  });
+
+  it('hr_admin unlocks workspace + team + hr + system', () => {
+    asRoles(['hr_admin', 'employee']);
+    render(<Sidebar />);
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_TEAM) })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_HR) })).not.toBeDisabled();
+    // hr_admin (hradmin persona) appears in several system-group leaf show lists
+    // (e.g. Regularization Queue) → system group is unlocked too.
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_SYSTEM) })).not.toBeDisabled();
+  });
+
+  it('hr_admin hr-group leaves expose the previously URL-only clusters', () => {
+    asRoles(['hr_admin', 'employee']);
+    navigationMocks.pathname = '/th/admin/employees'; // open hr group
+    render(<Sidebar />);
+    expect(screen.getByText('ทะเบียนพนักงาน').closest('a')).toHaveAttribute(
+      'href',
+      '/th/admin/employees',
+    );
+    expect(screen.getByText('จ้างงาน').closest('a')).toHaveAttribute('href', '/th/admin/hire');
+    expect(screen.getByText('สรรหา').closest('a')).toHaveAttribute('href', '/th/recruiting');
+    expect(screen.getByText('ค่าตอบแทน').closest('a')).toHaveAttribute('href', '/th/payroll');
+  });
+
+  it('hr_manager (HRIS tier) unlocks the system group', () => {
+    asRoles(['hr_manager', 'employee']);
+    render(<Sidebar />);
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_SYSTEM) })).not.toBeDisabled();
+  });
+});
+
+// ─── Single-open accordion behaviour ──────────────────────────────────────────
+
+describe('Blueprint sidebar — single-open accordion', () => {
+  beforeEach(() => {
+    asRoles(['hr_manager', 'employee']); // unlock every group so they can open
+    navigationMocks.pathname = '/th/home';
+  });
+
+  it('the active route group is open on first render', () => {
+    render(<Sidebar />);
+    // home lives in workspace → workspace trigger is expanded
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
     expect(screen.getByText('หน้าหลัก')).toBeInTheDocument();
-    expect(screen.getByText('โปรไฟล์ของฉัน')).toBeInTheDocument();
-    expect(screen.getByText('ลางาน')).toBeInTheDocument();
-    expect(screen.getByText('สวัสดิการ')).toBeInTheDocument();
-    expect(screen.getByText('คำร้องและแบบฟอร์ม')).toBeInTheDocument();
-    expect(screen.getByText('เวลา & การเข้างาน')).toBeInTheDocument();
   });
 
-  it('บุคลากร group has 6 items (3 existing + 3 new SF) (AC-4)', () => {
+  it('opening a second group collapses the first (only one open at a time)', () => {
     render(<Sidebar />);
-    expect(screen.getByText('เป้าหมายและผลงาน')).toBeInTheDocument();
-    expect(screen.getByText('การเรียนรู้')).toBeInTheDocument();
-    expect(screen.getByText('ผังองค์กร')).toBeInTheDocument();
-    // 3 new items
-    expect(screen.getByText('ประเมินผลงาน')).toBeInTheDocument();
-    expect(screen.getByText('การพัฒนา')).toBeInTheDocument();
-    expect(screen.getByText('สายการสืบทอด')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    clickGroup(GROUP_HR);
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_HR) })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
   });
 
-  it('บริษัท group has 5 items (2 existing + 3 new SF) (AC-4)', () => {
+  it('clicking the open group again collapses it (toggle to null)', () => {
     render(<Sidebar />);
-    expect(screen.getByText('ประกาศ')).toBeInTheDocument();
-    expect(screen.getByText('จัดการระบบ')).toBeInTheDocument();
-    // 3 new items
-    expect(screen.getByText('ตำแหน่งว่างภายใน')).toBeInTheDocument();
-    expect(screen.getByText('สรรหา')).toBeInTheDocument();
-    expect(screen.getByText('รายงาน')).toBeInTheDocument();
+    const workspace = screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) });
+    expect(workspace).toHaveAttribute('aria-expanded', 'true');
+    clickGroup(GROUP_WORKSPACE);
+    expect(workspace).toHaveAttribute('aria-expanded', 'false');
   });
 });
 
-describe('REGRESSION: Sidebar profile/benefits canonical tab navigation', () => {
-  it('benefits menu points to the Benefits Hub with a single-purpose label', () => {
-    render(<Sidebar />);
+// ─── Active-state highlight from pathname ─────────────────────────────────────
 
-    const benefitLink = screen.getByText('สวัสดิการ').closest('a')!;
-    expect(benefitLink).toHaveAttribute('href', '/th/benefits-hub');
-    expect(screen.queryByText('เงินเดือนและสวัสดิการ')).not.toBeInTheDocument();
-  });
-
-  it('profile menu is active on /profile/me without the benefits query', () => {
+describe('Blueprint sidebar — active leaf highlight', () => {
+  it('marks the profile leaf is-active on /profile/me', () => {
     navigationMocks.pathname = '/th/profile/me';
-    navigationMocks.searchParams = new URLSearchParams();
-
     render(<Sidebar />);
-
-    expect(screen.getByText('โปรไฟล์ของฉัน').closest('a')).toHaveClass('active');
-    expect(screen.getByText('สวัสดิการ').closest('a')).not.toHaveClass('active');
+    expect(screen.getByText('โปรไฟล์ของฉัน').closest('a')).toHaveClass('is-active');
+    expect(screen.getByText('หน้าหลัก').closest('a')).not.toHaveClass('is-active');
   });
 
-  it('profile menu stays active for the summary-only Profile Benefits tab', () => {
-    navigationMocks.pathname = '/th/profile/me';
-    navigationMocks.searchParams = new URLSearchParams('tab=benefits');
-
-    render(<Sidebar />);
-
-    expect(screen.getByText('โปรไฟล์ของฉัน').closest('a')).toHaveClass('active');
-    expect(screen.getByText('สวัสดิการ').closest('a')).not.toHaveClass('active');
-  });
-
-  it('benefits menu is active on Benefits Hub child service routes', () => {
+  it('benefits leaf is-active on a Benefits Hub child route', () => {
     navigationMocks.pathname = '/th/benefits-hub/referral';
-    navigationMocks.searchParams = new URLSearchParams();
-
     render(<Sidebar />);
+    expect(screen.getByText('สวัสดิการ').closest('a')).toHaveClass('is-active');
+  });
 
-    expect(screen.getByText('สวัสดิการ').closest('a')).toHaveClass('active');
-    expect(screen.getByText('โปรไฟล์ของฉัน').closest('a')).not.toHaveClass('active');
+  it('locale-agnostic: /en/home activates the home leaf with EN label', () => {
+    navigationMocks.pathname = '/en/home';
+    render(<Sidebar />);
+    expect(screen.getByText('Home').closest('a')).toHaveClass('is-active');
+    expect(screen.getByText('Home').closest('a')).toHaveAttribute('href', '/en/home');
   });
 });
 
-// ─── AC-4: Count by group breakdown ──────────────────────────────────────────
+// ─── Footer user card ─────────────────────────────────────────────────────────
 
-// AC-4: Verify count breakdown matches 6 + 6 + 5 = 17? Spec says 16 total.
-// Recount per spec: พื้นที่ฯ=6, บุคลากร=6, บริษัท=5 → total 17? BUT spec says 16.
-// Cross-check: Sidebar.tsx NAV array: พื้นที่ฯ=[home,profile,timeoff,benefits,requests,time-attendance]=6,
-//              บุคลากร=[goals,learning,directory,performance-form,development,succession]=6,
-//              บริษัท=[announce,integrations,careers,recruiting,reports]=5
-//              Total links = 17. But AC-4 says "10 existing + 6 new + 1 T&A = 17" — or 10+6=16 if T&A is among existing.
-// Resolution: T&A is a new item added per spec §3, so 10 existing internal items + 5 new internal routes + 1 T&A external = 16
-//             OR the spec counts T&A separately. Use actual NAV as ground truth = 17 items.
-// This test uses the ACTUAL NAV array count from Sidebar.tsx (17) and also verifies the spec description.
-
-describe('AC-4: Sidebar — NAV item count grounded in Sidebar.tsx NAV array', () => {
-  it('NAV total items match Sidebar.tsx implementation (AC-4)', () => {
+describe('Blueprint sidebar — footer user card', () => {
+  it('renders the avatar initials + emp id, linking to /login (logout affordance)', () => {
     render(<Sidebar />);
-    const nav = screen.getByRole('navigation', { name: 'เมนูหลัก' });
-    const links = within(nav).getAllByRole('link');
-    // Ground truth: sum of all items in NAV array in Sidebar.tsx
-    // พื้นที่ฯ(6) + บุคลากร(6) + บริษัท(5) = 17
-    // If spec says 16, MK IV will reconcile vs implementation after MK III runs
-    expect(links.length).toBeGreaterThanOrEqual(16);
-  });
-});
-
-// ─── AC-5: T&A external link attributes ──────────────────────────────────────
-
-// AC-5: "เวลา & การเข้างาน" T&A link has target="_blank" + rel includes "noopener"
-describe('AC-5: Sidebar — T&A external link target + rel attrs', () => {
-  it('renders T&A link text "เวลา & การเข้างาน" (AC-5)', () => {
-    render(<Sidebar />);
-    expect(screen.getByText('เวลา & การเข้างาน')).toBeInTheDocument();
-  });
-
-  it('T&A link points to https://cnext-time.centralgroup.com (AC-5)', () => {
-    render(<Sidebar />);
-    const tandaLink = screen.getByText('เวลา & การเข้างาน').closest('a')!;
-    expect(tandaLink).toHaveAttribute('href', 'https://cnext-time.centralgroup.com');
-  });
-
-  it('T&A link has target="_blank" (AC-5)', () => {
-    render(<Sidebar />);
-    const tandaLink = screen.getByText('เวลา & การเข้างาน').closest('a')!;
-    expect(tandaLink).toHaveAttribute('target', '_blank');
-  });
-
-  it('T&A link rel attribute contains "noopener" (AC-5)', () => {
-    render(<Sidebar />);
-    const tandaLink = screen.getByText('เวลา & การเข้างาน').closest('a')!;
-    const rel = tandaLink.getAttribute('rel') ?? '';
-    expect(rel).toContain('noopener');
-  });
-
-  it('T&A link rel attribute also contains "noreferrer" (AC-5 — security best practice)', () => {
-    render(<Sidebar />);
-    const tandaLink = screen.getByText('เวลา & การเข้างาน').closest('a')!;
-    const rel = tandaLink.getAttribute('rel') ?? '';
-    expect(rel).toContain('noreferrer');
-  });
-
-  it('T&A link is the only nav item with target="_blank" (AC-5)', () => {
-    render(<Sidebar />);
-    const nav = screen.getByRole('navigation', { name: 'เมนูหลัก' });
-    const externalLinks = within(nav)
-      .getAllByRole('link')
-      .filter((link) => link.getAttribute('target') === '_blank');
-    expect(externalLinks).toHaveLength(1);
-    expect(externalLinks[0]).toHaveAttribute('href', 'https://cnext-time.centralgroup.com');
-  });
-});
-
-// ─── AC-4: New SF nav items are internal links (not external) ────────────────
-
-// AC-4: 6 new SF module links point to internal routes
-describe('AC-4: Sidebar — 6 new SF items point to correct internal hrefs', () => {
-  it('ประเมินผลงาน points to /th/performance-form (AC-4)', () => {
-    render(<Sidebar />);
-    const link = screen.getByText('ประเมินผลงาน').closest('a')!;
-    expect(link).toHaveAttribute('href', '/th/performance-form');
-  });
-
-  it('การพัฒนา points to /th/development (AC-4)', () => {
-    render(<Sidebar />);
-    const link = screen.getByText('การพัฒนา').closest('a')!;
-    expect(link).toHaveAttribute('href', '/th/development');
-  });
-
-  it('สายการสืบทอด points to /th/succession (AC-4)', () => {
-    render(<Sidebar />);
-    const link = screen.getByText('สายการสืบทอด').closest('a')!;
-    expect(link).toHaveAttribute('href', '/th/succession');
-  });
-
-  it('ตำแหน่งว่างภายใน points to /th/careers (AC-4)', () => {
-    render(<Sidebar />);
-    const link = screen.getByText('ตำแหน่งว่างภายใน').closest('a')!;
-    expect(link).toHaveAttribute('href', '/th/careers');
-  });
-
-  it('สรรหา points to /th/recruiting (AC-4)', () => {
-    render(<Sidebar />);
-    const link = screen.getByText('สรรหา').closest('a')!;
-    expect(link).toHaveAttribute('href', '/th/recruiting');
-  });
-
-  it('รายงาน points to /th/reports (AC-4)', () => {
-    render(<Sidebar />);
-    const link = screen.getByText('รายงาน').closest('a')!;
-    expect(link).toHaveAttribute('href', '/th/reports');
-  });
-
-  it('new SF items do NOT have target="_blank" — they are internal (AC-4)', () => {
-    render(<Sidebar />);
-    const newSFLabels = [
-      'ประเมินผลงาน',
-      'การพัฒนา',
-      'สายการสืบทอด',
-      'ตำแหน่งว่างภายใน',
-      'สรรหา',
-      'รายงาน',
-    ];
-    newSFLabels.forEach((label) => {
-      const link = screen.getByText(label).closest('a')!;
-      expect(link).not.toHaveAttribute('target', '_blank');
-    });
+    const foot = screen.getByLabelText('ออกจากระบบและกลับไปหน้าเข้าสู่ระบบ');
+    expect(foot).toHaveAttribute('href', '/th/login');
+    expect(within(foot).getByText('จท')).toBeInTheDocument();
+    expect(within(foot).getByText('EMP-04821')).toBeInTheDocument();
   });
 });

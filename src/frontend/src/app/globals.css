@@ -173,6 +173,11 @@
 
 /* Ported from styles.css:144-150 (.app)
    Responsive (issue #5): mobile = single column, lg+ = sidebar+content */
+/* Legibility — HR users repeatedly report text is hard to read, so the base
+   font runs a notch larger than the 16px norm. Scales all rem-based (Tailwind
+   text-*) type app-wide; px chrome (sidebar/topbar) is sized up explicitly. */
+html { font-size: 17.5px; }
+
 .humi-app {
   display: grid;
   grid-template-columns: 1fr;
@@ -211,6 +216,10 @@
 @media (min-width: 1024px) {
   .humi-app { grid-template-columns: 256px 1fr !important; }
   .humi-sidebar { display: flex !important; }
+  /* Collapsed (user hid the sidebar via the topbar toggle) — reclaim the
+     full width and drop the rail+panel column. */
+  .humi-app.sidebar-collapsed { grid-template-columns: 1fr !important; }
+  .humi-app.sidebar-collapsed > .humi-sidebar { display: none !important; }
 }
 
 /* Drawer modifier — 2026: rounded right edge + shadow elevation + slide-in.
@@ -439,6 +448,350 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Blueprint sidebar (bp-*) — ported faithfully from HRMS_Blueprint/hrms-shell.css
+   (.sidebar / .brand / .tenant / .nav-group / .nav-trigger / .nav-panel /
+    .nav-children / .nav-child / .badge / .sb-user). Blueprint vars mapped to
+   the app's Humi tokens:
+     --color-ink (navy bg), --color-accent (teal), --color-canvas-soft (cream),
+     --color-danger family kept off (no red). Blueprint mono var → --font-mono.
+     Class names prefixed `bp-` so they layer additively on top of the base
+     `.humi-sidebar` (which supplies bg / sticky / 100vh / display rules).
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* The Blueprint sidebar is the navy rail; reuse the base .humi-sidebar chrome
+   (bg #0E1B2C, sticky, 100vh, lg+ display:flex) and tighten padding/gap. */
+.bp-sidebar {
+  padding: 20px 12px 14px;
+  gap: 2px;
+}
+
+.bp-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 10px 22px;
+}
+.bp-wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+.bp-tenant {
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(231, 227, 216, 0.5);
+  margin-top: 4px;
+  padding-left: 2px;
+}
+
+/* Nav list container — flex column, scrolls when items exceed viewport so the
+   foot (user card) stays pinned. Scrollbar hidden against the navy panel. */
+.bp-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.bp-nav::-webkit-scrollbar { display: none; }
+
+.bp-nav-group { border-radius: 10px; }
+.bp-nav-trigger {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  color: rgba(231, 227, 216, 0.85);
+  display: grid;
+  grid-template-columns: 18px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  border-radius: 10px;
+}
+.bp-nav-trigger:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+.bp-nav-trigger:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.bp-nav-trigger .bp-icon { color: rgba(231, 227, 216, 0.6); display: inline-flex; }
+.bp-nav-trigger .bp-icon svg { width: 16px; height: 16px; }
+.bp-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bp-nav-trigger .bp-count {
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(231, 227, 216, 0.7);
+}
+.bp-nav-trigger .bp-chev {
+  color: rgba(231, 227, 216, 0.4);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+}
+.bp-nav-trigger .bp-chev svg { width: 12px; height: 12px; }
+.bp-nav-group.open .bp-nav-trigger { background: rgba(31, 168, 160, 0.1); color: #fff; }
+.bp-nav-group.open .bp-nav-trigger .bp-icon { color: var(--color-accent); }
+.bp-nav-group.open .bp-nav-trigger .bp-count {
+  background: rgba(31, 168, 160, 0.18);
+  color: var(--color-accent);
+}
+.bp-nav-group.open .bp-nav-trigger .bp-chev {
+  transform: rotate(90deg);
+  color: var(--color-accent);
+}
+.bp-nav-group.locked .bp-nav-trigger { opacity: 0.35; cursor: not-allowed; }
+.bp-nav-group.locked .bp-nav-trigger:hover { background: transparent; }
+
+/* Collapse transition: grid-template-rows 0fr → 1fr (Blueprint mechanism). */
+.bp-nav-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bp-nav-group.open .bp-nav-panel { grid-template-rows: 1fr; }
+.bp-nav-panel > div { min-height: 0; }
+.bp-nav-children {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 0 8px 30px;
+  position: relative;
+}
+.bp-nav-children::before {
+  content: "";
+  position: absolute;
+  left: 26px;
+  top: 6px;
+  bottom: 8px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.bp-nav-child {
+  padding: 6px 10px 6px 12px;
+  border-radius: 6px;
+  color: rgba(231, 227, 216, 0.72);
+  font-size: 12.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+}
+.bp-nav-child::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  width: 6px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.bp-nav-child:hover { background: rgba(255, 255, 255, 0.04); color: #fff; }
+.bp-nav-child:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.bp-nav-child.is-active {
+  background: rgba(31, 168, 160, 0.16);
+  color: #fff;
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.bp-child-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bp-nav-child .bp-badge {
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(91, 108, 224, 0.22);
+  color: #b7c2ff;
+  font-weight: 600;
+}
+
+.bp-sb-user {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 10px 4px;
+}
+.bp-sb-user .bp-av {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #e08864, #e8c46b);
+}
+.bp-sb-user .bp-nm {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--color-canvas-soft);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bp-sb-user .bp-rl {
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+  font-size: 12.5px;
+  color: rgba(231, 227, 216, 0.55);
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Blueprint rail + panel shell nav (bp-shellnav / bp-rail / bp-panel) —
+   two-column master-detail (wireframe 2026-05-25). Col1 = macro-group icon
+   rail; Col2 = leaves of the selected group. Overrides the base .humi-sidebar
+   column layout to a row of [rail | panel]. Supersedes the bp-nav* accordion
+   rules above (now unused).
+   ════════════════════════════════════════════════════════════════════════ */
+.bp-shellnav {
+  flex-direction: row !important;
+  padding: 0 !important;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* Col 1 — macro-group icon rail */
+.bp-rail {
+  width: 74px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 16px 6px 12px;
+  background: #0E1B2C;
+}
+.bp-rail-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.bp-rail-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bp-rail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 2px;
+  border: 0;
+  background: transparent;
+  border-radius: 12px;
+  color: rgba(231, 227, 216, 0.6);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.18s, color 0.18s;
+}
+.bp-rail-icon { display: inline-flex; }
+.bp-rail-label { font-size: 12.5px; font-weight: 600; letter-spacing: 0.01em; }
+.bp-rail-item:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+.bp-rail-item:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.bp-rail-item.is-active { background: rgba(31, 168, 160, 0.16); color: #fff; }
+.bp-rail-item.is-active .bp-rail-icon { color: var(--color-accent); }
+.bp-rail-item.locked { opacity: 0.3; cursor: not-allowed; }
+.bp-rail-item.locked:hover { background: transparent; color: rgba(231, 227, 216, 0.6); }
+.bp-rail-close { margin-top: auto; color: #E7E3D8; align-self: center; }
+
+/* Col 2 — leaf panel for the selected group */
+.bp-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #122236;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 16px 12px 12px;
+}
+.bp-panel-head { padding: 0 8px 14px; }
+.bp-panel-head .bp-tenant { margin: 0; padding: 0; }
+.bp-panel-title {
+  font-size: 18.5px;
+  font-weight: 700;
+  color: var(--color-canvas-soft);
+  margin-top: 6px;
+  letter-spacing: -0.01em;
+}
+.bp-panel-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.bp-panel-nav::-webkit-scrollbar { display: none; }
+.bp-panel-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: rgba(231, 227, 216, 0.8);
+  font-size: 15.5px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.bp-panel-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+.bp-panel-item:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.bp-panel-item.is-active {
+  background: rgba(31, 168, 160, 0.18);
+  color: #fff;
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.bp-panel-item .bp-badge {
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+  font-size: 11.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(91, 108, 224, 0.22);
+  color: #b7c2ff;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 /* Ported from styles.css:251 (.main) */

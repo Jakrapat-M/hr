@@ -104,7 +104,7 @@ export function HireCheckpointSidebar() {
       aria-label="หัวข้อการกรอกข้อมูล"
       className="mt-4 space-y-4 px-1"
     >
-      <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
+      <p className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted">
         หัวข้อย่อย
       </p>
 
@@ -117,7 +117,7 @@ export function HireCheckpointSidebar() {
             <div className="flex items-center gap-2 px-1 py-0.5">
               <span
                 className={cn(
-                  'flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold',
+                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold',
                   isCurrentStep
                     ? 'bg-accent text-white'
                     : 'bg-accent/20 text-accent',
@@ -127,7 +127,7 @@ export function HireCheckpointSidebar() {
               </span>
               <span
                 className={cn(
-                  'text-[11px] font-semibold tracking-wide',
+                  'text-sm font-semibold tracking-wide',
                   isCurrentStep ? 'text-accent' : 'text-ink-soft',
                 )}
               >

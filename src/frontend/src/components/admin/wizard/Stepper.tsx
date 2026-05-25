@@ -60,19 +60,19 @@ export function Stepper({ steps, currentStep, onStepClick, stepperLabel = 'à¸‚à¸
                 <span className="flex min-w-0 flex-col">
                   <span
                     className={cn(
-                      'font-display text-[14px] font-semibold leading-tight',
+                      'font-display text-base font-semibold leading-tight',
                       isActive ? 'text-accent' : 'text-ink',
                     )}
                   >
                     {step.labelTh}
                   </span>
-                  <span className="mt-0.5 text-[11px] font-medium tracking-wide text-ink-muted">
+                  <span className="mt-0.5 text-xs font-medium tracking-wide text-ink-muted">
                     {step.labelEn}
                   </span>
                   {step.descTh && (
                     <span
                       className={cn(
-                        'mt-1 text-[11px] leading-snug',
+                        'mt-1 text-xs leading-snug',
                         isActive ? 'text-ink-soft' : 'text-ink-muted',
                       )}
                     >

@@ -885,9 +885,17 @@ describe('REGRESSION — Sidebar NAV ↔ AppShell TITLE_MAP parity', () => {
       'utf-8',
     );
 
-    // Extract sidebar internal NAV hrefs (skip external https:// links)
-    const hrefMatches = Array.from(sidebarSrc.matchAll(/href:\s*'(\/th\/[^']+)'/g));
-    const navHrefs = hrefMatches.map((m) => m[1]);
+    // Blueprint port (2026-05-25): the sidebar MODULES carry bare hrefs (e.g.
+    // `href: '/home'`) and prepend the locale at render. `__BENEFITS__` is the
+    // benefits sentinel → resolves to /benefits-hub via benefitsHubRoute.
+    // Extract the bare hrefs, normalise the sentinel, then prefix with /th to
+    // compare against the AppShell TITLE_MAP (which is locale-prefixed).
+    const hrefMatches = Array.from(sidebarSrc.matchAll(/href:\s*'(\/[a-z][^']*)'/g));
+    const bareHrefs = hrefMatches.map((m) => m[1]);
+    const navHrefs = [
+      ...bareHrefs.map((h) => `/th${h}`),
+      '/th/benefits-hub', // __BENEFITS__ sentinel → benefits hub
+    ];
     expect(navHrefs.length).toBeGreaterThan(0);
 
     // Extract TITLE_MAP prefixes

@@ -1,53 +1,50 @@
 'use client';
 
 // ════════════════════════════════════════════════════════════
-// Humi Sidebar — ported 1:1 from
-// docs/design-ref/shelfly-bundle/project/shell.jsx
-// (NAV array + <Sidebar/> component).
+// Humi Sidebar — ported 1:1 from the HRMS Blueprint shell
+// (/Users/tachongrak/Projects/HRMS_Blueprint/hrms-shell.jsx :
+//  MODULES array + <Sidebar/> component + hrms-shell.css nav rules).
 //
-// Changes vs reference:
-// - <div onClick> → <Link> (a11y + real routing)
-// - lucide-react icons instead of window.I glyphs (1:1 concept)
-// - Thai labels kept verbatim (Rule: strict source-grounding)
-// - User footer adapted from retail → HR (per task spec A1)
+// This REPLACES the previous role-gated accordion IA with the Blueprint's
+// 4-group / single-open accordion IA verbatim. User directive 2026-05-25:
+// "port ตาม blueprint เป๊ะ".
 //
-// PO direction (#3): Humi sidebar stays clean to 10 reference items.
-// Legacy routes (payroll, performance, permissions, onboarding,
-// workflows, government-reports, hrbp-reports, idp, locations, manager-
-// dashboard, overtime, quick-approve, recruitment, resignation,
-// screening, spd-management, succession, talent-management, training-
-// records, hospital-referral, leave, time, and others) remain URL-
-// accessible via /th/<route> but are NOT surfaced in this sidebar.
-// Reason: preserves Humi information architecture per design-ref bundle.
-// If expansion needed: add { id: 'legacy', label: 'เครื่องมือเพิ่มเติม' }
-// under 'บริษัท' group pointing to /legacy hub page (separate sprint).
+// Structure (per Blueprint):
+//   <aside class="bp-sidebar">
+//     <div class="bp-brand"> wordmark img + <div class="bp-tenant">CENTRAL · BANGKOK 03</div>
+//     per group:
+//       <div class="bp-nav-group [open] [locked]">
+//         <button class="bp-nav-trigger" aria-expanded disabled={locked}>
+//           <span icon/><span label/><span count/><span chev/>
+//         <div class="bp-nav-panel"><div><div class="bp-nav-children">
+//           per leaf <Link class="bp-nav-child [is-active]"> label + optional badge
+//     footer <div class="bp-sb-user"> avatar + name + empId
+//
+// Behaviours ported:
+//  - single-open accordion: ONE openGroup id; clicking the open one closes it.
+//  - .bp-nav-panel grid-template-rows 0fr→1fr collapse transition (CSS).
+//  - groups with zero visible leaves for the persona render `locked`
+//    (disabled, count "—").
+//  - active leaf highlighted via .is-active derived from pathname.
+//
+// Adaptations for Next.js:
+//  - leaves render as <Link href> mapped to existing app routes (see href map).
+//  - persona `show:[...]` ids mapped to the app Role union (PERSONA_ROLE).
+//  - lucide-react icons replace the Blueprint's inline `I` glyph set.
+//  - footer keeps the existing logout-to-/login affordance with .bp-sb-user look.
+//  - class names prefixed `bp-` so the new CSS block in globals.css is additive
+//    and does not collide with the legacy `.humi-*` sidebar rules.
 // ════════════════════════════════════════════════════════════
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
-  Home,
-  User,
-  Calendar,
-  Heart,
-  FileText,
-  Target,
-  BookOpen,
+  Users,
   Network,
-  Megaphone,
-  Plug,
-  Activity,
-  TrendingUp,
-  Users2,
-  Search,
-  UserPlus,
-  BarChart3,
-  Clock,
-  ClipboardList,
+  IdCard,
   Settings,
-  Layers,
-  ExternalLink,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -55,11 +52,10 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { benefitsHubRoute } from '@/lib/benefit-routes';
 import type { Role } from '@/lib/rbac';
-// Locale helpers — moved to Topbar with locale switcher (2026-04-23)
 
 export interface SidebarProps {
-  /** Called when any nav item or locale pill is clicked — used by AppShell
-   *  to close the mobile drawer after navigation. */
+  /** Called when any nav item is clicked — used by AppShell to close the
+   *  mobile drawer after navigation. */
   onNavigate?: () => void;
   /** Called when the explicit close (X) button is clicked. Renders the close
    *  button only when this prop is provided — typically only in drawer mode. */
@@ -68,298 +64,332 @@ export interface SidebarProps {
   className?: string;
 }
 
-type NavItem = {
+/** Blueprint persona ids. */
+type PersonaId = 'employee' | 'manager' | 'hradmin' | 'hris' | 'spd' | 'sysadmin';
+
+type Leaf = {
   id: string;
-  label: string;
+  label: string; // EN
+  labelTh: string; // TH
+  /** Mapped Next.js route (bare, no locale prefix). Some leaves with no
+   *  dedicated screen point at the closest existing route (no dead ends). */
   href: string;
-  icon: LucideIcon;
   badge?: string;
-  external?: boolean;
-  /** If set, item only renders when the current user has at least one of these roles. */
-  roles?: Role[];
+  /** Visible only to these personas. Omit → visible to everyone. */
+  show?: PersonaId[];
 };
 
-type NavSection = {
-  group: string;
-  items: NavItem[];
+type ModuleGroup = {
+  id: string;
+  label: string; // EN
+  labelTh: string; // TH
+  icon: LucideIcon;
+  leaves: Leaf[];
 };
 
-const NAV: NavSection[] = [
+const ALL6: PersonaId[] = ['employee', 'manager', 'hradmin', 'hris', 'spd', 'sysadmin'];
+
+// ── Blueprint MODULES IA, ported verbatim (labels + badges + show gates).
+//    `href` is the Next.js route each leaf navigates to. Leaves whose blueprint
+//    concept has no dedicated screen point at the closest existing route so the
+//    mockup never dead-ends (annotated PLACEHOLDER).
+const MODULES: ModuleGroup[] = [
   {
-    group: 'พื้นที่ทำงานของฉัน',
-    items: [
-      { id: 'home', label: 'หน้าหลัก', href: '/th/home', icon: Home },
-      { id: 'profile', label: 'โปรไฟล์ของฉัน', href: '/th/profile/me', icon: User },
-      { id: 'timeoff', label: 'ลางาน', href: '/th/timeoff', icon: Calendar, badge: '2' },
-      { id: 'benefits', label: 'สวัสดิการ', href: benefitsHubRoute('th'), icon: Heart, badge: '1' },
-      {
-        id: 'requests',
-        label: 'คำร้องและแบบฟอร์ม',
-        href: '/th/requests',
-        icon: FileText,
-        badge: '1',
-      },
-      { id: 'my-workflows', label: 'คำขอของฉัน', href: '/th/ess/workflows', icon: ClipboardList },
-      {
-        id: 'time-attendance',
-        label: 'เวลา & การเข้างาน',
-        href: 'https://cnext-time.centralgroup.com',
-        icon: Clock,
-        external: true,
-      },
+    id: 'workspace',
+    label: 'My Workspace',
+    labelTh: 'พื้นที่ทำงานของฉัน',
+    icon: Users,
+    leaves: [
+      { id: 'home', label: 'Home', labelTh: 'หน้าหลัก', href: '/home', show: ALL6 },
+      { id: 'profile', label: 'My Profile', labelTh: 'โปรไฟล์ของฉัน', href: '/profile/me', show: ALL6 },
+      { id: 'time', label: 'Time & Attendance', labelTh: 'ลงเวลา', href: '/time', show: ALL6 },
+      { id: 'leaves', label: 'Leaves', labelTh: 'ใบลา', href: '/timeoff', badge: '3', show: ALL6 },
+      { id: 'payslips', label: 'Payslips', labelTh: 'สลิปเงินเดือน', href: '/payslip', show: ALL6 },
+      { id: 'benefits', label: 'Benefits', labelTh: 'สวัสดิการ', href: '__BENEFITS__', show: ALL6 },
+      { id: 'documents', label: 'Documents', labelTh: 'เอกสาร', href: '/me/documents', show: ALL6 },
+      { id: 'requests', label: 'Requests', labelTh: 'ใบคำขอ', href: '/requests', show: ALL6 },
+      { id: 'announce', label: 'Announcements', labelTh: 'ประกาศ', href: '/announcements', show: ALL6 },
     ],
   },
   {
-    group: 'กล่องอนุมัติ',
-    items: [
-      {
-        id: 'quick-approve',
-        label: 'คำขอรออนุมัติ',
-        href: '/th/quick-approve',
-        icon: ClipboardList,
-        roles: ['manager', 'hr_admin', 'hr_manager', 'spd'],
-      },
+    id: 'team',
+    label: 'Team Management',
+    labelTh: 'การจัดการทีม',
+    icon: Network,
+    leaves: [
+      // PLACEHOLDER: inbox → unified /quick-approve inbox
+      { id: 'inbox', label: 'Team Inbox', labelTh: 'กล่องงาน', href: '/quick-approve', badge: '12', show: ['manager', 'hradmin', 'hris', 'spd', 'sysadmin'] },
+      // PLACEHOLDER: roster → manager-dashboard (no roster screen in this app)
+      { id: 'roster', label: 'Roster & Shifts', labelTh: 'ตารางกะ', href: '/manager-dashboard', show: ['manager', 'hradmin', 'sysadmin'] },
+      // PLACEHOLDER: swap → manager-dashboard
+      { id: 'swap', label: 'Shift Swap', labelTh: 'สลับกะ', href: '/manager-dashboard', show: ['manager', 'hradmin', 'sysadmin'] },
+      { id: 'approvals', label: 'Approvals', labelTh: 'อนุมัติ', href: '/quick-approve', show: ['manager', 'hradmin', 'hris', 'spd', 'sysadmin'] },
+      { id: 'perf', label: 'Team Performance', labelTh: 'ผลงานทีม', href: '/performance-form', show: ['manager', 'hradmin', 'sysadmin'] },
+      // PLACEHOLDER: probation → manager-dashboard
+      { id: 'probation', label: 'Probation Reviews', labelTh: 'ทดลองงาน', href: '/manager-dashboard', show: ['manager', 'hradmin', 'sysadmin'] },
+      { id: 'reports', label: 'Reports', labelTh: 'รายงาน', href: '/reports', show: ['manager', 'hradmin', 'hris', 'spd', 'sysadmin'] },
     ],
   },
   {
-    // STA-28 PR-A — Manager Benefits group (role-gated: manager / hr_admin / hr_manager)
-    group: 'สวัสดิการทีม (ผู้จัดการ)',
-    items: [
-      {
-        id: 'manager-benefits-team',
-        label: 'ทีม',
-        href: '/th/manager/benefits/team',
-        icon: Users2,
-        roles: ['manager', 'hr_admin', 'hr_manager'],
-      },
-      {
-        id: 'manager-benefits-reports',
-        label: 'รายงาน',
-        href: '/th/manager/benefits/reports',
-        icon: BarChart3,
-        roles: ['manager', 'hr_admin', 'hr_manager'],
-      },
+    id: 'hr',
+    label: 'HR Administration',
+    labelTh: 'งานบุคคล',
+    icon: IdCard,
+    leaves: [
+      { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris', 'spd', 'sysadmin'] },
+      { id: 'orgchart', label: 'Org Chart', labelTh: 'ผังองค์กร', href: '/org-chart', show: ['hradmin', 'hris', 'spd', 'sysadmin'] },
+      { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'sysadmin'] },
+      // PLACEHOLDER: lifecycle/onboarding → admin/hire
+      { id: 'lifecycle', label: 'Onboarding', labelTh: 'เริ่มงาน · 90 วันแรก', href: '/admin/hire', show: ['hradmin', 'sysadmin'] },
+      // PLACEHOLDER: confirmation letter → admin/documents
+      { id: 'confirm', label: 'Confirmation Letter', labelTh: 'หนังสือบรรจุ', href: '/admin/documents', show: ['hradmin', 'sysadmin'] },
+      // PLACEHOLDER: transfer → admin/change-requests
+      { id: 'transfer', label: 'Transfer', labelTh: 'โยกย้าย', href: '/admin/change-requests', show: ['hradmin', 'sysadmin'] },
+      // PLACEHOLDER: offboarding → resignation
+      { id: 'offboard', label: 'Offboarding', labelTh: 'ลาออก', href: '/resignation', show: ['hradmin', 'sysadmin'] },
+      // PLACEHOLDER: compensation → payroll
+      { id: 'comp', label: 'Compensation', labelTh: 'ค่าตอบแทน', href: '/payroll', show: ['hradmin', 'hris', 'spd', 'sysadmin'] },
+      // PLACEHOLDER: welfare plans → admin/benefits
+      { id: 'welfare', label: 'Welfare Plans', labelTh: 'แผนสวัสดิการ', href: '/admin/benefits', show: ['hradmin', 'hris', 'sysadmin'] },
+      // PLACEHOLDER: benefit claims → admin/benefits
+      { id: 'claims', label: 'Benefit Claims', labelTh: 'เบิกสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'spd', 'sysadmin'] },
+      // PLACEHOLDER: assets → admin/foundation
+      { id: 'assets', label: 'Assets', labelTh: 'ทรัพย์สิน', href: '/admin/foundation', show: ['hradmin', 'sysadmin'] },
+      { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'sysadmin'] },
+      // PLACEHOLDER: attendance heatmap → reports
+      { id: 'attendance', label: 'Attendance Heatmap', labelTh: 'ฮีตแมปการเข้างาน', href: '/reports', show: ['hradmin', 'hris', 'sysadmin'] },
+      // PLACEHOLDER: audit log → admin/system
+      { id: 'audit', label: 'Audit Log', labelTh: 'บันทึกตรวจสอบ', href: '/admin/system', show: ['hradmin', 'hris', 'spd', 'sysadmin'] },
     ],
   },
   {
-    // STA-27 PR-A — HRBP Benefits group (role-gated: hrbp / hr_admin / hr_manager)
-    // NO inbox entry — approvals route through `/quick-approve` per unified-inbox rule.
-    // Routes ship in PR-B / PR-B′ (stub 404 until then; foundation gates UX only).
-    group: 'สวัสดิการ (HRBP)',
-    items: [
-      {
-        id: 'hrbp-benefits-exceptions',
-        label: 'ข้อยกเว้น',
-        href: '/th/hrbp/benefits/exceptions',
-        icon: ClipboardList,
-        roles: ['hrbp', 'hr_admin', 'hr_manager'],
-      },
-      {
-        id: 'hrbp-benefits-reports',
-        label: 'รายงาน',
-        href: '/th/hrbp/benefits/reports',
-        icon: BarChart3,
-        roles: ['hrbp', 'hr_admin', 'hr_manager'],
-      },
-    ],
-  },
-  {
-    // STA-27 PR-A — SPD Branch Benefits group (role-gated: spd / hr_admin / hr_manager)
-    // NO inbox entry — claim drill-in still routes to `/workflows/benefit-claim/[id]`.
-    // Routes ship in PR-C / PR-D.
-    group: 'สวัสดิการสาขา (SPD)',
-    items: [
-      {
-        id: 'spd-benefits-branch-view',
-        label: 'ภาพรวมสาขา',
-        href: '/th/spd/benefits/branch-view',
-        icon: Users2,
-        roles: ['spd', 'hr_admin', 'hr_manager'],
-      },
-      {
-        id: 'spd-benefits-reports',
-        label: 'รายงาน',
-        href: '/th/spd/benefits/reports',
-        icon: BarChart3,
-        roles: ['spd', 'hr_admin', 'hr_manager'],
-      },
-    ],
-  },
-  {
-    group: 'บุคลากร',
-    items: [
-      { id: 'goals', label: 'เป้าหมายและผลงาน', href: '/th/goals', icon: Target },
-      { id: 'learning', label: 'การเรียนรู้', href: '/th/learning-directory', icon: BookOpen },
-      { id: 'directory', label: 'ผังองค์กร', href: '/th/org-chart', icon: Network },
-      {
-        id: 'performance-form',
-        label: 'ประเมินผลงาน',
-        href: '/th/performance-form',
-        icon: Activity,
-      },
-      { id: 'development', label: 'การพัฒนา', href: '/th/development', icon: TrendingUp },
-      { id: 'succession', label: 'สายการสืบทอด', href: '/th/succession', icon: Users2 },
-    ],
-  },
-  {
-    group: 'บริษัท',
-    items: [
-      { id: 'announce', label: 'ประกาศ', href: '/th/announcements', icon: Megaphone },
-      { id: 'integrations', label: 'จัดการระบบ', href: '/th/integrations', icon: Plug },
-      { id: 'careers', label: 'ตำแหน่งว่างภายใน', href: '/th/careers', icon: Search },
-      { id: 'recruiting', label: 'สรรหา', href: '/th/recruiting', icon: UserPlus },
-      { id: 'reports', label: 'รายงาน', href: '/th/reports', icon: BarChart3 },
-      {
-        id: 'foundation',
-        label: 'โครงสร้างองค์กร',
-        href: '/th/admin/foundation',
-        icon: Layers,
-        roles: ['hr_admin', 'hr_manager'],
-      },
-      { id: 'admin', label: 'ศูนย์ Admin', href: '/th/admin', icon: Settings },
+    id: 'system',
+    label: 'System Settings',
+    labelTh: 'ตั้งค่าระบบ',
+    icon: Settings,
+    leaves: [
+      // PLACEHOLDER: policy builder → integrations
+      { id: 'policy', label: 'Policy Builder', labelTh: 'ตั้งค่านโยบาย', href: '/integrations', show: ['hris', 'sysadmin'] },
+      // PLACEHOLDER: master catalog → admin/foundation
+      { id: 'catalog', label: 'Master Catalog', labelTh: 'ฐานข้อมูลกลาง', href: '/admin/foundation', show: ['hris', 'sysadmin'] },
+      // PLACEHOLDER: regularization queue → admin/change-requests
+      { id: 'regular', label: 'Regularization Queue', labelTh: 'คิวตรวจเวลา', href: '/admin/change-requests', show: ['hradmin', 'hris', 'sysadmin'] },
+      // PLACEHOLDER: document review → admin/documents
+      { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/admin/documents', show: ['spd', 'sysadmin'] },
+      // PLACEHOLDER: roles & permissions → permissions
+      { id: 'roles', label: 'Roles & Permissions', labelTh: 'สิทธิ์ตามบทบาท', href: '/permissions', show: ['sysadmin'] },
+      // PLACEHOLDER: approval workflows → integrations
+      { id: 'workflows', label: 'Approval Workflows', labelTh: 'ขั้นตอนอนุมัติ', href: '/integrations', show: ['sysadmin'] },
+      // PLACEHOLDER: notifications → integrations
+      { id: 'notifs', label: 'Notifications', labelTh: 'แจ้งเตือน', href: '/integrations', show: ['sysadmin'] },
+      { id: 'integrations', label: 'Integrations', labelTh: 'เชื่อมต่อระบบ', href: '/integrations', show: ['sysadmin'] },
+      // PLACEHOLDER: branding → integrations
+      { id: 'branding', label: 'Branding', labelTh: 'ธีม', href: '/integrations', show: ['sysadmin'] },
+      // PLACEHOLDER: security & SSO → permissions
+      { id: 'security', label: 'Security & SSO', labelTh: 'ความปลอดภัย', href: '/permissions', show: ['sysadmin'] },
+      // PLACEHOLDER: impersonation log → admin/system
+      { id: 'impers', label: 'Impersonation Log', labelTh: 'บันทึก impersonate', href: '/admin/system', show: ['sysadmin'] },
     ],
   },
 ];
+
+// Blueprint nav-child rows carry no icon — only the group trigger has one —
+// so leaf-level icons are intentionally omitted to stay faithful to the layout.
+
+/** Blueprint persona id → app Role. sysadmin maps to the top role so it sees
+ *  every group; hris → hr_manager (master-data tier), hradmin → hr_admin. */
+const PERSONA_ROLE: Record<PersonaId, Role> = {
+  employee: 'employee',
+  manager: 'manager',
+  hradmin: 'hr_admin',
+  hris: 'hr_manager',
+  spd: 'spd',
+  sysadmin: 'hr_manager',
+};
+
+/** A persona is "granted" for the current user when the user owns the mapped
+ *  Role directly. (Role hierarchy is handled by listing personas explicitly in
+ *  each leaf's `show`, mirroring the Blueprint.) */
+function personaGranted(persona: PersonaId, userRoles: Role[]): boolean {
+  // employee persona = baseline, always granted for any authenticated user.
+  if (persona === 'employee') return true;
+  return userRoles.includes(PERSONA_ROLE[persona]);
+}
+
+const leafVisible = (leaf: Leaf, userRoles: Role[]): boolean =>
+  !leaf.show || leaf.show.some((p) => personaGranted(p, userRoles));
 
 /** Strip locale prefix (/th/ or /en/) to get bare path e.g. /home */
 function stripLocale(path: string): string {
   return path.replace(/^\/(th|en)/, '') || '/';
 }
 
+const navLabel = (item: { label: string; labelTh: string }, isTh: boolean): string =>
+  isTh ? item.labelTh || item.label : item.label;
+
+/** Short rail labels (the narrow col-1 icon rail can't fit the full group name). */
+const RAIL_SHORT: Record<string, { th: string; en: string }> = {
+  workspace: { th: 'ฉัน', en: 'Me' },
+  team: { th: 'ทีม', en: 'Team' },
+  hr: { th: 'บุคคล', en: 'HR' },
+  system: { th: 'ระบบ', en: 'Setup' },
+};
+
 export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const userRoles = useAuthStore((s) => s.roles);
-  // Compare without locale prefix so /en/home matches href="/th/home"
+  const username = useAuthStore((s) => s.username);
   const barePath = stripLocale(pathname);
   const currentLocale = pathname.match(/^\/(th|en)/)?.[1] ?? 'th';
-  const isActive = (href: string) => {
-    const [hrefPath, hrefQuery = ''] = href.split('?');
-    const bareHref = stripLocale(hrefPath);
-    const hrefTab = new URLSearchParams(hrefQuery).get('tab');
-    if (hrefTab) {
-      return barePath === bareHref && searchParams?.get('tab') === hrefTab;
-    }
-    return barePath === bareHref || barePath.startsWith(bareHref + '/');
-  };
-  // Role-gated nav — items/sections with `roles` render only when the current
-  // user owns at least one matching role.
-  const hasRoleFor = (item: NavItem) =>
-    !item.roles || item.roles.some((r) => userRoles.includes(r));
-  const visibleSections = NAV.map((section) => ({
-    ...section,
-    items: section.items.filter(hasRoleFor),
-  })).filter((section) => section.items.length > 0);
+  const isTh = currentLocale === 'th';
+
+  // Resolve the bare href for a leaf (benefits uses the locale-aware helper,
+  // then we strip the locale back off for a uniform bare-path comparison).
+  const leafBareHref = (leaf: Leaf): string =>
+    leaf.href === '__BENEFITS__' ? stripLocale(benefitsHubRoute(currentLocale)) : leaf.href;
+
+  const isActive = (bareHref: string): boolean =>
+    barePath === bareHref || barePath.startsWith(bareHref + '/');
+
+  // ── Master-detail rail + panel (wireframe 2026-05-25) ───────────────────────
+  // The rail (col 1) selects which group's leaves render in the panel (col 2).
+  // Default selection follows the active route's group; a rail click overrides
+  // it for browsing, and the next navigation (pathname change) resets back to
+  // following the route. Derived from pathname so SSR + first paint match.
+  const visibleGroups = MODULES.map((m) => ({
+    ...m,
+    shownLeaves: m.leaves.filter((l) => leafVisible(l, userRoles)),
+  }));
+  const activeGroupId = visibleGroups.find((g) =>
+    g.shownLeaves.some((l) => isActive(leafBareHref(l))),
+  )?.id;
+  const firstUnlockedId = visibleGroups.find((g) => g.shownLeaves.length > 0)?.id ?? null;
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  // Reset manual selection on navigation so the panel follows the active route.
+  useEffect(() => {
+    setSelectedGroup(null);
+  }, [pathname]);
+  const shownGroupId = selectedGroup ?? activeGroupId ?? firstUnlockedId;
+  const shownGroup = visibleGroups.find((g) => g.id === shownGroupId) ?? null;
+
+  // searchParams retained for parity with the app's other shell components.
+  void searchParams;
+
   return (
-    <aside className={cn('humi-sidebar', className)} aria-label="เมนูหลัก">
-      <div className="humi-brand">
-        <div className="humi-wordmark">
-          {/* Sidebar bg = navy ink (`--color-ink`). The base humi-logo.png has
-              dark navy "Hum" text → invisible on navy bg. Use the pure-white
-              variant for the dark sidebar. Generated via PIL pixel swap from
-              the same source PNG so brand fidelity stays intact (only the
-              dark luminance band gets remapped to #FFFFFF — teal person
-              silhouette untouched). */}
+    <aside className={cn('humi-sidebar bp-shellnav', className)} aria-label="เมนูหลัก">
+      {/* ── Col 1: macro-group icon rail ── */}
+      <div className="bp-rail">
+        <div className="bp-rail-brand">
           <Image
             src="/humi-logo-final-2.png"
             alt="Humi"
-            width={72}
-            height={78}
+            width={40}
+            height={44}
             priority
-            style={{ height: 78, width: 'auto', objectFit: 'contain' }}
+            style={{ height: 34, width: 'auto', objectFit: 'contain' }}
           />
         </div>
-        {/* Explicit close affordance — only rendered in drawer mode (when
-            AppShell passes onClose). Without this the user has no visible
-            way to close the drawer once it covers the topbar hamburger. */}
+        <div className="bp-rail-groups" role="tablist" aria-label="กลุ่มเมนู">
+          {visibleGroups.map((m) => {
+            const locked = m.shownLeaves.length === 0;
+            const active = shownGroupId === m.id;
+            const RailIcon = m.icon;
+            const short = RAIL_SHORT[m.id] ?? { th: m.labelTh, en: m.label };
+            return (
+              <button
+                key={m.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                className={cn('bp-rail-item', active && 'is-active', locked && 'locked')}
+                disabled={locked}
+                onClick={() => !locked && setSelectedGroup(m.id)}
+                title={navLabel(m, isTh)}
+              >
+                <span className="bp-rail-icon" aria-hidden="true">
+                  <RailIcon size={20} />
+                </span>
+                <span className="bp-rail-label">{isTh ? short.th : short.en}</span>
+              </button>
+            );
+          })}
+        </div>
         {onClose && (
           <button
             type="button"
-            className="humi-icon-btn humi-drawer-close"
+            className="humi-icon-btn bp-rail-close"
             aria-label="ปิดเมนู"
             onClick={onClose}
-            style={{ marginLeft: 'auto' }}
           >
-            <X size={20} aria-hidden="true" />
+            <X size={18} aria-hidden="true" />
           </button>
         )}
       </div>
 
-      <nav className="humi-nav" aria-label="เมนูหลัก">
-        {visibleSections.map((section) => (
-          <div key={section.group} className="humi-nav-section">
-            <div className="humi-nav-label">{section.group}</div>
-            {section.items.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              if (item.external) {
-                return (
-                  <a
-                    key={item.id}
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="humi-nav-item"
-                    onClick={onNavigate}
-                  >
-                    <span className="humi-nav-icon" aria-hidden="true">
-                      <Icon size={16} />
-                    </span>
-                    <span className="humi-nav-text">{item.label}</span>
-                    <ExternalLink size={12} className="ml-auto text-ink-muted" aria-hidden="true" />
-                  </a>
-                );
-              }
-              return (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className={cn('humi-nav-item', active && 'active')}
-                  aria-current={active ? 'page' : undefined}
-                  onClick={onNavigate}
-                >
-                  <span className="humi-nav-icon" aria-hidden="true">
-                    <Icon size={16} />
+      {/* ── Col 2: leaves of the selected group ── */}
+      <div className="bp-panel">
+        <div className="bp-panel-head">
+          <div className="bp-tenant">CENTRAL · BANGKOK 03</div>
+          <div className="bp-panel-title">{shownGroup ? navLabel(shownGroup, isTh) : ''}</div>
+        </div>
+        <nav
+          className="bp-panel-nav"
+          aria-label={shownGroup ? navLabel(shownGroup, isTh) : 'เมนู'}
+        >
+          {shownGroup?.shownLeaves.map((l) => {
+            const bareHref = leafBareHref(l);
+            const href = `/${currentLocale}${bareHref}`;
+            const active = isActive(bareHref);
+            return (
+              <Link
+                key={l.id}
+                href={href}
+                className={cn('bp-panel-item', active && 'is-active')}
+                aria-current={active ? 'page' : undefined}
+                title={navLabel(l, !isTh)}
+                onClick={onNavigate}
+              >
+                <span className="bp-child-label">{navLabel(l, isTh)}</span>
+                {l.badge && (
+                  <span className="bp-badge" aria-label={`${l.badge} รายการใหม่`}>
+                    {l.badge}
                   </span>
-                  <span className="humi-nav-text">{item.label}</span>
-                  {item.badge && (
-                    <span className="humi-pill" aria-label={`${item.badge} รายการใหม่`}>
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <Link
+          href={`/${currentLocale}/login`}
+          className="bp-sb-user"
+          style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
+          aria-label="ออกจากระบบและกลับไปหน้าเข้าสู่ระบบ"
+        >
+          <div className="bp-av" aria-hidden="true">
+            จท
           </div>
-        ))}
-      </nav>
-
-      <Link
-        href={`/${currentLocale}/login`}
-        className="humi-sidebar-foot"
-        style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
-        aria-label="ออกจากระบบและกลับไปหน้าเข้าสู่ระบบ"
-      >
-        <div className="humi-avatar coral" aria-hidden="true">
-          จท
-        </div>
-        <div className="humi-user-meta">
-          <div className="humi-user-name">จงรักษ์ ทานากะ</div>
-          <div className="humi-user-role">กดเพื่อออกจากระบบ</div>
-        </div>
-      </Link>
-
-      {/* Locale switcher ย้ายไป Topbar แล้ว — 2026-04-23 (แก้ bug ยื่นนอก sidebar) */}
+          <div style={{ minWidth: 0 }}>
+            <div className="bp-nm">{username || 'จงรักษ์ ทานากะ'}</div>
+            <div className="bp-rl">EMP-04821</div>
+          </div>
+        </Link>
+      </div>
     </aside>
   );
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Sidebar Coverage Annotations (Track C1, autopilot 2026-04-26)
+// Sidebar Coverage Annotations
 // Routes that intentionally bypass the sidebar — entry point lives elsewhere
-// or feature is admin-tier scaffold not yet wired. Each line follows
-// `// SIDEBAR_LEGACY: <route> <reason ≥ 20 chars>` so the design-gate parser
-// can recognise the explicit rationale (see core/gate/checks/sidebar-coverage.ts).
+// or the feature is reached from a parent screen. Each line follows
+// `// SIDEBAR_LEGACY: <route> <reason ≥ 20 chars>` for the design-gate parser.
+//
+// NOTE (2026-05-25 Blueprint port): the sidebar IA is now the Blueprint MODULES
+// tree (4 groups, see MODULES above). The Blueprint leaves surface ESS, team,
+// HR-admin and system destinations directly; routes below are reached from a
+// parent page / are alt-paths and so stay URL-only.
 //
 // Auth (1)
 // SIDEBAR_LEGACY: /login pre-auth gate — never shown to authenticated users in chrome
@@ -368,39 +398,41 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
 // SIDEBAR_LEGACY: /employees/me alt-path superseded by canonical /profile/me sidebar entry
 // SIDEBAR_LEGACY: /employees/me/payslip deep-link from /profile/me Compensation tab
 // SIDEBAR_LEGACY: /ess/profile/edit reachable from /profile/me Edit button (BRD #166)
-// SIDEBAR_LEGACY: /me/documents reachable from /profile/me Documents tab (BRD #173)
+// SIDEBAR_LEGACY: /profile alt-path superseded by canonical /profile/me sidebar entry
 //
-// Workflow + leave family (4) — reachable from "ลางาน" + "คำขอของฉัน" sidebar entries
+// ESS workflow family (3) — reached from "ใบคำขอ" + "ใบลา" sidebar entries
+// SIDEBAR_LEGACY: /ess/workflows reachable from /requests "ใบคำขอ" sidebar entry
 // SIDEBAR_LEGACY: /overtime reachable from /timeoff OT request flow (sub-feature of timeoff)
-// SIDEBAR_LEGACY: /resignation reachable from /profile/me Resignation section (BRD #172)
-// SIDEBAR_LEGACY: /workflows alt-path superseded by /ess/workflows in sidebar config
-// SIDEBAR_LEGACY: /workflows/probation manager-tier deep-link from probation alert email
+// SIDEBAR_LEGACY: /workflows alt-path superseded by /requests in the workspace group
 //
-// Time / attendance (1) — sidebar uses external cnext-time URL, /time is internal scaffold
-// SIDEBAR_LEGACY: /time internal time-page scaffold — sidebar uses external cnext-time link
-//
-// Payroll cluster (6) — admin-tier scaffold pending P-B chain decision (#62 blocked)
-// SIDEBAR_LEGACY: /payroll admin-tier scaffold pending P-B Infrastructure decision (#62)
-// SIDEBAR_LEGACY: /payroll/processing admin-tier scaffold pending P-B chain (#62 blocked)
-// SIDEBAR_LEGACY: /payroll/reports admin-tier scaffold pending P-B chain (#62 blocked)
-// SIDEBAR_LEGACY: /payroll/setup admin-tier scaffold pending P-B chain (#62 blocked)
-// SIDEBAR_LEGACY: /payslip reachable from /profile/me Compensation tab payslip link
-//
-// Reports cluster (3) — reports tile + role-specific landing pages
-// SIDEBAR_LEGACY: /training-records surfaced via /learning-directory deep-link
-// SIDEBAR_LEGACY: /spd-management role-gated route from SPD persona inbox flow
-// SIDEBAR_LEGACY: /hospital-referral surfaced via /benefits-hub action tile (BRD #20 dep)
-//
-// Performance / Learning alternates (4)
-// SIDEBAR_LEGACY: /performance alt-path superseded by /performance-form sidebar entry
-// SIDEBAR_LEGACY: /learning alt-path superseded by /learning-directory sidebar entry
-// SIDEBAR_LEGACY: /talent-management admin-tier scaffold pending Sprint 2 succession wire
+// People / performance alternates (5) — reached from team-performance + profile
+// SIDEBAR_LEGACY: /goals reached from /performance-form goals shortcut (performance suite)
+// SIDEBAR_LEGACY: /performance alt-path superseded by /performance-form team-performance entry
+// SIDEBAR_LEGACY: /learning-directory reached from /home learning tile (external L&D system)
+// SIDEBAR_LEGACY: /learning alt-path superseded by /learning-directory deep-link
 // SIDEBAR_LEGACY: /idp individual-development-plan reached from performance-form action
 //
-// Admin-tier scaffolds (5)
-// SIDEBAR_LEGACY: /locations admin-tier scaffold from /admin landing — geographic master data
-// SIDEBAR_LEGACY: /permissions admin-tier scaffold from /admin landing — RBAC matrix editor
-// SIDEBAR_LEGACY: /screening admin-tier scaffold from /recruiting workflow — pre-hire checks
+// Talent / succession (5) — admin-tier, reached from HR-admin screens
+// SIDEBAR_LEGACY: /development reached from /performance-form development plan section
+// SIDEBAR_LEGACY: /succession admin-tier scaffold reached from /admin organization tools
+// SIDEBAR_LEGACY: /talent-management admin-tier scaffold reached from /admin landing page
+// SIDEBAR_LEGACY: /training-records surfaced via /learning-directory deep-link
+// SIDEBAR_LEGACY: /careers internal-mobility board reached from /profile/me careers tile
+//
+// Benefits family (4) — reached from "สวัสดิการ" hub + admin benefits screens
 // SIDEBAR_LEGACY: /benefits admin-tier scaffold (Benefit module deferred per #46 audit)
-// SIDEBAR_LEGACY: /benefits-hub ESS landing page reached via /profile/me Compensation tab
+// SIDEBAR_LEGACY: /hospital-referral surfaced via /benefits-hub action tile (BRD #20 dep)
+// SIDEBAR_LEGACY: /profile/benefits alt-path superseded by /profile/me Benefits tab entry
+// SIDEBAR_LEGACY: /manager/benefits/team reached from /manager-dashboard benefits shortcut
+//
+// Persona landing alt-paths (4) — reached from each persona's group entries
+// SIDEBAR_LEGACY: /hrbp/dashboard reached from team-management group for HRBP persona
+// SIDEBAR_LEGACY: /hrbp/talent-search reached from /hrbp/dashboard talent-search shortcut
+// SIDEBAR_LEGACY: /spd/benefits/branch-view reached from /spd-management branch shortcut
+// SIDEBAR_LEGACY: /spd-management superseded by unified /quick-approve inbox per unified-inbox rule
+//
+// Admin-tier scaffolds (3)
+// SIDEBAR_LEGACY: /locations admin-tier scaffold from /admin landing — geographic master data
+// SIDEBAR_LEGACY: /screening admin-tier scaffold from /recruiting workflow — pre-hire checks
+// SIDEBAR_LEGACY: /resignation reached from /profile/me Resignation section + HR offboarding
 // ════════════════════════════════════════════════════════════════════════════
