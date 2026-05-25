@@ -3113,7 +3113,8 @@
         "pending": "รออนุมัติ",
         "review": "กำลังตรวจสอบ",
         "approved": "อนุมัติแล้ว",
-        "rejected": "ปฏิเสธแล้ว"
+        "rejected": "ปฏิเสธแล้ว",
+        "awaitingNext": "รอผู้อนุมัติถัดไป"
       }
     },
     "slideOver": {
@@ -4513,7 +4514,10 @@
     "optional": "ไม่บังคับ",
     "cancel": "ยกเลิก",
     "confirm": "ยืนยัน",
-    "submitting": "กำลังส่ง…"
+    "submitting": "กำลังส่ง…",
+    "toastApproved": "อนุมัติคำขอแล้ว",
+    "toastRejected": "ปฏิเสธคำขอแล้ว",
+    "toastReturned": "ส่งกลับคำขอแล้ว"
   },
   "quick_approve_bulk": {
     "title": "อนุมัติแบบกลุ่ม",

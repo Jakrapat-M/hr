@@ -3148,7 +3148,8 @@
         "pending": "Pending",
         "review": "In Review",
         "approved": "Approved",
-        "rejected": "Rejected"
+        "rejected": "Rejected",
+        "awaitingNext": "Awaiting next approver"
       }
     },
     "slideOver": {
@@ -4634,7 +4635,10 @@
     "optional": "Optional",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "submitting": "Submitting…"
+    "submitting": "Submitting…",
+    "toastApproved": "Request approved",
+    "toastRejected": "Request rejected",
+    "toastReturned": "Request returned"
   },
   "quick_approve_bulk": {
     "title": "Bulk Approve Queue",

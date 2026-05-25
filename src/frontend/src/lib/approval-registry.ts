@@ -193,21 +193,15 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     labels: { th: 'เบิก', en: 'Claim' },
   },
 
-  // transfer → DISPLAY-ONLY no-throw adapter. No transfer store schema exists, so
-  // approve/reject are no-throw stubs that simply resolve to a terminal status.
-  // TODO(PR-1b/1c): replace with the dedicated `transfer-approvals` terminal-marker
-  // slice (id → 'approved'|'rejected', persisted) so the row drops out of `pending`
-  // and never re-renders approvable (plan R2). Do NOT wire UI here.
+  // transfer → dedicated `transfer-approvals` terminal-marker slice (plan R2). No
+  // domain transfer schema exists, so approve/reject write a terminal marker
+  // (id → 'approved'|'rejected', persisted) and `selectPendingApprovals()` reads it
+  // to drop the row OUT of `pending` so it never re-renders approvable (AC-1c.3).
   transfer: {
     toQueueItem: (record) =>
       genericToQueueItem('transfer', record as { id: string; submittedAt?: string }),
-    approve: (_id, _actor) => {
-      // no-throw stub — approve/reject WIRING lands in PR-1c via markApproved/
-      // markRejected on the transfer-approvals slice.
-    },
-    reject: (_id, _actor, _reason) => {
-      // no-throw stub — see above.
-    },
+    approve: (id, _actor) => useTransferApprovals.getState().markApproved(id),
+    reject: (id, _actor, _reason) => useTransferApprovals.getState().markRejected(id),
     seed: (fixtures = []) => useTransferApprovals.getState().seedFromQueue(fixtures),
     labels: { th: 'ย้าย', en: 'Transfer' },
   },
@@ -261,6 +255,13 @@ export interface QueueApproval {
   row: PendingRequest;
   /** Collapsed status — pending_spd/pending_hr/pending_manager(_approval) → pending. */
   status: QueueStatus;
+  /**
+   * PR-1c (AC-1c.2/1c.3): true when the first approver has acted but a later step
+   * is still pending (e.g. a benefit claim that the manager approved → now
+   * `pending_spd`). The collapsed `status` stays `pending`, but the row renders an
+   * explicit "awaiting next approver" chip instead of silently looking unactioned.
+   */
+  awaitingNext?: boolean;
 }
 
 /**
@@ -297,9 +298,17 @@ export function selectPendingApprovals(input: {
   for (const r of input.workflow) {
     if (r.queueSnapshot) out.push({ row: r.queueSnapshot, status: collapseQueueStatus(r.status) });
   }
-  // claim rows are the benefit-claims records carrying a queueSnapshot.
+  // claim rows are the benefit-claims records carrying a queueSnapshot. A claim
+  // moves pending_manager_approval → pending_spd once the manager approves: it
+  // stays collapsed-`pending`, but is now awaiting the NEXT approver (AC-1c.2).
   for (const r of input.claims) {
-    if (r.queueSnapshot) out.push({ row: r.queueSnapshot, status: collapseQueueStatus(r.status) });
+    if (r.queueSnapshot) {
+      out.push({
+        row: r.queueSnapshot,
+        status: collapseQueueStatus(r.status),
+        awaitingNext: r.status === 'pending_spd',
+      });
+    }
   }
   // transfer rows come from the dedicated terminal-marker slice (R2).
   for (const e of input.transfers) {
