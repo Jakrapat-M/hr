@@ -9,6 +9,7 @@ import {
   Card,
   CardEyebrow,
   CardTitle,
+  Modal,
 } from '@/components/humi';
 import { cn } from '@/lib/utils';
 import { DOCUMENT_UPLOAD_HELPER_TH } from '@/lib/document-boundary';
@@ -147,6 +148,22 @@ export default function HumiTimeoffPage() {
   const [tab, setTab] = useState<TabKey>(initialTab);
   const { toast, show: showToast } = useToast();
 
+  // Local decision state for the manager approval tab. HUMI_LEAVE_PENDING is a
+  // static display fixture (lp-1/lp-2) with no backing store, so the lightest
+  // clean wiring for this isolated mockup tab is a per-row decision that flips
+  // the row to a terminal chip + toast (no leave-approvals seed required here).
+  const [pendingDecisions, setPendingDecisions] = useState<Record<string, 'approved' | 'rejected'>>({});
+  const [policyOpen, setPolicyOpen] = useState(false);
+
+  const decide = (id: string, name: string, decision: 'approved' | 'rejected') => {
+    setPendingDecisions((prev) => ({ ...prev, [id]: decision }));
+    showToast(
+      decision === 'approved'
+        ? `อนุมัติคำขอลาของ ${name} แล้ว`
+        : `ปฏิเสธคำขอลาของ ${name} แล้ว`,
+    );
+  };
+
   return (
     <>
       {/* Toast */}
@@ -251,45 +268,66 @@ export default function HumiTimeoffPage() {
           </div>
 
           {tab === 'request' && (
-            <RequestTab onSubmitted={(msg) => { showToast(msg); setTab('history'); }} />
+            <RequestTab
+              onSubmitted={(msg) => { showToast(msg); setTab('history'); }}
+              onSavedDraft={(msg) => showToast(msg)}
+            />
           )}
 
           {tab === 'history' && <HistoryTab />}
 
           {tab === 'approve' && (
             <ul role="list" className="divide-y divide-hairline pt-2">
-              {HUMI_LEAVE_PENDING.map((p) => (
-                <li
-                  key={p.id}
-                  className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center"
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <Avatar name={p.name} tone={p.tone} size="sm" />
-                    <div className="min-w-0">
-                      <p className="text-body font-semibold text-ink">{p.name}</p>
-                      <p className="text-small text-ink-muted">
-                        {p.reason} · {p.when}
-                      </p>
+              {HUMI_LEAVE_PENDING.map((p) => {
+                const decision = pendingDecisions[p.id];
+                return (
+                  <li
+                    key={p.id}
+                    className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center"
+                  >
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <Avatar name={p.name} tone={p.tone} size="sm" />
+                      <div className="min-w-0">
+                        <p className="text-body font-semibold text-ink">{p.name}</p>
+                        <p className="text-small text-ink-muted">
+                          {p.reason} · {p.when}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      leadingIcon={<X size={14} />}
-                    >
-                      ปฏิเสธ
-                    </Button>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      leadingIcon={<Check size={14} />}
-                    >
-                      อนุมัติ
-                    </Button>
-                  </div>
-                </li>
-              ))}
+                    <div className="flex shrink-0 items-center gap-2">
+                      {decision ? (
+                        <span
+                          className={cn(
+                            'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
+                            HISTORY_TONE[decision],
+                          )}
+                        >
+                          {HISTORY_LABEL[decision]}
+                        </span>
+                      ) : (
+                        <>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            leadingIcon={<X size={14} />}
+                            onClick={() => decide(p.id, p.name, 'rejected')}
+                          >
+                            ปฏิเสธ
+                          </Button>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            leadingIcon={<Check size={14} />}
+                            onClick={() => decide(p.id, p.name, 'approved')}
+                          >
+                            อนุมัติ
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Card>
@@ -355,11 +393,36 @@ export default function HumiTimeoffPage() {
               ส่วนที่เกินจะจ่ายเป็นเงินในเช็คเงินเดือนวันที่ 15 ธันวาคม
             </p>
             <div className="relative mt-4">
-              <Button variant="primary">อ่านนโยบายฉบับเต็ม</Button>
+              <Button variant="primary" onClick={() => setPolicyOpen(true)}>
+                อ่านนโยบายฉบับเต็ม
+              </Button>
             </div>
           </Card>
         </aside>
       </div>
+
+      {/* Policy modal — full leave-carryover policy text */}
+      <Modal
+        open={policyOpen}
+        onClose={() => setPolicyOpen(false)}
+        title="นโยบายการยกยอดวันลา · ฉบับเต็ม"
+      >
+        <div className="space-y-4 text-body text-ink-soft leading-relaxed">
+          <p>
+            วันลาพักร้อนที่ไม่ได้ใช้ภายในปีปฏิทิน สามารถยกยอดไปใช้ในปีถัดไปได้
+            สูงสุด <strong className="text-ink">5 วัน</strong> โดยจะต้องใช้ให้หมดภายในไตรมาสแรกของปีถัดไป
+          </p>
+          <ul className="list-disc space-y-2 pl-5">
+            <li>วันลาส่วนที่เกิน 5 วันจะถูกจ่ายเป็นเงินในเช็คเงินเดือนวันที่ 15 ธันวาคม</li>
+            <li>ลาป่วยและลากิจไม่สามารถยกยอดได้ และจะถูกรีเซ็ตต้นปี</li>
+            <li>การยกยอดจะคำนวณอัตโนมัติเมื่อปิดรอบปลายปี ไม่ต้องยื่นคำขอ</li>
+            <li>กรณีลาออกระหว่างปี วันลาคงเหลือจะถูกจ่ายตามสัดส่วนในงวดสุดท้าย</li>
+          </ul>
+          <p className="text-small text-ink-muted">
+            อ้างอิงระเบียบบริษัทว่าด้วยการลา · ฉบับปรับปรุง 2569
+          </p>
+        </div>
+      </Modal>
     </>
   );
 }
@@ -368,7 +431,13 @@ export default function HumiTimeoffPage() {
 // Request tab — form with validation
 // ────────────────────────────────────────────────────────────
 
-function RequestTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
+function RequestTab({
+  onSubmitted,
+  onSavedDraft,
+}: {
+  onSubmitted: (msg: string) => void;
+  onSavedDraft: (msg: string) => void;
+}) {
   const submit = useTimeoffStore((s) => s.submit);
   const [kind, setKind] = useState<LeaveKind>('vacation');
   const [fromDate, setFromDate] = useState('');
@@ -404,6 +473,12 @@ function RequestTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
     setReason('');
     setErrors({});
     onSubmitted('ส่งคำขอลางานเรียบร้อยแล้ว · สถานะ: รออนุมัติ');
+  }
+
+  function handleSaveDraft() {
+    // Mockup: keep the current form values in place and confirm the draft was
+    // saved (no draft store in this phase — toast feedback only).
+    onSavedDraft('บันทึกร่างคำขอลาแล้ว · ยังไม่ส่งให้ผู้อนุมัติ');
   }
 
   return (
@@ -523,7 +598,7 @@ function RequestTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
         <Button variant="primary" className="h-11" onClick={handleSubmit}>
           ส่งคำขอ
         </Button>
-        <Button variant="ghost">บันทึกร่าง</Button>
+        <Button variant="ghost" onClick={handleSaveDraft}>บันทึกร่าง</Button>
         <p className="ml-auto text-small text-ink-muted">
           ผู้อนุมัติ: กฤตนัย อินทรเดช (หัวหน้าสายงาน)
         </p>

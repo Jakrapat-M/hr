@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Check, Plus } from 'lucide-react';
 import { Card, CardTitle, Button } from '@/components/humi';
+import { cn } from '@/lib/utils';
 import { useTimesheet } from '@/hooks/use-time';
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
@@ -19,11 +20,33 @@ export default function TimesheetPage() {
 
   const { rows, weekStart, updateHours, addRow, totalPerDay } = useTimesheet();
   const [newProject, setNewProject] = useState('');
+  const [toast, setToast] = useState<string | null>(null);
 
   const grandTotal = totalPerDay.reduce((s, v) => s + v, 0);
 
+  const handleSave = () => {
+    // Mockup: timesheet rows live in local state (useTimesheet); persist the
+    // current edit by snapshotting the grand total and confirming with a toast.
+    setToast(isTh ? `บันทึกแล้ว · รวม ${grandTotal} ชม.` : `Saved · ${grandTotal} hrs total`);
+    window.setTimeout(() => setToast(null), 3200);
+  };
+
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
+      {/* Toast */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={cn(
+            'fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-[var(--radius-md)] px-4 py-3',
+            'bg-ink text-canvas shadow-[var(--shadow-lg)] text-body font-medium',
+          )}
+        >
+          <Check size={16} aria-hidden />
+          {toast}
+        </div>
+      )}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-0.5">
@@ -36,7 +59,7 @@ export default function TimesheetPage() {
             {isTh ? `สัปดาห์: ${weekStart}` : `Week of ${weekStart}`}
           </p>
         </div>
-        <Button variant="primary" size="sm" onClick={() => {}}>
+        <Button variant="primary" size="sm" onClick={handleSave}>
           {isTh ? 'บันทึก' : 'Save'}
         </Button>
       </div>

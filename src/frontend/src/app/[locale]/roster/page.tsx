@@ -85,6 +85,36 @@ export default function RosterPage() {
     );
   };
 
+  // Export — build a client-side CSV blob of the visible roster (no backend).
+  const handleExport = () => {
+    const header = isTh
+      ? ['พนักงาน', 'รวมชั่วโมง', 'กะ']
+      : ['Employee', 'Total hours', 'Shifts'];
+    const lines = rows.map((r) => {
+      const shifts = r.shifts
+        .map((s) => `${s.start}-${s.end}`)
+        .join(' / ');
+      return [r.name, rowTotalHours(r).toFixed(1), shifts]
+        .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+        .join(',');
+    });
+    const csv = [header.join(','), ...lines].join('\n');
+    const blob = new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `roster-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    flash(
+      isTh
+        ? `ส่งออกตารางกะ ${rows.length} แถวแล้ว`
+        : `Exported ${rows.length} roster rows`,
+    );
+  };
+
   const hasRows = rows.length > 0;
   const legendEntries = useMemo(
     () => Object.keys(SHIFT_TYPE_LABELS) as Array<keyof typeof SHIFT_TYPE_LABELS>,
@@ -156,7 +186,7 @@ export default function RosterPage() {
           <Button
             variant="secondary"
             leadingIcon={<Download size={16} />}
-            onClick={() => flash(isTh ? 'กำลังส่งออก (ตัวอย่าง)' : 'Exporting (demo)')}
+            onClick={handleExport}
           >
             {isTh ? 'ส่งออก' : 'Export'}
           </Button>

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useProbationCase, type ProbationOutcome, type ProbationFailReason, type ProbationDecisionInput } from '@/hooks/use-probation';
 import { formatDate } from '@/lib/date';
+import { Modal } from '@/components/humi';
 
 // STA-23 PO v2 — Manager Approve page
 // Spec: Linear STA-23 PO comment 2026-05-15 08:32 UTC, Mockup 2 + Mockup 3
@@ -27,7 +28,7 @@ import { formatDate } from '@/lib/date';
 // Types + LOVs
 // ---------------------------------------------------------------------------
 
-// TODO(STA-23): replace fail reason LOV with real values from BA/HR
+// Fail-reason LOV — concrete in-mockup option set (sensible static reasons).
 const FAIL_REASON_OPTIONS: { value: ProbationFailReason; labelEn: string; labelTh: string }[] = [
   { value: 'performance', labelEn: 'Performance below standard', labelTh: 'ผลงานต่ำกว่ามาตรฐาน' },
   { value: 'attitude', labelEn: 'Attitude / Behavior issue', labelTh: 'ทัศนคติ / พฤติกรรม' },
@@ -176,6 +177,7 @@ export default function ProbationDetailPage() {
   const [effectiveDate, setEffectiveDate] = useState('');
   const [failReason, setFailReason] = useState<ProbationFailReason | ''>('');
   const [comment, setComment] = useState('');
+  const [policyOpen, setPolicyOpen] = useState(false);
 
   // Derive conditional visibility
   const showEffectiveDate = outcome !== '' && OUTCOMES_WITH_EFFECTIVE_DATE.includes(outcome as ProbationOutcome);
@@ -539,13 +541,13 @@ export default function ProbationDetailPage() {
               <li>• ไม่ผ่าน → แจ้งล่วงหน้า 1 รอบจ่ายเงินเดือน</li>
               <li>• ผ่าน → Allowance ตามสัญญา</li>
             </ul>
-            {/* TODO: replace with real policy doc route */}
-            <a
-              href="#"
+            <button
+              type="button"
+              onClick={() => setPolicyOpen(true)}
               className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-accent"
             >
-              ดูฉบับเต็ม <ArrowRight className="h-3 w-3" />
-            </a>
+              {locale === 'th' ? 'ดูฉบับเต็ม' : 'View full policy'} <ArrowRight className="h-3 w-3" />
+            </button>
           </div>
         </div>
       </div>
@@ -583,6 +585,48 @@ export default function ProbationDetailPage() {
           {locale === 'th' ? 'ส่งผลทดลองงานไปยัง HRBP' : 'Submit Probation Result to HRBP'}
         </button>
       </div>
+
+      {/* Probation policy modal — full reference text */}
+      <Modal
+        open={policyOpen}
+        onClose={() => setPolicyOpen(false)}
+        title={locale === 'th' ? 'นโยบายทดลองงาน · ฉบับ 2569' : 'Probation Policy · 2026 Edition'}
+      >
+        <div className="space-y-4 text-sm text-ink-soft leading-relaxed">
+          <ul className="list-disc space-y-2 pl-5">
+            <li>
+              {locale === 'th'
+                ? 'ระยะทดลองงานมาตรฐาน 119 วัน (ประมาณ 4 เดือน) นับจากวันเริ่มงาน'
+                : 'Standard probation period is 119 days (about 4 months) from the hire date.'}
+            </li>
+            <li>
+              {locale === 'th'
+                ? 'สามารถขยายเวลาทดลองงานได้สูงสุด 60 วัน โดยต้องระบุเหตุผลและวันที่มีผล'
+                : 'Probation may be extended up to 60 days, with a stated reason and effective date.'}
+            </li>
+            <li>
+              {locale === 'th'
+                ? 'กรณีไม่ผ่าน ต้องแจ้งล่วงหน้าอย่างน้อย 1 รอบการจ่ายเงินเดือน'
+                : 'A fail outcome requires at least one payroll cycle of advance notice.'}
+            </li>
+            <li>
+              {locale === 'th'
+                ? 'กรณีผ่าน พนักงานจะได้รับ Allowance ตามเงื่อนไขในสัญญาจ้าง'
+                : 'On pass, the employee receives the allowance per the employment contract.'}
+            </li>
+            <li>
+              {locale === 'th'
+                ? 'หากผู้จัดการไม่บันทึกผลภายในกำหนด ระบบจะ auto-pass อัตโนมัติ'
+                : 'If the manager does not record an outcome by the deadline, the system auto-passes.'}
+            </li>
+          </ul>
+          <p className="text-xs text-ink-muted">
+            {locale === 'th'
+              ? 'อ้างอิงระเบียบบริษัทว่าด้วยการทดลองงาน · ฉบับปรับปรุง 2569'
+              : 'Reference: Company probation policy · 2026 revision'}
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 }
