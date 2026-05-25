@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { LoginAsRibbon } from './LoginAsRibbon';
 import { CommandPalette } from './CommandPalette';
 import { useUIStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -104,6 +105,8 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/en/me/documents', title: 'เอกสาร' },
   { prefix: '/th/manager-dashboard', title: 'การจัดการทีม' },
   { prefix: '/en/manager-dashboard', title: 'การจัดการทีม' },
+  { prefix: '/th/roster', title: 'ตารางกะ' },
+  { prefix: '/en/roster', title: 'Roster & Shifts' },
   { prefix: '/th/payroll', title: 'ค่าตอบแทน' },
   { prefix: '/en/payroll', title: 'ค่าตอบแทน' },
   { prefix: '/th/resignation', title: 'ลาออก' },
@@ -281,6 +284,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="humi-main">
+        {/* Acting-as amber band — renders only while impersonating, ABOVE the Topbar. */}
+        <LoginAsRibbon />
         <Topbar title={title} onSearchClick={() => setPaletteOpen(true)} />
         <main className="humi-page-wrap">{children}</main>
       </div>

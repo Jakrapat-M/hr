@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils';
 import { getLocaleFromPath, swapLocale, type SupportedLocale } from '@/lib/humi-locale';
 import { PersonaSwitcher } from '@/components/humi/shell/PersonaSwitcher';
 import { NotificationBell } from '@/components/humi/NotificationBell';
-import { ActingBadge } from '@/components/humi/ActingBadge';
+import { TodoBell } from '@/components/humi/TodoBell';
 
 export interface TopbarProps {
   /** h2 page title — typically derived from route */
@@ -182,8 +182,9 @@ export function Topbar({
           <Moon size={18} aria-hidden="true" />
         )}
       </button>
+      {/* Req6: inbox-then-bell — TodoBell (envelope) precedes NotificationBell. */}
+      <TodoBell />
       <NotificationBell />
-      <ActingBadge />
       <PersonaSwitcher />
       {actions}
     </div>

@@ -1,28 +1,37 @@
 /**
- * sf-parity-sidebar.test.tsx — Blueprint sidebar IA structure + behaviour
+ * sidebar-ia.test.tsx — Humi sidebar IA structure + behaviour
  * Framework: Vitest + @testing-library/react + jsdom
  *
- * Rewritten 2026-05-25 (Blueprint port): the sidebar was re-ported 1:1 from the
- * HRMS Blueprint shell (MODULES tree + single-open accordion). The previous
- * "4 role-gated section" assertions no longer apply. The new IA is:
+ * NOTE: this suite INTENTIONALLY DIVERGES from SF/Blueprint parity. The menu was
+ * simplified 40 → 25 leaves per .omc/plans/sidebar-menu-simplify.md — placeholder /
+ * deep-link leaves were CUT, not repointed. This file asserts the REDUCED IA (the
+ * shipping contract), NOT the Blueprint's 40-leaf tree. Do not "fix" the menu back
+ * toward Blueprint parity on the strength of this test. The shell remains the
+ * master-detail rail+panel (col-1 macro-group rail of role="tab" buttons, col-2 the
+ * selected group's leaves); the assertions below are IA intent, not just API shape.
  *
- *   A. พื้นที่ทำงานของฉัน (workspace) — 9 ESS leaves, visible to everyone
- *   B. การจัดการทีม (team)            — manager/HR/SPD tools (role-gated)
- *   C. งานบุคคล (hr)                  — HR-admin destinations (role-gated)
- *   D. ตั้งค่าระบบ (system)            — HRIS / sysadmin settings (role-gated)
+ * The 4 macro groups (reduced IA):
+ *   A. พื้นที่ทำงานของฉัน (workspace) — 8 ESS leaves, visible to everyone (requests CUT)
+ *   B. การจัดการทีม (team)            — 5 manager/HR/SPD tools (role-gated; swap CUT)
+ *   C. งานบุคคล (hr)                  — 8 HR-admin destinations (role-gated; comp/assets cut)
+ *   D. ตั้งค่าระบบ (system)            — 4 settings: Roles, Master Catalog, Document Review, Audit & System
  *
  * KEY BEHAVIOURS asserted here:
- *  - All 4 group triggers ALWAYS render. A group with zero visible leaves for
- *    the persona is `locked` (disabled trigger, count "—").
- *  - Single-open accordion: ONE group open at a time; clicking a trigger opens
- *    it and closes the others; clicking the open one collapses it.
+ *  - All 4 group rail tabs ALWAYS render. A group with zero visible leaves for
+ *    the persona is `locked` (disabled rail tab + .locked class — the rail has no
+ *    accordion "—" count chrome; locked semantic carried by disabled/.locked).
+ *  - Master-detail: exactly ONE group's leaves are visible at a time; the active
+ *    route drives the default selection. (Replaces the old single-open accordion's
+ *    toggle-to-collapse mechanic, which the rail/panel does not have by design.)
  *  - Leaves render as <Link>; active leaf derived from pathname (.is-active).
  *  - Persona→Role gating (PERSONA_ROLE in Sidebar.tsx):
- *      employee → workspace only.
- *      manager  → unlocks team (perf/roster/swap/probation + approvals/reports).
- *      hr_admin → unlocks team + hr + system (hradmin appears in several
- *                 system-group leaf `show` lists, e.g. Regularization Queue).
- *      hr_manager (HRIS tier) → unlocks all four groups.
+ *      employee   → workspace only.
+ *      manager    → unlocks team (roster/probation/perf + inbox·approvals/reports).
+ *      hr_admin   → unlocks team + hr + system (the `audit` leaf lists hradmin).
+ *      hr_manager → unlocks all four groups (sysadmin persona maps to hr_manager).
+ *  - Menu simplify (40→25): every pure-decoration ?section=/#tab placeholder leaf was
+ *    cut. The system group is now Roles & Permissions + Master Catalog + Document
+ *    Review + Audit & System; hr_admin unlocks it via the `audit` leaf.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -94,15 +103,29 @@ function asRoles(roles: string[]) {
   authMock.roles = roles;
 }
 
-/** Group trigger labels (TH, since default locale = th). */
+/** Group panel-title labels (TH, since default locale = th). */
 const GROUP_WORKSPACE = 'พื้นที่ทำงานของฉัน';
 const GROUP_TEAM = 'การจัดการทีม';
 const GROUP_HR = 'งานบุคคล';
 const GROUP_SYSTEM = 'ตั้งค่าระบบ';
 
-/** Open a group by clicking its trigger button. */
-function clickGroup(label: string) {
-  fireEvent.click(screen.getByRole('button', { name: new RegExp(label) }));
+/** The macro-group rail renders `role="tab"` buttons. Their accessible name is
+ *  the SHORT rail label (RAIL_SHORT in Sidebar.tsx), since the full group label
+ *  is only on `title`. Map full label → short rail label to find each tab. */
+const RAIL_SHORT_TH: Record<string, string> = {
+  [GROUP_WORKSPACE]: 'ฉัน',
+  [GROUP_TEAM]: 'ทีม',
+  [GROUP_HR]: 'บุคคล',
+  [GROUP_SYSTEM]: 'ระบบ',
+};
+
+function railTab(fullLabel: string) {
+  return screen.getByRole('tab', { name: new RegExp(RAIL_SHORT_TH[fullLabel]) });
+}
+
+/** Open/select a group by clicking its rail tab. */
+function clickGroup(fullLabel: string) {
+  fireEvent.click(railTab(fullLabel));
 }
 
 beforeEach(() => {
@@ -120,12 +143,12 @@ describe('Blueprint sidebar — group structure', () => {
     expect(screen.getByRole('complementary', { name: 'เมนูหลัก' })).toBeInTheDocument();
   });
 
-  it('always renders all 4 group triggers (workspace, team, hr, system)', () => {
+  it('always renders all 4 group rail tabs (workspace, team, hr, system)', () => {
     render(<Sidebar />);
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_TEAM) })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_HR) })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_SYSTEM) })).toBeInTheDocument();
+    expect(railTab(GROUP_WORKSPACE)).toBeInTheDocument();
+    expect(railTab(GROUP_TEAM)).toBeInTheDocument();
+    expect(railTab(GROUP_HR)).toBeInTheDocument();
+    expect(railTab(GROUP_SYSTEM)).toBeInTheDocument();
   });
 
   it('renders the static tenant line CENTRAL · BANGKOK 03', () => {
@@ -134,25 +157,29 @@ describe('Blueprint sidebar — group structure', () => {
   });
 });
 
-// ─── Locked groups: zero visible leaves → disabled trigger + "—" count ────────
+// ─── Locked groups: zero visible leaves → disabled rail tab (.locked) ─────────
 
 describe('Blueprint sidebar — locked groups for a plain employee', () => {
-  it('workspace group is unlocked (enabled trigger)', () => {
+  it('workspace group is unlocked (enabled rail tab)', () => {
     render(<Sidebar />);
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).not.toBeDisabled();
+    expect(railTab(GROUP_WORKSPACE)).not.toBeDisabled();
   });
 
-  it('team / hr / system groups are locked (disabled triggers) for an employee', () => {
+  it('team / hr / system groups are locked (disabled rail tabs) for an employee', () => {
     render(<Sidebar />);
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_TEAM) })).toBeDisabled();
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_HR) })).toBeDisabled();
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_SYSTEM) })).toBeDisabled();
+    expect(railTab(GROUP_TEAM)).toBeDisabled();
+    expect(railTab(GROUP_HR)).toBeDisabled();
+    expect(railTab(GROUP_SYSTEM)).toBeDisabled();
   });
 
-  it('locked group triggers show the "—" count placeholder', () => {
+  it('locked group rail tabs carry the .locked class', () => {
+    // SF-parity intent preserved: a group with zero leaves for the persona is
+    // VISIBLY marked locked. The old test asserted the accordion "—" count glyph;
+    // the rail/panel has no count chrome, so the same locked semantic is now
+    // carried by the .locked class (+ disabled, asserted above). Mechanic changed,
+    // behavior (locked groups are shown-but-unenterable) unchanged.
     render(<Sidebar />);
-    const teamTrigger = screen.getByRole('button', { name: new RegExp(GROUP_TEAM) });
-    expect(within(teamTrigger).getByText('—')).toBeInTheDocument();
+    expect(railTab(GROUP_TEAM)).toHaveClass('locked');
   });
 });
 
@@ -163,19 +190,20 @@ describe('Blueprint sidebar — workspace leaves (ESS, all personas)', () => {
     navigationMocks.pathname = '/th/home'; // active route lives in workspace → group open
   });
 
-  it('surfaces all 9 ESS workspace leaves', () => {
+  it('surfaces all 8 ESS workspace leaves', () => {
     render(<Sidebar />);
     [
       'หน้าหลัก',
       'โปรไฟล์ของฉัน',
-      'ลงเวลา',
+      'เวลาและการเข้างาน',
       'ใบลา',
       'สลิปเงินเดือน',
       'สวัสดิการ',
       'เอกสาร',
-      'ใบคำขอ',
       'ประกาศ',
     ].forEach((label) => expect(screen.getByText(label)).toBeInTheDocument());
+    // requests leaf was CUT (folds into Leaves + Documents); /requests stays URL-only
+    expect(screen.queryByText('ใบคำขอ')).not.toBeInTheDocument();
   });
 
   it('maps leaves to the expected app routes', () => {
@@ -213,30 +241,44 @@ describe('Blueprint sidebar — role-gated views', () => {
   it('manager unlocks the team group but not HR admin', () => {
     asRoles(['manager', 'employee']);
     render(<Sidebar />);
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_TEAM) })).not.toBeDisabled();
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_HR) })).toBeDisabled();
+    expect(railTab(GROUP_TEAM)).not.toBeDisabled();
+    expect(railTab(GROUP_HR)).toBeDisabled();
     // manager has no system-group leaf → system stays locked
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_SYSTEM) })).toBeDisabled();
+    expect(railTab(GROUP_SYSTEM)).toBeDisabled();
   });
 
-  it('manager team leaves include approvals + reports + perf with correct hrefs', () => {
+  it('manager team leaves include the merged inbox·approvals + reports + perf with correct hrefs', () => {
     asRoles(['manager', 'employee']);
     navigationMocks.pathname = '/th/quick-approve'; // open team group
     render(<Sidebar />);
-    expect(screen.getByText('อนุมัติ').closest('a')).toHaveAttribute('href', '/th/quick-approve');
+    // Req5 dedupe: the former standalone "อนุมัติ" leaf merged into the unified
+    // "กล่องงาน · อนุมัติ" inbox leaf, still resolving to /quick-approve.
+    expect(screen.getByText('กล่องงาน · อนุมัติ').closest('a')).toHaveAttribute(
+      'href',
+      '/th/quick-approve',
+    );
+    expect(screen.queryByText('อนุมัติ')).not.toBeInTheDocument();
     expect(screen.getByText('รายงาน').closest('a')).toHaveAttribute('href', '/th/reports');
     expect(screen.getByText('ผลงานทีม').closest('a')).toHaveAttribute('href', '/th/performance-form');
+    // roster repointed to the real /roster page; probation → manager-dashboard
+    expect(screen.getByText('ตารางกะ').closest('a')).toHaveAttribute('href', '/th/roster');
+    expect(screen.getByText('ทดลองงาน').closest('a')).toHaveAttribute(
+      'href',
+      '/th/manager-dashboard/probations',
+    );
+    // swap (สลับกะ) was CUT — it is a modal inside /roster, not a menu leaf
+    expect(screen.queryByText('สลับกะ')).not.toBeInTheDocument();
   });
 
   it('hr_admin unlocks workspace + team + hr + system', () => {
     asRoles(['hr_admin', 'employee']);
     render(<Sidebar />);
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).not.toBeDisabled();
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_TEAM) })).not.toBeDisabled();
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_HR) })).not.toBeDisabled();
-    // hr_admin (hradmin persona) appears in several system-group leaf show lists
-    // (e.g. Regularization Queue) → system group is unlocked too.
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_SYSTEM) })).not.toBeDisabled();
+    expect(railTab(GROUP_WORKSPACE)).not.toBeDisabled();
+    expect(railTab(GROUP_TEAM)).not.toBeDisabled();
+    expect(railTab(GROUP_HR)).not.toBeDisabled();
+    // Menu simplify (40→25): the system group's `audit` leaf (Audit & System →
+    // /admin/system) lists hradmin, so hr_admin unlocks the system group.
+    expect(railTab(GROUP_SYSTEM)).not.toBeDisabled();
   });
 
   it('hr_admin hr-group leaves expose the previously URL-only clusters', () => {
@@ -249,57 +291,62 @@ describe('Blueprint sidebar — role-gated views', () => {
     );
     expect(screen.getByText('จ้างงาน').closest('a')).toHaveAttribute('href', '/th/admin/hire');
     expect(screen.getByText('สรรหา').closest('a')).toHaveAttribute('href', '/th/recruiting');
-    expect(screen.getByText('ค่าตอบแทน').closest('a')).toHaveAttribute('href', '/th/payroll');
+    // benefits-admin merges welfare+claims → single /admin/benefits leaf
+    expect(screen.getByText('จัดการสวัสดิการ').closest('a')).toHaveAttribute(
+      'href',
+      '/th/admin/benefits',
+    );
+    // comp (ค่าตอบแทน), welfare (แผนสวัสดิการ), transfer (โยกย้าย) leaves were CUT
+    expect(screen.queryByText('ค่าตอบแทน')).not.toBeInTheDocument();
+    expect(screen.queryByText('แผนสวัสดิการ')).not.toBeInTheDocument();
+    expect(screen.queryByText('โยกย้าย')).not.toBeInTheDocument();
   });
 
   it('hr_manager (HRIS tier) unlocks the system group', () => {
     asRoles(['hr_manager', 'employee']);
     render(<Sidebar />);
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_SYSTEM) })).not.toBeDisabled();
+    expect(railTab(GROUP_SYSTEM)).not.toBeDisabled();
   });
 });
 
-// ─── Single-open accordion behaviour ──────────────────────────────────────────
+// ─── Master-detail rail selection (single visible panel) ──────────────────────
+// Replaces the former "single-open accordion" block. The SF-parity INTENT that
+// block protected — exactly ONE group's leaves are visible at a time, and the
+// active route drives which group is shown on first paint — is fully preserved
+// below. What's dropped is the accordion-only "click the open group to collapse
+// it to zero-open" mechanic: the rail/panel is master-detail (a panel is always
+// shown for the selected group), so toggle-to-empty no longer exists by design.
+// No real navigational behavior was removed, only obsolete accordion chrome.
 
-describe('Blueprint sidebar — single-open accordion', () => {
+describe('Blueprint sidebar — master-detail rail selection', () => {
   beforeEach(() => {
-    asRoles(['hr_manager', 'employee']); // unlock every group so they can open
+    asRoles(['hr_manager', 'employee']); // unlock every group so they can be selected
     navigationMocks.pathname = '/th/home';
   });
 
-  it('the active route group is open on first render', () => {
+  it('the active route group is selected on first render (panel shows its leaves)', () => {
     render(<Sidebar />);
-    // home lives in workspace → workspace trigger is expanded
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    );
+    // home lives in workspace → workspace rail tab is the selected one
+    expect(railTab(GROUP_WORKSPACE)).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText('หน้าหลัก')).toBeInTheDocument();
   });
 
-  it('opening a second group collapses the first (only one open at a time)', () => {
+  it('selecting another group swaps the panel (only one group visible at a time)', () => {
     render(<Sidebar />);
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    );
+    expect(railTab(GROUP_WORKSPACE)).toHaveAttribute('aria-selected', 'true');
     clickGroup(GROUP_HR);
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_HR) })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    );
-    expect(screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    );
+    expect(railTab(GROUP_HR)).toHaveAttribute('aria-selected', 'true');
+    expect(railTab(GROUP_WORKSPACE)).toHaveAttribute('aria-selected', 'false');
+    // workspace leaves are no longer in the panel; hr leaves are
+    expect(screen.queryByText('หน้าหลัก')).not.toBeInTheDocument();
+    expect(screen.getByText('ทะเบียนพนักงาน')).toBeInTheDocument();
   });
 
-  it('clicking the open group again collapses it (toggle to null)', () => {
+  it('selecting the team group reveals the merged inbox·approvals leaf', () => {
     render(<Sidebar />);
-    const workspace = screen.getByRole('button', { name: new RegExp(GROUP_WORKSPACE) });
-    expect(workspace).toHaveAttribute('aria-expanded', 'true');
-    clickGroup(GROUP_WORKSPACE);
-    expect(workspace).toHaveAttribute('aria-expanded', 'false');
+    clickGroup(GROUP_TEAM);
+    expect(railTab(GROUP_TEAM)).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('กล่องงาน · อนุมัติ')).toBeInTheDocument();
   });
 });
 

@@ -1,12 +1,14 @@
 'use client';
 
-// TodoBell — Topbar to-do popover. Mirrors NotificationBell's interaction
+// TodoBell — Topbar inbox popover. Mirrors NotificationBell's interaction
 // model (button + danger count badge + click-outside scrim + popover dialog
 // + footer link). Each row carries a checkbox to mark a task done; marking
 // done decrements the badge (local state only — UI mockup phase, no backend).
+// Req6: trigger + empty-state use the Mail (envelope) glyph so the topbar reads
+// as inbox-then-bell, not two overlapping bells.
 
 import { useState } from 'react';
-import { ListTodo, CheckCheck, Check } from 'lucide-react';
+import { Mail, CheckCheck, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -45,12 +47,12 @@ export function TodoBell() {
       <button
         type="button"
         className="humi-icon-btn relative"
-        aria-label={isTh ? 'งานที่ต้องทำ' : 'To-do'}
+        aria-label={isTh ? 'กล่องข้อความเข้า' : 'Inbox'}
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => setOpen((o) => !o)}
       >
-        <ListTodo size={18} aria-hidden />
+        <Mail size={18} aria-hidden />
         {pendingCount > 0 && (
           <span
             className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-xs font-bold leading-none text-white"
@@ -115,7 +117,7 @@ export function TodoBell() {
             <div style={{ overflowY: 'auto', flex: 1 }}>
               {todos.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-ink-muted">
-                  <ListTodo size={28} strokeWidth={1.5} aria-hidden />
+                  <Mail size={28} strokeWidth={1.5} aria-hidden />
                   <p className="mt-2 text-sm">{isTh ? 'ไม่มีงานที่ต้องทำ' : 'No tasks'}</p>
                 </div>
               ) : (

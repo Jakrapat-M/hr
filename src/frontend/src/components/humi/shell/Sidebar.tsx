@@ -102,13 +102,13 @@ const MODULES: ModuleGroup[] = [
     leaves: [
       { id: 'home', label: 'Home', labelTh: 'หน้าหลัก', href: '/home', show: ALL6 },
       { id: 'profile', label: 'My Profile', labelTh: 'โปรไฟล์ของฉัน', href: '/profile/me', show: ALL6 },
-      { id: 'time', label: 'Time & Attendance', labelTh: 'ลงเวลา', href: '/time', show: ALL6 },
+      { id: 'time', label: 'Time & Attendance', labelTh: 'เวลาและการเข้างาน', href: '/time', show: ALL6 }, // labelTh changed ลงเวลา → เวลาและการเข้างาน (distinguish from Team "ตารางกะ")
       { id: 'leaves', label: 'Leaves', labelTh: 'ใบลา', href: '/timeoff', badge: '3', show: ALL6 },
       { id: 'payslips', label: 'Payslips', labelTh: 'สลิปเงินเดือน', href: '/payslip', show: ALL6 },
       { id: 'benefits', label: 'Benefits', labelTh: 'สวัสดิการ', href: '__BENEFITS__', show: ALL6 },
       { id: 'documents', label: 'Documents', labelTh: 'เอกสาร', href: '/me/documents', show: ALL6 },
-      { id: 'requests', label: 'Requests', labelTh: 'ใบคำขอ', href: '/requests', show: ALL6 },
       { id: 'announce', label: 'Announcements', labelTh: 'ประกาศ', href: '/announcements', show: ALL6 },
+      // CUT: requests (/requests) — folds into leaves/documents. Page stays URL-only.
     ],
   },
   {
@@ -117,17 +117,12 @@ const MODULES: ModuleGroup[] = [
     labelTh: 'การจัดการทีม',
     icon: Network,
     leaves: [
-      // PLACEHOLDER: inbox → unified /quick-approve inbox
-      { id: 'inbox', label: 'Team Inbox', labelTh: 'กล่องงาน', href: '/quick-approve', badge: '12', show: ['manager', 'hradmin', 'hris', 'spd', 'sysadmin'] },
-      // PLACEHOLDER: roster → manager-dashboard (no roster screen in this app)
-      { id: 'roster', label: 'Roster & Shifts', labelTh: 'ตารางกะ', href: '/manager-dashboard', show: ['manager', 'hradmin', 'sysadmin'] },
-      // PLACEHOLDER: swap → manager-dashboard
-      { id: 'swap', label: 'Shift Swap', labelTh: 'สลับกะ', href: '/manager-dashboard', show: ['manager', 'hradmin', 'sysadmin'] },
-      { id: 'approvals', label: 'Approvals', labelTh: 'อนุมัติ', href: '/quick-approve', show: ['manager', 'hradmin', 'hris', 'spd', 'sysadmin'] },
+      { id: 'approvals', label: 'Team Inbox · Approvals', labelTh: 'กล่องงาน · อนุมัติ', href: '/quick-approve', badge: '12', show: ['manager', 'hradmin', 'hris', 'spd', 'sysadmin'] }, // merged inbox+approvals (unified-approval-inbox rule)
+      { id: 'roster', label: 'Roster & Shifts', labelTh: 'ตารางกะ', href: '/roster', show: ['manager', 'hradmin', 'sysadmin'] }, // repointed → real /roster page
       { id: 'perf', label: 'Team Performance', labelTh: 'ผลงานทีม', href: '/performance-form', show: ['manager', 'hradmin', 'sysadmin'] },
-      // PLACEHOLDER: probation → manager-dashboard
-      { id: 'probation', label: 'Probation Reviews', labelTh: 'ทดลองงาน', href: '/manager-dashboard', show: ['manager', 'hradmin', 'sysadmin'] },
+      { id: 'probation', label: 'Probation Reviews', labelTh: 'ทดลองงาน', href: '/manager-dashboard/probations', show: ['manager', 'hradmin', 'sysadmin'] },
       { id: 'reports', label: 'Reports', labelTh: 'รายงาน', href: '/reports', show: ['manager', 'hradmin', 'hris', 'spd', 'sysadmin'] },
+      // CUT: swap (Shift Swap) — it is a modal inside /roster (?panel=swap), not a menu item.
     ],
   },
   {
@@ -138,28 +133,13 @@ const MODULES: ModuleGroup[] = [
     leaves: [
       { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris', 'spd', 'sysadmin'] },
       { id: 'orgchart', label: 'Org Chart', labelTh: 'ผังองค์กร', href: '/org-chart', show: ['hradmin', 'hris', 'spd', 'sysadmin'] },
-      { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'sysadmin'] },
-      // PLACEHOLDER: lifecycle/onboarding → admin/hire
-      { id: 'lifecycle', label: 'Onboarding', labelTh: 'เริ่มงาน · 90 วันแรก', href: '/admin/hire', show: ['hradmin', 'sysadmin'] },
-      // PLACEHOLDER: confirmation letter → admin/documents
-      { id: 'confirm', label: 'Confirmation Letter', labelTh: 'หนังสือบรรจุ', href: '/admin/documents', show: ['hradmin', 'sysadmin'] },
-      // PLACEHOLDER: transfer → admin/change-requests
-      { id: 'transfer', label: 'Transfer', labelTh: 'โยกย้าย', href: '/admin/change-requests', show: ['hradmin', 'sysadmin'] },
-      // PLACEHOLDER: offboarding → resignation
-      { id: 'offboard', label: 'Offboarding', labelTh: 'ลาออก', href: '/resignation', show: ['hradmin', 'sysadmin'] },
-      // PLACEHOLDER: compensation → payroll
-      { id: 'comp', label: 'Compensation', labelTh: 'ค่าตอบแทน', href: '/payroll', show: ['hradmin', 'hris', 'spd', 'sysadmin'] },
-      // PLACEHOLDER: welfare plans → admin/benefits
-      { id: 'welfare', label: 'Welfare Plans', labelTh: 'แผนสวัสดิการ', href: '/admin/benefits', show: ['hradmin', 'hris', 'sysadmin'] },
-      // PLACEHOLDER: benefit claims → admin/benefits
-      { id: 'claims', label: 'Benefit Claims', labelTh: 'เบิกสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'spd', 'sysadmin'] },
-      // PLACEHOLDER: assets → admin/foundation
-      { id: 'assets', label: 'Assets', labelTh: 'ทรัพย์สิน', href: '/admin/foundation', show: ['hradmin', 'sysadmin'] },
+      { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'sysadmin'] }, // merges lifecycle/onboarding
       { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'sysadmin'] },
-      // PLACEHOLDER: attendance heatmap → reports
-      { id: 'attendance', label: 'Attendance Heatmap', labelTh: 'ฮีตแมปการเข้างาน', href: '/reports', show: ['hradmin', 'hris', 'sysadmin'] },
-      // PLACEHOLDER: audit log → admin/system
-      { id: 'audit', label: 'Audit Log', labelTh: 'บันทึกตรวจสอบ', href: '/admin/system', show: ['hradmin', 'hris', 'spd', 'sysadmin'] },
+      { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'hris', 'spd', 'sysadmin'] }, // merges welfare+claims
+      { id: 'hr-docs', label: 'HR Documents', labelTh: 'เอกสารบุคคล', href: '/admin/documents', show: ['hradmin', 'sysadmin'] }, // merges confirm
+      { id: 'changes', label: 'Change Requests', labelTh: 'คำขอเปลี่ยนแปลง', href: '/admin/change-requests', show: ['hradmin', 'hris', 'sysadmin'] }, // merges transfer+regular
+      { id: 'offboard', label: 'Offboarding', labelTh: 'ลาออก', href: '/resignation', show: ['hradmin', 'sysadmin'] },
+      // CUT/fold: comp→(Payroll, reached elsewhere), assets→Catalog (System), attendance→Reports, audit→System.
     ],
   },
   {
@@ -168,27 +148,14 @@ const MODULES: ModuleGroup[] = [
     labelTh: 'ตั้งค่าระบบ',
     icon: Settings,
     leaves: [
-      // PLACEHOLDER: policy builder → integrations
-      { id: 'policy', label: 'Policy Builder', labelTh: 'ตั้งค่านโยบาย', href: '/integrations', show: ['hris', 'sysadmin'] },
-      // PLACEHOLDER: master catalog → admin/foundation
-      { id: 'catalog', label: 'Master Catalog', labelTh: 'ฐานข้อมูลกลาง', href: '/admin/foundation', show: ['hris', 'sysadmin'] },
-      // PLACEHOLDER: regularization queue → admin/change-requests
-      { id: 'regular', label: 'Regularization Queue', labelTh: 'คิวตรวจเวลา', href: '/admin/change-requests', show: ['hradmin', 'hris', 'sysadmin'] },
-      // PLACEHOLDER: document review → admin/documents
-      { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/admin/documents', show: ['spd', 'sysadmin'] },
-      // PLACEHOLDER: roles & permissions → permissions
       { id: 'roles', label: 'Roles & Permissions', labelTh: 'สิทธิ์ตามบทบาท', href: '/permissions', show: ['sysadmin'] },
-      // PLACEHOLDER: approval workflows → integrations
-      { id: 'workflows', label: 'Approval Workflows', labelTh: 'ขั้นตอนอนุมัติ', href: '/integrations', show: ['sysadmin'] },
-      // PLACEHOLDER: notifications → integrations
-      { id: 'notifs', label: 'Notifications', labelTh: 'แจ้งเตือน', href: '/integrations', show: ['sysadmin'] },
-      { id: 'integrations', label: 'Integrations', labelTh: 'เชื่อมต่อระบบ', href: '/integrations', show: ['sysadmin'] },
-      // PLACEHOLDER: branding → integrations
-      { id: 'branding', label: 'Branding', labelTh: 'ธีม', href: '/integrations', show: ['sysadmin'] },
-      // PLACEHOLDER: security & SSO → permissions
-      { id: 'security', label: 'Security & SSO', labelTh: 'ความปลอดภัย', href: '/permissions', show: ['sysadmin'] },
-      // PLACEHOLDER: impersonation log → admin/system
-      { id: 'impers', label: 'Impersonation Log', labelTh: 'บันทึก impersonate', href: '/admin/system', show: ['sysadmin'] },
+      { id: 'catalog', label: 'Master Catalog', labelTh: 'ฐานข้อมูลกลาง', href: '/admin/foundation', show: ['hris', 'sysadmin'] }, // merges assets
+      // docreview shares /admin/documents with hr-docs (HR group) — documented Principle-1
+      // exception: no distinct doc-review-queue route exists; same screen, two persona contexts.
+      { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/admin/documents', show: ['spd', 'sysadmin'] },
+      { id: 'audit', label: 'Audit & System', labelTh: 'บันทึก · ระบบ', href: '/admin/system', show: ['hradmin', 'hris', 'spd', 'sysadmin'] }, // merges impers
+      // CUT ENTIRELY: Integrations, Policy Builder, Approval Workflows, Branding, Notifications-as-integration.
+      // Notifications has a real page (/admin/system/notifications) but is left reachable via /admin/system.
     ],
   },
 ];
@@ -244,10 +211,22 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
   const currentLocale = pathname.match(/^\/(th|en)/)?.[1] ?? 'th';
   const isTh = currentLocale === 'th';
 
-  // Resolve the bare href for a leaf (benefits uses the locale-aware helper,
-  // then we strip the locale back off for a uniform bare-path comparison).
-  const leafBareHref = (leaf: Leaf): string =>
-    leaf.href === '__BENEFITS__' ? stripLocale(benefitsHubRoute(currentLocale)) : leaf.href;
+  // Resolve the bare path for a leaf — locale stripped AND query/hash stripped so
+  // active-state matching and the dedupe gate compare clean pathnames. Several
+  // leaves carry ?section= / #tab deep-links (Req5 dedupe) that must not leak into
+  // the bare-path comparison. The full href (with query/hash) is built in render.
+  const leafBareHref = (leaf: Leaf): string => {
+    const raw =
+      leaf.href === '__BENEFITS__' ? stripLocale(benefitsHubRoute(currentLocale)) : leaf.href;
+    return raw.replace(/[?#].*$/, '');
+  };
+
+  // The ?section= / #tab deep-link suffix (if any) preserved for the actual <Link>.
+  const leafSuffix = (leaf: Leaf): string => {
+    if (leaf.href === '__BENEFITS__') return '';
+    const m = leaf.href.match(/[?#].*$/);
+    return m ? m[0] : '';
+  };
 
   const isActive = (bareHref: string): boolean =>
     barePath === bareHref || barePath.startsWith(bareHref + '/');
@@ -339,7 +318,7 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
         >
           {shownGroup?.shownLeaves.map((l) => {
             const bareHref = leafBareHref(l);
-            const href = `/${currentLocale}${bareHref}`;
+            const href = `/${currentLocale}${bareHref}${leafSuffix(l)}`;
             const active = isActive(bareHref);
             return (
               <Link
@@ -386,13 +365,19 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
 // or the feature is reached from a parent screen. Each line follows
 // `// SIDEBAR_LEGACY: <route> <reason ≥ 20 chars>` for the design-gate parser.
 //
-// NOTE (2026-05-25 Blueprint port): the sidebar IA is now the Blueprint MODULES
-// tree (4 groups, see MODULES above). The Blueprint leaves surface ESS, team,
-// HR-admin and system destinations directly; routes below are reached from a
-// parent page / are alt-paths and so stay URL-only.
+// NOTE (2026-05-25 menu simplify): the sidebar IA is the simplified 25-leaf MODULES
+// tree (4 groups, see MODULES above; per .omc/plans/sidebar-menu-simplify.md). The
+// menu was cut 40 → 25 — placeholder/deep-link leaves were REMOVED, not repointed.
+// Routes below are reached from a parent page, are alt-paths, or had their menu leaf
+// CUT, and so stay URL-only.
 //
 // Auth (1)
 // SIDEBAR_LEGACY: /login pre-auth gate — never shown to authenticated users in chrome
+//
+// Menu-simplify CUT leaves (3) — real pages whose sidebar leaf was removed 40→25
+// SIDEBAR_LEGACY: /requests folded into Leaves + Documents workspace entries; page stays URL-reachable
+// SIDEBAR_LEGACY: /integrations connect-via-web feature cut from System group; no real connect surface in mockup scope
+// SIDEBAR_LEGACY: /payroll compensation reached from the Payroll module, not a top-level HR-admin leaf
 //
 // Profile / ESS canonical alt-paths (4) — superseded by /profile/me sidebar entry
 // SIDEBAR_LEGACY: /employees/me alt-path superseded by canonical /profile/me sidebar entry
@@ -400,10 +385,10 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
 // SIDEBAR_LEGACY: /ess/profile/edit reachable from /profile/me Edit button (BRD #166)
 // SIDEBAR_LEGACY: /profile alt-path superseded by canonical /profile/me sidebar entry
 //
-// ESS workflow family (3) — reached from "ใบคำขอ" + "ใบลา" sidebar entries
-// SIDEBAR_LEGACY: /ess/workflows reachable from /requests "ใบคำขอ" sidebar entry
+// ESS workflow family (3) — reached from "ใบลา" + Documents sidebar entries
+// SIDEBAR_LEGACY: /ess/workflows reachable from the workspace Leaves + Documents entries (requests funnel)
 // SIDEBAR_LEGACY: /overtime reachable from /timeoff OT request flow (sub-feature of timeoff)
-// SIDEBAR_LEGACY: /workflows alt-path superseded by /requests in the workspace group
+// SIDEBAR_LEGACY: /workflows alt-path superseded by the workspace Leaves + Documents entries
 //
 // People / performance alternates (5) — reached from team-performance + profile
 // SIDEBAR_LEGACY: /goals reached from /performance-form goals shortcut (performance suite)
@@ -434,5 +419,7 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
 // Admin-tier scaffolds (3)
 // SIDEBAR_LEGACY: /locations admin-tier scaffold from /admin landing — geographic master data
 // SIDEBAR_LEGACY: /screening admin-tier scaffold from /recruiting workflow — pre-hire checks
-// SIDEBAR_LEGACY: /resignation reached from /profile/me Resignation section + HR offboarding
+//
+// PRUNED 2026-05-25 (Req5 #8): /resignation is now surfaced directly as the HR-group
+// "Offboarding · ลาออก" leaf, so its URL-only annotation is stale and removed.
 // ════════════════════════════════════════════════════════════════════════════

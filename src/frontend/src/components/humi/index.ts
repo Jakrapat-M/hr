@@ -39,8 +39,6 @@ export type { EmptyStateProps } from './EmptyState';
 
 export { NotificationBell } from './NotificationBell';
 
-export { ActingBadge } from './ActingBadge';
-
 export { Textarea } from './Textarea';
 export type { TextareaProps } from './Textarea';
 

@@ -3086,6 +3086,36 @@
       "rejectAll": "ปฏิเสธทั้งหมด",
       "clearSelection": "ยกเลิกการเลือก"
     },
+    "simple": {
+      "breadcrumb": "HUMI · การจัดการทีม · อนุมัติ",
+      "title": "คิวอนุมัติ",
+      "subtitlePending": "{n} รายการรอการตัดสินใจ",
+      "filter": {
+        "all": "ทั้งหมด",
+        "pending": "รออนุมัติ",
+        "approved": "อนุมัติแล้ว",
+        "rejected": "ปฏิเสธแล้ว"
+      },
+      "columns": {
+        "ref": "เลขที่",
+        "employee": "พนักงาน",
+        "type": "ประเภท",
+        "filed": "วันที่ส่ง",
+        "detail": "รายละเอียด",
+        "status": "สถานะ"
+      },
+      "actions": {
+        "approve": "อนุมัติ",
+        "reject": "ปฏิเสธ",
+        "view": "ดูรายละเอียด"
+      },
+      "status": {
+        "pending": "รออนุมัติ",
+        "review": "กำลังตรวจสอบ",
+        "approved": "อนุมัติแล้ว",
+        "rejected": "ปฏิเสธแล้ว"
+      }
+    },
     "slideOver": {
       "title": "รายละเอียดคำขอ",
       "close": "ปิด",
@@ -3621,11 +3651,7 @@
     "openFeed": "เปิดฟีด",
     "pinnedTag": "ปักหมุด",
     "replyCta": "ตอบกลับ",
-    "calendarEyebrow": "เมษายน 2569",
-    "calendarTitle": "บนปฏิทิน",
-    "weekGreetCta": "ส่งข้อความอวยพร",
-    "prevMonth": "เดือนก่อน",
-    "nextMonth": "เดือนถัดไป"
+    "weekGreetCta": "ส่งข้อความอวยพร"
   },
   "humiProfile": {
     "subtitle": "รหัสพนักงาน",
@@ -3731,6 +3757,17 @@
       "th": "ภาษาไทย",
       "en": "English",
       "aria": "เลือกภาษา"
+    },
+    "ribbon": {
+      "actingAs": "กำลังดูในชื่อ",
+      "switchBack": "กลับสู่ผู้ดูแลระบบ",
+      "scope": "สิทธิ์"
+    },
+    "persona": {
+      "eyebrow": "RBAC · 4 ระดับ",
+      "title": "สลับบทบาท",
+      "footer": "บังคับใช้ RBAC — เห็นเฉพาะสิทธิ์ของแต่ละบทบาท",
+      "active": "ใช้อยู่"
     }
   },
   "commandPalette": {
@@ -4731,10 +4768,6 @@
     "noResults": "ไม่พบรายการที่ตรงกัน",
     "noResultsDesc": "ลองเปลี่ยนตัวกรอง"
   },
-  "acting_badge": {
-    "actingAs": "สวมบทบาท",
-    "clickToExit": "คลิกเพื่อออก"
-  },
   "reject_return_drawer": {
     "titleReject": "ปฏิเสธคำขอ",
     "titleReturn": "ส่งคืนคำขอ",
@@ -4850,6 +4883,47 @@
       "movement": "เพิ่ม / ลด",
       "cost": "ค่าใช้จ่ายโดยประมาณ",
       "privilege": "รายการตรวจสอบ"
+    }
+  },
+  "roster": {
+    "title": "ตารางกะและการจัดกะ",
+    "coverage": "ความครอบคลุม",
+    "shiftEditor": {
+      "title": "แก้ไขกะ"
+    },
+    "swap": {
+      "title": "ขอสลับกะ"
+    },
+    "bulkAssign": {
+      "title": "กำหนดกะแบบกลุ่ม"
+    },
+    "type": {
+      "manager": "กะหัวหน้า",
+      "partTime": "พาร์ทไทม์",
+      "night": "กะกลางคืน",
+      "regular": "กะปกติ"
+    },
+    "cov": {
+      "ok": "พอเพียง",
+      "gap": "ขาดคน",
+      "over": "เกินจำเป็น",
+      "off": "ปิดกะ"
+    },
+    "actions": {
+      "save": "บันทึก",
+      "cancel": "ยกเลิก",
+      "apply": "นำไปใช้",
+      "swap": "ขอสลับกะ",
+      "bulkAssign": "กำหนดกะแบบกลุ่ม"
+    },
+    "breadcrumb": "HUMI • บริหารทีม • ตารางกะ",
+    "subtitle": "คลิกที่กะเพื่อแก้ไขเวลา",
+    "hourlySchedule": "ตารางรายชั่วโมง",
+    "footerHint": "คลิกที่กะเพื่อแก้ไข",
+    "toolbar": {
+      "allDepartments": "ทุกแผนก",
+      "week": "สัปดาห์ 19–25 พ.ค.",
+      "export": "ส่งออก"
     }
   }
 }

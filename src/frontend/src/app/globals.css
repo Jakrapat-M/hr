@@ -60,6 +60,8 @@
   --color-danger-soft:    #FFEDD5;
   --color-danger-tint:    #FFEDD5;  /* alias of danger-soft for legacy bg-danger-tint usage — TODO: refactor 28 files to bg-danger-soft and remove this alias */
   --color-danger-ink:     #9A3412;  /* readable ink on pumpkin-soft */
+  --imp-bg:               #C2410C;  /* impersonation band — burnt orange (orange-700), distinct from pumpkin danger */
+  --imp-fg:               #FFF1E0;  /* cream text on the impersonation band */
   --color-info:           #5B6CE0;  /* indigo */
   --color-info-soft:      #E1E4FB;
 
@@ -1172,6 +1174,7 @@ html { font-size: 17.5px; }
    definition already lives at globals.css:307). */
 .humi-avatar--sage   { background: linear-gradient(135deg, #9BB5A0, #D6EEEC); color: var(--color-ink); }
 .humi-avatar--teal   { background: linear-gradient(135deg, #1FA8A0, #9BB5A0); color: #fff; }
+.humi-avatar--coral  { background: linear-gradient(135deg, #E08864, #F4E4B8); color: var(--color-ink); }
 .humi-avatar--butter { background: linear-gradient(135deg, #E8C46B, #F4E4B8); color: var(--color-ink); }
 .humi-avatar--ink    { background: linear-gradient(135deg, #243447, #5A6A7E); color: #fff; }
 
