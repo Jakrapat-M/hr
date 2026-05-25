@@ -20,6 +20,7 @@ import {
 import { useLeaveApprovals } from '@/stores/leave-approvals';
 import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useProbationApprovals } from '@/stores/probation-approvals';
+import { useTransferApprovals } from '@/stores/transfer-approvals';
 
 // ── Actor (caller-facing) ─────────────────────────────────────────────────────
 // Call sites pass one neutral actor shape; each adapter maps it to the store's
@@ -40,10 +41,11 @@ export interface ApprovalAdapter<Record_ = unknown> {
   reject: (id: string, actor: ApprovalActor, reason: string) => void | Promise<void>;
   /**
    * Idempotent seed hook. Orchestrated EXCLUSIVELY by ensureDemoSeed() (single
-   * seed authority, plan R1) — NOT called on quick-approve mount. PR-1a leaves
-   * the bodies as no-ops; PR-1b wires the reconciled fixtures through here.
+   * seed authority, plan R1) — NOT called on quick-approve mount. Receives the
+   * canonical queue rows for this RequestType (APPROVAL_SEED_BY_TYPE) and writes
+   * them into the source store via init-overwrite-empties.
    */
-  seed: (fixtures?: unknown[]) => void;
+  seed: (fixtures?: PendingRequest[]) => void;
   labels: { th: string; en: string };
 }
 
@@ -157,9 +159,7 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
       useLeaveApprovals.getState().approve(id, { id: actor.id ?? '', name: actor.name }),
     reject: (id, actor, reason) =>
       useLeaveApprovals.getState().reject(id, { id: actor.id ?? '', name: actor.name }, reason),
-    seed: () => {
-      // PR-1b: orchestrated by ensureDemoSeed() — single seed authority (R1).
-    },
+    seed: (fixtures = []) => useLeaveApprovals.getState().seedFromQueue(fixtures),
     labels: { th: 'ลา', en: 'Leave' },
   },
 
@@ -175,7 +175,9 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
         .getState()
         .reject(id, { id: actor.id ?? '', name: actor.name }, `OT: ${reason}`),
     seed: () => {
-      // PR-1b: orchestrated by ensureDemoSeed() — single seed authority (R1).
+      // No-op: overtime shares the leave-approvals store, which has a single
+      // init-overwrite-empties guard. ensureDemoSeed() seeds leave+overtime rows
+      // TOGETHER via the `leave` adapter to avoid the guard skipping the 2nd call.
     },
     labels: { th: 'โอที', en: 'Overtime' },
   },
@@ -187,9 +189,7 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     approve: (id, actor) => useBenefitClaimsStore.getState().managerApprove(id, actor.name),
     reject: (id, actor, reason) =>
       useBenefitClaimsStore.getState().managerSendBack(id, actor.name, reason),
-    seed: () => {
-      // PR-1b: orchestrated by ensureDemoSeed() — single seed authority (R1).
-    },
+    seed: (fixtures = []) => useBenefitClaimsStore.getState().seedQueueClaims(fixtures),
     labels: { th: 'เบิก', en: 'Claim' },
   },
 
@@ -202,14 +202,13 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     toQueueItem: (record) =>
       genericToQueueItem('transfer', record as { id: string; submittedAt?: string }),
     approve: (_id, _actor) => {
-      // no-throw stub — terminal visual state lands in the PR-1c slice.
+      // no-throw stub — approve/reject WIRING lands in PR-1c via markApproved/
+      // markRejected on the transfer-approvals slice.
     },
     reject: (_id, _actor, _reason) => {
-      // no-throw stub — terminal visual state lands in the PR-1c slice.
+      // no-throw stub — see above.
     },
-    seed: () => {
-      // PR-1b: orchestrated by ensureDemoSeed() — single seed authority (R1).
-    },
+    seed: (fixtures = []) => useTransferApprovals.getState().seedFromQueue(fixtures),
     labels: { th: 'ย้าย', en: 'Transfer' },
   },
 
@@ -227,9 +226,7 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
       useWorkflowApprovals
         .getState()
         .reject(id, { role: (actor.role as never) ?? ('spd' as never), name: actor.name }, reason),
-    seed: () => {
-      // PR-1b: orchestrated by ensureDemoSeed() — single seed authority (R1).
-    },
+    seed: (fixtures = []) => useWorkflowApprovals.getState().seedFromQueue(fixtures),
     labels: { th: 'เปลี่ยนข้อมูล', en: 'Change' },
   },
 
@@ -241,8 +238,97 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     reject: (id, actor, reason) =>
       useProbationApprovals.getState().rejectEvaluation(id, { name: actor.name }, reason),
     seed: () => {
-      // PR-1b: orchestrated by ensureDemoSeed() — single seed authority (R1).
+      // No-op: the 20 canonical queue rows contain ZERO probation rows, so there
+      // is nothing to seed here. probation-approvals keeps its own empty init;
+      // the manager queue surfaces probation via the existing use-probation cases
+      // on the legacy page, not through the seeded unified inbox.
     },
     labels: { th: 'ทดลองงาน', en: 'Probation' },
   },
 };
+
+// ── selectPendingApprovals — fan-IN from the seeded stores → queue view ─────────
+// The live inbox derives from this selector instead of the static
+// MOCK_PENDING_REQUESTS array (plan PR-1b). Each seeded source record carries a
+// `queueSnapshot` (the canonical PendingRequest) so the rendered row is identical;
+// the store's own status enum drives the collapse.
+
+/** Collapsed 3-state status for the unified inbox's filter tabs (AC-1b.1). */
+export type QueueStatus = 'pending' | 'approved' | 'rejected';
+
+export interface QueueApproval {
+  /** Canonical display row (verbatim from the seed). */
+  row: PendingRequest;
+  /** Collapsed status — pending_spd/pending_hr/pending_manager(_approval) → pending. */
+  status: QueueStatus;
+}
+
+/**
+ * Collapse any store status enum to the 3-state queue status. Every pending_*
+ * variant (pending_spd / pending_hr / pending_manager / pending_manager_approval)
+ * folds to `pending`; approved/rejected pass through; anything else (e.g.
+ * send_back) is treated as still-pending so the row stays actionable (AC-1b.1).
+ */
+export function collapseQueueStatus(raw: string | undefined): QueueStatus {
+  if (raw === 'approved') return 'approved';
+  if (raw === 'rejected') return 'rejected';
+  return 'pending';
+}
+
+/**
+ * Fan IN from the seeded source stores into the queue's PendingRequest view.
+ * Pure read — pass the store states in (caller subscribes via hooks/getState) so
+ * this stays testable and SSR-safe. Returns the canonical 20 rows (or fewer if a
+ * store was cleared), each tagged with its collapsed status.
+ */
+export function selectPendingApprovals(input: {
+  leave: { id: string; status: string; queueSnapshot?: PendingRequest }[];
+  workflow: { id: string; status: string; queueSnapshot?: PendingRequest }[];
+  claims: { id: string; status: string; queueSnapshot?: PendingRequest }[];
+  transfers: { id: string; terminalStatus?: QueueStatus; snapshot: PendingRequest }[];
+}): QueueApproval[] {
+  const out: QueueApproval[] = [];
+
+  // leave + overtime both live in the leave store; queueSnapshot.type distinguishes.
+  for (const r of input.leave) {
+    if (r.queueSnapshot) out.push({ row: r.queueSnapshot, status: collapseQueueStatus(r.status) });
+  }
+  // change_request lives in the workflow store; only queueSnapshot rows are queue rows.
+  for (const r of input.workflow) {
+    if (r.queueSnapshot) out.push({ row: r.queueSnapshot, status: collapseQueueStatus(r.status) });
+  }
+  // claim rows are the benefit-claims records carrying a queueSnapshot.
+  for (const r of input.claims) {
+    if (r.queueSnapshot) out.push({ row: r.queueSnapshot, status: collapseQueueStatus(r.status) });
+  }
+  // transfer rows come from the dedicated terminal-marker slice (R2).
+  for (const e of input.transfers) {
+    out.push({ row: e.snapshot, status: e.terminalStatus ?? 'pending' });
+  }
+
+  // Stable order by submittedAt desc, then id, so the inbox renders deterministically.
+  out.sort((a, b) => {
+    const t = new Date(b.row.submittedAt).getTime() - new Date(a.row.submittedAt).getTime();
+    return t !== 0 ? t : a.row.id.localeCompare(b.row.id);
+  });
+  return out;
+}
+
+/** Reactive hook — the live inbox subscribes to all four source stores. */
+export function useSelectPendingApprovals(): QueueApproval[] {
+  const leave = useLeaveApprovals((s) => s.requests);
+  const workflow = useWorkflowApprovals((s) => s.requests);
+  const claims = useBenefitClaimsStore((s) => s.claims);
+  const transfers = useTransferApprovals((s) => s.entries);
+  return selectPendingApprovals({ leave, workflow, claims, transfers });
+}
+
+/** Non-reactive read (getState) — for one-shot lookups (e.g. detail route). */
+export function getPendingApprovals(): QueueApproval[] {
+  return selectPendingApprovals({
+    leave: useLeaveApprovals.getState().requests,
+    workflow: useWorkflowApprovals.getState().requests,
+    claims: useBenefitClaimsStore.getState().claims,
+    transfers: useTransferApprovals.getState().entries,
+  });
+}

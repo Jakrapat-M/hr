@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { HumiApprovalStep, RequestStatus } from '@/lib/humi-mock-data';
+import type { PendingRequest } from '@/lib/quick-approve-api';
 
 export type BenefitClaimStatus =
   | 'pending_manager_approval'   // STA-28: manager must approve before SPD
@@ -73,6 +74,13 @@ export interface BenefitClaimRequest {
   originalRemainingAmount?: number;
   version: number;
   previousVersions: Array<Pick<BenefitClaimRequest, 'receiptNo' | 'receiptAmount' | 'totalClaimAmount' | 'claimDate' | 'remark' | 'updatedAt' | 'version'>>;
+  /**
+   * PR-1b: canonical queue-row snapshot for claim rows that belong to the unified
+   * inbox (the 20 seeded rows). Present only on queue-seeded claims so the live
+   * inbox reconstructs the SAME display row. Independent of the store's own
+   * benefit-claim fixtures, which back the benefits surfaces.
+   */
+  queueSnapshot?: PendingRequest;
 }
 
 export interface BenefitClaimInput {
@@ -134,6 +142,11 @@ interface BenefitClaimsState {
    * Mock-async 300ms.
    */
   managerSendBack: (claimId: string, managerName: string, note: string) => Promise<void>;
+  /**
+   * PR-1b: seed the canonical claim queue rows (init-overwrite-empties — only adds
+   * rows whose id is not already present). Orchestrated by ensureDemoSeed (R1).
+   */
+  seedQueueClaims: (rows: PendingRequest[]) => void;
   clear: () => void;
 }
 
@@ -492,7 +505,48 @@ const initialClaims: BenefitClaimRequest[] = [
   },
 ];
 
-export const BENEFIT_CLAIMS_PERSIST_VERSION = 2;
+/**
+ * PR-1b: build a native BenefitClaimRequest from a canonical claim queue row,
+ * carrying the queueSnapshot so the unified inbox reconstructs the SAME row.
+ * Seeded with status pending_manager_approval so it surfaces as pending.
+ */
+export function queueRowToBenefitClaim(row: PendingRequest): BenefitClaimRequest {
+  const details = (row.details ?? {}) as Record<string, unknown>;
+  const amount = typeof details.amount === 'number' ? details.amount : 0;
+  const at = row.submittedAt;
+  return {
+    id: row.id,
+    workflowRequestId: row.id,
+    employeeId: row.requester.id,
+    employeeName: row.requester.name,
+    company: 'Central Group',
+    businessUnit: row.requester.department,
+    employeeGroup: 'Monthly',
+    personalGrade: 'PG4',
+    benefitType: 'medical',
+    benefitCode: 'BEN-MED-OPD',
+    benefitName: typeof details.category === 'string' ? details.category : 'ค่ารักษาพยาบาล',
+    remainingAmount: 20000,
+    originalRemainingAmount: 20000,
+    currency: 'THB',
+    receiptNo: `RCPT-${row.id}`,
+    receiptDate: at.slice(0, 10),
+    claimDate: at.slice(0, 10),
+    receiptAmount: amount,
+    totalClaimAmount: amount,
+    remark: row.description,
+    status: 'pending_manager_approval',
+    submittedAt: at,
+    updatedAt: at,
+    attachments: [],
+    audit: [{ at, actorRole: 'employee', actorName: row.requester.name, action: 'submit' }],
+    version: 1,
+    previousVersions: [],
+    queueSnapshot: row,
+  };
+}
+
+export const BENEFIT_CLAIMS_PERSIST_VERSION = 3;
 
 export function migrateBenefitClaimsPersistedState(
   persistedState: unknown,
@@ -505,7 +559,12 @@ export function migrateBenefitClaimsPersistedState(
     const state = persistedState as Partial<BenefitClaimsState>;
     return {
       ...state,
-      claims: state.claims?.map(normalizePersistedClaim) ?? [],
+      // PR-1b rehydrate-to-seed: drop the queue-seeded claims (queueSnapshot
+      // present) so ensureDemoSeed re-adds them fresh → "approve a queue claim →
+      // refresh" returns to the seeded set. The store's own benefit fixtures
+      // (no queueSnapshot) persist normally for the benefits surfaces.
+      claims:
+        state.claims?.filter((c) => !c.queueSnapshot).map(normalizePersistedClaim) ?? [],
     };
   }
   return { claims: initialClaims };
@@ -638,12 +697,30 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
             resolve();
           }, 300);
         }),
+      seedQueueClaims: (rows) =>
+        set((s) => {
+          const existing = new Set(s.claims.map((c) => c.id));
+          const additions = rows
+            .filter((row) => !existing.has(row.id))
+            .map(queueRowToBenefitClaim);
+          return additions.length ? { claims: [...additions, ...s.claims] } : s;
+        }),
       clear: () => set({ claims: [] }),
     }),
     {
       name: 'humi-benefit-claims',
       version: BENEFIT_CLAIMS_PERSIST_VERSION,
       migrate: (persistedState) => migrateBenefitClaimsPersistedState(persistedState),
+      // PR-1b rehydrate-to-seed: on EVERY rehydrate drop the queue-seeded claims
+      // (queueSnapshot present) so ensureDemoSeed re-adds them fresh. The store's
+      // own benefit fixtures persist normally.
+      merge: (persistedState, currentState) => {
+        const persisted = (persistedState ?? {}) as Partial<BenefitClaimsState>;
+        const persistedClaims = Array.isArray(persisted.claims)
+          ? persisted.claims.filter((c) => !c.queueSnapshot)
+          : currentState.claims;
+        return { ...currentState, ...persisted, claims: persistedClaims };
+      },
     },
   ),
 );

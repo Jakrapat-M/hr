@@ -7,13 +7,13 @@
 // Danger = --color-danger (pumpkin). No Tailwind red/rose/pink. No hex.
 // ════════════════════════════════════════════════════════════
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Card } from '@/components/humi';
 import { Button } from '@/components/humi';
 import { DataTable, type DataTableColumn } from '@/components/humi';
-import { MOCK_PENDING_REQUESTS } from '@/components/quick-approve/mock-requests';
+import { useSelectPendingApprovals } from '@/lib/approval-registry';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 
 // ── Types ────────────────────────────────────────────────────
@@ -57,22 +57,35 @@ function displayRef(id: string): string {
 export function QuickApproveSimple() {
   const t = useTranslations('quickApprove.simple');
 
-  // Local override map: id → 'approved' | 'rejected' | null (still pending).
+  // PR-1b: rows now DERIVE from the seeded stores (single source of truth) instead
+  // of the static MOCK_PENDING_REQUESTS array. The selector collapses the store
+  // status enums (pending_spd/pending_hr/pending_manager(_approval)) → pending for
+  // the 3-state filter below.
+  const queue = useSelectPendingApprovals();
+  const rows = useMemo<PendingRequest[]>(() => queue.map((q) => q.row), [queue]);
+  const seededStatus = useMemo<Record<string, 'pending' | 'approved' | 'rejected'>>(
+    () => Object.fromEntries(queue.map((q) => [q.row.id, q.status])),
+    [queue],
+  );
+
+  // Local override map: id → 'approved' | 'rejected' (PR-1c replaces this with a
+  // registry dispatch). Until then, local overrides win over the seeded status.
   const [overrides, setOverrides] = useState<Record<string, 'approved' | 'rejected'>>({});
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
 
-  // Derive effective status for each request.
+  // Derive effective status for each request — local override first, then the
+  // collapsed seeded status.
   function effectiveStatus(req: PendingRequest): 'pending' | 'approved' | 'rejected' {
-    return overrides[req.id] ?? 'pending';
+    return overrides[req.id] ?? seededStatus[req.id] ?? 'pending';
   }
 
   // Tab counts.
-  const pendingCount  = MOCK_PENDING_REQUESTS.filter((r) => !overrides[r.id]).length;
-  const approvedCount = Object.values(overrides).filter((v) => v === 'approved').length;
-  const rejectedCount = Object.values(overrides).filter((v) => v === 'rejected').length;
+  const pendingCount  = rows.filter((r) => effectiveStatus(r) === 'pending').length;
+  const approvedCount = rows.filter((r) => effectiveStatus(r) === 'approved').length;
+  const rejectedCount = rows.filter((r) => effectiveStatus(r) === 'rejected').length;
 
   // Filtered rows.
-  const visibleRows = MOCK_PENDING_REQUESTS.filter((r) => {
+  const visibleRows = rows.filter((r) => {
     const status = effectiveStatus(r);
     if (activeTab === 'all')      return true;
     if (activeTab === 'pending')  return status === 'pending';
@@ -220,7 +233,7 @@ export function QuickApproveSimple() {
   // ── Render ───────────────────────────────────────────────
 
   const tabs: { key: FilterTab; count: number }[] = [
-    { key: 'all',      count: MOCK_PENDING_REQUESTS.length },
+    { key: 'all',      count: rows.length },
     { key: 'pending',  count: pendingCount },
     { key: 'approved', count: approvedCount },
     { key: 'rejected', count: rejectedCount },

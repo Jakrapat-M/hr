@@ -11,7 +11,7 @@ import { RequestPayload } from '@/components/quick-approve/detail/RequestPayload
 import { HistoryTimeline } from '@/components/quick-approve/detail/HistoryTimeline';
 import { ActionPanel } from '@/components/quick-approve/detail/ActionPanel';
 import { RejectReturnDrawer, type DrawerMode } from '@/components/quick-approve/detail/RejectReturnDrawer';
-import { MOCK_PENDING_REQUESTS } from '@/components/quick-approve/mock-requests';
+import { useSelectPendingApprovals } from '@/lib/approval-registry';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 
 // ── Mock data (15 items, at least 3 claims) ──────────────────────────────────
@@ -409,7 +409,13 @@ const MOCK_REQUESTS: PendingRequest[] = [
   },
 ];
 
-const DETAIL_REQUESTS = [...MOCK_REQUESTS, ...MOCK_PENDING_REQUESTS];
+// PR-1b (R3): the detail route now resolves ids from the SAME store-derived source
+// as the live inbox (selectPendingApprovals), so opening any listed row reflects
+// its live status (no stale seam). MOCK_REQUESTS (WF-001..015) is kept ONLY as a
+// fallback for the legacy detail-only ids that are not part of the seeded queue, so
+// the seeded set ∪ legacy set is a SUPERSET of every reachable id — no listed row
+// deep-links to notFound().
+const LEGACY_DETAIL_FALLBACK = MOCK_REQUESTS;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -431,10 +437,15 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
   }
 
   function handleDrawerConfirm(_requestId: string, _reason: string, _comment: string) {
-    // No-op in demo — production would dispatch to API here.
+    // No-op in demo — registry dispatch lands in PR-1c.
   }
 
-  const request = DETAIL_REQUESTS.find((r) => r.id === id);
+  // PR-1b (R3): resolve from the store-derived queue first (live status), then the
+  // legacy detail-only fallback. Order guarantees no listed row 404s.
+  const queue = useSelectPendingApprovals();
+  const request =
+    queue.find((q) => q.row.id === id)?.row ??
+    LEGACY_DETAIL_FALLBACK.find((r) => r.id === id);
 
   if (!request) {
     return (
