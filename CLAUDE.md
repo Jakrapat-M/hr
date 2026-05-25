@@ -145,3 +145,9 @@ ADW outputs are saved to `agents/{adw_id}/` with raw JSONL, parsed JSON, and sum
 - Thai Buddhist Era dates: use `apps/js/utils/date.js` helpers
 - Sensitive fields (bank accounts, national IDs) use `apps/js/utils/mask.js`
 - All implememnt task must follow same code pattern
+
+## Communication style (สำคัญ — ผู้ใช้ต้องการ)
+
+- **สรุปสั้น กระชับ** อย่า dump ข้อความยาว ตอบเป็น bullet สั้นๆ: สถานะ / กำลังทำ / รออะไร
+- เก็บ forensic/log/timeline ไว้ในใจ โชว์เฉพาะข้อสรุป + next step
+- ตัดสินใจ → ถามสั้น ตรงประเด็น ไม่อธิบายยาว

@@ -65,6 +65,9 @@ export function LoginAsRibbon() {
       aria-label={isTh ? 'กำลังดูในชื่อผู้อื่น' : 'Impersonation active'}
       className="flex items-center gap-2.5"
       style={{
+        // Span the full width of the .humi-app grid (sidebar + main) so the band
+        // covers the whole session chrome, matching the prototype's top-of-app `.imp`.
+        gridColumn: '1 / -1',
         background: 'var(--imp-bg)',
         color: 'var(--imp-fg)',
         minHeight: 30,

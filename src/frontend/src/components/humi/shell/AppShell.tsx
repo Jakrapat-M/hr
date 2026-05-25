@@ -248,6 +248,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={`humi-app${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
+      {/* Acting-as impersonation band — full-width grid row (grid-column 1/-1)
+          ABOVE the sidebar + main, so it covers the whole session chrome.
+          Renders only while impersonating. */}
+      <LoginAsRibbon />
+
       {/* Desktop sidebar — hidden below lg via .humi-sidebar CSS; hidden on
           desktop too when the user collapses it (sidebar-collapsed). */}
       <Sidebar />
@@ -284,8 +289,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="humi-main">
-        {/* Acting-as amber band — renders only while impersonating, ABOVE the Topbar. */}
-        <LoginAsRibbon />
         <Topbar title={title} onSearchClick={() => setPaletteOpen(true)} />
         <main className="humi-page-wrap">{children}</main>
       </div>

@@ -63,11 +63,12 @@ beforeEach(() => {
 });
 
 describe('LoginAsRibbon — Req2 acting band', () => {
-  it('AC2.1: amber band uses bg-warning-soft + border-warning, never bg-warning-tint', () => {
+  it('AC2.1: solid impersonation band uses --imp-bg/--imp-fg tokens, not old amber classes', () => {
     const { container } = render(<LoginAsRibbon />);
-    const band = container.querySelector('[role="status"]')!;
-    expect(band).toHaveClass('bg-warning-soft');
-    expect(band).toHaveClass('border-warning');
+    const band = container.querySelector('[role="status"]') as HTMLElement;
+    expect(band.style.background).toContain('var(--imp-bg)');
+    expect(band.style.color).toContain('var(--imp-fg)');
+    expect(band.className).not.toContain('bg-warning-soft');
     expect(band.className).not.toContain('bg-warning-tint');
   });
 
