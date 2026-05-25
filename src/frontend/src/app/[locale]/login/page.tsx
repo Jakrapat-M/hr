@@ -161,12 +161,14 @@ export default function HumiLoginPage() {
             <label className="humi-field">
               <span className="flex items-center">
                 {t('pwLabel')}
-                <a
-                  href="#"
-                  className="ml-auto text-[12px] text-ink-muted hover:text-ink hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                <button
+                  type="button"
+                  disabled
+                  aria-disabled="true"
+                  className="ml-auto text-xs text-ink-faint cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   {t('forgotPw')}
-                </a>
+                </button>
               </span>
               <input
                 type="password"

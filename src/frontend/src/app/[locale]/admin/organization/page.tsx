@@ -6,8 +6,8 @@
 // Tree view (left + expand/collapse) + drawer edit (right) — NOT flat CRUD table.
 // Drawer UX matches createCrudPage F6 pattern: right-slide, scrim, same form fields.
 //
-// Scale note: 50 seed units — POC fine.
-// TODO: ถ้า > 500 nodes ใช้ react-arborist หรือ @tanstack/virtual แทน recursive render
+// Scale note: ~53 seed units — recursive render is fine well below the ~500-node
+// threshold where virtualization (react-arborist / @tanstack/virtual) would matter.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, ChevronRight, ChevronDown, Building2, X, Search } from 'lucide-react'

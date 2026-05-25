@@ -37,22 +37,25 @@ function ProgressBar({ total, processed }: { total: number; processed: number })
   )
 }
 
+type Notice = { tone: 'error' | 'success'; message: string }
+
 export default function DataMigrationPage() {
   const jobs = useDataManagement((s) => s.dataMigrationJobs)
   const [fileName, setFileName] = useState<string | null>(null)
   const [isDryRun, setIsDryRun] = useState(false)
   const [dryRunRows, setDryRunRows] = useState<string[] | null>(null)
+  const [notice, setNotice] = useState<Notice | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.name.endsWith('.csv')) {
-      console.warn('[DataMigration] handleFileChange: ไฟล์ต้องเป็น .csv เท่านั้น — reject')
-      alert('กรุณาเลือกไฟล์ .csv เท่านั้น')
+      setNotice({ tone: 'error', message: 'กรุณาเลือกไฟล์ .csv เท่านั้น' })
       e.target.value = ''
       return
     }
+    setNotice(null)
     setFileName(file.name)
     setDryRunRows(null)
     setIsDryRun(false)
@@ -73,7 +76,7 @@ export default function DataMigrationPage() {
 
   function handleValidate() {
     if (!fileName) return
-    alert('Validate เสร็จสิ้น (mock) — พบ 1 warning, 1 error ใน preview ด้านล่าง')
+    setNotice({ tone: 'success', message: 'Validate เสร็จสิ้น (mock) — พบ 1 warning, 1 error ใน preview ด้านล่าง' })
     handleDryRun()
   }
 
@@ -89,6 +92,19 @@ export default function DataMigrationPage() {
       {/* Upload section */}
       <div className="bg-surface border border-hairline rounded-xl shadow-[var(--shadow-sm)] p-5 mb-6">
         <h2 className="text-sm font-semibold text-ink-soft mb-4">อัปโหลดไฟล์ CSV</h2>
+
+        {notice && (
+          <div
+            role={notice.tone === 'error' ? 'alert' : 'status'}
+            className={`mb-4 rounded-lg border px-4 py-2.5 text-sm ${
+              notice.tone === 'error'
+                ? 'bg-danger-soft text-danger-ink border-danger/20'
+                : 'bg-success-soft text-success border-success/20'
+            }`}
+          >
+            {notice.message}
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-3">
           <label
