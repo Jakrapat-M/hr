@@ -518,6 +518,7 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
       <div className="mt-6">
         <ActionPanel
           requestId={request.id}
+          requestType={request.type}
           onApprove={handleApprove}
           onReject={() => openDrawer('reject')}
           onReturn={() => openDrawer('return')}

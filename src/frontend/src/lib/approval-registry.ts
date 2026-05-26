@@ -117,6 +117,20 @@ export function benefitClaimToPendingRequest(c: BenefitClaimRequest): PendingReq
     submittedAt: c.submittedAt,
     urgency,
     waitingDays,
+    // STA-79: surface receipt attachments + the rich filter facets the claim-approve
+    // workspace reads (company / business-unit / event-reason / requested-for / etc.).
+    attachments: c.attachments.map((file) => file.filename ?? file.name ?? 'attachment'),
+    filterMeta: {
+      eventReason: c.benefitType,
+      requestedFor: c.employeeName,
+      effectiveDate: c.receiptDate,
+      initiatedBy: c.employeeName,
+      initiatedDate: c.submittedAt.slice(0, 10),
+      company: c.company,
+      businessUnit: c.businessUnit,
+      department: c.businessUnit,
+      assignment: 'Manager approval',
+    },
     details: {},
     approvalTimeline: [
       { step: 1, approver: 'หัวหน้างาน', status: 'pending' },

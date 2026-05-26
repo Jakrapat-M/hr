@@ -14,11 +14,36 @@ export interface PendingRequest {
  avatar?: string;
  position: string;
  department: string;
+ employeeId?: string;
+ businessUnit?: string;
+ company?: string;
+ branch?: string;
+ payGrade?: string;
  };
  description: string;
  submittedAt: string;
  urgency: Urgency;
  waitingDays: number;
+ attachments?: string[];
+ assignedApprover?: {
+ id: string;
+ name: string;
+ assignedAt?: string;
+ };
+ filterMeta?: {
+ eventReason?: string;
+ requestedFor?: string;
+ effectiveDate?: string;
+ initiatedBy?: string;
+ initiatedDate?: string;
+ company?: string;
+ location?: string;
+ costCentre?: string;
+ businessUnit?: string;
+ division?: string;
+ department?: string;
+ assignment?: string;
+ };
  details: LeaveDetails | OvertimeDetails | ClaimDetails | TransferDetails | Record<string, unknown>;
  approvalTimeline: ApprovalStep[];
 }
@@ -45,6 +70,12 @@ export interface ClaimDetails {
  category: string;
  receiptUrl?: string;
  merchant: string;
+ remainingAmount?: number;
+ receiptDate?: string;
+ receiptNo?: string;
+ receiptAmount?: number;
+ totalClaimAmount?: number;
+ remark?: string;
  policyChecks: { rule: string; passed: boolean }[];
 }
 

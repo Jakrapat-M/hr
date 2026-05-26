@@ -12,6 +12,7 @@ import {
   Hospital,
   HeartPulse,
   ReceiptText,
+  Search,
   ShieldCheck,
   Stethoscope,
   Users,
@@ -22,9 +23,13 @@ import {
   Card,
   CardEyebrow,
   CardTitle,
+  DataTable,
   DemoValuesDisclaimer,
+  FormField,
+  FormInput,
   buttonVariants,
 } from '@/components/humi';
+import type { DataTableColumn } from '@/components/humi';
 import { cn } from '@/lib/utils';
 import {
   benefitHospitalClaimRoute,
@@ -38,6 +43,7 @@ import {
   HUMI_CLAIM_ALLOWANCES,
   HUMI_CLAIM_HISTORY,
   HUMI_DEPENDENTS,
+  type HumiClaimHistoryItem,
 } from '@/lib/humi-mock-data';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 
@@ -49,6 +55,7 @@ import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 //   [4 KPIs]
 //   [services grid (2/3)] | [in-flight tracker (1/3)]
 //   [allowances strip]
+//   [claim history — STA-75 search + date filters]
 //   [dependents] [documents] [policies]
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -146,6 +153,23 @@ function daysSince(iso: string): number {
 
 function formatThb(n: number): string {
   return `฿${n.toLocaleString()}`;
+}
+
+function claimHistorySearchText(row: HumiClaimHistoryItem) {
+  return [
+    row.id,
+    row.type,
+    row.desc,
+    row.amount,
+    row.date,
+    CLAIM_STATUS_META[row.status].label,
+  ]
+    .join(' ')
+    .toLocaleLowerCase('th-TH');
+}
+
+function claimAmountValue(amount: string) {
+  return Number(amount.replace(/[^0-9.-]/g, '')) || 0;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -470,6 +494,9 @@ export default function HumiBenefitsHubPage() {
 
       </section>
 
+      {/* Claim history — STA-75 search + date filters */}
+      <ClaimHistorySection />
+
       {/* Dependents */}
       <section aria-labelledby="dependents-heading" className="mb-6">
         <Card variant="raised" size="md">
@@ -517,6 +544,178 @@ export default function HumiBenefitsHubPage() {
 // ────────────────────────────────────────────────────────────────────────────
 // Sub-sections
 // ────────────────────────────────────────────────────────────────────────────
+
+// STA-75 — Claim history with search + start/end date filters over HUMI_CLAIM_HISTORY.
+function ClaimHistorySection() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const filteredClaimHistory = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLocaleLowerCase('th-TH');
+
+    return HUMI_CLAIM_HISTORY.filter((row) => {
+      const submissionDate = row.submittedAt.slice(0, 10);
+      const matchesSearch = normalizedQuery
+        ? claimHistorySearchText(row).includes(normalizedQuery)
+        : true;
+      const matchesStartDate = startDate ? submissionDate >= startDate : true;
+      const matchesEndDate = endDate ? submissionDate <= endDate : true;
+
+      return matchesSearch && matchesStartDate && matchesEndDate;
+    });
+  }, [endDate, searchQuery, startDate]);
+
+  const claimHistoryColumns = useMemo<DataTableColumn<HumiClaimHistoryItem>[]>(() => [
+    {
+      id: 'benefitName',
+      header: 'ชื่อสวัสดิการ / Benefit Name',
+      cell: (row) => (
+        <div className="min-w-[180px]">
+          <p className="text-body font-semibold text-ink">{row.type}</p>
+          <p className="text-small text-ink-muted">{row.desc}</p>
+        </div>
+      ),
+      sortAccessor: (row) => row.type,
+    },
+    {
+      id: 'claimAmount',
+      header: 'จำนวนเงินเบิก / Claim Amount',
+      cell: (row) => (
+        <span className="font-display text-body font-semibold text-ink tabular-nums">
+          {row.amount}
+        </span>
+      ),
+      sortAccessor: (row) => claimAmountValue(row.amount),
+      align: 'right',
+      className: 'w-40',
+    },
+    {
+      id: 'submissionDate',
+      header: 'วันที่ส่ง / Submission Date',
+      cell: (row) => (
+        <span className="text-small tabular-nums text-ink-muted">{row.date}</span>
+      ),
+      sortAccessor: (row) => row.submittedAt,
+      className: 'w-44',
+    },
+    {
+      id: 'status',
+      header: 'สถานะ / Status',
+      cell: (row) => {
+        const meta = CLAIM_STATUS_META[row.status];
+        return (
+          <span
+            className={cn(
+              'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
+              meta.toneClass
+            )}
+          >
+            {meta.label}
+          </span>
+        );
+      },
+      sortAccessor: (row) => CLAIM_STATUS_META[row.status].label,
+      className: 'w-40',
+    },
+  ], []);
+
+  const resetClaimFilters = () => {
+    setSearchQuery('');
+    setStartDate('');
+    setEndDate('');
+  };
+
+  return (
+    <section aria-labelledby="claim-history-heading" className="mb-6">
+      <Card variant="raised" size="lg">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <CardEyebrow>คำขอเบิกล่าสุด</CardEyebrow>
+            <CardTitle id="claim-history-heading" className="mt-1">
+              ประวัติการเบิกค่าใช้จ่าย
+            </CardTitle>
+          </div>
+          <Button variant="ghost" leadingIcon={<Download size={14} />}>
+            ส่งออกรายงาน
+          </Button>
+        </div>
+
+        <div className="mb-4 grid gap-3 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-4 lg:grid-cols-[minmax(220px,1fr)_180px_180px_auto] lg:items-end">
+          <FormField
+            id="claim-history-search"
+            label="ค้นหา / Search bar"
+            help="ค้นหาจากชื่อสวัสดิการ รายละเอียด จำนวนเงิน หรือสถานะ"
+          >
+            {(controlProps) => (
+              <div className="relative">
+                <Search
+                  size={16}
+                  aria-hidden
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
+                />
+                <FormInput
+                  {...controlProps}
+                  type="search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="เช่น ค่าทันตกรรม หรือ อนุมัติแล้ว"
+                  className="pl-9"
+                />
+              </div>
+            )}
+          </FormField>
+          <FormField id="claim-history-start-date" label="วันที่เริ่มต้น / Start Date">
+            {(controlProps) => (
+              <FormInput
+                {...controlProps}
+                type="date"
+                value={startDate}
+                max={endDate || undefined}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+            )}
+          </FormField>
+          <FormField id="claim-history-end-date" label="วันที่สิ้นสุด / End Date">
+            {(controlProps) => (
+              <FormInput
+                {...controlProps}
+                type="date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(event) => setEndDate(event.target.value)}
+              />
+            )}
+          </FormField>
+          <Button
+            type="button"
+            variant="ghost"
+            className="min-h-[44px] justify-center"
+            onClick={resetClaimFilters}
+          >
+            ล้างตัวกรอง
+          </Button>
+        </div>
+
+        <DataTable
+          caption="ประวัติการเบิกค่าใช้จ่าย"
+          columns={claimHistoryColumns}
+          rows={filteredClaimHistory}
+          rowKey={(row) => row.id}
+          dense
+          emptyState={
+            <div className="text-center">
+              <p className="text-body font-semibold text-ink">ไม่พบประวัติการเบิก</p>
+              <p className="mt-1 text-small text-ink-muted">
+                ลองปรับคำค้นหา วันที่เริ่มต้น หรือวันที่สิ้นสุด
+              </p>
+            </div>
+          }
+        />
+      </Card>
+    </section>
+  );
+}
 
 function DocsSection() {
   const [showAll, setShowAll] = useState(false);

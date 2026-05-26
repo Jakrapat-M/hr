@@ -174,6 +174,20 @@ function benefitClaimToPendingRequest_ORIGINAL(c: BenefitClaimRequest): PendingR
     submittedAt: c.submittedAt,
     urgency,
     waitingDays,
+    // STA-79: lifted helper now carries receipt attachments + the claim-approve
+    // workspace filter facets — baseline updated to match the merged behavior.
+    attachments: c.attachments.map((file) => file.filename ?? file.name ?? 'attachment'),
+    filterMeta: {
+      eventReason: c.benefitType,
+      requestedFor: c.employeeName,
+      effectiveDate: c.receiptDate,
+      initiatedBy: c.employeeName,
+      initiatedDate: c.submittedAt.slice(0, 10),
+      company: c.company,
+      businessUnit: c.businessUnit,
+      department: c.businessUnit,
+      assignment: 'Manager approval',
+    },
     details: {},
     approvalTimeline: [
       { step: 1, approver: 'หัวหน้างาน', status: 'pending' },
