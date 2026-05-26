@@ -82,31 +82,37 @@ function makeHRBPActions(locale: string): QuickAction[] {
     {
       icon: <Inbox size={22} aria-hidden />,
       labelTh: 'อนุมัติ Pending',
+      labelEn: 'Pending Approvals',
       href: `/${locale}/quick-approve`,
     },
     {
       icon: <Search size={22} aria-hidden />,
       labelTh: 'Talent Search',
+      labelEn: 'Talent Search',
       href: `/${locale}/hrbp/talent-search`,
     },
     {
       icon: <BarChart3 size={22} aria-hidden />,
       labelTh: 'ดูรายงาน HRBP',
+      labelEn: 'HRBP Reports',
       href: `/${locale}/hrbp/reports`,
     },
     {
       icon: <ListChecks size={22} aria-hidden />,
       labelTh: 'Bulk Approve',
+      labelEn: 'Bulk Approve',
       href: `/${locale}/quick-approve/bulk`,
     },
     {
       icon: <Users size={22} aria-hidden />,
       labelTh: 'ดูพนักงานทั้งหมด',
+      labelEn: 'All Employees',
       href: `/${locale}/admin/employees`,
     },
     {
       icon: <Briefcase size={22} aria-hidden />,
       labelTh: 'จัดการตำแหน่ง',
+      labelEn: 'Manage Positions',
       href: `/${locale}/admin/positions`,
     },
   ];

@@ -3121,6 +3121,36 @@
       "rejectAll": "Reject All",
       "clearSelection": "Clear Selection"
     },
+    "simple": {
+      "breadcrumb": "HUMI · TEAM MANAGEMENT · APPROVALS",
+      "title": "Approvals queue",
+      "subtitlePending": "{n} items pending your decision",
+      "filter": {
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "columns": {
+        "ref": "REF",
+        "employee": "Employee",
+        "type": "Type",
+        "filed": "Filed",
+        "detail": "Detail",
+        "status": "Status"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "view": "View"
+      },
+      "status": {
+        "pending": "Pending",
+        "review": "In Review",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
+    },
     "slideOver": {
       "title": "Request Details",
       "close": "Close",
@@ -3665,11 +3695,7 @@
     "openFeed": "Open feed",
     "pinnedTag": "Pinned",
     "replyCta": "Reply",
-    "calendarEyebrow": "April 2026",
-    "calendarTitle": "On the calendar",
-    "weekGreetCta": "Send greeting",
-    "prevMonth": "Previous month",
-    "nextMonth": "Next month"
+    "weekGreetCta": "Send greeting"
   },
   "moduleContext": {
     "modules": {
@@ -3852,6 +3878,17 @@
       "th": "ภาษาไทย",
       "en": "English",
       "aria": "Select language"
+    },
+    "ribbon": {
+      "actingAs": "Acting as",
+      "switchBack": "Switch back to admin",
+      "scope": "Scope"
+    },
+    "persona": {
+      "eyebrow": "RBAC · 4 tiers",
+      "title": "Switch persona",
+      "footer": "RBAC enforced — you only see what each persona may access.",
+      "active": "Active"
     }
   },
   "commandPalette": {
@@ -4819,10 +4856,6 @@
     "noResults": "No matching entries",
     "noResultsDesc": "Try adjusting your filters"
   },
-  "acting_badge": {
-    "actingAs": "Acting as",
-    "clickToExit": "click to exit"
-  },
   "reject_return_drawer": {
     "titleReject": "Reject Request",
     "titleReturn": "Return Request",
@@ -4938,6 +4971,47 @@
       "movement": "Added / removed",
       "cost": "Estimated cost",
       "privilege": "Audit items"
+    }
+  },
+  "roster": {
+    "title": "Roster & Shifts",
+    "coverage": "Coverage",
+    "shiftEditor": {
+      "title": "Edit shift"
+    },
+    "swap": {
+      "title": "Request shift swap"
+    },
+    "bulkAssign": {
+      "title": "Bulk assign shifts"
+    },
+    "type": {
+      "manager": "Manager",
+      "partTime": "Part-time",
+      "night": "Night",
+      "regular": "Regular"
+    },
+    "cov": {
+      "ok": "Covered",
+      "gap": "Gap",
+      "over": "Over",
+      "off": "Off"
+    },
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "apply": "Apply",
+      "swap": "Request swap",
+      "bulkAssign": "Bulk assign"
+    },
+    "breadcrumb": "HUMI • TEAM MANAGEMENT • ROSTER & SHIFTS",
+    "subtitle": "Click a shift to override times.",
+    "hourlySchedule": "Hourly schedule",
+    "footerHint": "Click a shift to override",
+    "toolbar": {
+      "allDepartments": "All departments",
+      "week": "Week of 19–25 May",
+      "export": "Export"
     }
   }
 }

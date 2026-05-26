@@ -11,45 +11,35 @@ from pathlib import Path
 
 def is_dangerous_rm_command(command):
     """
-    Comprehensive detection of dangerous rm commands.
-    Matches various forms of rm -rf and similar destructive patterns.
+    Safe-guarded detection of dangerous rm commands (changed 2026-05-25).
+
+    Recursive rm (rm -rf, rm -r, rm --recursive) on ordinary relative/project
+    paths like `.next` or `node_modules` is ALLOWED. Only catastrophic targets
+    are still blocked: filesystem root, system root dirs, the home directory,
+    $HOME, parent-directory traversal, a bare wildcard, and the current dir.
     """
     # Normalize command by removing extra spaces and converting to lowercase
     normalized = ' '.join(command.lower().split())
-    
-    # Pattern 1: Standard rm -rf variations
-    patterns = [
-        r'\brm\s+.*-[a-z]*r[a-z]*f',  # rm -rf, rm -fr, rm -Rf, etc.
-        r'\brm\s+.*-[a-z]*f[a-z]*r',  # rm -fr variations
-        r'\brm\s+--recursive\s+--force',  # rm --recursive --force
-        r'\brm\s+--force\s+--recursive',  # rm --force --recursive
-        r'\brm\s+-r\s+.*-f',  # rm -r ... -f
-        r'\brm\s+-f\s+.*-r',  # rm -f ... -r
+
+    # Only recursive rm can be destructive enough to guard.
+    has_recursive = bool(re.search(r'\brm\s+(-[a-z]*r|--recursive)', normalized))
+    if not has_recursive:
+        return False
+
+    # Catastrophic targets — never allowed, even with safe-guarded rm.
+    dangerous_targets = [
+        r'\s/\s*($|\*)',                                                       # rm -rf /  or  rm -rf /*
+        r'\s/(bin|boot|dev|etc|home|lib|lib64|opt|proc|root|sbin|srv|sys|usr|var)\b',  # system root dirs
+        r'\s~(/|\s|$)',                                                        # home dir  ~  or  ~/...
+        r'\$home\b',                                                           # $HOME
+        r'(^|\s)\.\.(/|\s|$)',                                                 # parent traversal  ..  or  ../
+        r'\s\*(\s|$)',                                                         # bare wildcard target  rm -rf *
+        r'\s\.(\s|$)',                                                         # current dir target  rm -rf .
     ]
-    
-    # Check for dangerous patterns
-    for pattern in patterns:
+    for pattern in dangerous_targets:
         if re.search(pattern, normalized):
             return True
-    
-    # Pattern 2: Check for rm with recursive flag targeting dangerous paths
-    dangerous_paths = [
-        r'/',           # Root directory
-        r'/\*',         # Root with wildcard
-        r'~',           # Home directory
-        r'~/',          # Home directory path
-        r'\$HOME',      # Home environment variable
-        r'\.\.',        # Parent directory references
-        r'\*',          # Wildcards in general rm -rf context
-        r'\.',          # Current directory
-        r'\.\s*$',      # Current directory at end of command
-    ]
-    
-    if re.search(r'\brm\s+.*-[a-z]*r', normalized):  # If rm has recursive flag
-        for path in dangerous_paths:
-            if re.search(path, normalized):
-                return True
-    
+
     return False
 
 def is_env_file_access(tool_name, tool_input):

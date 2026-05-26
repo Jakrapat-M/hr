@@ -790,10 +790,7 @@ export default function HumiProfileMePage({
           prevents stranded Save/Cancel on other tabs). Buttons container uses
           fixed min-width to reserve space for 2-button state so toggling
           Edit↔(Cancel+Save) doesn't jump layout (Ken UAT 2026-04-22 "กระตุก"). */}
-      <div className="mb-5 flex items-center justify-between gap-3 flex-wrap">
-        <div className="text-small text-ink-muted">
-          {t('subtitle')} · {p.employeeCode}
-        </div>
+      <div className="mb-5 flex items-center justify-end gap-3 flex-wrap">
         {panelKey === 'personal' && (
           // Render all 3 buttons always, toggle visibility via CSS — avoids
           // React mount/unmount flash. Container reserves 2-button width so
@@ -867,6 +864,9 @@ export default function HumiProfileMePage({
               {p.nameTh}
             </h2>
             <span style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{p.pronouns}</span>
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', marginTop: 4 }}>
+            {t('subtitle')} · {p.employeeCode}
           </div>
           <div
             style={{

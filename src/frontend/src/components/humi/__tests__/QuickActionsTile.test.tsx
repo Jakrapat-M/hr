@@ -1,13 +1,20 @@
 /**
  * QuickActionsTile.test.tsx — vitest unit tests
  * BRD #171 — ESS Quick Actions Tile (hr#75)
- * AC-1 RENDER | AC-2 BASELINE ACTIONS | AC-3 NAVIGATION
- * AC-4 COMPONENT API | AC-5 LANGUAGE | AC-6 ISOLATION
+ * AC3.1 12-tile count | AC3.2 no calendar | AC3.4 tone tokens
+ * AC3.5 bilingual labels | AC-4 COMPONENT API | AC-6 ISOLATION
  */
 
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { QuickActionsTile, DEFAULT_ESS_ACTIONS } from '../QuickActionsTile';
+import { QuickActionsTile, DEFAULT_ESS_ACTIONS, type QuickAction } from '../QuickActionsTile';
+
+// Helper: safely coerce className (may be SVGAnimatedString on SVG nodes).
+function cls(el: Element): string {
+  return typeof el.className === 'string'
+    ? el.className
+    : String((el.className as SVGAnimatedString).baseVal ?? '');
+}
 
 // ────────────────────────────────────────────────────────────
 // AC-1 RENDER — humi-card region + header
@@ -20,63 +27,126 @@ describe('QuickActionsTile — AC-1 RENDER', () => {
 
   it('header text "เมนูลัด" ปรากฏใน DOM', () => {
     render(<QuickActionsTile />);
-    // 'เมนูลัด' ปรากฏ 2 ครั้ง: aria-label (region) + visible eyebrow text — ใช้ getAllBy
     const matches = screen.getAllByText('เมนูลัด');
     expect(matches.length).toBeGreaterThanOrEqual(1);
   });
 });
 
 // ────────────────────────────────────────────────────────────
-// AC-2 BASELINE ACTIONS — 4 default items, correct labels
+// AC3.1 — 12 tiles for full/admin persona
 // ────────────────────────────────────────────────────────────
-describe('QuickActionsTile — AC-2 BASELINE ACTIONS', () => {
-  it('DEFAULT_ESS_ACTIONS export มี exactly 4 รายการ', () => {
-    expect(DEFAULT_ESS_ACTIONS).toHaveLength(4);
+describe('QuickActionsTile — AC3.1 12 tiles', () => {
+  it('DEFAULT_ESS_ACTIONS exports exactly 12 รายการ', () => {
+    expect(DEFAULT_ESS_ACTIONS).toHaveLength(12);
   });
 
-  it('renders 4 action links เมื่อไม่ส่ง props.actions', () => {
+  it('renders 12 action links when no props.actions passed', () => {
     render(<QuickActionsTile />);
-    expect(screen.getAllByRole('link')).toHaveLength(4);
+    expect(screen.getAllByRole('link')).toHaveLength(12);
   });
 
-  it.each([
-    ['ขอลาหยุด', '/th/timeoff'],
-    ['สลิปเงินเดือน', '/th/profile/me?tab=employment#pay-statements'],
-    ['ดูข้อมูลส่วนตัว', '/th/profile/me'],
-    ['เบิกสวัสดิการ', '/th/benefits-hub/reimbursement'],
-  ])('renders link "%s" → href "%s"', (labelTh, href) => {
-    render(<QuickActionsTile />);
-    const link = screen.getByRole('link', { name: labelTh });
-    expect(link).toHaveAttribute('href', href);
+  it('show field is present on at least one role-restricted tile', () => {
+    const gated = DEFAULT_ESS_ACTIONS.filter((a) => a.show && a.show.length > 0);
+    expect(gated.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('employee-visible tiles number at least 11', () => {
+    const employeeVisible = DEFAULT_ESS_ACTIONS.filter(
+      (a) => !a.show || a.show.includes('Employee'),
+    );
+    expect(employeeVisible.length).toBeGreaterThanOrEqual(11);
   });
 });
 
 // ────────────────────────────────────────────────────────────
-// AC-3 NAVIGATION — href correctness (user-event click + assertion)
+// AC3.2 — No calendar grid
 // ────────────────────────────────────────────────────────────
-describe('QuickActionsTile — AC-3 NAVIGATION', () => {
-  it('แต่ละ link ใน DEFAULT_ESS_ACTIONS มี href ถูกต้องครบ 4 รายการ', () => {
+describe('QuickActionsTile — AC3.2 no calendar', () => {
+  it('queryByRole("grid") is absent from QuickActionsTile', () => {
     render(<QuickActionsTile />);
-    DEFAULT_ESS_ACTIONS.forEach((action) => {
-      const link = screen.getByRole('link', { name: action.labelTh });
-      expect(link).toHaveAttribute('href', action.href);
+    expect(screen.queryByRole('grid')).not.toBeInTheDocument();
+  });
+
+  it('no element with humi-cal class inside tile', () => {
+    const { container } = render(<QuickActionsTile />);
+    expect(container.querySelector('.humi-cal')).toBeNull();
+  });
+});
+
+// ────────────────────────────────────────────────────────────
+// AC3.4 — Tone tokens: no Tailwind red/rose/pink, no hex
+// ────────────────────────────────────────────────────────────
+describe('QuickActionsTile — AC3.4 tone token scan', () => {
+  it('each badge span className includes a valid tone token class', () => {
+    const { container } = render(<QuickActionsTile />);
+    const badgeSpans = Array.from(
+      container.querySelectorAll('.humi-quick-action-item span[aria-hidden="true"]'),
+    );
+    expect(badgeSpans.length).toBe(12);
+    const tonePatterns = [
+      /bg-accent-soft/,
+      /bg-\[var\(--color-accent-alt-soft\)\]/,
+      /bg-warning-soft/,
+    ];
+    badgeSpans.forEach((span) => {
+      const hasTone = tonePatterns.some((p) => p.test(cls(span)));
+      expect(hasTone).toBe(true);
     });
   });
 
-  // BEHAVIOR test (not implementation): href ต้องขึ้นต้นด้วย locale prefix
-  // เช่น /th/ ตามที่ /home/page.tsx ใช้ pattern เดียวกัน (line 113, 119, 324).
-  // ป้องกัน C8 source-grounding bug ที่ #75 v1 เคยปล่อย ('/timeoff' โดดๆ — 404)
-  it('ทุก href ใน DEFAULT_ESS_ACTIONS ขึ้นต้นด้วย locale prefix /th/ ตาม codebase convention', () => {
-    DEFAULT_ESS_ACTIONS.forEach((action) => {
-      expect(action.href).toMatch(/^\/th\//);
+  it('no className contains red/rose/pink Tailwind color', () => {
+    const { container } = render(<QuickActionsTile />);
+    const allEls = Array.from(container.querySelectorAll('[class]'));
+    const badPattern = /(^|\s)(bg|text|border)-(red|rose|pink)-\d/;
+    allEls.forEach((el) => {
+      expect(cls(el)).not.toMatch(badPattern);
     });
   });
 
-  it('baseline links expose browser-native navigation hrefs without custom click handlers', () => {
-    render(<QuickActionsTile />);
-    const link = screen.getByRole('link', { name: 'ขอลาหยุด' });
-    expect(link).toHaveAttribute('href', '/th/timeoff');
-    expect(link).not.toHaveAttribute('onclick');
+  it('no inline style contains a hex color', () => {
+    const { container } = render(<QuickActionsTile />);
+    const allEls = Array.from(container.querySelectorAll('[style]'));
+    const hexPattern = /#([0-9a-fA-F]{3,8})\b/;
+    allEls.forEach((el) => {
+      const style = (el as HTMLElement).getAttribute('style') ?? '';
+      expect(style).not.toMatch(hexPattern);
+    });
+  });
+});
+
+// ────────────────────────────────────────────────────────────
+// AC3.5 — Bilingual labels resolve both locales
+// ────────────────────────────────────────────────────────────
+describe('QuickActionsTile — AC3.5 bilingual labels', () => {
+  it('every DEFAULT_ESS_ACTIONS entry has non-empty labelEn', () => {
+    DEFAULT_ESS_ACTIONS.forEach((action) => {
+      expect(action.labelEn).toBeTruthy();
+      expect(action.labelEn.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('every DEFAULT_ESS_ACTIONS entry has non-empty labelTh', () => {
+    DEFAULT_ESS_ACTIONS.forEach((action) => {
+      expect(action.labelTh).toBeTruthy();
+      expect(action.labelTh.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('renders labelTh when locale=th (default)', () => {
+    render(<QuickActionsTile locale="th" />);
+    expect(screen.getByRole('link', { name: 'ขอลาหยุด' })).toBeInTheDocument();
+  });
+
+  it('renders labelEn when locale=en', () => {
+    render(<QuickActionsTile locale="en" />);
+    expect(screen.getByRole('link', { name: 'Time Off' })).toBeInTheDocument();
+  });
+
+  it('labelEn contains no Thai characters', () => {
+    DEFAULT_ESS_ACTIONS.forEach((action) => {
+      const thaiChars = (action.labelEn.match(/[฀-๿]/g) ?? []).length;
+      expect(thaiChars).toBe(0);
+    });
   });
 });
 
@@ -85,13 +155,12 @@ describe('QuickActionsTile — AC-3 NAVIGATION', () => {
 // ────────────────────────────────────────────────────────────
 describe('QuickActionsTile — AC-4 COMPONENT API', () => {
   it('รับ props.actions override → render ตาม props ไม่ใช่ DEFAULT_ESS_ACTIONS', () => {
-    const customActions = [
-      { icon: <span data-testid="custom-icon" />, labelTh: 'ทดสอบ', href: '/test' },
+    const customActions: QuickAction[] = [
+      { icon: <span data-testid="custom-icon" />, labelTh: 'ทดสอบ', labelEn: 'Test', href: '/test', tone: 'teal' },
     ];
     render(<QuickActionsTile actions={customActions} />);
     expect(screen.getAllByRole('link')).toHaveLength(1);
     expect(screen.getByRole('link', { name: 'ทดสอบ' })).toHaveAttribute('href', '/test');
-    // DEFAULT_ESS_ACTIONS labels ไม่ควรปรากฏ
     expect(screen.queryByRole('link', { name: 'ขอลาหยุด' })).not.toBeInTheDocument();
   });
 
@@ -101,9 +170,9 @@ describe('QuickActionsTile — AC-4 COMPONENT API', () => {
   });
 
   it('multiple custom actions → render ตามจำนวนที่ส่งมา', () => {
-    const twoActions = [
-      { icon: <span />, labelTh: 'แอ็กชัน 1', href: '/a1' },
-      { icon: <span />, labelTh: 'แอ็กชัน 2', href: '/a2' },
+    const twoActions: QuickAction[] = [
+      { icon: <span />, labelTh: 'แอ็กชัน 1', labelEn: 'Action 1', href: '/a1', tone: 'teal' },
+      { icon: <span />, labelTh: 'แอ็กชัน 2', labelEn: 'Action 2', href: '/a2', tone: 'amber' },
     ];
     render(<QuickActionsTile actions={twoActions} />);
     expect(screen.getAllByRole('link')).toHaveLength(2);
@@ -111,18 +180,17 @@ describe('QuickActionsTile — AC-4 COMPONENT API', () => {
 });
 
 // ────────────────────────────────────────────────────────────
-// AC-5 LANGUAGE — Thai-primary sweep, ไม่มี SF-style English suffix
+// AC-5 LANGUAGE — Thai-primary sweep
 // ────────────────────────────────────────────────────────────
 describe('QuickActionsTile — AC-5 LANGUAGE', () => {
   it('ทุก labelTh ใน DEFAULT_ESS_ACTIONS ไม่มี SF-style "(English)" suffix', () => {
-    // C10: ห้าม pattern 'ขอลาหยุด (Time-off)' หรือ 'สลิป (Payslip)'
     const sfDriftPattern = /\([A-Z][a-zA-Z ]+\)/;
     DEFAULT_ESS_ACTIONS.forEach((action) => {
       expect(action.labelTh).not.toMatch(sfDriftPattern);
     });
   });
 
-  it('ทุก labelTh ไม่มีคำ English 3+ ตัวอักษรติดกัน (ไม่ใช่ English-only label)', () => {
+  it('ทุก labelTh ไม่มีคำ English 3+ ตัวอักษรติดกัน', () => {
     DEFAULT_ESS_ACTIONS.forEach((action) => {
       expect(action.labelTh).not.toMatch(/[A-Za-z]{3,}/);
     });

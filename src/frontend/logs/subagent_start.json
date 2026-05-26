@@ -124,5 +124,248 @@
     "agent_type": "Explore",
     "hook_event_name": "SubagentStart",
     "logged_at": "2026-03-05T17:20:12.498509"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a23a5dbc07b30bd6c",
+    "agent_type": "oh-my-claudecode:explore",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T14:10:44.605692"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a7b96f6abf48cef25",
+    "agent_type": "oh-my-claudecode:explore",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T14:10:52.044110"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "af5b567732a44133d",
+    "agent_type": "oh-my-claudecode:explore",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T14:11:04.798729"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "ab0a5009d3a45c963",
+    "agent_type": "oh-my-claudecode:planner",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T14:16:21.409695"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "aaa67a27006f78979",
+    "agent_type": "oh-my-claudecode:architect",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T14:22:48.196204"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "ac8d3ff3feb9d2991",
+    "agent_type": "oh-my-claudecode:critic",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T14:26:19.679581"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "ab0a5009d3a45c963",
+    "agent_type": "oh-my-claudecode:planner",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T14:30:25.550815"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "aaa67a27006f78979",
+    "agent_type": "oh-my-claudecode:architect",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T14:39:53.940708"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "ac8d3ff3feb9d2991",
+    "agent_type": "oh-my-claudecode:critic",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T14:41:35.348701"
+  },
+  {
+    "session_id": "c64e78e5-c3d6-43c9-8cbd-bf198e733265",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/c64e78e5-c3d6-43c9-8cbd-bf198e733265.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "aa29291f0676572f4",
+    "agent_type": "worker-leaf",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T15:19:11.935018"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a8e8218e78919aaba",
+    "agent_type": "oh-my-claudecode:planner",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T15:20:21.478446"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "aaa67a27006f78979",
+    "agent_type": "oh-my-claudecode:architect",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T15:25:38.819327"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "ac8d3ff3feb9d2991",
+    "agent_type": "oh-my-claudecode:critic",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T15:28:42.319294"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a8e8218e78919aaba",
+    "agent_type": "oh-my-claudecode:planner",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T15:31:13.770205"
+  },
+  {
+    "session_id": "c64e78e5-c3d6-43c9-8cbd-bf198e733265",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/c64e78e5-c3d6-43c9-8cbd-bf198e733265.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a22a2c5093ffba6db",
+    "agent_type": "worker-shell",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T15:32:54.608721"
+  },
+  {
+    "session_id": "c64e78e5-c3d6-43c9-8cbd-bf198e733265",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/c64e78e5-c3d6-43c9-8cbd-bf198e733265.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a8100b4630f1c6f89",
+    "agent_type": "oh-my-claudecode:code-reviewer",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T15:36:59.146281"
+  },
+  {
+    "session_id": "c64e78e5-c3d6-43c9-8cbd-bf198e733265",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/c64e78e5-c3d6-43c9-8cbd-bf198e733265.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "ac5b08f19319b92fb",
+    "agent_type": "worker-shell",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T15:38:21.567667"
+  },
+  {
+    "session_id": "c64e78e5-c3d6-43c9-8cbd-bf198e733265",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/c64e78e5-c3d6-43c9-8cbd-bf198e733265.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a757940220d939be6",
+    "agent_type": "worker-shell",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T15:40:54.598366"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "aaa67a27006f78979",
+    "agent_type": "oh-my-claudecode:architect",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T15:50:19.656141"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "ac8d3ff3feb9d2991",
+    "agent_type": "oh-my-claudecode:critic",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T15:51:41.445277"
+  },
+  {
+    "session_id": "c64e78e5-c3d6-43c9-8cbd-bf198e733265",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/c64e78e5-c3d6-43c9-8cbd-bf198e733265.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a3d56289ad259c070",
+    "agent_type": "worker-roster",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T16:01:30.243092"
+  },
+  {
+    "session_id": "c64e78e5-c3d6-43c9-8cbd-bf198e733265",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/c64e78e5-c3d6-43c9-8cbd-bf198e733265.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a6d1a06badb8adaf7",
+    "agent_type": "worker-roster",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T16:13:18.448280"
+  },
+  {
+    "session_id": "dd2a2a9f-a7e8-403f-987c-127e06b66b7e",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/dd2a2a9f-a7e8-403f-987c-127e06b66b7e.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "aafcc74abdc815aed",
+    "agent_type": "oh-my-claudecode:executor",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T16:27:15.355087"
+  },
+  {
+    "session_id": "c64e78e5-c3d6-43c9-8cbd-bf198e733265",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/c64e78e5-c3d6-43c9-8cbd-bf198e733265.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "af2ed7e9f36f70ce3",
+    "agent_type": "worker-roster",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T16:34:53.075656"
+  },
+  {
+    "session_id": "282fa935-d21a-4a99-ba55-8fb5146b1a12",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/282fa935-d21a-4a99-ba55-8fb5146b1a12.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a6aecc3119c05519b",
+    "agent_type": "oh-my-claudecode:executor",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T16:42:15.525033"
+  },
+  {
+    "session_id": "c64e78e5-c3d6-43c9-8cbd-bf198e733265",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/c64e78e5-c3d6-43c9-8cbd-bf198e733265.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a41fc58aa11a69b8c",
+    "agent_type": "worker-roster",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T16:47:57.372693"
+  },
+  {
+    "session_id": "dd2a2a9f-a7e8-403f-987c-127e06b66b7e",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/dd2a2a9f-a7e8-403f-987c-127e06b66b7e.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a864e49c08375122a",
+    "agent_type": "oh-my-claudecode:executor",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-25T18:25:45.061196"
   }
 ]

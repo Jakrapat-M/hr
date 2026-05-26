@@ -20,15 +20,16 @@
 // - ⌘K kbd: hidden below md
 // ════════════════════════════════════════════════════════════
 
-import { Menu, Moon, Search, Sun } from 'lucide-react';
+import { Menu, Moon, PanelLeft, Search, Sun } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUIStore } from '@/stores/ui-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 import { getLocaleFromPath, swapLocale, type SupportedLocale } from '@/lib/humi-locale';
 import { PersonaSwitcher } from '@/components/humi/shell/PersonaSwitcher';
 import { NotificationBell } from '@/components/humi/NotificationBell';
-import { ActingBadge } from '@/components/humi/ActingBadge';
+import { TodoBell } from '@/components/humi/TodoBell';
 
 export interface TopbarProps {
   /** h2 page title — typically derived from route */
@@ -41,19 +42,38 @@ export interface TopbarProps {
   onSearchClick?: () => void;
 }
 
+// Time-based greeting for the active identity. Uses the first name only (matching
+// the home hero), so while impersonating it greets the persona ("คุณสมชาย"),
+// not the real admin.
+function greetingFor(username: string | null, isTh: boolean): string {
+  const first = (username ?? (isTh ? 'จงรักษ์ ทานากะ' : 'Jongrak')).trim().split(/\s+/)[0];
+  const h = new Date().getHours();
+  if (isTh) {
+    const tod = h < 12 ? 'สวัสดีตอนเช้า' : h < 18 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น';
+    return `${tod}ค่ะ คุณ${first}`;
+  }
+  const tod = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  return `${tod}, ${first}`;
+}
+
 export function Topbar({
   title,
-  subtitle = 'สวัสดีตอนเช้าค่ะ คุณจงรักษ์',
+  subtitle,
   actions,
   onSearchClick,
 }: TopbarProps) {
-  const { theme, setTheme, toggleMobileMenu, mobileMenuOpen } = useUIStore();
+  const { theme, setTheme, toggleMobileMenu, mobileMenuOpen, sidebarOpen, toggleSidebar } =
+    useUIStore();
   const isDark = theme === 'dark';
   const [scrolled, setScrolled] = useState(false);
   const topbarRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
   const currentLocale = getLocaleFromPath(pathname);
+  const username = useAuthStore((s) => s.username);
+  // Greeting follows the active identity (persona while impersonating). An explicit
+  // `subtitle` prop still overrides it.
+  const greetingEyebrow = subtitle ?? greetingFor(username, currentLocale === 'th');
   const handleLocaleSwitch = (locale: SupportedLocale) => {
     if (locale === currentLocale) return;
     router.push(swapLocale(pathname, locale));
@@ -90,6 +110,19 @@ export function Topbar({
         <span>เมนู</span>
       </button>
 
+      {/* Desktop sidebar collapse toggle — lg+ only (mobile uses the drawer).
+          Lets the user hide the sidebar to reclaim workspace width. */}
+      <button
+        type="button"
+        className="humi-icon-btn !hidden lg:!inline-flex"
+        aria-label={sidebarOpen ? 'ซ่อนเมนูด้านข้าง' : 'แสดงเมนูด้านข้าง'}
+        aria-pressed={!sidebarOpen}
+        title={sidebarOpen ? 'ซ่อนเมนูด้านข้าง' : 'แสดงเมนูด้านข้าง'}
+        onClick={toggleSidebar}
+      >
+        <PanelLeft size={18} aria-hidden="true" />
+      </button>
+
       {/* Title block — min-w-0 lets it shrink below content; whitespace-nowrap +
           truncate on eyebrow+h2 prevent Thai-character vertical wrap when topbar
           right-side gets crowded (e.g., 9-persona switcher with long label) */}
@@ -98,7 +131,7 @@ export function Topbar({
           className="humi-eyebrow hidden sm:block whitespace-nowrap overflow-hidden text-ellipsis"
           style={{ marginBottom: 4 }}
         >
-          {subtitle}
+          {greetingEyebrow}
         </div>
         <h2
           className="truncate whitespace-nowrap text-lg sm:text-xl lg:text-2xl"
@@ -168,8 +201,9 @@ export function Topbar({
           <Moon size={18} aria-hidden="true" />
         )}
       </button>
+      {/* Req6: inbox-then-bell — TodoBell (envelope) precedes NotificationBell. */}
+      <TodoBell />
       <NotificationBell />
-      <ActingBadge />
       <PersonaSwitcher />
       {actions}
     </div>

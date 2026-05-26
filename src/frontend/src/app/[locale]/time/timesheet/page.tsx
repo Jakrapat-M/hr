@@ -27,7 +27,7 @@ export default function TimesheetPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-0.5">
-            {isTh ? 'เวลางาน' : 'Time & Attendance'}
+            {isTh ? 'บันทึกชั่วโมงงาน' : 'Hours Logging'}
           </p>
           <h1 className="text-2xl font-bold text-ink">
             {isTh ? 'บันทึกเวลางาน' : 'Timesheet'}

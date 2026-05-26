@@ -1,7 +1,7 @@
 {
-  "tool_name": "mcp__plugin_oh-my-claudecode_t__lsp_diagnostics",
-  "tool_input_preview": "{\"file\":\"/Users/tachongrak/Projects/hr/src/frontend/src/app/[locale]/admin/benefits/plans/page.tsx\",\"severity\":\"error\"}",
-  "error": "Language server 'typescript-language-server' not found.\nInstall with: npm install -g typescript-language-server typescript",
-  "timestamp": "2026-05-02T06:42:39.073Z",
+  "tool_name": "mcp__playwright__browser_close",
+  "tool_input_preview": "{}",
+  "error": "### Error\nError: Browser is already in use for /Users/tachongrak/Library/Caches/ms-playwright/mcp-chrome-d8dd2c2, use --isolated to run multiple instances of the same browser",
+  "timestamp": "2026-05-25T12:22:14.890Z",
   "retry_count": 2
 }

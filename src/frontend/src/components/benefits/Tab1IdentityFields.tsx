@@ -1,7 +1,11 @@
 'use client';
 
 import { FormField, FormInput } from '@/components/humi';
-import { type PlanCategory, type WorkflowTemplate } from '@/data/benefits/plan-registry';
+import {
+  deriveRecordTypeFromBenefitTypeGroup,
+  type PlanCategory,
+  type WorkflowTemplate,
+} from '@/data/benefits/plan-registry';
 
 export type CountryCode = 'TH' | 'VN';
 export type PlanStatus = 'active' | 'inactive';
@@ -17,7 +21,6 @@ export interface Tab1IdentityValues {
   planKey: string;
   nameTh: string;
   nameEn: string;
-  prefix: 'records' | 'info' | 'none';
   category: PlanCategory;
   schemaVersion: 'v1' | 'v2';
   template: WorkflowTemplate;
@@ -107,11 +110,9 @@ export function Tab1IdentityFields({
   mode,
   isTh,
 }: Tab1IdentityFieldsProps) {
-  // Derive recordType inline — no useEffect
-  const derivedRecordType =
-    values.prefix === 'records' ? 'records'
-    : values.prefix === 'info'    ? 'info'
-    : 'claimable';
+  // STA-70: recordType is derived from the Benefit type/group — the manual
+  // "Plan name prefix" radio was removed. No useEffect; pure derivation.
+  const derivedRecordType = deriveRecordTypeFromBenefitTypeGroup(values.benefitTypeGroup);
 
   const chip = RECORD_TYPE_CHIP[derivedRecordType];
 
@@ -180,35 +181,6 @@ export function Tab1IdentityFields({
           />
         )}
       </FormField>
-
-      {/* 5. Plan name prefix selector → derives recordType */}
-      <div className="flex flex-col gap-1.5">
-        <span className="text-small font-medium text-ink">
-          {isTh ? 'คำนำหน้าชื่อแผน' : 'Plan name prefix'}
-        </span>
-        <div className="flex flex-wrap gap-4" role="radiogroup" aria-label={isTh ? 'คำนำหน้าชื่อแผน' : 'Plan name prefix'}>
-          {(['records', 'info', 'none'] as const).map((p) => (
-            <label key={p} className="flex items-center gap-2 cursor-pointer text-small text-ink">
-              <input
-                type="radio"
-                name="tab1-prefix"
-                value={p}
-                checked={values.prefix === p}
-                onChange={() => onChange('prefix', p)}
-                className="accent-accent"
-              />
-              {p === 'records' ? '[Records]' : p === 'info' ? '[Info]' : isTh ? 'ไม่มีคำนำหน้า' : 'None'}
-            </label>
-          ))}
-        </div>
-        {/* Derived recordType chip */}
-        <div className="mt-1 flex items-center gap-2">
-          <span className="text-small text-ink-muted">{isTh ? 'ประเภทระเบียน:' : 'Record type:'}</span>
-          <span className={`inline-flex items-center rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] ${chip.className}`}>
-            {isTh ? chip.labelTh : chip.label}
-          </span>
-        </div>
-      </div>
 
       {/* 6. Category */}
       <FormField
@@ -384,6 +356,17 @@ export function Tab1IdentityFields({
             </select>
           )}
         </FormField>
+
+        {/* STA-70: recordType is derived from the Benefit type above (the manual
+            prefix radio was removed) — shown read-only so admins see the result. */}
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-small text-ink-muted">
+            {isTh ? 'ประเภทระเบียนที่ได้:' : 'Derived record type:'}
+          </span>
+          <span className={`inline-flex items-center rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] ${chip.className}`}>
+            {isTh ? chip.labelTh : chip.label}
+          </span>
+        </div>
       </div>
 
       {/* ── STA-70 Enrolment section ────────────────────────────────────── */}

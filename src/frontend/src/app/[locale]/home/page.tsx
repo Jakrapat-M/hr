@@ -19,8 +19,6 @@ import {
   Megaphone,
   FileText,
   ArrowRight,
-  ChevronRight,
-  ChevronLeft,
   PartyPopper,
   Pin,
   type LucideIcon,
@@ -32,33 +30,24 @@ import {
   Wallet,
   User,
   FilePlus,
+  Clock,
+  Inbox,
+  Bell,
+  Users2,
+  GraduationCap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/humi';
 import { QuickActionsTile, DEFAULT_ESS_ACTIONS, type QuickAction } from '@/components/humi/QuickActionsTile';
 import { useAdminSelfService } from '@/lib/admin/store/useAdminSelfService';
-import type { RoleName } from '@/lib/admin/types/adminSelfService';
-import type { Role } from '@/lib/rbac';
 import {
   HUMI_PENDING_REQUESTS,
   HUMI_EMPLOYEES,
   HUMI_TODAY_PRESENCE,
   HUMI_PENDING_DOCS,
   HUMI_ANNOUNCEMENTS,
-  HUMI_CAL_EVENTS,
   HUMI_WEEK_RECOGNITION,
 } from '@/lib/humi-mock-data';
-
-// Map lowercase Role → RoleName (CapCase) used by adminSelfService matrices.
-function toRoleName(role: Role): RoleName {
-  const map: Partial<Record<Role, RoleName>> = {
-    employee: 'Employee',
-    manager:  'Manager',
-    hrbp:     'HRBP',
-    spd:      'SPD',
-  };
-  return map[role] ?? 'Employee';
-}
 
 // Lucide icon map for adminSelfService QuickActionTile icon strings.
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -71,6 +60,11 @@ const ICON_MAP: Record<string, LucideIcon> = {
   CalendarPlus,
   Wallet,
   User,
+  Clock,
+  Inbox,
+  Bell,
+  Users2,
+  GraduationCap,
 };
 
 function makeAdminQuickActions(
@@ -85,6 +79,7 @@ function makeAdminQuickActions(
         return Icon ? <Icon size={22} aria-hidden /> : <FileText size={22} aria-hidden />;
       })(),
       labelTh: t.label,
+      labelEn: t.label,
       href: t.href,
     }));
 }
@@ -97,8 +92,6 @@ const AVATAR_TONE_MAP = {
   indigo: 'humi-avatar humi-avatar--teal',
 } as const;
 
-const CAL_DAYS_TH = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
-
 function getTimeGreeting(): string {
   const h = new Date().getHours();
   if (h < 12) return 'สวัสดีตอนเช้า';
@@ -110,7 +103,6 @@ export default function HumiHomePage() {
   const t = useTranslations('humiHero');
   const router = useRouter();
   const username = useAuthStore((s) => s.username);
-  const roles    = useAuthStore((s) => s.roles);
   const greeting = getTimeGreeting();
 
   // BRD #182 — Quick Actions from admin config bus.
@@ -119,14 +111,6 @@ export default function HumiHomePage() {
   const quickActions: QuickAction[] = publishedQuickActions.length > 0
     ? makeAdminQuickActions(publishedQuickActions)
     : DEFAULT_ESS_ACTIONS;
-
-  // BRD #183 — tile pool filtered by current role.
-  const publishedTiles = useAdminSelfService((s) => s.published.tiles);
-  const primaryRole = roles[0] ?? 'employee';
-  const roleName = toRoleName(primaryRole);
-  const visibleTiles = publishedTiles.filter(
-    (tile) => tile.enabled && tile.visibleTo.includes(roleName),
-  );
 
   const top2 = HUMI_PENDING_REQUESTS.slice(0, 2);
   const feed = HUMI_ANNOUNCEMENTS.slice(0, 2);
@@ -200,7 +184,7 @@ export default function HumiHomePage() {
           <div className="humi-row" style={{ alignItems: 'flex-start' }}>
             <div>
               <div className="humi-eyebrow">{t('todayEyebrow')}</div>
-              <h3 className="mt-1.5 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+              <h3 className="mt-1.5 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
                 {t('todayTitle')}
               </h3>
             </div>
@@ -284,21 +268,9 @@ export default function HumiHomePage() {
         </div>
       </div>
 
-      {/* Row 1.5 — Quick Actions (BRD #182: from admin config bus, per-role BRD #183) */}
+      {/* Row 1.5 — Quick Actions (BRD #182: from admin config bus) */}
       <div style={{ marginTop: 20 }}>
         <QuickActionsTile actions={quickActions} />
-        {/* BRD #183 tile visibility debug — visibleTiles is computed above and
-            available for future tile widget rendering. Currently tiles render as
-            a row of chips below the quick-actions; full tile widgets are Sprint 3+. */}
-        {visibleTiles.length > 0 && (
-          <div className="humi-row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-            {visibleTiles.map((tile) => (
-              <span key={tile.id} className="humi-tag humi-tag--cream" style={{ fontSize: 12 }}>
-                {tile.label}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Row 2 — approvals + docs */}
@@ -310,7 +282,7 @@ export default function HumiHomePage() {
           <div className="humi-row" style={{ marginBottom: 6 }}>
             <div>
               <div className="humi-eyebrow">{t('pendingEyebrow')}</div>
-              <h3 className="mt-1.5 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+              <h3 className="mt-1.5 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
                 {t('pendingTitle')}
               </h3>
             </div>
@@ -366,7 +338,7 @@ export default function HumiHomePage() {
 
         <div className="humi-card humi-card--cream">
           <div className="humi-eyebrow">{t('docsEyebrow')}</div>
-          <h3 className="mt-1.5 mb-3.5 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+          <h3 className="mt-1.5 mb-3.5 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
             {t('docsTitle')}
           </h3>
           {HUMI_PENDING_DOCS.map((d) => (
@@ -425,7 +397,7 @@ export default function HumiHomePage() {
           <div className="humi-row" style={{ marginBottom: 12 }}>
             <div>
               <div className="humi-eyebrow">{t('feedEyebrow')}</div>
-              <h3 className="mt-1.5 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+              <h3 className="mt-1.5 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
                 {t('feedTitle')}
               </h3>
             </div>
@@ -498,134 +470,48 @@ export default function HumiHomePage() {
           ))}
         </div>
 
-        <div className="humi-col" style={{ gap: 20 }}>
-          {/* Calendar */}
-          <div className="humi-card">
-            <div className="humi-row">
-              <div>
-                <div className="humi-eyebrow">{t('calendarEyebrow')}</div>
-                <h3 className="mt-1.5 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
-                  {t('calendarTitle')}
-                </h3>
-              </div>
-              <span className="humi-spacer" />
-              <button
-                type="button"
-                aria-label={t('prevMonth')}
-                className="humi-icon-btn"
-                style={{ width: 32, height: 32 }}
-              >
-                <ChevronLeft size={14} />
-              </button>
-              <button
-                type="button"
-                aria-label={t('nextMonth')}
-                className="humi-icon-btn"
-                style={{ width: 32, height: 32, marginLeft: 4 }}
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-            <div className="humi-cal" style={{ marginTop: 14 }} role="grid" aria-label={t('calendarEyebrow')}>
-              {CAL_DAYS_TH.map((d) => (
-                <div key={d} className="humi-cal-dow" role="columnheader">
-                  {d}
-                </div>
-              ))}
-              {Array.from({ length: 35 }).map((_, i) => {
-                const day = i - 2;
-                const off = day < 1 || day > 30;
-                const has = [8, 14, 17, 21, 28].includes(day);
-                const sel = day === 21;
-                const range = [28, 29, 30].includes(day);
-                return (
-                  <div
-                    key={i}
-                    role="gridcell"
-                    className={cn(
-                      'humi-cal-day',
-                      off && 'humi-cal-day--off',
-                      has && 'humi-cal-day--has',
-                      sel && 'humi-cal-day--sel',
-                      range && 'humi-cal-day--range',
-                    )}
-                  >
-                    {off ? '' : day}
-                  </div>
-                );
-              })}
-            </div>
-            <hr className="humi-divider" />
-            <div className="humi-col" style={{ gap: 10 }}>
-              {HUMI_CAL_EVENTS.map((ev) => (
-                <div key={ev.id} className="humi-row">
-                  <div
-                    style={{
-                      width: 6,
-                      height: 26,
-                      borderRadius: 3,
-                      background:
-                        ev.tone === 'accent'
-                          ? 'var(--color-accent)'
-                          : 'var(--color-warning)',
-                    }}
-                    aria-hidden
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
-                      {ev.title}
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-                      {ev.timeLabel}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Week recognition (ink card) */}
+        {/* Week recognition (ink card) — promoted up; calendar removed per Req3 */}
+        <div
+          data-testid="week-recognition"
+          className="humi-card humi-card--ink"
+          style={{ overflow: 'hidden', position: 'relative' }}
+        >
           <div
-            className="humi-card humi-card--ink"
-            style={{ overflow: 'hidden', position: 'relative' }}
+            className="humi-blob humi-blob--teal"
+            style={{ width: 90, height: 110, right: -20, bottom: -30, opacity: 0.55 }}
+            aria-hidden
+          />
+          <div
+            className="humi-eyebrow"
+            style={{ color: 'var(--color-accent)' }}
           >
-            <div
-              className="humi-blob humi-blob--teal"
-              style={{ width: 90, height: 110, right: -20, bottom: -30, opacity: 0.55 }}
+            <PartyPopper
+              size={12}
+              style={{ display: 'inline-block', verticalAlign: -2, marginRight: 4 }}
               aria-hidden
             />
-            <div
-              className="humi-eyebrow"
-              style={{ color: 'var(--color-accent)' }}
-            >
-              <PartyPopper
-                size={12}
-                style={{ display: 'inline-block', verticalAlign: -2, marginRight: 4 }}
+            {HUMI_WEEK_RECOGNITION.eyebrow}
+          </div>
+          <h3 className="mt-2 font-display text-xl font-semibold leading-snug tracking-tight text-[color:var(--color-canvas-soft)]">
+            {HUMI_WEEK_RECOGNITION.title}
+          </h3>
+          <div className="humi-row" style={{ marginTop: 14, gap: 0 }}>
+            {HUMI_WEEK_RECOGNITION.initials.map((a, idx) => (
+              <span
+                key={a.i}
+                className={AVATAR_TONE_MAP[a.tone]}
+                style={{
+                  border: '2px solid var(--color-ink)',
+                  marginLeft: idx === 0 ? 0 : -8,
+                }}
                 aria-hidden
-              />
-              {HUMI_WEEK_RECOGNITION.eyebrow}
-            </div>
-            <h3 className="mt-2 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-[color:var(--color-canvas-soft)]">
-              {HUMI_WEEK_RECOGNITION.title}
-            </h3>
-            <div className="humi-row" style={{ marginTop: 14, gap: 0 }}>
-              {HUMI_WEEK_RECOGNITION.initials.map((a, idx) => (
-                <span
-                  key={a.i}
-                  className={AVATAR_TONE_MAP[a.tone]}
-                  style={{
-                    border: '2px solid var(--color-ink)',
-                    marginLeft: idx === 0 ? 0 : -8,
-                  }}
-                  aria-hidden
-                >
-                  {a.i}
-                </span>
-              ))}
-              <Button variant="primary" style={{ marginLeft: 'auto' }}>
-                {t('weekGreetCta')}
-              </Button>
-            </div>
+              >
+                {a.i}
+              </span>
+            ))}
+            <Button variant="primary" style={{ marginLeft: 'auto' }}>
+              {t('weekGreetCta')}
+            </Button>
           </div>
         </div>
       </div>

@@ -1,0 +1,524 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1779693187296,
+  "projectRoot": "/Users/tachongrak/Projects/hr/src/frontend",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "next",
+        "version": "16.0.0",
+        "category": "fullstack"
+      },
+      {
+        "name": "react",
+        "version": "19.0.0",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.0.0",
+        "category": "frontend"
+      },
+      {
+        "name": "@playwright/test",
+        "version": "1.49.0",
+        "category": "testing"
+      },
+      {
+        "name": "vitest",
+        "version": "2.1.0",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "cd /Users/tachongrak/Projects/hr/src/frontend\necho \"=== tsc ===\"; npx tsc --noEmit -p tsconfig.json 2>&1 | grep -iE \"sidebar-ia|Sidebar\\.tsx\"; echo \"tsc-done\"\necho \"=== sidebar tests ===\"; npx vitest --run sidebar-ia sidebar-dedupe 2>&1 | grep -E \"Test Files|Tests |× \" | tail -12",
+    "testCommand": "cd /Users/tachongrak/Projects/hr/src/frontend\necho \"=== tsc ===\"; npx tsc --noEmit -p tsconfig.json 2>&1 | grep -iE \"sidebar-ia|Sidebar\\.tsx\"; echo \"tsc-done\"\necho \"=== sidebar tests ===\"; npx vitest --run sidebar-ia sidebar-dedupe 2>&1 | grep -E \"Test Files|Tests |× \" | tail -12",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "next dev --port 3000",
+      "build": "next build",
+      "start": "next start",
+      "test": "vitest",
+      "test:watch": "vitest --watch",
+      "test:e2e": "playwright test",
+      "test:e2e:headed": "playwright test --headed",
+      "test:e2e:demo-plus": "playwright test demo-2026-04-26-plus.spec.ts --project=chromium",
+      "lint": "eslint 'e2e/helpers/auth.helper.ts' 'src/__tests__/benefit-journey-canonical.test.tsx' 'src/app/[locale]/profile/[tab]/page.tsx' 'src/app/[locale]/profile/benefits/page.tsx' 'src/app/[locale]/profile/me/page.tsx' 'src/app/[locale]/employees/me/page.tsx' 'src/app/[locale]/ess/profile/edit/page.tsx' 'src/app/[locale]/admin/employees/page.tsx' 'src/app/[locale]/admin/employees/[id]/page.tsx' --max-warnings=0",
+      "build:address": "bun ../../scripts/build-address-chunks.ts"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "public",
+      "src"
+    ],
+    "gitBranches": {
+      "defaultBranch": "master",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "e2e": {
+      "path": "e2e",
+      "purpose": null,
+      "fileCount": 34,
+      "lastAccessed": 1779693186885,
+      "keyFiles": [
+        "accessibility.spec.ts",
+        "add-employee-sanity.spec.ts",
+        "admin-employees-export.spec.ts",
+        "auth.spec.ts",
+        "chain-1-ess-termination.spec.ts"
+      ]
+    },
+    "logs": {
+      "path": "logs",
+      "purpose": null,
+      "fileCount": 13,
+      "lastAccessed": 1779693186886,
+      "keyFiles": [
+        "chat.json",
+        "notification.json",
+        "post_tool_use.json",
+        "post_tool_use_failure.json",
+        "pre_compact.json"
+      ]
+    },
+    "messages": {
+      "path": "messages",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1779693186893,
+      "keyFiles": [
+        "en.json",
+        "th.json"
+      ]
+    },
+    "playwright-report": {
+      "path": "playwright-report",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1779693186894,
+      "keyFiles": [
+        "index.html"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 6,
+      "lastAccessed": 1779693186895,
+      "keyFiles": [
+        "humi-logo-final-2.png",
+        "humi-logo-light.png",
+        "humi-logo-white-v2.png",
+        "humi-logo-white-v3.png",
+        "humi-logo-white.png"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1779693186895,
+      "keyFiles": []
+    },
+    "test-artifacts": {
+      "path": "test-artifacts",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1779693186896,
+      "keyFiles": []
+    },
+    "test-results": {
+      "path": "test-results",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1779693186897,
+      "keyFiles": []
+    },
+    "src/__tests__": {
+      "path": "src/__tests__",
+      "purpose": "Test files",
+      "fileCount": 55,
+      "lastAccessed": 1779693186902,
+      "keyFiles": [
+        "Address8Editor.test.tsx",
+        "BankDetailsEditor.test.tsx",
+        "ContactArrayEditor.test.tsx"
+      ]
+    },
+    "src/app": {
+      "path": "src/app",
+      "purpose": "Application code",
+      "fileCount": 4,
+      "lastAccessed": 1779693186903,
+      "keyFiles": [
+        "fonts.ts",
+        "globals.css",
+        "layout.tsx"
+      ]
+    },
+    "src/components": {
+      "path": "src/components",
+      "purpose": "UI components",
+      "fileCount": 1,
+      "lastAccessed": 1779693186904,
+      "keyFiles": [
+        "AddressPicklist.tsx"
+      ]
+    },
+    "src/data": {
+      "path": "src/data",
+      "purpose": "Data files",
+      "fileCount": 0,
+      "lastAccessed": 1779693186904,
+      "keyFiles": []
+    },
+    "src/lib": {
+      "path": "src/lib",
+      "purpose": "Library code",
+      "fileCount": 30,
+      "lastAccessed": 1779693186905,
+      "keyFiles": [
+        "_request.ts",
+        "all-ported-employees.ts",
+        "api.ts"
+      ]
+    },
+    "src/mocks": {
+      "path": "src/mocks",
+      "purpose": "Mock data",
+      "fileCount": 1,
+      "lastAccessed": 1779693186905,
+      "keyFiles": [
+        "employees.ts"
+      ]
+    },
+    "src/test": {
+      "path": "src/test",
+      "purpose": "Test files",
+      "fileCount": 1,
+      "lastAccessed": 1779693186906,
+      "keyFiles": [
+        "setup.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/components/humi/shell/Sidebar.tsx",
+      "accessCount": 32,
+      "lastAccessed": 1779719665862,
+      "type": "file"
+    },
+    {
+      "path": "src/components/__tests__/sidebar-ia.test.tsx",
+      "accessCount": 14,
+      "lastAccessed": 1779719837827,
+      "type": "file"
+    },
+    {
+      "path": "src/app/[locale]/home/page.tsx",
+      "accessCount": 13,
+      "lastAccessed": 1779709332031,
+      "type": "file"
+    },
+    {
+      "path": "src/app/globals.css",
+      "accessCount": 13,
+      "lastAccessed": 1779710383950,
+      "type": "file"
+    },
+    {
+      "path": "src/components/__tests__/sf-parity-sidebar.test.tsx",
+      "accessCount": 12,
+      "lastAccessed": 1779702153999,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/shell/LoginAsRibbon.tsx",
+      "accessCount": 12,
+      "lastAccessed": 1779710544583,
+      "type": "file"
+    },
+    {
+      "path": "src/data/roster/mock.ts",
+      "accessCount": 10,
+      "lastAccessed": 1779701881201,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/shell/__tests__/sidebar-dedupe.test.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1779701648062,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/shell/Topbar.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1779711244265,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/shell/AppShell.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1779702781507,
+      "type": "file"
+    },
+    {
+      "path": "src/app/[locale]/admin/benefits/plans/page.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1779709991171,
+      "type": "file"
+    },
+    {
+      "path": "src/components/roster/RosterGantt.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1779701918640,
+      "type": "file"
+    },
+    {
+      "path": "src/app/[locale]/roster/page.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1779702054416,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/shell/__tests__/login-ribbon.test.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1779710757370,
+      "type": "file"
+    },
+    {
+      "path": "src/components/benefits/Tab1IdentityFields.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1779709967041,
+      "type": "file"
+    },
+    {
+      "path": "src/components/manager/__tests__/quick-approve-simple.test.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1779697241512,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/shell/__tests__/persona-switcher.test.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1779697518657,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/shell/PersonaSwitcher.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1779698339465,
+      "type": "file"
+    },
+    {
+      "path": "src/components/manager/quick-approve-simple.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1779698575608,
+      "type": "file"
+    },
+    {
+      "path": "src/components/roster/__tests__/ShiftEditorDrawer.test.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1779700122126,
+      "type": "file"
+    },
+    {
+      "path": "src/components/roster/CoverageStrip.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1779701940823,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/QuickActionsTile.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1779708056081,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/workflow-api.ts",
+      "accessCount": 3,
+      "lastAccessed": 1779709706663,
+      "type": "file"
+    },
+    {
+      "path": "src/app/[locale]/timeoff/page.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1779711670190,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/TodoBell.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1779693803781,
+      "type": "file"
+    },
+    {
+      "path": "messages/en.json",
+      "accessCount": 2,
+      "lastAccessed": 1779698751518,
+      "type": "file"
+    },
+    {
+      "path": "messages/th.json",
+      "accessCount": 2,
+      "lastAccessed": 1779698758249,
+      "type": "file"
+    },
+    {
+      "path": "src/app/[locale]/profile/me/page.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1779699605184,
+      "type": "file"
+    },
+    {
+      "path": "src/components/roster/__tests__/RosterGantt.test.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1779700058817,
+      "type": "file"
+    },
+    {
+      "path": "src/components/roster/__tests__/CoverageStrip.test.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1779700093181,
+      "type": "file"
+    },
+    {
+      "path": "src/app/[locale]/time/timesheet/page.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1779702250852,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/admin/store/useAdminSelfService.ts",
+      "accessCount": 2,
+      "lastAccessed": 1779708436373,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/demo-users.ts",
+      "accessCount": 1,
+      "lastAccessed": 1779693449634,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/admin/store/hrbpRoster.ts",
+      "accessCount": 1,
+      "lastAccessed": 1779693450045,
+      "type": "file"
+    },
+    {
+      "path": "src/app/[locale]/quick-approve/page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1779693469069,
+      "type": "file"
+    },
+    {
+      "path": "src/components/manager/quick-approve-page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1779693469951,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/ActingBadge.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1779693471542,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/index.ts",
+      "accessCount": 1,
+      "lastAccessed": 1779697246312,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/__tests__/persona-tiers.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1779697313633,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/shell/__tests__/topbar-bells.test.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1779697466549,
+      "type": "file"
+    },
+    {
+      "path": "src/components/profile/profile-header.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1779699461627,
+      "type": "file"
+    },
+    {
+      "path": "src/components/roster/ShiftEditorDrawer.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1779701966303,
+      "type": "file"
+    },
+    {
+      "path": "src/components/roster/ShiftSwapModal.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1779701983879,
+      "type": "file"
+    },
+    {
+      "path": "src/components/roster/BulkAssignModal.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1779702002731,
+      "type": "file"
+    },
+    {
+      "path": "src/data/admin/mockAdminSelfService.json",
+      "accessCount": 1,
+      "lastAccessed": 1779708353528,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/benefit-routes.ts",
+      "accessCount": 1,
+      "lastAccessed": 1779708370599,
+      "type": "file"
+    },
+    {
+      "path": "src/__tests__/benefit-plan-record-type-derivation.test.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1779709817380,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

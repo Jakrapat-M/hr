@@ -409,7 +409,13 @@ export async function getBenefitDefinition(benefitKey: string): Promise<BenefitD
 
 export async function updateBenefitPlan(
   benefitKey: string,
-  updates: { display_name?: string; default_policy?: 'allow' | 'deny' },
+  updates: {
+    display_name?: string;
+    default_policy?: 'allow' | 'deny';
+    // STA-70 plan-config fields carried through the EditPlanModal Identity tab.
+    recordType?: string;
+    benefitTypeGroup?: string;
+  },
 ): Promise<BenefitDefinition> {
   const headers = await buildAuthHeaders();
   const res = await fetch(
@@ -429,6 +435,8 @@ export interface CreateBenefitPlanInput {
   displayNameEn: string;
   category: string;
   recordType: string;
+  // STA-70 — benefit type group selected in the CreatePlanModal Identity tab.
+  benefitTypeGroup?: string;
   annualLimitThb?: number | null;
   eligibilityRuleId?: string | null;
 }

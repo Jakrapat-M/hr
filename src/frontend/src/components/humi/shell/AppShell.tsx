@@ -19,8 +19,8 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { LoginAsRibbon } from './LoginAsRibbon';
 import { CommandPalette } from './CommandPalette';
-import { AdminShell } from '@/components/admin/shell/AdminShell';
 import { useUIStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { ensureDemoSeed } from '@/lib/demo-seed';
@@ -70,10 +70,49 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/en/recruiting', title: 'สรรหา' },
   { prefix: '/th/reports', title: 'รายงาน' },
   { prefix: '/en/reports', title: 'รายงาน' },
+  // Admin destinations (more specific prefixes first — resolveTitle returns the
+  // first match, so these must precede the broad '/th/admin' entry below).
+  { prefix: '/th/admin/hire', title: 'รับพนักงานใหม่' },
+  { prefix: '/en/admin/hire', title: 'Hire Employee' },
+  { prefix: '/th/admin/employees', title: 'ทะเบียนพนักงาน' },
+  { prefix: '/en/admin/employees', title: 'Employees' },
+  { prefix: '/th/admin/foundation', title: 'โครงสร้างองค์กร' },
+  { prefix: '/en/admin/foundation', title: 'Foundation' },
+  { prefix: '/th/admin/benefits', title: 'แผนสวัสดิการ' },
+  { prefix: '/en/admin/benefits', title: 'Benefit Plans' },
+  { prefix: '/th/admin/documents', title: 'เอกสาร' },
+  { prefix: '/en/admin/documents', title: 'Documents' },
+  { prefix: '/th/admin/change-requests', title: 'คำขอเปลี่ยนแปลง' },
+  { prefix: '/en/admin/change-requests', title: 'Change Requests' },
+  { prefix: '/th/admin/reports', title: 'รายงาน (Admin)' },
+  { prefix: '/en/admin/reports', title: 'Reports (Admin)' },
+  { prefix: '/th/admin/self-service', title: 'Self-Service Config' },
+  { prefix: '/en/admin/self-service', title: 'Self-Service Config' },
+  { prefix: '/th/admin/users', title: 'ผู้ใช้และสิทธิ์' },
+  { prefix: '/en/admin/users', title: 'Users & Permissions' },
+  { prefix: '/th/admin/system', title: 'ระบบ' },
+  { prefix: '/en/admin/system', title: 'System' },
   { prefix: '/th/admin', title: 'ศูนย์ Admin' },
   { prefix: '/en/admin', title: 'ศูนย์ Admin' },
   { prefix: '/th/ess', title: 'บริการตนเอง' },
   { prefix: '/en/ess', title: 'บริการตนเอง' },
+  // ── Blueprint sidebar destinations (port 2026-05-25) ──
+  { prefix: '/th/time', title: 'ลงเวลา' },
+  { prefix: '/en/time', title: 'ลงเวลา' },
+  { prefix: '/th/payslip', title: 'สลิปเงินเดือน' },
+  { prefix: '/en/payslip', title: 'สลิปเงินเดือน' },
+  { prefix: '/th/me/documents', title: 'เอกสาร' },
+  { prefix: '/en/me/documents', title: 'เอกสาร' },
+  { prefix: '/th/manager-dashboard', title: 'การจัดการทีม' },
+  { prefix: '/en/manager-dashboard', title: 'การจัดการทีม' },
+  { prefix: '/th/roster', title: 'ตารางกะ' },
+  { prefix: '/en/roster', title: 'Roster & Shifts' },
+  { prefix: '/th/payroll', title: 'ค่าตอบแทน' },
+  { prefix: '/en/payroll', title: 'ค่าตอบแทน' },
+  { prefix: '/th/resignation', title: 'ลาออก' },
+  { prefix: '/en/resignation', title: 'ลาออก' },
+  { prefix: '/th/permissions', title: 'สิทธิ์ตามบทบาท' },
+  { prefix: '/en/permissions', title: 'สิทธิ์ตามบทบาท' },
 ];
 
 type ReadonlyURLSearchParamsLike = {
@@ -96,7 +135,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const hasHydrated = useAuthStore((s) => s._hasHydrated);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const { mobileMenuOpen, closeMobileMenu } = useUIStore();
+  const { mobileMenuOpen, closeMobileMenu, sidebarOpen } = useUIStore();
   // Refs for focus management — return focus to hamburger when drawer closes,
   // and focus the first interactive element inside drawer when it opens.
   const drawerRef = useRef<HTMLDivElement | null>(null);
@@ -201,15 +240,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  if (pathname.startsWith('/th/admin') || pathname.startsWith('/en/admin')) {
-    return <AdminShell>{children}</AdminShell>;
-  }
-
+  // NOTE (2026-05-25): admin routes now render through this same AppShell with
+  // the unified rail+panel Sidebar — there is no longer a separate AdminShell /
+  // AdminSidebar (user: "sidebar แยก employee/admin 2 ชุด ทำให้งง"). The
+  // Blueprint Sidebar already surfaces every /admin/* destination.
   const title = resolveTitle(pathname, searchParams);
 
   return (
-    <div className="humi-app">
-      {/* Desktop sidebar — hidden below lg via .humi-sidebar CSS */}
+    <div className={`humi-app${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
+      {/* Acting-as impersonation band — full-width grid row (grid-column 1/-1)
+          ABOVE the sidebar + main, so it covers the whole session chrome.
+          Renders only while impersonating. */}
+      <LoginAsRibbon />
+
+      {/* Desktop sidebar — hidden below lg via .humi-sidebar CSS; hidden on
+          desktop too when the user collapses it (sidebar-collapsed). */}
       <Sidebar />
 
       {/* Mobile drawer overlay — renders only when open. Wrapper has no width

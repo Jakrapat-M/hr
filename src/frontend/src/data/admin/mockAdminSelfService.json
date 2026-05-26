@@ -399,68 +399,100 @@
   },
   "quickActions": [
     {
-      "id": "qa_pay_statement",
-      "label": "สลิปเงินเดือน",
-      "icon": "FileText",
-      "href": "/th/employees/me/payslip",
+      "id": "qa_leave_request",
+      "label": "ขอลาหยุด",
+      "icon": "CalendarPlus",
+      "href": "/th/timeoff",
       "enabled": true,
       "order": 1
     },
     {
-      "id": "qa_request_feedback",
-      "label": "ขอฟีดแบ็ก",
-      "icon": "MessageSquare",
-      "href": "/th/workflows",
-      "enabled": false,
+      "id": "qa_pay_statement",
+      "label": "สลิปเงินเดือน",
+      "icon": "FileText",
+      "href": "/th/profile/me?tab=employment#pay-statements",
+      "enabled": true,
       "order": 2
     },
     {
-      "id": "qa_give_feedback",
-      "label": "ให้ฟีดแบ็ก",
-      "icon": "ThumbsUp",
-      "href": "/th/workflows",
-      "enabled": false,
+      "id": "qa_personal_info",
+      "label": "ข้อมูลส่วนตัว",
+      "icon": "User",
+      "href": "/th/profile/me",
+      "enabled": true,
       "order": 3
     },
     {
-      "id": "qa_create_activity",
-      "label": "สร้างกิจกรรม",
-      "icon": "PlusCircle",
-      "href": "/th/goals",
-      "enabled": false,
+      "id": "qa_benefit_reimbursement",
+      "label": "เบิกสวัสดิการ",
+      "icon": "Wallet",
+      "href": "/th/benefits-hub/reimbursement",
+      "enabled": true,
       "order": 4
     },
     {
-      "id": "qa_manage_data",
-      "label": "จัดการข้อมูลของฉัน",
-      "icon": "UserCog",
-      "href": "/th/ess/profile/edit",
+      "id": "qa_request_document",
+      "label": "ขอเอกสาร",
+      "icon": "FilePlus",
+      "href": "/th/me/documents/request",
       "enabled": true,
       "order": 5
     },
     {
-      "id": "qa_reminders",
-      "label": "รายการแจ้งเตือน",
-      "icon": "Bell",
-      "href": "/th/announcements",
-      "enabled": false,
+      "id": "qa_time_clock",
+      "label": "บันทึกเวลา",
+      "icon": "Clock",
+      "href": "/th/time-clock",
+      "enabled": true,
       "order": 6
     },
     {
-      "id": "qa_leave_request",
-      "label": "ขอลาหยุด",
-      "icon": "CalendarOff",
-      "href": "/th/timeoff?tab=request",
+      "id": "qa_my_requests",
+      "label": "คำขอของฉัน",
+      "icon": "Inbox",
+      "href": "/th/requests",
       "enabled": true,
       "order": 7
     },
     {
-      "id": "qa_time_sheet",
-      "label": "ใบลงเวลา",
-      "icon": "Clock",
-      "href": "/th/time",
+      "id": "qa_announcements",
+      "label": "ประกาศ",
+      "icon": "Bell",
+      "href": "/th/announcements",
       "enabled": true,
       "order": 8
+    },
+    {
+      "id": "qa_org_chart",
+      "label": "แผนผังองค์กร",
+      "icon": "Network",
+      "href": "/th/org-chart",
+      "enabled": true,
+      "order": 9
+    },
+    {
+      "id": "qa_employee_directory",
+      "label": "ทำเนียบพนักงาน",
+      "icon": "Users2",
+      "href": "/th/admin/employees",
+      "enabled": true,
+      "order": 10
+    },
+    {
+      "id": "qa_performance",
+      "label": "ผลงานของฉัน",
+      "icon": "BarChart3",
+      "href": "/th/performance",
+      "enabled": true,
+      "order": 11
+    },
+    {
+      "id": "qa_learning",
+      "label": "การเรียนรู้",
+      "icon": "GraduationCap",
+      "href": "/th/learning",
+      "enabled": true,
+      "order": 12
     }
   ],
   "tiles": [
