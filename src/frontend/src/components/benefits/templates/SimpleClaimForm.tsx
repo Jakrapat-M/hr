@@ -23,6 +23,7 @@ export interface SimpleClaimSubmission {
   selectedBenefit: string;
   benefitCode: string;
   claimDate: string;
+  receiptDate?: string;
   remainingAmount?: number;
   receiptNo: string;
   receiptAmount: number;
