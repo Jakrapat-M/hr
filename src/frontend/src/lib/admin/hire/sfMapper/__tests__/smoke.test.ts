@@ -13,7 +13,7 @@ const minimalFormData: FormData = {
     age: null, employeeId: '', nationalIdCardType: null,
     country: null, nationalId: '', issueDate: null, expiryDate: null,
     isPrimary: null, vnIssuePlace: '', salutationLocal: null,
-    attachmentName: null,
+    attachmentName: null, replacedEmployeeId: '',
   },
   biographical: {
     otherTitleTh: '', firstNameLocal: '', lastNameLocal: '',
@@ -36,7 +36,7 @@ const minimalFormData: FormData = {
     disabilityCertStartDate: null, disabilityCertEndDate: null,
     typeOfDisability: '', certificateId: '',
     spouseFatherIdNumber: '', spouseMotherIdNumber: '',
-    additionalInformation: '',
+    additionalInformation: '', disabilityAttachmentName: null,
   },
   workPermit: {
     documentType: '', country: '', documentNumber: '',

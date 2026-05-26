@@ -21,8 +21,17 @@
 //   4→'43' (Hindu), 5→'46' (Catholic), 6→'99' (Other)
 // Labels confirmed via standard Thai government religion code convention.
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
+import {
+  AttachmentDropzone,
+  type AttachedFile,
+} from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
+import {
+  attachmentNameFromFiles,
+  filesFromAttachmentName,
+} from '@/components/admin/AttachmentDropzone/attachmentFiles'
 
 // SF RELIGION_THA picklist — 6 active codes (externalCode values), sort-order ascending
 // Source: sf-qas-picklist-options-LINKED-2026-04-26.json # RELIGION_THA
@@ -40,8 +49,13 @@ interface StepGlobalInfoProps {
 }
 
 export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
+  const t = useTranslations('hireForm.globalInfo')
   const { formData, setStepData, setStepValidity } = useHireWizard()
   const gi = formData.globalInfo
+
+  const [disabilityAttachmentFiles, setDisabilityAttachmentFiles] = useState<AttachedFile[]>(
+    () => filesFromAttachmentName(gi.disabilityAttachmentName, 'disability-attachment'),
+  )
 
   // All fields optional per BA — always valid
   useEffect(() => {
@@ -51,6 +65,11 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
 
   function patch(values: Partial<typeof gi>) {
     setStepData('globalInfo', values)
+  }
+
+  function handleDisabilityAttachmentChange(files: AttachedFile[]) {
+    setDisabilityAttachmentFiles(files)
+    patch({ disabilityAttachmentName: attachmentNameFromFiles(files) || null })
   }
 
   const showDisabilityFields = gi.disabilityStatus === 'Y'
@@ -193,6 +212,20 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
               value={gi.disabilityCertEndDate ?? ''}
               onChange={(e) => patch({ disabilityCertEndDate: e.target.value || null })}
               className="humi-input w-full"
+            />
+          </fieldset>
+        )}
+
+        {/* STA-81: เอกสารแนบ (สถานะความพิการ) — shown only when disabilityStatus = Y */}
+        {showDisabilityFields && (
+          <fieldset className="md:col-span-2">
+            <AttachmentDropzone
+              id="gi-disability-attachment"
+              files={disabilityAttachmentFiles}
+              onFilesChange={handleDisabilityAttachmentChange}
+              label={t('disabilityAttachment')}
+              maxFiles={5}
+              maxSizeMB={10}
             />
           </fieldset>
         )}

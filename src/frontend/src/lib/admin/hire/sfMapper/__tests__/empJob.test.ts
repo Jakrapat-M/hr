@@ -13,7 +13,7 @@ const baseFormData: FormData = {
     age: 36, employeeId: 'EMP00123', nationalIdCardType: 'NATIONAL_ID',
     country: 'THA', nationalId: '1234567890123', issueDate: null, expiryDate: null,
     isPrimary: 'YES', vnIssuePlace: '', salutationLocal: 'MR',
-    attachmentName: null,
+    attachmentName: null, replacedEmployeeId: '',
   },
   biographical: {
     otherTitleTh: 'นาย', firstNameLocal: 'สมชาย', lastNameLocal: 'ใจดี',
@@ -36,7 +36,7 @@ const baseFormData: FormData = {
     disabilityCertStartDate: null, disabilityCertEndDate: null,
     typeOfDisability: '', certificateId: '',
     spouseFatherIdNumber: '', spouseMotherIdNumber: '',
-    additionalInformation: '',
+    additionalInformation: '', disabilityAttachmentName: null,
   },
   workPermit: {
     documentType: '', country: '', documentNumber: '',

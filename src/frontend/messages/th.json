@@ -4108,7 +4108,12 @@
       "forwardDateWarning": "วันที่เริ่มงานล่วงหน้าต้องผ่านการอนุมัติจาก SPD ก่อนเปิดใช้งาน (BRD #101)",
       "dvtPreviousId": "รหัสพนักงานเดิม (DVT)",
       "dvtPreviousIdPlaceholder": "กรอกถ้าเคยฝึกงาน/เคยเป็น DVT",
-      "dvtPreviousIdHelp": "ใช้ค้นประวัติเดิมและเติมข้อมูลอัตโนมัติเมื่อพบข้อมูลพนักงานฝึกงานเดิม"
+      "dvtPreviousIdHelp": "ใช้ค้นประวัติเดิมและเติมข้อมูลอัตโนมัติเมื่อพบข้อมูลพนักงานฝึกงานเดิม",
+      "replacedEmployeeId": "รหัสพนักงานที่ถูกแทนที่",
+      "replacedEmployeeIdPlaceholder": "รหัสพนักงานที่ถูกแทนที่โดยการจ้างนี้"
+    },
+    "globalInfo": {
+      "disabilityAttachment": "เอกสารแนบ (สถานะความพิการ)"
     },
     "biographical": {
       "sectionTitle": "ข้อมูลส่วนตัว",

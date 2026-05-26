@@ -4229,7 +4229,12 @@
       "forwardDateWarning": "A future hire date requires SPD pre-approval before activation (BRD #101)",
       "dvtPreviousId": "Previous Employee ID (DVT)",
       "dvtPreviousIdPlaceholder": "Enter if previously an intern/DVT",
-      "dvtPreviousIdHelp": "Used to look up previous intern records and prefill matching data when available"
+      "dvtPreviousIdHelp": "Used to look up previous intern records and prefill matching data when available",
+      "replacedEmployeeId": "Replaced Employee ID",
+      "replacedEmployeeIdPlaceholder": "Employee ID of the person being replaced"
+    },
+    "globalInfo": {
+      "disabilityAttachment": "Disability Document (Attachment)"
     },
     "biographical": {
       "sectionTitle": "Personal Information",

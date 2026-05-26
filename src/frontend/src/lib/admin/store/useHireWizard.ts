@@ -58,6 +58,8 @@ export interface GlobalInfoEntry {
   spouseFatherIdNumber: string         // SF: genericNumber4 (string OK at OData level — long IDs)
   spouseMotherIdNumber: string         // SF: genericNumber5
   additionalInformation: string        // SF: customString2
+  // STA-81: attachment upload when disability status = Y
+  disabilityAttachmentName: string | null
 }
 
 // ── Phase 5b-3: Work Permit (EmpWorkPermit SF entity) ──
@@ -188,6 +190,8 @@ export interface FormData {
     attachmentName: string | null
     // BA Personal Info row 1 — Salutation (Local)
     salutationLocal: string | null
+    // STA-81: conditional field — shown only when eventReason = 'H_RPLMENT'
+    replacedEmployeeId: string
   }
 
   // ── Cluster 2 "Job" (Personal Info carry-over) ── 12 fields
@@ -369,6 +373,7 @@ const initialFormData: FormData = {
     vnIssuePlace: '',
     attachmentName: null,
     salutationLocal: null,
+    replacedEmployeeId: '',
   },
   biographical: {
     otherTitleTh: '',
@@ -412,6 +417,7 @@ const initialFormData: FormData = {
     spouseFatherIdNumber: '',
     spouseMotherIdNumber: '',
     additionalInformation: '',
+    disabilityAttachmentName: null,
   },
   // ── Phase 5b-3: Work Permit ──
   workPermit: {
@@ -909,7 +915,14 @@ export const useHireWizard = create<HireWizardState>()(
             typeOfDisability: '', certificateId: '',
             spouseFatherIdNumber: '', spouseMotherIdNumber: '',
             additionalInformation: '',
+            disabilityAttachmentName: null,
           }
+        } else if (!('disabilityAttachmentName' in fd.globalInfo)) {
+          fd.globalInfo.disabilityAttachmentName = null
+        }
+        // STA-81: backfill replacedEmployeeId for old identity drafts
+        if (fd.identity && !('replacedEmployeeId' in fd.identity)) {
+          fd.identity.replacedEmployeeId = ''
         }
         if (!fd.workPermit) {
           fd.workPermit = {

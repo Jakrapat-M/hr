@@ -72,6 +72,7 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
   const [showBirthDetails,  setShowBirthDetails]  = useState(false)
 
   const [dvtPreviousId,     setDvtPreviousId]     = useState(formData.employeeInfo.dvtPreviousId ?? '')
+  const [replacedEmployeeId, setReplacedEmployeeId] = useState(id.replacedEmployeeId ?? '')
   const [hireDate,          setHireDate]          = useState(id.hireDate ?? todayISO())
   const [companyCode,       setCompanyCode]       = useState(id.companyCode ?? '')
   const [eventReason,       setEventReason]       = useState(id.eventReason ?? '')
@@ -156,6 +157,7 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
         isPrimary: isPrimary || null, vnIssuePlace,
         attachmentName: attachmentNameFromFiles(attachmentFiles) || null,
         salutationLocal: salutationLocal || null,
+        replacedEmployeeId,
       })
       onValidChange?.(true)
     } else {
@@ -171,7 +173,7 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
     hireDate, companyCode, eventReason, salutationEn, firstNameEn, middleNameEn,
     lastNameEn, dateOfBirth, countryOfBirth, regionOfBirth, age, employeeId,
     nationalIdCardType, country, nationalId, issueDate, expiryDate,
-    isPrimary, vnIssuePlace, attachmentFiles, salutationLocal, setStepData, onValidChange,
+    isPrimary, vnIssuePlace, attachmentFiles, salutationLocal, replacedEmployeeId, setStepData, onValidChange,
   ])
 
   useEffect(() => { validate() }, [validate])
@@ -277,6 +279,23 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
         </select>
         {errMsg('eventReason')}
       </fieldset>
+
+      {/* ─── STA-81: Replaced Employee ID — shown only when Event Reason = H_RPLMENT ─── */}
+      {eventReason === 'H_RPLMENT' && (
+        <fieldset className="md:col-span-2">
+          <label htmlFor="replaced-employee-id" className="humi-label">
+            {t('replacedEmployeeId')}
+          </label>
+          <input
+            id="replaced-employee-id"
+            type="text"
+            value={replacedEmployeeId}
+            onChange={(e) => setReplacedEmployeeId(e.target.value)}
+            placeholder={t('replacedEmployeeIdPlaceholder')}
+            className="humi-input w-full"
+          />
+        </fieldset>
+      )}
 
       {/* ─── BA row 4 — Salutation (EN) * ─── */}
       <fieldset>

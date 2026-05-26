@@ -108,6 +108,8 @@ export const stepIdentitySchema = z.object({
   vnIssuePlace: z.string().default(''),
   /** BA Personal Info row 1 — Salutation (Local) * */
   salutationLocal: z.enum(SALUTATION_EN_IDS),
+  /** STA-81: Replaced Employee ID — optional, shown only when eventReason = H_RPLMENT */
+  replacedEmployeeId: z.string().optional(),
 })
 .refine(
   (data) => {
@@ -283,6 +285,8 @@ export const globalInfoEntrySchema = z.object({
   spouseFatherIdNumber: z.string(),
   spouseMotherIdNumber: z.string(),
   additionalInformation: z.string(),
+  /** STA-81: attachment shown when disabilityStatus = Y */
+  disabilityAttachmentName: z.string().nullable().optional(),
 })
 
 export const stepGlobalInfoSchema = z.object({
