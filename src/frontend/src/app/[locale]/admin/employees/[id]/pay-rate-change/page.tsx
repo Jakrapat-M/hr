@@ -8,12 +8,13 @@
 //
 // C1: surgical — duplicates /promotion structure; routes to pay-rate-approvals store.
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { ArrowLeft, Wallet, Clock, Plus, Trash2 } from 'lucide-react'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
+import { formatCurrency } from '@/lib/date'
 import { usePayRateApprovals, PAY_RATE_STEP_LABEL, type PayRateAmountType, type PayRateRecurringPayment } from '@/stores/pay-rate-approvals'
 import { usePromotionApprovals } from '@/stores/promotion-approvals'
 import { useAuthStore } from '@/stores/auth-store'
@@ -66,6 +67,11 @@ const PAY_GROUPS = [
 
 // STA-24: Currency picklist. TODO(STA-24): confirm full ISO list with backend.
 const CURRENCIES = ['THB', 'USD', 'EUR', 'JPY', 'SGD'] as const
+
+// MOCK: current monthly base salary used for live salary preview (STA-83).
+// Matches ฿82,500 shown in humi-mock-data / CompensationSummary.
+// TODO(STA-83): replace with employee.base_salary once backend field lands.
+const CURRENT_MONTHLY_SALARY = 82_500
 
 // STA-24: Pay Component sets — full list for PRCHG_PROMO; subset for PRCHG_SALADJ.
 const PAY_COMPONENTS_PROMO_SET = [
@@ -219,6 +225,23 @@ export default function PayRateChangePage() {
   const amountValid = amount !== '' && !isNaN(amountNum) && (
     amountType === 'percent' ? isPercentAmountValid(amountNum) : isFlatAmountValid(amountNum)
   )
+
+  // STA-83: Live salary preview — derives percent↔flat and new salary from CURRENT_MONTHLY_SALARY.
+  const salaryPreview = useMemo(() => {
+    if (amount === '' || isNaN(amountNum) || CURRENT_MONTHLY_SALARY <= 0) return null
+    let delta: number
+    let pct: number
+    if (amountType === 'percent') {
+      pct = amountNum
+      delta = (CURRENT_MONTHLY_SALARY * pct) / 100
+    } else {
+      delta = amountNum
+      pct = (delta / CURRENT_MONTHLY_SALARY) * 100
+    }
+    if (!isFinite(delta) || !isFinite(pct)) return null
+    const newSalary = CURRENT_MONTHLY_SALARY + delta
+    return { delta, pct, newSalary }
+  }, [amount, amountNum, amountType])
 
   const isFormValid =
     !!effectiveDate &&
@@ -596,6 +619,50 @@ export default function PayRateChangePage() {
                 <p role="alert" className="humi-error text-danger" style={{ marginTop: 4 }}>
                   {amountError || (amountType === 'percent' ? 'ระบุ 0–50 เท่านั้น' : 'ระบุจำนวนเงินที่มากกว่า 0')}
                 </p>
+              )}
+
+              {/* STA-83: Live salary preview — struck-through current + new proposed salary */}
+              {salaryPreview && (
+                <div
+                  data-testid="salary-preview"
+                  style={{
+                    marginTop: 12,
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-md, 8px)',
+                    background: 'var(--color-canvas-soft)',
+                    border: '1px solid var(--color-hairline)',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <span className="humi-eyebrow" style={{ marginRight: 4 }}>ตัวอย่างเงินเดือน</span>
+                  {/* Struck-through current salary */}
+                  <span
+                    data-testid="salary-preview-current"
+                    className="text-body line-through text-ink-muted"
+                  >
+                    {formatCurrency(CURRENT_MONTHLY_SALARY)}
+                  </span>
+                  <span className="text-ink-muted" aria-hidden>→</span>
+                  {/* New proposed salary — prominent */}
+                  <span
+                    data-testid="salary-preview-new"
+                    className="text-body font-semibold text-ink"
+                  >
+                    {formatCurrency(salaryPreview.newSalary)}
+                  </span>
+                  {/* Delta + percent annotation */}
+                  <span
+                    data-testid="salary-preview-delta"
+                    className="text-small text-ink-muted"
+                  >
+                    ({salaryPreview.delta >= 0 ? '+' : ''}
+                    {formatCurrency(salaryPreview.delta)} · ≈{salaryPreview.pct.toFixed(1)}%
+                    {amountType === 'flat' ? ' ของเงินเดือนปัจจุบัน' : ''})
+                  </span>
+                </div>
               )}
             </div>
 
