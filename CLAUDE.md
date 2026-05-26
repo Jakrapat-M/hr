@@ -27,124 +27,135 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | #221 | 1:42 PM | 🔵 | RIS HR System - Employee Information Module Architecture | ~480 |
 </claude-mem-context>
 
+## ⚠️ Where the real app lives
+
+**The active product is the Next.js frontend in `src/frontend/`.** Everything else is legacy or reference:
+
+| What | Where | Status |
+|------|-------|--------|
+| **Active app** | `src/frontend/` — Next.js 16 App Router, React 19, TS 5 | ✅ do all product work here |
+| Legacy NestJS backend | `src/services/*` (14 microservices) | ⛔ out of scope this phase; do not wire |
+| Legacy docs | `README.md` (describes microservices + a vanilla `apps/` SPA) | ⛔ stale; the `apps/` SPA has been removed |
+
+The root `README.md` and the `src/services/` tree describe an earlier microservice architecture. Treat them as historical context only. For normal product work, inspect and modify `src/frontend`.
+
 ## Running the Application
 
-No build step required. The app runs directly from static files:
+Run everything from `src/frontend/`:
 
 ```bash
-# Serve the app (recommended)
-python -m http.server 8080 -d apps
-# Then open http://localhost:8080
-
-# Or open directly
-open apps/index.html
+cd src/frontend
+npm run dev          # Next.js dev server → http://localhost:3000
+npm run build        # production build
+npm run start        # serve the production build
 ```
+
+Default locale is Thai, so the dev URL lands at `http://localhost:3000/th`. English is `/en`.
+
+> Port 3000 is the only supported app target. Keycloak occupies 8080 (see Infrastructure below).
 
 ## Running Tests
 
+Run from `src/frontend/`:
+
 ```bash
-# Run all unit/verification tests
-npm run test:all
-
-# Run individual test suites
-npm test                        # verification-test.js
-npm run test:additional         # additional modules
-npm run test:profile            # profile-details
-npm run test:scorecard          # scorecard tab
-npm run test:benefits           # benefits tab
-
-# E2E tests use Playwright MCP (see .mcp.json)
+npm test                       # Vitest unit/integration (src/__tests__ + co-located *.test.tsx)
+npm run test:watch             # Vitest watch mode
+npm run test:e2e               # Playwright E2E (e2e/*.spec.ts)
+npm run test:e2e:headed        # Playwright headed
+npm run lint                   # ESLint — NOTE: scoped to an explicit file allowlist in package.json
+npm run build                  # also acts as the TS typecheck gate
 ```
 
-## Architecture
+- Focused first: `npm test -- --run <pattern>`, `npm run test:e2e -- --project=chromium <spec>`.
+- `npm run lint` only lints the files listed in `package.json` `scripts.lint` (not the whole tree) — widen the glob there if you need broader coverage.
+- For route/UI/behavior changes, add or update a Vitest/Playwright regression test alongside the change.
 
-### Frontend SPA (`apps/`)
+## Architecture (`src/frontend/`)
 
-Vanilla JavaScript with no build tooling. All modules are IIFE (Immediately Invoked Function Expression) patterns loaded via `<script>` tags in `apps/index.html`. **Script load order matters** — core modules must be loaded before pages that depend on them.
+Next.js 16 **App Router**, React 19 Server/Client components, TypeScript, Tailwind, Zustand state, `next-intl` i18n.
 
-**Load order in `index.html`:**
-1. Core: `state.js` → `i18n.js` → `api.js` → `router.js`
-2. Utils: `date.js`, `mask.js`, `rbac.js`, `validation.js`, `accessibility.js`
-3. Mock data: `mock-*.js` files
-4. Components: reusable UI (`header.js`, `modal.js`, `tabs.js`, etc.)
-5. Workflow engine: `engine.js`, `rules.js`, `notifications.js`
-6. Pages: `home.js`, `profile.js`, etc.
-7. Bootstrap: `app.js` (initializes everything)
-
-**Key modules:**
-- `apps/js/state.js` — Centralized pub/sub state store (`AppState.get/set/subscribe`)
-- `apps/js/router.js` — Hash-based SPA routing (`#/profile/tab`, `#/home`)
-- `apps/js/api.js` — Mock API client with simulated 300ms delays and retry logic
-- `apps/js/i18n.js` — Internationalization (Thai/English), loads from `apps/locales/`
-- `apps/js/utils/rbac.js` — Role-based access control (Employee, Manager, HR Admin, HR Manager)
-
-**Adding a new page:**
-1. Create `apps/js/pages/my-page.js` with `render()` and `init()` functions
-2. Add `<script src="js/pages/my-page.js">` to `apps/index.html`
-3. Register route in `apps/js/app.js` `registerRoutes()`
-4. Add translations to `apps/locales/en.json` and `apps/locales/th.json`
-
-### State Management
-
-```javascript
-AppState.set('currentEmployee', data);     // Update state
-AppState.get('currentEmployee');           // Read state
-AppState.subscribe('language', callback);  // React to changes
+```
+src/frontend/src/
+├── app/
+│   ├── [locale]/...          # all product routes (file-based; ~46 route groups)
+│   │   ├── home, profile, benefits-hub, payroll, quick-approve, admin/*, hrbp/*, ...
+│   │   └── globals.css       # Humi design tokens (CSS variables) — source of truth
+│   └── api/auth/[...nextauth]
+├── components/
+│   ├── humi/                 # Humi design system: 18 primitives + index.ts
+│   │   └── shell/            # AppShell, Sidebar, Topbar, CommandPalette, LoginAsRibbon, PersonaSwitcher
+│   └── <domain>/             # feature components (benefits, payroll, quick-approve, roster, ...)
+├── stores/                   # Zustand stores (see State below)
+├── lib/                      # API mocks, rbac, persona tiers, mock data, date/mask helpers
+├── i18n/                     # routing.ts, config.ts (locales), request.ts
+└── messages/                 # en.json, th.json (next-intl catalogs)
 ```
 
-### Routing
+### Routing (App Router — file-based)
 
-```javascript
-Router.register('profile/:tab', { render: (params) => ..., onEnter: (params) => ... });
-Router.navigate('profile', { id: 'EMP001' }); // → #/profile/EMP001
-```
+No route registry. To add a screen, create a folder + `page.tsx` under `src/app/[locale]/<route>/`. Locale prefix is handled by `middleware.ts` (`next-intl`). Links/navigation should preserve the active locale.
 
-### Branding
+- Locales: `['th','en']`, **default `th`** (`src/i18n/config.ts`).
+- Dynamic segments use folders like `profile/[tab]`, `quick-approve/[id]`.
 
-Custom Tailwind colors: `cg-red` (#C8102E), `cg-dark`, `cg-light`, `cg-success`, `cg-warning`, `cg-error`, `cg-info`.
+### State Management (Zustand)
+
+Stores live in `src/frontend/src/stores/`:
+
+- UI/session: `ui-store.ts`, `auth-store.ts`
+- Humi feature slices: `humi-*-slice.ts` (announcements, benefits, goals, integrations, learning, orgchart, profile, requests, timeoff)
+- Approval queues: `*-approvals.ts` (leave, pay-rate, probation, promotion, termination, transfer, workflow), plus benefit claim/referral/exception stores
+
+Use the existing slice that owns the domain before adding a new store.
+
+### Humi Design System (canonical)
+
+Start every UI task from Humi primitives and tokens — do not write route-local card/markup or raw hex.
+
+- **Tokens**: `src/frontend/src/app/globals.css` (CSS variables). Docs: `docs/design-system-humi.md`, `docs/humi-components.md`, `docs/humi-shell-port-notes.md`.
+- **Primitives**: `src/components/humi/` — `Card`, `Button`, `FormField`, `FileUploadField`, `DataTable`, `Modal`, `Nav`, `Avatar`, `Toggle`, `Textarea`, `EmptyState`, etc. (import via `components/humi/index.ts`).
+- **Palette**: cream canvas (`--color-canvas` `#F6F1E8`) + navy ink (`--color-ink` `#0E1B2C`). Primary/active = **teal** (`--color-accent` `#1FA8A0`). Info/alt = **indigo** `#5B6CE0`.
+- **NO-RED guardrail**: danger/error uses **pumpkin** `--color-danger` `#FB923C`, never red, Central-retail red, crimson, clay, or coral. No hardcoded hex in components unless the design docs explicitly allow it.
+- Use token utilities/vars: `bg-canvas`, `bg-canvas-soft`, `bg-surface`, `text-ink`, `text-ink-muted`, `border-hairline`, `shadow-[var(--shadow-card)]`, `rounded-[var(--radius-md)]`, `ring-accent-soft`. Radii: `--radius-xs 6px` … `--radius-xl 28px`.
+
+### RBAC & Demo Personas
+
+- Roles (`src/lib/rbac.ts`): `employee` < `manager` < `hrbp` < `spd` < `hr_admin` < `hr_manager` (hierarchy with implicit inheritance).
+- `src/lib/persona-tiers.ts` maps roles onto 4 demo tiers — **A** System/HR Admin, **B** People Partners (hrbp/spd), **C** Manager, **D** Employee — surfaced by the shell `PersonaSwitcher` + `LoginAsRibbon`.
+- **Menu RBAC = remove, not hide**: if a role lacks access, drop the menu item/group entirely; never render it locked/disabled.
+- **Approvals are unified**: every approval surfaces in the `/quick-approve` umbrella (tabs + rows + count) — never as a standalone per-feature entry page. Detail pages under `/workflows/<type>/[id]` are fine.
+
+### Mock data
+
+Static/registry-backed seeds (no real backend this phase): `src/lib/humi-mock-data.ts` (+ `humi-mock-data-sf-parity.ts`, `humi-mock-data-sf-real.ts`), `demo-seed.ts`, `demo-users.ts`, plus domain mocks (`*-mock.ts`) and `approval-registry.ts`. `lib/api.ts` / `*-api.ts` simulate async against these seeds.
 
 ### MCP Servers (`.mcp.json`)
 
-- **playwright** — Browser automation for E2E testing
-- **azure-devops** — Azure DevOps integration for `centralgroup` org
-- **firecrawl-mcp** — Web scraping/research
+- **playwright** — browser automation / E2E
+- **azure-devops** — Azure DevOps (`centralgroup` org)
+- **firecrawl-mcp** — web scraping / research
+- **context7** — up-to-date library/framework docs
+- **notebooklm** — source-grounded Q&A over NotebookLM notebooks
 
-## AI Developer Workflows (`adws/`)
+## Infrastructure (local)
 
-Python scripts that orchestrate Claude Code agents for complex development tasks. Requires `uv` (Python package manager).
+Docker Compose (`docker-compose.yml`) starts: **PostgreSQL** (5432), **Redis** (6379), **Keycloak** (8080). These back the legacy services; the Next.js mockup phase does not require them, but Keycloak's 8080 is why the app uses 3000.
 
-```bash
-# Run a prompt directly
-./adws/adw_prompt.py "Add error handling to api.js"
+## Specs & Slash Commands
 
-# Plan then implement (two-phase)
-./adws/adw_chore_implement.py "Add new HR feature"
-
-# Execute a slash command
-./adws/adw_slash_command.py /chore "description"
-
-# Multi-agent task orchestrator (reads tasks.md)
-python adws/adw_triggers/adw_trigger_cron_todone.py
-```
-
-ADW outputs are saved to `agents/{adw_id}/` with raw JSONL, parsed JSON, and summary files.
-
-**Slash commands** (`.claude/commands/*.md`) define reusable prompts: `/chore`, `/implement`, `/plan`, `/build`, `/prime`, `/test_e2e`.
-
-## Specs and Task Planning
-
-- `specs/` — Feature specs and chore plans (e.g., `specs/chore-{id}-{name}.md`)
-- `tasks.md` — Multi-agent task queue used by `adw_trigger_cron_todone.py`
-- Workflow: `/chore` creates a spec → `/implement` executes it → `/update_task` marks done
+- `specs/` — feature specs and chore plans (`specs/chore-{id}-{name}.md`).
+- `.claude/commands/*.md` — reusable slash commands: `/chore`, `/implement`, `/plan`, `/build`, `/prime`, `/test_e2e`, etc.
+- Outputs from agent workflows land under `agents/{id}/`.
 
 ## Key Conventions
 
-- All JS uses IIFE module pattern — no ES modules, no `import/export` (except `module.exports` guards for test compatibility)
-- Mock data lives in `apps/js/data/mock-*.js` and is imported by `api.js`
-- i18n keys follow dot notation: `nav.home`, `profile.personalInfo`, `common.save`
-- Thai Buddhist Era dates: use `apps/js/utils/date.js` helpers
-- Sensitive fields (bank accounts, national IDs) use `apps/js/utils/mask.js`
-- All implememnt task must follow same code pattern
+- **TypeScript + React 19 + App Router** — Server Components by default; add `'use client'` only when a component needs interactivity/state.
+- Reuse existing Humi primitives, Zustand stores, lib helpers, and routes before introducing new patterns. Keep diffs small and reversible.
+- i18n: add keys to **both** `messages/en.json` and `messages/th.json`; keep TH/EN parity. Default locale is `th`.
+- Thai Buddhist Era dates: use `src/lib/date.ts` helpers. Sensitive fields (bank accounts, national IDs) use the masking helpers.
+- No new dependencies without explicit request. No legacy card classes / route-local card styling in migrated Humi routes.
+- E2E and manual verification target the Next.js app at `http://localhost:3000` only (never the removed vanilla SPA).
 
 ## Communication style (สำคัญ — ผู้ใช้ต้องการ)
 
