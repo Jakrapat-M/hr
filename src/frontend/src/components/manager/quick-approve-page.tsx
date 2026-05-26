@@ -46,8 +46,9 @@ import { useCapabilities } from '@/hooks/use-capabilities';
 import { useQuickApprove } from '@/hooks/use-quick-approve';
 import { MOCK_PENDING_REQUESTS } from '@/components/quick-approve/mock-requests';
 import { useProbationCases, type ProbationCase } from '@/hooks/use-probation';
-import { useBenefitClaimsStore, type BenefitClaimRequest } from '@/stores/benefit-claims';
+import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 import type { PendingRequest, RequestType, Urgency } from '@/lib/quick-approve-api';
+import { probationToPendingRequest, benefitClaimToPendingRequest } from '@/lib/approval-registry';
 import { cn } from '@/lib/utils';
 // STA-28 PR-B v2 — Smart Tabs + Bulk Toolbar
 import { SmartTabs, type ActiveTab } from '@/components/manager/quick-approve/SmartTabs';
@@ -289,6 +290,14 @@ function pickTone(seed: string) {
   return AVATAR_TONES[Math.abs(h) % AVATAR_TONES.length];
 }
 
+// PR-1a (clickable-HRMS): the two bridge helpers probationToPendingRequest /
+// benefitClaimToPendingRequest were LIFTED into the canonical approval registry
+// (src/lib/approval-registry.ts) — imported above for local use by the useMemos
+// AND re-exported here for back-compat. STA-78/79 filter facets that master added
+// to benefitClaimToPendingRequest now live in the registry copy. The remaining
+// filter helpers below stay local (STA-75 claim-history filter strip).
+export { probationToPendingRequest, benefitClaimToPendingRequest };
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -372,86 +381,9 @@ function uniqueOptions(items: PendingRequest[], key: SelectFilterKey): string[] 
   );
 }
 
-// Probation cases live in their own mock store (PR #135) — adapt the pending
-// ones into PendingRequest shape so they interleave with the other workflow
-// approvals. Drill-in is special-cased to /workflows/probation/<id>.
-function probationToPendingRequest(c: ProbationCase): PendingRequest {
-  const slaMs = new Date(c.slaDeadline).getTime() - Date.now();
-  const slaHours = slaMs / (1000 * 60 * 60);
-  const urgency: Urgency = slaHours < 12 ? 'urgent' : slaHours < 48 ? 'normal' : 'low';
-  const waitingDays = Math.max(
-    0,
-    Math.floor((Date.now() - new Date(c.submittedAt ?? c.hireDate).getTime()) / 86400000),
-  );
-  const managerStatus =
-    c.status === 'pending_manager' ? 'pending'
-    : c.status === 'pending_hr' || c.status === 'escalated_ceo' || c.status === 'approved' ? 'approved'
-    : 'pending';
-  const hrStatus =
-    c.status === 'pending_hr' || c.status === 'escalated_ceo' ? 'pending'
-    : c.status === 'approved' ? 'approved'
-    : 'pending';
-  return {
-    id: c.id,
-    type: 'probation',
-    requester: {
-      id: c.employeeId,
-      name: c.fullNameTh,
-      position: c.position,
-      department: c.department,
-    },
-    description: `อนุมัติผลทดลองงาน — ${c.fullNameTh}`,
-    submittedAt: c.submittedAt ?? c.hireDate,
-    urgency,
-    waitingDays,
-    details: {},
-    approvalTimeline: [
-      { step: 1, approver: 'หัวหน้างาน', status: managerStatus },
-      { step: 2, approver: 'HR Director', status: hrStatus },
-    ],
-  };
-}
-
-// STA-28 PR-A — read-side bridge: surface pending_manager_approval benefit claims
-// alongside legacy PendingRequest items. No store mutation, no schema change.
-function benefitClaimToPendingRequest(c: BenefitClaimRequest): PendingRequest {
-  const slaMs = 72 * 60 * 60 * 1000; // 72-hour SLA for manager approval
-  const elapsedMs = Date.now() - new Date(c.submittedAt).getTime();
-  const slaHours = elapsedMs / (1000 * 60 * 60);
-  const urgency: Urgency = slaHours > 48 ? 'urgent' : slaHours > 24 ? 'normal' : 'low';
-  const waitingDays = Math.max(0, Math.floor(elapsedMs / 86400000));
-  return {
-    id: c.id,
-    type: 'claim',
-    requester: {
-      id: c.employeeId,
-      name: c.employeeName,
-      position: c.benefitName,
-      department: c.businessUnit,
-    },
-    description: `เบิกสวัสดิการ ${c.benefitName} — ฿${c.totalClaimAmount.toLocaleString('th-TH')}`,
-    submittedAt: c.submittedAt,
-    urgency,
-    waitingDays,
-    attachments: c.attachments.map((file) => file.filename ?? file.name ?? 'attachment'),
-    filterMeta: {
-      eventReason: c.benefitType,
-      requestedFor: c.employeeName,
-      effectiveDate: c.receiptDate,
-      initiatedBy: c.employeeName,
-      initiatedDate: c.submittedAt.slice(0, 10),
-      company: c.company,
-      businessUnit: c.businessUnit,
-      department: c.businessUnit,
-      assignment: 'Manager approval',
-    },
-    details: {},
-    approvalTimeline: [
-      { step: 1, approver: 'หัวหน้างาน', status: 'pending' },
-      { step: 2, approver: 'SPD Benefits', status: 'pending' },
-    ],
-  };
-}
+// Note: probationToPendingRequest / benefitClaimToPendingRequest are imported from
+// @/lib/approval-registry (PR-1a lift) and re-exported above — they are no longer
+// defined locally. Their STA-78/79 filter-facet enhancements live in the registry.
 
 function isProbationPending(c: ProbationCase): boolean {
   return (

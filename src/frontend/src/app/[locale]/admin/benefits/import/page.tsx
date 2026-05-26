@@ -205,7 +205,7 @@ export default function BenefitImportPage() {
   const [runDone, setRunDone] = useState(false);
 
   // Monitor job panel
-  const [jobs] = useState<ImportJob[]>(MOCK_IMPORT_JOBS);
+  const [jobs, setJobs] = useState<ImportJob[]>(MOCK_IMPORT_JOBS);
   const [logModalJob, setLogModalJob] = useState<ImportJob | null>(null);
 
   const validationItems = csvType === 'enrolment' ? MOCK_VALIDATION_ENROLMENT : MOCK_VALIDATION_CLAIM;
@@ -259,6 +259,33 @@ export default function BenefitImportPage() {
     await mockProgress(8, (s) => setRunStep(s), 400);
     setIsRunning(false);
     setRunDone(true);
+
+    // Record the completed run as a visible job-history row (in-session only).
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    const stamp = `${hh}:${mm}:${ss}`;
+    const jobId = `IMP-${String(Math.floor(now.getTime() / 1000) % 10000).padStart(4, '0')}`;
+    const totalRows = validationItems.length;
+    const newJob: ImportJob = {
+      id: jobId,
+      filename: selectedFile?.name ?? 'import.csv',
+      type: csvType,
+      status: validError > 0 ? 'failed' : 'completed',
+      started: `${now.toISOString().slice(0, 10)}T${stamp}`,
+      records: totalRows,
+      processed: validOk + validWarning,
+      errors: validError,
+      logLines: [
+        `[${stamp}] Job ${jobId} started`,
+        `[${stamp}] Parsed ${totalRows} rows from ${selectedFile?.name ?? 'import.csv'}`,
+        `[${stamp}] Validation: ${validOk} OK / ${validWarning} warning(s) / ${validError} error(s)`,
+        `[${stamp}] Inserted ${validOk + validWarning} records`,
+        `[${stamp}] Job ${jobId} completed`,
+      ],
+    };
+    setJobs((prev) => [newJob, ...prev]);
   };
 
   // ── Step 1: Upload ───────────────────────────────────────────────────────────

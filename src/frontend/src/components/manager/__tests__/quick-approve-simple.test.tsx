@@ -6,18 +6,36 @@
  * AC7.6 token scan (no red/rose/pink, no hex) | AC7.7 bilingual labels
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import thMessages from '../../../../messages/th.json';
 import { QuickApproveSimple } from '../quick-approve-simple';
-import { MOCK_PENDING_REQUESTS } from '@/components/quick-approve/mock-requests';
+// PR-1b: the inbox now DERIVES from the seeded stores, so the count comes from the
+// single seed authority (APPROVAL_SEED_COUNT), not the retired static array.
+import { APPROVAL_SEED_COUNT } from '@/lib/approval-seed-fixtures';
+import { useLeaveApprovals } from '@/stores/leave-approvals';
+import { useWorkflowApprovals } from '@/stores/workflow-approvals';
+import { useBenefitClaimsStore } from '@/stores/benefit-claims';
+import { useTransferApprovals } from '@/stores/transfer-approvals';
+import { ensureDemoSeed, resetEnsureDemoSeedForTests } from '@/lib/demo-seed';
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/th/quick-approve'),
   useRouter: vi.fn(() => ({ push: vi.fn() })),
 }));
+
+// PR-1b: run the SINGLE seed authority before each test so the derived inbox has
+// the canonical rows (mirrors AppShell mounting ensureDemoSeed before the route).
+beforeEach(() => {
+  useLeaveApprovals.getState().clear();
+  useWorkflowApprovals.getState().clear();
+  useBenefitClaimsStore.getState().clear();
+  useTransferApprovals.getState().clear();
+  resetEnsureDemoSeedForTests();
+  ensureDemoSeed();
+});
 
 // Wrap component in required providers.
 function renderComponent() {
@@ -53,7 +71,7 @@ describe('QuickApproveSimple — AC7.1 header', () => {
 
   it('renders subtitle with pending count', () => {
     renderComponent();
-    const totalPending = MOCK_PENDING_REQUESTS.length;
+    const totalPending = APPROVAL_SEED_COUNT;
     // subtitle is a <p> element — scope to elements that exactly contain the count
     const matches = screen.getAllByText((t) => t.includes(String(totalPending)));
     expect(matches.some((el) => el.tagName === 'P')).toBe(true);
@@ -131,7 +149,7 @@ describe('QuickApproveSimple — AC7.4 inline actions', () => {
 describe('QuickApproveSimple — AC7.5 approve state change', () => {
   it('clicking Approve reduces pending subtitle count by 1', () => {
     renderComponent();
-    const totalPending = MOCK_PENDING_REQUESTS.length;
+    const totalPending = APPROVAL_SEED_COUNT;
     const approveBtns = screen.getAllByRole('button', { name: /อนุมัติ/ });
     fireEvent.click(approveBtns[0]);
     // subtitle <p> should now contain totalPending - 1

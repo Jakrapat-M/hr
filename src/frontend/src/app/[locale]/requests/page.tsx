@@ -49,6 +49,7 @@ import {
 import { selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { selectTaxPlanningRequestSummaries, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
+import { useQueueRequestRows } from '@/lib/approval-registry';
 
 // ════════════════════════════════════════════════════════════
 // /requests — Forms/requests tracker
@@ -118,6 +119,11 @@ export default function HumiRequestsPage() {
   const benefitClaims = useBenefitClaimsStore((state) => state.claims);
   const benefitReferrals = useBenefitReferralsStore((state) => state.referrals);
   const taxPlanningDrafts = useBenefitTaxPlanningStore((state) => state.drafts);
+  // PR-2 (ORPHAN1): project the canonical approval-queue rows into the tracker so
+  // an approval/rejection in /quick-approve flips the SAME request's status here
+  // live, no refresh (AC-2.1). queueSnapshot ids (WF-2026-NNN) are distinct from
+  // the legacy REQ-/benefit rows, so no de-dup is needed.
+  const queueRows = useQueueRequestRows('th');
 
   const allMine = useMemo(() => {
     const base = HUMI_MY_REQUESTS.map((r) => ({ ...r }));
@@ -131,11 +137,19 @@ export default function HumiRequestsPage() {
         { role: 'หัวหน้างาน', name: 'ปรีชา วัฒนกุล', initials: 'ปว', tone: 'teal' as const, status: 'pending' as const, when: 'รอดำเนินการ' },
       ] satisfies HumiApprovalStep[],
     }));
+    const queue = queueRows.map((q) => ({
+      id: q.id,
+      type: q.type,
+      sub: q.sub,
+      submitted: q.submitted,
+      status: q.status as RequestStatus,
+      approvalChain: q.approvalChain satisfies HumiApprovalStep[],
+    }));
     const benefitRows = selectBenefitRequestSummaries(benefitClaims);
     const referralRows = selectBenefitReferralRequestSummaries(benefitReferrals);
     const taxRows = selectTaxPlanningRequestSummaries(taxPlanningDrafts);
-    return [...referralRows, ...taxRows, ...benefitRows, ...store, ...base];
-  }, [benefitClaims, benefitReferrals, taxPlanningDrafts, submissions]);
+    return [...referralRows, ...taxRows, ...benefitRows, ...queue, ...store, ...base];
+  }, [benefitClaims, benefitReferrals, taxPlanningDrafts, submissions, queueRows]);
 
   const filtered = useMemo(() => {
     if (filter === 'all') return allMine;

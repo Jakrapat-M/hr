@@ -1,95 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, CheckCircle2, XCircle, ShieldOff, Square, CheckSquare } from 'lucide-react';
 import { Button, DataTable, Modal, FormField, Capability } from '@/components/humi';
 import { UrgencyBadge } from '@/components/quick-approve/UrgencyBadge';
 import type { DataTableColumn } from '@/components/humi';
+import { APPROVAL_REGISTRY, useSelectPendingApprovals } from '@/lib/approval-registry';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 
-// ── Shared mock (subset for the bulk queue) ───────────────────────────────────
-
-const BULK_MOCK: PendingRequest[] = [
-  {
-    id: 'WF-001',
-    type: 'leave',
-    requester: { id: 'EMP001', name: 'สมชาย ใจดี', position: 'Software Engineer', department: 'Technology' },
-    description: 'Annual leave for family trip',
-    submittedAt: '2026-04-28T09:00:00Z',
-    urgency: 'normal',
-    waitingDays: 3,
-    details: {},
-    approvalTimeline: [{ step: 1, approver: 'Manager', status: 'approved' }, { step: 2, approver: 'HRBP', status: 'pending' }],
-  },
-  {
-    id: 'WF-002',
-    type: 'overtime',
-    requester: { id: 'EMP002', name: 'มณี สุขใจ', position: 'Product Manager', department: 'Product' },
-    description: 'Overtime for sprint deadline',
-    submittedAt: '2026-04-27T14:30:00Z',
-    urgency: 'urgent',
-    waitingDays: 4,
-    details: {},
-    approvalTimeline: [{ step: 1, approver: 'Manager', status: 'pending' }],
-  },
-  {
-    id: 'WF-003',
-    type: 'claim',
-    requester: { id: 'EMP003', name: 'วิไล ทองคำ', position: 'Business Analyst', department: 'Finance' },
-    description: 'Medical expense reimbursement',
-    submittedAt: '2026-04-26T10:00:00Z',
-    urgency: 'normal',
-    waitingDays: 5,
-    details: {},
-    approvalTimeline: [{ step: 1, approver: 'HRBP', status: 'pending' }],
-  },
-  {
-    id: 'WF-006',
-    type: 'leave',
-    requester: { id: 'EMP006', name: 'อนุชา พงษ์ไพร', position: 'Marketing Executive', department: 'Marketing' },
-    description: 'Sick leave request',
-    submittedAt: '2026-04-29T07:30:00Z',
-    urgency: 'urgent',
-    waitingDays: 2,
-    details: {},
-    approvalTimeline: [{ step: 1, approver: 'Manager', status: 'pending' }],
-  },
-  {
-    id: 'WF-008',
-    type: 'overtime',
-    requester: { id: 'EMP008', name: 'ธีรพงศ์ วงศ์ชัย', position: 'QA Engineer', department: 'Technology' },
-    description: 'Weekend testing overtime',
-    submittedAt: '2026-04-28T16:00:00Z',
-    urgency: 'normal',
-    waitingDays: 3,
-    details: {},
-    approvalTimeline: [{ step: 1, approver: 'Manager', status: 'pending' }],
-  },
-  {
-    id: 'WF-012',
-    type: 'overtime',
-    requester: { id: 'EMP012', name: 'ศุภชัย มะลิวัลย์', position: 'DevOps Engineer', department: 'Technology' },
-    description: 'Infrastructure migration overtime',
-    submittedAt: '2026-04-26T18:00:00Z',
-    urgency: 'urgent',
-    waitingDays: 5,
-    details: {},
-    approvalTimeline: [{ step: 1, approver: 'Manager', status: 'pending' }],
-  },
-  {
-    id: 'WF-013',
-    type: 'leave',
-    requester: { id: 'EMP013', name: 'นภาพร ลิ้มทอง', position: 'UX Designer', department: 'Product' },
-    description: 'Personal leave request',
-    submittedAt: '2026-04-28T08:00:00Z',
-    urgency: 'normal',
-    waitingDays: 3,
-    details: {},
-    approvalTimeline: [{ step: 1, approver: 'Manager', status: 'pending' }],
-  },
-];
+// Demo manager actor for mock dispatch (mirrors quick-approve-simple).
+const MANAGER_NAME = 'ผู้จัดการ / Manager';
 
 // ── Not-authorized fallback ───────────────────────────────────────────────────
 
@@ -114,6 +36,16 @@ function NotAuthorized() {
 function BulkApproveInner() {
   const t = useTranslations('quick_approve_bulk');
   const router = useRouter();
+
+  // PR-1c: the bulk queue derives from the SAME seeded stores as the unified inbox
+  // (only still-pending rows are actionable in bulk), so dispatching mutates the
+  // real source store — no parallel mock array.
+  const queue = useSelectPendingApprovals();
+  const rows = useMemo<PendingRequest[]>(
+    () => queue.filter((q) => q.status === 'pending').map((q) => q.row),
+    [queue],
+  );
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkAction, setBulkAction] = useState<'approve' | 'reject' | null>(null);
   const [reason, setReason] = useState('');
@@ -130,10 +62,10 @@ function BulkApproveInner() {
   };
 
   const toggleAll = () => {
-    if (selectedIds.size === BULK_MOCK.length) {
+    if (selectedIds.size === rows.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(BULK_MOCK.map((r) => r.id)));
+      setSelectedIds(new Set(rows.map((r) => r.id)));
     }
   };
 
@@ -147,7 +79,7 @@ function BulkApproveInner() {
           aria-label="Select all"
           className="flex items-center"
         >
-          {selectedIds.size === BULK_MOCK.length ? (
+          {rows.length > 0 && selectedIds.size === rows.length ? (
             <CheckSquare className="h-4 w-4 text-accent" />
           ) : (
             <Square className="h-4 w-4 text-ink-muted" />
@@ -223,8 +155,24 @@ function BulkApproveInner() {
   const handleConfirm = async () => {
     if (!bulkAction) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setDone({ action: bulkAction, count: selectedIds.size });
+    const count = selectedIds.size;
+    // AC-1c.3: dispatch every selected row to its correct source store by type so
+    // each ends in a terminal/next-pending state — no invisible/indeterminate row.
+    // Await the async benefit adapter so claims reach pending_spd before we close.
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    await Promise.all(
+      Array.from(selectedIds).map((id) => {
+        const row = byId.get(id);
+        if (!row) return Promise.resolve();
+        const adapter = APPROVAL_REGISTRY[row.type];
+        const result =
+          bulkAction === 'approve'
+            ? adapter.approve(id, { name: MANAGER_NAME })
+            : adapter.reject(id, { name: MANAGER_NAME }, reason);
+        return Promise.resolve(result);
+      }),
+    );
+    setDone({ action: bulkAction, count });
     setSelectedIds(new Set());
     setBulkAction(null);
     setReason('');
@@ -276,7 +224,7 @@ function BulkApproveInner() {
 
       {/* Table */}
       <DataTable
-        rows={BULK_MOCK}
+        rows={rows}
         columns={columns}
         rowKey={(row) => row.id}
         caption={t('title')}
@@ -289,7 +237,7 @@ function BulkApproveInner() {
       {/* Sticky bottom action bar */}
       <div className="sticky bottom-0 z-10 mt-4 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-hairline bg-surface px-5 py-3 shadow-[var(--shadow-md)]">
         <span className="text-small text-ink-muted">
-          {t('selectedCount', { count: selectedIds.size, total: BULK_MOCK.length })}
+          {t('selectedCount', { count: selectedIds.size, total: rows.length })}
         </span>
         <div className="flex gap-3">
           <Button

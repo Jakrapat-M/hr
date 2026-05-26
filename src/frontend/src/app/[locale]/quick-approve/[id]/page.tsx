@@ -11,8 +11,11 @@ import { RequestPayload } from '@/components/quick-approve/detail/RequestPayload
 import { HistoryTimeline } from '@/components/quick-approve/detail/HistoryTimeline';
 import { ActionPanel } from '@/components/quick-approve/detail/ActionPanel';
 import { RejectReturnDrawer, type DrawerMode } from '@/components/quick-approve/detail/RejectReturnDrawer';
-import { MOCK_PENDING_REQUESTS } from '@/components/quick-approve/mock-requests';
+import { APPROVAL_REGISTRY, useSelectPendingApprovals } from '@/lib/approval-registry';
 import type { PendingRequest } from '@/lib/quick-approve-api';
+
+// Demo manager actor for mock dispatch (mirrors quick-approve-simple).
+const MANAGER_NAME = 'ผู้จัดการ / Manager';
 
 // ── Mock data (15 items, at least 3 claims) ──────────────────────────────────
 
@@ -409,7 +412,13 @@ const MOCK_REQUESTS: PendingRequest[] = [
   },
 ];
 
-const DETAIL_REQUESTS = [...MOCK_REQUESTS, ...MOCK_PENDING_REQUESTS];
+// PR-1b (R3): the detail route now resolves ids from the SAME store-derived source
+// as the live inbox (selectPendingApprovals), so opening any listed row reflects
+// its live status (no stale seam). MOCK_REQUESTS (WF-001..015) is kept ONLY as a
+// fallback for the legacy detail-only ids that are not part of the seeded queue, so
+// the seeded set ∪ legacy set is a SUPERSET of every reachable id — no listed row
+// deep-links to notFound().
+const LEGACY_DETAIL_FALLBACK = MOCK_REQUESTS;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -424,17 +433,40 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>('reject');
+  const [toast, setToast] = useState<string | null>(null);
 
   function openDrawer(mode: DrawerMode) {
     setDrawerMode(mode);
     setDrawerOpen(true);
   }
 
-  function handleDrawerConfirm(_requestId: string, _reason: string, _comment: string) {
-    // No-op in demo — production would dispatch to API here.
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
   }
 
-  const request = DETAIL_REQUESTS.find((r) => r.id === id);
+  // PR-1b (R3): resolve from the store-derived queue first (live status), then the
+  // legacy detail-only fallback. Order guarantees no listed row 404s.
+  const queue = useSelectPendingApprovals();
+  const request =
+    queue.find((q) => q.row.id === id)?.row ??
+    LEGACY_DETAIL_FALLBACK.find((r) => r.id === id);
+
+  // PR-1c: dispatch approve/reject to the correct source store by request type,
+  // then toast. The benefit adapter is mock-async (Promise) — fire it; the page
+  // re-renders from the subscribed selector once the store settles.
+  function handleApprove() {
+    if (!request) return;
+    void APPROVAL_REGISTRY[request.type].approve(request.id, { name: MANAGER_NAME });
+    showToast(t('toastApproved'));
+  }
+
+  function handleDrawerConfirm(requestId: string, reason: string, _comment: string) {
+    if (!request) return;
+    void APPROVAL_REGISTRY[request.type].reject(requestId, { name: MANAGER_NAME }, reason);
+    setDrawerOpen(false);
+    showToast(drawerMode === 'return' ? t('toastReturned') : t('toastRejected'));
+  }
 
   if (!request) {
     return (
@@ -487,6 +519,7 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
         <ActionPanel
           requestId={request.id}
           requestType={request.type}
+          onApprove={handleApprove}
           onReject={() => openDrawer('reject')}
           onReturn={() => openDrawer('return')}
         />
@@ -499,6 +532,16 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
         onClose={() => setDrawerOpen(false)}
         onConfirm={handleDrawerConfirm}
       />
+
+      {/* Toast */}
+      {toast && (
+        <div
+          role="status"
+          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-[var(--radius-md)] border border-hairline bg-surface px-4 py-2 text-small text-ink shadow-[var(--shadow-md)]"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

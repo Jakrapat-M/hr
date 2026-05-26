@@ -3,27 +3,26 @@
 // ════════════════════════════════════════════════════════════
 // QuickApproveSimple — simplified approvals queue (PR-5 Req7)
 // Unified inbox at /quick-approve. DataTable + segmented filter.
-// Local state only — mockup, no persistence.
+// PR-1c: approve/reject DISPATCH to the source store via APPROVAL_REGISTRY —
+// the row's status then derives from the store (no local override map).
 // Danger = --color-danger (pumpkin). No Tailwind red/rose/pink. No hex.
 // ════════════════════════════════════════════════════════════
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Card } from '@/components/humi';
 import { Button } from '@/components/humi';
 import { DataTable, type DataTableColumn } from '@/components/humi';
-import { MOCK_PENDING_REQUESTS } from '@/components/quick-approve/mock-requests';
+import { APPROVAL_REGISTRY, useSelectPendingApprovals } from '@/lib/approval-registry';
 import type { PendingRequest } from '@/lib/quick-approve-api';
+
+// Demo manager actor for mock dispatch (mirrors workflows/benefit-claim/[id]).
+const MANAGER_NAME = 'ผู้จัดการ / Manager';
 
 // ── Types ────────────────────────────────────────────────────
 
 type FilterTab = 'all' | 'pending' | 'approved' | 'rejected';
-
-interface RowStatus {
-  id: string;
-  overrideStatus: 'approved' | 'rejected' | null;
-}
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -57,22 +56,43 @@ function displayRef(id: string): string {
 export function QuickApproveSimple() {
   const t = useTranslations('quickApprove.simple');
 
-  // Local override map: id → 'approved' | 'rejected' | null (still pending).
-  const [overrides, setOverrides] = useState<Record<string, 'approved' | 'rejected'>>({});
+  // PR-1b: rows now DERIVE from the seeded stores (single source of truth) instead
+  // of the static MOCK_PENDING_REQUESTS array. The selector collapses the store
+  // status enums (pending_spd/pending_hr/pending_manager(_approval)) → pending for
+  // the 3-state filter below.
+  const locale = useLocale();
+  const queue = useSelectPendingApprovals();
+  const rows = useMemo<PendingRequest[]>(() => queue.map((q) => q.row), [queue]);
+  // PR-1c: status DERIVES from the store (via the selector) — no local override
+  // map. Approve/reject dispatch to the source store and the row re-renders from
+  // the new store status.
+  const seededStatus = useMemo<Record<string, 'pending' | 'approved' | 'rejected'>>(
+    () => Object.fromEntries(queue.map((q) => [q.row.id, q.status])),
+    [queue],
+  );
+  // Rows where the first approver has acted but a later step is still pending
+  // (e.g. a claim the manager approved → now awaiting SPD). Drives the explicit
+  // "awaiting next approver" chip so an approved-but-not-terminal row never looks
+  // unactioned (AC-1c.2).
+  const awaitingNext = useMemo<Record<string, boolean>>(
+    () => Object.fromEntries(queue.filter((q) => q.awaitingNext).map((q) => [q.row.id, true])),
+    [queue],
+  );
+
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
 
-  // Derive effective status for each request.
+  // Effective status = the collapsed store status (no local override).
   function effectiveStatus(req: PendingRequest): 'pending' | 'approved' | 'rejected' {
-    return overrides[req.id] ?? 'pending';
+    return seededStatus[req.id] ?? 'pending';
   }
 
   // Tab counts.
-  const pendingCount  = MOCK_PENDING_REQUESTS.filter((r) => !overrides[r.id]).length;
-  const approvedCount = Object.values(overrides).filter((v) => v === 'approved').length;
-  const rejectedCount = Object.values(overrides).filter((v) => v === 'rejected').length;
+  const pendingCount  = rows.filter((r) => effectiveStatus(r) === 'pending').length;
+  const approvedCount = rows.filter((r) => effectiveStatus(r) === 'approved').length;
+  const rejectedCount = rows.filter((r) => effectiveStatus(r) === 'rejected').length;
 
   // Filtered rows.
-  const visibleRows = MOCK_PENDING_REQUESTS.filter((r) => {
+  const visibleRows = rows.filter((r) => {
     const status = effectiveStatus(r);
     if (activeTab === 'all')      return true;
     if (activeTab === 'pending')  return status === 'pending';
@@ -81,12 +101,15 @@ export function QuickApproveSimple() {
     return true;
   });
 
-  function handleApprove(id: string) {
-    setOverrides((prev) => ({ ...prev, [id]: 'approved' }));
+  // PR-1c: dispatch to the correct source store by row type. The benefit adapter
+  // returns a Promise (manager-approve is mock-async) — fire it; the subscribed
+  // selector re-renders the row once the store settles. Never throws (AC-1c.2).
+  function handleApprove(row: PendingRequest) {
+    void APPROVAL_REGISTRY[row.type].approve(row.id, { name: MANAGER_NAME });
   }
 
-  function handleReject(id: string) {
-    setOverrides((prev) => ({ ...prev, [id]: 'rejected' }));
+  function handleReject(row: PendingRequest) {
+    void APPROVAL_REGISTRY[row.type].reject(row.id, { name: MANAGER_NAME }, 'ปฏิเสธจากคิวอนุมัติ');
   }
 
   // ── Columns ──────────────────────────────────────────────
@@ -160,6 +183,15 @@ export function QuickApproveSimple() {
       header: t('columns.status'),
       cell: (row) => {
         const status = effectiveStatus(row);
+        // AC-1c.2: a still-pending row whose first approver has acted shows an
+        // explicit "awaiting next approver" chip instead of looking unactioned.
+        if (status === 'pending' && awaitingNext[row.id]) {
+          return (
+            <span className="humi-tag humi-tag--butter" style={{ fontSize: 12 }}>
+              {t('status.awaitingNext')}
+            </span>
+          );
+        }
         const badgeClass =
           status === 'approved' ? 'humi-tag humi-tag--accent' :
           status === 'rejected' ? 'humi-tag' :
@@ -177,7 +209,7 @@ export function QuickApproveSimple() {
         if (status !== 'pending') {
           return (
             <Link
-              href={`/th/quick-approve/${row.id}`}
+              href={`/${locale}/quick-approve/${row.id}`}
               className="humi-button humi-button--ghost"
               style={{ fontSize: 12, padding: '4px 10px' }}
             >
@@ -190,21 +222,19 @@ export function QuickApproveSimple() {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => handleApprove(row.id)}
+              onClick={() => handleApprove(row)}
             >
               {t('actions.approve')}
             </Button>
             <Button
-              variant="secondary"
+              variant="danger"
               size="sm"
-              className="bg-danger text-danger"
-              style={{ background: 'var(--color-danger-soft)', color: 'var(--color-danger)', border: 'none' }}
-              onClick={() => handleReject(row.id)}
+              onClick={() => handleReject(row)}
             >
               {t('actions.reject')}
             </Button>
             <Link
-              href={`/th/quick-approve/${row.id}`}
+              href={`/${locale}/quick-approve/${row.id}`}
               className="humi-button humi-button--ghost"
               style={{ fontSize: 12, padding: '4px 10px' }}
             >
@@ -220,7 +250,7 @@ export function QuickApproveSimple() {
   // ── Render ───────────────────────────────────────────────
 
   const tabs: { key: FilterTab; count: number }[] = [
-    { key: 'all',      count: MOCK_PENDING_REQUESTS.length },
+    { key: 'all',      count: rows.length },
     { key: 'pending',  count: pendingCount },
     { key: 'approved', count: approvedCount },
     { key: 'rejected', count: rejectedCount },

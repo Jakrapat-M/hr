@@ -4,7 +4,7 @@
 // active jobs list + pause/resume — BRD #207 — Part E Wave 2a
 
 import { useDataManagement } from '@/lib/admin/store/useDataManagement'
-import { formatCron } from '@/lib/admin/utils/cronFormat'
+import { formatCron, parseCronParts } from '@/lib/admin/utils/cronFormat'
 import { useState } from 'react'
 
 export default function ReportAutomationPage() {
@@ -69,8 +69,10 @@ export default function ReportAutomationPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {allJobs.map((job) => {
-                let freq = job.cron
-                try { freq = formatCron(job.cron) } catch (err) { console.warn('[formatCron] invalid cron:', job.cron, err) }
+                // ตรวจ cron ก่อน format — invalid cron แสดง inline warning chip (ไม่ใช้ console)
+                let cronValid = true
+                try { parseCronParts(job.cron) } catch { cronValid = false }
+                const freq = cronValid ? formatCron(job.cron) : job.cron
                 const lastRun = job.lastRunAt
                   ? new Date(job.lastRunAt).toLocaleDateString('th-TH')
                   : '—'
@@ -79,7 +81,19 @@ export default function ReportAutomationPage() {
                 return (
                   <tr key={job.id} className="hover:bg-canvas-soft">
                     <td className="px-4 py-3 text-ink whitespace-nowrap">{job.reportName}</td>
-                    <td className="px-4 py-3 text-ink-muted whitespace-nowrap">{freq}</td>
+                    <td className="px-4 py-3 text-ink-muted whitespace-nowrap">
+                      {cronValid ? (
+                        freq
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
+                          role="status"
+                          title="Cron expression ไม่ถูกต้อง — แสดงค่าดิบ"
+                        >
+                          ⚠ cron ไม่ถูกต้อง: {freq}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-ink-muted whitespace-nowrap">{job.delivery}</td>
                     <td className="px-4 py-3 text-ink-faint whitespace-nowrap">{lastRun}</td>
                     <td className="px-4 py-3 text-center">

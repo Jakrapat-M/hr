@@ -87,7 +87,9 @@ describe('benefit claim store', () => {
   });
 
   it('provides a persist migration for stored benefit-claims snapshots', () => {
-    expect(BENEFIT_CLAIMS_PERSIST_VERSION).toBe(2);
+    // PR-1b: bumped 2→3 for the rehydrate-to-seed persist contract (queue-seeded
+    // claims carrying queueSnapshot are dropped on rehydrate; ensureDemoSeed refills).
+    expect(BENEFIT_CLAIMS_PERSIST_VERSION).toBe(3);
 
     const migrated = migrateBenefitClaimsPersistedState({ claims: [] });
     expect(migrated.claims).toEqual([]);

@@ -60,14 +60,21 @@ export default function LearningPage() {
             </li>
           ))}
         </ul>
-        <div className="mt-4 pt-4 border-t border-hairline">
-          <a
-            href="#"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+        <div className="mt-4 pt-4 border-t border-hairline flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            title={t('externalNote')}
+            className="inline-flex items-center gap-1.5 rounded-md border border-hairline bg-canvas-soft px-3 py-1.5 text-sm font-medium text-ink-faint cursor-not-allowed"
           >
             <ExternalLink className="h-4 w-4" />
             {t('openPlatform')}
-          </a>
+          </button>
+          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-info-tint text-info border border-info/20">
+            {t('badge')}
+          </span>
+          <p className="w-full text-xs text-ink-muted">{t('externalNote')}</p>
         </div>
       </Card>
     </div>

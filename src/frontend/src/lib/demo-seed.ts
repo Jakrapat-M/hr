@@ -1,189 +1,22 @@
 // demo-seed.ts — hydrate workflow stores with realistic mock requests so
 // personas don't land on empty inboxes during a fresh demo.
 //
-// Called once by AppShell on mount. Guards against duplicate seeding by
-// checking if each store already has any requests.
+// Called once by AppShell on mount. This is the SINGLE seed authority (plan R1):
+// the registry-owned approval stores (leave/overtime, change_request, claim,
+// transfer) are seeded ONLY from here, via the registry adapters' seed() over the
+// canonical queue rows (APPROVAL_SEED_BY_TYPE). The previous overlapping demo
+// arrays for leave + personal-info-change have been reconciled into the single
+// fixture source (leave rows → APPROVAL_SEED_BY_TYPE.leave; the 3 legacy
+// personal-info rows now live in workflow-approvals' own LEGACY_PERSONAL_INFO_REQUESTS,
+// seeded alongside the queue change_request rows by the change_request adapter).
+//
+// Termination + promotion are NOT part of the unified queue's 6 RequestType
+// values, so they keep their own fixtures here.
 
-import { useWorkflowApprovals, type ApprovalRequest } from '@/stores/workflow-approvals';
-import { useLeaveApprovals, type LeaveRequest } from '@/stores/leave-approvals';
 import { useTerminationApprovals, type TerminationRequest } from '@/stores/termination-approvals';
 import { usePromotionApprovals, type PromotionRequest } from '@/stores/promotion-approvals';
-
-const MOCK_REQUESTS: ApprovalRequest[] = [
-  {
-    id: 'WF-20260424-0842-A3FX',
-    type: 'personal_info_change',
-    employeeId: 'EMP-0142',
-    employeeName: 'กมลรัตน์ จันทร์แดง',
-    submittedBy: {
-      id: 'EMP-0142',
-      name: 'กมลรัตน์ จันทร์แดง',
-      role: 'employee',
-    },
-    submittedAt: '2026-04-24T08:42:00+07:00',
-    status: 'pending_spd',
-    diffs: [
-      {
-        path: 'contact.phone',
-        label: 'เบอร์โทรศัพท์',
-        before: '081-234-5678',
-        after: '089-876-5432',
-      },
-      {
-        path: 'contact.addressLine1',
-        label: 'ที่อยู่',
-        before: '123/4 ซอยสุขุมวิท 23 คลองเตย กรุงเทพ',
-        after: '789/12 ซอยรัชดา 42 ห้วยขวาง กรุงเทพ',
-      },
-      {
-        path: 'attributes.maritalStatus',
-        label: 'สถานภาพสมรส',
-        before: 'โสด',
-        after: 'สมรส',
-      },
-    ],
-    audit: [
-      {
-        actorRole: 'employee',
-        actorName: 'กมลรัตน์ จันทร์แดง',
-        action: 'submit',
-        comment: 'แต่งงานเมื่อเดือนที่แล้ว ขออัปเดตที่อยู่ใหม่ด้วย',
-        at: '2026-04-24T08:42:00+07:00',
-      },
-    ],
-  },
-  {
-    id: 'WF-20260424-1015-B2KQ',
-    type: 'personal_info_change',
-    employeeId: 'EMP-0087',
-    employeeName: 'ธนวัฒน์ สุขเกษม',
-    submittedBy: {
-      id: 'EMP-0087',
-      name: 'ธนวัฒน์ สุขเกษม',
-      role: 'employee',
-    },
-    submittedAt: '2026-04-24T10:15:00+07:00',
-    status: 'pending_spd',
-    diffs: [
-      {
-        path: 'emergencyContact.name',
-        label: 'ผู้ติดต่อฉุกเฉิน (ชื่อ)',
-        before: 'นางสาวสุนิสา ว.',
-        after: 'นางสุนิสา สุขเกษม',
-      },
-      {
-        path: 'emergencyContact.phone',
-        label: 'ผู้ติดต่อฉุกเฉิน (เบอร์)',
-        before: '086-111-2222',
-        after: '081-999-8877',
-      },
-    ],
-    audit: [
-      {
-        actorRole: 'employee',
-        actorName: 'ธนวัฒน์ สุขเกษม',
-        action: 'submit',
-        at: '2026-04-24T10:15:00+07:00',
-      },
-    ],
-  },
-  {
-    id: 'WF-20260422-1430-C9PM',
-    type: 'personal_info_change',
-    employeeId: 'EMP-0031',
-    employeeName: 'สมศรี พรมใจดี',
-    submittedBy: {
-      id: 'EMP-0031',
-      name: 'สมศรี พรมใจดี',
-      role: 'employee',
-    },
-    submittedAt: '2026-04-22T14:30:00+07:00',
-    status: 'approved',
-    diffs: [
-      {
-        path: 'contact.email',
-        label: 'อีเมลส่วนตัว',
-        before: 'somsri.old@gmail.com',
-        after: 'somsri.p@outlook.com',
-      },
-    ],
-    audit: [
-      {
-        actorRole: 'employee',
-        actorName: 'สมศรี พรมใจดี',
-        action: 'submit',
-        at: '2026-04-22T14:30:00+07:00',
-      },
-      {
-        actorRole: 'spd',
-        actorName: 'ดารณี ล. (SPD)',
-        action: 'approve',
-        comment: 'ยืนยันเอกสารแนบแล้ว',
-        at: '2026-04-22T16:45:00+07:00',
-      },
-    ],
-  },
-];
-
-const MOCK_LEAVE_REQUESTS: LeaveRequest[] = [
-  {
-    id: 'LV-20260424-0900-A1BX',
-    employeeId: 'EMP-0142',
-    employeeName: 'กมลรัตน์ จันทร์แดง',
-    leaveType: 'annual',
-    startDate: '2026-05-02',
-    endDate: '2026-05-04',
-    reason: 'ท่องเที่ยวพักผ่อนกับครอบครัว',
-    status: 'pending',
-    submittedAt: '2026-04-24T09:00:00+07:00',
-    audit: [
-      {
-        actorId: 'EMP-0142',
-        actorName: 'กมลรัตน์ จันทร์แดง',
-        action: 'submit',
-        at: '2026-04-24T09:00:00+07:00',
-      },
-    ],
-  },
-  {
-    id: 'LV-20260424-1030-B2CY',
-    employeeId: 'EMP-0087',
-    employeeName: 'ธนวัฒน์ สุขเกษม',
-    leaveType: 'sick',
-    startDate: '2026-04-25',
-    endDate: '2026-04-25',
-    reason: 'ไม่สบาย มีไข้',
-    status: 'pending',
-    submittedAt: '2026-04-24T10:30:00+07:00',
-    audit: [
-      {
-        actorId: 'EMP-0087',
-        actorName: 'ธนวัฒน์ สุขเกษม',
-        action: 'submit',
-        at: '2026-04-24T10:30:00+07:00',
-      },
-    ],
-  },
-  {
-    id: 'LV-20260423-1400-C3DZ',
-    employeeId: 'EMP-0031',
-    employeeName: 'สมศรี พรมใจดี',
-    leaveType: 'personal',
-    startDate: '2026-04-28',
-    endDate: '2026-04-28',
-    reason: 'ธุระส่วนตัวสำคัญ ต้องไปติดต่อราชการ',
-    status: 'pending',
-    submittedAt: '2026-04-23T14:00:00+07:00',
-    audit: [
-      {
-        actorId: 'EMP-0031',
-        actorName: 'สมศรี พรมใจดี',
-        action: 'submit',
-        at: '2026-04-23T14:00:00+07:00',
-      },
-    ],
-  },
-];
+import { APPROVAL_REGISTRY } from '@/lib/approval-registry';
+import { APPROVAL_SEED_BY_TYPE } from '@/lib/approval-seed-fixtures';
 
 const MOCK_TERMINATION_REQUESTS: TerminationRequest[] = [
   {
@@ -333,22 +166,33 @@ const MOCK_PROMOTION_REQUESTS: PromotionRequest[] = [
 
 let seeded = false;
 
+/** Reset the once-per-session guard. Test-only — lets a suite re-run the single
+ *  seed authority after clearing the stores between cases. */
+export function resetEnsureDemoSeedForTests(): void {
+  seeded = false;
+}
+
 /** Seed all workflow stores once per browser session if stores are empty.
- *  Safe to call multiple times — idempotent via `seeded` flag + empty checks. */
+ *  Safe to call multiple times — idempotent via `seeded` flag + each store's
+ *  own init-overwrite-empties guard. SINGLE seed authority (plan R1). */
 export function ensureDemoSeed(): void {
   if (seeded) return;
   seeded = true;
 
-  const workflowState = useWorkflowApprovals.getState();
-  if (workflowState.requests.length === 0) {
-    useWorkflowApprovals.setState({ requests: MOCK_REQUESTS });
-  }
+  // ── Registry-owned approval stores (the unified queue's canonical 20 rows) ──
+  // leave + overtime share the leave-approvals store; seed them TOGETHER through
+  // the leave adapter so the store's single empty-guard doesn't skip the 2nd set.
+  APPROVAL_REGISTRY.leave.seed([
+    ...APPROVAL_SEED_BY_TYPE.leave,
+    ...APPROVAL_SEED_BY_TYPE.overtime,
+  ]);
+  APPROVAL_REGISTRY.change_request.seed(APPROVAL_SEED_BY_TYPE.change_request);
+  APPROVAL_REGISTRY.claim.seed(APPROVAL_SEED_BY_TYPE.claim);
+  APPROVAL_REGISTRY.transfer.seed(APPROVAL_SEED_BY_TYPE.transfer);
+  // probation: zero canonical queue rows — adapter seed is a documented no-op.
+  APPROVAL_REGISTRY.probation.seed(APPROVAL_SEED_BY_TYPE.probation);
 
-  const leaveState = useLeaveApprovals.getState();
-  if (leaveState.requests.length === 0) {
-    useLeaveApprovals.setState({ requests: MOCK_LEAVE_REQUESTS });
-  }
-
+  // ── Non-queue lifecycle stores (own fixtures; not part of the 6 RequestType) ──
   const terminationState = useTerminationApprovals.getState();
   if (terminationState.requests.length === 0) {
     useTerminationApprovals.setState({ requests: MOCK_TERMINATION_REQUESTS });

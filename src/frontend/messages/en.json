@@ -98,7 +98,8 @@
         "Last review cycle outcome displayed on the profile page",
         "Link-out to the employee's performance dashboard"
       ],
-      "openPlatform": "Open Performance Platform"
+      "openPlatform": "Open Performance Platform",
+      "externalNote": "Opens in the external Performance platform — not available in this demo."
     },
     "learning": {
       "title": "Learning & Development",
@@ -113,7 +114,8 @@
         "Mandatory training compliance status (compliant / overdue)",
         "Link-out to the employee's learning dashboard"
       ],
-      "openPlatform": "Open Learning Platform"
+      "openPlatform": "Open Learning Platform",
+      "externalNote": "Opens in the external LMS — not available in this demo."
     },
     "recruitingExt": {
       "title": "Recruitment",
@@ -128,7 +130,8 @@
         "Pending onboarding tasks linked to recent hires",
         "Link-out to the ATS job requisition portal"
       ],
-      "openPlatform": "Open ATS Portal"
+      "openPlatform": "Open ATS Portal",
+      "externalNote": "Opens in the external ATS — not available in this demo."
     }
   },
   "placeholders": {
@@ -3148,7 +3151,8 @@
         "pending": "Pending",
         "review": "In Review",
         "approved": "Approved",
-        "rejected": "Rejected"
+        "rejected": "Rejected",
+        "awaitingNext": "Awaiting next approver"
       }
     },
     "slideOver": {
@@ -4645,7 +4649,10 @@
     "optional": "Optional",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "submitting": "Submitting…"
+    "submitting": "Submitting…",
+    "toastApproved": "Request approved",
+    "toastRejected": "Request rejected",
+    "toastReturned": "Request returned"
   },
   "quick_approve_bulk": {
     "title": "Bulk Approve Queue",
