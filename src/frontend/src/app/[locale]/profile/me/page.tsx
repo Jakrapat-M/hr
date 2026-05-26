@@ -1371,7 +1371,7 @@ export default function HumiProfileMePage({
       {panelKey === 'job' && (
         <>
           <div className="grid gap-4 md:grid-cols-2">
-            <FieldCard eyebrow={t('jobEyebrow')} title={t('jobTitle')} rows={p.job} labelW={160} />
+            <FieldCard eyebrow={t('jobEyebrow')} title={t('jobTitle')} rows={p.job} labelW={160} paired />
             <div className="humi-col" style={{ gap: 16 }}>
               {/* Raw 'ค่าตอบแทน 82,500 / เดือน' card removed — duplicated the
                 BRD #170 CompensationSummary which is the canonical default-masked
@@ -2269,11 +2269,13 @@ function FieldCard({
   title,
   rows,
   labelW,
+  paired,
 }: {
   eyebrow: string;
   title: string;
   rows: ReadonlyArray<readonly [string, string]>;
   labelW: number;
+  paired?: boolean;
 }) {
   return (
     <div className="humi-card">
@@ -2281,7 +2283,10 @@ function FieldCard({
       <h3 className="mt-1.5 mb-4 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
         {title}
       </h3>
-      <div className="humi-col" style={{ gap: 14 }}>
+      <div
+        className={paired ? 'grid gap-x-8 gap-y-3.5 sm:grid-cols-2' : 'humi-col'}
+        style={paired ? undefined : { gap: 14 }}
+      >
         {rows.map(([l, v]) => {
           // Section divider row: label starts with "────" and value is empty.
           // Render as full-width eyebrow heading instead of a label/value pair —
@@ -2291,6 +2296,7 @@ function FieldCard({
             return (
               <div
                 key={l}
+                className={paired ? 'sm:col-span-2' : undefined}
                 style={{
                   fontSize: 11,
                   fontWeight: 600,
@@ -2305,10 +2311,16 @@ function FieldCard({
               </div>
             );
           }
+          // In paired mode: rows that are part of a date/years pair occupy one grid
+          // cell each (they land side-by-side because they are consecutive in the array).
+          // Lone fields (not "Effective Date" / "Years in" labels) would consume a single
+          // cell and shift every subsequent pair off-axis — force them to span both columns.
+          const isDateOrYearsField =
+            paired && (l.includes('Effective Date') || l.includes('Years in'));
           return (
             <div
               key={l}
-              className="humi-row"
+              className={paired && !isDateOrYearsField ? 'humi-row sm:col-span-2' : 'humi-row'}
               style={{
                 borderBottom: '1px solid var(--color-hairline-soft)',
                 paddingBottom: 10,
