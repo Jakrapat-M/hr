@@ -46,6 +46,8 @@ import {
   IdCard,
   Settings,
   X,
+  PanelLeftClose,
+  PanelLeftOpen,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -256,6 +258,30 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
   useEffect(() => {
     setSelectedGroup(null);
   }, [pathname]);
+
+  // ── Collapse the leaf panel (col2) down to the icon rail (col1) ─────────────
+  // Persisted so the choice survives reloads. Read in an effect (not initial
+  // state) to keep SSR markup === first client render and avoid a hydration
+  // mismatch. Collapse only applies to the desktop static sidebar — the mobile
+  // drawer (className carries `--drawer`) always shows the full panel.
+  const isDrawer = (className ?? '').includes('humi-sidebar--drawer');
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('bp-panel-collapsed') === '1') setCollapsed(true);
+    } catch {
+      /* localStorage unavailable (SSR / privacy mode) — keep default expanded. */
+    }
+  }, []);
+  const setCollapsedPersist = (next: boolean) => {
+    setCollapsed(next);
+    try {
+      localStorage.setItem('bp-panel-collapsed', next ? '1' : '0');
+    } catch {
+      /* ignore — collapse still works for this session. */
+    }
+  };
+  const collapsedDesktop = collapsed && !isDrawer;
   const shownGroupId = selectedGroup ?? activeGroupId ?? firstUnlockedId;
   const shownGroup = visibleGroups.find((g) => g.id === shownGroupId) ?? null;
 
@@ -263,7 +289,10 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
   void searchParams;
 
   return (
-    <aside className={cn('humi-sidebar bp-shellnav', className)} aria-label="เมนูหลัก">
+    <aside
+      className={cn('humi-sidebar bp-shellnav', collapsedDesktop && 'bp-collapsed', className)}
+      aria-label="เมนูหลัก"
+    >
       {/* ── Col 1: macro-group icon rail ── */}
       <div className="bp-rail">
         <div className="bp-rail-brand">
@@ -276,6 +305,22 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
             style={{ height: 34, width: 'auto', objectFit: 'contain' }}
           />
         </div>
+        {!isDrawer && (
+          <button
+            type="button"
+            className="bp-rail-toggle"
+            aria-label={collapsed ? 'ขยายเมนู' : 'ย่อเมนู'}
+            aria-expanded={!collapsed}
+            title={collapsed ? 'ขยายเมนู' : 'ย่อเมนู'}
+            onClick={() => setCollapsedPersist(!collapsed)}
+          >
+            {collapsed ? (
+              <PanelLeftOpen size={18} aria-hidden="true" />
+            ) : (
+              <PanelLeftClose size={18} aria-hidden="true" />
+            )}
+          </button>
+        )}
         <div className="bp-rail-groups" role="tablist" aria-label="กลุ่มเมนู">
           {visibleGroups.map((m) => {
             const active = shownGroupId === m.id;
@@ -288,7 +333,11 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
                 role="tab"
                 aria-selected={active}
                 className={cn('bp-rail-item', active && 'is-active')}
-                onClick={() => setSelectedGroup(m.id)}
+                onClick={() => {
+                  setSelectedGroup(m.id);
+                  // Clicking a group icon while folded re-opens the leaf panel.
+                  if (collapsedDesktop) setCollapsedPersist(false);
+                }}
                 title={navLabel(m, isTh)}
               >
                 <span className="bp-rail-icon" aria-hidden="true">
