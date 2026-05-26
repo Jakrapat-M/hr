@@ -1,3 +1,44 @@
+# HANDOFF — 2026-05-26 (clickable HRMS approvals + shell follow-ups)
+
+**Status: all work MERGED to `master` (tip `abcbe20e`) — integrated build GREEN.** Branch `feat/clickable-hrms-pr1a-approval-registry` and the 3 follow-up branches are merged; future work branches off `master`.
+
+## What landed (4 PRs, all merged)
+| PR | What |
+|----|------|
+| #186 | Sidebar/IA restructure + **org-chart visible to ALL personas** (was admin-only; moved into "My Workspace / พื้นที่ทำงานของฉัน", `show: ALL6`) + pre-existing build-error fixes (`receiptDate`, `labelEn`) |
+| #188 | **Clickable HRMS approvals (PR-1a→PR-5)** — the main work |
+| #189 | Global type scale: removed the `body{zoom:1.25}` hack + 3 `calc(100vh/--app-zoom)` workarounds → `html{font-size:20px}` + rem (keeps HR "bigger text"; `100dvh` shells) |
+| #187 | Collapsible sidebar leaf-panel → icon rail (localStorage `bp-panel-collapsed`); recovered from orphaned uncommitted work |
+
+## Approval architecture (the core of PR-1a→5) — IMPORTANT for future work
+- **`src/lib/approval-registry.ts`** — stateless `APPROVAL_REGISTRY: Record<RequestType, adapter>` over the 6 approval stores (leave/workflow/probation/transfer/promotion/pay-rate-approvals + benefit-claims). Total over RequestType (tsc-enforced). Adapters own per-type `toQueueItem` (fan-in) + `approve`/`reject` (fan-out) + `seed`. Call sites stay dumb.
+- **Queue derives from seeded stores** (not the old static `MOCK_PENDING_REQUESTS`): `selectPendingApprovals()` / `useSelectPendingApprovals()` fan in from the stores, collapsing `pending_spd|pending_hr|pending_manager` → `pending` for the 3-state filter.
+- **`ensureDemoSeed()` (src/lib/demo-seed.ts, called by AppShell) is the SINGLE seed authority.** Stores carry a `queueSnapshot` so the rich 20 rows survive. Persist = version-bump + rehydrate-to-seed → **refresh resets to seed by design** (so cross-persona propagation is in-session only; client-nav preserves, full reload resets).
+- Cross-persona: approve in `/quick-approve` → `/requests`, `/workflows` (use-workflows now reads the registry, not MOCK_WORKFLOWS), and the `admin/system/reports` pending tile reflect live.
+- `transfer` has no store schema → dedicated `src/stores/transfer-approvals.ts` terminal-marker slice.
+- Reference pattern that was already correct: `workflows/benefit-claim/[id]/page.tsx`.
+
+## Source-of-truth artifacts (this session)
+- `.omc/specs/seed-clickable-hrms-mockup.md` — Ouroboros (qoo) seed, ambiguity 0.10
+- `.omc/specs/gap-audit-clickable-hrms.md` — 5-module dead-end audit (file:line)
+- `.omc/plans/clickable-hrms-mockup.md` — ralplan consensus plan (PR-1a→5, ACs, ADR)
+- `.omc/plans/open-questions.md` — 3 decisions RESOLVED (external stubs=disable+label, report tile=added, Linear=skipped)
+
+## Verification baseline (don't chase these — pre-existing on master)
+- `npm run build` GREEN. `tsc --noEmit` clean except **2 pre-existing errors** in `src/lib/__tests__/workflow-api.eligibility-fallback.test.ts` (test-only, not in build graph).
+- Full test suite: **62 failing tests across 21 files are PRE-EXISTING on master** (verified via baseline worktree at the pre-work commit). This work added **0 net-new failures**. Don't treat those 21 files as regressions.
+
+## Loose ends / follow-ups
+- **"Size up px chrome"**: #189 scales rem/text but NOT px-based inline styles (sidebar/topbar chrome renders at literal px, no longer zoom-inflated). If chrome reads too small, do a follow-up px→rem pass.
+- **Stale stashes** (mine this session, safe to drop): `stash@{0}` noise-fontsize-bump, `stash@{1}` noise-for-clickable-merge, `stash@{2}` stray-app-zoom-0.8 (**moot** — zoom removed in #189), `stash@{3}` runtime-noise-before-clickable-rebase. `stash@{4}+` are pre-existing user stashes — DO NOT touch.
+- 4 merged remote branches can be deleted.
+- Linear was intentionally skipped (PR bodies ref STA-46/28 for context; no ticket state changed — AI never moves Linear to Done).
+
+## Env note
+- Ouroboros ("qoo") interview MCP runs on the **codex backend** (claude backend lacks `claude_agent_sdk`). Gotcha: the MCP `timeout` field is per-tool-call ms and is **floored to 1s if <1000** — must be `600000`. Reconnect via `/mcp` after editing `~/.claude.json`. See memory `reference_ouroboros_qoo_codex_backend`.
+
+---
+
 # HANDOFF — Sidebar IA / Shell redesign
 
 **Branch:** `feat/sidebar-ia-restructure`
