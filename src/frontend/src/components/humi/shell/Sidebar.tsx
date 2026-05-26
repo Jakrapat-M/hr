@@ -102,6 +102,7 @@ const MODULES: ModuleGroup[] = [
     leaves: [
       { id: 'home', label: 'Home', labelTh: 'หน้าหลัก', href: '/home', show: ALL6 },
       { id: 'profile', label: 'My Profile', labelTh: 'โปรไฟล์ของฉัน', href: '/profile/me', show: ALL6 },
+      { id: 'orgchart', label: 'Org Chart', labelTh: 'ผังองค์กร', href: '/org-chart', show: ALL6 }, // self-service: every persona can view org structure / their reporting line
       { id: 'time', label: 'Time & Attendance', labelTh: 'เวลาและการเข้างาน', href: '/time', show: ALL6 }, // labelTh changed ลงเวลา → เวลาและการเข้างาน (distinguish from Team "ตารางกะ")
       { id: 'leaves', label: 'Leaves', labelTh: 'ใบลา', href: '/timeoff', badge: '3', show: ALL6 },
       { id: 'payslips', label: 'Payslips', labelTh: 'สลิปเงินเดือน', href: '/payslip', show: ALL6 },
@@ -132,7 +133,6 @@ const MODULES: ModuleGroup[] = [
     icon: IdCard,
     leaves: [
       { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris', 'spd', 'sysadmin'] },
-      { id: 'orgchart', label: 'Org Chart', labelTh: 'ผังองค์กร', href: '/org-chart', show: ['hradmin', 'hris', 'spd', 'sysadmin'] },
       { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'sysadmin'] }, // merges lifecycle/onboarding
       { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'sysadmin'] },
       { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'hris', 'spd', 'sysadmin'] }, // merges welfare+claims
