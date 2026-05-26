@@ -133,6 +133,14 @@ vi.mock('@/components/quick-approve/UrgencyBadge', () => ({
   ),
 }));
 
+// ── Seed stores (PR-1b/1c: bulk queue derives from seeded Zustand stores) ─────
+
+import { useLeaveApprovals } from '@/stores/leave-approvals';
+import { useWorkflowApprovals } from '@/stores/workflow-approvals';
+import { useBenefitClaimsStore } from '@/stores/benefit-claims';
+import { useTransferApprovals } from '@/stores/transfer-approvals';
+import { ensureDemoSeed, resetEnsureDemoSeedForTests } from '@/lib/demo-seed';
+
 // ── Subject ───────────────────────────────────────────────────────────────────
 
 import BulkApprovePage from '../page';
@@ -142,6 +150,13 @@ import BulkApprovePage from '../page';
 describe('BulkApprovePage', () => {
   beforeEach(() => {
     _canBulkApprove = true;
+    // Seed the canonical 20 rows so useSelectPendingApprovals() returns data.
+    useLeaveApprovals.getState().clear();
+    useWorkflowApprovals.getState().clear();
+    useBenefitClaimsStore.getState().clear();
+    useTransferApprovals.getState().clear();
+    resetEnsureDemoSeedForTests();
+    ensureDemoSeed();
   });
 
   it('renders the bulk queue table for SPD/HRBP (capability allowed)', () => {
@@ -175,7 +190,7 @@ describe('BulkApprovePage', () => {
 
   it('shows row data for pending requests', () => {
     render(<BulkApprovePage />);
-    // First mock requester name should appear
+    // WF-2026-004 requester name from the canonical seeded rows (mock-requests.ts).
     expect(screen.getByText('สมชาย ใจดี')).toBeInTheDocument();
   });
 });

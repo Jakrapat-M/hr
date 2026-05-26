@@ -64,6 +64,14 @@ vi.mock('@/components/quick-approve/UrgencyBadge', () => ({
   UrgencyBadge: ({ urgency }: { urgency: string }) => <span data-testid="urgency">{urgency}</span>,
 }));
 
+// ── Seed stores (PR-1b/1c: detail page resolves ids from seeded stores first) ─
+
+import { useLeaveApprovals } from '@/stores/leave-approvals';
+import { useWorkflowApprovals } from '@/stores/workflow-approvals';
+import { useBenefitClaimsStore } from '@/stores/benefit-claims';
+import { useTransferApprovals } from '@/stores/transfer-approvals';
+import { ensureDemoSeed, resetEnsureDemoSeedForTests } from '@/lib/demo-seed';
+
 // ── Subject ───────────────────────────────────────────────────────────────────
 
 import QuickApproveDetailPage from '../page';
@@ -92,6 +100,18 @@ async function renderPage(id: string) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('QuickApproveDetailPage', () => {
+  beforeEach(() => {
+    // Seed the canonical 20 rows so the store-derived queue can resolve WF-2026-*
+    // ids (e.g. WF-2026-016). Legacy WF-001..015 ids still resolve via the
+    // LEGACY_DETAIL_FALLBACK inside the page component without seeding.
+    useLeaveApprovals.getState().clear();
+    useWorkflowApprovals.getState().clear();
+    useBenefitClaimsStore.getState().clear();
+    useTransferApprovals.getState().clear();
+    resetEnsureDemoSeedForTests();
+    ensureDemoSeed();
+  });
+
   it('renders request summary for a known ID', async () => {
     await renderPage('WF-001');
     expect(screen.getByText('สมชาย ใจดี')).toBeInTheDocument();
