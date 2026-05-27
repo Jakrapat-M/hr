@@ -1,45 +1,9 @@
 {
-  "timestamp": "2026-04-30T15:51:52.105Z",
+  "timestamp": "2026-05-27T17:31:28.935Z",
   "baseUrl": "http://localhost:8080",
   "totalTests": 3,
   "passed": 0,
-  "failed": 3,
-  "tests": [
-    {
-      "name": "Succession Planning",
-      "route": "#/succession-planning",
-      "description": "Fix 1: succession-planning route added to app.js and scripts added to index.html",
-      "status": "failed",
-      "errors": [
-        "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8080/#/succession-planning\nCall log:\n\u001b[2m  - navigating to \"http://localhost:8080/#/succession-planning\", waiting until \"networkidle\"\u001b[22m\n"
-      ],
-      "warnings": [],
-      "screenshot": "FAIL_succession_planning_verification.png",
-      "timestamp": "2026-04-30T15:52:03.656Z"
-    },
-    {
-      "name": "Resignation",
-      "route": "#/resignation",
-      "description": "Fix 2: Resignation page fixed - route added and Thai translations added",
-      "status": "failed",
-      "errors": [
-        "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8080/#/resignation\nCall log:\n\u001b[2m  - navigating to \"http://localhost:8080/#/resignation\", waiting until \"networkidle\"\u001b[22m\n"
-      ],
-      "warnings": [],
-      "screenshot": "FAIL_resignation_verification.png",
-      "timestamp": "2026-04-30T15:52:05.681Z"
-    },
-    {
-      "name": "Payroll Setup",
-      "route": "#/payroll-setup",
-      "description": "Fix 3: Payroll Setup Thai title updated to include \"ค่าตอบแทน\"",
-      "status": "failed",
-      "errors": [
-        "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8080/#/payroll-setup\nCall log:\n\u001b[2m  - navigating to \"http://localhost:8080/#/payroll-setup\", waiting until \"networkidle\"\u001b[22m\n"
-      ],
-      "warnings": [],
-      "screenshot": "FAIL_payroll_setup_verification.png",
-      "timestamp": "2026-04-30T15:52:05.717Z"
-    }
-  ]
+  "failed": 0,
+  "tests": [],
+  "fatalError": "browserType.launch: Executable doesn't exist at /Users/tachongrak/Library/Caches/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-mac-arm64/chrome-headless-shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
 }

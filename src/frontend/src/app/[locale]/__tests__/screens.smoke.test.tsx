@@ -187,11 +187,13 @@ describe('Org Chart — org-chart/page.tsx (AC-2)', () => {
 
   it('แสดง tree nodes (org nodes มี Thai names)', () => {
     render(<OrgChartPage />);
-    // Root node เป็น person "วาสนา จิรวัฒน์" (CHRO) จาก HUMI_ORG_PEOPLE mock data
+    // Org chart opens on the default focused person ("มาร์คัส เคลลี่", resolvedFocus
+    // fallback = 'marcus' in page.tsx) and shows their reporting context — not the
+    // full tree from the CHRO root. Assert that focused person's Thai name renders.
     const pageText = document.body.textContent ?? '';
     expect(pageText).toMatch(/[฀-๿]/);
     // ต้องมีชื่อพนักงานไทยในหน้า
-    expect(pageText).toContain('วาสนา');
+    expect(pageText).toContain('มาร์คัส');
   });
 
   it('แสดง detail panel ฝั่งขวา', () => {

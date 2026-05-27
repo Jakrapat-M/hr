@@ -43,7 +43,7 @@ export function PromotionInbox() {
       {/* Header */}
       <div>
         <div className="humi-eyebrow" style={{ marginBottom: 4 }}>Chain 4 — BRD #103</div>
-        <h2 className="font-display text-[18px] font-semibold text-ink">
+        <h2 className="font-display text-lg font-semibold text-ink">
           คำขอเลื่อนตำแหน่ง — รอ SPD อนุมัติ
         </h2>
         <p className="text-small text-ink-muted mt-1">

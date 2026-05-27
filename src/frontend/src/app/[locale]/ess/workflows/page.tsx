@@ -443,7 +443,7 @@ export default function MyWorkflowsPage() {
     <div className="pb-8" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div className="humi-row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <h1 className="font-display text-[22px] font-semibold text-ink">
+          <h1 className="font-display text-2xl font-semibold text-ink">
             {locale === 'th' ? 'คำขอของฉัน' : 'My Requests'}
           </h1>
           <p className="text-small text-ink-muted mt-1">

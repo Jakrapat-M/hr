@@ -23,24 +23,26 @@ interface StepperProps {
   stepperLabel?: string
 }
 
-export function Stepper({ steps, currentStep, onStepClick, stepperLabel = 'ขั้นตอน Hire Wizard' }: StepperProps) {
+export function Stepper({ steps, currentStep, maxUnlockedStep, onStepClick, stepperLabel = 'ขั้นตอน Hire Wizard' }: StepperProps) {
   return (
     <nav aria-label={stepperLabel}>
       <ol className="flex flex-col gap-2">
         {steps.map((step) => {
           const isActive = step.number === currentStep
           const isComplete = step.number < currentStep
+          const isLocked = step.number > maxUnlockedStep
 
           return (
             <li key={step.number} data-testid="step-item">
               <button
                 type="button"
-                onClick={() => onStepClick(step.number)}
+                onClick={() => !isLocked && onStepClick(step.number)}
                 aria-current={isActive ? 'step' : undefined}
-                aria-disabled="false"
+                aria-disabled={isLocked ? 'true' : 'false'}
+                disabled={isLocked}
                 className={cn(
                   'flex w-full items-start gap-3 rounded-2xl px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]',
-                  'cursor-pointer',
+                  isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
                   isActive && 'bg-accent-soft',
                   !isActive && 'hover:bg-canvas-soft',
                 )}

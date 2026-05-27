@@ -39,10 +39,14 @@ describe('Humi system design contract', () => {
     const home = read('src/frontend/src/app/[locale]/home/page.tsx');
     const login = read('src/frontend/src/app/[locale]/login/page.tsx');
 
-    expect(shell).toContain('className="humi-app"');
-    expect(shell).toContain('className="humi-main"');
+    // AppShell builds the class via template literal (`humi-app${...}`) so the
+    // literal string `"humi-app"` won't appear verbatim — check for the token instead.
+    expect(shell).toContain('humi-app');
+    expect(shell).toContain('humi-main');
+    // Sidebar was ported to Blueprint rail+panel (bp-* classes) but still carries
+    // the humi-sidebar class on the <aside> root for CSS grid wiring.
     expect(sidebar).toContain('humi-sidebar');
-    expect(sidebar).toContain('humi-nav-item');
+    // humi-nav-item was replaced by Blueprint bp-panel-item in the rail port — removed.
     expect(topbar).toContain('humi-topbar');
     expect(topbar).toContain('humi-search');
     expect(home).toContain('humi-card');

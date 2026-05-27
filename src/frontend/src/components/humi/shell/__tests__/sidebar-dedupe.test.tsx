@@ -177,9 +177,12 @@ describe('AC5.1 — no two visible leaves share a bare href (per persona)', () =
 
 describe('Req5 — menu simplification (cut placeholder clutter)', () => {
   it('the full menu (sysadmin sees every group) stays at the simplified size', () => {
-    // workspace 9 + team 6 + hr 12 + system 2 = 29 real leaves.
+    // workspace 10 + team 5 + hr 6 + system 4 = 25 defined leaves.
+    // hr-docs and docreview both resolve to /admin/documents so the href Set
+    // dedupes them → 24 unique hrefs collected by collectLeafHrefs.
+    // (This reflects the 2026-05-25 simplification: 40 → 25 leaves, -/integrations etc.)
     const total = collectLeafHrefs(PERSONA_ROLES.sysadmin).length;
-    expect(total).toBe(29);
+    expect(total).toBe(24);
   });
 
   it('no leaf is a bare ?section= deep-link onto a page another leaf already owns', () => {
@@ -194,11 +197,18 @@ describe('Req5 — menu simplification (cut placeholder clutter)', () => {
     expect(decoration).toEqual([]);
   });
 
-  it('the system group is trimmed to its two real leaves (roles + integrations)', () => {
-    const sysHrefs = collectLeafHrefs(['hr_manager', 'employee'])
-      .map(toBarePath)
-      .filter((p) => p === '/permissions' || p === '/integrations');
-    expect(new Set(sysHrefs)).toEqual(new Set(['/permissions', '/integrations']));
+  it('the system group has the simplified set of leaves (roles, catalog, docreview/audit)', () => {
+    // 2026-05-25 simplification: /integrations was CUT from the system group.
+    // System group now has: roles (/permissions), catalog (/admin/foundation),
+    // docreview (/admin/documents), audit (/admin/system).
+    // sysadmin maps to hr_manager role per PERSONA_ROLE.
+    const sysHrefs = collectLeafHrefs(['hr_manager', 'employee']).map(toBarePath);
+    // /permissions must be present
+    expect(sysHrefs).toContain('/permissions');
+    // /integrations must NOT be present (it was cut)
+    expect(sysHrefs).not.toContain('/integrations');
+    // /admin/foundation (catalog) must be present for sysadmin/hris
+    expect(sysHrefs).toContain('/admin/foundation');
   });
 });
 

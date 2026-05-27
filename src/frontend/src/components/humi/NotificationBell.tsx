@@ -51,7 +51,7 @@ export function NotificationBell() {
         <Bell size={18} aria-hidden />
         {unreadCount > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-white"
+            className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-xs font-bold leading-none text-white"
             aria-label={isTh ? `${unreadCount} การแจ้งเตือนที่ยังไม่ได้อ่าน` : `${unreadCount} unread notifications`}
           >
             {unreadCount > 9 ? '9+' : unreadCount}

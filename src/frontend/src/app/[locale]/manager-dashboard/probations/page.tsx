@@ -148,7 +148,7 @@ function EvaluationModal({ employee, onClose, onSubmit }: EvaluationModalProps) 
           <div style={{ flex: 1 }}>
             <h2
               id="eval-dialog-title"
-              className="font-display text-[16px] font-semibold text-ink"
+              className="font-display text-base font-semibold text-ink"
             >
               {locale === 'en' ? 'Probation Evaluation' : 'ประเมินทดลองงาน'}
             </h2>
@@ -452,7 +452,7 @@ export default function ManagerProbationsPage() {
             <div className="humi-eyebrow">
               {isTh ? 'การดำเนินการ' : 'Actions'}
             </div>
-            <h1 className="font-display text-[20px] font-semibold text-ink">
+            <h1 className="font-display text-xl font-semibold text-ink">
               {isTh ? 'ทดลองงานของทีม' : 'Team Probations'}
             </h1>
           </div>

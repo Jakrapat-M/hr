@@ -3330,9 +3330,9 @@
   },
   "spd_management": {
     "title": "SPD Case Management",
-    "titleTh": "การจัดการเคส SPD",
+    "titleTh": "SPD Case Management (TH)",
     "subtitle": "Case-load overview, escalations queue and override audit trail",
-    "subtitleTh": "ภาพรวมเคส คิวการยกระดับ และประวัติการ Override",
+    "subtitleTh": "Case-load overview, escalations and override audit trail (TH)",
     "persona": "SPD Specialist",
     "kpi": {
       "activeCases": "Active Cases",
@@ -3342,7 +3342,7 @@
     },
     "escalations": {
       "title": "Escalations Queue",
-      "titleTh": "คิวการยกระดับ",
+      "titleTh": "Escalations Queue (TH)",
       "subtitle": "Approval requests escalated beyond normal SLA",
       "caseId": "Case ID",
       "type": "Type",
@@ -3355,7 +3355,7 @@
     },
     "overridePanel": {
       "title": "Recent Override Actions",
-      "titleTh": "รายการ Override ล่าสุด",
+      "titleTh": "Recent Override Actions (TH)",
       "subtitle": "Audit trail for all override actions taken by this account",
       "caseId": "Case ID",
       "action": "Action",
@@ -3729,49 +3729,49 @@
     "eyebrow": "Modules",
     "title": "Your workspace",
     "ec": {
-      "nameTh": "ข้อมูลพนักงาน",
+      "nameTh": "Employee Center (TH)",
       "nameEn": "Employee Center",
       "cta": "View my profile",
       "ctaManager": "View team directory",
       "ctaAdmin": "Manage employees"
     },
     "time": {
-      "nameTh": "เวลา & การเข้างาน",
+      "nameTh": "Time & Attendance (TH)",
       "nameEn": "Time & Attendance",
       "cta": "Clock in / out",
       "ctaManager": "Approve time requests",
       "ctaAdmin": "Manage schedules"
     },
     "payroll": {
-      "nameTh": "เงินเดือน",
+      "nameTh": "Payroll (TH)",
       "nameEn": "Payroll",
       "cta": "View payslip",
       "ctaManager": "Team payroll overview",
       "ctaAdmin": "Run payroll"
     },
     "benefits": {
-      "nameTh": "สวัสดิการ",
+      "nameTh": "Benefits (TH)",
       "nameEn": "Benefits",
       "cta": "My coverage",
       "ctaManager": "Team benefits",
       "ctaAdmin": "Manage plans"
     },
     "performance": {
-      "nameTh": "ผลงาน",
+      "nameTh": "Performance (TH)",
       "nameEn": "Performance",
       "cta": "My goals",
       "external": "External system",
       "externalNote": "Performance management is handled in the SuccessFactors system."
     },
     "learning": {
-      "nameTh": "การเรียนรู้",
+      "nameTh": "Learning (TH)",
       "nameEn": "Learning",
       "cta": "My courses",
       "external": "External system",
       "externalNote": "Learning management is handled in the LMS portal."
     },
     "recruiting": {
-      "nameTh": "สรรหา",
+      "nameTh": "Recruiting (TH)",
       "nameEn": "Recruiting",
       "cta": "View openings",
       "external": "External system",

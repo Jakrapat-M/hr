@@ -151,7 +151,7 @@ export function RequestList({
  >
  <span>{typeIcons[type] ?? <ClipboardList className="h-4 w-4" />}</span>
  <span>{type}</span>
- <span className="bg-surface/20 rounded-full px-1.5 text-[10px]">{count}</span>
+ <span className="bg-surface/20 rounded-full px-1.5 text-xs">{count}</span>
  </button>
  ))}
  </div>

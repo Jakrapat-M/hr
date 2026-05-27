@@ -131,7 +131,7 @@ export default function AuditLogPage() {
           <CardEyebrow>
             {isTh ? 'ระบบ · ความปลอดภัย' : 'System · Security'}
           </CardEyebrow>
-          <h1 className="font-display text-[28px] font-semibold text-ink">
+          <h1 className="font-display text-3xl font-semibold text-ink">
             {isTh ? 'บันทึกการตรวจสอบ' : 'Audit Log'}
           </h1>
           <p className="mt-2 text-small text-ink-muted">

@@ -39,6 +39,7 @@ export default function HirePage() {
     goNext,
     goBack,
     jumpTo,
+    jumpToUrl,
     isStepValid,
     reset,
   } = useHireWizard()
@@ -87,7 +88,7 @@ export default function HirePage() {
       return
     }
     if (urlStep !== currentStep) {
-      jumpTo(urlStep)
+      jumpToUrl(urlStep)
     }
   // `searchParams` is intentionally represented as paramsString to avoid
   // object-identity churn from Next navigation mocks and runtime wrappers.
@@ -248,7 +249,7 @@ export default function HirePage() {
           <p className="mt-1 text-small text-ink-soft">
             {candidateContext.position ?? 'Manual hire'} · {candidateContext.email ?? candidateContext.candidateId}
           </p>
-          <p className="mt-1 text-[11px] text-ink-muted">
+          <p className="mt-1 text-xs text-ink-muted">
             Frozen at {new Date(candidateContext.frozenAt).toLocaleString('th-TH')}
           </p>
         </section>

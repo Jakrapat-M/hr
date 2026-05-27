@@ -506,7 +506,7 @@ export default function BenefitPlansPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <CardEyebrow>{t('eyebrow')}</CardEyebrow>
-          <h1 className="font-display text-[28px] font-semibold text-ink">{t('title')}</h1>
+          <h1 className="font-display text-3xl font-semibold text-ink">{t('title')}</h1>
           <p className="mt-2 text-small text-ink-muted">{t('subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -536,7 +536,7 @@ export default function BenefitPlansPage() {
         ].map((stat) => (
           <Card key={stat.label} variant="raised" size="md">
             <CardEyebrow>{stat.label}</CardEyebrow>
-            <p className="mt-1 font-display text-[24px] font-semibold text-ink tabular-nums">{stat.value}</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-ink tabular-nums">{stat.value}</p>
           </Card>
         ))}
       </div>

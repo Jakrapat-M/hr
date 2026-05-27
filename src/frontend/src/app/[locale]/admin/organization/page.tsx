@@ -639,7 +639,7 @@ export default function OrganizationPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <div>
           <div className="humi-eyebrow">ORGANIZATIONAL STRUCTURE</div>
-          <h1 className="font-display text-[22px] font-semibold text-ink">โครงสร้างหน่วยงาน</h1>
+          <h1 className="font-display text-2xl font-semibold text-ink">โครงสร้างหน่วยงาน</h1>
         </div>
         <button
           type="button"
@@ -742,7 +742,7 @@ export default function OrganizationPage() {
           >
             {/* Drawer header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--color-hairline)' }}>
-              <h2 className="font-display text-[18px] font-semibold text-ink">
+              <h2 className="font-display text-lg font-semibold text-ink">
                 {mode === 'create' ? 'เพิ่มหน่วยงาน' : 'แก้ไขหน่วยงาน'}
               </h2>
               <button

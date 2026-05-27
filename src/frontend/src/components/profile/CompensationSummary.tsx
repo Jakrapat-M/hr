@@ -46,7 +46,7 @@ export default function CompensationSummary() {
       <header className="humi-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div className="humi-row" style={{ gap: 8, alignItems: 'center' }}>
           <Wallet size={18} aria-hidden />
-          <h3 className="font-display text-[18px] font-semibold leading-[1.2] tracking-tight text-ink">
+          <h3 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
             สรุปค่าตอบแทน
           </h3>
         </div>
@@ -98,7 +98,7 @@ export default function CompensationSummary() {
                 ช่องทางหลักในแท็บการจ้างงาน
               </span>
             </div>
-            <h4 className="font-display text-[16px] font-semibold leading-[1.2] tracking-tight text-ink">
+            <h4 className="font-display text-base font-semibold leading-[1.2] tracking-tight text-ink">
               ดู statement เงินเดือนและย้อนหลัง
             </h4>
           </div>

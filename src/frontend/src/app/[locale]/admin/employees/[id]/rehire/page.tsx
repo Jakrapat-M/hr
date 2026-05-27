@@ -130,7 +130,7 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
       <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
         {employee.employee_id} · {employee.company}
       </div>
-      <div className="font-display text-[18px] font-semibold text-ink">{nameTh}</div>
+      <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
       <div className="text-small text-ink-muted mb-3">{nameEn}</div>
       <div
         className="grid grid-cols-2 gap-3 sm:grid-cols-4"
@@ -412,7 +412,7 @@ export default function RehirePage() {
         </div>
         <div>
           <div className="humi-eyebrow">การดำเนินการ</div>
-          <h1 className="font-display text-[20px] font-semibold text-ink">
+          <h1 className="font-display text-xl font-semibold text-ink">
             รับกลับเข้าทำงาน
           </h1>
         </div>

@@ -70,7 +70,7 @@ export default function SelfServicePage() {
       {/* Header */}
       <div>
         <div className="humi-eyebrow">SELF-SERVICE</div>
-        <h1 className="font-display text-[22px] font-semibold text-ink">การตั้งค่าแบบกำหนดเอง</h1>
+        <h1 className="font-display text-2xl font-semibold text-ink">การตั้งค่าแบบกำหนดเอง</h1>
         <p style={{ fontSize: 13, color: 'var(--color-ink-muted)', marginTop: 4 }}>
           ปรับพื้นที่ Self-Service ของพนักงาน เลือกฟิลด์ที่แสดง บังคับ ล็อค หรือทำเป็นทางลัด
         </p>

@@ -5005,5 +5005,82 @@
     "whyNotEligible": "เหตุผลที่ลงทะเบียนไม่ได้",
     "employeeId": "รหัสพนักงาน",
     "planId": "รหัสสวัสดิการ"
+  },
+  "moduleContext": {
+    "modules": {
+      "ec": "ศูนย์ข้อมูลพนักงาน",
+      "time": "เวลา & การเข้างาน",
+      "payroll": "เงินเดือน",
+      "benefits": "สวัสดิการ",
+      "performance": "ผลงาน",
+      "learning": "การเรียนรู้",
+      "recruiting": "สรรหา"
+    },
+    "personas": {
+      "employee": "พนักงาน",
+      "manager": "ผู้จัดการ",
+      "hr_admin": "ผู้ดูแลระบบ HR",
+      "hr_manager": "ผู้จัดการ HR"
+    },
+    "stats": {
+      "pendingApprovals": "รออนุมัติ",
+      "openRequests": "คำขอที่เปิดอยู่",
+      "teamOnLeave": "ลางานวันนี้",
+      "pendingPayroll": "งานเงินเดือนที่รอดำเนินการ",
+      "activeClaims": "การเบิกที่ใช้งานอยู่"
+    }
+  },
+  "moduleTiles": {
+    "eyebrow": "โมดูล",
+    "title": "พื้นที่ทำงานของคุณ",
+    "ec": {
+      "nameTh": "ข้อมูลพนักงาน",
+      "nameEn": "Employee Center",
+      "cta": "ดูโปรไฟล์ของฉัน",
+      "ctaManager": "ดูไดเรกทอรีทีม",
+      "ctaAdmin": "จัดการพนักงาน"
+    },
+    "time": {
+      "nameTh": "เวลา & การเข้างาน",
+      "nameEn": "Time & Attendance",
+      "cta": "เช็คอิน / เช็คเอาท์",
+      "ctaManager": "อนุมัติคำขอเวลา",
+      "ctaAdmin": "จัดการตารางงาน"
+    },
+    "payroll": {
+      "nameTh": "เงินเดือน",
+      "nameEn": "Payroll",
+      "cta": "ดูสลิปเงินเดือน",
+      "ctaManager": "ภาพรวมเงินเดือนทีม",
+      "ctaAdmin": "ประมวลผลเงินเดือน"
+    },
+    "benefits": {
+      "nameTh": "สวัสดิการ",
+      "nameEn": "Benefits",
+      "cta": "ความคุ้มครองของฉัน",
+      "ctaManager": "สวัสดิการทีม",
+      "ctaAdmin": "จัดการแผน"
+    },
+    "performance": {
+      "nameTh": "ผลงาน",
+      "nameEn": "Performance",
+      "cta": "เป้าหมายของฉัน",
+      "external": "ระบบภายนอก",
+      "externalNote": "การจัดการผลงานดำเนินการในระบบ SuccessFactors"
+    },
+    "learning": {
+      "nameTh": "การเรียนรู้",
+      "nameEn": "Learning",
+      "cta": "คอร์สของฉัน",
+      "external": "ระบบภายนอก",
+      "externalNote": "การจัดการการเรียนรู้ดำเนินการในพอร์ทัล LMS"
+    },
+    "recruiting": {
+      "nameTh": "สรรหา",
+      "nameEn": "Recruiting",
+      "cta": "ดูตำแหน่งที่เปิดรับ",
+      "external": "ระบบภายนอก",
+      "externalNote": "การสรรหาจัดการในพอร์ทัลการได้มาซึ่งบุคลากร"
+    }
   }
 }

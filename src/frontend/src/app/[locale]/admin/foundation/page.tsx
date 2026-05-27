@@ -65,19 +65,19 @@ export default function FoundationLandingPage() {
         >
           <div>
             <div className="humi-eyebrow" style={{ fontSize: 10 }}>หน่วยงานทั้งหมด</div>
-            <div className="font-display text-[22px] font-semibold text-ink">
+            <div className="font-display text-2xl font-semibold text-ink">
               {summary.orgUnitCount}
             </div>
           </div>
           <div>
             <div className="humi-eyebrow" style={{ fontSize: 10 }}>ตำแหน่ง</div>
-            <div className="font-display text-[22px] font-semibold text-ink">
+            <div className="font-display text-2xl font-semibold text-ink">
               {summary.positionCount}
             </div>
           </div>
           <div>
             <div className="humi-eyebrow" style={{ fontSize: 10 }}>พนักงานในระบบ</div>
-            <div className="font-display text-[22px] font-semibold" style={{ color: 'var(--color-accent)' }}>
+            <div className="font-display text-2xl font-semibold" style={{ color: 'var(--color-accent)' }}>
               {summary.totalHeadcount.toLocaleString('th-TH')}
             </div>
           </div>
@@ -100,7 +100,7 @@ export default function FoundationLandingPage() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="humi-eyebrow">{tile.eyebrow}</div>
-                  <h2 className="mt-1 font-display text-[16px] font-semibold text-ink group-hover:text-accent">
+                  <h2 className="mt-1 font-display text-base font-semibold text-ink group-hover:text-accent">
                     {tile.title}
                   </h2>
                   <p className="mt-1 text-small text-ink-soft">{tile.desc}</p>

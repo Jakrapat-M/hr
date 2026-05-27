@@ -613,6 +613,8 @@ interface HireWizardState {
   goNext: () => void
   goBack: () => void
   jumpTo: (step: number) => void
+  /** URL deep-link navigation — bypasses maxUnlockedStep lock, does NOT advance maxUnlockedStep */
+  jumpToUrl: (step: number) => void
   isStepValid: (step: number, strict?: boolean) => boolean
   reset: () => void
 }
@@ -850,6 +852,11 @@ export const useHireWizard = create<HireWizardState>()(
           console.warn(`[useHireWizard] jumpTo: step ${step} ยังถูกล็อคอยู่ (max: ${maxUnlockedStep})`)
           return
         }
+        set({ currentStep: step as StepNumber })
+      },
+
+      jumpToUrl: (step: number) => {
+        if (step < 1 || step > 3) return
         set({ currentStep: step as StepNumber })
       },
 

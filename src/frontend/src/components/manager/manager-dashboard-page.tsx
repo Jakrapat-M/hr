@@ -92,7 +92,7 @@ function OrgNodeItem({ node, depth = 0 }: { node: OrgNode; depth?: number }) {
  </div>
  <div className="min-w-0">
  <p className="text-xs font-medium text-ink truncate">{node.name}</p>
- <p className="text-[10px] text-ink-muted truncate">{node.position}</p>
+ <p className="text-xs text-ink-muted truncate">{node.position}</p>
  </div>
  </div>
  {expanded && hasChildren && node.children!.map((child: OrgNode) => <OrgNodeItem key={child.id} node={child} depth={depth + 1} />)}
@@ -417,7 +417,7 @@ export function ManagerDashboardPage() {
        </div>
        {showDotted && (
         <span
-         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-dashed border-indigo-400 text-[10px] text-indigo-600 bg-indigo-50 shrink-0"
+         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-dashed border-indigo-400 text-xs text-indigo-600 bg-indigo-50 shrink-0"
          title="สายไขว้"
         >
          <GitBranch className="h-2.5 w-2.5" />
@@ -593,12 +593,12 @@ export function ManagerDashboardPage() {
  <span className={cn('text-xs', isToday(day) ?'font-bold text-brand' :'text-ink-muted')}>{day}</span>
  <div className="mt-0.5 space-y-0.5">
  {dayEvents.slice(0, 2).map((ev) => (
- <div key={ev.id} className={cn('text-[9px] px-1 py-0.5 rounded truncate text-white', EVENT_COLORS[ev.type] ??'bg-hairline')} title={`${ev.employeeName}: ${ev.label}`}>
+ <div key={ev.id} className={cn('text-xs px-1 py-0.5 rounded truncate text-white', EVENT_COLORS[ev.type] ??'bg-hairline')} title={`${ev.employeeName}: ${ev.label}`}>
  {ev.employeeName.split('')[0]}
  </div>
  ))}
  {dayEvents.length > 2 && (
- <span className="text-[9px] text-ink-muted px-1">+{dayEvents.length - 2}</span>
+ <span className="text-xs text-ink-muted px-1">+{dayEvents.length - 2}</span>
  )}
  </div>
  </div>
@@ -659,7 +659,7 @@ export function ManagerDashboardPage() {
            className="h-full rounded-full flex items-center px-2"
            style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 60%, white))' }}
           >
-           <span className="text-[11px] font-medium text-white leading-none">{count}</span>
+           <span className="text-xs font-medium text-white leading-none">{count}</span>
           </div>
          </div>
          <span className="text-xs text-ink-muted w-6 text-right shrink-0">{count}</span>
@@ -683,7 +683,7 @@ export function ManagerDashboardPage() {
         return (
          <div key={ev.id} className="flex items-center gap-3 p-3 rounded-md border border-hairline hover:bg-surface-raised/30 transition">
           <span className="text-xs text-ink-muted w-24 shrink-0">{ev.date}</span>
-          <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border shrink-0', badge.cls)}>
+          <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border shrink-0', badge.cls)}>
            {badge.label}
           </span>
           <span className="text-sm font-medium text-ink shrink-0">{ev.employeeName}</span>

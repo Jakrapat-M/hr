@@ -125,7 +125,7 @@ export function TeamCalendar({
  />
  ))}
  {dayEvents.length > 3 && (
- <span className="text-[9px] text-ink-muted">+{dayEvents.length - 3}</span>
+ <span className="text-xs text-ink-muted">+{dayEvents.length - 3}</span>
  )}
  </div>
  </div>

@@ -25,7 +25,7 @@ export function BenefitClaimsInbox() {
   return (
     <div className="pb-8" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
-        <h1 className="font-display text-[22px] font-semibold text-ink">Benefit Reimbursement — SPD</h1>
+        <h1 className="font-display text-2xl font-semibold text-ink">Benefit Reimbursement — SPD</h1>
         <p className="text-small text-ink-muted mt-1">สวัสดิการรอ SPD ตรวจสอบ</p>
         <p className="text-small text-ink-muted mt-1">ตรวจคำขอเบิกสวัสดิการจาก Employee Self Service พร้อม approve / reject / send back</p>
       </div>

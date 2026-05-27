@@ -82,7 +82,7 @@ export function TalentResultCard({ employee }: { employee: TalentEmployee }) {
           <p className="mt-0.5 text-small text-ink-muted font-mono">{employee.employeeCode}</p>
         </div>
         {employee.isHiPo && (
-          <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent-ink">
+          <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent-ink">
             HiPo
           </span>
         )}

@@ -16,9 +16,9 @@ const avatarVariants = cva(
   {
     variants: {
       size: {
-        sm: 'h-8 w-8 rounded-[var(--radius-sm)] text-[12px]',
-        md: 'h-12 w-12 rounded-[var(--radius-md)] text-[16px]',
-        lg: 'h-[72px] w-[72px] rounded-[var(--radius-2xl)] text-[24px]',
+        sm: 'h-8 w-8 rounded-[var(--radius-sm)] text-sm',
+        md: 'h-12 w-12 rounded-[var(--radius-md)] text-base',
+        lg: 'h-[72px] w-[72px] rounded-[var(--radius-2xl)] text-2xl',
       },
       tone: {
         teal: 'bg-accent-soft text-accent-ink',

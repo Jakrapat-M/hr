@@ -822,7 +822,7 @@ export function QuickApprovePage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-display text-[22px] font-semibold text-ink leading-tight">
+              <h1 className="font-display text-2xl font-semibold text-ink leading-tight">
                 {isTh ? 'กล่องอนุมัติ' : 'Approval Workspace'}
               </h1>
               {/* Queue scope label */}

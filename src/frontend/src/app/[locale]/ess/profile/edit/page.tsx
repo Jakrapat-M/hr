@@ -179,7 +179,7 @@ export default function ProfileEditPage() {
 
       {/* Header */}
       <div>
-        <h1 className="font-display text-[22px] font-semibold text-ink">แก้ไขข้อมูลส่วนตัว</h1>
+        <h1 className="font-display text-2xl font-semibold text-ink">แก้ไขข้อมูลส่วนตัว</h1>
         <p className="mt-1 text-sm text-ink-muted">
           การแก้ไขจะถูกส่งให้ SPD พิจารณาอนุมัติก่อนมีผลในระบบ (BRD #166)
         </p>

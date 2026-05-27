@@ -245,13 +245,17 @@ describe('AC-4 + AC-8 — Topbar no-regression + compressed tokens', () => {
     expect(tokenList.includes('lg:hidden') || tokenList.includes('lg:!hidden')).toBe(true);
   });
 
-  it('Topbar eyebrow div has hidden sm:block classes', async () => {
+  it('Topbar greeting h2 is present and search pill is hidden on mobile', async () => {
     const { Topbar } = await import('@/components/humi/shell/Topbar');
     const { container } = render(<Topbar title="หน้าหลัก" />);
+    // AC-8: Topbar was refactored — the separate eyebrow div was removed and the
+    // greeting is now a single h2 (no hidden sm:block eyebrow row). The search pill
+    // still uses !hidden sm:!flex for responsive hiding. Assert the h2 is present.
+    const h2 = container.querySelector('h2');
+    expect(h2).toBeTruthy();
     const tokens = allClassTokens(container);
-    // AC-8: eyebrow hidden on mobile
-    expect(tokens).toContain('hidden');
-    expect(tokens).toContain('sm:block');
+    // Search pill hidden on mobile via !hidden
+    expect(tokens).toContain('!hidden');
   });
 
   it('Topbar has search pill with hidden sm:flex classes', async () => {
@@ -391,12 +395,14 @@ describe('AC-3 — timeoff page grid tokens', () => {
 describe('AC-3 — benefits-hub page grid tokens', () => {
   beforeEach(() => { vi.resetModules(); });
 
-  it('benefits card grid has md:grid-cols-2 lg:grid-cols-3 tokens', async () => {
+  it('benefits KPI strip has grid-cols-2 md:grid-cols-4 tokens', async () => {
     const { default: Page } = await import('@/app/[locale]/benefits-hub/page');
     const { container } = render(<Page />);
     const tokens = allClassTokens(container);
-    expect(tokens).toContain('md:grid-cols-2');
-    expect(tokens).toContain('lg:grid-cols-3');
+    // benefits-hub was rewritten as a single-scroll page (no benefit card grid).
+    // The KPI strip uses grid-cols-2 md:grid-cols-4; services use a 2fr/1fr layout.
+    expect(tokens).toContain('grid-cols-2');
+    expect(tokens).toContain('md:grid-cols-4');
   });
 });
 
@@ -439,11 +445,14 @@ describe('AC-3 — learning-directory page grid tokens', () => {
 describe('AC-3 — org-chart page overflow', () => {
   beforeEach(() => { vi.resetModules(); });
 
-  it('org-chart canvas wrapper has overflow-x-auto for horizontal scroll', async () => {
+  it('org-chart renders a 2-column grid (lineage + detail)', async () => {
     const { default: Page } = await import('@/app/[locale]/org-chart/page');
     const { container } = render(<Page />);
     const tokens = allClassTokens(container);
-    expect(tokens).toContain('overflow-x-auto');
+    // Org-chart was rewritten as a Teams/Viva egocentric lineage view (2026-05).
+    // No zoom/pan/overflow-x-auto canvas. It now uses a 2-col grid: lineage (1.5fr)
+    // + employee detail (1fr). Assert the grid layout token is present.
+    expect(tokens).toContain('lg:grid-cols-[1.5fr_1fr]');
   });
 });
 

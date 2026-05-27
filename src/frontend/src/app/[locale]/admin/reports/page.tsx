@@ -191,7 +191,7 @@ export default function ReportsPage() {
       {/* Header */}
       <div>
         <div className="humi-eyebrow">REPORTS</div>
-        <h1 className="font-display text-[22px] font-semibold text-ink">ศูนย์รายงาน</h1>
+        <h1 className="font-display text-2xl font-semibold text-ink">ศูนย์รายงาน</h1>
         <p style={{ fontSize: 13, color: 'var(--color-ink-muted)', marginTop: 4 }}>
           ภาพรวมกำลังคน หน่วยงาน และความเคลื่อนไหวย้อนหลัง 30 วัน
         </p>

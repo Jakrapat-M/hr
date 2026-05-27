@@ -421,7 +421,7 @@ export default function EmployeeEditPage() {
         <div className="humi-eyebrow" style={{ marginBottom: 6 }}>
           {employee.employee_id}
         </div>
-        <div className="font-display text-[18px] font-semibold text-ink">{nameTh}</div>
+        <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
         <div className="text-small text-ink-muted">
           {employee.position_title} · {employee.company}
         </div>
@@ -432,7 +432,7 @@ export default function EmployeeEditPage() {
           changes (transfer/probation/terminate), not personal-info corrections. */}
       <div className="humi-card">
         <div style={{ marginBottom: 24 }}>
-          <h1 className="font-display text-[20px] font-semibold text-ink">
+          <h1 className="font-display text-xl font-semibold text-ink">
             แก้ไขข้อมูลส่วนตัว
           </h1>
         </div>

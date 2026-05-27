@@ -1,17 +1,45 @@
 /**
  * /quick-approve page.test.tsx
  *
- * Smoke test: the route page renders QuickApprovePage without crashing
- * for the default locale with no auth context.
+ * Smoke tests: the route page renders QuickApproveSimple without crashing.
+ * The page now delegates to QuickApproveSimple (PR-5 Req7) — a unified status-
+ * filtered inbox with title "คิวอนุมัติ" (t('title') in the simple namespace),
+ * status filter tabs (all/pending/approved/rejected), and a DataTable.
+ * No type-filter chips. No probation-specific drill-in hrefs.
  */
 
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 // ── next-intl mock ─────────────────────────────────────────────────────────
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string) => {
+    // Return the last segment so nested keys like "filter.all" → "ทั้งหมด"
+    const map: Record<string, string> = {
+      'title': 'คิวอนุมัติ',
+      'breadcrumb': 'อนุมัติ',
+      'subtitlePending': '{n} รายการรอการตัดสินใจ',
+      'filter.all': 'ทั้งหมด',
+      'filter.pending': 'รออนุมัติ',
+      'filter.approved': 'อนุมัติแล้ว',
+      'filter.rejected': 'ปฏิเสธแล้ว',
+      'columns.ref': 'เลขที่',
+      'columns.employee': 'พนักงาน',
+      'columns.type': 'ประเภท',
+      'columns.filed': 'วันที่ส่ง',
+      'columns.detail': 'รายละเอียด',
+      'columns.status': 'สถานะ',
+      'actions.approve': 'อนุมัติ',
+      'actions.reject': 'ปฏิเสธ',
+      'actions.view': 'ดูรายละเอียด',
+      'status.pending': 'รออนุมัติ',
+      'status.approved': 'อนุมัติแล้ว',
+      'status.rejected': 'ปฏิเสธแล้ว',
+      'status.awaitingNext': 'รอผู้อนุมัติถัดไป',
+    };
+    return map[key] ?? key;
+  },
   useLocale: () => 'th',
 }));
 
@@ -21,25 +49,23 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-// ── Humi component stubs — Capability uses real implementation ─────────────
+// ── Humi component stubs ───────────────────────────────────────────────────
 vi.mock('@/components/humi', async () => {
-  // Use real Capability so RBAC gates work
   const { Capability } = await vi.importActual<typeof import('@/components/humi/Capability')>(
     '@/components/humi/Capability',
   );
   return {
-    Card: ({ children, header }: any) => <div>{header}{children}</div>,
+    Card: ({ children }: any) => <div>{children}</div>,
     CardTitle: ({ children }: any) => <h2>{children}</h2>,
     Button: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
     Modal: ({ open, children, title }: any) =>
       open ? <div role="dialog" aria-label={title}>{children}</div> : null,
-    DataTable: ({ rows, columns, emptyState }: any) => (
+    DataTable: ({ rows, columns }: any) => (
       <div data-testid="data-table">
         {rows.length === 0
-          ? <div data-testid="empty-state">{emptyState}</div>
+          ? <div data-testid="empty-state" />
           : (
             <div data-testid="has-rows">
-              <span data-testid="rows-count">{rows.length} rows</span>
               {rows.map((row: any) => (
                 <div key={row.id} data-testid={`row-${row.id}`} data-type={row.type}>
                   {columns?.map((col: any) => (
@@ -54,31 +80,6 @@ vi.mock('@/components/humi', async () => {
     Capability,
   };
 });
-
-vi.mock('@/components/ui/badge', () => ({
-  Badge: ({ children }: any) => <span>{children}</span>,
-}));
-vi.mock('@/components/ui/skeleton', () => ({
-  Skeleton: () => <div aria-hidden />,
-}));
-vi.mock('@/components/quick-approve/UrgencyBadge', () => ({
-  UrgencyBadge: ({ urgency }: any) => <span>{urgency}</span>,
-}));
-vi.mock('@/components/quick-approve/ApprovalChain', () => ({
-  ApprovalChain: () => <div data-testid="approval-chain" />,
-  ApprovalTimelineChain: () => <div data-testid="approval-timeline-chain" />,
-}));
-vi.mock('@/components/quick-approve/DelegationModal', () => ({
-  DelegationModal: () => null,
-}));
-vi.mock('@/hooks/use-quick-approve', () => ({
-  useQuickApprove: () => ({
-    loading: false,
-    delegations: [],
-    createDelegation: vi.fn(),
-    revokeDelegation: vi.fn(),
-  }),
-}));
 
 // ── localStorage mock ──────────────────────────────────────────────────────
 const localStorageMock = (() => {
@@ -111,46 +112,27 @@ describe('/quick-approve page route', () => {
   it('renders without crashing and shows the workspace title', async () => {
     const { default: QuickApprovePageRoute } = await import('@/app/[locale]/quick-approve/page');
     render(<QuickApprovePageRoute />);
-    expect(screen.getByText('กล่องอนุมัติ')).toBeInTheDocument();
+    // QuickApproveSimple renders t('title') = 'คิวอนุมัติ' as an <h1>
+    expect(screen.getByRole('heading', { level: 1, name: /คิวอนุมัติ/ })).toBeInTheDocument();
   });
 
-  it('renders the data table with mock rows', async () => {
+  it('renders the data table and status filter tabs', async () => {
     const { default: QuickApprovePageRoute } = await import('@/app/[locale]/quick-approve/page');
     render(<QuickApprovePageRoute />);
+    // DataTable is always rendered (stub shows empty-state when rows=[])
     expect(screen.getByTestId('data-table')).toBeInTheDocument();
-    expect(screen.getByTestId('has-rows')).toBeInTheDocument();
+    // Status tabs: all / pending / approved / rejected
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs.length).toBeGreaterThanOrEqual(4);
   });
 
-  it('shows the probation tab chip and probation rows drill-in to /workflows/probation', async () => {
+  it('shows status filter tab buttons for all four states', async () => {
     const { default: QuickApprovePageRoute } = await import('@/app/[locale]/quick-approve/page');
     render(<QuickApprovePageRoute />);
-
-    // The "ทดลองงาน" chip is rendered alongside the other type filter chips.
-    const probationChip = await screen.findByRole('button', { name: /ทดลองงาน/ });
-    expect(probationChip).toBeInTheDocument();
-
-    // Probation cases load asynchronously (300ms setTimeout in useProbationCases).
-    // Wait until at least one probation row has been merged into the unified list.
-    await waitFor(() => {
-      const probationRows = document.querySelectorAll('[data-type="probation"]');
-      expect(probationRows.length).toBeGreaterThan(0);
-    });
-
-    // Activating the chip narrows the list to probation only.
-    fireEvent.click(probationChip);
-    await waitFor(() => {
-      const rows = document.querySelectorAll('[data-testid^="row-"]');
-      expect(rows.length).toBeGreaterThan(0);
-      rows.forEach((row) => {
-        expect(row.getAttribute('data-type')).toBe('probation');
-      });
-    });
-
-    // Drill-in href resolves to /<locale>/workflows/probation/<id>, not /quick-approve/<id>.
-    const probationRow = document.querySelector('[data-type="probation"]');
-    expect(probationRow).not.toBeNull();
-    const link = probationRow!.querySelector('a[href*="/workflows/probation/"]');
-    expect(link).not.toBeNull();
-    expect(link!.getAttribute('href')).toMatch(/^\/th\/workflows\/probation\/PB-/);
+    // Four segmented filter tabs rendered as role=tab buttons
+    expect(screen.getByRole('tab', { name: /ทั้งหมด/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /รออนุมัติ/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /อนุมัติแล้ว/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /ปฏิเสธแล้ว/ })).toBeInTheDocument();
   });
 });

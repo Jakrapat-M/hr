@@ -182,17 +182,20 @@ describe('AC-4 smoke — /timeoff', () => {
 describe('AC-4 smoke — /benefits-hub', () => {
   beforeEach(() => { vi.resetModules(); });
 
-  it('renders benefits tab switcher', async () => {
+  it('renders benefits-hub page header', async () => {
     const { default: Page } = await import('@/app/[locale]/benefits-hub/page');
     render(<Page />);
-    expect(screen.getByText('สวัสดิการ')).toBeTruthy();
+    // benefits-hub was rewritten as a single-scroll service catalog (2026-05).
+    // No tab switcher. Page h1 is "สวัสดิการของคุณ".
+    expect(screen.getByText('สวัสดิการของคุณ')).toBeTruthy();
   });
 
-  it('renders benefit plan cards from mock data', async () => {
+  it('renders benefits-hub service catalog entries', async () => {
     const { default: Page } = await import('@/app/[locale]/benefits-hub/page');
     render(<Page />);
-    expect(screen.getByText('ประกันสุขภาพและทันตกรรม')).toBeTruthy();
-    expect(screen.getByText('กองทุนสำรองเลี้ยงชีพ')).toBeTruthy();
+    // Service catalog has "ขอใบส่งตัว" and "เบิกสวัสดิการ" cards (SERVICES array).
+    expect(screen.getByText('ขอใบส่งตัว')).toBeTruthy();
+    expect(screen.getByText('เบิกสวัสดิการ')).toBeTruthy();
   });
 });
 
@@ -273,11 +276,17 @@ describe('AC-4 smoke — /org-chart', () => {
     expect(searchInput).toBeTruthy();
   });
 
-  it('renders org chart canvas with node cards', async () => {
+  it('renders org chart lineage with default focused person', async () => {
     const { default: Page } = await import('@/app/[locale]/org-chart/page');
     const { container } = render(<Page />);
-    // NodeCard renders person name วาสนา จิรวัฒน์ (ประธาน)
-    expect(screen.getByText('วาสนา จิรวัฒน์')).toBeTruthy();
+    // Org-chart rewritten as Teams/Viva egocentric lineage view (2026-05).
+    // Default focused person is 'marcus' (มาร์คัส เคลลี่).
+    // The name appears in both the linecard and the right-panel h2 — use getAllByText.
+    const focusedCard = container.querySelector('.sforg-linecard.is-focused');
+    expect(focusedCard).toBeTruthy();
+    // getAllByText because name appears in linecard + right-panel h2
+    const matches = screen.getAllByText('มาร์คัส เคลลี่');
+    expect(matches.length).toBeGreaterThan(0);
   });
 });
 

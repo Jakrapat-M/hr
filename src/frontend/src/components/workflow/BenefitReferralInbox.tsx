@@ -26,7 +26,7 @@ export function BenefitReferralInbox() {
     <div className="space-y-5 pb-8">
       <header>
         <CardEyebrow>Hospital referral · SPD</CardEyebrow>
-        <h1 className="mt-1 font-display text-[22px] font-semibold text-ink">Hospital Referral — SPD</h1>
+        <h1 className="mt-1 font-display text-2xl font-semibold text-ink">Hospital Referral — SPD</h1>
         <p className="text-small text-ink-muted mt-1">ขอใบส่งตัว/ePatient แยกจาก Benefit Reimbursement</p>
       </header>
       <section aria-labelledby="benefit-referral-inbox-heading">

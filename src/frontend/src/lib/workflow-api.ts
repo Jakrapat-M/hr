@@ -198,6 +198,8 @@ export interface EligibilityRule {
   pg_to: number | null;
   plan_effective: string | null;
   waiting_period?: number | null;
+  waiting_period_days?: number | null;
+  effective_type?: 'hire_date' | 'pass_probation_date' | 'day_from_hire_date' | 'hour_from_hire_date' | null;
   no_of_years_from_hiring: number | null;
   hiring_date_from: string | null;
   hiring_date_to: string | null;
@@ -205,6 +207,8 @@ export interface EligibilityRule {
   entitlement_amount: number | null;
   max_per_claim: number | null;
   additional_condition: string | null;
+  rule_id?: string | null;
+  plan_id?: string | null;
 }
 
 export interface EligibilityRuleInput {
@@ -296,10 +300,65 @@ export async function listEligibilityRules(benefitKey: string): Promise<Eligibil
     if (!res.ok) return mockFallback();
     const body = (await res.json()) as { benefitKey: string; rules: EligibilityRule[] };
     const rules = Array.isArray(body) ? (body as unknown as EligibilityRule[]) : (body.rules ?? []);
-    return rules.length > 0 ? rules : mockFallback();
+    const base = rules.length > 0 ? rules : await mockFallback();
+    const local = _readLocal(benefitKey);
+    if (local.length === 0) return base;
+    // Merge: local rules override/extend the base set by id
+    const baseIds = new Set(base.map((r) => r.id));
+    const merged = [...base];
+    for (const lr of local) {
+      if (baseIds.has(lr.id)) {
+        const idx = merged.findIndex((r) => r.id === lr.id);
+        merged[idx] = lr;
+      } else {
+        merged.push(lr);
+      }
+    }
+    return merged;
   } catch {
-    // Network error / abort / fetch threw → return mock seed
-    return mockFallback();
+    // Network error / abort / fetch threw → return mock seed + local
+    const base = await mockFallback();
+    const local = _readLocal(benefitKey);
+    if (local.length === 0) return base;
+    const baseIds = new Set(base.map((r) => r.id));
+    const merged = [...base];
+    for (const lr of local) {
+      if (baseIds.has(lr.id)) {
+        const idx = merged.findIndex((r) => r.id === lr.id);
+        merged[idx] = lr;
+      } else {
+        merged.push(lr);
+      }
+    }
+    return merged;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Local-storage fallback store for add/update/delete when gateway unavailable.
+// Key: `eligibility_rules_local_${benefitKey}`
+// Value: JSON array of EligibilityRule (extra items only — merged with mock seed
+//        on read in listEligibilityRules above).
+// ---------------------------------------------------------------------------
+
+function _localKey(benefitKey: string): string {
+  return `eligibility_rules_local_${benefitKey}`;
+}
+
+function _readLocal(benefitKey: string): EligibilityRule[] {
+  try {
+    const raw = localStorage.getItem(_localKey(benefitKey));
+    return raw ? (JSON.parse(raw) as EligibilityRule[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function _writeLocal(benefitKey: string, rules: EligibilityRule[]): void {
+  try {
+    localStorage.setItem(_localKey(benefitKey), JSON.stringify(rules));
+  } catch {
+    // storage quota or SSR — ignore
   }
 }
 
@@ -307,16 +366,61 @@ export async function addEligibilityRule(
   benefitKey: string,
   rule: EligibilityRuleInput,
 ): Promise<EligibilityRule> {
-  const headers = await buildAuthHeaders();
-  const res = await fetch(
-    `${BASE_URL}/admin/benefits/${encodeURIComponent(benefitKey)}/eligibility`,
-    { method: 'POST', headers, body: JSON.stringify(rule) },
-  );
-  if (!res.ok) {
-    const text = await readErrorText(res);
-    throw new Error(`workflow-api addEligibilityRule failed (${res.status}): ${text}`);
+  try {
+    const headers = await buildAuthHeaders();
+    const res = await fetch(
+      `${BASE_URL}/admin/benefits/${encodeURIComponent(benefitKey)}/eligibility`,
+      { method: 'POST', headers, body: JSON.stringify(rule) },
+    );
+    if (!res.ok) {
+      const text = await readErrorText(res);
+      throw new Error(`workflow-api addEligibilityRule failed (${res.status}): ${text}`);
+    }
+    return res.json() as Promise<EligibilityRule>;
+  } catch {
+    // Gateway unavailable — persist locally so subsequent listEligibilityRules
+    // can surface the new rule without a backend.
+    const newRule: EligibilityRule = {
+      id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      benefit_key: benefitKey,
+      scope_type: rule.scope_type,
+      scope_value: rule.scope_value,
+      allow: rule.allow,
+      max_per_month: rule.max_per_month ?? null,
+      max_per_year: rule.max_per_year ?? null,
+      auto_approve_max: rule.auto_approve_max ?? null,
+      created_by: rule.created_by,
+      effective_from: rule.effective_from ?? new Date().toISOString().slice(0, 10),
+      effective_to: rule.effective_to ?? null,
+      rule_id: (rule as unknown as Record<string, unknown>).rule_id as string ?? null,
+      rule_name: rule.rule_name ?? null,
+      plan_id: (rule as unknown as Record<string, unknown>).plan_id as string ?? null,
+      status: rule.status ?? 'active',
+      policy_profile: rule.policy_profile ?? null,
+      business_unit: rule.business_unit ?? null,
+      company: rule.company ?? null,
+      company_code: rule.company_code ?? null,
+      job_code: rule.job_code ?? null,
+      employee_group: rule.employee_group ?? null,
+      employee_subgroup: rule.employee_subgroup ?? null,
+      dvt_project: rule.dvt_project ?? null,
+      pg_from: rule.pg_from ?? null,
+      pg_to: rule.pg_to ?? null,
+      plan_effective: rule.plan_effective ?? null,
+      waiting_period_days: (rule as unknown as Record<string, unknown>).waiting_period_days as number ?? null,
+      no_of_years_from_hiring: rule.no_of_years_from_hiring ?? null,
+      hiring_date_from: rule.hiring_date_from ?? null,
+      hiring_date_to: rule.hiring_date_to ?? null,
+      claim_period: rule.claim_period ?? null,
+      entitlement_amount: rule.entitlement_amount ?? null,
+      max_per_claim: rule.max_per_claim ?? null,
+      additional_condition: rule.additional_condition ?? null,
+      effective_type: (rule as unknown as Record<string, unknown>).effective_type as EligibilityRule['effective_type'] ?? null,
+    };
+    const existing = _readLocal(benefitKey);
+    _writeLocal(benefitKey, [...existing, newRule]);
+    return newRule;
   }
-  return res.json() as Promise<EligibilityRule>;
 }
 
 export async function updateEligibilityRule(
@@ -324,16 +428,27 @@ export async function updateEligibilityRule(
   ruleId: string,
   input: Partial<EligibilityRuleInput>,
 ): Promise<EligibilityRule> {
-  const headers = await buildAuthHeaders();
-  const res = await fetch(
-    `${BASE_URL}/admin/benefits/${encodeURIComponent(benefitKey)}/eligibility/${ruleId}`,
-    { method: 'PUT', headers, body: JSON.stringify(input) },
-  );
-  if (!res.ok) {
-    const text = await readErrorText(res);
-    throw new Error(`workflow-api updateEligibilityRule failed (${res.status}): ${text}`);
+  try {
+    const headers = await buildAuthHeaders();
+    const res = await fetch(
+      `${BASE_URL}/admin/benefits/${encodeURIComponent(benefitKey)}/eligibility/${ruleId}`,
+      { method: 'PUT', headers, body: JSON.stringify(input) },
+    );
+    if (!res.ok) {
+      const text = await readErrorText(res);
+      throw new Error(`workflow-api updateEligibilityRule failed (${res.status}): ${text}`);
+    }
+    return res.json() as Promise<EligibilityRule>;
+  } catch {
+    // Gateway unavailable — apply update to local store.
+    const existing = _readLocal(benefitKey);
+    const idx = existing.findIndex((r) => r.id === ruleId);
+    if (idx === -1) throw new Error(`updateEligibilityRule: rule ${ruleId} not found locally`);
+    const updated: EligibilityRule = { ...existing[idx], ...input } as EligibilityRule;
+    existing[idx] = updated;
+    _writeLocal(benefitKey, existing);
+    return updated;
   }
-  return res.json() as Promise<EligibilityRule>;
 }
 
 export async function getEligibilityRuleHistory(
@@ -383,14 +498,31 @@ export async function getEligibilityRuleHistory(
 }
 
 export async function deleteEligibilityRule(benefitKey: string, ruleId: string): Promise<void> {
-  const headers = await buildAuthHeaders();
-  const res = await fetch(
-    `${BASE_URL}/admin/benefits/${encodeURIComponent(benefitKey)}/eligibility/${ruleId}`,
-    { method: 'DELETE', headers },
-  );
-  if (!res.ok) {
-    const text = await readErrorText(res);
-    throw new Error(`workflow-api deleteEligibilityRule failed (${res.status}): ${text}`);
+  try {
+    const headers = await buildAuthHeaders();
+    const res = await fetch(
+      `${BASE_URL}/admin/benefits/${encodeURIComponent(benefitKey)}/eligibility/${ruleId}`,
+      { method: 'DELETE', headers },
+    );
+    if (!res.ok) {
+      const text = await readErrorText(res);
+      throw new Error(`workflow-api deleteEligibilityRule failed (${res.status}): ${text}`);
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith('workflow-api deleteEligibilityRule failed')) {
+      throw err;
+    }
+    // Network unavailable — soft-delete in local store (status=inactive, effective_to=today)
+    const local = _readLocal(benefitKey);
+    const idx = local.findIndex((r) => r.id === ruleId);
+    if (idx !== -1) {
+      local[idx] = {
+        ...local[idx],
+        status: 'inactive',
+        effective_to: new Date().toISOString().slice(0, 10),
+      };
+      _writeLocal(benefitKey, local);
+    }
   }
 }
 

@@ -46,7 +46,7 @@ function ReviewCheckpointHeader({
         <Icon size={14} aria-hidden />
       </div>
       <div className="min-w-0">
-        <h3 className="font-display text-[16px] font-semibold leading-tight text-ink">{title}</h3>
+        <h3 className="font-display text-base font-semibold leading-tight text-ink">{title}</h3>
         {sub && <p className="mt-1 text-small text-ink-muted">{sub}</p>}
       </div>
     </div>

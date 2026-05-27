@@ -48,7 +48,7 @@ export function TerminationInbox() {
       {/* Header */}
       <div>
         <div className="humi-eyebrow" style={{ marginBottom: 4 }}>Chain 1 — BRD #172</div>
-        <h2 className="font-display text-[18px] font-semibold text-ink">
+        <h2 className="font-display text-lg font-semibold text-ink">
           คำขอลาออก — รอ SPD อนุมัติ
         </h2>
         <p className="text-small text-ink-muted mt-1">

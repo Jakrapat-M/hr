@@ -116,7 +116,7 @@ export default function NotificationTemplatesPage() {
           <CardEyebrow>
             {isTh ? 'ระบบ · การแจ้งเตือน' : 'System · Notifications'}
           </CardEyebrow>
-          <h1 className="font-display text-[28px] font-semibold text-ink">
+          <h1 className="font-display text-3xl font-semibold text-ink">
             {isTh ? 'เทมเพลตการแจ้งเตือน' : 'Notification Templates'}
           </h1>
           <p className="mt-2 text-small text-ink-muted">

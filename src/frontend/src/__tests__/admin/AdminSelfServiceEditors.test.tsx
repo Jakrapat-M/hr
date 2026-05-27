@@ -177,9 +177,9 @@ describe('ReadOnly Matrix Editor', () => {
 // -----------------------------------------------------------------------
 
 describe('Quick Actions Editor', () => {
-  it('TC-QA-1: quickActions seed มีครบ 8 items', () => {
+  it('TC-QA-1: quickActions seed มีครบ 12 items', () => {
     const { result } = renderHook(() => useAdminSelfService())
-    expect(result.current.draft.quickActions).toHaveLength(8)
+    expect(result.current.draft.quickActions).toHaveLength(12)
   })
 
   it('TC-QA-2: setQuickActions (reorder) อัปเดต draft.quickActions และ isDirty=true', () => {

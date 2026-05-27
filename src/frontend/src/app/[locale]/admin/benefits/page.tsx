@@ -237,7 +237,7 @@ export default function AdminBenefitsPage() {
 }
 
 function Summary({ label, value }: { label: string; value: number | string }) {
-  return <Card variant="raised" size="md"><CardEyebrow>{label}</CardEyebrow><p className="mt-1 font-display text-[24px] font-semibold text-ink tabular-nums">{value}</p></Card>;
+  return <Card variant="raised" size="md"><CardEyebrow>{label}</CardEyebrow><p className="mt-1 font-display text-2xl font-semibold text-ink tabular-nums">{value}</p></Card>;
 }
 
 function DataSection({ title, description, headers, rows }: { title: string; description?: string; headers: string[]; rows: string[][] }) {
