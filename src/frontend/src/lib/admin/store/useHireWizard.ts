@@ -100,8 +100,12 @@ export interface DependentEntry {
   email: string
   // Tax-related (BA flagged some)
   isTaxDependent: boolean
-  // Address (optional, free-text)
+  // Address (optional, free-text) — STA-82: extended with copy-from-employee + building/floor/street
+  copyAddressFromEmployee: boolean     // UI: copy employee address action
   addressLine1: string
+  building: string                     // BA: Building
+  floor: string                        // BA: Floor
+  street: string                       // BA: Street
   // BA Dependents row 123 — Attachment
   attachmentName?: string | null
 }
@@ -119,6 +123,7 @@ export interface EmergencyContactEntry {
   // SF dump: addressCustomString12 = Province (sap_required=true, sap_visible=false)
   //          addressCustomString13 = District  (sap_required=true, sap_visible=false)
   //          these DUPLICATE addressCustomString1/2 — mapper writes identical values to both pairs
+  copyAddressFromEmployee: boolean     // STA-82: UI — copy employee address action (LOV Yes/No → checkbox)
   addressCountry: string       // SF: addressCountry (ISO3 — default 'THA')
   addressProvince: string      // SF: addressCustomString1 + addressCustomString12 (Province cascade pair)
   addressDistrict: string      // SF: addressCustomString2 + addressCustomString13 (District cascade pair)
@@ -192,6 +197,8 @@ export interface FormData {
     salutationLocal: string | null
     // STA-81: conditional field — shown only when eventReason = 'H_RPLMENT'
     replacedEmployeeId: string
+    // STA-83: Passport ID (optional, separate from national ID)
+    passportId?: string
   }
 
   // ── Cluster 2 "Job" (Personal Info carry-over) ── 12 fields
@@ -263,6 +270,7 @@ export interface FormData {
     seniorityStartDate: string
     retirementDate: string
     pfServiceDate: string
+    pfServiceEndDate: string
     dvtPreviousId: string
     cgPreviousEmployeeId: string
     // BRD #23, #30: employeeGroup + employeeSubGroup (SF EmpJob.employeeGroup/.employeeSubGroup)
@@ -325,6 +333,33 @@ export interface FormData {
     event: string | null                // SF: EmpJob.event — default 'H' on hire
     employmentType: string | null       // SF: EmpJob.employmentType (picklist EmploymentType 50 opts)
     attachmentName: string | null       // BA Job Information row 234 — Attachment
+    // STA-82: additional spec fields
+    jobRole: string | null              // Job Role (free-text)
+    jobType: string | null              // Job Type (free-text)
+    personnelGrade: string | null       // Personnel Grade (free-text)
+    bandMatching: string | null         // Band Matching (free-text)
+    band: string | null                 // Band (free-text)
+    transferOutTo: string | null        // Transfer out to (LOV)
+    transferInTo: string | null         // Transfer in to (LOV)
+    transferFrom: string | null         // Transfer from (free-text)
+    specialBenefitGroup: string | null  // Special Benefit Group (free-text)
+    okToRehire: string | null           // OK to Rehire (LOV Yes/No)
+    // DVT subsection
+    dvtProjectName: string | null
+    dvtType: string | null
+    dvtCourse: string | null
+    dvtCourseOfTime: string | null
+    dvtAcademicYear: string | null
+    dvtGraduationDate: string | null
+    dvtBondingEndDate: string | null
+    scholarship: string | null
+    probationaryPeriodEndDate: string | null  // maps to probationEndDate synonym
+    extendedProbationDate: string | null
+    // Organisation Information
+    pointOfSales: string | null         // Point of Sales* (required)
+    storeBrandFormat: string | null     // Store Brand/ Format
+    brand: string | null                // Brand
+    workLocation: string | null         // Work Location* (required — distinct from storeBranchCode legacy)
   }
   compensation: {
     baseSalary: number | null
@@ -374,6 +409,7 @@ const initialFormData: FormData = {
     attachmentName: null,
     salutationLocal: null,
     replacedEmployeeId: '',
+    passportId: '',
   },
   biographical: {
     otherTitleTh: '',
@@ -441,6 +477,7 @@ const initialFormData: FormData = {
     seniorityStartDate: '',
     retirementDate: '',
     pfServiceDate: '',
+    pfServiceEndDate: '',
     dvtPreviousId: '',
     cgPreviousEmployeeId: '',
   },
@@ -497,6 +534,31 @@ const initialFormData: FormData = {
     event: null,
     employmentType: null,
     attachmentName: null,
+    // STA-82: additional spec fields
+    jobRole: null,
+    jobType: null,
+    personnelGrade: null,
+    bandMatching: null,
+    band: null,
+    transferOutTo: null,
+    transferInTo: null,
+    transferFrom: null,
+    specialBenefitGroup: null,
+    okToRehire: null,
+    dvtProjectName: null,
+    dvtType: null,
+    dvtCourse: null,
+    dvtCourseOfTime: null,
+    dvtAcademicYear: null,
+    dvtGraduationDate: null,
+    dvtBondingEndDate: null,
+    scholarship: null,
+    probationaryPeriodEndDate: null,
+    extendedProbationDate: null,
+    pointOfSales: null,
+    storeBrandFormat: null,
+    brand: null,
+    workLocation: null,
   },
   compensation: {
     baseSalary: null,
@@ -896,6 +958,15 @@ export const useHireWizard = create<HireWizardState>()(
           attachmentName: null,
           supervisorId: null, supervisorLabel: null,
           overrideStandardWeeklyHours: false, dayOffType: '',
+          // STA-82 backfill
+          jobRole: null, jobType: null, personnelGrade: null,
+          bandMatching: null, band: null, transferOutTo: null,
+          transferInTo: null, transferFrom: null, specialBenefitGroup: null,
+          okToRehire: null, dvtProjectName: null, dvtType: null,
+          dvtCourse: null, dvtCourseOfTime: null, dvtAcademicYear: null,
+          dvtGraduationDate: null, dvtBondingEndDate: null, scholarship: null,
+          probationaryPeriodEndDate: null, extendedProbationDate: null,
+          pointOfSales: null, storeBrandFormat: null, brand: null, workLocation: null,
         }
         for (const [k, v] of Object.entries(jobDefaults)) {
           if (!(k in fd.job)) fd.job[k] = v
@@ -938,6 +1009,18 @@ export const useHireWizard = create<HireWizardState>()(
           fd.dependents = fd.dependents.map((dep: Record<string, unknown>) => ({
             ...dep,
             attachmentName: 'attachmentName' in dep ? dep.attachmentName : null,
+            // STA-82: backfill new address fields for old dependent entries
+            copyAddressFromEmployee: 'copyAddressFromEmployee' in dep ? dep.copyAddressFromEmployee : false,
+            building: 'building' in dep ? dep.building : '',
+            floor: 'floor' in dep ? dep.floor : '',
+            street: 'street' in dep ? dep.street : '',
+          }))
+        }
+        // STA-82: backfill copyAddressFromEmployee for existing emergencyContacts entries
+        if (Array.isArray(fd.emergencyContacts)) {
+          fd.emergencyContacts = fd.emergencyContacts.map((ec: Record<string, unknown>) => ({
+            ...ec,
+            copyAddressFromEmployee: 'copyAddressFromEmployee' in ec ? ec.copyAddressFromEmployee : false,
           }))
         }
         // v7: Phase 5 compensation bank/payment fields + recurringComponents

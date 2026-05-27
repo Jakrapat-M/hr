@@ -49,7 +49,7 @@ const minimalFormData: FormData = {
   employeeInfo: {
     employeeClass: null,
     originalStartDate: '', seniorityStartDate: '', retirementDate: '',
-    pfServiceDate: '', dvtPreviousId: '', cgPreviousEmployeeId: '',
+    pfServiceDate: '', pfServiceEndDate: '', dvtPreviousId: '', cgPreviousEmployeeId: '',
     ssn: '',
   },
   nationalId: { value: '' },
@@ -71,6 +71,15 @@ const minimalFormData: FormData = {
     ssoLocation: null, groupCompanyGroup: null, contractType: null,
     zone: null, contractEndDate: null, probationEndDate: null,
     emplStatus: null, event: null, employmentType: null,
+    // STA-82 fields
+    jobRole: null, jobType: null, personnelGrade: null,
+    bandMatching: null, band: null, transferOutTo: null,
+    transferInTo: null, transferFrom: null, specialBenefitGroup: null,
+    okToRehire: null, dvtProjectName: null, dvtType: null,
+    dvtCourse: null, dvtCourseOfTime: null, dvtAcademicYear: null,
+    dvtGraduationDate: null, dvtBondingEndDate: null, scholarship: null,
+    probationaryPeriodEndDate: null, extendedProbationDate: null,
+    pointOfSales: null, storeBrandFormat: null, brand: null, workLocation: null,
   },
   compensation: { baseSalary: null },
 }

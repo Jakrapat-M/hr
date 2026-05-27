@@ -92,6 +92,8 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
   const [isPrimary,         setIsPrimary]         = useState(id.isPrimary ?? '')
   const [vnIssuePlace,      setVnIssuePlace]      = useState(id.vnIssuePlace ?? '')
   const [salutationLocal,   setSalutationLocal]   = useState(id.salutationLocal ?? '')
+  // Passport ID — optional, separate from national ID (STA-82)
+  const [passportId,        setPassportId]        = useState(id.passportId ?? '')
   const [attachmentFiles,   setAttachmentFiles]   = useState<AttachedFile[]>(
     () => filesFromAttachmentName(id.attachmentName, 'identity-existing'),
   )
@@ -158,6 +160,7 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
         attachmentName: attachmentNameFromFiles(attachmentFiles) || null,
         salutationLocal: salutationLocal || null,
         replacedEmployeeId,
+        passportId: passportId || '',
       })
       onValidChange?.(true)
     } else {
@@ -173,7 +176,8 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
     hireDate, companyCode, eventReason, salutationEn, firstNameEn, middleNameEn,
     lastNameEn, dateOfBirth, countryOfBirth, regionOfBirth, age, employeeId,
     nationalIdCardType, country, nationalId, issueDate, expiryDate,
-    isPrimary, vnIssuePlace, attachmentFiles, salutationLocal, replacedEmployeeId, setStepData, onValidChange,
+    isPrimary, vnIssuePlace, attachmentFiles, salutationLocal, replacedEmployeeId,
+    passportId, setStepData, onValidChange,
   ])
 
   useEffect(() => { validate() }, [validate])
@@ -569,6 +573,21 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
           label="ไฟล์แนบ National ID (Attachment)"
           maxFiles={5}
           maxSizeMB={10}
+        />
+      </fieldset>
+
+      {/* Passport ID — optional (STA-82: separate from national ID, for foreign travel docs) */}
+      <fieldset>
+        <label htmlFor="passport-id" className="humi-label">
+          {t('passportId')}
+        </label>
+        <input
+          id="passport-id"
+          type="text"
+          value={passportId}
+          onChange={(e) => setPassportId(e.target.value)}
+          placeholder={t('passportIdPlaceholder')}
+          className="humi-input w-full"
         />
       </fieldset>
 

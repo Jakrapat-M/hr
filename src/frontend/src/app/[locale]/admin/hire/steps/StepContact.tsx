@@ -4,6 +4,8 @@
 // Wave 2-A: BRD #15 email (SF ecEmailType, no 5-cap), #16 phone (countryCode + extension),
 //           BRD #17 8-field Thai address (PerAddressDEFLT)
 // Phase 2: address free-text replaced by AddressPicklist cascade (zProvince→zDistrict→zSubDistrict)
+// STA-82: added addressType LOV, floor/room/building/street, sys_EC-PY_* read-only mirrors,
+//         Social Accounts repeating section (domain LOV + IM ID + URL)
 // Perf budget goal: ≤500ms first interaction on slow 3G (chunk ≤100KB; Bangkok max 33KB)
 // Picklist source: SF cite in code comments
 
@@ -45,27 +47,75 @@ const PHONE_TYPE_LABELS: Record<string, string> = {
 const SF_PHONE_TYPES = ['C', 'B', 'H', 'F', 'BI'] as const
 const SF_EMAIL_TYPES = ['P', 'B'] as const
 
+// STA-82: addressType LOV — SF PerAddressDEFLT.addressType
+// HOME=ที่บ้าน, WORK=ที่ทำงาน, OTHER=อื่นๆ
+const ADDRESS_TYPE_LABELS: Record<string, string> = {
+  HOME:  'ที่บ้าน (Home)',
+  WORK:  'ที่ทำงาน (Work)',
+  OTHER: 'อื่นๆ (Other)',
+}
+const ADDRESS_TYPES = ['HOME', 'WORK', 'OTHER'] as const
+
+// STA-82: imdomain LOV — SF PerSocialAccountNav.domain
+// AIM/Google/ICQ/LINE/MSN/QQ/Skype/WeChat/WhatsApp/Yahoo
+const IM_DOMAIN_LABELS: Record<string, string> = {
+  LINE:      'LINE',
+  WhatsApp:  'WhatsApp',
+  Skype:     'Skype',
+  WeChat:    'WeChat',
+  Google:    'Google',
+  Yahoo:     'Yahoo',
+  AIM:       'AIM',
+  ICQ:       'ICQ',
+  MSN:       'MSN',
+  QQ:        'QQ',
+}
+const IM_DOMAINS = ['LINE', 'WhatsApp', 'Skype', 'WeChat', 'Google', 'Yahoo', 'AIM', 'ICQ', 'MSN', 'QQ'] as const
+
+// STA-82: Social account entry — SF PerSocialAccountNav
+interface SocialAccountEntry {
+  domain: string   // SF domain (imdomain LOV)
+  imId:   string   // SF instantMessagingID
+  url:    string   // SF url
+}
+
+const EMPTY_SOCIAL: SocialAccountEntry = { domain: 'LINE', imId: '', url: '' }
+
 // BRD #17: Thai address — Phase 2 replaces free-text with AddressPicklist cascade
 // SF cite: qas-fields-2026-04-26/sf-qas-PerAddressDEFLT-2026-04-26.json
 // Full address stored in contact.address; house/village/moo/soi remain free-text.
 // Non-THA country: picklist hidden, free-text fallback inputs shown instead.
 interface ThaiAddress {
-  houseNo:     string  // SF address5
-  village:     string  // SF address4
-  moo:         string  // SF address11
-  soi:         string  // SF address7
+  // STA-82: addressType LOV (required field)
+  addressType: string   // SF addressType
+  // STA-82: additional free-text address sub-fields
+  floor:       string   // SF address2
+  roomNo:      string   // SF address3
+  building:    string   // SF address6
+  street:      string   // SF address8
+  houseNo:     string   // SF address5
+  village:     string   // SF address4
+  moo:         string   // SF address11
+  soi:         string   // SF address7
   // Phase 2: picklist externalCodes (SF zProvince/zDistrict/zSubDistrict)
-  subdistrict: string  // SF customString3
-  district:    string  // SF customString2
-  province:    string  // SF customString1
-  zipCode:     string  // SF customString4
-  country:     string  // SF country (default THA)
+  subdistrict: string   // SF customString3
+  district:    string   // SF customString2
+  province:    string   // SF customString1
+  zipCode:     string   // SF customString4
+  country:     string   // SF country (default THA)
+  // STA-82: payroll-integration mirror fields (sys_EC-PY_*) — read-only, populated by system
+  ecPyProvinceCode: string  // sys_EC-PY_ProvinceCode
+  ecPyProvinceText: string  // sys_EC-PY_ProvinceText
+  ecPyPostalCode:   string  // sys_EC-PY_PostalCode
 }
 
 const EMPTY_ADDRESS: ThaiAddress = {
+  addressType: 'HOME',
+  floor: '', roomNo: '', building: '', street: '',
   houseNo: '', village: '', moo: '', soi: '',
   subdistrict: '', district: '', province: '',
   zipCode: '', country: 'THA',
+  ecPyProvinceCode: '', ecPyProvinceText: '', ecPyPostalCode: '',
 }
 
 // Derive AddressPicklistValue from ThaiAddress (province/district/subDistrict/postalCode)
@@ -169,6 +219,26 @@ export default function StepContact() {
     setStepData('contact', {
       addressAttachmentName: attachmentNameFromFiles(files) || null,
     })
+  }
+
+  // ── Social Account helpers (STA-82) ───────────────────────────────────────
+  const socialAccounts = (formData.contact as Record<string, unknown>)?.socialAccounts as SocialAccountEntry[] | undefined ?? []
+
+  function setSocialAccounts(next: SocialAccountEntry[]) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setStepData('contact', { socialAccounts: next } as any)
+  }
+
+  function addSocialAccount() {
+    setSocialAccounts([...socialAccounts, { ...EMPTY_SOCIAL }])
+  }
+
+  function removeSocialAccount(idx: number) {
+    setSocialAccounts(socialAccounts.filter((_, i) => i !== idx))
+  }
+
+  function updateSocialAccount(idx: number, patch: Partial<SocialAccountEntry>) {
+    setSocialAccounts(socialAccounts.map((s, i) => (i === idx ? { ...s, ...patch } : s)))
   }
 
   // ── Job Relationship helpers ───────────────────────────────────────────────
@@ -366,6 +436,25 @@ export default function StepContact() {
         {/* SF cite: customString1=province, customString2=district, customString3=subdistrict, customString4=postalCode
             address5=houseNo, address4=village, address11=moo, address7=soi, country=THA */}
 
+        {/* STA-82: ประเภทที่อยู่ (addressType) — SF PerAddressDEFLT.addressType LOV */}
+        <div className="mb-4">
+          <fieldset>
+            <label htmlFor="addr-type" className="humi-label">
+              {t('addressType')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            </label>
+            <select
+              id="addr-type"
+              value={address.addressType}
+              onChange={(e) => updateAddress({ addressType: e.target.value })}
+              className="humi-select w-full md:w-56"
+            >
+              {ADDRESS_TYPES.map((at) => (
+                <option key={at} value={at}>{ADDRESS_TYPE_LABELS[at]}</option>
+              ))}
+            </select>
+          </fieldset>
+        </div>
+
         {/* ประเทศ — SF country (shown first; controls THA vs non-THA path) */}
         <div className="mb-4">
           <fieldset>
@@ -376,6 +465,45 @@ export default function StepContact() {
               value={address.country}
               onChange={(e) => updateAddress({ country: e.target.value })}
               className="humi-input w-full md:w-48" />
+          </fieldset>
+        </div>
+
+        {/* STA-82: ชั้น / ห้อง / อาคาร / ถนน — SF address2/3/6/8 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 mb-4">
+          {/* ชั้น — SF address2 */}
+          <fieldset>
+            <label htmlFor="addr-floor" className="humi-label">{t('floor')}</label>
+            <input id="addr-floor" type="text" placeholder={t('floorPlaceholder')}
+              value={address.floor}
+              onChange={(e) => updateAddress({ floor: e.target.value })}
+              className="humi-input w-full" />
+          </fieldset>
+
+          {/* ห้องที่ — SF address3 */}
+          <fieldset>
+            <label htmlFor="addr-room" className="humi-label">{t('roomNo')}</label>
+            <input id="addr-room" type="text" placeholder={t('roomNoPlaceholder')}
+              value={address.roomNo}
+              onChange={(e) => updateAddress({ roomNo: e.target.value })}
+              className="humi-input w-full" />
+          </fieldset>
+
+          {/* อาคาร — SF address6 */}
+          <fieldset>
+            <label htmlFor="addr-building" className="humi-label">{t('building')}</label>
+            <input id="addr-building" type="text" placeholder={t('buildingPlaceholder')}
+              value={address.building}
+              onChange={(e) => updateAddress({ building: e.target.value })}
+              className="humi-input w-full" />
+          </fieldset>
+
+          {/* ถนน — SF address8 */}
+          <fieldset>
+            <label htmlFor="addr-street" className="humi-label">{t('street')}</label>
+            <input id="addr-street" type="text" placeholder={t('streetPlaceholder')}
+              value={address.street}
+              onChange={(e) => updateAddress({ street: e.target.value })}
+              className="humi-input w-full" />
           </fieldset>
         </div>
 
@@ -471,6 +599,62 @@ export default function StepContact() {
           </div>
         )}
 
+        {/* STA-82: sys_EC-PY_* — payroll-integration mirror fields (read-only, populated by system) */}
+        <div className="mt-4 rounded-[var(--radius-md)] border border-hairline-soft bg-canvas-soft p-4">
+          <p className="mb-3 text-xs font-medium text-ink-muted uppercase tracking-wide">
+            {t('ecPySystemGroup')}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
+            {/* sys_EC-PY_ProvinceCode */}
+            <fieldset>
+              <label htmlFor="addr-ec-province-code" className="humi-label text-ink-muted">
+                {t('ecPyProvinceCode')}
+              </label>
+              <input
+                id="addr-ec-province-code"
+                type="text"
+                value={address.ecPyProvinceCode}
+                readOnly
+                disabled
+                aria-readonly="true"
+                className="humi-input w-full cursor-not-allowed opacity-60"
+              />
+            </fieldset>
+
+            {/* sys_EC-PY_ProvinceText */}
+            <fieldset>
+              <label htmlFor="addr-ec-province-text" className="humi-label text-ink-muted">
+                {t('ecPyProvinceText')}
+              </label>
+              <input
+                id="addr-ec-province-text"
+                type="text"
+                value={address.ecPyProvinceText}
+                readOnly
+                disabled
+                aria-readonly="true"
+                className="humi-input w-full cursor-not-allowed opacity-60"
+              />
+            </fieldset>
+
+            {/* sys_EC-PY_PostalCode */}
+            <fieldset>
+              <label htmlFor="addr-ec-postal-code" className="humi-label text-ink-muted">
+                {t('ecPyPostalCode')}
+              </label>
+              <input
+                id="addr-ec-postal-code"
+                type="text"
+                value={address.ecPyPostalCode}
+                readOnly
+                disabled
+                aria-readonly="true"
+                className="humi-input w-full cursor-not-allowed opacity-60"
+              />
+            </fieldset>
+          </div>
+        </div>
+
         {/* BA Addresses row 94 — Attachment */}
         <div className="mt-4">
           <AttachmentDropzone
@@ -482,6 +666,68 @@ export default function StepContact() {
             maxSizeMB={10}
           />
         </div>
+      </section>
+
+      {/* ─── Social Accounts (STA-82: SF PerSocialAccountNav — domain LOV + IM ID + URL) ─── */}
+      <section aria-label={t('socialSection')}>
+        <p className="humi-label mb-3">{t('socialSection')}</p>
+        {/* SF cite: PerSocialAccountNav — domain (imdomain LOV), instantMessagingID, url */}
+
+        <div className="space-y-3">
+          {socialAccounts.map((acct, idx) => (
+            <div key={idx} className="flex flex-wrap items-start gap-2">
+              {/* Domain — SF domain (imdomain LOV) */}
+              <select
+                aria-label={`${t('socialDomain')} ${idx + 1}`}
+                value={acct.domain}
+                onChange={(e) => updateSocialAccount(idx, { domain: e.target.value })}
+                className="humi-select w-36 shrink-0"
+              >
+                {IM_DOMAINS.map((d) => (
+                  <option key={d} value={d}>{IM_DOMAIN_LABELS[d]}</option>
+                ))}
+              </select>
+
+              {/* Instant Messaging ID — SF instantMessagingID */}
+              <input
+                type="text"
+                aria-label={`${t('socialImId')} ${idx + 1}`}
+                placeholder={t('socialImIdPlaceholder')}
+                value={acct.imId}
+                onChange={(e) => updateSocialAccount(idx, { imId: e.target.value })}
+                className="humi-input min-w-0 flex-1"
+              />
+
+              {/* URL — SF url */}
+              <input
+                type="url"
+                aria-label={`${t('socialUrl')} ${idx + 1}`}
+                placeholder={t('socialUrlPlaceholder')}
+                value={acct.url}
+                onChange={(e) => updateSocialAccount(idx, { url: e.target.value })}
+                className="humi-input min-w-0 flex-1"
+              />
+
+              {/* ลบ */}
+              <button
+                type="button"
+                aria-label={`${t('remove')} ${t('socialSection')} ${idx + 1}`}
+                onClick={() => removeSocialAccount(idx)}
+                className="rounded px-2 py-1.5 text-sm text-warning hover:bg-warning/10"
+              >
+                {t('remove')}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={addSocialAccount}
+          className="mt-3 text-sm text-accent hover:underline"
+        >
+          {t('addSocial')}
+        </button>
       </section>
 
       {/* ─── บุคคลที่เกี่ยวข้อง ───────────────────────────────────────────── */}

@@ -35,6 +35,7 @@ const EMPTY_EC: EmergencyContactEntry = {
   relationship: '',
   phone: '',
   primaryFlag: false,
+  copyAddressFromEmployee: false,
   addressCountry: 'THA',
   addressProvince: '',
   addressDistrict: '',
@@ -217,6 +218,19 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
                 ที่อยู่ / Address (optional)
               </summary>
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+
+                {/* STA-82: Copy Address from Employee — LOV Yes/No → checkbox */}
+                <fieldset className="md:col-span-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={ec.copyAddressFromEmployee}
+                      onChange={(e) => updateEntry(idx, { copyAddressFromEmployee: e.target.checked })}
+                      className="h-4 w-4 rounded"
+                    />
+                    <span className="text-sm text-ink">คัดลอกที่อยู่จากพนักงาน / Copy Address from Employee</span>
+                  </label>
+                </fieldset>
 
                 {/* ประเทศ — SF: addressCountry (ISO3, default THA) */}
                 <fieldset>

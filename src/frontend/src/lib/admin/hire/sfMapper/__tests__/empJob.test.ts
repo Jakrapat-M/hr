@@ -49,7 +49,7 @@ const baseFormData: FormData = {
   employeeInfo: {
     employeeClass: null,
     originalStartDate: '2026-05-01', seniorityStartDate: '2026-05-01',
-    retirementDate: '', pfServiceDate: '', dvtPreviousId: '', cgPreviousEmployeeId: '',
+    retirementDate: '', pfServiceDate: '', pfServiceEndDate: '', dvtPreviousId: '', cgPreviousEmployeeId: '',
     employeeGroup: 'EG01', employeeSubGroup: 'ESG01',
   },
   nationalId: { value: '1234567890123' },
@@ -74,6 +74,15 @@ const baseFormData: FormData = {
     policyProfile: 'RBS', ssoLocation: 'SSO-BKK', groupCompanyGroup: 'S00001',
     contractType: 'C1', zone: 'Z-CENTRAL', contractEndDate: null, probationEndDate: '2026-11-01',
     emplStatus: 'A', event: 'H', employmentType: 'P1',
+    // STA-82 fields
+    jobRole: null, jobType: null, personnelGrade: null,
+    bandMatching: null, band: null, transferOutTo: null,
+    transferInTo: null, transferFrom: null, specialBenefitGroup: null,
+    okToRehire: null, dvtProjectName: null, dvtType: null,
+    dvtCourse: null, dvtCourseOfTime: null, dvtAcademicYear: null,
+    dvtGraduationDate: null, dvtBondingEndDate: null, scholarship: null,
+    probationaryPeriodEndDate: null, extendedProbationDate: null,
+    pointOfSales: null, storeBrandFormat: null, brand: null, workLocation: null,
   },
   compensation: { baseSalary: 50000 },
 }

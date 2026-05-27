@@ -77,19 +77,22 @@
   --font-display: var(--font-cpn-condensed), var(--font-cpn), var(--font-anuphan), ui-sans-serif, system-ui, sans-serif;
   --font-mono:    var(--font-geist-mono), ui-monospace, 'Courier New', monospace;
 
-  /* ── Type scale (from spec: h1 32/40 … body 15/24) ──────── */
-  --text-display-h1: 32px;
-  --text-display-h1--line-height: 40px;
-  --text-display-h2: 24px;
-  --text-display-h2--line-height: 32px;
-  --text-display-h3: 20px;
-  --text-display-h3--line-height: 28px;
-  --text-body:       15px;
-  --text-body--line-height: 24px;
-  --text-small:      13px;
-  --text-small--line-height: 20px;
-  --text-eyebrow:    11px;
-  --text-eyebrow--line-height: 16px;
+  /* ── Type scale (rem-based so it scales with the html knob below) ──
+     rem values = old px ÷ 16, so they ride the same scaling mechanism as
+     every standard Tailwind text utility instead of rendering at a fixed
+     px size that ignores the global knob. Tune overall size via `html`. */
+  --text-display-h1: 2rem;
+  --text-display-h1--line-height: 2.5rem;
+  --text-display-h2: 1.5rem;
+  --text-display-h2--line-height: 2rem;
+  --text-display-h3: 1.25rem;
+  --text-display-h3--line-height: 1.75rem;
+  --text-body:       0.9375rem;
+  --text-body--line-height: 1.5rem;
+  --text-small:      0.8125rem;
+  --text-small--line-height: 1.25rem;
+  --text-eyebrow:    0.6875rem;
+  --text-eyebrow--line-height: 1rem;
   --text-eyebrow--letter-spacing: 0.14em;
 
   /* ── Layout ─────────────────────────────────────────────── */
@@ -178,12 +181,12 @@
 /* Global type-scale knob — replaces the old `body { zoom: 1.25 }` hack.
    HR users repeatedly report text is hard to read, so the root font runs a
    notch larger than the 16px norm. This scales every rem-based unit (all
-   Tailwind text-*/spacing utilities) up app-wide via the proper mechanism —
+   Tailwind text and spacing utilities) up app-wide via the proper mechanism —
    no `zoom`, which doesn't rescale `vh` for descendants and breaks JS DOM
    measurement. Tune here (17.5–20px range) to dial the overall scale.
    px-based chrome (sidebar/topbar inline styles) renders at its literal size;
    any chrome that now reads too small is a follow-up "size up px chrome" pass. */
-html { font-size: 20px; }
+html { font-size: 22px; }
 
 .humi-app {
   display: grid;
@@ -223,10 +226,15 @@ html { font-size: 20px; }
    of layer cascade. Surgical (only 2 properties flagged), safe (no other rule should
    override these at 1024px+). Verified via browser-harness computed styles 2026-04-22. */
 @media (min-width: 1024px) {
-  .humi-app { grid-template-columns: 256px 1fr !important; }
+  /* Sidebar width is user-adjustable via the drag handle in Sidebar.tsx, which
+     writes --humi-sidebar-w on :root (clamped 200–420px, persisted to
+     localStorage). Falls back to 256px before the client effect runs / when the
+     drag feature is unavailable. */
+  .humi-app { grid-template-columns: var(--humi-sidebar-w, 256px) 1fr !important; }
   .humi-sidebar { display: flex !important; }
-  /* Collapsed (user hid the sidebar via the topbar toggle) — reclaim the
-     full width and drop the rail+panel column. */
+  /* Fully-hidden state (legacy sidebarOpen=false; the topbar toggle that drove
+     this was removed 2026-05-27, but the rule is kept harmless for any
+     programmatic setSidebarOpen(false)) — reclaim full width, drop the column. */
   .humi-app.sidebar-collapsed { grid-template-columns: 1fr !important; }
   .humi-app.sidebar-collapsed > .humi-sidebar { display: none !important; }
   /* Panel collapsed (user folded the leaf panel via the rail toggle) — keep the
@@ -293,7 +301,7 @@ html { font-size: 20px; }
 .humi-wordmark {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 28px;
+  font-size: 1.7500rem;
   letter-spacing: -0.04em;
   color: var(--color-canvas-soft);
   display: flex;
@@ -335,7 +343,7 @@ html { font-size: 20px; }
    1000px viewports without scrolling — avoids the hidden-scrollbar
    clip cutting the last item (ศูนย์ Admin). */
 .humi-nav-label {
-  font-size: 11px;
+  font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: rgba(231, 227, 216, 0.45);
@@ -356,7 +364,7 @@ html { font-size: 20px; }
   padding: 7px 12px;
   min-height: 36px;   /* desktop — mouse target; drawer mode overrides to 44 for touch */
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: 0.8750rem;
   color: rgba(231, 227, 216, 0.72);
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease-spring),
@@ -411,7 +419,7 @@ html { font-size: 20px; }
   margin-left: auto;
   background: var(--color-accent);
   color: var(--color-ink);
-  font-size: 10px;
+  font-size: 0.6250rem;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 999px;
@@ -439,7 +447,7 @@ html { font-size: 20px; }
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 0.8125rem;
   flex-shrink: 0;
 }
 .humi-avatar.coral {
@@ -448,7 +456,7 @@ html { font-size: 20px; }
 
 /* User meta in sidebar footer — ported from shell.jsx:48-51 inline styles. */
 .humi-user-meta {
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.3;
   min-width: 0;
 }
@@ -461,7 +469,7 @@ html { font-size: 20px; }
 }
 .humi-user-role {
   color: rgba(231, 227, 216, 0.55);
-  font-size: 11px;
+  font-size: 0.6875rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -499,7 +507,7 @@ html { font-size: 20px; }
 }
 .bp-tenant {
   font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
-  font-size: 11.5px;
+  font-size: 0.7188rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(231, 227, 216, 0.5);
@@ -534,7 +542,7 @@ html { font-size: 20px; }
   padding: 10px 12px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 13.5px;
+  font-size: 0.8438rem;
   font-weight: 500;
   text-align: left;
   border-radius: 10px;
@@ -553,7 +561,7 @@ html { font-size: 20px; }
 }
 .bp-nav-trigger .bp-count {
   font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
-  font-size: 10px;
+  font-size: 0.6250rem;
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 999px;
@@ -608,7 +616,7 @@ html { font-size: 20px; }
   padding: 6px 10px 6px 12px;
   border-radius: 6px;
   color: rgba(231, 227, 216, 0.72);
-  font-size: 12.5px;
+  font-size: 0.7812rem;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -644,7 +652,7 @@ html { font-size: 20px; }
 }
 .bp-nav-child .bp-badge {
   font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
-  font-size: 9px;
+  font-size: 0.5625rem;
   padding: 1px 5px;
   border-radius: 4px;
   background: rgba(91, 108, 224, 0.22);
@@ -668,13 +676,13 @@ html { font-size: 20px; }
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 0.7500rem;
   flex-shrink: 0;
   color: #fff;
   background: linear-gradient(135deg, #e08864, #e8c46b);
 }
 .bp-sb-user .bp-nm {
-  font-size: 15.5px;
+  font-size: 0.9688rem;
   font-weight: 600;
   color: var(--color-canvas-soft);
   line-height: 1.2;
@@ -684,7 +692,7 @@ html { font-size: 20px; }
 }
 .bp-sb-user .bp-rl {
   font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
-  font-size: 12.5px;
+  font-size: 0.7812rem;
   color: rgba(231, 227, 216, 0.55);
   margin-top: 2px;
   letter-spacing: 0.02em;
@@ -702,6 +710,50 @@ html { font-size: 20px; }
   padding: 0 !important;
   gap: 0;
   overflow: hidden;
+  /* Keep the base .humi-sidebar `position: sticky` (top:0, height:100dvh) so the
+     sidebar stays put while the page scrolls — DON'T downgrade to `relative`
+     (that clobbered sticky and made the rail scroll away). `sticky` is still a
+     containing block for the absolutely-positioned drag-resize handle below. */
+  position: sticky;
+  top: 0;
+} /* sticky sidebar: stays on scroll (STA fix) */
+
+/* ── Drag-to-resize handle — sits on the sidebar's right edge (the seam against
+   the main column). Thin hit-target that widens its visible accent on hover/drag.
+   Only rendered on the desktop static sidebar when the leaf panel is expanded
+   (see Sidebar.tsx gating). */
+.bp-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 7px;
+  z-index: 5;
+  cursor: col-resize;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  /* visible seam line drawn via ::after so the hit-area stays wider than the line */
+  touch-action: none;
+}
+.bp-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 2px;
+  background: transparent;
+  transition: background 0.15s;
+}
+.bp-resize-handle:hover::after,
+.bp-resize-handle:focus-visible::after,
+.bp-resize-handle[data-dragging='true']::after {
+  background: var(--color-accent);
+}
+.bp-resize-handle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
 }
 
 /* Col 1 — macro-group icon rail */
@@ -740,7 +792,7 @@ html { font-size: 20px; }
   transition: background 0.18s, color 0.18s;
 }
 .bp-rail-icon { display: inline-flex; }
-.bp-rail-label { font-size: 12.5px; font-weight: 600; letter-spacing: 0.01em; }
+.bp-rail-label { font-size: 0.7812rem; font-weight: 600; letter-spacing: 0.01em; }
 .bp-rail-item:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
 .bp-rail-item:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .bp-rail-item.is-active { background: rgba(31, 168, 160, 0.16); color: #fff; }
@@ -762,7 +814,7 @@ html { font-size: 20px; }
 .bp-panel-head { padding: 0 8px 14px; }
 .bp-panel-head .bp-tenant { margin: 0; padding: 0; }
 .bp-panel-title {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 700;
   line-height: 1.3;
   color: var(--color-canvas-soft);
@@ -793,7 +845,7 @@ html { font-size: 20px; }
   padding: 8px 10px;
   border-radius: 8px;
   color: rgba(231, 227, 216, 0.8);
-  font-size: 15.5px;
+  font-size: 0.9688rem;
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
@@ -808,7 +860,7 @@ html { font-size: 20px; }
 }
 .bp-panel-item .bp-badge {
   font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
-  font-size: 11.5px;
+  font-size: 0.7188rem;
   padding: 1px 5px;
   border-radius: 4px;
   background: rgba(91, 108, 224, 0.22);
@@ -914,7 +966,7 @@ html { font-size: 20px; }
   border: 1px solid var(--color-hairline-soft);
   border-radius: var(--radius-md);
   color: var(--color-ink-muted);
-  font-size: 14px;
+  font-size: 0.8750rem;
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--dur-fast) var(--ease-spring),
               border-color var(--dur-fast);
@@ -937,7 +989,7 @@ html { font-size: 20px; }
 .humi-search kbd {
   margin-left: auto;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 0.6875rem;
   background: var(--color-canvas);
   border: 1px solid var(--color-hairline);
   border-radius: 6px;
@@ -1001,7 +1053,7 @@ html { font-size: 20px; }
   align-items: center;
   gap: 7px;
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   cursor: pointer;
@@ -1039,7 +1091,7 @@ html { font-size: 20px; }
   justify-content: center;
   gap: 6px;
   padding: 8px 16px;
-  font-size: 14px;
+  font-size: 0.8750rem;
   font-weight: 500;
   border-radius: 10px;
   border: 1px solid transparent;
@@ -1131,7 +1183,7 @@ html { font-size: 20px; }
    of existing token so usage inside Topbar doesn't require a new
    global utility class. */
 .humi-eyebrow {
-  font-size: 13px;
+  font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--color-ink-soft);
@@ -1206,7 +1258,7 @@ html { font-size: 20px; }
   gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 0.7500rem;
   font-weight: 500;
   background: var(--color-canvas);
   color: var(--color-ink-soft);
@@ -1249,7 +1301,7 @@ html { font-size: 20px; }
 .humi-tab {
   padding: 7px 14px;
   border-radius: 9px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--color-ink-muted);
   cursor: pointer;
@@ -1301,7 +1353,7 @@ html { font-size: 20px; }
   position: relative;
   z-index: 1;
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 1.3750rem;
   font-weight: 700;
 }
 
@@ -1310,13 +1362,13 @@ html { font-size: 20px; }
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
-  font-size: 12px;
+  font-size: 0.7500rem;
 }
 .humi-cal-dow {
   color: var(--color-ink-faint);
   text-align: center;
   font-weight: 600;
-  font-size: 10px;
+  font-size: 0.6250rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1355,13 +1407,13 @@ html { font-size: 20px; }
 
 /* Ported from styles.css:421-436 (.field). */
 .humi-field { display: flex; flex-direction: column; gap: 6px; }
-.humi-field label { font-size: 13px; font-weight: 500; color: var(--color-ink-soft); }
+.humi-field label { font-size: 0.8125rem; font-weight: 500; color: var(--color-ink-soft); }
 .humi-field input {
   padding: 12px 14px;
   border: 1px solid var(--color-hairline);
   border-radius: 12px;
   background: var(--color-surface);
-  font-size: 14px;
+  font-size: 0.8750rem;
   font-family: inherit;
   color: var(--color-ink);
   outline: none;
@@ -1411,7 +1463,7 @@ html { font-size: 20px; }
    headline). Ported inline styles from home.jsx:14 / login.jsx:22. */
 .humi-hero-title {
   font-family: var(--font-display);
-  font-size: 33px;
+  font-size: 2.0625rem;
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: -0.015em;
@@ -1430,7 +1482,7 @@ html { font-size: 20px; }
 }
 .humi-login-body {
   color: rgba(231, 227, 216, 0.75);
-  font-size: 16px;
+  font-size: 1.0000rem;
   line-height: 1.65;
   margin-top: 18px;
   max-width: 480px;
@@ -1446,7 +1498,7 @@ html { font-size: 20px; }
 }
 .humi-login-quote-body {
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 1.0625rem;
   color: var(--color-canvas-soft);
   line-height: 1.6;
 }
@@ -1490,13 +1542,13 @@ html { font-size: 20px; }
 
 .humi-label {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-ink);
   letter-spacing: -0.005em;
 }
 .humi-label-hint {
-  font-size: 12px;
+  font-size: 0.7500rem;
   color: var(--color-ink-muted);
   font-weight: 400;
   margin-left: 4px;
@@ -1517,7 +1569,7 @@ html { font-size: 20px; }
   background: var(--color-surface);
   color: var(--color-ink);
   padding: 10px 12px;
-  font-size: 14px;
+  font-size: 0.8750rem;
   font-family: inherit;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
@@ -1559,16 +1611,16 @@ html { font-size: 20px; }
 .humi-input--wide { max-width: 100%; }
 
 .humi-help {
-  font-size: 12px;
+  font-size: 0.7500rem;
   color: var(--color-ink-muted);
 }
 .humi-error {
-  font-size: 12px;
+  font-size: 0.7500rem;
   color: var(--color-warning);
   font-weight: 500;
 }
 .humi-required-note {
-  font-size: 12px;
+  font-size: 0.7500rem;
   color: var(--color-ink-muted);
   margin-top: 18px;
 }
@@ -1580,14 +1632,14 @@ html { font-size: 20px; }
    than one giant scrolling form. */
 .humi-section-title {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 1.1250rem;
   font-weight: 600;
   color: var(--color-ink);
   letter-spacing: -0.015em;
   margin-bottom: 4px;
 }
 .humi-section-sub {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--color-ink-muted);
   margin-bottom: 16px;
 }
@@ -1626,7 +1678,7 @@ html { font-size: 20px; }
    `<fieldset><label>` patterns used across Step*.tsx. */
 .humi-step-section label.text-gray-700 {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-ink);
   letter-spacing: -0.005em;
@@ -1658,7 +1710,7 @@ html { font-size: 20px; }
   background: var(--color-surface);
   color: var(--color-ink);
   padding: 10px 12px;
-  font-size: 14px;
+  font-size: 0.8750rem;
   font-family: inherit;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
@@ -1697,7 +1749,7 @@ html { font-size: 20px; }
   border-radius: 999px;
   background: var(--color-accent-soft);
   color: var(--color-accent);
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -1844,7 +1896,7 @@ html { font-size: 20px; }
   border-radius: var(--radius-md);
   background: var(--color-surface);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 0.8750rem;
 }
 
 /* 7. Reacts — Ported from styles.css:573-581 (.reacts / .reacts .r) */
@@ -1860,7 +1912,7 @@ html { font-size: 20px; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 0.6875rem;
   background: var(--color-canvas);
   border: 1.5px solid var(--color-surface);
   margin-left: -6px;
@@ -1922,3 +1974,296 @@ html { font-size: 20px; }
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
+
+/* ════════════════════════════════════════════════════════════
+   15. Teams/Viva-style egocentric lineage view (/org-chart LEFT)
+   Single centered column, normal vertical scroll. No pan/zoom.
+   Cream/navy/teal tokens only — NO raw hex, NO red.
+   ════════════════════════════════════════════════════════════ */
+
+/* Scrollable lineage column — full height of the Card */
+.sforg-lineage-col {
+  overflow-y: auto;
+  max-height: 82vh;
+  padding: 4px 2px 24px;
+  /* subtle scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-hairline) transparent;
+}
+
+/* Vertical connector line between consecutive ancestor/focused cards */
+.sforg-connector {
+  display: block;
+  width: 1px;
+  height: 20px;
+  margin: 0 auto;
+  background: var(--color-hairline);
+}
+
+/* ── Wide horizontal lineage card ─────────────────────────── */
+.sforg-linecard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 13px 16px;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-spring),
+    box-shadow var(--dur-base) var(--ease-spring);
+}
+.sforg-linecard:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-md);
+}
+.sforg-linecard:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Focused (centered) card — teal accent ring + soft teal bg header strip */
+.sforg-linecard.is-focused {
+  border-color: var(--color-accent);
+  box-shadow:
+    0 0 0 2px var(--color-accent-soft),
+    var(--shadow-md);
+  background: var(--color-surface);
+}
+
+.sforg-linecard-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Presence dot — bottom-right of avatar */
+.sforg-presence {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--color-surface);
+}
+.sforg-presence.available  { background: var(--color-sage); }
+.sforg-presence.busy       { background: var(--color-danger); }
+.sforg-presence.offline    { background: var(--color-ink-faint); }
+
+.sforg-linecard-body {
+  min-width: 0;
+  flex: 1;
+}
+.sforg-linecard-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  line-height: 1.25;
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sforg-linecard-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  color: var(--color-ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sforg-linecard-dept {
+  display: block;
+  margin-top: 1px;
+  font-size: 0.7500rem;
+  line-height: 1.3;
+  color: var(--color-ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Report-count badge on the right of a linecard */
+.sforg-report-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  font-size: 0.7500rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+}
+.sforg-report-badge svg {
+  width: 13px;
+  height: 13px;
+  color: var(--color-ink-muted);
+}
+
+/* Focused card stats row (N reports · N direct) */
+.sforg-focused-stats {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 5px;
+  font-size: 0.7500rem;
+  color: var(--color-ink-muted);
+}
+
+/* ── "Show N more" collapsed-ancestors pill ─────────────────── */
+.sforg-show-more {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 6px 14px 6px 8px;
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-ink-soft);
+  transition: border-color var(--dur-fast) var(--ease-spring);
+}
+.sforg-show-more:hover { border-color: var(--color-accent); color: var(--color-accent); }
+.sforg-show-more:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.sforg-avatar-stack {
+  display: flex;
+  flex-direction: row-reverse; /* rightmost first, stacks left */
+}
+.sforg-avatar-stack > * { margin-left: -8px; }
+.sforg-avatar-stack > *:last-child { margin-left: 0; }
+
+/* ── Section divider with centered label chip ───────────────── */
+.sforg-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px auto;
+  max-width: 600px;
+  width: 100%;
+}
+.sforg-section-divider::before,
+.sforg-section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-hairline);
+}
+.sforg-section-label {
+  flex-shrink: 0;
+  padding: 3px 12px;
+  font-size: 0.7500rem;
+  color: var(--color-ink-muted);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ── Peers horizontal carousel ──────────────────────────────── */
+.sforg-peers-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 6px 2px 10px;
+  max-width: 600px;
+  margin: 0 auto;
+  scrollbar-width: none;
+}
+.sforg-peers-row::-webkit-scrollbar { display: none; }
+
+.sforg-peercard {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  width: 148px;
+  padding: 14px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    border-color var(--dur-fast) var(--ease-spring),
+    box-shadow var(--dur-base) var(--ease-spring);
+}
+.sforg-peercard:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-md);
+}
+.sforg-peercard:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.sforg-peercard-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+.sforg-peercard-sub {
+  display: block;
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  color: var(--color-ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  width: 100%;
+}
+
+/* Carousel scroll buttons */
+.sforg-carousel-wrap {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.sforg-carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  color: var(--color-ink-soft);
+  transition: border-color var(--dur-fast) var(--ease-spring);
+}
+.sforg-carousel-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
+.sforg-carousel-btn:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.sforg-carousel-btn.prev { left: -16px; }
+.sforg-carousel-btn.next { right: -16px; }
+/* hmr-touch */
