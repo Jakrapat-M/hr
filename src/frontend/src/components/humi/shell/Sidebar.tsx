@@ -67,7 +67,7 @@ export interface SidebarProps {
 }
 
 /** Blueprint persona ids. */
-type PersonaId = 'employee' | 'manager' | 'hradmin' | 'hris' | 'spd' | 'sysadmin';
+type PersonaId = 'employee' | 'manager' | 'hrbp' | 'spd' | 'hradmin' | 'hris' | 'sysadmin';
 
 type Leaf = {
   id: string;
@@ -121,11 +121,11 @@ const MODULES: ModuleGroup[] = [
     labelTh: 'การจัดการทีม',
     icon: Network,
     leaves: [
-      { id: 'approvals', label: 'Team Inbox · Approvals', labelTh: 'กล่องงาน · อนุมัติ', href: '/quick-approve', badge: '12', show: ['manager', 'hradmin', 'hris', 'spd', 'sysadmin'] }, // merged inbox+approvals (unified-approval-inbox rule)
+      { id: 'approvals', label: 'Team Inbox · Approvals', labelTh: 'กล่องงาน · อนุมัติ', href: '/quick-approve', badge: '12', show: ['manager', 'hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] }, // merged inbox+approvals; HRBP added 2026-05-28 (People Partner approval surface)
       { id: 'roster', label: 'Roster & Shifts', labelTh: 'ตารางกะ', href: '/roster', show: ['manager', 'hradmin', 'sysadmin'] }, // repointed → real /roster page
-      { id: 'perf', label: 'Team Performance', labelTh: 'ผลงานทีม', href: '/performance-form', show: ['manager', 'hradmin', 'sysadmin'] },
-      { id: 'probation', label: 'Probation Reviews', labelTh: 'ทดลองงาน', href: '/manager-dashboard/probations', show: ['manager', 'hradmin', 'sysadmin'] },
-      { id: 'reports', label: 'Reports', labelTh: 'รายงาน', href: '/reports', show: ['manager', 'hradmin', 'hris', 'spd', 'sysadmin'] },
+      { id: 'perf', label: 'Team Performance', labelTh: 'ผลงานทีม', href: '/performance-form', show: ['manager', 'hrbp', 'hradmin', 'sysadmin'] },
+      { id: 'probation', label: 'Probation Reviews', labelTh: 'ทดลองงาน', href: '/manager-dashboard/probations', show: ['manager', 'hrbp', 'hradmin', 'sysadmin'] },
+      { id: 'reports', label: 'Reports', labelTh: 'รายงาน', href: '/reports', show: ['manager', 'hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] },
       // CUT: swap (Shift Swap) — it is a modal inside /roster (?panel=swap), not a menu item.
     ],
   },
@@ -135,12 +135,12 @@ const MODULES: ModuleGroup[] = [
     labelTh: 'งานบุคคล',
     icon: IdCard,
     leaves: [
-      { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris', 'spd', 'sysadmin'] },
+      { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] },
       { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'sysadmin'] }, // merges lifecycle/onboarding
       { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'sysadmin'] },
-      { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'hris', 'spd', 'sysadmin'] }, // merges welfare+claims
-      { id: 'hr-docs', label: 'HR Documents', labelTh: 'เอกสารบุคคล', href: '/admin/documents', show: ['hradmin', 'sysadmin'] }, // merges confirm
-      { id: 'changes', label: 'Change Requests', labelTh: 'คำขอเปลี่ยนแปลง', href: '/admin/change-requests', show: ['hradmin', 'hris', 'sysadmin'] }, // merges transfer+regular
+      { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] }, // merges welfare+claims
+      { id: 'hr-docs', label: 'HR Documents', labelTh: 'เอกสารบุคคล', href: '/admin/documents', show: ['hrbp', 'hradmin', 'sysadmin'] }, // merges confirm
+      { id: 'changes', label: 'Change Requests', labelTh: 'คำขอเปลี่ยนแปลง', href: '/admin/change-requests', show: ['hrbp', 'hradmin', 'hris', 'sysadmin'] }, // merges transfer+regular
       // REMOVED 2026-05-27 (user: "ลาออกไม่ควรอยู่ใน บุคคล"): /resignation is an
       // employee SELF-SERVICE submission ("ยื่นคำขอลาออก … SPD รับทราบและดำเนินการต่อ"),
       // not an HR-admin console — it belongs to the "ฉัน" journey (entered from the
@@ -159,7 +159,7 @@ const MODULES: ModuleGroup[] = [
       // docreview shares /admin/documents with hr-docs (HR group) — documented Principle-1
       // exception: no distinct doc-review-queue route exists; same screen, two persona contexts.
       { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/admin/documents', show: ['spd', 'sysadmin'] },
-      { id: 'audit', label: 'Audit & System', labelTh: 'บันทึก · ระบบ', href: '/admin/system', show: ['hradmin', 'hris', 'spd', 'sysadmin'] }, // merges impers
+      { id: 'audit', label: 'Audit & System', labelTh: 'บันทึก · ระบบ', href: '/admin/system', show: ['hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] }, // merges impers
       // CUT ENTIRELY: Integrations, Policy Builder, Approval Workflows, Branding, Notifications-as-integration.
       // Notifications has a real page (/admin/system/notifications) but is left reachable via /admin/system.
     ],
@@ -174,9 +174,10 @@ const MODULES: ModuleGroup[] = [
 const PERSONA_ROLE: Record<PersonaId, Role> = {
   employee: 'employee',
   manager: 'manager',
+  hrbp: 'hrbp',
+  spd: 'spd',
   hradmin: 'hr_admin',
   hris: 'hr_manager',
-  spd: 'spd',
   sysadmin: 'hr_manager',
 };
 
