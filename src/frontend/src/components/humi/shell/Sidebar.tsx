@@ -213,11 +213,6 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const userRoles = useAuthStore((s) => s.roles);
-  const username = useAuthStore((s) => s.username);
-  // Footer = the identity you are currently operating as. While impersonating
-  // that is the persona you stepped into ("คนที่เราไปสวมบท"); the top
-  // LoginAsRibbon carries the real-admin + acting-as context.
-  const userId = useAuthStore((s) => s.userId);
   const barePath = stripLocale(pathname);
   const currentLocale = pathname.match(/^\/(th|en)/)?.[1] ?? 'th';
   const isTh = currentLocale === 'th';
@@ -498,26 +493,9 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
             );
           })}
         </nav>
-
-        <Link
-          href={`/${currentLocale}/login`}
-          className="bp-sb-user"
-          style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
-          aria-label="ออกจากระบบและกลับไปหน้าเข้าสู่ระบบ"
-        >
-          <div className="bp-av" aria-hidden="true">
-            {(username || 'จงรักษ์ ทานากะ')
-              .trim()
-              .split(/\s+/)
-              .map((w) => w[0])
-              .slice(0, 2)
-              .join('')}
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div className="bp-nm">{username || 'จงรักษ์ ทานากะ'}</div>
-            <div className="bp-rl">{userId || 'EMP-04821'}</div>
-          </div>
-        </Link>
+        {/* Sidebar footer profile/logout removed (2026-05-28) — identity, sign out,
+            and Take Action on Behalf of all live in the Topbar avatar dropdown now
+            (SF parity). See .omc/specs/deep-interview-proxy-sf-realignment.md. */}
       </div>
 
       {/* Drag-to-resize handle — desktop static sidebar only, and only while the

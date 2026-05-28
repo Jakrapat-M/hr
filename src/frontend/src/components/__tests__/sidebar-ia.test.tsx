@@ -380,14 +380,17 @@ describe('Blueprint sidebar — active leaf highlight', () => {
   });
 });
 
-// ─── Footer user card ─────────────────────────────────────────────────────────
+// ─── Footer user card — REMOVED 2026-05-28 ────────────────────────────────────
+// Identity, sign out, and Take Action on Behalf of all live in the Topbar avatar
+// dropdown now (SF parity). The sidebar bottom-left profile circle is gone.
+// See .omc/specs/deep-interview-proxy-sf-realignment.md.
 
-describe('Blueprint sidebar — footer user card', () => {
-  it('renders the avatar initials + emp id, linking to /login (logout affordance)', () => {
+describe('Blueprint sidebar — footer user card (removed)', () => {
+  it('does NOT render the legacy bottom-left profile/logout affordance', () => {
     render(<Sidebar />);
-    const foot = screen.getByLabelText('ออกจากระบบและกลับไปหน้าเข้าสู่ระบบ');
-    expect(foot).toHaveAttribute('href', '/th/login');
-    expect(within(foot).getByText('จท')).toBeInTheDocument();
-    expect(within(foot).getByText('EMP-04821')).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText('ออกจากระบบและกลับไปหน้าเข้าสู่ระบบ')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('EMP-04821')).not.toBeInTheDocument();
   });
 });
