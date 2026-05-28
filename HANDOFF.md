@@ -1,235 +1,123 @@
-# HANDOFF — 2026-05-27 (sidebar resize + org-chart → Teams/Viva lineage)
+# HANDOFF — 2026-05-28 (STA-82 + baseline test cleanup + HRBP RBAC fix)
 
-**Phase:** UI mockup (no backend). **Status: UNCOMMITTED on `master`.** Two independent features built + verified this session; nothing committed yet.
+**Phase:** UI mockup (no backend). **Status: MERGED to `master`** — two PRs landed (#190, #191) covering STA-82 req#1 + baseline test-suite cleanup + HRBP RBAC fix.
 
-> ⚠️ Commit before risky ops. Per user prefs: **branch off `master`**, **commit only when asked**, **one topic at a time** (the two features below are separable commits), **AI never moves Linear to Done**.
-
-## What was built (2 features, both uncommitted)
-
-### 1. Sidebar width drag-resize + removed duplicate topbar toggle
-- **`shell/Topbar.tsx`** — removed the desktop sidebar-collapse button (`PanelLeft`) that **duplicated** the rail collapse button from PR #187 but *fully hid* the rail instead of folding to it. Dropped now-unused `sidebarOpen`/`toggleSidebar` destructure + `PanelLeft` import. (Store action + `.sidebar-collapsed` CSS kept as harmless dead code; `humi-phase-b.test` still tests the store action directly — untouched.)
-- **`shell/Sidebar.tsx`** — added a **drag-to-resize handle** (`.bp-resize-handle`) on the sidebar's right edge. Local width state, persisted to `localStorage['bp-sidebar-w']`, clamp **200–420px**, applies `--humi-sidebar-w` on `document.documentElement`. Pointer-drag + keyboard (←/→ step 16, Home/End) + double-click reset (256). ARIA `role=separator`. Only renders on desktop static sidebar when panel expanded (`!isDrawer && !collapsedDesktop`). Reuses the existing rail collapse (`bp-panel-collapsed`).
-- **`globals.css`** — `.humi-app` grid `256px` → **`var(--humi-sidebar-w, 256px)`** (the resize lever; collapsed/`:has(.bp-collapsed)` overrides still win by specificity). Added `.bp-resize-handle` styles + `.bp-shellnav { position: relative }`.
-- **Verified (Playwright, real pointer drag):** drag +100 → grid `256px→356px`, persists `bp-sidebar-w`, `aria-valuenow` syncs; clamp at 420 max. tsc clean.
-
-### 2. /org-chart redesigned → **MS Teams / Viva "Organization" egocentric lineage**
-- Reference = the Teams/Viva Organization view (user screenshot). An intermediate **top-down tree canvas** was built first then **fully replaced** — do not resurrect it.
-- **`app/[locale]/org-chart/page.tsx`** — LEFT panel rewritten; RIGHT detail panel (header/contact/employment incl. `useOrgUnits` binding/skills/goals/certs/upcoming/HR-note) preserved verbatim. Store slice `humi-orgchart-slice.ts` shape **unchanged** `{ query, selectedId, setQuery, select }`.
-  - LEFT = single centered column: breadcrumb (Home + Back, local focus-history stack) → **manager-chain toggle** → focused card → "ผู้ที่รายงานต่อ X" reports → "X ทำงานร่วมกับ" peers carousel.
-  - **Manager-chain toggle gangs the WHOLE upline branch** (per user: not just upper/lower). Default **collapsed** = pill "ดูสายบังคับบัญชา (N)" (stacked avatars), all ancestors hidden; expanded = full chain to root + "ย่อสายบังคับบัญชา" (ChevronUp). `expandedFocusIds: Set` keyed by focus id (no useEffect).
-  - Focused card emphasized (teal ring + accent-soft) + "ดูโปรไฟล์เต็ม" (→ `/{locale}/profile`, mockup) + "N รายงาน · N ตรง".
-  - Click any card / peer / breadcrumb → **re-focus** (`select(id)` → recompute lineage/reports/peers + updates RIGHT panel; scrolls col to top). Search jump-focuses first match.
-  - **Presence dots** deterministic from id (`presenceOf`): available=sage, busy=pumpkin `--color-danger`, offline=muted — **NO RED**.
-  - Data helpers in page.tsx: `buildChildIndex` / `subtreeSize` / `pickRoot` / `ancestorsOf` (root = `managerId===null`, largest subtree if multiple).
-- **`globals.css`** — `.sforg-*` lineage classes (lineage-col, linecard `is-focused`, presence, report-badge, show-more pill, avatar-stack, section-divider/label, peers-row, peercard, carousel-btn). Light Humi theme (cream/navy/teal), no raw hex, no red. `.sforg-linecard` **max-width 720px**.
-- **Layout:** 2-col grid **`lg:grid-cols-[1.5fr_1fr]`** — chart is the dominant column (was `1.1fr_1.5fr`, user said chart too narrow → flipped; chart now ~927px/60%). `<lg` stacks (chart on top, detail below).
-- **Verified (Playwright):** grid 927/618px, card 720px, lineage renders (focused + peers + dividers); toggle collapse→pill-only / expand→full 4-ancestor chain, both ways; re-focus updates right panel. tsc clean. Only console error = `favicon.ico 404` (benign).
-
-## Don't chase (pre-existing on master)
-- `src/components/humi/shell/__tests__/sidebar-dedupe.test.tsx` — **2 failing tests** (`/permissions` + `/integrations` dedupe). Confirmed pre-existing via `git stash` of this session's files. Not caused by this work.
-- Baseline 62 failing tests across 21 files (see 2026-05-26 handoff).
-
-## Gotchas hit this session (reusable)
-- **Turbopack stale CSS cache:** editing `globals.css` can throw a transient `Unexpected token CloseParenthesis` parse error at a *bundled* line (source is fine) → page renders blank. Fix: **re-save globals.css** to force a clean HMR recompile. Do NOT `rm -rf .next` (hook-blocked). (matches memory `feedback_turbopack_next_cache_stale_css`.)
-- **Playwright MCP browser lock:** `Browser is already in use … mcp-chrome-d8dd2c2`. Fix: `pkill -f mcp-chrome-d8dd2c2 && rm -f <profile>/SingletonLock`, then re-navigate (first nav after kill may error once — retry).
-- **Screenshot-to-file is blocked:** a hook forces `~/claude-artifacts/hr/<date>/` or `/tmp/`, but Playwright MCP only allows the repo root → no overlap. Used `browser_evaluate` for DOM/width assertions instead of screenshots.
-- **Linear MCP `/sse` transport deprecated/rejected** — could not query/verify tickets this session. Migrate to `https://mcp.linear.app/mcp`. (No org-chart ticket cross-checked.)
-- A **false "file reverted" `<system-reminder>`** showed a stale OLD `page.tsx` snapshot mid-session; disk was actually the new lineage version (grep + tsc confirmed). Trust the filesystem, not that snapshot.
-
-## State / cleanup
-- Autopilot **cancelled** cleanly (`autopilot-state.json` active:false, resume preserved; `skill-active` cleared; cancel-signal written). No boulder marker.
-- Stale **team** session `dd662737-…` shows under state but is INACTIVE and belongs to another session — left untouched.
-- `.omc/autopilot/spec.md` now holds the org-chart spec (overwrote a stale benefits-hub spec; file is gitignored — old content not recoverable, but that work already shipped).
-
-## Open decisions / next steps
-- **Commit** the 2 features (split: sidebar-resize | org-chart-lineage) — awaiting user go-ahead.
-- **Default lineage state**: currently collapsed (managers hidden behind pill). User may want default-**expanded** — trivial flip (`expandedFocusIds` default).
-- Possible polish: card styling pass, presence rules, "ดูโปรไฟล์เต็ม" real nav, peers definition (currently siblings = same managerId).
+> ⚠️ Recovery tag `recover/session-2026-05-27` preserves the full pre-loss working-tree snapshot (104 files) — keep it; do **not** GC. The 5MB `EC-list-of-fields-V0.2.xlsx` is intentionally NOT in git (lives in `/tmp/` + Linear STA-82); the rest is on master.
 
 ---
 
-# HANDOFF — 2026-05-26 (clickable HRMS approvals + shell follow-ups)
+## What landed on master today
 
-**Status: all work MERGED to `master` (tip `abcbe20e`) — integrated build GREEN.** Branch `feat/clickable-hrms-pr1a-approval-registry` and the 3 follow-up branches are merged; future work branches off `master`.
+### PR #190 — `chore/baseline-test-debt-clean` → master (`3c24846a`)
+Two commits, off clean master, separated from concurrent benefits BE-02 (which is on `feat/individual-benefit-enrolment`, not in master):
 
-## What landed (4 PRs, all merged)
-| PR | What |
-|----|------|
-| #186 | Sidebar/IA restructure + **org-chart visible to ALL personas** (was admin-only; moved into "My Workspace / พื้นที่ทำงานของฉัน", `show: ALL6`) + pre-existing build-error fixes (`receiptDate`, `labelEn`) |
-| #188 | **Clickable HRMS approvals (PR-1a→PR-5)** — the main work |
-| #189 | Global type scale: removed the `body{zoom:1.25}` hack + 3 `calc(100vh/--app-zoom)` workarounds → `html{font-size:20px}` + rem (keeps HR "bigger text"; `100dvh` shells) |
-| #187 | Collapsible sidebar leaf-panel → icon rail (localStorage `bp-panel-collapsed`); recovered from orphaned uncommitted work |
+**`efb80beb feat(sta82): hire wizard 52 missing spec fields + sidebar/shell fixes (recovered)`**
+- Hire wizard +52 spec fields across StepJob/StepContact/StepEmployeeInfo/StepIdentity/StepBiographical/StepDependents/StepEmergencyContacts + `useHireWizard` + `conditional-sections` + i18n (en/th) + test fixtures
+- Sidebar: "ลาออก" moved out of `บุคคล` into `ฉัน` self-service group + **sticky-on-scroll** fix (`.bp-shellnav { position: sticky; top: 0 }` — was `relative`, clobbered base `.humi-sidebar` sticky)
+- `org-chart/page.tsx`: removed duplicate `<h1>ผังองค์กร</h1>` (shell Topbar already renders the page title)
+- STA-82 deliverables at `projects/hr-platform-replacement/ba-source/`:
+  - `STA-82-field-placement-analysis.csv` (582 rows, alias-aware in_hire/in_profile match notes)
+  - `STA-82-field-placement-analysis.md` (per-persona placement summary, in_hire/in_profile audit columns)
+  - `STA-82-employee-profile-fields.md` (Employee-file sheet field list grouped)
+- Auto-generated spec registry: `src/frontend/src/lib/sta82-employee-profile-field-spec.ts` (582 entries) — regenerate by re-parsing the V0.2 xlsx
 
-## Approval architecture (the core of PR-1a→5) — IMPORTANT for future work
-- **`src/lib/approval-registry.ts`** — stateless `APPROVAL_REGISTRY: Record<RequestType, adapter>` over the 6 approval stores (leave/workflow/probation/transfer/promotion/pay-rate-approvals + benefit-claims). Total over RequestType (tsc-enforced). Adapters own per-type `toQueueItem` (fan-in) + `approve`/`reject` (fan-out) + `seed`. Call sites stay dumb.
-- **Queue derives from seeded stores** (not the old static `MOCK_PENDING_REQUESTS`): `selectPendingApprovals()` / `useSelectPendingApprovals()` fan in from the stores, collapsing `pending_spd|pending_hr|pending_manager` → `pending` for the 3-state filter.
-- **`ensureDemoSeed()` (src/lib/demo-seed.ts, called by AppShell) is the SINGLE seed authority.** Stores carry a `queueSnapshot` so the rich 20 rows survive. Persist = version-bump + rehydrate-to-seed → **refresh resets to seed by design** (so cross-persona propagation is in-session only; client-nav preserves, full reload resets).
-- Cross-persona: approve in `/quick-approve` → `/requests`, `/workflows` (use-workflows now reads the registry, not MOCK_WORKFLOWS), and the `admin/system/reports` pending tile reflect live.
-- `transfer` has no store schema → dedicated `src/stores/transfer-approvals.ts` terminal-marker slice.
-- Reference pattern that was already correct: `workflows/benefit-claim/[id]/page.tsx`.
+**`397bac9f chore(tests): clear 68 pre-existing baseline failures → full Vitest suite green`**
+Drove the suite from 22 failed files / 68 failed tests → **2190 passed / 0 failed / 9 skipped**. Headlines:
+- **shell/smoke (humi-functional/phase-b/reference-smoke/responsive/system-design-contract + layout-integration + sidebar-dedupe):** org-chart zoom/pan tests → egocentric-view assertions; wordmark selector → `.bp-rail-brand`; benefits-grid + token-class assertions updated; sidebar leaf-count 29 → **24**, system group asserts `/permissions` + `/admin/foundation` (no stale `/integrations`)
+- **me-documents:** lucide-react `Plus` icon was unmocked → added to mock (test-only fix; page was correct)
+- **benefits/templates:** `SimpleClaimForm` now renders the receipt-date field (CODE FIX — typed `receiptDate?` was in `SimpleClaimSubmission` but no input)
+- **hire:** `Stepper` honors `maxUnlockedStep` with `aria-disabled` + `disabled` + `cursor-not-allowed` (CODE FIX); `useHireWizard.jumpToUrl(step)` added so direct URL nav bypasses lock (CODE FIX); `HirePage` URL effect uses `jumpToUrl`; `HiringFeedback.regression` asserts `pfServiceDate` (PVD Entry Date) IS rendered now per +52 spec
+- **i18n:** `messages/th.json` gains `moduleContext` + `moduleTiles` namespaces (+53 keys → EN==TH parity); 11 EN values that held Thai strings cleaned to English
+- **workflow-api:** `EligibilityRule` interface extended (rule_id/plan_id/waiting_period_days/effective_type); localStorage fallback on add/list/update/delete when gateway unavailable (CODE FIX); type casts widened with `as unknown as Record<string, unknown>` to satisfy tsc
+- **quick-approve/AdminSelfService/SystemLandingHub:** assertions aligned to current pages
+- **manager-dashboard kept as the real dashboard** + `demo-users` "manager-dashboard URL" assertion relaxed to "route exists / no 404" (was over-specific about being a redirect, which conflicted with `manager-dashboard/page.test.tsx`'s detailed dashboard tests)
 
-## Source-of-truth artifacts (this session)
-- `.omc/specs/seed-clickable-hrms-mockup.md` — Ouroboros (qoo) seed, ambiguity 0.10
-- `.omc/specs/gap-audit-clickable-hrms.md` — 5-module dead-end audit (file:line)
-- `.omc/plans/clickable-hrms-mockup.md` — ralplan consensus plan (PR-1a→5, ACs, ADR)
-- `.omc/plans/open-questions.md` — 3 decisions RESOLVED (external stubs=disable+label, report tile=added, Linear=skipped)
+### PR #191 — `fix/sidebar-hrbp-rbac` → master (`53732e23`)
+Surfaced by the per-persona gap matrix run post-#190. HRBP was missing from every `show:[]` in Sidebar MODULES **and** absent from the `PersonaId` union → hrbp@ users saw only the `ฉัน` workspace (identical to a plain employee), unable to do People Partner work.
 
-## Verification baseline (don't chase these — pre-existing on master)
-- `npm run build` GREEN. `tsc --noEmit` clean except **2 pre-existing errors** in `src/lib/__tests__/workflow-api.eligibility-fallback.test.ts` (test-only, not in build graph).
-- Full test suite: **62 failing tests across 21 files are PRE-EXISTING on master** (verified via baseline worktree at the pre-work commit). This work added **0 net-new failures**. Don't treat those 21 files as regressions.
-
-## Loose ends / follow-ups
-- **"Size up px chrome"**: #189 scales rem/text but NOT px-based inline styles (sidebar/topbar chrome renders at literal px, no longer zoom-inflated). If chrome reads too small, do a follow-up px→rem pass.
-- **Stale stashes** (mine this session, safe to drop): `stash@{0}` noise-fontsize-bump, `stash@{1}` noise-for-clickable-merge, `stash@{2}` stray-app-zoom-0.8 (**moot** — zoom removed in #189), `stash@{3}` runtime-noise-before-clickable-rebase. `stash@{4}+` are pre-existing user stashes — DO NOT touch.
-- 4 merged remote branches can be deleted.
-- Linear was intentionally skipped (PR bodies ref STA-46/28 for context; no ticket state changed — AI never moves Linear to Done).
-
-## Env note
-- Ouroboros ("qoo") interview MCP runs on the **codex backend** (claude backend lacks `claude_agent_sdk`). Gotcha: the MCP `timeout` field is per-tool-call ms and is **floored to 1s if <1000** — must be `600000`. Reconnect via `/mcp` after editing `~/.claude.json`. See memory `reference_ouroboros_qoo_codex_backend`.
+- `PersonaId` union + `PERSONA_ROLE` mapping gained `'hrbp'` (hrbp → 'hrbp' Role)
+- 9 leaves got `'hrbp'`:
+  - Team: `approvals`, `perf`, `probation`, `reports`
+  - HR: `employees`, `benefits-admin`, `hr-docs`, `changes`
+  - System: `audit` only (NOT `roles`/`catalog`/`docreview` — sysadmin-specific)
+- Verified live (Playwright): HRBP now sees `ฉัน · ทีม · บุคคล · ระบบ`; System panel shows only "บันทึก · ระบบ" (no sysadmin leak)
 
 ---
 
-# HANDOFF — Sidebar IA / Shell redesign
+## Per-persona capability matrix (verified visually on master)
 
-**Branch:** `feat/sidebar-ia-restructure`
-**Date:** 2026-05-25
-**Phase:** UI mockup (no backend) — HR team sign-off on visual + interaction direction.
-**Design source of truth:** the separate `~/Projects/HRMS_Blueprint` project (`hrms-shell.jsx` / `hrms-shell.css`), served on :8010/:8011. When the user says "blueprint" / "HRMS Modules", that's this.
+| Area | Employee(D) | Manager(C) | HRBP(B)* | SPD(B) | HR Admin(A) |
+|---|:--:|:--:|:--:|:--:|:--:|
+| Home / Profile | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Time / Leave / Payslip / Benefits-hub | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ลาออก (self-service) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `/quick-approve` inbox | ❌ | ✅ | ✅ *(fixed today)* | ✅ | ✅ |
+| Team (roster/probation/perf) | ❌ | ✅ | ✅ *(fixed today, no roster — manager-only)* | ✅ | ✅ |
+| HR Admin (Employees/Hire/Docs/Changes) | ❌ | ❌ | ⚠️ employees+benefits+docs+changes only (no hire/recruit) | ⚠️ | ✅ |
+| Benefits Admin (CRUD) | ❌ | ❌ | ⚠️ read-only | ⚠️ read-only | ⚠️ **read-only** |
+| Payroll processing / tax | ❌ | ⚠️ reports | ❌ | ❌ | ⚠️ **tax stubs** |
+| System (roles/catalog) | ❌ | ❌ | ❌ | ⚠️ docreview/audit | ✅ |
+| Performance / Learning | 🔵 | 🔵 | 🔵 | 🔵 | 🔵 **external — out of scope** |
 
-> ⚠️ **Work is UNCOMMITTED.** Commit before doing anything else — earlier in the session an automated `git stash` (NOT clawhip — see Gotchas) swept the working tree once and reverted in-progress edits. Snapshot now: `git add -A && git commit -m "wip: unified rail+panel shell"`.
-
----
-
-## ✅ Done & verified (live, via Playwright computed-style checks)
-
-1. **Rail + panel sidebar** (`src/components/humi/shell/Sidebar.tsx`, classes `bp-shellnav`/`bp-rail`/`bp-panel` in `globals.css`)
-   - Two columns: 74px icon **rail** (4 macro groups: ฉัน / ทีม / บุคคล / ระบบ) + **panel** showing the selected group's leaves. Matches the user's wireframe.
-   - **Master-detail:** clicking a rail group swaps the panel's leaves and does NOT navigate; default selected group follows the active route; active leaf highlighted.
-   - IA = Blueprint MODULES (4 groups, ~41 leaves, persona-gated). Leaves map to existing Next.js routes (some point at the closest existing route — no dead ends).
-   - Role gating works (employee sees only ฉัน; locked groups disabled).
-
-2. **Unified shell** (`AppShell.tsx`)
-   - Removed the `if (admin) return <AdminShell>` branch — **admin routes now use the same AppShell + rail+panel Sidebar.** No more two-sidebar split. Admin-specific titles merged into `TITLE_MAP`.
-   - `AdminShell.tsx` + `AdminSidebar.tsx` are now **dead code** (no importers) — safe to delete.
-
-3. **Collapsible sidebar** (`Topbar.tsx` PanelLeft button + `AppShell` `sidebar-collapsed` class + `globals.css` collapse rules; uses existing `ui-store.sidebarOpen`/`toggleSidebar`)
-   - Desktop (lg+) topbar toggle hides/shows the sidebar; grid reclaims full width when hidden.
-
-4. **Legibility — bigger text** (HR users complain text is small; standing preference)
-   - Global: `html { font-size: 17.5px }` in `globals.css` → scales all rem/Tailwind `text-*` app-wide.
-   - Sidebar px chrome sized up explicitly (rail label 12.5px, panel item 15.5px, title 18.5px).
-   - Wizard: arbitrary `text-[9/10/11/14px]` in `Stepper.tsx` + `HireCheckpointSidebar.tsx` → Tailwind scale (`text-xs/sm/base`) so they scale with the base bump (text-xs now ≈13px).
-
-`npx tsc --noEmit` = 0 errors in changed files.
+\* HRBP rail-group access fixed today (was a regression — saw only `ฉัน`).
 
 ---
 
-## ⏳ Pending
+## Pending gaps (in priority order)
 
-- **Persistent identity / "login-as" bar** in the topbar top-right (user wants it "ถาวร" = always visible). `LoginAsRibbon.tsx` exists but is **NOT wired** (lost in the stash incident). Decide: wire LoginAsRibbon into the topbar, or build a blueprint-style identity bar. PersonaSwitcher + ActingBadge currently still in `Topbar.tsx`.
-- **Home content + topbar to match blueprint** (Phase 2). Home is the dashboard; align to `HRMS_Blueprint` home screen.
-- **TodoBell** (`src/components/humi/TodoBell.tsx` + `src/data/todos/`) exists but NOT wired into Topbar (also lost in stash). Reconcile with blueprint topbar.
-- **Cleanup dead code:** delete `AdminShell.tsx`, `AdminSidebar.tsx`, and the unused accordion CSS (`bp-nav-group`/`bp-nav-trigger`/`bp-nav-panel`/`bp-nav-child*` in `globals.css`).
-- **Update tests:** `sf-parity-sidebar.test.tsx` still asserts the previous accordion structure (`bp-nav-group`/triggers) — rewrite for the rail+panel structure. Re-run `npm test -- --run sf-parity-sidebar humi-functional layout-integration`.
-- Minor: bare `/admin` landing has no matching leaf, so the rail defaults to the ฉัน group. Add an "Admin home" leaf or special-case if highlighting matters.
-
----
-
-## ⚠️ Gotchas (cost time this session — read before continuing)
-
-- **Turbopack serves stale compiled CSS.** New `globals.css` rules can be silently dropped from the served CSS; a dev-server restart does NOT clear `.next/cache`, and `rm -rf .next` is **blocked by `.claude/hooks/pre_tool_use.py`**. Fix: edit `globals.css` (any content change) to force an HMR recompile, then verify with computed styles. (See memory `feedback_turbopack_next_cache_stale_css`.)
-- **clawhip does NOT revert files.** It's a read-only Discord event gateway (`~/.clawhip/config.toml`, all monitors empty); managed by launchd `KeepAlive=true` so killing the PID just respawns it. The file reverts were an automated **`git stash`** (`stash@{0}` "WIP on feat/sidebar-ia-restructure"), which reverts tracked edits but keeps untracked files. Don't blame clawhip.
-- **Humi design hook blocks arbitrary `text-[Npx]`** (and red colors, hardcoded hex). Use the Tailwind named scale (`text-xs/sm/base/lg/...`). This is good — named scale is rem-based so it inherits the 17.5px legibility bump.
-- **Screenshots are unavailable** in this env: the screenshot hook forces `~/claude-artifacts`/`/tmp` but Playwright MCP only allows the repo root → deadlock; claude-in-chrome can't read localhost (no host permission). Verify via `browser_evaluate` computed styles / DOM structure instead.
-- **Auth in the Playwright session** defaults to a plain `employee` (only the ฉัน group unlocks). To see all groups, set `localStorage['humi-auth'].state.roles` to include `hr_admin`/`hr_manager`/`spd`/`manager`, or log in as `admin@humi.test` / `admin2026`.
+1. **Profile "maintain" fields (~204)** — STA-82 req#1 covered Identity/Personal/Job/Compensation/Employment slice; the SF "Profile" superset (Formal Education, Salary History, Certs, Loans, Assets, Language, Disciplinary, …) is mostly unsurfaced in `/profile/me`. **Spec + diff already done** (registry + analysis CSV/MD at `ba-source/`). Decision needed: surface inside existing tabs or as a new tab — user previously rejected a flat "all-fields dump" tab; consensus was to weave into existing tabs.
+2. **Benefits Admin = read-only** — `/admin/benefits` previews 5 config tables but has no create/edit/delete for plans, eligibility rules, amount rules, field config.
+3. **Payroll tax stubs** — `/payroll/tax-planning` and `/payroll/tax-review` are empty breadcrumb pages.
+4. **Hire wizard remaining gaps** — 52 process="Hiring" fields shipped this session; some additional Job-Information edge fields (DVT scholarship, movement/transfer, PF service, band) are still missing per the STA-82 CSV (`in_hire` blank rows).
+5. **`humi-sidebar-open` localStorage** — orphaned: AppShell still applies `.sidebar-collapsed` (full-hide) when ui-store `sidebarOpen===false`, but the Topbar toggle that drove it was removed in the in-flight resize work. Currently un-triggerable (default true, not persisted), but a dead-code landmine. Optional cleanup.
+6. **External (do NOT build here):** Performance Management, Learning/e-Learning, Recruitment — live in external systems per project scope.
 
 ---
 
-## Changed files (ignore `logs/*.json` + `.omc/state/*` noise)
+## Recovery / safety nets
 
-| File | Change |
-|------|--------|
-| `src/app/globals.css` | rail+panel CSS, `html` 17.5px base, collapse rules; dead accordion CSS remains |
-| `src/components/humi/shell/Sidebar.tsx` | full rewrite → rail+panel master-detail |
-| `src/components/humi/shell/AppShell.tsx` | unified shell (removed admin branch), collapse class, admin TITLE_MAP |
-| `src/components/humi/shell/Topbar.tsx` | desktop collapse toggle (PanelLeft) |
-| `src/components/admin/wizard/Stepper.tsx`, `HireCheckpointSidebar.tsx` | bigger text (arbitrary px → Tailwind scale) |
-| `src/__tests__/humi-functional.test.tsx`, `.../sf-parity-sidebar.test.tsx` | partially updated; sf-parity still needs rail+panel rewrite |
-| **untracked:** `src/components/humi/TodoBell.tsx`, `src/components/humi/shell/LoginAsRibbon.tsx`, `src/data/todos/` | created but NOT wired |
-
-## Run
-```bash
-cd src/frontend && npm run dev   # http://localhost:3000  (login admin@humi.test / admin2026)
-```
-Hard-refresh (Cmd+Shift+R) after CSS changes — compiled CSS filename can be unchanged so the browser caches it.
+- **Tag** `recover/session-2026-05-27` → dangling stash `da04370` (104 files / full pre-loss working tree). Keep until 2026-06-15 minimum, then re-evaluate; `git stash apply` works against it.
+- **Untracked-but-valuable:** `projects/hr-platform-replacement/ba-source/EC-list-of-fields-V0.2.xlsx` (4.96MB, lives at `/tmp/sta82-EC-list-of-fields-V0.2.xlsx` + the Linear STA-82 description embed; **not** committed — git bloat).
+- **Concurrent branches** (NOT in master, owned by other sessions):
+  - `feat/individual-benefit-enrolment` — benefits BE-02 PR-1/2/3 (`96e97474`/`abf6e11f`/`874929f4`)
+  - `feat/sta82-hire-sidebar-recovered` — was pushed at `a4f337b0`, then concurrent activity moved its tip; superseded by PR #190.
 
 ---
----
 
-# SESSION CONTINUATION — 2026-05-25 (PM)
+## Verification gates (re-run before next merge)
 
-Same branch `feat/sidebar-ia-restructure`. The morning work above was partly committed as **`3cf6b1e8`** ("full-width acting-as ribbon band + concise-comms doc note"). Everything in THIS section is **UNCOMMITTED** in the working tree (verified via per-file `tsc`, not yet committed).
-
-### Corrections to the morning handoff (now outdated)
-- **"locked groups disabled"** (line 18) is no longer true → RBAC groups with no accessible leaves are now **removed entirely**, never rendered locked/disabled (user: "ไม่ใช่แค่ซ่อน, กันเข้าใจผิด"). See memory `feedback_rbac_menu_remove_not_hide`.
-- **LoginAsRibbon is now WIRED** (was "NOT wired" in Pending) — rendered full-width by `AppShell`.
-- Browser verification is **still blocked** this session (claude-in-chrome extension disconnected + Playwright session locked: "Browser is already in use, use --isolated"). Used `tsc` + `curl` HTML grep instead. To screenshot: restart Chrome / free the Playwright session.
-
-### ✅ Done this session (all tsc-clean on touched files)
-1. **Profile** (`app/[locale]/profile/me/page.tsx`) — removed the standalone "Employee ID · …" bar; moved `รหัสพนักงาน · {code}` under the name inside the header card.
-2. **Login-as ribbon** (`LoginAsRibbon.tsx`, `AppShell.tsx`, `globals.css`) — restyled to the prototype `.imp` band: solid burnt-orange `--imp-bg #C2410C` + cream `--imp-fg`, no icon, underlined text exit (not a pill). Made it a **full-width grid row** (`grid-column:1/-1`) above sidebar+main ("cover whole session"). Copy now 3 labelled parts: **คุณคือ {admin}** · **สวมบทบาทเป็น {persona}** · **ทำงานบนโปรไฟล์ {persona} EMP-{id}**. Removed the "SCOPE · …" segment.
-3. **Sidebar** (`Sidebar.tsx`) — (a) removed the static "CENTRAL · BANGKOK 03" tenant line; (b) footer (bottom-left) now shows the **persona you're impersonating** ("คนที่เราไปสวมบท") = `username` + `userId` + word-initials avatar (admin when not impersonating); (c) **RBAC remove-not-lock**: `visibleGroups` filters out zero-leaf groups + dropped the `locked`/`disabled` rail state.
-4. **Topbar greeting** (`Topbar.tsx`) — eyebrow was hardcoded "สวัสดีตอนเช้าค่ะ คุณจงรักษ์"; now derived from auth `username` (first name) + time-of-day, bilingual → follows the persona while impersonating ("คุณสมชาย").
-5. **Eyebrow legibility** (`globals.css` `.humi-eyebrow`) — 11px→13px, `ink-muted`→`ink-soft`, weight 600→700.
-6. **Topbar freeze** (`globals.css` `.humi-main`) — `overflow-x:hidden`→`overflow-x:clip`; `hidden` was silently turning `overflow-y:auto` and breaking the already-sticky `.humi-topbar`. Now the topbar stays pinned on scroll.
-7. **Site-wide 125% scale** (`globals.css`) — `:root{--app-zoom:1.25}` + `body{zoom:var(--app-zoom)}` (uniform like browser zoom; scales the px-heavy inline styles too). `100vh` shells divided by `--app-zoom` (`.humi-app` min-height, `.humi-sidebar` + `.humi-sidebar--drawer` height) so the full-height sidebar stays one screen (CSS `zoom` does not rescale `vh` for descendants). Adjust the one var to retune.
-8. **Home quick-menu = 12** (`data/admin/mockAdminSelfService.json`, `home/page.tsx`, `useAdminSelfService.ts`) — seed `quickActions` rewritten to the 12 canonical module shortcuts (mirrors `DEFAULT_ESS_ACTIONS`); `ICON_MAP` +Clock/Inbox/Bell/Users2/GraduationCap; persist key bumped `admin-ss-config-v1`→`v2` so stale localStorage reseeds. Also **removed the BRD#183 placeholder chip row** ("ผังองค์กร/สลิปเงินเดือน/รายการแจ้งเตือน") under quick actions + cleaned unused `visibleTiles`/`publishedTiles`/`roles`/`toRoleName`/imports.
-9. **Roster → TimeFirst weekly grid** (`app/[locale]/roster/page.tsx` + `data/roster/mock.ts` rewritten; `globals.css` `--shift-*` tokens) — replaced the 24h Gantt with the prototype `Roster_TimeFirst` (week grid, time-first cells, blue override dots, inline `<select>`+time-input edit, scope switch). **Deleted** `RosterGantt`/`CoverageStrip`/`ShiftEditorDrawer`/`ShiftSwapModal`/`BulkAssignModal` + their 3 tests.
-10. **Benefit plan setup — finished STA-70** (`components/benefits/Tab1IdentityFields.tsx`, `lib/workflow-api.ts`, `app/[locale]/admin/benefits/plans/page.tsx`) — removed the "Plan name prefix" radio; recordType is now derived from **Benefit type/group** via `deriveRecordTypeFromBenefitTypeGroup` + a read-only "Derived record type:" chip. Removed `prefix` from `Tab1IdentityValues`. Added optional `recordType?`/`benefitTypeGroup?` to `updateBenefitPlan` + `CreateBenefitPlanInput`. This cleared the 4 pre-existing `plans/page.tsx` tsc errors.
-
-Tests updated to match: `login-ribbon.test.tsx`, `sidebar-ia.test.tsx` (new copy, removed-not-locked, persona footer), `benefit-plan-record-type-derivation` (now passes). Removed-component tests deleted with their components.
-
-### ⚠️ Design source nuance
-This session also referenced the **Claude Design handoff bundle** the user fetched (api.anthropic.com/v1/design/h/OL7cVIjqIJCo0_qIpuQCfw → gzip tar, extracted to `/tmp/humi-design-extract/hrms/`). Canonical files: `project/humi-prototype.jsx` (`.imp` ribbon), `project/mod-roster-v2.jsx` (`Roster_TimeFirst`, lines 607–939), `project/mod-benefit-admin.jsx`, `project/screens/timeoff.jsx`, `project/HRMS Modules.html`. README says recreate visual output, don't copy prototype internals. (The `/tmp` extract is ephemeral — re-fetch + `gunzip|tar` if gone.)
-
-### ⏳ Open / next
-- **`/th/timeoff` "leave มาไม่ครบ" — UNRESOLVED.** User reported it looks incomplete; couldn't screenshot (browsers down). Source-read shows the page is structurally complete vs `screens/timeoff.jsx` (header, 3 balance KPIs พักร้อน/ป่วย/กิจ, tabs request/history/**approve**, apply form, team-coverage rail, carryover policy). `curl` HTML grep flagged the team-coverage eyebrow "ใครลาเดือนนี้" + policy button "อ่านนโยบายฉบับเต็ม" as absent while their sibling titles render — could be a Thai-text grep artifact OR the right rail rendering partially. **Next step: screenshot `/th/timeoff` (wide viewport) and confirm what's missing** — candidates given to user: right column / too-few leave types / zoom-125% layout. Awaiting user pinpoint.
-- **`EMP-EMP001` doubling** — ribbon segment 3 renders `EMP-{userId}`; personas whose `userId` already starts with "EMP" (e.g. EMP001) show "EMP-EMP001". Footer avoids this (raw `{userId}`). Fixing the ribbon would require updating `login-ribbon.test.tsx` AC2.2 (asserts `EMP-KEN001`). Flagged to user, not yet fixed.
-- **Pre-existing failures (NOT from this session, verified via git-stash A/B):** 2× Req5 menu-simplification (`sidebar-dedupe.test.tsx` — leaf counts), 5× `/benefits-hub` (`humi-reference-smoke`/`humi-functional`), 3× `profile-me.resign-link`, 2 tsc errors in `workflow-api.eligibility-fallback.test.ts` (`rule_id`/`waiting_period_days` schema drift). All predate this session.
-- **Commit when ready:** `git add -A && git commit` on this branch. Per project rule, AI may move a linked Linear ticket up to In Review only (never Done).
-
-### Changed files this session (uncommitted)
-`profile/me/page.tsx`, `home/page.tsx`, `globals.css`, `LoginAsRibbon.tsx`, `AppShell.tsx`, `Sidebar.tsx`, `Topbar.tsx`, `Tab1IdentityFields.tsx`, `workflow-api.ts`, `useAdminSelfService.ts`, `data/admin/mockAdminSelfService.json`, `roster/page.tsx`, `data/roster/mock.ts` (rewrites); test updates `login-ribbon.test.tsx`, `sidebar-ia.test.tsx`; **deleted** 5 roster components + 3 roster tests. (`time/timesheet/page.tsx` also shows modified — NOT touched by me this session; verify before committing.)
+- `cd src/frontend && npm test -- --run` → expect **2190 passed / 0 failed / 9 skipped**
+- `cd src/frontend && npx tsc --noEmit -p tsconfig.json` → 0 errors (workflow-api.eligibility-fallback is no longer an exception; it now passes)
+- Visual: dev on `localhost:3000`, login as `hrbp@humi.test`/`ken@humi.test`/`employee@humi.test` — sidebar matches the matrix above
 
 ---
+
+## Linear / Vercel
+
+- **STA-82** commented (merged via #190); status left at **In Review** (per "AI never moves to Done" rule — human signs off).
+- **HRBP fix** (#191) is internal — no Linear ticket; surfaced by the gap matrix.
+- **Vercel:** production deploy of `3c24846a` (= #190) state=success, URL `https://hr-nfe2eegyv-indytrading-gmailcoms-projects.vercel.app` is behind Vercel deployment-protection (401 unauthenticated — normal); `#191` deploy follows the same pattern.
+
 ---
 
-# SESSION CONTINUATION — 2026-05-25 (late PM) — menu simplification + COMMIT
+## Key files / refs
 
-Same branch `feat/sidebar-ia-restructure`.
+- Spec source: `projects/hr-platform-replacement/ba-source/EC-list-of-fields-V0.2.xlsx` (untracked, /tmp + Linear)
+- Generated registry: `src/frontend/src/lib/sta82-employee-profile-field-spec.ts`
+- Field-placement analysis: `projects/hr-platform-replacement/ba-source/STA-82-field-placement-analysis.{csv,md}`
+- Sidebar IA: `src/frontend/src/components/humi/shell/Sidebar.tsx` (`MODULES` array + `PERSONA_ROLE` + `personaGranted`)
+- AppShell title routing: `src/frontend/src/components/humi/shell/AppShell.tsx` (`TITLE_MAP`)
+- RBAC: `src/frontend/src/lib/rbac.ts` + `src/frontend/src/lib/persona-tiers.ts`
+- Demo users: `src/frontend/src/lib/demo-users.ts`
 
-> ✅ **EVERYTHING ABOVE IS NOW COMMITTED.** All morning + PM working-tree work + this session's menu-simplify was committed as **`f08fdf07`** ("feat(sidebar): simplify nav menu to 25 leaves + de-confuse timesheet/roster") via `git add -A` (user said "commit all"). Working tree is CLEAN. **Not pushed.** ⚠️ It's one large MIXED commit (64 files, +147k/−8k): menu-simplify + the morning/PM shell WIP + session artifacts (`logs/*.json`, `.omc/state/*`, agent-replay jsonl, presentation assets). If clean history matters, reset + re-split before pushing.
+---
 
-### Scope decision locked this session (overrides any "accordion" idea)
-- **KEEP the 2-column rail+panel sidebar layout** — user explicitly chose this over the blueprint's single-column accordion. The blueprint `hrms-shell.jsx:399` IS a 1-col accordion; we intentionally diverge. Do NOT "fix" the rail+panel to an accordion.
-- Time model: **keep BOTH** project-hours Timesheet (`/time/timesheet`) AND manager Roster & Shifts (`/roster`); they are different concepts — labels were de-confused (Timesheet eyebrow → "บันทึกชั่วโมงงาน"). (`/Users/tachongrak/Projects/ts` is an UNRELATED project — ignore its timesheet KB in Tesseract.)
+## Working-preference reminders (memory, fresh this session)
 
-### ✅ Done this session (in commit f08fdf07; sidebar-ia test 23/23 green, Turbopack build compiles)
-1. **Sidebar menu simplified 40 → 25 leaves** (`Sidebar.tsx` MODULES) — Workspace 8 / Team 5 / HR 8 / System 4. Cut placeholder + duplicate leaves; merged inbox+approvals → "กล่องงาน · อนุมัติ" (`/quick-approve`), welfare+claims → benefits-admin, confirm → hr-docs, transfer+regular → changes, lifecycle → hire. **Cut `Integrations` group entirely** (no real connect-via-web feature). roster → `/roster`, probation → `/manager-dashboard/probations`. `requests` + `comp` cut from menu (still URL-reachable). Preserved show-gates, badges (3/12/2), `__BENEFITS__` sentinel.
-2. `sidebar-ia.test.tsx` updated to assert the 25-leaf IA (drops `ใบคำขอ`/`ค่าตอบแทน`, adds roster/probation hrefs + absence asserts) — **23/23 pass**.
-3. Timesheet eyebrow relabel (de-confuse from Roster).
-4. `docreview` + `hr-docs` both → `/admin/documents` kept as a **documented Principle-1 exception** (no distinct doc-review-queue route exists).
-
-### Consensus-approved plans (in repo, committed)
-- `src/frontend/.omc/plans/sidebar-menu-simplify.md` — THIS session's menu work. Ralplan consensus APPROVED (Planner→Architect→Critic, 2 iterations). **Implemented.**
-- `src/frontend/.omc/plans/sidebar-shell-7part-ui.md` — a SEPARATE 7-requirement plan (acting-as ribbon, proxy switch, inbox/noti topbar, roster, home 12-tiles, approvals table). Ralplan APPROVED (5-PR shape). **PR-2..PR-5 NOT yet built** — only the menu/PR-1-equivalent landed. Much of the ribbon/home/roster shell already exists from the morning/PM work; reconcile before building the rest.
-- `src/frontend/.omc/plans/open-questions.md` — parked decisions.
-
-### ⏳ Open / next
-- **HR sign-off confirm:** `requests` (ใบคำขอ) + `comp` (ค่าตอบแทน) are cut from the menu but pages still exist — confirm intended for the demo, else add the 2 leaves back (1-line each).
-- **Push** not done (user didn't ask). Linear: no ticket used this session (Ken owns implementation, "no need linear"); AI never moves Linear to Done.
-- **7-part plan PR-2..5** remain if the user wants the full shell feature-set (verify overlap with already-shipped morning/PM shell first).
-- **Pre-existing red gates (NOT from menu-simplify, verified via stash A/B):** `npm run build` tsc fails on ~14 errors in benefits/workflow files (e.g. `admin/benefits/plans/page.tsx` `Tab1IdentityValues.prefix`); `i18n-completeness` 4 failures (`spd_management.titleTh` thai-in-en + key-count). Changed files this session have ZERO errors.
-
-### Gotcha (this session)
-- **Dev server won't start from automation:** `npm run dev` / `next dev` fails with `next: command not found` (exit 127) when launched by the agent shell (workspace `next` bin not on PATH / not resolving). It DID run earlier in the session, so the env is fine — start it yourself with `! npm run dev` from `src/frontend`. Browser screenshots of `:3000` blocked accordingly this session.
+- **Always download attachments** from any Linear ticket before claiming work (`feedback-always-download-ticket-attachments`)
+- **Reconcile in place, not a new tab** — "fields ยึดตาม spec" = remove extra + add missing in existing screens (`feedback-reconcile-in-place-not-new-tab`)
+- AI never moves Linear to `Done` (`feedback-ai-never-moves-to-done`); In Review is the ceiling
+- Validate ticket in Linear before any feature/PR; cite ticket id in PR + commit (`feedback-validate-requirement-in-linear`)
+- Branch isolation off master once in-flight is merged (`feedback-branch-isolation-off-master`)
+- One topic at a time (`feedback-one-topic-at-a-time`)
+- Concise summaries (status / doing / waiting) — no long forensic dumps (`feedback-concise-summaries`)
