@@ -20,7 +20,7 @@
 // - ⌘K kbd: hidden below md
 // ════════════════════════════════════════════════════════════
 
-import { Menu, Moon, Search, Sun } from 'lucide-react';
+import { LogOut, Menu, Moon, Search, Sun, UserCog } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUIStore } from '@/stores/ui-store';
@@ -65,14 +65,17 @@ export function Topbar({
   actions,
   onSearchClick,
 }: TopbarProps) {
-  const { theme, setTheme, toggleMobileMenu, mobileMenuOpen } = useUIStore();
+  const { theme, setTheme, toggleMobileMenu, mobileMenuOpen, setPersonaPickerOpen } = useUIStore();
   const isDark = theme === 'dark';
   const [scrolled, setScrolled] = useState(false);
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const topbarRef = useRef<HTMLDivElement>(null);
+  const avatarMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
   const currentLocale = getLocaleFromPath(pathname);
   const username = useAuthStore((s) => s.username);
+  const isTh = currentLocale === 'th';
   // Greeting follows the active identity (persona while impersonating). An explicit
   // `subtitle` prop still overrides it.
   const greetingEyebrow = subtitle ?? greetingFor(username, currentLocale === 'th');
@@ -88,6 +91,33 @@ export function Topbar({
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Close avatar menu on outside click + Esc
+  useEffect(() => {
+    if (!avatarMenuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (avatarMenuRef.current && !avatarMenuRef.current.contains(e.target as Node)) {
+        setAvatarMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAvatarMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [avatarMenuOpen]);
+
+  const initials = (username ?? (isTh ? 'จงรักษ์ ทานากะ' : 'Jongrak'))
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   const handleThemeToggle = () => {
     setTheme(isDark ? 'light' : 'dark');
@@ -196,6 +226,77 @@ export function Topbar({
       {/* Req6: inbox-then-bell — TodoBell (envelope) precedes NotificationBell. */}
       <TodoBell />
       <NotificationBell />
+
+      {/* Avatar dropdown — SF Proxy Now canonical entry point.
+          The Topbar persona pill was removed (di-proxy-sf-2026-05-28); the
+          "Take Action on Behalf of…" trigger lives in this avatar menu now.
+          PersonaSwitcher (rendered just below) is purely the modal — open/close
+          is driven by ui-store.personaPickerOpen. */}
+      <div className="relative" ref={avatarMenuRef}>
+        <button
+          type="button"
+          onClick={() => setAvatarMenuOpen((o) => !o)}
+          aria-haspopup="menu"
+          aria-expanded={avatarMenuOpen}
+          aria-label={isTh ? 'เมนูบัญชี' : 'Account menu'}
+          className={cn(
+            'inline-flex h-9 w-9 items-center justify-center rounded-full',
+            'bg-accent-soft text-accent-ink text-small font-semibold',
+            'border border-hairline transition-colors',
+            'hover:bg-canvas-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+          )}
+        >
+          {initials}
+        </button>
+
+        {avatarMenuOpen && (
+          <div
+            role="menu"
+            aria-label={isTh ? 'เมนูบัญชี' : 'Account menu'}
+            className={cn(
+              'absolute right-0 top-full z-40 mt-2 min-w-[14rem] overflow-hidden rounded-md border border-hairline bg-surface',
+              'shadow-[var(--shadow-lg)]',
+            )}
+          >
+            <div className="border-b border-hairline px-3 py-2 text-small text-ink-muted">
+              {username ?? (isTh ? 'บัญชีของฉัน' : 'My account')}
+            </div>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setAvatarMenuOpen(false);
+                setPersonaPickerOpen(true);
+              }}
+              className={cn(
+                'flex w-full items-center gap-2 px-3 py-2 text-left text-small text-ink',
+                'transition-colors hover:bg-canvas-soft focus-visible:outline-none focus-visible:bg-canvas-soft',
+              )}
+            >
+              <UserCog size={14} aria-hidden className="flex-shrink-0" />
+              <span>{isTh ? 'สวมบทบาทแทน…' : 'Take Action on Behalf of…'}</span>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setAvatarMenuOpen(false);
+                router.push(`/${currentLocale}/login`);
+              }}
+              className={cn(
+                'flex w-full items-center gap-2 border-t border-hairline px-3 py-2 text-left text-small text-ink',
+                'transition-colors hover:bg-canvas-soft focus-visible:outline-none focus-visible:bg-canvas-soft',
+              )}
+            >
+              <LogOut size={14} aria-hidden className="flex-shrink-0" />
+              <span>{isTh ? 'ออกจากระบบ' : 'Sign out'}</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Mounted but invisible until ui-store.personaPickerOpen flips true.
+          Avatar dropdown menu item above flips that flag. */}
       <PersonaSwitcher />
       {actions}
     </div>

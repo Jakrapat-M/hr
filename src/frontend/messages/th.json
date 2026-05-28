@@ -3765,13 +3765,18 @@
     "ribbon": {
       "actingAs": "กำลังดูในชื่อ",
       "switchBack": "กลับสู่ผู้ดูแลระบบ",
-      "scope": "สิทธิ์"
+      "scope": "สิทธิ์",
+      "actingAsName": "คุณกำลังสวมบทบาทเป็น {name}",
+      "endProxy": "จบการสวมบทบาท"
     },
     "persona": {
       "eyebrow": "RBAC · 4 ระดับ",
       "title": "สลับบทบาท",
       "footer": "บังคับใช้ RBAC — เห็นเฉพาะสิทธิ์ของแต่ละบทบาท",
-      "active": "ใช้อยู่"
+      "active": "ใช้อยู่",
+      "menuLabel": "สวมบทบาทแทน…",
+      "header": "สวมบทบาทแทน",
+      "searchPlaceholder": "ค้นหาด้วยชื่อ อีเมล หรือบทบาท"
     }
   },
   "commandPalette": {

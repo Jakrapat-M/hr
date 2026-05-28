@@ -3886,13 +3886,18 @@
     "ribbon": {
       "actingAs": "Acting as",
       "switchBack": "Switch back to admin",
-      "scope": "Scope"
+      "scope": "Scope",
+      "actingAsName": "You are acting as {name}",
+      "endProxy": "End Proxy"
     },
     "persona": {
       "eyebrow": "RBAC · 4 tiers",
       "title": "Switch persona",
       "footer": "RBAC enforced — you only see what each persona may access.",
-      "active": "Active"
+      "active": "Active",
+      "menuLabel": "Take Action on Behalf of…",
+      "header": "Take Action on Behalf of",
+      "searchPlaceholder": "Search by name, email, or role"
     }
   },
   "commandPalette": {

@@ -13,6 +13,10 @@ export type DemoUser = {
   email: string;
   password: string;
   roles: Role[];
+  /** Display-only secondary line for the persona picker (SF Proxy Now parity). */
+  jobTitle?: string;
+  /** Display-only secondary line for the persona picker (SF Proxy Now parity). */
+  department?: string;
 };
 
 export const DEMO_USERS: Record<string, DemoUser> = {
@@ -22,6 +26,8 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'admin@humi.test',
     password: 'admin2026',
     roles: ['hr_admin', 'hr_manager', 'spd', 'hrbp', 'manager', 'employee'],
+    jobTitle: 'HR System Administrator',
+    department: 'People Operations',
   },
   'spd@humi.test': {
     id: 'SPD001',
@@ -29,6 +35,8 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'spd@humi.test',
     password: 'spd2026',
     roles: ['spd', 'employee'],
+    jobTitle: 'Shared People Desk Officer',
+    department: 'People Services',
   },
   'hrbp@humi.test': {
     id: 'HRB001',
@@ -36,6 +44,8 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'hrbp@humi.test',
     password: 'hrbp2026',
     roles: ['hrbp', 'employee'],
+    jobTitle: 'HR Business Partner',
+    department: 'People Partners',
   },
   'manager@humi.test': {
     id: 'MGR001',
@@ -43,6 +53,8 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'manager@humi.test',
     password: 'manager2026',
     roles: ['manager', 'employee'],
+    jobTitle: 'Team Manager',
+    department: 'Operations',
   },
   'employee@humi.test': {
     id: 'EMP001',
@@ -50,6 +62,8 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'employee@humi.test',
     password: 'employee2026',
     roles: ['employee'],
+    jobTitle: 'Associate',
+    department: 'Operations',
   },
 
   // T7 — 4 SF-canonical personas from RBAC V2 probe (sf-rbac-probe-{name}-V2.json)
@@ -59,6 +73,8 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'ken@humi.test',
     password: 'ken2026',
     roles: ['hr_admin', 'employee'],
+    jobTitle: 'Senior HR Administrator',
+    department: 'People Operations',
   },
   'apinya@humi.test': {
     id: 'APN001',
@@ -66,6 +82,8 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'apinya@humi.test',
     password: 'apinya2026',
     roles: ['hrbp', 'employee'],
+    jobTitle: 'HR Business Partner — BU2',
+    department: 'People Partners',
   },
   'worawee@humi.test': {
     id: 'WRW001',
@@ -73,6 +91,8 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'worawee@humi.test',
     password: 'worawee2026',
     roles: ['spd', 'employee'],
+    jobTitle: 'Shared People Desk Lead',
+    department: 'People Services',
   },
   'rungrote@humi.test': {
     id: 'RNG001',
@@ -80,6 +100,8 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'rungrote@humi.test',
     password: 'rungrote2026',
     roles: ['manager', 'employee'],
+    jobTitle: 'Finance Manager',
+    department: 'Finance',
   },
 
   // HRIS Admin — system-config tier (Picklist Centre, BenefitProgram,
@@ -94,6 +116,8 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     email: 'hris@humi.test',
     password: 'hris2026',
     roles: ['hr_manager', 'employee'],
+    jobTitle: 'HRIS Administrator',
+    department: 'HR Information Systems',
   },
 };
 
