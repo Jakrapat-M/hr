@@ -63,7 +63,7 @@ export function ApprovalInbox({ expectedStep, role, title, subtitle }: ApprovalI
     <div className="pb-8" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Header */}
       <div>
-        <h1 className="font-display text-[22px] font-semibold text-ink">{title}</h1>
+        <h1 className="font-display text-2xl font-semibold text-ink">{title}</h1>
         <p className="text-small text-ink-muted mt-1">{subtitle}</p>
       </div>
 

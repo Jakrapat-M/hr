@@ -65,7 +65,7 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
   return (
     <div className="humi-card humi-card--cream">
       <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
-      <div className="font-display text-[18px] font-semibold text-ink">{nameTh}</div>
+      <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
       <div className="text-small text-ink-muted mb-3">{nameEn}</div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" style={{ marginTop: 8 }}>
         <div>
@@ -213,7 +213,7 @@ export default function ActingPage() {
         </div>
         <div>
           <div className="humi-eyebrow">การดำเนินการ</div>
-          <h1 className="font-display text-[20px] font-semibold text-ink">มอบหมายปฏิบัติการ</h1>
+          <h1 className="font-display text-xl font-semibold text-ink">มอบหมายปฏิบัติการ</h1>
         </div>
       </div>
 

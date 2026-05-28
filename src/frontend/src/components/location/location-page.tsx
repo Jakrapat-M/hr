@@ -30,7 +30,7 @@ function LocationTreeNode({ node, depth = 0, selectedId, onSelect }: { node: Loc
  )}
  <MapPin className="h-4 w-4 text-ink-muted flex-shrink-0" />
  <span className="text-sm font-medium truncate">{node.nameEn}</span>
- <Badge variant="neutral" className="ml-auto text-[10px]">{node.type}</Badge>
+ <Badge variant="neutral" className="ml-auto text-xs">{node.type}</Badge>
  <span className="text-xs text-ink-muted">{node.headcount}</span>
  </div>
  {expanded && hasChildren && (

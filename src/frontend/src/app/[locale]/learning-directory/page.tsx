@@ -201,7 +201,7 @@ export default function LearningDirectoryPage() {
                   key={member.initials + i}
                   className={cn(
                     'inline-flex h-8 w-8 items-center justify-center rounded-full',
-                    'text-[11px] font-semibold',
+                    'text-xs font-semibold',
                     'ring-2 ring-[color:var(--color-surface)]',
                     i > 0 && '-ml-2',
                     member.tone === 'teal' && 'bg-accent-soft text-accent-ink',
@@ -270,7 +270,7 @@ export default function LearningDirectoryPage() {
                   {course.tag && course.tag_label && (
                     <span
                       className={cn(
-                        'ml-auto inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em]',
+                        'ml-auto inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.08em]',
                         TAG_TONE[course.tag]
                       )}
                     >

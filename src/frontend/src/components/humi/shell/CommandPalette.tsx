@@ -134,7 +134,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             className="flex-1 bg-transparent text-body text-ink placeholder:text-ink-muted focus:outline-none"
           />
           <kbd
-            className="hidden sm:inline-flex items-center gap-0.5 rounded-md border border-hairline bg-canvas-soft px-1.5 py-0.5 text-[11px] text-ink-muted"
+            className="hidden sm:inline-flex items-center gap-0.5 rounded-md border border-hairline bg-canvas-soft px-1.5 py-0.5 text-xs text-ink-muted"
             aria-label="กด Escape เพื่อปิด"
           >
             Esc
@@ -167,7 +167,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 >
                   <span className="flex-1 text-small font-medium">{cmd.label}</span>
                   {cmd.group && (
-                    <span className="shrink-0 text-[11px] text-ink-faint">{cmd.group}</span>
+                    <span className="shrink-0 text-xs text-ink-faint">{cmd.group}</span>
                   )}
                 </button>
               </li>
@@ -177,10 +177,10 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
         {/* Footer hint — hidden on mobile (too cramped), visible sm+ */}
         <div className="hidden sm:flex items-center gap-3 border-t border-hairline px-4 py-2.5">
-          <span className="text-[11px] text-ink-faint">
+          <span className="text-xs text-ink-faint">
             ↑↓ เลือก · Enter ไป · Esc ปิด
           </span>
-          <span className="ml-auto text-[11px] text-ink-faint">
+          <span className="ml-auto text-xs text-ink-faint">
             {isMac() ? '⌘K' : 'Ctrl+K'}
           </span>
         </div>

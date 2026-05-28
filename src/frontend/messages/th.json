@@ -4110,7 +4110,9 @@
       "dvtPreviousIdPlaceholder": "กรอกถ้าเคยฝึกงาน/เคยเป็น DVT",
       "dvtPreviousIdHelp": "ใช้ค้นประวัติเดิมและเติมข้อมูลอัตโนมัติเมื่อพบข้อมูลพนักงานฝึกงานเดิม",
       "replacedEmployeeId": "รหัสพนักงานที่ถูกแทนที่",
-      "replacedEmployeeIdPlaceholder": "รหัสพนักงานที่ถูกแทนที่โดยการจ้างนี้"
+      "replacedEmployeeIdPlaceholder": "รหัสพนักงานที่ถูกแทนที่โดยการจ้างนี้",
+      "passportId": "เลขหนังสือเดินทาง (Passport ID)",
+      "passportIdPlaceholder": "เลขหนังสือเดินทาง (ไม่บังคับ)"
     },
     "globalInfo": {
       "disabilityAttachment": "เอกสารแนบ (สถานะความพิการ)"
@@ -4118,6 +4120,8 @@
     "biographical": {
       "sectionTitle": "ข้อมูลส่วนตัว",
       "sectionSubtitle": "ชื่อท้องถิ่น ชื่อเล่น เพศ สัญชาติ กรุ๊ปเลือด สถานภาพสมรส",
+      "otherTitleTh": "ยศ/ตำแหน่งทางวิชาการ (Other Title TH)",
+      "selectOtherTitleTh": "— เลือกยศ/ตำแหน่ง —",
       "salutationLocal": "คำนำหน้า (ภาษาท้องถิ่น)",
       "firstNameLocal": "ชื่อ (TH)",
       "lastNameLocal": "นามสกุล (TH)",
@@ -4195,7 +4199,28 @@
       "zipCodePlaceholder": "เช่น 11000",
       "countryPlaceholder": "THA",
       "relationshipTypePlaceholder": "เช่น ผู้จัดการ / หัวหน้างาน",
-      "personNamePlaceholder": "ชื่อ-นามสกุล"
+      "personNamePlaceholder": "ชื่อ-นามสกุล",
+      "addressType": "ประเภทที่อยู่",
+      "addressTypePlaceholder": "เลือกประเภทที่อยู่",
+      "floor": "ชั้น",
+      "floorPlaceholder": "เช่น 3",
+      "roomNo": "ห้องที่",
+      "roomNoPlaceholder": "เช่น 302",
+      "building": "อาคาร",
+      "buildingPlaceholder": "เช่น อาคาร A",
+      "street": "ถนน",
+      "streetPlaceholder": "เช่น พหลโยธิน",
+      "ecPySystemGroup": "ข้อมูล Payroll Integration (ระบบ)",
+      "ecPyProvinceCode": "รหัสจังหวัด (EC-PY)",
+      "ecPyProvinceText": "ชื่อจังหวัด (EC-PY)",
+      "ecPyPostalCode": "รหัสไปรษณีย์ (EC-PY)",
+      "socialSection": "Social Accounts",
+      "socialDomain": "ช่องทาง",
+      "socialImId": "ไอดี / เบอร์",
+      "socialImIdPlaceholder": "เช่น @username",
+      "socialUrl": "URL",
+      "socialUrlPlaceholder": "https://",
+      "addSocial": "+ เพิ่ม Social Account"
     },
     "employeeInfo": {
       "sectionTitle": "ข้อมูลพนักงาน",
@@ -4207,6 +4232,7 @@
       "seniorityStartDate": "วันนับอายุงาน",
       "retirementDate": "วันเกษียณ",
       "pfServiceDate": "วันเข้ากองทุนสำรองเลี้ยงชีพ",
+      "pfServiceEndDate": "วันออกกองทุนสำรองเลี้ยงชีพ",
       "dvtPreviousId": "รหัสพนักงานเดิม (DVT)",
       "cgPreviousEmployeeId": "รหัสพนักงาน CG เดิม",
       "ssn": "เลขประกันสังคม / เลขประจำตัวประชาชน",
@@ -4947,6 +4973,114 @@
       "allDepartments": "ทุกแผนก",
       "week": "สัปดาห์ 19–25 พ.ค.",
       "export": "ส่งออก"
+    }
+  },
+  "benefitEnroll": {
+    "cardLabel": "ลงทะเบียนสวัสดิการ",
+    "cardDesc": "ลงทะเบียนสวัสดิการประจำปีให้พนักงานรายบุคคล",
+    "pageTitle": "ลงทะเบียนสวัสดิการ",
+    "backToEmployee": "กลับไปหน้าข้อมูลพนักงาน",
+    "demoNote": "หน้าจอจำลองสำหรับให้ HR ตรวจทาน — ยังไม่เชื่อมต่อระบบหลังบ้าน ไม่บันทึก payroll หรือ workflow จริง",
+    "activeEnrolments": "สวัสดิการที่ลงทะเบียนแล้ว",
+    "eligiblePlans": "สวัสดิการที่ลงทะเบียนได้",
+    "entitlement": "วงเงินสิทธิ์",
+    "enrolledAmount": "จำนวนที่ลงทะเบียน",
+    "uncapped": "ไม่จำกัด",
+    "enrolNow": "ลงทะเบียน",
+    "enrolmentAmount": "จำนวนเงินลงทะเบียน",
+    "schedulePeriod": "รอบลงทะเบียน",
+    "effectiveDate": "วันที่มีผล",
+    "confirm": "ยืนยัน",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "successTitle": "ลงทะเบียนสวัสดิการเรียบร้อยแล้ว",
+    "successBody": "บันทึกการลงทะเบียนเรียบร้อยแล้ว และแสดงในรายการสวัสดิการที่ลงทะเบียนแล้ว",
+    "enrolAnother": "ลงทะเบียนสวัสดิการอื่น",
+    "amountExceeds": "จำนวนเงินเกินวงเงินสิทธิ์",
+    "notEligible": "ไม่ผ่านเงื่อนไข",
+    "requiredField": "จำเป็นต้องกรอก",
+    "emptyEnrolments": "ยังไม่มีสวัสดิการที่ลงทะเบียน",
+    "emptyEnrolmentsDesc": "เริ่มลงทะเบียนสวัสดิการประจำปีจากรายการด้านล่าง",
+    "eligible": "ลงทะเบียนได้",
+    "whyNotEligible": "เหตุผลที่ลงทะเบียนไม่ได้",
+    "employeeId": "รหัสพนักงาน",
+    "planId": "รหัสสวัสดิการ"
+  },
+  "moduleContext": {
+    "modules": {
+      "ec": "ศูนย์ข้อมูลพนักงาน",
+      "time": "เวลา & การเข้างาน",
+      "payroll": "เงินเดือน",
+      "benefits": "สวัสดิการ",
+      "performance": "ผลงาน",
+      "learning": "การเรียนรู้",
+      "recruiting": "สรรหา"
+    },
+    "personas": {
+      "employee": "พนักงาน",
+      "manager": "ผู้จัดการ",
+      "hr_admin": "ผู้ดูแลระบบ HR",
+      "hr_manager": "ผู้จัดการ HR"
+    },
+    "stats": {
+      "pendingApprovals": "รออนุมัติ",
+      "openRequests": "คำขอที่เปิดอยู่",
+      "teamOnLeave": "ลางานวันนี้",
+      "pendingPayroll": "งานเงินเดือนที่รอดำเนินการ",
+      "activeClaims": "การเบิกที่ใช้งานอยู่"
+    }
+  },
+  "moduleTiles": {
+    "eyebrow": "โมดูล",
+    "title": "พื้นที่ทำงานของคุณ",
+    "ec": {
+      "nameTh": "ข้อมูลพนักงาน",
+      "nameEn": "Employee Center",
+      "cta": "ดูโปรไฟล์ของฉัน",
+      "ctaManager": "ดูไดเรกทอรีทีม",
+      "ctaAdmin": "จัดการพนักงาน"
+    },
+    "time": {
+      "nameTh": "เวลา & การเข้างาน",
+      "nameEn": "Time & Attendance",
+      "cta": "เช็คอิน / เช็คเอาท์",
+      "ctaManager": "อนุมัติคำขอเวลา",
+      "ctaAdmin": "จัดการตารางงาน"
+    },
+    "payroll": {
+      "nameTh": "เงินเดือน",
+      "nameEn": "Payroll",
+      "cta": "ดูสลิปเงินเดือน",
+      "ctaManager": "ภาพรวมเงินเดือนทีม",
+      "ctaAdmin": "ประมวลผลเงินเดือน"
+    },
+    "benefits": {
+      "nameTh": "สวัสดิการ",
+      "nameEn": "Benefits",
+      "cta": "ความคุ้มครองของฉัน",
+      "ctaManager": "สวัสดิการทีม",
+      "ctaAdmin": "จัดการแผน"
+    },
+    "performance": {
+      "nameTh": "ผลงาน",
+      "nameEn": "Performance",
+      "cta": "เป้าหมายของฉัน",
+      "external": "ระบบภายนอก",
+      "externalNote": "การจัดการผลงานดำเนินการในระบบ SuccessFactors"
+    },
+    "learning": {
+      "nameTh": "การเรียนรู้",
+      "nameEn": "Learning",
+      "cta": "คอร์สของฉัน",
+      "external": "ระบบภายนอก",
+      "externalNote": "การจัดการการเรียนรู้ดำเนินการในพอร์ทัล LMS"
+    },
+    "recruiting": {
+      "nameTh": "สรรหา",
+      "nameEn": "Recruiting",
+      "cta": "ดูตำแหน่งที่เปิดรับ",
+      "external": "ระบบภายนอก",
+      "externalNote": "การสรรหาจัดการในพอร์ทัลการได้มาซึ่งบุคลากร"
     }
   }
 }

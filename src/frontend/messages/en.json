@@ -3330,9 +3330,9 @@
   },
   "spd_management": {
     "title": "SPD Case Management",
-    "titleTh": "การจัดการเคส SPD",
+    "titleTh": "SPD Case Management (TH)",
     "subtitle": "Case-load overview, escalations queue and override audit trail",
-    "subtitleTh": "ภาพรวมเคส คิวการยกระดับ และประวัติการ Override",
+    "subtitleTh": "Case-load overview, escalations and override audit trail (TH)",
     "persona": "SPD Specialist",
     "kpi": {
       "activeCases": "Active Cases",
@@ -3342,7 +3342,7 @@
     },
     "escalations": {
       "title": "Escalations Queue",
-      "titleTh": "คิวการยกระดับ",
+      "titleTh": "Escalations Queue (TH)",
       "subtitle": "Approval requests escalated beyond normal SLA",
       "caseId": "Case ID",
       "type": "Type",
@@ -3355,7 +3355,7 @@
     },
     "overridePanel": {
       "title": "Recent Override Actions",
-      "titleTh": "รายการ Override ล่าสุด",
+      "titleTh": "Recent Override Actions (TH)",
       "subtitle": "Audit trail for all override actions taken by this account",
       "caseId": "Case ID",
       "action": "Action",
@@ -3729,49 +3729,49 @@
     "eyebrow": "Modules",
     "title": "Your workspace",
     "ec": {
-      "nameTh": "ข้อมูลพนักงาน",
+      "nameTh": "Employee Center (TH)",
       "nameEn": "Employee Center",
       "cta": "View my profile",
       "ctaManager": "View team directory",
       "ctaAdmin": "Manage employees"
     },
     "time": {
-      "nameTh": "เวลา & การเข้างาน",
+      "nameTh": "Time & Attendance (TH)",
       "nameEn": "Time & Attendance",
       "cta": "Clock in / out",
       "ctaManager": "Approve time requests",
       "ctaAdmin": "Manage schedules"
     },
     "payroll": {
-      "nameTh": "เงินเดือน",
+      "nameTh": "Payroll (TH)",
       "nameEn": "Payroll",
       "cta": "View payslip",
       "ctaManager": "Team payroll overview",
       "ctaAdmin": "Run payroll"
     },
     "benefits": {
-      "nameTh": "สวัสดิการ",
+      "nameTh": "Benefits (TH)",
       "nameEn": "Benefits",
       "cta": "My coverage",
       "ctaManager": "Team benefits",
       "ctaAdmin": "Manage plans"
     },
     "performance": {
-      "nameTh": "ผลงาน",
+      "nameTh": "Performance (TH)",
       "nameEn": "Performance",
       "cta": "My goals",
       "external": "External system",
       "externalNote": "Performance management is handled in the SuccessFactors system."
     },
     "learning": {
-      "nameTh": "การเรียนรู้",
+      "nameTh": "Learning (TH)",
       "nameEn": "Learning",
       "cta": "My courses",
       "external": "External system",
       "externalNote": "Learning management is handled in the LMS portal."
     },
     "recruiting": {
-      "nameTh": "สรรหา",
+      "nameTh": "Recruiting (TH)",
       "nameEn": "Recruiting",
       "cta": "View openings",
       "external": "External system",
@@ -4231,7 +4231,9 @@
       "dvtPreviousIdPlaceholder": "Enter if previously an intern/DVT",
       "dvtPreviousIdHelp": "Used to look up previous intern records and prefill matching data when available",
       "replacedEmployeeId": "Replaced Employee ID",
-      "replacedEmployeeIdPlaceholder": "Employee ID of the person being replaced"
+      "replacedEmployeeIdPlaceholder": "Employee ID of the person being replaced",
+      "passportId": "Passport ID",
+      "passportIdPlaceholder": "Passport number (optional)"
     },
     "globalInfo": {
       "disabilityAttachment": "Disability Document (Attachment)"
@@ -4239,6 +4241,8 @@
     "biographical": {
       "sectionTitle": "Personal Information",
       "sectionSubtitle": "Local name, nickname, gender, nationality, blood type, marital status",
+      "otherTitleTh": "Other Title (TH)",
+      "selectOtherTitleTh": "— Select title —",
       "salutationLocal": "Salutation (Local)",
       "firstNameLocal": "Firstname (TH)",
       "lastNameLocal": "Lastname (TH)",
@@ -4316,7 +4320,28 @@
       "zipCodePlaceholder": "e.g. 11000",
       "countryPlaceholder": "THA",
       "relationshipTypePlaceholder": "e.g. Manager / Supervisor",
-      "personNamePlaceholder": "Full name"
+      "personNamePlaceholder": "Full name",
+      "addressType": "Address Type",
+      "addressTypePlaceholder": "Select address type",
+      "floor": "Floor",
+      "floorPlaceholder": "e.g. 3",
+      "roomNo": "Room No.",
+      "roomNoPlaceholder": "e.g. 302",
+      "building": "Building",
+      "buildingPlaceholder": "e.g. Building A",
+      "street": "Street",
+      "streetPlaceholder": "e.g. Pahon Yothin",
+      "ecPySystemGroup": "Payroll Integration Fields (System)",
+      "ecPyProvinceCode": "Province Code (EC-PY)",
+      "ecPyProvinceText": "Province Name (EC-PY)",
+      "ecPyPostalCode": "Postal Code (EC-PY)",
+      "socialSection": "Social Accounts",
+      "socialDomain": "Platform",
+      "socialImId": "ID / Number",
+      "socialImIdPlaceholder": "e.g. @username",
+      "socialUrl": "URL",
+      "socialUrlPlaceholder": "https://",
+      "addSocial": "+ Add Social Account"
     },
     "employeeInfo": {
       "sectionTitle": "Employee Information",
@@ -4328,6 +4353,7 @@
       "seniorityStartDate": "Seniority Date",
       "retirementDate": "Retirement Date",
       "pfServiceDate": "PVD Entry Date",
+      "pfServiceEndDate": "PVD Exit Date",
       "dvtPreviousId": "Previous Employee ID (DVT)",
       "cgPreviousEmployeeId": "Previous CG Employee ID",
       "ssn": "SSN / National ID",
@@ -5025,5 +5051,36 @@
       "week": "Week of 19–25 May",
       "export": "Export"
     }
+  },
+  "benefitEnroll": {
+    "cardLabel": "Enrol Benefits",
+    "cardDesc": "Enrol an individual employee in an annual benefit plan",
+    "pageTitle": "Enrol Benefits",
+    "backToEmployee": "Back to employee record",
+    "demoNote": "Mockup screen for HR review — no backend wiring; does not post payroll or run a real workflow.",
+    "activeEnrolments": "Active enrolments",
+    "eligiblePlans": "Eligible plans",
+    "entitlement": "Entitlement",
+    "enrolledAmount": "Enrolled amount",
+    "uncapped": "Uncapped",
+    "enrolNow": "Enrol Now",
+    "enrolmentAmount": "Enrolment amount",
+    "schedulePeriod": "Schedule period",
+    "effectiveDate": "Effective date",
+    "confirm": "Confirm",
+    "save": "Save",
+    "cancel": "Cancel",
+    "successTitle": "Benefit enrolment saved",
+    "successBody": "The enrolment has been recorded and now appears in active enrolments.",
+    "enrolAnother": "Enrol another plan",
+    "amountExceeds": "Amount exceeds the entitlement",
+    "notEligible": "Not eligible",
+    "requiredField": "Required",
+    "emptyEnrolments": "No active enrolments yet",
+    "emptyEnrolmentsDesc": "Start by enrolling the employee in an annual plan below.",
+    "eligible": "Eligible",
+    "whyNotEligible": "Why not eligible",
+    "employeeId": "Employee ID",
+    "planId": "Plan ID"
   }
 }

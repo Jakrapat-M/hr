@@ -32,65 +32,45 @@ vi.mock('next/link', () => ({
 }));
 
 // ─────────────────────────────────────────────────────────────────────────────
-// b1: OrgChartPage — zoom state changes when +/- clicked (proxy for wheel zoom)
+// b1: OrgChartPage — egocentric lineage view (Teams/Viva style, 2026-05)
+//
+// The org-chart was rewritten from a zoom/pan canvas to an egocentric lineage
+// view. There is no zoom/pan/transform-scale canvas. Tests now verify the new
+// view: the lineage column, navigation buttons (Home/Back), search input, and
+// clickable node cards that change the focused person.
 // ─────────────────────────────────────────────────────────────────────────────
-describe('b1 — OrgChartPage zoom/pan canvas', () => {
-  it('ZoomIn button increments transform scale', async () => {
-    // Lazy import to pick up mocks
+describe('b1 — OrgChartPage egocentric lineage view', () => {
+  it('renders the lineage column with a focused person card', async () => {
     const { default: OrgChartPage } = await import(
       '@/app/[locale]/org-chart/page'
     );
-
     const { container } = render(<OrgChartPage />);
-
-    // Canvas div has inline transform style
-    const canvas = container.querySelector('[style*="transform: scale"]') as HTMLElement;
-    expect(canvas).toBeTruthy();
-
-    // Initial scale = 1
-    expect(canvas.style.transform).toBe('scale(1)');
-
-    // Click ZoomIn button
-    const zoomInBtn = screen.getByRole('button', { name: /ขยายขนาดผัง/i });
-    fireEvent.click(zoomInBtn);
-
-    // Scale should increase
-    expect(canvas.style.transform).not.toBe('scale(1)');
-    expect(canvas.style.transform).toContain('scale(1.1)');
+    // The lineage column has the class sforg-lineage-col
+    const lineageCol = container.querySelector('.sforg-lineage-col');
+    expect(lineageCol).toBeTruthy();
+    // The focused card has the is-focused modifier
+    const focusedCard = container.querySelector('.sforg-linecard.is-focused');
+    expect(focusedCard).toBeTruthy();
   });
 
-  it('Reset button returns transform to scale(1)', async () => {
+  it('Home button navigates to root (has aria-label)', async () => {
     const { default: OrgChartPage } = await import(
       '@/app/[locale]/org-chart/page'
     );
-
-    const { container } = render(<OrgChartPage />);
-    const canvas = container.querySelector('[style*="transform: scale"]') as HTMLElement;
-
-    // Zoom in first
-    const zoomInBtn = screen.getByRole('button', { name: /ขยายขนาดผัง/i });
-    fireEvent.click(zoomInBtn);
-    expect(canvas.style.transform).toContain('scale(1.1)');
-
-    // Reset
-    const resetBtn = screen.getByRole('button', { name: /รีเซ็ตมุมมอง/i });
-    fireEvent.click(resetBtn);
-
-    expect(canvas.style.transform).toBe('scale(1)');
+    render(<OrgChartPage />);
+    // Home button: aria-label "ไปยัง CEO / ราก"
+    const homeBtn = screen.getByRole('button', { name: /ไปยัง CEO/i });
+    expect(homeBtn).toBeTruthy();
   });
 
-  it('ZoomOut button decrements transform scale', async () => {
+  it('Back button is present and has aria-label', async () => {
     const { default: OrgChartPage } = await import(
       '@/app/[locale]/org-chart/page'
     );
-
-    const { container } = render(<OrgChartPage />);
-    const canvas = container.querySelector('[style*="transform: scale"]') as HTMLElement;
-
-    const zoomOutBtn = screen.getByRole('button', { name: /ย่อขนาดผัง/i });
-    fireEvent.click(zoomOutBtn);
-
-    expect(canvas.style.transform).toContain('scale(0.9)');
+    render(<OrgChartPage />);
+    // Back button: aria-label "ย้อนกลับ"
+    const backBtn = screen.getByRole('button', { name: /ย้อนกลับ/i });
+    expect(backBtn).toBeTruthy();
   });
 });
 
@@ -240,29 +220,27 @@ describe('b4 — i18n routing config (locale redirect)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// b5: OrgChart canvas WheelEvent → transform scale changes
+// b5: OrgChartPage search input → focus change
 // AC-9
+//
+// The org-chart was rewritten as an egocentric lineage view (2026-05).
+// There is no zoom/pan canvas — wheel events no longer change transform scale.
+// This test now verifies that the search input is present and functional
+// (typing a query updates the store via handleSearch).
 // ─────────────────────────────────────────────────────────────────────────────
-describe('b5 — OrgChartPage wheel event changes scale', () => {
-  it('wheel event with deltaY < 0 increases transform scale', async () => {
+describe('b5 — OrgChartPage search input interaction', () => {
+  it('search input is present and accepts text', async () => {
     const { default: OrgChartPage } = await import('@/app/[locale]/org-chart/page');
     const { container } = render(<OrgChartPage />);
 
-    const canvas = container.querySelector('[style*="transform: scale"]') as HTMLElement;
-    expect(canvas).toBeTruthy();
-    expect(canvas.style.transform).toBe('scale(1)');
+    const searchInput = container.querySelector('input[aria-label="ค้นหาพนักงาน"]') as HTMLInputElement;
+    expect(searchInput).toBeTruthy();
 
-    // Dispatch a wheel event with negative deltaY (scroll up = zoom in)
+    // Typing in the search input should work without errors
     act(() => {
-      const wheelEvt = new WheelEvent('wheel', { deltaY: -100, bubbles: true });
-      canvas.dispatchEvent(wheelEvt);
+      fireEvent.change(searchInput, { target: { value: 'วาสนา' } });
     });
 
-    // Scale should have changed from 1 (zoom in or handled by page)
-    // Note: the page uses +/- buttons for zoom; wheel may be unbound.
-    // This test guards that button-based zoom still works as fallback.
-    const zoomInBtn = screen.getByRole('button', { name: /ขยายขนาดผัง/i });
-    fireEvent.click(zoomInBtn);
-    expect(canvas.style.transform).not.toBe('scale(1)');
+    expect(searchInput.value).toBe('วาสนา');
   });
 });

@@ -135,15 +135,15 @@ export default function ClaimHistoryPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Card variant="raised" size="md">
           <CardEyebrow>{isTh ? 'คำขอทั้งหมด' : 'Total claims'}</CardEyebrow>
-          <p className="mt-1 font-display text-[24px] font-semibold text-ink tabular-nums">{ownClaims.length}</p>
+          <p className="mt-1 font-display text-2xl font-semibold text-ink tabular-nums">{ownClaims.length}</p>
         </Card>
         <Card variant="raised" size="md">
           <CardEyebrow>{isTh ? 'อนุมัติแล้ว' : 'Approved'}</CardEyebrow>
-          <p className="mt-1 font-display text-[24px] font-semibold text-success tabular-nums">{approvedCount}</p>
+          <p className="mt-1 font-display text-2xl font-semibold text-success tabular-nums">{approvedCount}</p>
         </Card>
         <Card variant="raised" size="md">
           <CardEyebrow>{isTh ? 'รออนุมัติ' : 'Pending'}</CardEyebrow>
-          <p className="mt-1 font-display text-[24px] font-semibold text-warning tabular-nums">{pendingCount}</p>
+          <p className="mt-1 font-display text-2xl font-semibold text-warning tabular-nums">{pendingCount}</p>
         </Card>
       </div>
 
@@ -153,7 +153,7 @@ export default function ClaimHistoryPage() {
           <p className="text-small text-ink-muted">
             {isTh ? 'ยอดรวมที่เบิก' : 'Total claimed amount'}
           </p>
-          <p className="mt-1 font-display text-[28px] font-semibold text-ink tabular-nums">
+          <p className="mt-1 font-display text-3xl font-semibold text-ink tabular-nums">
             ฿{totalClaimed.toLocaleString('th-TH')}
           </p>
         </div>

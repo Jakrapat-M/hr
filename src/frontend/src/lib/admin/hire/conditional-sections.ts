@@ -50,7 +50,11 @@ export function createEmptyDependentEntry(): DependentEntry {
     phone: '',
     email: '',
     isTaxDependent: false,
+    copyAddressFromEmployee: false,
     addressLine1: '',
+    building: '',
+    floor: '',
+    street: '',
     attachmentName: null,
   }
 }

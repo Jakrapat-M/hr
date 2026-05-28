@@ -115,7 +115,7 @@ function MultiChipField({
               type="button"
               onClick={() => toggle(o.value)}
               className={[
-                'rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors',
+                'rounded-full px-2.5 py-1 text-sm font-medium transition-colors',
                 active
                   ? 'bg-accent text-canvas'
                   : 'bg-canvas-soft text-ink-muted hover:bg-accent-soft hover:text-accent-ink',

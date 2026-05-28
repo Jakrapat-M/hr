@@ -80,7 +80,7 @@ export function ResignationPage() {
     return (
       <div className="pb-8 flex flex-col gap-5">
         <div>
-          <h1 className="font-display text-[22px] font-semibold text-ink">คำขอลาออก</h1>
+          <h1 className="font-display text-2xl font-semibold text-ink">คำขอลาออก</h1>
           <p className="text-small text-ink-muted mt-1">
             ยื่นคำขอลาออกผ่านระบบ Self-Service (BRD #172)
           </p>
@@ -150,7 +150,7 @@ export function ResignationPage() {
   return (
     <div className="pb-8 flex flex-col gap-5">
       <div>
-        <h1 className="font-display text-[22px] font-semibold text-ink">คำขอลาออก</h1>
+        <h1 className="font-display text-2xl font-semibold text-ink">คำขอลาออก</h1>
         <p className="text-small text-ink-muted mt-1">
           ยื่นคำขอลาออกผ่านระบบ Self-Service — SPD จะรับทราบและดำเนินการต่อ (BRD #172)
         </p>

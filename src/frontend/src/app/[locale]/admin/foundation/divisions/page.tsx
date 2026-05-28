@@ -49,7 +49,7 @@ export default function FoundationDivisionsPage() {
       <div className="humi-row" style={{ marginBottom: 20, alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div className="humi-eyebrow">Admin · EC Foundation</div>
-          <h1 className="mt-1 font-display text-[24px] font-semibold text-ink">หน่วยธุรกิจ</h1>
+          <h1 className="mt-1 font-display text-2xl font-semibold text-ink">หน่วยธุรกิจ</h1>
           <p className="mt-1 text-small text-ink-soft">
             กลุ่มบริษัทและหน่วยธุรกิจระดับสูงสุด {divisions.length} รายการ
           </p>
@@ -72,7 +72,7 @@ export default function FoundationDivisionsPage() {
           style={{ marginBottom: 20, border: '1.5px solid var(--color-accent)', padding: 20 }}
         >
           <div className="humi-row" style={{ marginBottom: 14 }}>
-            <h2 className="font-display text-[16px] font-semibold text-ink">เพิ่มหน่วยธุรกิจใหม่</h2>
+            <h2 className="font-display text-base font-semibold text-ink">เพิ่มหน่วยธุรกิจใหม่</h2>
             <button
               type="button"
               className="humi-icon-btn"
@@ -170,7 +170,7 @@ export default function FoundationDivisionsPage() {
               </div>
               <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                 <div className="humi-row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                  <span className="font-display text-[15px] font-semibold text-ink">
+                  <span className="font-display text-base font-semibold text-ink">
                     {div.nameTh}
                   </span>
                   <span className="humi-tag" style={{ fontSize: 10 }}>{div.code}</span>

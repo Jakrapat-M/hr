@@ -1,3 +1,53 @@
+# HANDOFF — 2026-05-27 (sidebar resize + org-chart → Teams/Viva lineage)
+
+**Phase:** UI mockup (no backend). **Status: UNCOMMITTED on `master`.** Two independent features built + verified this session; nothing committed yet.
+
+> ⚠️ Commit before risky ops. Per user prefs: **branch off `master`**, **commit only when asked**, **one topic at a time** (the two features below are separable commits), **AI never moves Linear to Done**.
+
+## What was built (2 features, both uncommitted)
+
+### 1. Sidebar width drag-resize + removed duplicate topbar toggle
+- **`shell/Topbar.tsx`** — removed the desktop sidebar-collapse button (`PanelLeft`) that **duplicated** the rail collapse button from PR #187 but *fully hid* the rail instead of folding to it. Dropped now-unused `sidebarOpen`/`toggleSidebar` destructure + `PanelLeft` import. (Store action + `.sidebar-collapsed` CSS kept as harmless dead code; `humi-phase-b.test` still tests the store action directly — untouched.)
+- **`shell/Sidebar.tsx`** — added a **drag-to-resize handle** (`.bp-resize-handle`) on the sidebar's right edge. Local width state, persisted to `localStorage['bp-sidebar-w']`, clamp **200–420px**, applies `--humi-sidebar-w` on `document.documentElement`. Pointer-drag + keyboard (←/→ step 16, Home/End) + double-click reset (256). ARIA `role=separator`. Only renders on desktop static sidebar when panel expanded (`!isDrawer && !collapsedDesktop`). Reuses the existing rail collapse (`bp-panel-collapsed`).
+- **`globals.css`** — `.humi-app` grid `256px` → **`var(--humi-sidebar-w, 256px)`** (the resize lever; collapsed/`:has(.bp-collapsed)` overrides still win by specificity). Added `.bp-resize-handle` styles + `.bp-shellnav { position: relative }`.
+- **Verified (Playwright, real pointer drag):** drag +100 → grid `256px→356px`, persists `bp-sidebar-w`, `aria-valuenow` syncs; clamp at 420 max. tsc clean.
+
+### 2. /org-chart redesigned → **MS Teams / Viva "Organization" egocentric lineage**
+- Reference = the Teams/Viva Organization view (user screenshot). An intermediate **top-down tree canvas** was built first then **fully replaced** — do not resurrect it.
+- **`app/[locale]/org-chart/page.tsx`** — LEFT panel rewritten; RIGHT detail panel (header/contact/employment incl. `useOrgUnits` binding/skills/goals/certs/upcoming/HR-note) preserved verbatim. Store slice `humi-orgchart-slice.ts` shape **unchanged** `{ query, selectedId, setQuery, select }`.
+  - LEFT = single centered column: breadcrumb (Home + Back, local focus-history stack) → **manager-chain toggle** → focused card → "ผู้ที่รายงานต่อ X" reports → "X ทำงานร่วมกับ" peers carousel.
+  - **Manager-chain toggle gangs the WHOLE upline branch** (per user: not just upper/lower). Default **collapsed** = pill "ดูสายบังคับบัญชา (N)" (stacked avatars), all ancestors hidden; expanded = full chain to root + "ย่อสายบังคับบัญชา" (ChevronUp). `expandedFocusIds: Set` keyed by focus id (no useEffect).
+  - Focused card emphasized (teal ring + accent-soft) + "ดูโปรไฟล์เต็ม" (→ `/{locale}/profile`, mockup) + "N รายงาน · N ตรง".
+  - Click any card / peer / breadcrumb → **re-focus** (`select(id)` → recompute lineage/reports/peers + updates RIGHT panel; scrolls col to top). Search jump-focuses first match.
+  - **Presence dots** deterministic from id (`presenceOf`): available=sage, busy=pumpkin `--color-danger`, offline=muted — **NO RED**.
+  - Data helpers in page.tsx: `buildChildIndex` / `subtreeSize` / `pickRoot` / `ancestorsOf` (root = `managerId===null`, largest subtree if multiple).
+- **`globals.css`** — `.sforg-*` lineage classes (lineage-col, linecard `is-focused`, presence, report-badge, show-more pill, avatar-stack, section-divider/label, peers-row, peercard, carousel-btn). Light Humi theme (cream/navy/teal), no raw hex, no red. `.sforg-linecard` **max-width 720px**.
+- **Layout:** 2-col grid **`lg:grid-cols-[1.5fr_1fr]`** — chart is the dominant column (was `1.1fr_1.5fr`, user said chart too narrow → flipped; chart now ~927px/60%). `<lg` stacks (chart on top, detail below).
+- **Verified (Playwright):** grid 927/618px, card 720px, lineage renders (focused + peers + dividers); toggle collapse→pill-only / expand→full 4-ancestor chain, both ways; re-focus updates right panel. tsc clean. Only console error = `favicon.ico 404` (benign).
+
+## Don't chase (pre-existing on master)
+- `src/components/humi/shell/__tests__/sidebar-dedupe.test.tsx` — **2 failing tests** (`/permissions` + `/integrations` dedupe). Confirmed pre-existing via `git stash` of this session's files. Not caused by this work.
+- Baseline 62 failing tests across 21 files (see 2026-05-26 handoff).
+
+## Gotchas hit this session (reusable)
+- **Turbopack stale CSS cache:** editing `globals.css` can throw a transient `Unexpected token CloseParenthesis` parse error at a *bundled* line (source is fine) → page renders blank. Fix: **re-save globals.css** to force a clean HMR recompile. Do NOT `rm -rf .next` (hook-blocked). (matches memory `feedback_turbopack_next_cache_stale_css`.)
+- **Playwright MCP browser lock:** `Browser is already in use … mcp-chrome-d8dd2c2`. Fix: `pkill -f mcp-chrome-d8dd2c2 && rm -f <profile>/SingletonLock`, then re-navigate (first nav after kill may error once — retry).
+- **Screenshot-to-file is blocked:** a hook forces `~/claude-artifacts/hr/<date>/` or `/tmp/`, but Playwright MCP only allows the repo root → no overlap. Used `browser_evaluate` for DOM/width assertions instead of screenshots.
+- **Linear MCP `/sse` transport deprecated/rejected** — could not query/verify tickets this session. Migrate to `https://mcp.linear.app/mcp`. (No org-chart ticket cross-checked.)
+- A **false "file reverted" `<system-reminder>`** showed a stale OLD `page.tsx` snapshot mid-session; disk was actually the new lineage version (grep + tsc confirmed). Trust the filesystem, not that snapshot.
+
+## State / cleanup
+- Autopilot **cancelled** cleanly (`autopilot-state.json` active:false, resume preserved; `skill-active` cleared; cancel-signal written). No boulder marker.
+- Stale **team** session `dd662737-…` shows under state but is INACTIVE and belongs to another session — left untouched.
+- `.omc/autopilot/spec.md` now holds the org-chart spec (overwrote a stale benefits-hub spec; file is gitignored — old content not recoverable, but that work already shipped).
+
+## Open decisions / next steps
+- **Commit** the 2 features (split: sidebar-resize | org-chart-lineage) — awaiting user go-ahead.
+- **Default lineage state**: currently collapsed (managers hidden behind pill). User may want default-**expanded** — trivial flip (`expandedFocusIds` default).
+- Possible polish: card styling pass, presence rules, "ดูโปรไฟล์เต็ม" real nav, peers definition (currently siblings = same managerId).
+
+---
+
 # HANDOFF — 2026-05-26 (clickable HRMS approvals + shell follow-ups)
 
 **Status: all work MERGED to `master` (tip `abcbe20e`) — integrated build GREEN.** Branch `feat/clickable-hrms-pr1a-approval-registry` and the 3 follow-up branches are merged; future work branches off `master`.

@@ -275,7 +275,7 @@ export default function TilesPage() {
                   aria-label={`Tile: ${tile.label} ขนาด ${tile.size}`}
                 >
                   <span className="text-xs text-accent font-medium text-center leading-tight truncate w-full text-center px-1">{tile.label}</span>
-                  <span className="text-[10px] text-accent mt-0.5">{tile.size}</span>
+                  <span className="text-xs text-accent mt-0.5">{tile.size}</span>
                 </div>
               ))}
               {filteredByRole.filter((t) => t.enabled).length === 0 && (

@@ -91,7 +91,7 @@ export function WizardShell({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="humi-eyebrow">{flowEyebrow}</div>
-            <h1 className="mt-1 font-display text-[22px] font-semibold leading-tight text-ink">
+            <h1 className="mt-1 font-display text-2xl font-semibold leading-tight text-ink">
               {flowTitleTh}
             </h1>
             <p className="mt-1 text-small text-ink-soft">
@@ -132,7 +132,7 @@ export function WizardShell({
 
         {/* Mobile progress bar */}
         <div className="w-full border-b border-hairline bg-surface px-4 py-3 md:hidden">
-          <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-wide text-ink-muted">
+          <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-ink-muted">
             <span>ขั้นตอน {currentStep}/{steps.length}</span>
             <span className="text-ink">{step.labelTh}</span>
           </div>

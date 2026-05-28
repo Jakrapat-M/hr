@@ -860,7 +860,7 @@ export default function HumiProfileMePage({
         </span>
         <div style={{ flex: '1 1 260px', minWidth: 0, position: 'relative' }}>
           <div className="humi-row" style={{ gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
-            <h2 className="font-display text-[24px] font-semibold leading-[1.1] tracking-tight text-ink">
+            <h2 className="font-display text-2xl font-semibold leading-[1.1] tracking-tight text-ink">
               {p.nameTh}
             </h2>
             <span style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{p.pronouns}</span>
@@ -918,7 +918,7 @@ export default function HumiProfileMePage({
               (display mode = read-only value, edit mode = input + pencil → single-step modal) */}
           {true && (
             <div className="humi-card md:col-span-2">
-              <h3 className="mb-4 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+              <h3 className="mb-4 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
                 {t('personalTitle')}
               </h3>
               {/* Section A — Personal Info */}
@@ -1289,7 +1289,7 @@ export default function HumiProfileMePage({
       {/* ── Personal tab — Address card (v2 additive) ─────────────────────── */}
       {panelKey === 'personal' && (
         <div className="humi-card" style={{ marginTop: 16 }}>
-          <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+          <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
             {tEss('sections.address')}
             <PendingSectionBadge section="address" />
           </h3>
@@ -1319,7 +1319,7 @@ export default function HumiProfileMePage({
       {/* ── Personal tab — Contact Info multi-value card (v2 additive) ───── */}
       {panelKey === 'personal' && (
         <div className="humi-card" style={{ marginTop: 16 }}>
-          <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+          <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
             {tEss('sections.contact')}
             <PendingSectionBadge section="contact" />
           </h3>
@@ -1351,7 +1351,7 @@ export default function HumiProfileMePage({
       {/* ── Personal tab — Bank card (v2 additive) ───────────────────────── */}
       {panelKey === 'personal' && (
         <div className="humi-card" style={{ marginTop: 16 }}>
-          <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+          <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
             {tEss('sections.bank')}
             <PendingSectionBadge section="bank" />
           </h3>
@@ -1470,7 +1470,7 @@ export default function HumiProfileMePage({
       {panelKey === 'emergency' && (
         <>
           <div className="humi-card">
-            <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+            <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
               {t('emergencyTitle')}
               <PendingSectionBadge section="emergencyContact" />
             </h3>
@@ -1506,7 +1506,7 @@ export default function HumiProfileMePage({
 
           {/* ── ผู้อุปการะ (BRD #20) ────────────────────────────────────────── */}
           <div className="humi-card" style={{ marginTop: 16 }}>
-            <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+            <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
               ผู้อุปการะ
               <PendingSectionBadge section="dependents" />
             </h3>
@@ -1565,7 +1565,7 @@ export default function HumiProfileMePage({
             >
               <div>
                 <div className="humi-eyebrow">{t('tabBenefits')}</div>
-                <h3 className="mt-2 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+                <h3 className="mt-2 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
                   {t('benefitsTitle')}
                 </h3>
                 <p style={{ color: 'var(--color-ink-muted)', fontSize: 13, marginTop: 6 }}>
@@ -1599,7 +1599,7 @@ export default function HumiProfileMePage({
               >
                 <div>
                   <div className="humi-eyebrow">Entitlement summary</div>
-                  <h4 className="mt-2 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+                  <h4 className="mt-2 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
                     ภาพรวมสิทธิ์สวัสดิการ
                   </h4>
                   <p className="mt-1 text-small text-ink-muted">
@@ -1635,7 +1635,7 @@ export default function HumiProfileMePage({
             </div>
 
             <div className="humi-card">
-              <h4 className="font-display text-[18px] font-semibold leading-[1.2] tracking-tight text-ink">
+              <h4 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
                 {t('benefitsPlansTitle')}
               </h4>
               <div className="grid gap-3 md:grid-cols-3" style={{ marginTop: 16 }}>
@@ -1685,7 +1685,7 @@ export default function HumiProfileMePage({
             </div>
 
             <div className="humi-card">
-              <h4 className="font-display text-[18px] font-semibold leading-[1.2] tracking-tight text-ink">
+              <h4 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
                 {t('benefitsAllowancesTitle')}
               </h4>
               <div className="humi-col" style={{ gap: 12, marginTop: 16 }}>
@@ -1743,7 +1743,7 @@ export default function HumiProfileMePage({
 
           <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
             <div className="humi-card">
-              <h4 className="font-display text-[18px] font-semibold leading-[1.2] tracking-tight text-ink">
+              <h4 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
                 {t('benefitsDependentsTitle')}
               </h4>
               <div className="humi-col" style={{ gap: 10, marginTop: 16 }}>
@@ -1769,7 +1769,7 @@ export default function HumiProfileMePage({
             </div>
 
             <div className="humi-card">
-              <h4 className="font-display text-[18px] font-semibold leading-[1.2] tracking-tight text-ink">
+              <h4 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
                 {t('benefitsClaimsTitle')}
               </h4>
               <ul className="humi-list mt-2.5" role="list">
@@ -1848,7 +1848,7 @@ export default function HumiProfileMePage({
             </Link>
           </div>
           <div className="humi-card">
-            <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+            <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
               {t('docsTitle')}
             </h3>
             <p className="mt-2 text-small text-ink-muted" data-testid="profile-documents-boundary">
@@ -1899,7 +1899,7 @@ export default function HumiProfileMePage({
       {panelKey === 'tax' && (
         <div className="grid gap-4">
           <div className="humi-card">
-            <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink mb-4">
+            <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink mb-4">
               {tActivity('title')}
             </h3>
 
@@ -1925,7 +1925,7 @@ export default function HumiProfileMePage({
             {/* Legacy tax documents */}
             <hr className="humi-divider" style={{ marginTop: 24, marginBottom: 16 }} />
             <h4
-              className="font-display text-[16px] font-semibold leading-[1.2] tracking-tight text-ink mb-3"
+              className="font-display text-base font-semibold leading-[1.2] tracking-tight text-ink mb-3"
               style={{ color: 'var(--color-ink-muted)' }}
             >
               {t('taxTitle')}
@@ -2032,7 +2032,7 @@ function FullEditField({
         <span style={{ fontSize: 12, color: 'var(--color-ink-muted)', flex: 1 }}>
           {label}
           {requiresAttachment && (
-            <span className="ml-1 text-[10px] text-ink-muted">(ต้องแนบเอกสาร)</span>
+            <span className="ml-1 text-xs text-ink-muted">(ต้องแนบเอกสาร)</span>
           )}
         </span>
         {hasPending && (
@@ -2280,7 +2280,7 @@ function FieldCard({
   return (
     <div className="humi-card">
       <div className="humi-eyebrow">{eyebrow}</div>
-      <h3 className="mt-1.5 mb-4 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+      <h3 className="mt-1.5 mb-4 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
         {title}
       </h3>
       <div

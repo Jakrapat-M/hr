@@ -20,7 +20,7 @@
 // - ⌘K kbd: hidden below md
 // ════════════════════════════════════════════════════════════
 
-import { Menu, Moon, PanelLeft, Search, Sun } from 'lucide-react';
+import { Menu, Moon, Search, Sun } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUIStore } from '@/stores/ui-store';
@@ -57,13 +57,15 @@ function greetingFor(username: string | null, isTh: boolean): string {
 }
 
 export function Topbar({
-  title,
+  // `title` is intentionally not rendered: every content page owns its title via
+  // its own breadcrumb + <h1> header, so showing a route-derived title here
+  // duplicated it on ~97/138 pages. Topbar now carries only the greeting.
+  // Prop kept on TopbarProps so existing callers/tests still type-check.
   subtitle,
   actions,
   onSearchClick,
 }: TopbarProps) {
-  const { theme, setTheme, toggleMobileMenu, mobileMenuOpen, sidebarOpen, toggleSidebar } =
-    useUIStore();
+  const { theme, setTheme, toggleMobileMenu, mobileMenuOpen } = useUIStore();
   const isDark = theme === 'dark';
   const [scrolled, setScrolled] = useState(false);
   const topbarRef = useRef<HTMLDivElement>(null);
@@ -110,34 +112,24 @@ export function Topbar({
         <span>เมนู</span>
       </button>
 
-      {/* Desktop sidebar collapse toggle — lg+ only (mobile uses the drawer).
-          Lets the user hide the sidebar to reclaim workspace width. */}
-      <button
-        type="button"
-        className="humi-icon-btn !hidden lg:!inline-flex"
-        aria-label={sidebarOpen ? 'ซ่อนเมนูด้านข้าง' : 'แสดงเมนูด้านข้าง'}
-        aria-pressed={!sidebarOpen}
-        title={sidebarOpen ? 'ซ่อนเมนูด้านข้าง' : 'แสดงเมนูด้านข้าง'}
-        onClick={toggleSidebar}
-      >
-        <PanelLeft size={18} aria-hidden="true" />
-      </button>
+      {/* NOTE: the desktop sidebar-collapse toggle that used to live here was
+          removed (2026-05-27) — it duplicated the rail collapse button inside
+          Sidebar.tsx (PR #187) but fully hid the rail instead of folding to it.
+          The rail toggle + the drag-resize handle are now the single source of
+          sidebar width control on desktop. */}
 
       {/* Title block — min-w-0 lets it shrink below content; whitespace-nowrap +
           truncate on eyebrow+h2 prevent Thai-character vertical wrap when topbar
           right-side gets crowded (e.g., 9-persona switcher with long label) */}
+      {/* Greeting is now the sole topbar heading (page title lives in each page's
+          own header, see destructure note above). Promoted from small eyebrow to
+          the h2 slot so the bar doesn't read empty. */}
       <div className="min-w-0 flex-shrink overflow-hidden">
-        <div
-          className="humi-eyebrow hidden sm:block whitespace-nowrap overflow-hidden text-ellipsis"
-          style={{ marginBottom: 4 }}
-        >
-          {greetingEyebrow}
-        </div>
         <h2
           className="truncate whitespace-nowrap text-lg sm:text-xl lg:text-2xl"
           style={{ fontFamily: 'var(--font-display)', fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.02em' }}
         >
-          {title}
+          {greetingEyebrow}
         </h2>
       </div>
 
@@ -177,7 +169,7 @@ export function Topbar({
             onClick={() => handleLocaleSwitch(loc)}
             aria-pressed={currentLocale === loc}
             className={cn(
-              'h-7 min-w-[32px] rounded-md border px-2 text-[11px] font-semibold uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]',
+              'h-7 min-w-[32px] rounded-md border px-2 text-xs font-semibold uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)]',
               currentLocale === loc
                 ? 'border-[color:var(--color-accent)] bg-accent-soft text-[color:var(--color-accent)]'
                 : 'border-hairline bg-surface text-ink-muted hover:border-[color:var(--color-accent)] hover:text-ink-soft',

@@ -128,15 +128,15 @@ function WeeklyHeatmap({ attendance }: { attendance: AttendanceRecord[] }) {
  const isToday = rec?.date ==='2026-03-05';
  return (
  <div key={day} className="flex-1 text-center">
- <p className={`text-[10px] mb-1 ${isToday ?'font-bold text-brand' :'text-ink-muted'}`}>{day}</p>
+ <p className={`text-xs mb-1 ${isToday ?'font-bold text-brand' :'text-ink-muted'}`}>{day}</p>
  <div
  className={`h-8 sm:h-10 rounded-md ${getColor(rec?.status)} ${isToday ?'ring-2 ring-brand ring-offset-1' :''} transition-all`}
  title={rec ? `${rec.date}: ${rec.status}` :'No data'}
  />
  {rec?.workHours ? (
- <p className="text-[10px] text-ink-muted mt-0.5">{rec.workHours}h</p>
+ <p className="text-xs text-ink-muted mt-0.5">{rec.workHours}h</p>
  ) : (
- <p className="text-[10px] text-ink-faint mt-0.5">-</p>
+ <p className="text-xs text-ink-faint mt-0.5">-</p>
  )}
  </div>
  );
@@ -240,11 +240,11 @@ export function TimePage() {
  <MapPin className="h-3 w-3" />
  <span>{clockStatus.locationName}</span>
  {clockStatus.isWithinGeofence ? (
- <span className="inline-flex items-center gap-0.5 ml-2 px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-medium">
+ <span className="inline-flex items-center gap-0.5 ml-2 px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">
  <CheckCircle className="h-2.5 w-2.5" /> In Zone
  </span>
  ) : (
- <span className="inline-flex items-center gap-0.5 ml-2 px-1.5 py-0.5 rounded-full bg-danger-soft text-danger text-[10px] font-medium">
+ <span className="inline-flex items-center gap-0.5 ml-2 px-1.5 py-0.5 rounded-full bg-danger-soft text-danger text-xs font-medium">
  <XCircle className="h-2.5 w-2.5" /> Out of Zone
  </span>
  )}
@@ -324,7 +324,7 @@ export function TimePage() {
  <div className="lg:col-span-3 p-5 sm:p-6 lg:p-8">
  <div className="flex items-center justify-between mb-3">
  <h3 className="text-sm font-semibold text-ink">This Week</h3>
- <div className="flex items-center gap-3 text-[10px] text-ink-muted">
+ <div className="flex items-center gap-3 text-xs text-ink-muted">
  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500" /> On Time</span>
  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-amber-400" /> Late</span>
  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-danger-soft" /> Absent</span>
@@ -350,11 +350,11 @@ export function TimePage() {
  <div className="grid grid-cols-2 gap-2 pt-1">
  <div className="text-center p-2 bg-surface-raised rounded-md">
  <p className="text-lg font-bold text-ink">{summary.totalWorkDays}</p>
- <p className="text-[10px] text-ink-muted">{t('workingHours')}</p>
+ <p className="text-xs text-ink-muted">{t('workingHours')}</p>
  </div>
  <div className="text-center p-2 bg-surface-raised rounded-md">
  <p className="text-lg font-bold text-brand">{summary.totalOvertimeHours}h</p>
- <p className="text-[10px] text-ink-muted">OT Hours</p>
+ <p className="text-xs text-ink-muted">OT Hours</p>
  </div>
  </div>
  <div className="flex items-center justify-between pt-1 text-xs">
@@ -525,7 +525,7 @@ export function TimePage() {
  {shift.shiftName}
  </span>
  {isToday && (
- <span className="text-[10px] font-bold text-brand bg-brand/10 px-1.5 py-0.5 rounded-full">
+ <span className="text-xs font-bold text-brand bg-brand/10 px-1.5 py-0.5 rounded-full">
  TODAY
  </span>
  )}
@@ -576,27 +576,27 @@ export function TimePage() {
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
  <div className="bg-ink rounded-md p-4 text-canvas">
  <p className="text-2xl font-bold">{summary.totalWorkHours}h</p>
- <p className="text-[10px] text-ink-muted mt-0.5">{t('totalHours')}</p>
+ <p className="text-xs text-ink-muted mt-0.5">{t('totalHours')}</p>
  </div>
  <div className="bg-surface border border-hairline border-hairline rounded-md p-4">
  <p className="text-2xl font-bold text-ink">{summary.totalWorkDays}</p>
- <p className="text-[10px] text-ink-muted mt-0.5">Work Days</p>
+ <p className="text-xs text-ink-muted mt-0.5">Work Days</p>
  </div>
  <div className="bg-surface border border-hairline border-hairline rounded-md p-4">
  <p className="text-2xl font-bold text-amber-500">{summary.lateDays}</p>
- <p className="text-[10px] text-ink-muted mt-0.5">Late Days</p>
+ <p className="text-xs text-ink-muted mt-0.5">Late Days</p>
  </div>
  <div className="bg-surface border border-hairline border-hairline rounded-md p-4">
  <p className="text-2xl font-bold text-danger">{summary.absentDays}</p>
- <p className="text-[10px] text-ink-muted mt-0.5">Absent Days</p>
+ <p className="text-xs text-ink-muted mt-0.5">Absent Days</p>
  </div>
  <div className="bg-surface border border-hairline border-hairline rounded-md p-4">
  <p className="text-2xl font-bold text-sky-500">{summary.leaveDays}</p>
- <p className="text-[10px] text-ink-muted mt-0.5">Leave Days</p>
+ <p className="text-xs text-ink-muted mt-0.5">Leave Days</p>
  </div>
  <div className="bg-surface border border-hairline border-hairline rounded-md p-4">
  <p className="text-2xl font-bold text-brand">{summary.totalOvertimeHours}h</p>
- <p className="text-[10px] text-ink-muted mt-0.5">OT Hours</p>
+ <p className="text-xs text-ink-muted mt-0.5">OT Hours</p>
  </div>
  </div>
 
@@ -624,7 +624,7 @@ export function TimePage() {
  </div>
  <div className="text-right flex items-center gap-2">
  {rec.workHours > 0 && <span className="text-sm font-mono font-medium">{rec.workHours}h</span>}
- <Badge variant={config.variant} className="capitalize text-[10px]">{rec.status}</Badge>
+ <Badge variant={config.variant} className="capitalize text-xs">{rec.status}</Badge>
  </div>
  </div>
  );
@@ -725,7 +725,7 @@ export function TimePage() {
  </p>
  <p className="text-xs text-ink-muted mt-1">{req.reason}</p>
  {req.approvedBy && (
- <p className="text-[10px] text-ink-muted mt-1">Approved by {req.approvedBy}</p>
+ <p className="text-xs text-ink-muted mt-1">Approved by {req.approvedBy}</p>
  )}
  </div>
  <ChevronRight className="h-4 w-4 text-ink-faint flex-shrink-0 mt-3" />

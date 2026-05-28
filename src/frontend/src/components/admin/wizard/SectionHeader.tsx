@@ -20,7 +20,7 @@ export function SectionHeader({ icon: Icon, eyebrow, title, sub }: SectionHeader
         <Icon size={18} aria-hidden />
       </div>
       <div className="min-w-0">
-        <div className="mb-0.5 text-[11px] font-semibold tracking-[0.08em] text-ink-muted">{eyebrow}</div>
+        <div className="mb-0.5 text-xs font-semibold tracking-[0.08em] text-ink-muted">{eyebrow}</div>
         <h3 className="humi-section-title">{title}</h3>
         <p className="humi-section-sub" style={{ marginBottom: 0 }}>{sub}</p>
       </div>

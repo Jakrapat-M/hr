@@ -156,7 +156,7 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
       <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
         {employee.employee_id}
       </div>
-      <div className="font-display text-[18px] font-semibold text-ink">{nameTh}</div>
+      <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
       <div className="text-small text-ink-muted mb-3">{nameEn}</div>
       <div
         className="grid grid-cols-2 gap-3 sm:grid-cols-4"
@@ -216,7 +216,7 @@ function ConfirmTerminateDialog({
       >
         <h2
           id="dialog-title"
-          className="font-display text-[18px] font-semibold text-ink"
+          className="font-display text-lg font-semibold text-ink"
           style={{ marginBottom: 8 }}
         >
           ยืนยันการสิ้นสุดสภาพพนักงาน?
@@ -474,7 +474,7 @@ export default function TerminatePage() {
           </div>
           <div>
             <div className="humi-eyebrow">การดำเนินการ</div>
-            <h1 className="font-display text-[20px] font-semibold text-ink">
+            <h1 className="font-display text-xl font-semibold text-ink">
               สิ้นสุดสภาพพนักงาน
             </h1>
           </div>

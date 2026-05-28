@@ -53,7 +53,7 @@ export default function ChangeRequestsPage() {
   if (!canApprove) {
     return (
       <div className="humi-card" data-testid="change-requests-no-access">
-        <h3 className="font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+        <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
           ไม่มีสิทธิ์เข้าถึง
         </h3>
         <p className="mt-2 text-ink-soft" style={{ fontSize: 14 }}>

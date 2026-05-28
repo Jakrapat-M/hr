@@ -17,7 +17,7 @@ export function PageShell({ title, description, actions, children }: PageShellPr
     <div className="max-w-page mx-auto w-full">
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-sans font-semibold text-[28px] leading-9 text-ink">
+          <h1 className="font-sans font-semibold text-3xl leading-9 text-ink">
             {title}
           </h1>
           {description && (

@@ -29,6 +29,20 @@ import {
   PICKLIST_RELIGION,
 } from '@hrms/shared/picklists'
 
+// zOtherTitle LOV — Thai academic/professional titles (PerPersonal.customString1 equivalent)
+// Source: BA Appendix — "Other Title (TH)" picklist
+const PICKLIST_OTHER_TITLE_TH = [
+  { id: 'DR',   labelTh: 'ดร. (Doctor)',        active: true },
+  { id: 'PROF', labelTh: 'ศ. (ศาสตราจารย์)',   active: true },
+  { id: 'ASSP', labelTh: 'รศ. (รองศาสตราจารย์)', active: true },
+  { id: 'ASTP', labelTh: 'ผศ. (ผู้ช่วยศาสตราจารย์)', active: true },
+  { id: 'LEC',  labelTh: 'อ. (อาจารย์)',         active: true },
+  { id: 'REV',  labelTh: 'พระ (พระภิกษุ)',       active: true },
+  { id: 'POL',  labelTh: 'พล.ต.ท. (ตำรวจ)',      active: true },
+  { id: 'MIL',  labelTh: 'พล.ท. (ทหาร)',         active: true },
+  { id: 'OTHER', labelTh: 'อื่นๆ (Other)',        active: true },
+] as const
+
 // SF-aligned gender options — Female/Male only (SF externalCode: Female/Male; Humi id: F/M)
 // SF cite: qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.gender
 // PICKLIST_GENDER uses Humi IDs 'M'/'F'/'X'; filter to M/F only (drop X — no SF counterpart)
@@ -206,18 +220,22 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
 
   return (
     <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
-      {/* ─── BA Personal Info row 2 — Other Title (TH) * ─── */}
+      {/* ─── BA Personal Info row 2 — Other Title (TH) * — LOV picklist (zOtherTitle) ─── */}
       <fieldset>
         <label htmlFor="other-title-th" className="humi-label">
-          {t('salutationLocal')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+          {t('otherTitleTh')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
         </label>
-        <input id="other-title-th" type="text" required aria-required="true"
+        <select id="other-title-th" required aria-required="true"
           aria-invalid={touched.otherTitleTh && !!errors.otherTitleTh}
-          placeholder={t('salutationLocalPlaceholder')}
           value={otherTitleTh}
           onChange={(e) => setOtherTitleTh(e.target.value)}
           onBlur={() => touch('otherTitleTh')}
-          className="humi-input w-full" />
+          className="humi-select w-full">
+          <option value="">{t('selectOtherTitleTh')}</option>
+          {PICKLIST_OTHER_TITLE_TH.filter((o) => o.active).map((o) => (
+            <option key={o.id} value={o.id}>{o.labelTh}</option>
+          ))}
+        </select>
         {errMsg('otherTitleTh')}
       </fieldset>
 

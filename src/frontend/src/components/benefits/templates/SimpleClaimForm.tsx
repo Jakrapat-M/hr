@@ -54,6 +54,7 @@ export function SimpleClaimForm({
 
   const [form, setForm] = useState({
     claimDate: todayIsoDate(),
+    receiptDate: '',
     receiptNo: '',
     receiptAmount: '',
     claimAmount: '',
@@ -93,6 +94,7 @@ export function SimpleClaimForm({
     setLastWorkflowId(wfId);
     setForm({
       claimDate: todayIsoDate(),
+      receiptDate: '',
       receiptNo: '',
       receiptAmount: '',
       claimAmount: '',
@@ -104,6 +106,7 @@ export function SimpleClaimForm({
       selectedBenefit: planName,
       benefitCode: plan.id,
       claimDate: form.claimDate,
+      receiptDate: form.receiptDate || undefined,
       remainingAmount: visibleRemainingAmount,
       receiptNo: form.receiptNo.trim(),
       receiptAmount: amount,
@@ -167,6 +170,17 @@ export function SimpleClaimForm({
               value={form.receiptNo}
               onChange={(e) => setField('receiptNo', e.target.value)}
               placeholder={isTh ? 'เช่น RC-2026-0001' : 'e.g. RC-2026-0001'}
+            />
+          )}
+        </FormField>
+
+        <FormField id={`${plan.id}-receipt-date`} label={isTh ? 'วันที่ใบเสร็จ' : 'Receipt Date'}>
+          {(controlProps) => (
+            <FormInput
+              {...controlProps}
+              type="date"
+              value={form.receiptDate}
+              onChange={(e) => setField('receiptDate', e.target.value)}
             />
           )}
         </FormField>

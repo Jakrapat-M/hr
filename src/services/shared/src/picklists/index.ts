@@ -11291,6 +11291,19 @@ export const PICKLIST_RELIGION: readonly PicklistItem[] = [
   }
 ] as const
 
+// zOtherTitle — BA Personal Info (STA-83): Other Title (TH) LOV
+// SF source: PerPersonal.customString1 suffix / Thai-locale custom title codes
+export const PICKLIST_OTHER_TITLE: readonly PicklistItem[] = [
+  { id: 'PROF', labelTh: 'ศาสตราจารย์ (ศ.)', labelEn: 'Professor', sortOrder: 1, active: true },
+  { id: 'ASSOC_PROF', labelTh: 'รองศาสตราจารย์ (รศ.)', labelEn: 'Associate Professor', sortOrder: 2, active: true },
+  { id: 'ASST_PROF', labelTh: 'ผู้ช่วยศาสตราจารย์ (ผศ.)', labelEn: 'Assistant Professor', sortOrder: 3, active: true },
+  { id: 'DR', labelTh: 'ดร.', labelEn: 'Dr.', sortOrder: 4, active: true },
+  { id: 'CAPT', labelTh: 'กัปตัน', labelEn: 'Captain', sortOrder: 5, active: true },
+  { id: 'FLIGHT_LT', labelTh: 'เรืออากาศโท', labelEn: 'Flight Lieutenant', sortOrder: 6, active: true },
+  { id: 'REV', labelTh: 'พระ/พระคุณเจ้า', labelEn: 'Reverend', sortOrder: 7, active: true },
+  { id: 'OTHER', labelTh: 'อื่นๆ', labelEn: 'Other', sortOrder: 99, active: true },
+] as const
+
 export const PICKLIST_TIME_STATUS: readonly PicklistItem[] = [
   {
     "id": "1",

@@ -311,7 +311,7 @@ export function TalentSearchPanel() {
             <p className="text-small text-ink-muted" aria-live="polite">
               พบ <strong className="text-ink">{results.length}</strong> รายการ
               {activeFilterCount > 0 && (
-                <span className="ml-2 inline-flex items-center rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-ink">
+                <span className="ml-2 inline-flex items-center rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-ink">
                   {activeFilterCount} ตัวกรอง
                 </span>
               )}

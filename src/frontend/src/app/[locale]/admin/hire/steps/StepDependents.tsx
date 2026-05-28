@@ -52,7 +52,11 @@ const EMPTY_DEP: DependentEntry = {
   phone: '',
   email: '',
   isTaxDependent: false,
+  copyAddressFromEmployee: false,
   addressLine1: '',
+  building: '',
+  floor: '',
+  street: '',
   attachmentName: null,
 }
 
@@ -413,6 +417,19 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                   />
                 </fieldset>
 
+                {/* STA-82: Copy Address from Employee */}
+                <fieldset className="md:col-span-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={dep.copyAddressFromEmployee}
+                      onChange={(e) => updateEntry(idx, { copyAddressFromEmployee: e.target.checked })}
+                      className="h-4 w-4 rounded"
+                    />
+                    <span className="text-sm text-ink">คัดลอกที่อยู่จากพนักงาน / Copy Address from Employee</span>
+                  </label>
+                </fieldset>
+
                 <fieldset className="md:col-span-2">
                   <label htmlFor={`dep-addr-${idx}`} className="humi-label">
                     ที่อยู่ / Address
@@ -423,6 +440,49 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="บ้านเลขที่ ถนน แขวง เขต จังหวัด"
                     value={dep.addressLine1}
                     onChange={(e) => updateEntry(idx, { addressLine1: e.target.value })}
+                    className="humi-input w-full"
+                  />
+                </fieldset>
+
+                {/* STA-82: Building / Floor / Street */}
+                <fieldset>
+                  <label htmlFor={`dep-building-${idx}`} className="humi-label">
+                    อาคาร / Building
+                  </label>
+                  <input
+                    id={`dep-building-${idx}`}
+                    type="text"
+                    placeholder="ชื่ออาคาร"
+                    value={dep.building}
+                    onChange={(e) => updateEntry(idx, { building: e.target.value })}
+                    className="humi-input w-full"
+                  />
+                </fieldset>
+
+                <fieldset>
+                  <label htmlFor={`dep-floor-${idx}`} className="humi-label">
+                    ชั้น / Floor
+                  </label>
+                  <input
+                    id={`dep-floor-${idx}`}
+                    type="text"
+                    placeholder="เช่น 3, ชั้น 3"
+                    value={dep.floor}
+                    onChange={(e) => updateEntry(idx, { floor: e.target.value })}
+                    className="humi-input w-full"
+                  />
+                </fieldset>
+
+                <fieldset className="md:col-span-2">
+                  <label htmlFor={`dep-street-${idx}`} className="humi-label">
+                    ถนน / Street
+                  </label>
+                  <input
+                    id={`dep-street-${idx}`}
+                    type="text"
+                    placeholder="ชื่อถนน"
+                    value={dep.street}
+                    onChange={(e) => updateEntry(idx, { street: e.target.value })}
                     className="humi-input w-full"
                   />
                 </fieldset>

@@ -110,6 +110,34 @@ export default function StepJob({ onValidChange }: StepJobProps) {
     () => filesFromAttachmentName(job.attachmentName, 'job-existing'),
   )
 
+  // STA-82: additional spec fields — Job Information
+  const [jobRole,               setJobRole]               = useState<string>(job.jobRole ?? '')
+  const [jobType,               setJobType]               = useState<string>(job.jobType ?? '')
+  const [personnelGrade,        setPersonnelGrade]        = useState<string>(job.personnelGrade ?? '')
+  const [bandMatching,          setBandMatching]          = useState<string>(job.bandMatching ?? '')
+  const [band,                  setBand]                  = useState<string>(job.band ?? '')
+  const [transferOutTo,         setTransferOutTo]         = useState<string>(job.transferOutTo ?? '')
+  const [transferInTo,          setTransferInTo]          = useState<string>(job.transferInTo ?? '')
+  const [transferFrom,          setTransferFrom]          = useState<string>(job.transferFrom ?? '')
+  const [specialBenefitGroup,   setSpecialBenefitGroup]   = useState<string>(job.specialBenefitGroup ?? '')
+  const [okToRehire,            setOkToRehire]            = useState<string>(job.okToRehire ?? '')
+  // DVT subsection
+  const [dvtProjectName,        setDvtProjectName]        = useState<string>(job.dvtProjectName ?? '')
+  const [dvtType,               setDvtType]               = useState<string>(job.dvtType ?? '')
+  const [dvtCourse,             setDvtCourse]             = useState<string>(job.dvtCourse ?? '')
+  const [dvtCourseOfTime,       setDvtCourseOfTime]       = useState<string>(job.dvtCourseOfTime ?? '')
+  const [dvtAcademicYear,       setDvtAcademicYear]       = useState<string>(job.dvtAcademicYear ?? '')
+  const [dvtGraduationDate,     setDvtGraduationDate]     = useState<string>(job.dvtGraduationDate ?? '')
+  const [dvtBondingEndDate,     setDvtBondingEndDate]     = useState<string>(job.dvtBondingEndDate ?? '')
+  const [scholarship,           setScholarship]           = useState<string>(job.scholarship ?? '')
+  const [probationaryPeriodEndDate, setProbationaryPeriodEndDate] = useState<string>(job.probationaryPeriodEndDate ?? '')
+  const [extendedProbationDate, setExtendedProbationDate] = useState<string>(job.extendedProbationDate ?? '')
+  // Organisation Information
+  const [pointOfSales,          setPointOfSales]          = useState<string>(job.pointOfSales ?? '')
+  const [storeBrandFormat,      setStoreBrandFormat]      = useState<string>(job.storeBrandFormat ?? '')
+  const [brand,                 setBrand]                 = useState<string>(job.brand ?? '')
+  const [workLocation,          setWorkLocation]          = useState<string>(job.workLocation ?? '')
+
   // Compute FTE when standard weekly hours change
   useEffect(() => {
     const computed = standardWeeklyHours > 0 ? standardWeeklyHours / 40 : 0
@@ -162,6 +190,40 @@ export default function StepJob({ onValidChange }: StepJobProps) {
     })
   }, [policyProfile, ssoLocation, groupCompanyGroup, contractType, zone, employmentType,
       contractEndDate, probationEndDate, setStepData])
+
+  // Sync STA-82 fields to store
+  useEffect(() => {
+    setStepData('job', {
+      jobRole: jobRole || null,
+      jobType: jobType || null,
+      personnelGrade: personnelGrade || null,
+      bandMatching: bandMatching || null,
+      band: band || null,
+      transferOutTo: transferOutTo || null,
+      transferInTo: transferInTo || null,
+      transferFrom: transferFrom || null,
+      specialBenefitGroup: specialBenefitGroup || null,
+      okToRehire: okToRehire || null,
+      dvtProjectName: dvtProjectName || null,
+      dvtType: dvtType || null,
+      dvtCourse: dvtCourse || null,
+      dvtCourseOfTime: dvtCourseOfTime || null,
+      dvtAcademicYear: dvtAcademicYear || null,
+      dvtGraduationDate: dvtGraduationDate || null,
+      dvtBondingEndDate: dvtBondingEndDate || null,
+      scholarship: scholarship || null,
+      probationaryPeriodEndDate: probationaryPeriodEndDate || null,
+      extendedProbationDate: extendedProbationDate || null,
+      pointOfSales: pointOfSales || null,
+      storeBrandFormat: storeBrandFormat || null,
+      brand: brand || null,
+      workLocation: workLocation || null,
+    })
+  }, [jobRole, jobType, personnelGrade, bandMatching, band,
+      transferOutTo, transferInTo, transferFrom, specialBenefitGroup, okToRehire,
+      dvtProjectName, dvtType, dvtCourse, dvtCourseOfTime, dvtAcademicYear,
+      dvtGraduationDate, dvtBondingEndDate, scholarship, probationaryPeriodEndDate,
+      extendedProbationDate, pointOfSales, storeBrandFormat, brand, workLocation, setStepData])
 
   const validate = useCallback(
     (positionCode: string, bu: string | null) => {
@@ -838,6 +900,360 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               type="date"
               value={probationEndDate}
               onChange={(e) => setProbationEndDate(e.target.value)}
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+        </div>
+      </fieldset>
+
+      {/* ── STA-82: Job Information additional fields ───────────────────────── */}
+      <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
+        <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">
+          ข้อมูลงานเพิ่มเติม / Additional Job Information
+        </legend>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+
+          {/* Job Role */}
+          <fieldset>
+            <label htmlFor="job-role" className="humi-label">Job Role</label>
+            <input
+              id="job-role"
+              type="text"
+              value={jobRole}
+              onChange={(e) => setJobRole(e.target.value)}
+              placeholder="Job Role"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* Job Type */}
+          <fieldset>
+            <label htmlFor="job-type" className="humi-label">Job Type</label>
+            <input
+              id="job-type"
+              type="text"
+              value={jobType}
+              onChange={(e) => setJobType(e.target.value)}
+              placeholder="Job Type"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* Personnel Grade */}
+          <fieldset>
+            <label htmlFor="personnel-grade" className="humi-label">Personnel Grade</label>
+            <input
+              id="personnel-grade"
+              type="text"
+              value={personnelGrade}
+              onChange={(e) => setPersonnelGrade(e.target.value)}
+              placeholder="Personnel Grade"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* Band Matching */}
+          <fieldset>
+            <label htmlFor="band-matching" className="humi-label">Band Matching</label>
+            <input
+              id="band-matching"
+              type="text"
+              value={bandMatching}
+              onChange={(e) => setBandMatching(e.target.value)}
+              placeholder="Band Matching"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* Band */}
+          <fieldset>
+            <label htmlFor="band" className="humi-label">Band</label>
+            <input
+              id="band"
+              type="text"
+              value={band}
+              onChange={(e) => setBand(e.target.value)}
+              placeholder="Band"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* Transfer out to (LOV) */}
+          <fieldset>
+            <label htmlFor="transfer-out-to" className="humi-label">Transfer out to</label>
+            <select
+              id="transfer-out-to"
+              value={transferOutTo}
+              onChange={(e) => setTransferOutTo(e.target.value)}
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              <option value="BU-RETAIL">BU-RETAIL</option>
+              <option value="BU-FOOD">BU-FOOD</option>
+              <option value="BU-PROPERTY">BU-PROPERTY</option>
+              <option value="BU-DIGITAL">BU-DIGITAL</option>
+              <option value="BU-INTERNATIONAL">BU-INTERNATIONAL</option>
+            </select>
+          </fieldset>
+
+          {/* Transfer in to (LOV) */}
+          <fieldset>
+            <label htmlFor="transfer-in-to" className="humi-label">Transfer in to</label>
+            <select
+              id="transfer-in-to"
+              value={transferInTo}
+              onChange={(e) => setTransferInTo(e.target.value)}
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              <option value="BU-RETAIL">BU-RETAIL</option>
+              <option value="BU-FOOD">BU-FOOD</option>
+              <option value="BU-PROPERTY">BU-PROPERTY</option>
+              <option value="BU-DIGITAL">BU-DIGITAL</option>
+              <option value="BU-INTERNATIONAL">BU-INTERNATIONAL</option>
+            </select>
+          </fieldset>
+
+          {/* Transfer from */}
+          <fieldset>
+            <label htmlFor="transfer-from" className="humi-label">Transfer from</label>
+            <input
+              id="transfer-from"
+              type="text"
+              value={transferFrom}
+              onChange={(e) => setTransferFrom(e.target.value)}
+              placeholder="Transfer from"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* Special Benefit Group */}
+          <fieldset>
+            <label htmlFor="special-benefit-group" className="humi-label">Special Benefit Group</label>
+            <input
+              id="special-benefit-group"
+              type="text"
+              value={specialBenefitGroup}
+              onChange={(e) => setSpecialBenefitGroup(e.target.value)}
+              placeholder="Special Benefit Group"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* OK to Rehire (LOV Yes/No) */}
+          <fieldset>
+            <label htmlFor="ok-to-rehire" className="humi-label">OK to Rehire</label>
+            <select
+              id="ok-to-rehire"
+              value={okToRehire}
+              onChange={(e) => setOkToRehire(e.target.value)}
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              <option value="YES">Yes / ใช่</option>
+              <option value="NO">No / ไม่ใช่</option>
+            </select>
+          </fieldset>
+
+          {/* Probationary Period End Date */}
+          <fieldset>
+            <label htmlFor="probationary-period-end-date" className="humi-label">Probationary Period End Date</label>
+            <input
+              id="probationary-period-end-date"
+              type="date"
+              value={probationaryPeriodEndDate}
+              onChange={(e) => setProbationaryPeriodEndDate(e.target.value)}
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* Extended Probation Date */}
+          <fieldset>
+            <label htmlFor="extended-probation-date" className="humi-label">Extended Probation Date</label>
+            <input
+              id="extended-probation-date"
+              type="date"
+              value={extendedProbationDate}
+              onChange={(e) => setExtendedProbationDate(e.target.value)}
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+        </div>
+      </fieldset>
+
+      {/* ── STA-82: DVT Subsection ────────────────────────────────────────────── */}
+      <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
+        <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">
+          DVT / ทุนการศึกษา
+        </legend>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+
+          {/* DVT: Project name */}
+          <fieldset>
+            <label htmlFor="dvt-project-name" className="humi-label">DVT: Project name</label>
+            <input
+              id="dvt-project-name"
+              type="text"
+              value={dvtProjectName}
+              onChange={(e) => setDvtProjectName(e.target.value)}
+              placeholder="DVT Project name"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* DVT: Type */}
+          <fieldset>
+            <label htmlFor="dvt-type" className="humi-label">DVT: Type</label>
+            <input
+              id="dvt-type"
+              type="text"
+              value={dvtType}
+              onChange={(e) => setDvtType(e.target.value)}
+              placeholder="DVT Type"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* DVT: Course */}
+          <fieldset>
+            <label htmlFor="dvt-course" className="humi-label">DVT: Course</label>
+            <input
+              id="dvt-course"
+              type="text"
+              value={dvtCourse}
+              onChange={(e) => setDvtCourse(e.target.value)}
+              placeholder="DVT Course"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* DVT: Course of Time */}
+          <fieldset>
+            <label htmlFor="dvt-course-of-time" className="humi-label">DVT: Course of Time</label>
+            <input
+              id="dvt-course-of-time"
+              type="text"
+              value={dvtCourseOfTime}
+              onChange={(e) => setDvtCourseOfTime(e.target.value)}
+              placeholder="DVT Course of Time"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* DVT: Academic Year */}
+          <fieldset>
+            <label htmlFor="dvt-academic-year" className="humi-label">DVT: Academic Year</label>
+            <input
+              id="dvt-academic-year"
+              type="text"
+              value={dvtAcademicYear}
+              onChange={(e) => setDvtAcademicYear(e.target.value)}
+              placeholder="ปีการศึกษา (เช่น 2568)"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* DVT: Graduation Date */}
+          <fieldset>
+            <label htmlFor="dvt-graduation-date" className="humi-label">DVT: Graduation Date</label>
+            <input
+              id="dvt-graduation-date"
+              type="date"
+              value={dvtGraduationDate}
+              onChange={(e) => setDvtGraduationDate(e.target.value)}
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* DVT: Bonding End date */}
+          <fieldset>
+            <label htmlFor="dvt-bonding-end-date" className="humi-label">DVT: Bonding End date</label>
+            <input
+              id="dvt-bonding-end-date"
+              type="date"
+              value={dvtBondingEndDate}
+              onChange={(e) => setDvtBondingEndDate(e.target.value)}
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* Scholarship */}
+          <fieldset>
+            <label htmlFor="scholarship" className="humi-label">Scholarship</label>
+            <input
+              id="scholarship"
+              type="text"
+              value={scholarship}
+              onChange={(e) => setScholarship(e.target.value)}
+              placeholder="Scholarship"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+        </div>
+      </fieldset>
+
+      {/* ── STA-82: Organisation Information ─────────────────────────────────── */}
+      <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
+        <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">
+          Organisation Information / ข้อมูลองค์กร
+        </legend>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+
+          {/* Point of Sales (required) */}
+          <fieldset>
+            <label htmlFor="point-of-sales" className="humi-label">
+              Point of Sales<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            </label>
+            <input
+              id="point-of-sales"
+              type="text"
+              value={pointOfSales}
+              onChange={(e) => setPointOfSales(e.target.value)}
+              placeholder="Point of Sales"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* Store Brand/ Format */}
+          <fieldset>
+            <label htmlFor="store-brand-format" className="humi-label">Store Brand / Format</label>
+            <input
+              id="store-brand-format"
+              type="text"
+              value={storeBrandFormat}
+              onChange={(e) => setStoreBrandFormat(e.target.value)}
+              placeholder="Store Brand / Format"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* Brand */}
+          <fieldset>
+            <label htmlFor="brand" className="humi-label">Brand</label>
+            <input
+              id="brand"
+              type="text"
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              placeholder="Brand"
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* Work Location (required) */}
+          <fieldset>
+            <label htmlFor="work-location" className="humi-label">
+              Work Location<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            </label>
+            <input
+              id="work-location"
+              type="text"
+              value={workLocation}
+              onChange={(e) => setWorkLocation(e.target.value)}
+              placeholder="Work Location"
               className="humi-input w-full"
             />
           </fieldset>

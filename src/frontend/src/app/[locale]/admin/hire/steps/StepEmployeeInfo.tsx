@@ -69,6 +69,9 @@ export default function StepEmployeeInfo({ onValidChange }: StepEmployeeInfoProp
   const [seniorityStartDate,   setSeniorityStartDate]   = useState<string>(formData.employeeInfo.seniorityStartDate || hireDate)
   const [retirementDate,       setRetirementDate]       = useState<string>(formData.employeeInfo.retirementDate || calcRetirementDate(dob))
   const [cgPreviousEmployeeId, setCgPreviousEmployeeId] = useState<string>(formData.employeeInfo.cgPreviousEmployeeId ?? '')
+  // PF service date range (กองทุนสำรองเลี้ยงชีพ — SF EmpEmployment.pfServiceDate / pfServiceEndDate)
+  const [pfServiceDate,        setPfServiceDate]        = useState<string>(formData.employeeInfo.pfServiceDate ?? '')
+  const [pfServiceEndDate,     setPfServiceEndDate]     = useState<string>(formData.employeeInfo.pfServiceEndDate ?? '')
 
   const validate = useCallback(
     (group: string, subGroup: string, origStart: string, senStart: string) => {
@@ -105,8 +108,10 @@ export default function StepEmployeeInfo({ onValidChange }: StepEmployeeInfoProp
       seniorityStartDate,
       retirementDate,
       cgPreviousEmployeeId,
+      pfServiceDate,
+      pfServiceEndDate,
     })
-  }, [originalStartDate, seniorityStartDate, retirementDate, cgPreviousEmployeeId, setStepData])
+  }, [originalStartDate, seniorityStartDate, retirementDate, cgPreviousEmployeeId, pfServiceDate, pfServiceEndDate, setStepData])
 
   return (
     <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
@@ -212,6 +217,34 @@ export default function StepEmployeeInfo({ onValidChange }: StepEmployeeInfoProp
               value={cgPreviousEmployeeId}
               onChange={(e) => setCgPreviousEmployeeId(e.target.value)}
               placeholder={t('idPlaceholder')}
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* วันเข้ากองทุนสำรองเลี้ยงชีพ (PF Service Date) */}
+          <fieldset>
+            <label htmlFor="pf-service-date" className="humi-label">
+              {t('pfServiceDate')}
+            </label>
+            <input
+              id="pf-service-date"
+              type="date"
+              value={pfServiceDate}
+              onChange={(e) => setPfServiceDate(e.target.value)}
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* วันสิ้นสุดกองทุนสำรองเลี้ยงชีพ (PF Service End Date) */}
+          <fieldset>
+            <label htmlFor="pf-service-end-date" className="humi-label">
+              {t('pfServiceEndDate')}
+            </label>
+            <input
+              id="pf-service-end-date"
+              type="date"
+              value={pfServiceEndDate}
+              onChange={(e) => setPfServiceEndDate(e.target.value)}
               className="humi-input w-full"
             />
           </fieldset>

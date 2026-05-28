@@ -150,7 +150,7 @@ export default function AdminDashboardPage() {
           <div className="humi-row" style={{ alignItems: 'flex-start' }}>
             <div>
               <div className="humi-eyebrow">ภาพรวม</div>
-              <h3 className="mt-1.5 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+              <h3 className="mt-1.5 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
                 สถานะระบบ
               </h3>
             </div>
@@ -165,7 +165,7 @@ export default function AdminDashboardPage() {
                   {s.label}
                 </div>
                 <div
-                  className="mt-1 font-display text-[22px] font-semibold leading-none"
+                  className="mt-1 font-display text-2xl font-semibold leading-none"
                   style={{
                     color:
                       s.tone === 'accent'
@@ -194,7 +194,7 @@ export default function AdminDashboardPage() {
         <div className="humi-row" style={{ marginBottom: 12 }}>
           <div>
             <div className="humi-eyebrow">Admin Tools</div>
-            <h3 className="mt-1.5 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
+            <h3 className="mt-1.5 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
               เครื่องมือการจัดการ
             </h3>
           </div>
@@ -216,7 +216,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="humi-eyebrow">{section.eyebrow}</div>
-                    <h4 className="mt-1 font-display text-[16px] font-semibold text-ink group-hover:text-accent">
+                    <h4 className="mt-1 font-display text-base font-semibold text-ink group-hover:text-accent">
                       {section.title}
                     </h4>
                     <p className="mt-1 text-small text-ink-soft">{section.desc}</p>
@@ -258,7 +258,7 @@ export default function AdminDashboardPage() {
           />
           Recent Activity
         </div>
-        <h3 className="mt-2 font-display text-[20px] font-semibold leading-[1.2] tracking-tight text-[color:var(--color-canvas-soft)]">
+        <h3 className="mt-2 font-display text-xl font-semibold leading-[1.2] tracking-tight text-[color:var(--color-canvas-soft)]">
           กิจกรรมล่าสุด
         </h3>
         <p

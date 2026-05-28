@@ -192,7 +192,7 @@ export function EntitlementRulesManager() {
                       <span className="ml-2 text-small text-ink-muted">({plan.code})</span>
                     </div>
                   </div>
-                  <span className="shrink-0 inline-flex items-center rounded-full bg-surface border border-hairline px-2.5 py-0.5 text-[11px] font-semibold text-ink-muted">
+                  <span className="shrink-0 inline-flex items-center rounded-full bg-surface border border-hairline px-2.5 py-0.5 text-xs font-semibold text-ink-muted">
                     {groupRules.length} กฎ
                   </span>
                 </button>
@@ -239,7 +239,7 @@ export function EntitlementRulesManager() {
                                       <div key={h.id} className="flex items-center gap-4">
                                         <span className="text-ink-muted tabular-nums">{new Date(h.effective_from).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                         <span className="font-semibold text-ink tabular-nums">฿{(h.entitlement_amount ?? 0).toLocaleString('th-TH')}</span>
-                                        {h.effective_to && <span className="text-[11px] text-ink-faint">(ยกเลิก)</span>}
+                                        {h.effective_to && <span className="text-xs text-ink-faint">(ยกเลิก)</span>}
                                       </div>
                                     ))}
                                   </div>
@@ -298,7 +298,7 @@ function RuleRow({ rule, onEdit, onDelete, onHistory }: { rule: EligibilityRule;
   return (
     <div className="hover:bg-canvas-soft/50 transition-colors group">
       <div className="flex items-center gap-4 px-4 py-3">
-        <span className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${egColor(rule.employee_group ?? '')}`}>
+        <span className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${egColor(rule.employee_group ?? '')}`}>
           {rule.employee_group ?? '-'}
         </span>
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1">
@@ -318,9 +318,9 @@ function RuleRow({ rule, onEdit, onDelete, onHistory }: { rule: EligibilityRule;
           )}
         </div>
         <div className="shrink-0 text-right">
-          <div className="font-display text-[18px] font-bold text-ink tabular-nums">฿{(rule.entitlement_amount ?? 0).toLocaleString('th-TH')}</div>
+          <div className="font-display text-lg font-bold text-ink tabular-nums">฿{(rule.entitlement_amount ?? 0).toLocaleString('th-TH')}</div>
           {rule.max_per_claim != null && (
-            <div className="text-[11px] text-ink-muted tabular-nums">ต่อครั้ง ฿{rule.max_per_claim.toLocaleString('th-TH')}</div>
+            <div className="text-xs text-ink-muted tabular-nums">ต่อครั้ง ฿{rule.max_per_claim.toLocaleString('th-TH')}</div>
           )}
         </div>
         <div className="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
@@ -339,7 +339,7 @@ function RuleRow({ rule, onEdit, onDelete, onHistory }: { rule: EligibilityRule;
         </div>
       </div>
       {rule.additional_condition && (
-        <p className="mt-0.5 text-[11px] text-ink-muted pl-9 pb-2">{rule.additional_condition}</p>
+        <p className="mt-0.5 text-xs text-ink-muted pl-9 pb-2">{rule.additional_condition}</p>
       )}
     </div>
   );
@@ -436,7 +436,7 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel }: RuleFormProps) {
     <form onSubmit={handleSubmit} className="mt-4 rounded-md border border-accent/30 bg-accent/5 p-4 space-y-4" aria-label={isEdit ? 'แก้ไขกฎวงเงินสิทธิ์' : 'เพิ่มกฎวงเงินสิทธิ์'}>
       <p className="text-small font-semibold text-ink">{isEdit ? 'แก้ไขกฎวงเงินสิทธิ์' : 'เพิ่มกฎวงเงินสิทธิ์ใหม่'}</p>
       <section className="space-y-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">Rule ID and Validity</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">Rule ID and Validity</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex flex-col gap-1">
             <label className={labelCls}>Rule ID</label>
@@ -473,7 +473,7 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel }: RuleFormProps) {
       </section>
 
       <section className="space-y-3 border-t border-hairline-soft pt-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">Employee Info.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">Employee Info.</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex flex-col gap-1">
             <label className={labelCls}>Business Unit</label>
@@ -538,7 +538,7 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel }: RuleFormProps) {
       </section>
 
       <section className="space-y-3 border-t border-hairline-soft pt-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">Effective of plan</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">Effective of plan</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex flex-col gap-1">
             <label className={labelCls}>Effective Types</label>
@@ -554,7 +554,7 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel }: RuleFormProps) {
       </section>
 
       <section className="space-y-3 border-t border-hairline-soft pt-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">Reimbursement Limitation</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">Reimbursement Limitation</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex flex-col gap-1">
             <label className={labelCls}>Claim Period</label>

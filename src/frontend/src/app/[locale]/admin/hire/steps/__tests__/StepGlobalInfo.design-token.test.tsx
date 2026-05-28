@@ -1,7 +1,16 @@
 import { act, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import StepGlobalInfo from '@/app/[locale]/admin/hire/steps/StepGlobalInfo'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => {
+    const map: Record<string, string> = {
+      disabilityAttachment: 'เอกสารแนบ (สถานะความพิการ)',
+    }
+    return map[key] ?? key
+  },
+}))
 
 beforeEach(() => {
   localStorage.clear()

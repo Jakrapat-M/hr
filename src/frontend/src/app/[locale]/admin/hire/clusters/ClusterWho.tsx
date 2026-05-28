@@ -133,7 +133,7 @@ export default function ClusterWho() {
       {!showDependentsSection && (
         <section className="rounded-2xl border border-dashed border-hairline bg-canvas-soft p-4" aria-label="ข้อมูลตามกรณี">
           <div className="humi-eyebrow">ข้อมูลตามกรณี</div>
-          <h3 className="mt-1 font-display text-[17px] font-semibold leading-[1.2] text-ink">
+          <h3 className="mt-1 font-display text-lg font-semibold leading-[1.2] text-ink">
             เปิดเฉพาะเมื่อมีข้อมูลเสริมที่เกี่ยวข้อง
           </h3>
           <p className="mt-1 text-small text-ink-muted">

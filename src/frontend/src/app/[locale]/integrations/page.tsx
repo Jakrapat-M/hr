@@ -97,14 +97,14 @@ function IntegrationMark({
 function StatusBadge({ isEnabled }: { isEnabled: boolean }) {
   if (isEnabled) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--color-success-soft)] px-2.5 py-0.5 text-[11px] font-semibold text-[color:var(--color-success)]">
+      <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--color-success-soft)] px-2.5 py-0.5 text-xs font-semibold text-[color:var(--color-success)]">
         <Check className="h-3 w-3" aria-hidden />
         เชื่อมต่อแล้ว
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center rounded-full bg-canvas-soft px-2.5 py-0.5 text-[11px] font-semibold text-ink-muted">
+    <span className="inline-flex items-center rounded-full bg-canvas-soft px-2.5 py-0.5 text-xs font-semibold text-ink-muted">
       ยังไม่เชื่อมต่อ
     </span>
   );
@@ -248,7 +248,7 @@ export default function IntegrationsPage() {
                 <div className="mt-auto flex items-center gap-3">
                   {wasConnected ? (
                     <>
-                      <span className="text-[12px] text-ink-muted">
+                      <span className="text-sm text-ink-muted">
                         ซิงค์ล่าสุด · 4 นาทีที่แล้ว
                       </span>
                       {/* humi-toggle — ml-auto tap region min-h-[44px] for mobile touch-target */}
@@ -265,7 +265,7 @@ export default function IntegrationsPage() {
                     </>
                   ) : (
                     <>
-                      <span className="text-[12px] text-ink-muted">
+                      <span className="text-sm text-ink-muted">
                         ติดตั้ง 5 นาที
                       </span>
                       <Button

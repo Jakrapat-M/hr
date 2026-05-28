@@ -386,7 +386,7 @@ export default function EmployeeDetailPage() {
                 </span>
               )}
             </div>
-            <h1 className="font-display text-[22px] font-semibold leading-tight text-ink">
+            <h1 className="font-display text-2xl font-semibold leading-tight text-ink">
               {nameTh}
             </h1>
             <div className="text-small text-ink-muted">{nameEn}</div>
@@ -863,7 +863,7 @@ export default function EmployeeDetailPage() {
         <div className="humi-row" style={{ marginBottom: 16 }}>
           <div>
             <div className="humi-eyebrow">ประวัติการเปลี่ยนแปลง</div>
-            <h2 className="mt-1 font-display text-[18px] font-semibold text-ink">
+            <h2 className="mt-1 font-display text-lg font-semibold text-ink">
               Timeline
             </h2>
           </div>

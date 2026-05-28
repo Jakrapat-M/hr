@@ -159,7 +159,7 @@ export function LeaveCalendar({ events, holidays, onDateClick }: LeaveCalendarPr
 
               {holiday && (
                 <div className="mt-0.5">
-                  <span className="text-[10px] leading-tight text-danger line-clamp-1">{holiday.nameEn}</span>
+                  <span className="text-xs leading-tight text-danger line-clamp-1">{holiday.nameEn}</span>
                 </div>
               )}
 
@@ -171,7 +171,7 @@ export function LeaveCalendar({ events, holidays, onDateClick }: LeaveCalendarPr
                     <div
                       key={evt.id}
                       className={cn(
-                        'text-[10px] leading-tight px-1 py-0.5 rounded truncate',
+                        'text-xs leading-tight px-1 py-0.5 rounded truncate',
                         colors.bg,
                         colors.text,
                         evt.status === 'pending' && 'border border-dashed border-current'
@@ -182,7 +182,7 @@ export function LeaveCalendar({ events, holidays, onDateClick }: LeaveCalendarPr
                   );
                 })}
                 {dayEvents.length > 2 && (
-                  <span className="text-[10px] text-ink-muted">+{dayEvents.length - 2} more</span>
+                  <span className="text-xs text-ink-muted">+{dayEvents.length - 2} more</span>
                 )}
               </div>
             </div>

@@ -80,7 +80,7 @@ export function createCrudPage<TItem extends { id: string }>(
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <div>
             <div className="humi-eyebrow">{config.titleEn.toUpperCase()}</div>
-            <h1 className="font-display text-[22px] font-semibold text-ink">{config.titleTh}</h1>
+            <h1 className="font-display text-2xl font-semibold text-ink">{config.titleTh}</h1>
           </div>
           <button
             type="button"
@@ -203,7 +203,7 @@ export function createCrudPage<TItem extends { id: string }>(
               style={{ width: 480, maxWidth: '100vw', background: 'var(--color-surface)', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--color-hairline)' }}>
-                <h2 className="font-display text-[18px] font-semibold text-ink">
+                <h2 className="font-display text-lg font-semibold text-ink">
                   {mode === 'create' ? `เพิ่ม${config.titleTh}` : `แก้ไข${config.titleTh}`}
                 </h2>
                 <button

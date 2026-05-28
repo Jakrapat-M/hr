@@ -103,7 +103,7 @@ export default function PermissionsPage() {
  <pre className="text-xs bg-surface-raised border border-hairline rounded-md p-3 overflow-auto max-h-[75vh] font-mono text-ink leading-relaxed">
  {JSON.stringify(activeData, null, 2)}
  </pre>
- <p className="text-[11px] text-ink-soft mt-2 leading-snug">
+ <p className="text-xs text-ink-soft mt-2 leading-snug">
  In production this payload POSTs to the permission service
  (Keycloak group attributes or HR policy DB).
  </p>

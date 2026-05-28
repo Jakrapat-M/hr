@@ -58,7 +58,7 @@ export function ScreeningPage() {
  </div>
  </div>
  <div className="flex flex-wrap gap-1 mb-2">
- {candidate.skills.slice(0, 2).map((s) => <Badge key={s} variant="neutral" className="text-[10px]">{s}</Badge>)}
+ {candidate.skills.slice(0, 2).map((s) => <Badge key={s} variant="neutral" className="text-xs">{s}</Badge>)}
  </div>
  <div className="flex gap-1">
  {nextStage && (

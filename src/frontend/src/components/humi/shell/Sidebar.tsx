@@ -36,7 +36,7 @@
 //    and does not collide with the legacy `.humi-*` sidebar rules.
 // ════════════════════════════════════════════════════════════
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -111,6 +111,7 @@ const MODULES: ModuleGroup[] = [
       { id: 'benefits', label: 'Benefits', labelTh: 'สวัสดิการ', href: '__BENEFITS__', show: ALL6 },
       { id: 'documents', label: 'Documents', labelTh: 'เอกสาร', href: '/me/documents', show: ALL6 },
       { id: 'announce', label: 'Announcements', labelTh: 'ประกาศ', href: '/announcements', show: ALL6 },
+      { id: 'resign', label: 'Resign', labelTh: 'ลาออก', href: '/resignation', show: ALL6 }, // employee SELF-SERVICE (BRD #172) — lives in "ฉัน", not HR group (user 2026-05-27)
       // CUT: requests (/requests) — folds into leaves/documents. Page stays URL-only.
     ],
   },
@@ -140,7 +141,10 @@ const MODULES: ModuleGroup[] = [
       { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'hris', 'spd', 'sysadmin'] }, // merges welfare+claims
       { id: 'hr-docs', label: 'HR Documents', labelTh: 'เอกสารบุคคล', href: '/admin/documents', show: ['hradmin', 'sysadmin'] }, // merges confirm
       { id: 'changes', label: 'Change Requests', labelTh: 'คำขอเปลี่ยนแปลง', href: '/admin/change-requests', show: ['hradmin', 'hris', 'sysadmin'] }, // merges transfer+regular
-      { id: 'offboard', label: 'Offboarding', labelTh: 'ลาออก', href: '/resignation', show: ['hradmin', 'sysadmin'] },
+      // REMOVED 2026-05-27 (user: "ลาออกไม่ควรอยู่ใน บุคคล"): /resignation is an
+      // employee SELF-SERVICE submission ("ยื่นคำขอลาออก … SPD รับทราบและดำเนินการต่อ"),
+      // not an HR-admin console — it belongs to the "ฉัน" journey (entered from the
+      // profile Employment tab). HR/SPD pick up the submitted request via /quick-approve.
       // CUT/fold: comp→(Payroll, reached elsewhere), assets→Catalog (System), attendance→Reports, audit→System.
     ],
   },
@@ -282,6 +286,107 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
     }
   };
   const collapsedDesktop = collapsed && !isDrawer;
+
+  // ── Drag-to-resize the sidebar width (rail + leaf panel together) ───────────
+  // Persisted like the collapse flag. The chosen width is applied to :root as
+  // --humi-sidebar-w, which the .humi-app grid in globals.css consumes. Clamped
+  // so neither the page nor the panel ever gets squeezed to an unusable size.
+  // Only the desktop static sidebar resizes — the drawer is a fixed overlay.
+  const SIDEBAR_W_MIN = 200;
+  const SIDEBAR_W_MAX = 420;
+  const SIDEBAR_W_DEFAULT = 256;
+  const clampW = (w: number) =>
+    Math.min(SIDEBAR_W_MAX, Math.max(SIDEBAR_W_MIN, Math.round(w)));
+  const [width, setWidth] = useState(SIDEBAR_W_DEFAULT);
+  const [dragging, setDragging] = useState(false);
+  const widthRef = useRef(SIDEBAR_W_DEFAULT);
+  const dragRef = useRef<{ startX: number; startW: number } | null>(null);
+
+  // Read persisted width in an effect (not initial state) so SSR markup ===
+  // first client render — same hydration-safety reason as the collapse flag.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('bp-sidebar-w');
+      if (raw) {
+        const w = clampW(Number(raw));
+        if (Number.isFinite(w)) {
+          setWidth(w);
+          widthRef.current = w;
+        }
+      }
+    } catch {
+      /* localStorage unavailable — keep default width. */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Apply width to the grid via a :root custom property. The collapsed/drawer
+  // CSS rules override the grid by specificity, so setting this unconditionally
+  // (when not the drawer) is safe.
+  useEffect(() => {
+    if (isDrawer) return;
+    try {
+      document.documentElement.style.setProperty('--humi-sidebar-w', `${width}px`);
+    } catch {
+      /* non-DOM env — ignore. */
+    }
+  }, [width, isDrawer]);
+
+  const persistWidth = (w: number) => {
+    try {
+      localStorage.setItem('bp-sidebar-w', String(w));
+    } catch {
+      /* ignore — resize still works for this session. */
+    }
+  };
+  const onResizeDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (collapsedDesktop) return;
+    e.preventDefault();
+    dragRef.current = { startX: e.clientX, startW: widthRef.current };
+    setDragging(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+  };
+  const onResizeMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const next = clampW(d.startW + (e.clientX - d.startX));
+    widthRef.current = next;
+    setWidth(next);
+  };
+  const endResize = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!dragRef.current) return;
+    dragRef.current = null;
+    setDragging(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      /* pointer already released. */
+    }
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+    persistWidth(widthRef.current);
+  };
+  const onResizeKey = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    const STEP = 16;
+    let next = widthRef.current;
+    if (e.key === 'ArrowLeft') next = clampW(widthRef.current - STEP);
+    else if (e.key === 'ArrowRight') next = clampW(widthRef.current + STEP);
+    else if (e.key === 'Home') next = SIDEBAR_W_MIN;
+    else if (e.key === 'End') next = SIDEBAR_W_MAX;
+    else return;
+    e.preventDefault();
+    widthRef.current = next;
+    setWidth(next);
+    persistWidth(next);
+  };
+  const resetWidth = () => {
+    widthRef.current = SIDEBAR_W_DEFAULT;
+    setWidth(SIDEBAR_W_DEFAULT);
+    persistWidth(SIDEBAR_W_DEFAULT);
+  };
+
   const shownGroupId = selectedGroup ?? activeGroupId ?? firstUnlockedId;
   const shownGroup = visibleGroups.find((g) => g.id === shownGroupId) ?? null;
 
@@ -413,6 +518,32 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
           </div>
         </Link>
       </div>
+
+      {/* Drag-to-resize handle — desktop static sidebar only, and only while the
+          leaf panel is expanded (resizing a 74px icon rail is meaningless).
+          ARIA window-splitter pattern: role=separator + valuenow/min/max +
+          arrow-key support. Double-click resets to the default width. */}
+      {!isDrawer && !collapsedDesktop && (
+        <button
+          type="button"
+          className="bp-resize-handle"
+          data-dragging={dragging ? 'true' : undefined}
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="ปรับความกว้างเมนูด้านข้าง"
+          aria-valuenow={width}
+          aria-valuemin={SIDEBAR_W_MIN}
+          aria-valuemax={SIDEBAR_W_MAX}
+          tabIndex={0}
+          title="ลากเพื่อปรับความกว้าง · ดับเบิลคลิกเพื่อรีเซ็ต"
+          onPointerDown={onResizeDown}
+          onPointerMove={onResizeMove}
+          onPointerUp={endResize}
+          onPointerCancel={endResize}
+          onKeyDown={onResizeKey}
+          onDoubleClick={resetWidth}
+        />
+      )}
     </aside>
   );
 }

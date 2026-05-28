@@ -41,7 +41,7 @@ export default function AdminBenefitRecordsPage() {
         <CardEyebrow>
           {isTh ? 'สวัสดิการ · บันทึกโดย HR' : 'Benefits admin · HR records'}
         </CardEyebrow>
-        <h1 className="font-display text-[28px] font-semibold text-ink">
+        <h1 className="font-display text-3xl font-semibold text-ink">
           {isTh ? 'บันทึกสวัสดิการพิเศษ' : 'Benefit Records'}
         </h1>
         <p className="mt-2 text-small text-ink-muted">

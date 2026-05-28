@@ -299,7 +299,7 @@ export default function HumiAnnouncementsPage() {
             <div className="humi-eyebrow" style={{ color: '#6B4E14' }}>
               {t('draftEyebrow')}
             </div>
-            <h3 className="mt-1.5 font-display text-[18px] font-semibold leading-[1.2] tracking-tight text-ink">
+            <h3 className="mt-1.5 font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
               {t('draftTitle')}
             </h3>
             <p

@@ -79,21 +79,16 @@ describe('HirePage UX refactor navigation and candidate context', () => {
     await waitFor(() => expect(nav.replace).toHaveBeenCalledWith('/th/admin/hire?step=1', { scroll: false }))
   })
 
-  it('honors an unlocked URL step and rejects a locked direct URL step', async () => {
-    act(() => {
-      useHireWizard.getState().goNext()
-    })
-    resetPage('step=2')
-    act(() => {
-      useHireWizard.setState({ currentStep: 1, maxUnlockedStep: 2 })
-    })
-
-    render(<HirePage />)
-    await waitFor(() => expect(screen.getByTestId('step-state')).toHaveTextContent('2/2'))
-
+  it('honors a direct URL step (including locked steps) without advancing maxUnlockedStep', async () => {
+    // URL deep-link navigation bypasses lock — jumpToUrl is used, not jumpTo
+    // maxUnlockedStep stays at 1; currentStep follows the URL
     resetPage('step=3')
+    act(() => {
+      useHireWizard.setState({ currentStep: 1, maxUnlockedStep: 1 })
+    })
+
     render(<HirePage />)
-    await waitFor(() => expect(nav.replace).toHaveBeenCalledWith('/th/admin/hire?step=1', { scroll: false }))
+    await waitFor(() => expect(screen.getByTestId('step-state')).toHaveTextContent('3/1'))
     expect(useHireWizard.getState().maxUnlockedStep).toBe(1)
   })
 

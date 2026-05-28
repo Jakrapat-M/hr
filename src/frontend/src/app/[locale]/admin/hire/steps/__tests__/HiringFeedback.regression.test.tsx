@@ -199,11 +199,15 @@ describe('MS Teams hiring feedback regression', () => {
   })
 
   it('does not render removed employment-detail fields from the Teams feedback', () => {
+    // dvtPreviousId and SSN remain removed from StepEmployeeInfo (moved to StepIdentity / removed entirely).
+    // pfServiceDate (PVD Entry Date) was legitimately re-added in the +52 spec fields
+    // as "PF Service Date / กองทุนสำรองเลี้ยงชีพ" (Area C — SF EmpEmployment.pfServiceDate).
     render(<StepEmployeeInfo />)
 
     expect(screen.queryByLabelText('Previous Employee ID (DVT)')).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/SSN \/ National ID/)).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('PVD Entry Date')).not.toBeInTheDocument()
+    // PVD Entry Date is now correctly present as pfServiceDate per Area C spec
+    expect(screen.queryByLabelText('PVD Entry Date')).toBeInTheDocument()
   })
 
   it('validates Employee Info from visible hiring fields without the removed Employee Class UI', async () => {

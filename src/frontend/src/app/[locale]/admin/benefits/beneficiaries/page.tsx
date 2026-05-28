@@ -149,7 +149,7 @@ export default function AdminBeneficiariesPage() {
           <CardEyebrow>
             {isTh ? 'สวัสดิการ · บันทึกโดย HR' : 'Benefits admin · HR records'}
           </CardEyebrow>
-          <h1 className="font-display text-[28px] font-semibold text-ink">
+          <h1 className="font-display text-3xl font-semibold text-ink">
             {isTh ? 'ผู้รับผลประโยชน์' : 'Beneficiaries'}
           </h1>
           <p className="mt-2 text-small text-ink-muted">
@@ -176,15 +176,15 @@ export default function AdminBeneficiariesPage() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Card variant="raised" size="md">
           <CardEyebrow>{isTh ? 'รายการทั้งหมด' : 'Total records'}</CardEyebrow>
-          <p className="mt-1 font-display text-[24px] font-semibold text-ink tabular-nums">{rows.length}</p>
+          <p className="mt-1 font-display text-2xl font-semibold text-ink tabular-nums">{rows.length}</p>
         </Card>
         <Card variant="raised" size="md">
           <CardEyebrow>{isTh ? 'ใช้งานอยู่' : 'Active'}</CardEyebrow>
-          <p className="mt-1 font-display text-[24px] font-semibold text-ink tabular-nums">{activeCount}</p>
+          <p className="mt-1 font-display text-2xl font-semibold text-ink tabular-nums">{activeCount}</p>
         </Card>
         <Card variant="raised" size="md">
           <CardEyebrow>{isTh ? 'จำนวนพนักงาน' : 'Employees covered'}</CardEyebrow>
-          <p className="mt-1 font-display text-[24px] font-semibold text-ink tabular-nums">{empCount}</p>
+          <p className="mt-1 font-display text-2xl font-semibold text-ink tabular-nums">{empCount}</p>
         </Card>
       </div>
 

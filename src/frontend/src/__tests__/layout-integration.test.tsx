@@ -122,8 +122,9 @@ describe('AC-2 — wordmark "Hum" present on all routes', () => {
   for (const route of ROUTES) {
     it(`wordmark visible at ${route}`, async () => {
       const { container, unmount } = await renderShellAtRoute(route);
-      // The wordmark div now holds the official Humi logo PNG (alt="Humi")
-      const wordmarkEl = container.querySelector('.humi-wordmark');
+      // Sidebar was ported to Blueprint rail+panel (2026-05-25). The brand logo
+      // now lives in .bp-rail-brand (the icon-rail col-1 brand cell), not .humi-wordmark.
+      const wordmarkEl = container.querySelector('.bp-rail-brand');
       expect(wordmarkEl).toBeTruthy();
       // Brand mark = img with alt matching "Humi"
       const img = wordmarkEl?.querySelector('img');
