@@ -53,9 +53,12 @@ vi.mock('next-intl', () => ({
       selectBloodType: '— เลือกกรุ๊ปเลือด —',
       selectMaritalStatus: '— เลือกสถานภาพ —',
       selectReligion: '— เลือกศาสนา (ไม่บังคับ) —',
+      selectOtherTitleTh: '— เลือกคำนำหน้า —',
+      otherTitleTh: 'คำนำหน้าอื่น (TH)',
     }
     return th[key] ?? key
   },
+  useLocale: () => 'th',
 }))
 
 // reset Zustand store before every test to guarantee isolation

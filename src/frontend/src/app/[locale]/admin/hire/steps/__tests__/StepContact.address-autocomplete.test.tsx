@@ -56,6 +56,7 @@ vi.mock('next-intl', () => ({
     }
     return th[key] ?? key
   },
+  useLocale: () => 'th',
 }))
 
 // ── Minimal mock data matching the real chunk format ───────────────────────
