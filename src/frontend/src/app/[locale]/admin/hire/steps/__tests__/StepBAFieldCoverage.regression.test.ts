@@ -2,8 +2,17 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-const BA_CSV_PATH =
-  '/Users/tachongrak/stark/projects/hr-platform-replacement/ba-source/EC-list-of-fields-2026-05-10.employee-file.csv'
+// STA-82 A5b: de-hardcode the machine-specific absolute path. The BA field fixture
+// now lives in-repo so the test is portable across machines / CI.
+// process.cwd() === src/frontend when vitest runs; '../../' reaches the repo root.
+// NOTE (deviation from ralplan §A5b): the plan called for switching to V0.2.xlsx, but
+// the project has no xlsx parser dependency and adding one violates the no-new-deps /
+// mockup-phase rule. The committed CSV is the exact source the test already validated
+// (205 Hiring rows), so content is unchanged — only the path is made portable.
+const BA_CSV_PATH = resolve(
+  process.cwd(),
+  '../../projects/hr-platform-replacement/ba-source/EC-list-of-fields-2026-05-10.employee-file.csv',
+)
 
 const HIRE_SOURCE_ROOTS = [
   resolve(process.cwd(), 'src/app/[locale]/admin/hire'),
