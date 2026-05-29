@@ -74,12 +74,15 @@ export default function StepEmployeeInfo({ onValidChange }: StepEmployeeInfoProp
   const [pfServiceEndDate,     setPfServiceEndDate]     = useState<string>(formData.employeeInfo.pfServiceEndDate ?? '')
 
   const validate = useCallback(
-    (group: string, subGroup: string, origStart: string, senStart: string) => {
+    (group: string, subGroup: string, origStart: string, senStart: string, pfStart: string, pfEnd: string) => {
       const result = stepEmployeeInfoSchema.safeParse({
         employeeGroup: group || undefined,
         employeeSubGroup: subGroup || undefined,
         originalStartDate: origStart,
         seniorityStartDate: senStart,
+        // STA-82 AC10: feed PF dates so pfServiceEndAfterPfStart refine fires in the live form.
+        pfServiceDate: pfStart,
+        pfServiceEndDate: pfEnd,
       })
       if (result.success) {
         onValidChange?.(true)
@@ -93,8 +96,8 @@ export default function StepEmployeeInfo({ onValidChange }: StepEmployeeInfoProp
   useEffect(() => {
     // Existing validation callback updates wizard validity while synchronizing this legacy step.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    validate(employeeGroup, employeeSubGroup, originalStartDate, seniorityStartDate)
-  }, [employeeGroup, employeeSubGroup, originalStartDate, seniorityStartDate, validate])
+    validate(employeeGroup, employeeSubGroup, originalStartDate, seniorityStartDate, pfServiceDate, pfServiceEndDate)
+  }, [employeeGroup, employeeSubGroup, originalStartDate, seniorityStartDate, pfServiceDate, pfServiceEndDate, validate])
 
   // Sync employeeGroup/SubGroup to store (BRD #23, #30)
   useEffect(() => {

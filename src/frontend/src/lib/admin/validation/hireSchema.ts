@@ -166,6 +166,18 @@ export const stepIdentitySchema = z.object({
     path: ['nationalId'],
   },
 )
+// STA-82 A3 — idExpiryAfterIssue: expiry must be after issue when both present.
+// Inline 'TH (EN)' literal per Principle 7 / ADR-4 (no i18n key).
+.refine(
+  (data) => {
+    if (!data.issueDate || !data.expiryDate) return true
+    return new Date(data.expiryDate) > new Date(data.issueDate)
+  },
+  {
+    message: 'วันหมดอายุบัตรต้องหลังวันออกบัตร (ID expiry must be after issue)',
+    path: ['expiryDate'],
+  },
+)
 
 export type StepIdentityData = z.infer<typeof stepIdentitySchema>
 
@@ -362,7 +374,56 @@ export const stepEmployeeInfoSchema = z.object({
   // Phase 4: SSN — User.ssn (sap_label="National ID", sap_creatable=true).
   // Optional 13-digit Thai social security / national ID number for User entity.
   ssn: z.string().optional().default(''),
+  // STA-82 A3/A4 — PVD service dates. Field names match the store + StepEmployeeInfo
+  // (pfServiceDate/pfServiceEndDate) so the refine below is reachable from the live form.
+  // Optional (mockup phase).
+  pfServiceDate: z.string().optional().default(''),
+  pfServiceEndDate: z.string().optional().default(''),
 })
+// STA-82 A3 — pfServiceEndAfterPfStart: PVD exit date must be after entry date when both present.
+// Inline 'TH (EN)' literal per Principle 7 / ADR-4 (no i18n key).
+.superRefine((data, ctx) => {
+  if (!data.pfServiceDate || !data.pfServiceEndDate) return
+  if (new Date(data.pfServiceEndDate) <= new Date(data.pfServiceDate)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'วันสิ้นสุด PF service ต้องหลังวันเริ่ม (PF service end must be after start)',
+      path: ['pfServiceEndDate'],
+    })
+  }
+})
+
+// STA-82 A3 — DVT sub-schema (Job > DVT cluster, conditional on Scholarship === 'YES').
+// All fields optional; visibility/gating handled at wizard level by shouldShowDvtSection.
+// Draft preservation per ADR-3 (no useEffect, no reset).
+// Field names mirror the 7 BA DVT rows as stored on the job slice
+// (dvtProjectName/dvtType/dvtCourse/dvtCourseOfTime/dvtAcademicYear/
+//  dvtGraduationDate/dvtBondingEndDate) so callers can build this shape directly.
+export const dvtSchema = z.object({
+  projectName: z.string().optional().default(''),
+  dvtType: z.string().optional().default(''),
+  course: z.string().optional().default(''),
+  courseOfTime: z.string().optional().default(''),
+  academicYear: z.string().optional().default(''),
+  graduationDate: z.string().optional().default(''),
+  bondingEndDate: z.string().optional().default(''),
+})
+
+export type DvtData = z.infer<typeof dvtSchema>
+
+/** ADR-3 helper — true when any DVT field is non-empty (draft exists). */
+export function hasDvtDraftData(dvt: DvtData | undefined | null): boolean {
+  if (!dvt) return false
+  return Object.values(dvt).some((v) => typeof v === 'string' && v.length > 0)
+}
+
+/** Wizard-level visibility gate per ADR-3. Mirrors conditional-sections.ts:13-29 precedent. */
+export function shouldShowDvtSection(
+  scholarship: '' | 'YES' | 'NO' | undefined | null,
+  dvt: DvtData | undefined | null,
+): boolean {
+  return scholarship === 'YES' || hasDvtDraftData(dvt)
+}
 
 export const stepNationalIdSchema = z.object({
   value: z

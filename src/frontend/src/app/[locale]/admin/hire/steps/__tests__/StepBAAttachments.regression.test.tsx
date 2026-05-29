@@ -11,6 +11,7 @@ import { useHireWizard } from '@/lib/admin/store/useHireWizard'
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => 'th',
 }))
 
 type CandidateSection = {

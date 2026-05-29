@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl'
 import { useHireWizard, sliceValid } from '@/lib/admin/store/useHireWizard'
 import { useHrbpRoster } from '@/lib/admin/store/hrbpRoster'
 import { deriveUserId, deriveUsername } from '@/lib/admin/hire/sfMapper/derivedRules'
+import { collectCrossStepFailures } from '@/lib/admin/validation/crossStepRules'
 import { ClipboardCheck, Check, AlertCircle, UserCheck, PhoneCall, Users } from 'lucide-react'
 
 function SummaryRow({ label, value, ok }: { label: string; value: string; ok: boolean }) {
@@ -103,6 +104,16 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
   const derivedUserId = deriveUserId(id.employeeId || '')
   const derivedUsername = deriveUsername(primaryEmail, derivedUserId)
   const employeeGroupValue = [employeeInfo.employeeGroup, employeeInfo.employeeSubGroup].filter(Boolean).join(' / ') || '—'
+
+  // STA-82 AC7 / ADR-4 — surface failing cross-step rules inline in the Review
+  // summary. Messages are pre-localized 'TH (EN)' literals from crossStepRules.ts
+  // (no t() wrapper). Step 3 (Review) runs the same Step-2 rule set.
+  const crossStepFailures = collectCrossStepFailures(3, {
+    identity: { hireDate: id.hireDate ?? undefined },
+    // Mirror the submit-gate mapping in useHireWizard.checkStepValid (probationaryPeriodEndDate
+    // with a Phase-3 probationEndDate fallback) so Review display and gate stay in parity.
+    job: { probationEnd: job.probationaryPeriodEndDate ?? job.probationEndDate ?? undefined },
+  })
 
   return (
     <div id="review" className="space-y-5">
@@ -243,6 +254,58 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
           <SummaryRow label={t('summaryCompensation')}    value={salary}                        ok={sliceValid.compensation(formData)} />
           <SummaryRow label={t('summaryDirectManager')}    value={directManagerValue}             ok={!!job.supervisorId} />
           <SummaryRow label={t('summaryHrbp')}            value={hrbpAssignee || t('summaryNotSelected')} ok={!!hrbpAssignee} />
+        </div>
+      </div>
+
+      {/* ── STA-82 AC7: รายละเอียดงาน / องค์กร เพิ่มเติม + cross-step rule surfacing ─── */}
+      <div id="review.jobDetails" className="humi-card scroll-mt-6">
+        <ReviewCheckpointHeader
+          icon={ClipboardCheck}
+          title={t('jobDetailsSectionTitle')}
+          sub={t('jobDetailsSectionSub')}
+        />
+        <div>
+          {/* ADR-4: failing cross-step rules surface inline at the top of the card */}
+          {crossStepFailures.map((failure) => (
+            <SummaryRow
+              key={failure.path.join('.')}
+              label={t('summaryValidationIssue')}
+              value={failure.message}
+              ok={false}
+            />
+          ))}
+          {/* Job Information */}
+          <SummaryRow label={t('summaryPersonnelGrade')}            value={job.personnelGrade || '—'}            ok={!!job.personnelGrade} />
+          <SummaryRow label={t('summaryBand')}                      value={job.band || '—'}                      ok={!!job.band} />
+          <SummaryRow label={t('summaryBandMatching')}              value={job.bandMatching || '—'}              ok={!!job.bandMatching} />
+          <SummaryRow label={t('summaryTransferOutTo')}             value={job.transferOutTo || '—'}             ok={!!job.transferOutTo} />
+          <SummaryRow label={t('summaryTransferInTo')}              value={job.transferInTo || '—'}              ok={!!job.transferInTo} />
+          <SummaryRow label={t('summarySpecialBenefitGroup')}       value={job.specialBenefitGroup || '—'}       ok={!!job.specialBenefitGroup} />
+          <SummaryRow label={t('summaryOkToRehire')}                value={job.okToRehire || '—'}                ok={!!job.okToRehire} />
+          <SummaryRow label={t('summaryProbationaryPeriodEndDate')} value={job.probationaryPeriodEndDate || '—'} ok={!!job.probationaryPeriodEndDate} />
+          <SummaryRow label={t('summaryExtendedProbationDate')}     value={job.extendedProbationDate || '—'}     ok={!!job.extendedProbationDate} />
+          {/* Organisation Information */}
+          <SummaryRow label={t('summaryPointOfSales')}              value={job.pointOfSales || '—'}              ok={!!job.pointOfSales} />
+          <SummaryRow label={t('summaryStoreBrandFormat')}          value={job.storeBrandFormat || '—'}          ok={!!job.storeBrandFormat} />
+          <SummaryRow label={t('summaryBrand')}                     value={job.brand || '—'}                     ok={!!job.brand} />
+          <SummaryRow label={t('summaryWorkLocation')}              value={job.workLocation || '—'}              ok={!!job.workLocation} />
+          {/* PF dates (employeeInfo) + passport (identity) */}
+          <SummaryRow label={t('summaryPfServiceDate')}             value={employeeInfo.pfServiceDate || '—'}    ok={!!employeeInfo.pfServiceDate} />
+          <SummaryRow label={t('summaryPfServiceEndDate')}          value={employeeInfo.pfServiceEndDate || '—'} ok={!!employeeInfo.pfServiceEndDate} />
+          <SummaryRow label={t('summaryPassportId')}                value={id.passportId || '—'}                 ok={!!id.passportId} />
+          {/* Scholarship + DVT cluster (DVT rows only when Scholarship = YES) */}
+          <SummaryRow label={t('summaryScholarship')}               value={job.scholarship || '—'}               ok={!!job.scholarship} />
+          {job.scholarship === 'YES' && (
+            <>
+              <SummaryRow label={t('summaryDvtProjectName')}    value={job.dvtProjectName || '—'}    ok={!!job.dvtProjectName} />
+              <SummaryRow label={t('summaryDvtType')}           value={job.dvtType || '—'}           ok={!!job.dvtType} />
+              <SummaryRow label={t('summaryDvtCourse')}         value={job.dvtCourse || '—'}         ok={!!job.dvtCourse} />
+              <SummaryRow label={t('summaryDvtCourseOfTime')}   value={job.dvtCourseOfTime || '—'}   ok={!!job.dvtCourseOfTime} />
+              <SummaryRow label={t('summaryDvtAcademicYear')}   value={job.dvtAcademicYear || '—'}   ok={!!job.dvtAcademicYear} />
+              <SummaryRow label={t('summaryDvtGraduationDate')} value={job.dvtGraduationDate || '—'} ok={!!job.dvtGraduationDate} />
+              <SummaryRow label={t('summaryDvtBondingEndDate')} value={job.dvtBondingEndDate || '—'} ok={!!job.dvtBondingEndDate} />
+            </>
+          )}
         </div>
       </div>
 

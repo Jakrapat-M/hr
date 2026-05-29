@@ -10,6 +10,7 @@ import {
   stepIdentitySchema,
   stepBiographicalSchema,
   stepCompensationSchema,
+  stepEmployeeInfoSchema,
   calcAge,
 } from '@/lib/admin/validation/hireSchema'
 
@@ -209,6 +210,71 @@ describe('BRD #119 cost distribution — stepCompensationSchema superRefine', ()
     if (!result.success) {
       const issue = result.error.issues.find((i) => i.path[0] === 'costDistribution')
       expect(issue?.message).toBe('สัดส่วน cost center รวมต้องเท่ากับ 100%')
+    }
+  })
+})
+
+// ─── STA-82 AC10: idExpiryAfterIssue — stepIdentitySchema cross-field refine ───
+describe('STA-82 AC10 idExpiryAfterIssue — stepIdentitySchema', () => {
+  it('PASS: expiryDate after issueDate', () => {
+    const result = stepIdentitySchema.safeParse({
+      ...validIdentity,
+      issueDate: '2020-01-01',
+      expiryDate: '2030-01-01',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('PASS: both blank (optional — no rule)', () => {
+    const result = stepIdentitySchema.safeParse({ ...validIdentity, issueDate: null, expiryDate: null })
+    expect(result.success).toBe(true)
+  })
+
+  it('FAIL: expiryDate <= issueDate → inline TH (EN) literal on expiryDate path', () => {
+    const result = stepIdentitySchema.safeParse({
+      ...validIdentity,
+      issueDate: '2030-01-01',
+      expiryDate: '2030-01-01',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path[0] === 'expiryDate')
+      expect(issue?.message).toBe('วันหมดอายุบัตรต้องหลังวันออกบัตร (ID expiry must be after issue)')
+    }
+  })
+})
+
+// ─── STA-82 AC10: pfServiceEndAfterPfStart — stepEmployeeInfoSchema superRefine ───
+describe('STA-82 AC10 pfServiceEndAfterPfStart — stepEmployeeInfoSchema', () => {
+  const validEmployeeInfo = {
+    originalStartDate:  '2020-01-01',
+    seniorityStartDate: '2020-01-01',
+  }
+
+  it('PASS: pfServiceEndDate after pfServiceDate', () => {
+    const result = stepEmployeeInfoSchema.safeParse({
+      ...validEmployeeInfo,
+      pfServiceDate: '2020-02-01',
+      pfServiceEndDate: '2025-02-01',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('PASS: PF dates blank (optional — no rule)', () => {
+    const result = stepEmployeeInfoSchema.safeParse(validEmployeeInfo)
+    expect(result.success).toBe(true)
+  })
+
+  it('FAIL: pfServiceEndDate <= pfServiceDate → inline TH (EN) literal on pfServiceEndDate path', () => {
+    const result = stepEmployeeInfoSchema.safeParse({
+      ...validEmployeeInfo,
+      pfServiceDate: '2025-02-01',
+      pfServiceEndDate: '2020-02-01',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path[0] === 'pfServiceEndDate')
+      expect(issue?.message).toBe('วันสิ้นสุด PF service ต้องหลังวันเริ่ม (PF service end must be after start)')
     }
   })
 })

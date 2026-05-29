@@ -135,6 +135,7 @@ const messages: Record<string, string> = {
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => messages[key] ?? key,
+  useLocale: () => 'th',
 }))
 
 vi.mock('@/components/admin/PositionLookup', () => ({

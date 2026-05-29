@@ -9,7 +9,8 @@
 // Perf budget goal: ≤500ms first interaction on slow 3G (chunk ≤100KB; Bangkok max 33KB)
 // Picklist source: SF cite in code comments
 
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { ADDRESS_TYPE_OPTIONS, SOCIAL_DOMAIN_OPTIONS, pickLabel } from '@/lib/admin/hire/picklists/picklistRegistry'
 import { useHireWizard, type EmailEntry, type JobRelationship } from '@/lib/admin/store/useHireWizard'
 import AddressPicklist, { EMPTY_ADDRESS_PICKLIST, type AddressPicklistValue } from '@/components/AddressPicklist'
 import { AttachmentDropzone, type AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
@@ -46,31 +47,6 @@ const PHONE_TYPE_LABELS: Record<string, string> = {
 
 const SF_PHONE_TYPES = ['C', 'B', 'H', 'F', 'BI'] as const
 const SF_EMAIL_TYPES = ['P', 'B'] as const
-
-// STA-82: addressType LOV — SF PerAddressDEFLT.addressType
-// HOME=ที่บ้าน, WORK=ที่ทำงาน, OTHER=อื่นๆ
-const ADDRESS_TYPE_LABELS: Record<string, string> = {
-  HOME:  'ที่บ้าน (Home)',
-  WORK:  'ที่ทำงาน (Work)',
-  OTHER: 'อื่นๆ (Other)',
-}
-const ADDRESS_TYPES = ['HOME', 'WORK', 'OTHER'] as const
-
-// STA-82: imdomain LOV — SF PerSocialAccountNav.domain
-// AIM/Google/ICQ/LINE/MSN/QQ/Skype/WeChat/WhatsApp/Yahoo
-const IM_DOMAIN_LABELS: Record<string, string> = {
-  LINE:      'LINE',
-  WhatsApp:  'WhatsApp',
-  Skype:     'Skype',
-  WeChat:    'WeChat',
-  Google:    'Google',
-  Yahoo:     'Yahoo',
-  AIM:       'AIM',
-  ICQ:       'ICQ',
-  MSN:       'MSN',
-  QQ:        'QQ',
-}
-const IM_DOMAINS = ['LINE', 'WhatsApp', 'Skype', 'WeChat', 'Google', 'Yahoo', 'AIM', 'ICQ', 'MSN', 'QQ'] as const
 
 // STA-82: Social account entry — SF PerSocialAccountNav
 interface SocialAccountEntry {
@@ -145,6 +121,7 @@ interface ExtendedPhoneEntry {
 
 export default function StepContact() {
   const t = useTranslations('hireForm.contact')
+  const locale = useLocale() as 'th' | 'en'
   const { formData, setStepData } = useHireWizard()
   const {
     phones = [],
@@ -448,8 +425,9 @@ export default function StepContact() {
               onChange={(e) => updateAddress({ addressType: e.target.value })}
               className="humi-select w-full md:w-56"
             >
-              {ADDRESS_TYPES.map((at) => (
-                <option key={at} value={at}>{ADDRESS_TYPE_LABELS[at]}</option>
+              <option value="">— เลือก —</option>
+              {ADDRESS_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
               ))}
             </select>
           </fieldset>
@@ -683,8 +661,8 @@ export default function StepContact() {
                 onChange={(e) => updateSocialAccount(idx, { domain: e.target.value })}
                 className="humi-select w-36 shrink-0"
               >
-                {IM_DOMAINS.map((d) => (
-                  <option key={d} value={d}>{IM_DOMAIN_LABELS[d]}</option>
+                {SOCIAL_DOMAIN_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
                 ))}
               </select>
 

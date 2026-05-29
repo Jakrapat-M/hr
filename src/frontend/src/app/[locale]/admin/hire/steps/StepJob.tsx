@@ -7,9 +7,24 @@
 // Cascade → readonly: businessUnit, branch, job, jobGrade
 // Manual (not in PositionCascade): Division, JobFunction, CorporateTitle
 import { useState, useEffect, useCallback } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useHireWizard } from '@/lib/admin/store/useHireWizard'
-import { stepJobSchema } from '@/lib/admin/validation/hireSchema'
+import {
+  PERSONNEL_GRADE_OPTIONS,
+  BAND_MATCHING_OPTIONS,
+  BAND_OPTIONS,
+  TRANSFER_TARGET_OPTIONS,
+  SPECIAL_BENEFIT_GROUP_OPTIONS,
+  OK_TO_REHIRE_OPTIONS,
+  DVT_TYPE_OPTIONS,
+  SCHOLARSHIP_OPTIONS,
+  POS_OPTIONS,
+  STORE_BRAND_FORMAT_OPTIONS,
+  BRAND_OPTIONS,
+  OT_FLAG_OPTIONS,
+  pickLabel,
+} from '@/lib/admin/hire/picklists/picklistRegistry'
+import { stepJobSchema, shouldShowDvtSection } from '@/lib/admin/validation/hireSchema'
 import PositionLookup from '@/components/admin/PositionLookup'
 import {
   AttachmentDropzone,
@@ -61,6 +76,7 @@ export interface StepJobProps {
 
 export default function StepJob({ onValidChange }: StepJobProps) {
   const t = useTranslations('hireForm.job')
+  const locale = useLocale() as 'th' | 'en'
   const { formData, setStepData } = useHireWizard()
   const job = formData.job
 
@@ -130,6 +146,20 @@ export default function StepJob({ onValidChange }: StepJobProps) {
   const [dvtGraduationDate,     setDvtGraduationDate]     = useState<string>(job.dvtGraduationDate ?? '')
   const [dvtBondingEndDate,     setDvtBondingEndDate]     = useState<string>(job.dvtBondingEndDate ?? '')
   const [scholarship,           setScholarship]           = useState<string>(job.scholarship ?? '')
+
+  // STA-82 AC5 (ADR-3): DVT cluster is visible only when Scholarship === 'YES', OR when a
+  // draft already exists (so a saved DVT draft survives a YES→NO→YES toggle). DVT field
+  // values live in this component's useState, so conditionally rendering the JSX never
+  // discards them — no useEffect, no reset.
+  const showDvtFields = shouldShowDvtSection(scholarship as '' | 'YES' | 'NO', {
+    projectName: dvtProjectName,
+    dvtType,
+    course: dvtCourse,
+    courseOfTime: dvtCourseOfTime,
+    academicYear: dvtAcademicYear,
+    graduationDate: dvtGraduationDate,
+    bondingEndDate: dvtBondingEndDate,
+  })
   const [probationaryPeriodEndDate, setProbationaryPeriodEndDate] = useState<string>(job.probationaryPeriodEndDate ?? '')
   const [extendedProbationDate, setExtendedProbationDate] = useState<string>(job.extendedProbationDate ?? '')
   // Organisation Information
@@ -599,9 +629,10 @@ export default function StepJob({ onValidChange }: StepJobProps) {
                     onChange={(e) => setOtFlag(e.target.value)}
                     className="humi-select w-full"
                   >
-                    <option value="">{t('selectOtFlag')}</option>
-                    <option value="YES">{t('otYes')}</option>
-                    <option value="NO">{t('otNo')}</option>
+                    <option value="">— เลือก —</option>
+                    {OT_FLAG_OPTIONS.map((opt) => (
+                      <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+                    ))}
                   </select>
                 </fieldset>
 
@@ -943,40 +974,49 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* Personnel Grade */}
           <fieldset>
             <label htmlFor="personnel-grade" className="humi-label">Personnel Grade</label>
-            <input
+            <select
               id="personnel-grade"
-              type="text"
               value={personnelGrade}
               onChange={(e) => setPersonnelGrade(e.target.value)}
-              placeholder="Personnel Grade"
-              className="humi-input w-full"
-            />
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              {PERSONNEL_GRADE_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
+            </select>
           </fieldset>
 
           {/* Band Matching */}
           <fieldset>
             <label htmlFor="band-matching" className="humi-label">Band Matching</label>
-            <input
+            <select
               id="band-matching"
-              type="text"
               value={bandMatching}
               onChange={(e) => setBandMatching(e.target.value)}
-              placeholder="Band Matching"
-              className="humi-input w-full"
-            />
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              {BAND_MATCHING_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
+            </select>
           </fieldset>
 
           {/* Band */}
           <fieldset>
             <label htmlFor="band" className="humi-label">Band</label>
-            <input
+            <select
               id="band"
-              type="text"
               value={band}
               onChange={(e) => setBand(e.target.value)}
-              placeholder="Band"
-              className="humi-input w-full"
-            />
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              {BAND_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
+            </select>
           </fieldset>
 
           {/* Transfer out to (LOV) */}
@@ -989,11 +1029,9 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               className="humi-select w-full"
             >
               <option value="">— เลือก —</option>
-              <option value="BU-RETAIL">BU-RETAIL</option>
-              <option value="BU-FOOD">BU-FOOD</option>
-              <option value="BU-PROPERTY">BU-PROPERTY</option>
-              <option value="BU-DIGITAL">BU-DIGITAL</option>
-              <option value="BU-INTERNATIONAL">BU-INTERNATIONAL</option>
+              {TRANSFER_TARGET_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
             </select>
           </fieldset>
 
@@ -1007,11 +1045,9 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               className="humi-select w-full"
             >
               <option value="">— เลือก —</option>
-              <option value="BU-RETAIL">BU-RETAIL</option>
-              <option value="BU-FOOD">BU-FOOD</option>
-              <option value="BU-PROPERTY">BU-PROPERTY</option>
-              <option value="BU-DIGITAL">BU-DIGITAL</option>
-              <option value="BU-INTERNATIONAL">BU-INTERNATIONAL</option>
+              {TRANSFER_TARGET_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
             </select>
           </fieldset>
 
@@ -1031,14 +1067,17 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* Special Benefit Group */}
           <fieldset>
             <label htmlFor="special-benefit-group" className="humi-label">Special Benefit Group</label>
-            <input
+            <select
               id="special-benefit-group"
-              type="text"
               value={specialBenefitGroup}
               onChange={(e) => setSpecialBenefitGroup(e.target.value)}
-              placeholder="Special Benefit Group"
-              className="humi-input w-full"
-            />
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              {SPECIAL_BENEFIT_GROUP_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
+            </select>
           </fieldset>
 
           {/* OK to Rehire (LOV Yes/No) */}
@@ -1051,8 +1090,9 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               className="humi-select w-full"
             >
               <option value="">— เลือก —</option>
-              <option value="YES">Yes / ใช่</option>
-              <option value="NO">No / ไม่ใช่</option>
+              {OK_TO_REHIRE_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
             </select>
           </fieldset>
 
@@ -1090,6 +1130,24 @@ export default function StepJob({ onValidChange }: StepJobProps) {
         </legend>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
 
+          {/* Scholarship — gates the DVT cluster (AC5). Kept first so the relationship is obvious. */}
+          <fieldset>
+            <label htmlFor="scholarship" className="humi-label">Scholarship</label>
+            <select
+              id="scholarship"
+              value={scholarship}
+              onChange={(e) => setScholarship(e.target.value)}
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              {SCHOLARSHIP_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
+            </select>
+          </fieldset>
+
+          {/* DVT detail fields — visible only when Scholarship = YES (or a draft already exists). */}
+          {showDvtFields && (<>
           {/* DVT: Project name */}
           <fieldset>
             <label htmlFor="dvt-project-name" className="humi-label">DVT: Project name</label>
@@ -1106,14 +1164,17 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {/* DVT: Type */}
           <fieldset>
             <label htmlFor="dvt-type" className="humi-label">DVT: Type</label>
-            <input
+            <select
               id="dvt-type"
-              type="text"
               value={dvtType}
               onChange={(e) => setDvtType(e.target.value)}
-              placeholder="DVT Type"
-              className="humi-input w-full"
-            />
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              {DVT_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
+            </select>
           </fieldset>
 
           {/* DVT: Course */}
@@ -1178,19 +1239,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               className="humi-input w-full"
             />
           </fieldset>
-
-          {/* Scholarship */}
-          <fieldset>
-            <label htmlFor="scholarship" className="humi-label">Scholarship</label>
-            <input
-              id="scholarship"
-              type="text"
-              value={scholarship}
-              onChange={(e) => setScholarship(e.target.value)}
-              placeholder="Scholarship"
-              className="humi-input w-full"
-            />
-          </fieldset>
+          </>)}
 
         </div>
       </fieldset>
@@ -1207,40 +1256,49 @@ export default function StepJob({ onValidChange }: StepJobProps) {
             <label htmlFor="point-of-sales" className="humi-label">
               Point of Sales<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
             </label>
-            <input
+            <select
               id="point-of-sales"
-              type="text"
               value={pointOfSales}
               onChange={(e) => setPointOfSales(e.target.value)}
-              placeholder="Point of Sales"
-              className="humi-input w-full"
-            />
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              {POS_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
+            </select>
           </fieldset>
 
           {/* Store Brand/ Format */}
           <fieldset>
             <label htmlFor="store-brand-format" className="humi-label">Store Brand / Format</label>
-            <input
+            <select
               id="store-brand-format"
-              type="text"
               value={storeBrandFormat}
               onChange={(e) => setStoreBrandFormat(e.target.value)}
-              placeholder="Store Brand / Format"
-              className="humi-input w-full"
-            />
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              {STORE_BRAND_FORMAT_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
+            </select>
           </fieldset>
 
           {/* Brand */}
           <fieldset>
             <label htmlFor="brand" className="humi-label">Brand</label>
-            <input
+            <select
               id="brand"
-              type="text"
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
-              placeholder="Brand"
-              className="humi-input w-full"
-            />
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              {BRAND_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
+            </select>
           </fieldset>
 
           {/* Work Location (required) */}

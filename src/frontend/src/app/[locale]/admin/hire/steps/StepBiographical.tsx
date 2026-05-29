@@ -9,7 +9,8 @@
 // Picklist source: @hrms/shared/picklists (C7: single source of truth)
 
 import { useState, useEffect, useCallback } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { OTHER_TITLE_TH_OPTIONS, pickLabel } from '@/lib/admin/hire/picklists/picklistRegistry'
 import { useHireWizard, type FormData } from '@/lib/admin/store/useHireWizard'
 import { stepBiographicalSchema } from '@/lib/admin/validation/hireSchema'
 import {
@@ -28,20 +29,6 @@ import {
   PICKLIST_MARITAL_STATUS,
   PICKLIST_RELIGION,
 } from '@hrms/shared/picklists'
-
-// zOtherTitle LOV — Thai academic/professional titles (PerPersonal.customString1 equivalent)
-// Source: BA Appendix — "Other Title (TH)" picklist
-const PICKLIST_OTHER_TITLE_TH = [
-  { id: 'DR',   labelTh: 'ดร. (Doctor)',        active: true },
-  { id: 'PROF', labelTh: 'ศ. (ศาสตราจารย์)',   active: true },
-  { id: 'ASSP', labelTh: 'รศ. (รองศาสตราจารย์)', active: true },
-  { id: 'ASTP', labelTh: 'ผศ. (ผู้ช่วยศาสตราจารย์)', active: true },
-  { id: 'LEC',  labelTh: 'อ. (อาจารย์)',         active: true },
-  { id: 'REV',  labelTh: 'พระ (พระภิกษุ)',       active: true },
-  { id: 'POL',  labelTh: 'พล.ต.ท. (ตำรวจ)',      active: true },
-  { id: 'MIL',  labelTh: 'พล.ท. (ทหาร)',         active: true },
-  { id: 'OTHER', labelTh: 'อื่นๆ (Other)',        active: true },
-] as const
 
 // SF-aligned gender options — Female/Male only (SF externalCode: Female/Male; Humi id: F/M)
 // SF cite: qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.gender
@@ -91,6 +78,7 @@ type TouchedState = {
 
 export default function StepBiographical({ onValidChange }: StepBiographicalProps) {
   const t = useTranslations('hireForm.biographical')
+  const locale = useLocale() as 'th' | 'en'
   const { formData, setStepData } = useHireWizard()
   const bio = formData.biographical
   const reviewAttachmentName = formData.review?.attachmentName ?? null
@@ -232,8 +220,8 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           onBlur={() => touch('otherTitleTh')}
           className="humi-select w-full">
           <option value="">{t('selectOtherTitleTh')}</option>
-          {PICKLIST_OTHER_TITLE_TH.filter((o) => o.active).map((o) => (
-            <option key={o.id} value={o.id}>{o.labelTh}</option>
+          {OTHER_TITLE_TH_OPTIONS.map((o) => (
+            <option key={o.id} value={o.id}>{pickLabel(o, locale)}</option>
           ))}
         </select>
         {errMsg('otherTitleTh')}
