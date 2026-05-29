@@ -12,6 +12,10 @@
 //   - persist key ยังคง 'hire-wizard-draft' (ไม่ทำลาย existing drafts)
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import {
+  passesAllCrossStepRules,
+  type CrossStepRuleInput,
+} from '@/lib/admin/validation/crossStepRules'
 
 // ประเภท step number — จำกัดเป็น 1-3 เท่านั้น (Who / Job / Review)
 export type StepNumber = 1 | 2 | 3
@@ -710,24 +714,44 @@ const sliceValid = {
 // Cluster 1: identity presence AND Zod (sv.identity) AND bio Zod (sv.biographical)
 //            AND contact Zod (sv.contact) — biographical/contact default true so
 //            unit tests remain green (components not mounted in unit tests)
+// STA-82 A5 (ADR-4) — map FormData onto the permissive CrossStepRuleInput shape.
+// The store names differ from the rule's generic field names, so map explicitly:
+//   - job.probationaryPeriodEndDate → probationEnd (BA "Probationary Period End Date")
+//   - transferOutDate / jobStartDate have NO store field yet (Transfer cluster is
+//     target LOVs, not dates) — left undefined so transferOutAfterJobStart passes
+//     until/unless a transfer-date field is added. The rule stays tested + ready.
+function toCrossStepInput(d: FormData): CrossStepRuleInput {
+  return {
+    identity: { hireDate: d.identity.hireDate ?? undefined },
+    job: {
+      probationEnd: d.job.probationaryPeriodEndDate ?? d.job.probationEndDate ?? undefined,
+    },
+  }
+}
+
 function checkStepValid(step: number, d: FormData, sv: StepValidity, hrbpAssignee: string, strict = false): boolean {
   // Demo-friendly: navigation (strict=false) is a free pass — Next button always enabled
   // so the wizard can be walked end-to-end without filling fields. Strict gate runs only
   // at final Save (HirePage.handleSubmit) so backend never sees incomplete data.
   if (!strict) return true
+  // STA-82 A5 (ADR-4): compose cross-step rules with the per-slice presence/Zod gates.
+  // crossStepRulesFor(1) === [] so step 1 is unaffected; steps 2 and 3 enforce the
+  // probation-after-hire gate (Step-3 submit-gate). Boolean AND — never relaxes.
+  const crossOk = passesAllCrossStepRules(step, toCrossStepInput(d))
   switch (step) {
     case 1:
       // DEF-02/03 strict: identity presence + Zod refine (hireDate ≤90d, NID mod-11)
       // + biographical/contact/emergencyContacts Zod gates.
-      return sliceValid.identity(d) && sv.identity && sv.biographical && sv.contact
+      return crossOk && sliceValid.identity(d) && sv.identity && sv.biographical && sv.contact
         && sliceValid.emergencyContacts(d) && sv.emergencyContacts
     case 2:
       // DEF-05 strict: Cluster 2 presence + sv.employeeInfo (dates/class) + sv.compensation (cost-split sum)
-      return sliceValid.employeeInfo(d) && sliceValid.job(d) && sliceValid.compensation(d)
+      return crossOk && sliceValid.employeeInfo(d) && sliceValid.job(d) && sliceValid.compensation(d)
         && sv.employeeInfo && sv.compensation
     case 3:
-      // Step 3 UI is always navigable. Final strict check happens in handleSubmit.
-      return true
+      // Step 3 UI is always navigable for nav; under strict (final submit) it now also
+      // enforces cross-step rules so Submit is gated when probationEnd <= hireDate (ADR-4).
+      return crossOk
     default: return false
   }
 }
