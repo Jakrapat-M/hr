@@ -26,6 +26,7 @@ const MODULE_ACCESS: Record<string, Role[]> = {
  home: ['employee','manager','hr_admin','hr_manager'],
 'payroll-setup': ['hr_admin','hr_manager'],
 'payroll-processing': ['hr_admin','hr_manager'],
+'payroll-tax-review': ['spd','hr_admin','hr_manager'],
 'time-management': ['hr_admin','hr_manager'],
 'government-reports': ['hr_admin','hr_manager'],
  settings: ['hr_admin','hr_manager'],
@@ -72,7 +73,7 @@ export function canAccessModule(userRoles: Role[], module: string): boolean {
 }
 
 export function getHighestRole(userRoles: Role[]): Role {
- const priority: Role[] = ['hr_manager','hr_admin','hrbp','spd','manager','employee'];
+ const priority: Role[] = ['hr_manager','hr_admin','spd','hrbp','manager','employee'];
  for (const role of priority) {
  if (userRoles.includes(role)) return role;
  }

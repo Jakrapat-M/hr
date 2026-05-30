@@ -130,6 +130,11 @@ const SPD: CapabilityBundle = {
     reroute: true,
     override: true,
   },
+  // Two-axis scope model (do NOT add a 'bu' member to QueueScope):
+  //   1) queueScope = coarse approver-queue tier. SPD's `company` = all-employees
+  //      superset (final approver reads the whole company queue).
+  //   2) data-row scope (which employee ROWS the persona sees) is a separate axis
+  //      in scope-filter.ts: pickScopeMode(['spd']) === 'all'.
   queueScope: 'company',
 };
 
@@ -159,6 +164,11 @@ const HRBP: CapabilityBundle = {
     override: true,
     talentSearch: true,
   },
+  // Two-axis scope model (do NOT add a 'bu' member to QueueScope):
+  //   1) queueScope = coarse approver-queue tier. HRBP's `company` = coarse read
+  //      of the company approver queue.
+  //   2) data-row scope (which employee ROWS the persona sees) is a separate axis
+  //      in scope-filter.ts: pickScopeMode(['hrbp']) === 'bu' (BU-limited rows).
   queueScope: 'company',
 };
 
