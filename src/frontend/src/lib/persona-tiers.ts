@@ -26,6 +26,21 @@ const ROLE_TIER: Record<Role, PersonaTier> = {
   employee: 'D',
 };
 
+/** Blueprint persona ids. */
+export type PersonaId = 'employee' | 'manager' | 'hrbp' | 'spd' | 'hradmin' | 'hris' | 'sysadmin';
+
+/** Blueprint persona id → app Role. sysadmin maps to the top role so it sees
+ *  every group; hris → hr_manager (master-data tier), hradmin → hr_admin. */
+export const PERSONA_ROLE: Record<PersonaId, Role> = {
+  employee: 'employee',
+  manager: 'manager',
+  hrbp: 'hrbp',
+  spd: 'spd',
+  hradmin: 'hr_admin',
+  hris: 'hr_manager',
+  sysadmin: 'hr_manager',
+};
+
 /** The set of tiers a role bundle unlocks, deduped + in canonical order. */
 export function personaTiers(roles: Role[]): PersonaTier[] {
   const set = new Set<PersonaTier>();
