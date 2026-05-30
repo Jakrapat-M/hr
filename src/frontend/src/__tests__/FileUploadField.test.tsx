@@ -377,3 +377,67 @@ describe('Preview — shows filename + size + remove button after upload', () =>
     restore();
   });
 });
+
+// ════════════════════════════════════════════════════════════════════════════
+// maxFiles cap (STA-77 — up to 5 files per claim)
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('maxFiles cap', () => {
+  it('uploading more than maxFiles in one batch caps the count and shows a message', async () => {
+    let n = 0;
+    mockAddAttachment.mockImplementation(() => `att-${++n}`);
+    const restore = mockFileReaderSuccess('data:application/pdf;base64,CAP');
+    render(<FileUploadField label="แนบ" maxFiles={2} />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const files = [
+      makeFile('a.pdf', 0.1, 'application/pdf'),
+      makeFile('b.pdf', 0.1, 'application/pdf'),
+      makeFile('c.pdf', 0.1, 'application/pdf'),
+    ];
+
+    await act(async () => {
+      fireEvent.change(input, { target: { files } });
+    });
+
+    // only the first 2 are accepted
+    expect(mockAddAttachment).toHaveBeenCalledTimes(2);
+    const alert = screen.getByRole('alert');
+    expect(alert.textContent).toMatch(/สูงสุด 2 ไฟล์/);
+    restore();
+  });
+
+  it('rejects further files once the cap is already reached', async () => {
+    let n = 0;
+    mockAddAttachment.mockImplementation(() => `att-${++n}`);
+    const restore = mockFileReaderSuccess('data:application/pdf;base64,CAP2');
+    render(<FileUploadField label="แนบ" maxFiles={1} />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [makeFile('first.pdf', 0.1, 'application/pdf')] } });
+    });
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [makeFile('second.pdf', 0.1, 'application/pdf')] } });
+    });
+
+    expect(mockAddAttachment).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('alert').textContent).toMatch(/สูงสุด 1 ไฟล์/);
+    restore();
+  });
+
+  it('without maxFiles, any number of files is accepted (unchanged default)', async () => {
+    let n = 0;
+    mockAddAttachment.mockImplementation(() => `att-${++n}`);
+    const restore = mockFileReaderSuccess('data:application/pdf;base64,NOLIMIT');
+    render(<FileUploadField label="แนบ" />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const files = Array.from({ length: 7 }, (_, i) => makeFile(`f${i}.pdf`, 0.05, 'application/pdf'));
+
+    await act(async () => {
+      fireEvent.change(input, { target: { files } });
+    });
+
+    expect(mockAddAttachment).toHaveBeenCalledTimes(7);
+    restore();
+  });
+});

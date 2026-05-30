@@ -39,6 +39,8 @@ export interface FileUploadFieldProps {
   required?: boolean;
   /** Max file size in MB. Defaults to 5. */
   maxSizeMB?: number;
+  /** Max number of files. Undefined = unlimited (default). */
+  maxFiles?: number;
   /** Called with the generated attachment id after successful upload. */
   onUpload?: (id: string, file?: { filename: string; size: number; mimeType: string }) => void;
   /** Called with the attachment id when the user removes a file. */
@@ -63,6 +65,7 @@ export function FileUploadField({
   helperText,
   required = false,
   maxSizeMB = 5,
+  maxFiles,
   onUpload,
   onRemove,
   className,
@@ -151,11 +154,32 @@ export function FileUploadField({
     [addAttachment, maxBytes, maxSizeMB, onUpload]
   );
 
+  // ── Add a batch of files, enforcing the optional maxFiles cap ──────────────
+
+  const addFiles = (incoming: File[]) => {
+    let files = incoming;
+    let capMessage: string | null = null;
+    if (maxFiles != null) {
+      const remaining = maxFiles - previews.length;
+      if (remaining <= 0) {
+        setError(`อัปโหลดได้สูงสุด ${maxFiles} ไฟล์`);
+        return;
+      }
+      if (files.length > remaining) {
+        capMessage = `อัปโหลดได้สูงสุด ${maxFiles} ไฟล์ — เพิ่มได้อีก ${remaining} ไฟล์`;
+        files = files.slice(0, remaining);
+      }
+    }
+    // processFile resets the error to null on entry, so surface the cap
+    // message *after* the accepted files are queued.
+    files.forEach(processFile);
+    if (capMessage) setError(capMessage);
+  };
+
   // ── Input change handler ──────────────────────────────────
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    files.forEach(processFile);
+    addFiles(Array.from(e.target.files ?? []));
     // reset input so same file can be re-selected after removal
     e.target.value = '';
   };
@@ -175,8 +199,7 @@ export function FileUploadField({
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(false);
-    const files = Array.from(e.dataTransfer.files);
-    files.forEach(processFile);
+    addFiles(Array.from(e.dataTransfer.files));
   };
 
   // ── Remove handler ────────────────────────────────────────
@@ -279,7 +302,7 @@ export function FileUploadField({
 
           {/* Format/size hint */}
           <p className="text-small text-ink-muted">
-            PDF, JPG, PNG — สูงสุด {maxSizeMB} MB
+            PDF, JPG, PNG — สูงสุด {maxSizeMB} MB{maxFiles != null ? ` · สูงสุด ${maxFiles} ไฟล์` : ''}
           </p>
         </div>
 
