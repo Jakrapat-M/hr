@@ -9,6 +9,9 @@ import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
 import type { ApproverStage } from '@/data/benefits/plan-registry';
 import { useOvertime, type OTRequest, type OTStatus } from '@/hooks/use-overtime';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth-store';
+import { hasAnyRole } from '@/lib/rbac';
+import { AccessDenied } from '@/components/shared/access-denied';
 
 // Overtime approval chain: manager only
 const OT_CHAIN: ApproverStage[] = ['manager'];
@@ -228,9 +231,24 @@ function OTRow({
 export default function OvertimePage() {
   const locale = useLocale();
   const t = useTranslations('overtime');
+  const roles = useAuthStore((s) => s.roles);
   const { requests, loading, stats, submitRequest, cancelRequest } = useOvertime();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: '', startTime: '18:00', endTime: '20:00', reason: '' });
+
+  // In-page guard: OT approver surface = team manager / HR (OQ-2 explicit list,
+  // NOT MODULE_ACCESS.overtime which governs admin config surfaces). Deny → render
+  // AccessDenied IN PLACE; no redirect to /timeoff, no toast (M1). URL stays /overtime.
+  // Placed after all hooks to respect the Rules of Hooks.
+  const canApprove = hasAnyRole(roles, ['manager', 'hr_admin', 'hr_manager']);
+  if (!canApprove) {
+    return (
+      <AccessDenied
+        reasonTh="หน้านี้สำหรับผู้อนุมัติ OT (หัวหน้า/HR)"
+        reason="For OT approvers (manager/HR)"
+      />
+    );
+  }
 
   const displayRequests = requests.length > 0 ? requests : MOCK_EXTRA;
   const auditMap = requests.length > 0 ? OT_AUDIT : OT_AUDIT_DEMO;
