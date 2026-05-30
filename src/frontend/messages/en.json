@@ -5136,5 +5136,23 @@
     "whyNotEligible": "Why not eligible",
     "employeeId": "Employee ID",
     "planId": "Plan ID"
+  },
+  "timesheetReview": {
+    "eyebrow": "Time & Attendance",
+    "title": "Timesheet Review",
+    "subtitle": "Read-only view of weekly timesheets submitted by your team.",
+    "tableTitle": "Submitted timesheets",
+    "tableCaption": "Submitted weekly timesheets",
+    "colEmployee": "Employee",
+    "colWeek": "Week of",
+    "colTotal": "Total hours",
+    "colStatus": "Status",
+    "colSubmittedAt": "Submitted",
+    "statusSubmitted": "Submitted",
+    "hours": "{count} hrs",
+    "emptyTitle": "No timesheets submitted yet",
+    "emptyDesc": "Submitted weekly timesheets from your team will appear here.",
+    "noAccessTitle": "Not available",
+    "noAccessDesc": "Timesheet review is available to managers and HR only."
   }
 }

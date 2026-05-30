@@ -2,10 +2,17 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Check, Plus } from 'lucide-react';
+import { Check, Plus, AlertTriangle } from 'lucide-react';
 import { Card, CardTitle, Button } from '@/components/humi';
 import { cn } from '@/lib/utils';
 import { useTimesheet } from '@/hooks/use-time';
+import { useAuthStore } from '@/stores/auth-store';
+import {
+  useTimesheetSubmissions,
+  validateTimesheet,
+  sumTimesheetHours,
+  type TimesheetSubmissionRow,
+} from '@/stores/timesheet-submissions';
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 type Day = typeof DAYS[number];
@@ -19,15 +26,53 @@ export default function TimesheetPage() {
   const isTh = locale === 'th';
 
   const { rows, weekStart, updateHours, addRow, totalPerDay } = useTimesheet();
+  const submit = useTimesheetSubmissions((s) => s.submit);
+  const userId = useAuthStore((s) => s.userId);
+  const username = useAuthStore((s) => s.username);
   const [newProject, setNewProject] = useState('');
   const [toast, setToast] = useState<string | null>(null);
+  const [status, setStatus] = useState<
+    { kind: 'success' | 'error'; message: string } | null
+  >(null);
 
   const grandTotal = totalPerDay.reduce((s, v) => s + v, 0);
 
   const handleSave = () => {
-    // Mockup: timesheet rows live in local state (useTimesheet); persist the
-    // current edit by snapshotting the grand total and confirming with a toast.
-    setToast(isTh ? `บันทึกแล้ว · รวม ${grandTotal} ชม.` : `Saved · ${grandTotal} hrs total`);
+    // Mockup: validate the weekly totals, then persist a `submitted` record to
+    // the timesheet-submissions store. This is status tracking, NOT a routed
+    // approval — the manager/HR review surface only reads this store.
+    const snapshot: TimesheetSubmissionRow[] = rows.map((r) => ({ ...r }));
+    const result = validateTimesheet(snapshot);
+
+    if (!result.valid) {
+      const message =
+        result.reason === 'day-over-24'
+          ? isTh
+            ? 'ชั่วโมงต่อวันต้องไม่เกิน 24 ชม.'
+            : 'A single day cannot exceed 24 hours.'
+          : isTh
+            ? 'กรุณาบันทึกชั่วโมงงานก่อนส่ง'
+            : 'Please log some hours before submitting.';
+      setStatus({ kind: 'error', message });
+      return;
+    }
+
+    const total = sumTimesheetHours(snapshot);
+    submit({
+      employeeId: userId ?? 'EMP001',
+      employeeName: username ?? 'พนักงาน',
+      weekStart,
+      rows: snapshot,
+      totalHours: total,
+    });
+
+    setStatus({
+      kind: 'success',
+      message: isTh
+        ? `ส่งใบบันทึกเวลาแล้ว · รวม ${total} ชม.`
+        : `Timesheet submitted · ${total} hrs total`,
+    });
+    setToast(isTh ? `บันทึกแล้ว · รวม ${total} ชม.` : `Saved · ${total} hrs total`);
     window.setTimeout(() => setToast(null), 3200);
   };
 
@@ -63,6 +108,27 @@ export default function TimesheetPage() {
           {isTh ? 'บันทึก' : 'Save'}
         </Button>
       </div>
+
+      {/* Validation / confirmation status (pumpkin danger token for errors — never red) */}
+      {status && (
+        <div
+          role={status.kind === 'error' ? 'alert' : 'status'}
+          aria-live="polite"
+          className={cn(
+            'flex items-center gap-2 rounded-[var(--radius-md)] border px-4 py-3 text-body font-medium',
+            status.kind === 'error'
+              ? 'bg-danger-soft border-danger text-danger'
+              : 'bg-accent-soft border-accent text-accent',
+          )}
+        >
+          {status.kind === 'error' ? (
+            <AlertTriangle size={16} aria-hidden />
+          ) : (
+            <Check size={16} aria-hidden />
+          )}
+          {status.message}
+        </div>
+      )}
 
       <Card>
         <div className="overflow-x-auto">
