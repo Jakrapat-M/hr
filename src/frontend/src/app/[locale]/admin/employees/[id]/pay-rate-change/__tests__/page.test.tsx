@@ -235,18 +235,20 @@ describe('STA-24: /pay-rate-change form — existing field coverage', () => {
     usePayRateApprovals.getState().clear()
   })
 
-  it('Amount type toggle: percent default; flat switch works', () => {
+  it('Amount type toggle: flat (THB) default; percent switch works', () => {
+    // STA-83: amount type now defaults to THB (flat), not percent.
     render(<PayRateChangePage />)
     const percentRadio = screen.getByRole('radio', { name: 'percent' }) as HTMLInputElement
     const flatRadio = screen.getByRole('radio', { name: 'flat' }) as HTMLInputElement
-    expect(percentRadio.checked).toBe(true)
-    const amountInput = screen.getByLabelText(/amount value/i) as HTMLInputElement
-    fireEvent.change(amountInput, { target: { value: '10' } })
-    expect(amountInput.value).toBe('10')
-    fireEvent.click(flatRadio)
     expect(flatRadio.checked).toBe(true)
+    expect(percentRadio.checked).toBe(false)
+    const amountInput = screen.getByLabelText(/amount value/i) as HTMLInputElement
     fireEvent.change(amountInput, { target: { value: '12500' } })
     expect(amountInput.value).toBe('12500')
+    fireEvent.click(percentRadio)
+    expect(percentRadio.checked).toBe(true)
+    fireEvent.change(amountInput, { target: { value: '10' } })
+    expect(amountInput.value).toBe('10')
   })
 
   it('Currency defaults to THB', () => {
