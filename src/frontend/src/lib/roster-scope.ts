@@ -42,6 +42,13 @@ export function pickRosterScope(
   currentEmpId: string | null,
   totalRows: number,
 ): RosterScope {
+  // No resolvable identity (e.g. email not in EMP_BY_LOGIN) → we cannot compute a
+  // persona slice, so fall back to the full demo board rather than an empty one.
+  // Real demo personas (manager/hrbp/...) resolve an emp-id and still scope below.
+  if (!currentEmpId) {
+    return Object.freeze({ mode: 'all', visibleCount: totalRows, employees: [...pool] });
+  }
+
   const { mode, employees } = filterEmployeesByPersona(pool, roles, currentEmpId);
 
   // 'all' personas see the full board; scoped personas see a slice sized to

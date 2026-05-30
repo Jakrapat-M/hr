@@ -113,6 +113,8 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/en/resignation', title: 'ลาออก' },
   { prefix: '/th/permissions', title: 'สิทธิ์ตามบทบาท' },
   { prefix: '/en/permissions', title: 'สิทธิ์ตามบทบาท' },
+  { prefix: '/th/hrbp/employees', title: 'พนักงานในหน่วยงาน' },
+  { prefix: '/en/hrbp/employees', title: 'BU Employees' },
 ];
 
 type ReadonlyURLSearchParamsLike = {
