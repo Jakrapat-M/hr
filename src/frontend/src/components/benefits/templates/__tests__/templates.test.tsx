@@ -107,12 +107,13 @@ describe('SimpleClaimForm', () => {
     expect(screen.getByLabelText(/จำนวนเงินตามใบเสร็จ/)).toBeInTheDocument();
   });
 
-  it('shows the approval chain stages', () => {
+  it('does not show the approval chain (removed per STA-76)', () => {
     render(<SimpleClaimForm plan={OPD_PLAN} />);
-    // OPD plan has ['hrbp','spd','hr_admin']
-    expect(screen.getByText('HRBP')).toBeInTheDocument();
-    expect(screen.getByText('SPD')).toBeInTheDocument();
-    expect(screen.getByText('HR Admin')).toBeInTheDocument();
+    // OPD plan has ['hrbp','spd','hr_admin'] but the claim form no longer
+    // surfaces the internal approval routing to the employee.
+    expect(screen.queryByText(/ขั้นตอนอนุมัติ/)).not.toBeInTheDocument();
+    expect(screen.queryByText('HRBP')).not.toBeInTheDocument();
+    expect(screen.queryByText('SPD')).not.toBeInTheDocument();
   });
 
   it('shows annual limit when set', () => {

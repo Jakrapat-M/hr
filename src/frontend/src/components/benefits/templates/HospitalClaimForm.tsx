@@ -7,7 +7,6 @@ import { FileUploadField } from '@/components/humi/FileUploadField';
 import { Capability } from '@/components/humi';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import type { BenefitTemplateProps } from './SimpleClaimForm';
-import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
 
 // Mock dependent list — Sprint 2 will wire to real API
 const MOCK_DEPENDENTS = [
@@ -206,14 +205,6 @@ export function HospitalClaimForm({
           onUpload={(_, file) => setField('attachmentName', file?.filename ?? '')}
           onRemove={() => setField('attachmentName', '')}
         />
-      </div>
-
-      {/* Approval chain */}
-      <div className="mt-4 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-3">
-        <p className="mb-2 text-small font-medium text-ink">
-          {isTh ? 'ขั้นตอนอนุมัติ' : 'Approval chain'}
-        </p>
-        <ApprovalChain chain={plan.approvalChain} locale={locale} />
       </div>
 
       {errors.length > 0 && (
