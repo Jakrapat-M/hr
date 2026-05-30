@@ -118,6 +118,53 @@ export function Tab1IdentityFields({
 
   return (
     <div className="space-y-5">
+      {/* ── Benefit info section — moved to top per STA-84 ──────────────── */}
+      <div className="border-b border-hairline pb-5">
+        <h3 className="mb-3 text-small font-semibold uppercase tracking-wider text-ink-muted">
+          {isTh ? 'ข้อมูลสวัสดิการ (Benefit info)' : 'Benefit info'}
+        </h3>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Country */}
+          <FormField
+            id="tab1-country"
+            label={isTh ? 'ประเทศ (Country)' : 'Country'}
+            required
+          >
+            {(cp) => (
+              <select
+                {...cp}
+                value={values.country}
+                onChange={(e) => onChange('country', e.target.value as CountryCode)}
+                className={selectClass}
+              >
+                <option value="TH">{isTh ? 'ไทย (TH)' : 'Thailand (TH)'}</option>
+                <option value="VN">{isTh ? 'เวียดนาม (VN)' : 'Vietnam (VN)'}</option>
+              </select>
+            )}
+          </FormField>
+
+          {/* Status */}
+          <FormField
+            id="tab1-status"
+            label={isTh ? 'สถานะ (Status)' : 'Status'}
+            required
+          >
+            {(cp) => (
+              <select
+                {...cp}
+                value={values.status}
+                onChange={(e) => onChange('status', e.target.value as PlanStatus)}
+                className={selectClass}
+              >
+                <option value="active">{isTh ? 'ใช้งาน (Active)' : 'Active'}</option>
+                <option value="inactive">{isTh ? 'ไม่ใช้งาน (Inactive)' : 'Inactive'}</option>
+              </select>
+            )}
+          </FormField>
+        </div>
+      </div>
+
       {/* 1. TTT reference */}
       <FormField
         id="tab1-ttt"
@@ -277,53 +324,6 @@ export function Tab1IdentityFields({
             />
           )}
         </FormField>
-      </div>
-
-      {/* ── STA-70 Benefit info section ─────────────────────────────────── */}
-      <div className="border-t border-hairline pt-5">
-        <h3 className="mb-3 text-small font-semibold uppercase tracking-wider text-ink-muted">
-          {isTh ? 'ข้อมูลสวัสดิการ (Benefit info)' : 'Benefit info'}
-        </h3>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {/* 10. Country */}
-          <FormField
-            id="tab1-country"
-            label={isTh ? 'ประเทศ (Country)' : 'Country'}
-            required
-          >
-            {(cp) => (
-              <select
-                {...cp}
-                value={values.country}
-                onChange={(e) => onChange('country', e.target.value as CountryCode)}
-                className={selectClass}
-              >
-                <option value="TH">{isTh ? 'ไทย (TH)' : 'Thailand (TH)'}</option>
-                <option value="VN">{isTh ? 'เวียดนาม (VN)' : 'Vietnam (VN)'}</option>
-              </select>
-            )}
-          </FormField>
-
-          {/* 11. Status */}
-          <FormField
-            id="tab1-status"
-            label={isTh ? 'สถานะ (Status)' : 'Status'}
-            required
-          >
-            {(cp) => (
-              <select
-                {...cp}
-                value={values.status}
-                onChange={(e) => onChange('status', e.target.value as PlanStatus)}
-                className={selectClass}
-              >
-                <option value="active">{isTh ? 'ใช้งาน (Active)' : 'Active'}</option>
-                <option value="inactive">{isTh ? 'ไม่ใช้งาน (Inactive)' : 'Inactive'}</option>
-              </select>
-            )}
-          </FormField>
-        </div>
       </div>
 
       {/* ── STA-70 Benefit type / group section ─────────────────────────── */}
