@@ -1138,9 +1138,47 @@ export const HUMI_MY_PROFILE = {
   // rather than introduce new keys into this shared object literal. Each renders via
   // FieldCard in profile/me/page.tsx once populated. Empty arrays add no field tokens →
   // StepBAFieldCoverage regression stays GREEN (maintain rows are excluded from it anyway).
-  workExperienceCompany: [] as ReadonlyArray<readonly [string, string]>,   // Batch 7
-  previousEmployment: [] as ReadonlyArray<readonly [string, string]>,      // Batch 7
-  certifications: [] as ReadonlyArray<readonly [string, string]>,          // Batch 7
+  // ── Work Experience Within Company (Batch 7) — SF EC Core EmpJob history rows
+  workExperienceCompany: [
+    ['──── ตำแหน่งปัจจุบัน ────', ''],
+    ['Start Date', '1 ตุลาคม 2566'],
+    ['End Date', 'ปัจจุบัน'],
+    ['Event', 'Transfer / โอนย้าย'],
+    ['Company', 'Central Retail Corporation PCL'],
+    ['──── ประวัติตำแหน่ง ────', ''],
+    ['Start Date', '1 มีนาคม 2562'],
+    ['End Date', '30 กันยายน 2566'],
+    ['Event', 'Promotion / เลื่อนตำแหน่ง'],
+    ['Company', 'Central Group HQ'],
+    ['Start Date', '1 พฤษภาคม 2559'],
+    ['End Date', '28 กุมภาพันธ์ 2562'],
+    ['Event', 'Hire / บรรจุ'],
+    ['Company', 'Robinson Lifestyle Co., Ltd.'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Previous Employment (Batch 7) — SF EC Core OutsideWorkExperience
+  previousEmployment: [
+    ['──── ประสบการณ์ก่อนร่วมงาน ────', ''],
+    ['Start Date', 'มิถุนายน 2557'],
+    ['End Date', 'เมษายน 2559'],
+    ['Company Name', 'PTT Global Chemical PCL'],
+    ['Start Date', 'มิถุนายน 2555'],
+    ['End Date', 'พฤษภาคม 2557'],
+    ['Company Name', 'Kasikorn Bank PCL (HR Dept.)'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Certifications / Licenses (Batch 7) — SF EC Core PersonCertification
+  certifications: [
+    ['──── ใบรับรอง/ใบอนุญาต ────', ''],
+    ['Certification / License', 'Professional HR (PHR)'],
+    ['License Number', 'PHR-2023-TH-08841'],
+    ['Name as on Certificate', 'Chongrak Tanaka'],
+    ['Country', 'Thailand'],
+    ['Certification / License', 'SHRM Certified Professional (SHRM-CP)'],
+    ['License Number', 'SHRM-CP-2022-067321'],
+    ['Name as on Certificate', 'Jongrak Tanaka'],
+    ['Country', 'United States'],
+  ] as ReadonlyArray<readonly [string, string]>,
   assessments: [] as ReadonlyArray<readonly [string, string]>,             // Batch 8
   memberships: [] as ReadonlyArray<readonly [string, string]>,             // Batch 8
   specialProjects: [] as ReadonlyArray<readonly [string, string]>,         // Batch 8

@@ -3824,7 +3824,13 @@
     "profileFieldAddress": "Address",
     "resignationSectionEyebrow": "Resignation",
     "resignationSectionDesc": "Submit and track resignation requests",
-    "resignationSectionLink": "View resignation requests"
+    "resignationSectionLink": "View resignation requests",
+    "workExpCompanyEyebrow": "Work experience",
+    "workExpCompanyTitle": "Experience within company",
+    "prevEmploymentEyebrow": "Previous employment",
+    "prevEmploymentTitle": "Work history before joining",
+    "certificationsEyebrow": "Certifications & licences",
+    "certificationsTitle": "Professional certifications"
   },
   "humiAnnouncements": {
     "subtitle": "Team and company feed",
@@ -4241,7 +4247,9 @@
       "passportIdPlaceholder": "Passport number (optional)"
     },
     "globalInfo": {
-      "disabilityAttachment": "Disability Document (Attachment)"
+      "disabilityAttachment": "Disability Document (Attachment)",
+      "countryRegion": "Country / Region",
+      "selectCountryRegion": "Select country"
     },
     "biographical": {
       "sectionTitle": "Personal Information",
@@ -4524,6 +4532,8 @@
       "summaryDvtAcademicYear": "DVT: Academic Year",
       "summaryDvtGraduationDate": "DVT: Graduation Date",
       "summaryDvtBondingEndDate": "DVT: Bonding End date",
+      "summaryDvtPartnerUniversity": "DVT: Partner University",
+      "summaryDvtDegreeLevel": "DVT: Degree Level",
       "summaryPfServiceDate": "PF Service Date",
       "summaryPfServiceEndDate": "PF Service End Date",
       "summaryPassportId": "Passport ID"

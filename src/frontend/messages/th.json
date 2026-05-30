@@ -3703,7 +3703,13 @@
     "profileFieldAddress": "ที่อยู่",
     "resignationSectionEyebrow": "การลาออก",
     "resignationSectionDesc": "ยื่นคำขอลาออกและติดตามสถานะ",
-    "resignationSectionLink": "ดูคำขอลาออก"
+    "resignationSectionLink": "ดูคำขอลาออก",
+    "workExpCompanyEyebrow": "ประสบการณ์ทำงาน",
+    "workExpCompanyTitle": "ประสบการณ์ภายในบริษัท",
+    "prevEmploymentEyebrow": "ประวัติการทำงานก่อนหน้า",
+    "prevEmploymentTitle": "ประวัติการทำงานก่อนเข้าร่วม",
+    "certificationsEyebrow": "ใบรับรองและใบอนุญาต",
+    "certificationsTitle": "ใบรับรองวิชาชีพ"
   },
   "humiAnnouncements": {
     "subtitle": "ฟีดของทีมและบริษัท",
@@ -4120,7 +4126,9 @@
       "passportIdPlaceholder": "เลขหนังสือเดินทาง (ไม่บังคับ)"
     },
     "globalInfo": {
-      "disabilityAttachment": "เอกสารแนบ (สถานะความพิการ)"
+      "disabilityAttachment": "เอกสารแนบ (สถานะความพิการ)",
+      "countryRegion": "ประเทศ / ภูมิภาค",
+      "selectCountryRegion": "เลือกประเทศ"
     },
     "biographical": {
       "sectionTitle": "ข้อมูลส่วนตัว",
@@ -4403,6 +4411,8 @@
       "summaryDvtAcademicYear": "DVT: ปีการศึกษา",
       "summaryDvtGraduationDate": "DVT: วันจบการศึกษา",
       "summaryDvtBondingEndDate": "DVT: วันสิ้นสุดข้อผูกพัน",
+      "summaryDvtPartnerUniversity": "DVT: มหาวิทยาลัยคู่ร่วม",
+      "summaryDvtDegreeLevel": "DVT: ระดับการศึกษา",
       "summaryPfServiceDate": "วันเริ่มสมาชิกกองทุนสำรองเลี้ยงชีพ",
       "summaryPfServiceEndDate": "วันสิ้นสุดกองทุนสำรองเลี้ยงชีพ",
       "summaryPassportId": "เลขหนังสือเดินทาง"
