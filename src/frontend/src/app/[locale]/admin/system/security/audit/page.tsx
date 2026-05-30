@@ -51,7 +51,11 @@ export default function AuditLogPage() {
       rows = rows.filter(
         (r) =>
           r.actor.toLowerCase().includes(q) ||
-          r.actorRole.toLowerCase().includes(q),
+          r.actorRole.toLowerCase().includes(q) ||
+          r.targetEntity.toLowerCase().includes(q) ||
+          r.targetEntityTh.toLowerCase().includes(q) ||
+          r.targetId.toLowerCase().includes(q) ||
+          (r.field?.toLowerCase().includes(q) ?? false),
       );
     }
     return rows;
@@ -95,6 +99,16 @@ export default function AuditLogPage() {
             {isTh ? row.targetEntityTh : row.targetEntity}
           </p>
           <p className="font-mono text-xs text-ink-faint">{row.targetId}</p>
+          {row.field && (
+            <p className="mt-1 text-xs text-ink-muted">
+              <span className="font-medium text-ink-soft">
+                {isTh ? (row.fieldTh ?? row.field) : row.field}:
+              </span>{' '}
+              <span className="text-ink-faint line-through">{row.oldValue}</span>
+              <span aria-hidden className="mx-1">→</span>
+              <span className="font-medium text-accent">{row.newValue}</span>
+            </p>
+          )}
         </div>
       ),
     },
@@ -136,8 +150,8 @@ export default function AuditLogPage() {
           </h1>
           <p className="mt-2 text-small text-ink-muted">
             {isTh
-              ? `ประวัติการดำเนินการในระบบ — ${filtered.length} รายการ`
-              : `System action history — ${filtered.length} entries`}
+              ? `ประวัติการดำเนินการและการแก้ไขข้อมูลในระบบ — ${filtered.length} รายการ`
+              : `System action & record change history — ${filtered.length} entries`}
           </p>
         </header>
 
@@ -179,7 +193,7 @@ export default function AuditLogPage() {
               type="text"
               value={actorFilter}
               onChange={(e) => setActorFilter(e.target.value)}
-              placeholder={isTh ? 'ค้นหาผู้ดำเนินการ...' : 'Search actor...'}
+              placeholder={isTh ? 'ค้นหา (ผู้ดำเนินการ / เป้าหมาย)...' : 'Search actor or record...'}
               className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-1.5 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent"
             />
             {actorFilter && (

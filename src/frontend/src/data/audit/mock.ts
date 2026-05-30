@@ -25,9 +25,21 @@ export interface AuditEntry {
   category: AuditCategory;
   ip: string;
   timestamp: string;
+  /** Field-level change history (STA-80). Present on record edits — shows
+   *  which field changed and its before/after value. */
+  field?: string;
+  fieldTh?: string;
+  oldValue?: string;
+  newValue?: string;
 }
 
 export const MOCK_AUDIT_LOG: AuditEntry[] = [
+  // ── STA-80: record change history (field-level before/after) ──────────────
+  { id: 'AUD-CH-01', actor: 'Ken Admin',      actorRole: 'HR Admin', action: 'edit', actionLabelTh: 'แก้ไขข้อมูล', actionLabelEn: 'Edited', targetEntity: 'Benefit: Medical Reimbursement', targetEntityTh: 'สวัสดิการ: ค่ารักษาพยาบาล', targetId: 'TH_MED_001', category: 'system', ip: '10.0.0.5', timestamp: '2026-05-05T10:12:00Z', field: 'Maximum Claim Amount', fieldTh: 'วงเงินเบิกสูงสุด', oldValue: '30,000 THB', newValue: '35,000 THB' },
+  { id: 'AUD-CH-02', actor: 'Ken Admin',      actorRole: 'HR Admin', action: 'edit', actionLabelTh: 'แก้ไขข้อมูล', actionLabelEn: 'Edited', targetEntity: 'Benefit: Medical Reimbursement', targetEntityTh: 'สวัสดิการ: ค่ารักษาพยาบาล', targetId: 'TH_MED_001', category: 'system', ip: '10.0.0.5', timestamp: '2026-05-05T10:09:00Z', field: 'Enable Attachment', fieldTh: 'อนุญาตแนบไฟล์', oldValue: 'No', newValue: 'Yes' },
+  { id: 'AUD-CH-03', actor: 'กัณณิกา HRBP',   actorRole: 'HRBP',     action: 'edit', actionLabelTh: 'แก้ไขข้อมูล', actionLabelEn: 'Edited', targetEntity: 'Benefit: Medical Reimbursement', targetEntityTh: 'สวัสดิการ: ค่ารักษาพยาบาล', targetId: 'TH_MED_001', category: 'system', ip: '10.0.1.24', timestamp: '2026-05-04T16:40:00Z', field: 'Reset Day Numbering', fieldTh: 'การรีเซ็ตรอบวัน', oldValue: 'Yearly', newValue: 'Per Claim' },
+  { id: 'AUD-CH-04', actor: 'Ken Admin',      actorRole: 'HR Admin', action: 'edit', actionLabelTh: 'แก้ไขข้อมูล', actionLabelEn: 'Edited', targetEntity: 'Benefit: Dental Care', targetEntityTh: 'สวัสดิการ: ทันตกรรม', targetId: 'TH_DEN_002', category: 'system', ip: '10.0.0.5', timestamp: '2026-05-04T09:20:00Z', field: 'Status', fieldTh: 'สถานะ', oldValue: 'Inactive', newValue: 'Active' },
+  { id: 'AUD-CH-05', actor: 'กัณณิกา HRBP',   actorRole: 'HRBP',     action: 'edit', actionLabelTh: 'แก้ไขข้อมูล', actionLabelEn: 'Edited', targetEntity: 'Employee', targetEntityTh: 'ข้อมูลพนักงาน', targetId: 'EMP004', category: 'employee', ip: '10.0.1.24', timestamp: '2026-05-03T13:05:00Z', field: 'Job Grade', fieldTh: 'ระดับงาน', oldValue: 'M3', newValue: 'M4' },
   { id: 'AUD-001', actor: 'วิชัย SPD',        actorRole: 'SPD',      action: 'approve',        actionLabelTh: 'อนุมัติ',              actionLabelEn: 'Approved',          targetEntity: 'LeaveRequest',        targetEntityTh: 'คำขอลา',              targetId: 'WF-001', category: 'workflow', ip: '10.0.1.12',  timestamp: '2026-05-02T08:31:00Z' },
   { id: 'AUD-002', actor: 'กัณณิกา HRBP',    actorRole: 'HRBP',     action: 'approve',        actionLabelTh: 'อนุมัติ',              actionLabelEn: 'Approved',          targetEntity: 'OvertimeRequest',     targetEntityTh: 'คำขอล่วงเวลา',        targetId: 'WF-008', category: 'workflow', ip: '10.0.1.24',  timestamp: '2026-05-02T07:55:00Z' },
   { id: 'AUD-003', actor: 'สมชาย Manager',    actorRole: 'Manager',  action: 'submit',         actionLabelTh: 'ยื่นคำขอ',             actionLabelEn: 'Submitted',         targetEntity: 'LeaveRequest',        targetEntityTh: 'คำขอลา',              targetId: 'WF-006', category: 'workflow', ip: '10.0.2.44',  timestamp: '2026-05-02T07:30:00Z' },
