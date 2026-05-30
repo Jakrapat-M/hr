@@ -7,9 +7,7 @@ import {
   Wallet,
   Network,
   BarChart3,
-  Briefcase,
   Inbox,
-  Users2,
   Clock,
   Bell,
   GraduationCap,
@@ -134,13 +132,6 @@ export const DEFAULT_ESS_ACTIONS: QuickAction[] = [
     tone: 'indigo',
   },
   {
-    icon: makeIcon(Users2),
-    labelTh: 'ทำเนียบพนักงาน',
-    labelEn: 'Directory',
-    href: '/th/admin/employees',
-    tone: 'indigo',
-  },
-  {
     icon: makeIcon(BarChart3),
     labelTh: 'ผลงานของฉัน',
     labelEn: 'Performance',
@@ -162,9 +153,7 @@ export const DEFAULT_ESS_ACTIONS: QuickAction[] = [
 // param so the canonical surface filters to the manager's team. Replaces the
 // 7-tab /manager-dashboard landing.
 export const MANAGER_ACTIONS: QuickAction[] = [
-  { icon: makeIcon(Users2),    labelTh: 'ทีมของฉัน',        labelEn: 'My Team',        href: '/th/admin/employees?scope=team', tone: 'teal'   },
   { icon: makeIcon(Network),   labelTh: 'แผนผังทีมฉัน',      labelEn: 'Team Org Chart', href: '/th/org-chart?scope=team',       tone: 'indigo' },
-  { icon: makeIcon(Briefcase), labelTh: 'ตำแหน่งของทีมฉัน', labelEn: 'Team Positions', href: '/th/admin/positions?scope=team', tone: 'indigo' },
   { icon: makeIcon(BarChart3), labelTh: 'รายงานของทีมฉัน',   labelEn: 'Team Reports',   href: '/th/reports?scope=team',         tone: 'amber'  },
   { icon: makeIcon(Inbox),     labelTh: 'คำขอรออนุมัติ',     labelEn: 'Approvals',      href: '/th/quick-approve',              tone: 'coral'  },
 ];

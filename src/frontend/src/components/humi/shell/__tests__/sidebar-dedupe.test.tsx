@@ -93,6 +93,7 @@ import { Sidebar } from '../Sidebar';
 const PERSONA_ROLES: Record<string, string[]> = {
   employee: ['employee'],
   manager: ['manager', 'employee'],
+  hrbp: ['hrbp', 'employee'],
   hradmin: ['hr_admin', 'employee'],
   hris: ['hr_manager', 'employee'],
   spd: ['spd', 'employee'],
@@ -270,5 +271,35 @@ describe('AC5.4 — manager team-group regression guard', () => {
     ).find((b) => /Team|ทีม/.test(b.textContent ?? ''));
     expect(teamTrigger).toBeDefined();
     expect(teamTrigger!.disabled).toBe(false);
+  });
+});
+
+// ─── AC-2.1 (P1 Item 2) — ghost-menu cut for People Partners ──────────────────
+// hrbp/spd were shown /admin/employees + /admin/change-requests leaves that the
+// route guards block (admin/layout admits neither; change-requests excludes
+// hrbp) → false affordances. PR-3 drops them. REMOVE not HIDE.
+
+describe('AC-2.1 — People-Partner ghost-menu leaves are cut', () => {
+  it('spd persona: no leaf resolves to /admin/employees', () => {
+    const bares = collectLeafHrefs(PERSONA_ROLES.spd).map(toBarePath);
+    expect(bares).not.toContain('/admin/employees');
+  });
+
+  it('hrbp persona: no leaf resolves to /admin/employees OR /admin/change-requests', () => {
+    const bares = collectLeafHrefs(PERSONA_ROLES.hrbp).map(toBarePath);
+    expect(bares).not.toContain('/admin/employees');
+    expect(bares).not.toContain('/admin/change-requests');
+  });
+
+  it("the employees leaf show === ['hradmin','hris','sysadmin']", () => {
+    const src = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/humi/shell/Sidebar.tsx'),
+      'utf8',
+    );
+    const line = src
+      .split('\n')
+      .find((l) => l.includes("href: '/admin/employees'"));
+    expect(line).toBeDefined();
+    expect(line).toContain("show: ['hradmin', 'hris', 'sysadmin']");
   });
 });

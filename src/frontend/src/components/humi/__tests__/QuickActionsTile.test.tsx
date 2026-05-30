@@ -33,16 +33,18 @@ describe('QuickActionsTile — AC-1 RENDER', () => {
 });
 
 // ────────────────────────────────────────────────────────────
-// AC3.1 — 12 tiles for full/admin persona
+// AC3.1 — 11 tiles for full/admin persona
+// (P1 Item 2: the all-roles "Directory" → /admin/employees tile was cut as a
+//  false affordance for non-admin roles, 12 → 11.)
 // ────────────────────────────────────────────────────────────
-describe('QuickActionsTile — AC3.1 12 tiles', () => {
-  it('DEFAULT_ESS_ACTIONS exports exactly 12 รายการ', () => {
-    expect(DEFAULT_ESS_ACTIONS).toHaveLength(12);
+describe('QuickActionsTile — AC3.1 11 tiles', () => {
+  it('DEFAULT_ESS_ACTIONS exports exactly 11 รายการ', () => {
+    expect(DEFAULT_ESS_ACTIONS).toHaveLength(11);
   });
 
-  it('renders 12 action links when no props.actions passed', () => {
+  it('renders 11 action links when no props.actions passed', () => {
     render(<QuickActionsTile />);
-    expect(screen.getAllByRole('link')).toHaveLength(12);
+    expect(screen.getAllByRole('link')).toHaveLength(11);
   });
 
   it('show field is present on at least one role-restricted tile', () => {
@@ -50,11 +52,12 @@ describe('QuickActionsTile — AC3.1 12 tiles', () => {
     expect(gated.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('employee-visible tiles number at least 11', () => {
+  it('employee-visible tiles number at least 10', () => {
+    // P1 Item 2 cut the un-gated "Directory" tile (12 → 11 total, 11 → 10 employee-visible).
     const employeeVisible = DEFAULT_ESS_ACTIONS.filter(
       (a) => !a.show || a.show.includes('Employee'),
     );
-    expect(employeeVisible.length).toBeGreaterThanOrEqual(11);
+    expect(employeeVisible.length).toBeGreaterThanOrEqual(10);
   });
 });
 
@@ -82,7 +85,7 @@ describe('QuickActionsTile — AC3.4 tone token scan', () => {
     const badgeSpans = Array.from(
       container.querySelectorAll('.humi-quick-action-item span[aria-hidden="true"]'),
     );
-    expect(badgeSpans.length).toBe(12);
+    expect(badgeSpans.length).toBe(11);
     const tonePatterns = [
       /bg-accent-soft/,
       /bg-\[var\(--color-accent-alt-soft\)\]/,

@@ -14,7 +14,6 @@ import {
   X,
   ArrowRight,
   Clock,
-  Users,
   ClipboardList,
   Zap,
   ChevronRight,
@@ -117,13 +116,6 @@ export default function ManagerDashboardPage() {
           >
             <Inbox size={15} />
             {t('ctaApprove')}
-          </Link>
-          <Link
-            href={`/${locale}/admin/employees?scope=team`}
-            className="humi-button humi-button--ghost"
-          >
-            <Users size={15} />
-            {t('ctaTeam')}
           </Link>
         </div>
       </div>
