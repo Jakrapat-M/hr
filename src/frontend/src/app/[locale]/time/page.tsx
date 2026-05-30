@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Clock, CalendarOff, Timer, CheckSquare } from 'lucide-react';
+import { Clock, CalendarOff, Timer, CheckSquare, ClipboardList } from 'lucide-react';
 import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
+import { useAuthStore } from '@/stores/auth-store';
+import { hasAnyRole } from '@/lib/rbac';
 
 const TILES = [
   {
@@ -44,10 +46,25 @@ const TILES = [
   },
 ];
 
+// Manager/HR-only tiles (remove-not-hide: hidden entirely for roles without access).
+const REVIEW_TILE = {
+  key: 'timesheet-review',
+  icon: ClipboardList,
+  titleEn: 'Timesheet Review',
+  titleTh: 'ตรวจสอบใบบันทึกเวลา',
+  descEn: 'Read-only view of timesheets submitted by your team',
+  descTh: 'มุมมองแบบอ่านอย่างเดียวของใบบันทึกเวลาที่ทีมส่ง',
+  href: 'time/review',
+} as const;
+
 export default function TimeLandingPage() {
   const params = useParams();
   const locale = params?.locale as string ?? 'th';
   const isTh = locale === 'th';
+
+  const roles = useAuthStore((s) => s.roles);
+  const canReview = hasAnyRole(roles, ['manager', 'hrbp', 'spd', 'hr_admin', 'hr_manager']);
+  const tiles = canReview ? [...TILES, REVIEW_TILE] : TILES;
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8">
@@ -70,7 +87,7 @@ export default function TimeLandingPage() {
 
       {/* 4-tile grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {TILES.map(({ key, icon: Icon, titleEn, titleTh, descEn, descTh, href }) => (
+        {tiles.map(({ key, icon: Icon, titleEn, titleTh, descEn, descTh, href }) => (
           <Link key={key} href={`/${locale}/${href}`} className="group block no-underline">
             <Card className="h-full hover:shadow-[var(--shadow-card)] transition-shadow">
               <div className="flex items-start gap-4 p-5">
