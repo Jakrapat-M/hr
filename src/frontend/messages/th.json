@@ -3715,7 +3715,13 @@
     "membershipsEyebrow": "สมาชิกองค์กรวิชาชีพ",
     "membershipsTitle": "สมาชิกภาพและตำแหน่ง",
     "specialProjectsEyebrow": "โครงการพิเศษและกิจกรรมชุมชน",
-    "specialProjectsTitle": "งานพิเศษ โครงการ และงานอาสาสมัคร"
+    "specialProjectsTitle": "งานพิเศษ โครงการ และงานอาสาสมัคร",
+    "documentsEyebrow": "เอกสารและ E-Letter",
+    "documentsTitle": "เอกสาร OHS, E-Letter และ EBO",
+    "advancedPersonalEyebrow": "ข้อมูลเพิ่มเติม",
+    "advancedPersonalTitle": "ข้อมูลและลิงก์เพิ่มเติม",
+    "compensationExtraEyebrow": "เปรียบเทียบค่าตอบแทน",
+    "compensationExtraTitle": "Compa-Ratio และตำแหน่งในกลุ่มเงินเดือน"
   },
   "humiAnnouncements": {
     "subtitle": "ฟีดของทีมและบริษัท",

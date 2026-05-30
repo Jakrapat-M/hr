@@ -1535,6 +1535,42 @@ export default function HumiProfileMePage({
               />
             </div>
           )}
+
+          {/* ── Batch 9: Documents & E-Letter (STA-82 EC maintain) ──────────── */}
+          {p.documents.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('documentsEyebrow')}
+                title={t('documentsTitle')}
+                rows={p.documents}
+                labelW={160}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 9: Advanced Personal / Additional Info (STA-82 EC maintain) */}
+          {p.advancedPersonal.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('advancedPersonalEyebrow')}
+                title={t('advancedPersonalTitle')}
+                rows={p.advancedPersonal}
+                labelW={180}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 9: Compensation Extra / Compa-Ratio (STA-82 EC maintain) */}
+          {p.compensationExtra.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('compensationExtraEyebrow')}
+                title={t('compensationExtraTitle')}
+                rows={p.compensationExtra}
+                labelW={140}
+              />
+            </div>
+          )}
         </>
       )}
 

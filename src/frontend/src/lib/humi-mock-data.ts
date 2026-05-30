@@ -1227,9 +1227,32 @@ export const HUMI_MY_PROFILE = {
     ['Role', 'Mentor'],
     ['Since', 'มิถุนายน 2566'],
   ] as ReadonlyArray<readonly [string, string]>,
-  documents: [] as ReadonlyArray<readonly [string, string]>,               // Batch 9
-  advancedPersonal: [] as ReadonlyArray<readonly [string, string]>,        // Batch 9
-  compensationExtra: [] as ReadonlyArray<readonly [string, string]>,       // Batch 9
+  // ── Documents, E-Letter & OHS (Batch 9) — SF EC Core OHS/E-Letter/EBO portlets
+  documents: [
+    ['──── OHS Document ────', ''],
+    ['OHS Document Name', 'Health & Safety Acknowledgement 2567'],
+    ['OHS Document URL', 'https://docs.centralgroup.com/ohs/ha-2567.pdf'],
+    ['──── E-Letter ────', ''],
+    ['E-Letter', 'Offer Letter — HR Manager — ต.ค. 2566'],
+    ['E-Letter Password', '••••••••'],
+    ['──── Employee Benefit Obligation (EBO) ────', ''],
+    ['EBO หมายเหตุ', 'ผ่านการตรวจสุขภาพประจำปี 2567 แล้ว ไม่มีเงื่อนไขพิเศษ'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Advanced Personal / Additional Information (Batch 9) — SF EC Core AdvancedPersonal
+  advancedPersonal: [
+    ['──── Additional Information ────', ''],
+    ['Additional Information Name', 'LinkedIn Profile'],
+    ['Additional Information URL', 'https://www.linkedin.com/in/chongrak-tanaka'],
+    ['Additional Information Name', 'Personal Portfolio'],
+    ['Additional Information URL', 'https://chongrak.dev'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Compensation Extra (Batch 9) — Compa-Ratio + EBO note
+  compensationExtra: [
+    ['──── Compensation Benchmarking ────', ''],
+    ['Compa-Ratio', '1.02 (102% of midpoint)'],
+  ] as ReadonlyArray<readonly [string, string]>,
 
   // Compensation portlet not yet extracted from SF (Phase 4 work).
   // Values below are illustrative — schema TBD via cnext follow-up.

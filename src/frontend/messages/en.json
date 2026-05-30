@@ -3836,7 +3836,13 @@
     "membershipsEyebrow": "Professional memberships",
     "membershipsTitle": "Memberships & positions",
     "specialProjectsEyebrow": "Special projects & community",
-    "specialProjectsTitle": "Assignments, projects & volunteer work"
+    "specialProjectsTitle": "Assignments, projects & volunteer work",
+    "documentsEyebrow": "Documents & e-letter",
+    "documentsTitle": "OHS documents, e-letter & EBO",
+    "advancedPersonalEyebrow": "Advanced personal",
+    "advancedPersonalTitle": "Additional information & links",
+    "compensationExtraEyebrow": "Compensation benchmarking",
+    "compensationExtraTitle": "Compa-ratio & pay positioning"
   },
   "humiAnnouncements": {
     "subtitle": "Team and company feed",
