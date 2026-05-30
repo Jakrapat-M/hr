@@ -201,7 +201,7 @@ export default function PayRateChangePage() {
   const [payGroup, setPayGroup] = useState<string>('')
   const [payrollId, setPayrollId] = useState<string>('')
   const [payComponent, setPayComponent] = useState<string>(PAY_COMPONENTS[0])
-  const [amountType, setAmountType] = useState<PayRateAmountType>('percent')
+  const [amountType, setAmountType] = useState<PayRateAmountType>('flat') // STA-83: default to THB (flat)
   const [amount, setAmount] = useState<string>('')
   const [currency, setCurrency] = useState<string>('THB')
   const [notes, setNotes] = useState<string>('')
