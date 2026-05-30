@@ -54,6 +54,7 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { benefitsHubRoute } from '@/lib/benefit-routes';
 import type { Role } from '@/lib/rbac';
+import { PERSONA_ROLE, type PersonaId } from '@/lib/persona-tiers';
 
 export interface SidebarProps {
   /** Called when any nav item is clicked — used by AppShell to close the
@@ -65,9 +66,6 @@ export interface SidebarProps {
   /** Extra className merged onto <aside> — e.g. "humi-sidebar--drawer". */
   className?: string;
 }
-
-/** Blueprint persona ids. */
-type PersonaId = 'employee' | 'manager' | 'hrbp' | 'spd' | 'hradmin' | 'hris' | 'sysadmin';
 
 type Leaf = {
   id: string;
@@ -168,18 +166,6 @@ const MODULES: ModuleGroup[] = [
 
 // Blueprint nav-child rows carry no icon — only the group trigger has one —
 // so leaf-level icons are intentionally omitted to stay faithful to the layout.
-
-/** Blueprint persona id → app Role. sysadmin maps to the top role so it sees
- *  every group; hris → hr_manager (master-data tier), hradmin → hr_admin. */
-const PERSONA_ROLE: Record<PersonaId, Role> = {
-  employee: 'employee',
-  manager: 'manager',
-  hrbp: 'hrbp',
-  spd: 'spd',
-  hradmin: 'hr_admin',
-  hris: 'hr_manager',
-  sysadmin: 'hr_manager',
-};
 
 /** A persona is "granted" for the current user when the user owns the mapped
  *  Role directly. (Role hierarchy is handled by listing personas explicitly in

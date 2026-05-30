@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { personaTiers, tierChips, TIER_ORDER } from '../persona-tiers';
+import { personaTiers, tierChips, TIER_ORDER, PERSONA_ROLE } from '../persona-tiers';
 
 describe('personaTiers / tierChips', () => {
   it('AC4.6: hr_admin includes tier A', () => {
@@ -48,5 +48,23 @@ describe('personaTiers / tierChips', () => {
 
   it('tierChips is an alias of personaTiers', () => {
     expect(tierChips).toBe(personaTiers);
+  });
+});
+
+describe('PERSONA_ROLE (AC-6.1: centralized persona id → app Role map)', () => {
+  it('aliases sysadmin and hris onto hr_manager', () => {
+    expect(PERSONA_ROLE.sysadmin).toBe('hr_manager');
+    expect(PERSONA_ROLE.hris).toBe('hr_manager');
+  });
+
+  it('maps hradmin to hr_admin', () => {
+    expect(PERSONA_ROLE.hradmin).toBe('hr_admin');
+  });
+
+  it('passes the remaining personas straight through to their like-named role', () => {
+    expect(PERSONA_ROLE.employee).toBe('employee');
+    expect(PERSONA_ROLE.manager).toBe('manager');
+    expect(PERSONA_ROLE.hrbp).toBe('hrbp');
+    expect(PERSONA_ROLE.spd).toBe('spd');
   });
 });
