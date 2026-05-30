@@ -219,6 +219,7 @@ function buildDraftValue(opts: {
         spouseMotherIdNumber: '',
         additionalInformation: '',
         disabilityAttachmentName: null,
+        countryRegion: 'THA',
       },
       // Phase 5b-3: Work Permit — documentType must exist or conditional-sections.ts throws
       workPermit: {
@@ -455,6 +456,45 @@ test.describe('STA-82 Hire Wizard — 52 fields (AC16 / D2)', () => {
         // Submit button not visible — cross-step error row alone is sufficient
         await expect(crossStepError).toBeVisible({ timeout: 5_000 });
       }
+    } finally {
+      await ctx.close();
+    }
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // TH-4: Country/Region LOV (BA row 49, STA-82) — field renders + selectable
+  // ─────────────────────────────────────────────────────────────────────────
+  test('TH-4: GlobalInfo Country/Region select renders and is selectable (BA row 49)', async ({ browser }) => {
+    const ctx = await authedContext(browser, 'hr_admin');
+    const page = await ctx.newPage();
+
+    try {
+      // Step 1 = ClusterWho; globalInfo section is collapsed by default — expand via click.
+      const reached = await gotoHireWithDraft(page, 'th', { currentStep: 1, maxUnlockedStep: 2 });
+      if (!reached) { test.skip(); return; }
+
+      // Expand the "Global Information" accordion section
+      const globalInfoSection = page.locator('[id="who.globalInfo"]');
+      await globalInfoSection.waitFor({ state: 'visible', timeout: 10_000 });
+      const toggleBtn = globalInfoSection.locator('button').first();
+      await toggleBtn.click();
+
+      // Country/Region select should now be visible
+      const countrySelect = page.locator('#gi-country-region');
+      await expect(countrySelect).toBeVisible({ timeout: 8_000 });
+
+      // Must have options (PICKLIST_COUNTRY_ISO has many active entries)
+      const optionCount = await countrySelect.evaluate((el: HTMLSelectElement) => el.options.length);
+      expect(optionCount).toBeGreaterThan(10);
+
+      // Default value should be THA (Thailand)
+      const defaultValue = await countrySelect.inputValue();
+      expect(defaultValue).toBe('THA');
+
+      // Select a different country (SGP = Singapore) and verify it changes
+      await countrySelect.selectOption('SGP');
+      const newValue = await countrySelect.inputValue();
+      expect(newValue).toBe('SGP');
     } finally {
       await ctx.close();
     }

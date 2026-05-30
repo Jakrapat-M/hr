@@ -1133,6 +1133,127 @@ export const HUMI_MY_PROFILE = {
     ['Work Location', 'Central World Tower, Bangkok'],
   ] as ReadonlyArray<readonly [string, string]>,
 
+  // ── STA-82 EC fields buildout — maintain profile sub-sections (SPINE stubs).
+  // Pre-created empty so the maintain leaf batches (7/8/9) only APPEND tuple rows
+  // rather than introduce new keys into this shared object literal. Each renders via
+  // FieldCard in profile/me/page.tsx once populated. Empty arrays add no field tokens →
+  // StepBAFieldCoverage regression stays GREEN (maintain rows are excluded from it anyway).
+  // ── Work Experience Within Company (Batch 7) — SF EC Core EmpJob history rows
+  workExperienceCompany: [
+    ['──── ตำแหน่งปัจจุบัน ────', ''],
+    ['Start Date', '1 ตุลาคม 2566'],
+    ['End Date', 'ปัจจุบัน'],
+    ['Event', 'Transfer / โอนย้าย'],
+    ['Company', 'Central Retail Corporation PCL'],
+    ['──── ประวัติตำแหน่ง ────', ''],
+    ['Start Date', '1 มีนาคม 2562'],
+    ['End Date', '30 กันยายน 2566'],
+    ['Event', 'Promotion / เลื่อนตำแหน่ง'],
+    ['Company', 'Central Group HQ'],
+    ['Start Date', '1 พฤษภาคม 2559'],
+    ['End Date', '28 กุมภาพันธ์ 2562'],
+    ['Event', 'Hire / บรรจุ'],
+    ['Company', 'Robinson Lifestyle Co., Ltd.'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Previous Employment (Batch 7) — SF EC Core OutsideWorkExperience
+  previousEmployment: [
+    ['──── ประสบการณ์ก่อนร่วมงาน ────', ''],
+    ['Start Date', 'มิถุนายน 2557'],
+    ['End Date', 'เมษายน 2559'],
+    ['Company Name', 'PTT Global Chemical PCL'],
+    ['Start Date', 'มิถุนายน 2555'],
+    ['End Date', 'พฤษภาคม 2557'],
+    ['Company Name', 'Kasikorn Bank PCL (HR Dept.)'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Certifications / Licenses (Batch 7) — SF EC Core PersonCertification
+  certifications: [
+    ['──── ใบรับรอง/ใบอนุญาต ────', ''],
+    ['Certification / License', 'Professional HR (PHR)'],
+    ['License Number', 'PHR-2023-TH-08841'],
+    ['Name as on Certificate', 'Chongrak Tanaka'],
+    ['Country', 'Thailand'],
+    ['Certification / License', 'SHRM Certified Professional (SHRM-CP)'],
+    ['License Number', 'SHRM-CP-2022-067321'],
+    ['Name as on Certificate', 'Jongrak Tanaka'],
+    ['Country', 'United States'],
+  ] as ReadonlyArray<readonly [string, string]>,
+  // ── Assessments (Batch 8): Personal Assessment Summary + Business Driver Assessment + Coaching Feedback
+  assessments: [
+    ['──── Personal Assessment Summary ────', ''],
+    ['Assessment Type', 'Annual Performance Review'],
+    ['Assessment Period', 'ม.ค. 2567 – ธ.ค. 2567'],
+    ['Overall Rating', '4 — Exceeds Expectations'],
+    ['Assessor', 'Krittinai Indradet'],
+    ['Assessment Date', '15 มกราคม 2568'],
+    ['Comments', 'Strong leadership demonstrated across cross-functional projects.'],
+    ['──── Business Driver Assessment ────', ''],
+    ['Business Driver', 'People Development'],
+    ['Rating', '4 — Exceeds Expectations'],
+    ['──── Coaching Feedback ────', ''],
+    ['Coach', 'Narumon Weerasak (นฤมล วีระศักดิ์)'],
+    ['Session Date', '20 พฤศจิกายน 2567'],
+    ['Focus Area', 'Strategic Thinking & Influence'],
+    ['Feedback Summary', 'Demonstrated strong ability to align HR initiatives with business goals.'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Professional Memberships (Batch 8): Professional Memberships Position/Role
+  memberships: [
+    ['──── สมาชิกองค์กรวิชาชีพ ────', ''],
+    ['Organisation', 'Society for Human Resource Management (SHRM)'],
+    ['Position / Role', 'Active Member'],
+    ['Member Since', 'January 2022'],
+    ['Organisation', 'People Management Association of Thailand (PMAT)'],
+    ['Position / Role', 'Committee Member — Education Sub-committee'],
+    ['Member Since', 'March 2023'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Special Projects / Community (Batch 8): Special Assignments/Projects + Community/Volunteer Org
+  specialProjects: [
+    ['──── Special Assignments / Projects ────', ''],
+    ['Project Name', 'HRMS Platform Replacement — SAP EC Migration'],
+    ['Role', 'HR System Lead'],
+    ['Start Date', 'ตุลาคม 2566'],
+    ['End Date', 'ปัจจุบัน'],
+    ['Description', 'Lead the HR side of migrating legacy HRMS to SAP SuccessFactors EC + CRC custom modules.'],
+    ['Project Name', 'HR Digital Transformation Roadmap 2025'],
+    ['Role', 'Project Sponsor'],
+    ['Start Date', 'มกราคม 2567'],
+    ['End Date', 'ธันวาคม 2567'],
+    ['Description', 'Defined 3-year HR tech strategy covering payroll, talent, and workforce analytics.'],
+    ['──── Community / Volunteer Organisations ────', ''],
+    ['Organisation', 'Codeathon for Good — HR Track'],
+    ['Role', 'Mentor'],
+    ['Since', 'มิถุนายน 2566'],
+  ] as ReadonlyArray<readonly [string, string]>,
+  // ── Documents, E-Letter & OHS (Batch 9) — SF EC Core OHS/E-Letter/EBO portlets
+  documents: [
+    ['──── OHS Document ────', ''],
+    ['OHS Document Name', 'Health & Safety Acknowledgement 2567'],
+    ['OHS Document URL', 'https://docs.centralgroup.com/ohs/ha-2567.pdf'],
+    ['──── E-Letter ────', ''],
+    ['E-Letter', 'Offer Letter — HR Manager — ต.ค. 2566'],
+    ['E-Letter Password', '••••••••'],
+    ['──── Employee Benefit Obligation (EBO) ────', ''],
+    ['EBO หมายเหตุ', 'ผ่านการตรวจสุขภาพประจำปี 2567 แล้ว ไม่มีเงื่อนไขพิเศษ'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Advanced Personal / Additional Information (Batch 9) — SF EC Core AdvancedPersonal
+  advancedPersonal: [
+    ['──── Additional Information ────', ''],
+    ['Additional Information Name', 'LinkedIn Profile'],
+    ['Additional Information URL', 'https://www.linkedin.com/in/chongrak-tanaka'],
+    ['Additional Information Name', 'Personal Portfolio'],
+    ['Additional Information URL', 'https://chongrak.dev'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Compensation Extra (Batch 9) — Compa-Ratio + EBO note
+  compensationExtra: [
+    ['──── Compensation Benchmarking ────', ''],
+    ['Compa-Ratio', '1.02 (102% of midpoint)'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
   // Compensation portlet not yet extracted from SF (Phase 4 work).
   // Values below are illustrative — schema TBD via cnext follow-up.
   comp: {

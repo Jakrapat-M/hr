@@ -32,6 +32,7 @@ import {
   attachmentNameFromFiles,
   filesFromAttachmentName,
 } from '@/components/admin/AttachmentDropzone/attachmentFiles'
+import { PICKLIST_COUNTRY_ISO } from '@hrms/shared/picklists'
 
 // SF RELIGION_THA picklist — 6 active codes (externalCode values), sort-order ascending
 // Source: sf-qas-picklist-options-LINKED-2026-04-26.json # RELIGION_THA
@@ -78,6 +79,24 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
     <div className="space-y-4">
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+
+        {/* ประเทศ/ภูมิภาค — BA row 49 (STA-82); reuses PICKLIST_COUNTRY_ISO */}
+        <fieldset>
+          <label htmlFor="gi-country-region" className="humi-label">
+            {t('countryRegion')}
+          </label>
+          <select
+            id="gi-country-region"
+            value={gi.countryRegion ?? 'THA'}
+            onChange={(e) => patch({ countryRegion: e.target.value || null })}
+            className="humi-input w-full"
+          >
+            <option value="">— {t('selectCountryRegion')} —</option>
+            {PICKLIST_COUNTRY_ISO.filter((c) => c.active).map((c) => (
+              <option key={c.id} value={c.id}>{c.labelTh}</option>
+            ))}
+          </select>
+        </fieldset>
 
         {/* ศาสนา — SF: genericString5 (RELIGION_THA picklist) */}
         <fieldset>

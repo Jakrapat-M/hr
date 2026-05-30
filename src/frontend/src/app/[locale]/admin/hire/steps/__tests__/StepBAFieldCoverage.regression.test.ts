@@ -37,8 +37,7 @@ const CURRENTLY_UNCOVERED_BA_ROWS = new Map<number, string>([
   [124, 'Dependent copy-address control is not represented in hire source.'],
   [126, 'Dependent house number has no matching hire source token yet.'],
   [127, 'Dependent house number has no matching hire source token yet.'],
-  [131, 'Dependent lane/soi has no matching hire source token yet.'],
-  [132, 'Dependent lane/soi has no matching hire source token yet.'],
+  [132, 'Dependent street has no matching hire source token yet.'],
   [133, 'Dependent street has no matching hire source token yet.'],
   [149, 'Termination-only field appears in the hiring worksheet but is not part of hire source.'],
   [150, 'Termination-only field appears in the hiring worksheet but is not part of hire source.'],
@@ -49,9 +48,9 @@ const CURRENTLY_UNCOVERED_BA_ROWS = new Map<number, string>([
   [170, 'Store Brand/Format has no matching hire source token yet.'],
   [171, 'Store Brand/Format has no matching hire source token yet.'],
   [209, 'DVT project fields are not represented in current hire source.'],
-  [210, 'DVT project fields are not represented in current hire source.'],
+  // row 210 (DVT Partner University) removed — token dvtPartnerUniversity landed in StepJob.tsx (STA-82 Batch 6)
   [211, 'DVT project fields are not represented in current hire source.'],
-  [212, 'DVT project fields are not represented in current hire source.'],
+  // row 212 (DVT Degree Level) removed — token dvtDegreeLevel landed in StepJob.tsx (STA-82 Batch 6)
   [213, 'DVT project fields are not represented in current hire source.'],
   [214, 'DVT project fields are not represented in current hire source.'],
   [215, 'DVT project fields are not represented in current hire source.'],

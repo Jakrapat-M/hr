@@ -1463,6 +1463,114 @@ export default function HumiProfileMePage({
 
           {/* ── BRD #170 ESS Compensation Summary ─────────────────────────── */}
           <CompensationSummary />
+
+          {/* ── Batch 7: Work Experience Within Company (STA-82 EC maintain) ── */}
+          {p.workExperienceCompany.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('workExpCompanyEyebrow')}
+                title={t('workExpCompanyTitle')}
+                rows={p.workExperienceCompany}
+                labelW={140}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 7: Previous Employment (STA-82 EC maintain) ────────────── */}
+          {p.previousEmployment.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('prevEmploymentEyebrow')}
+                title={t('prevEmploymentTitle')}
+                rows={p.previousEmployment}
+                labelW={140}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 7: Certifications / Licenses (STA-82 EC maintain) ────── */}
+          {p.certifications.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('certificationsEyebrow')}
+                title={t('certificationsTitle')}
+                rows={p.certifications}
+                labelW={140}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 8: Assessments (STA-82 EC maintain) ───────────────────── */}
+          {p.assessments.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('assessmentsEyebrow')}
+                title={t('assessmentsTitle')}
+                rows={p.assessments}
+                labelW={160}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 8: Professional Memberships (STA-82 EC maintain) ─────── */}
+          {p.memberships.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('membershipsEyebrow')}
+                title={t('membershipsTitle')}
+                rows={p.memberships}
+                labelW={160}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 8: Special Projects / Community (STA-82 EC maintain) ─── */}
+          {p.specialProjects.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('specialProjectsEyebrow')}
+                title={t('specialProjectsTitle')}
+                rows={p.specialProjects}
+                labelW={160}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 9: Documents & E-Letter (STA-82 EC maintain) ──────────── */}
+          {p.documents.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('documentsEyebrow')}
+                title={t('documentsTitle')}
+                rows={p.documents}
+                labelW={160}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 9: Advanced Personal / Additional Info (STA-82 EC maintain) */}
+          {p.advancedPersonal.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('advancedPersonalEyebrow')}
+                title={t('advancedPersonalTitle')}
+                rows={p.advancedPersonal}
+                labelW={180}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 9: Compensation Extra / Compa-Ratio (STA-82 EC maintain) */}
+          {p.compensationExtra.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('compensationExtraEyebrow')}
+                title={t('compensationExtraTitle')}
+                rows={p.compensationExtra}
+                labelW={140}
+              />
+            </div>
+          )}
         </>
       )}
 
