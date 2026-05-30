@@ -6,7 +6,6 @@ import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput, Textarea } 
 import { FileUploadField } from '@/components/humi/FileUploadField';
 import { Capability } from '@/components/humi';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
-import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -230,14 +229,6 @@ export function SimpleClaimForm({
           onUpload={(_, file) => setField('attachmentName', file?.filename ?? '')}
           onRemove={() => setField('attachmentName', '')}
         />
-      </div>
-
-      {/* Approval chain */}
-      <div className="mt-4 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-3">
-        <p className="mb-2 text-small font-medium text-ink">
-          {isTh ? 'ขั้นตอนอนุมัติ' : 'Approval chain'}
-        </p>
-        <ApprovalChain chain={plan.approvalChain} locale={locale} />
       </div>
 
       {errors.length > 0 && (
