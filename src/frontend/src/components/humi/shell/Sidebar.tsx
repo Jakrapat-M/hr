@@ -135,12 +135,12 @@ const MODULES: ModuleGroup[] = [
     labelTh: 'งานบุคคล',
     icon: IdCard,
     leaves: [
-      { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] },
+      { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris', 'sysadmin'] }, // P1 Item 2: dropped hrbp+spd — admin/layout admits neither; People-Partner BU view is P2
       { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'sysadmin'] }, // merges lifecycle/onboarding
       { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'sysadmin'] },
       { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] }, // merges welfare+claims
       { id: 'hr-docs', label: 'HR Documents', labelTh: 'เอกสารบุคคล', href: '/admin/documents', show: ['hrbp', 'hradmin', 'sysadmin'] }, // merges confirm
-      { id: 'changes', label: 'Change Requests', labelTh: 'คำขอเปลี่ยนแปลง', href: '/admin/change-requests', show: ['hrbp', 'hradmin', 'hris', 'sysadmin'] }, // merges transfer+regular
+      { id: 'changes', label: 'Change Requests', labelTh: 'คำขอเปลี่ยนแปลง', href: '/admin/change-requests', show: ['hradmin', 'hris', 'sysadmin'] }, // merges transfer+regular; P1 Item 2: dropped hrbp (change-requests approver roles exclude hrbp → barrier)
       // REMOVED 2026-05-27 (user: "ลาออกไม่ควรอยู่ใน บุคคล"): /resignation is an
       // employee SELF-SERVICE submission ("ยื่นคำขอลาออก … SPD รับทราบและดำเนินการต่อ"),
       // not an HR-admin console — it belongs to the "ฉัน" journey (entered from the
