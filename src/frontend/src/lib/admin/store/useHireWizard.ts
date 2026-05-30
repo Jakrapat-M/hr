@@ -64,6 +64,8 @@ export interface GlobalInfoEntry {
   additionalInformation: string        // SF: customString2
   // STA-81: attachment upload when disability status = Y
   disabilityAttachmentName: string | null
+  // STA-82 EC fields — BA row 49 "Country/Region" (Global Information)
+  countryRegion: string | null             // ISO3 — default THA, editable; reuses PICKLIST_COUNTRY_ISO
 }
 
 // ── Phase 5b-3: Work Permit (EmpWorkPermit SF entity) ──
@@ -104,11 +106,13 @@ export interface DependentEntry {
   email: string
   // Tax-related (BA flagged some)
   isTaxDependent: boolean
-  // Address (optional, free-text) — STA-82: extended with copy-from-employee + building/floor/street
+  // Address (optional, free-text) — STA-82: extended with copy-from-employee + building/floor/street + moo/soi
   copyAddressFromEmployee: boolean     // UI: copy employee address action
   addressLine1: string
   building: string                     // BA: Building
   floor: string                        // BA: Floor
+  moo: string                          // BA row 130: Moo (หมู่ที่)
+  soi: string                          // BA row 131: Lane/Soi (ซอย)
   street: string                       // BA: Street
   // BA Dependents row 123 — Attachment
   attachmentName?: string | null
@@ -356,6 +360,9 @@ export interface FormData {
     dvtAcademicYear: string | null
     dvtGraduationDate: string | null
     dvtBondingEndDate: string | null
+    dvtPartnerUniversity: string | null  // DVT Partner University (BA row 210, DVT_PARTNER_UNIVERSITY)
+    dvtDegreeLevel: string | null        // DVT Degree Level (BA row 212, DVT_DEGREE_LEVEL)
+    gpa: string | null                   // GPA — Formal Education (BA row 355, process=Hiring per user decision)
     scholarship: string | null
     probationaryPeriodEndDate: string | null  // maps to probationEndDate synonym
     extendedProbationDate: string | null
@@ -458,6 +465,7 @@ const initialFormData: FormData = {
     spouseMotherIdNumber: '',
     additionalInformation: '',
     disabilityAttachmentName: null,
+    countryRegion: 'THA',
   },
   // ── Phase 5b-3: Work Permit ──
   workPermit: {
@@ -556,6 +564,9 @@ const initialFormData: FormData = {
     dvtAcademicYear: null,
     dvtGraduationDate: null,
     dvtBondingEndDate: null,
+    dvtPartnerUniversity: null,
+    dvtDegreeLevel: null,
+    gpa: null,
     scholarship: null,
     probationaryPeriodEndDate: null,
     extendedProbationDate: null,
@@ -995,7 +1006,8 @@ export const useHireWizard = create<HireWizardState>()(
           transferInTo: null, transferFrom: null, specialBenefitGroup: null,
           okToRehire: null, dvtProjectName: null, dvtType: null,
           dvtCourse: null, dvtCourseOfTime: null, dvtAcademicYear: null,
-          dvtGraduationDate: null, dvtBondingEndDate: null, scholarship: null,
+          dvtGraduationDate: null, dvtBondingEndDate: null,
+          dvtPartnerUniversity: null, dvtDegreeLevel: null, gpa: null, scholarship: null,
           probationaryPeriodEndDate: null, extendedProbationDate: null,
           pointOfSales: null, storeBrandFormat: null, brand: null, workLocation: null,
         }
@@ -1021,6 +1033,10 @@ export const useHireWizard = create<HireWizardState>()(
           }
         } else if (!('disabilityAttachmentName' in fd.globalInfo)) {
           fd.globalInfo.disabilityAttachmentName = null
+        }
+        // STA-82: backfill countryRegion for old globalInfo drafts
+        if (fd.globalInfo && !('countryRegion' in fd.globalInfo)) {
+          fd.globalInfo.countryRegion = 'THA'
         }
         // STA-81: backfill replacedEmployeeId for old identity drafts
         if (fd.identity && !('replacedEmployeeId' in fd.identity)) {

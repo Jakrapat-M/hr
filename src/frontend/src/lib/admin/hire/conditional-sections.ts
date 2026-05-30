@@ -54,6 +54,8 @@ export function createEmptyDependentEntry(): DependentEntry {
     addressLine1: '',
     building: '',
     floor: '',
+    moo: '',
+    soi: '',
     street: '',
     attachmentName: null,
   }

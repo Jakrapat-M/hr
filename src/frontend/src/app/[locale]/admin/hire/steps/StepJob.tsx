@@ -18,6 +18,8 @@ import {
   OK_TO_REHIRE_OPTIONS,
   DVT_TYPE_OPTIONS,
   SCHOLARSHIP_OPTIONS,
+  PARTNER_UNIVERSITY_OPTIONS,
+  DEGREE_LEVEL_OPTIONS,
   POS_OPTIONS,
   STORE_BRAND_FORMAT_OPTIONS,
   BRAND_OPTIONS,
@@ -145,6 +147,9 @@ export default function StepJob({ onValidChange }: StepJobProps) {
   const [dvtAcademicYear,       setDvtAcademicYear]       = useState<string>(job.dvtAcademicYear ?? '')
   const [dvtGraduationDate,     setDvtGraduationDate]     = useState<string>(job.dvtGraduationDate ?? '')
   const [dvtBondingEndDate,     setDvtBondingEndDate]     = useState<string>(job.dvtBondingEndDate ?? '')
+  const [dvtPartnerUniversity,  setDvtPartnerUniversity]  = useState<string>(job.dvtPartnerUniversity ?? '')
+  const [dvtDegreeLevel,        setDvtDegreeLevel]        = useState<string>(job.dvtDegreeLevel ?? '')
+  const [gpa,                   setGpa]                   = useState<string>(job.gpa ?? '')
   const [scholarship,           setScholarship]           = useState<string>(job.scholarship ?? '')
 
   // STA-82 AC5 (ADR-3): DVT cluster is visible only when Scholarship === 'YES', OR when a
@@ -241,6 +246,9 @@ export default function StepJob({ onValidChange }: StepJobProps) {
       dvtAcademicYear: dvtAcademicYear || null,
       dvtGraduationDate: dvtGraduationDate || null,
       dvtBondingEndDate: dvtBondingEndDate || null,
+      dvtPartnerUniversity: dvtPartnerUniversity || null,
+      dvtDegreeLevel: dvtDegreeLevel || null,
+      gpa: gpa || null,
       scholarship: scholarship || null,
       probationaryPeriodEndDate: probationaryPeriodEndDate || null,
       extendedProbationDate: extendedProbationDate || null,
@@ -252,7 +260,8 @@ export default function StepJob({ onValidChange }: StepJobProps) {
   }, [jobRole, jobType, personnelGrade, bandMatching, band,
       transferOutTo, transferInTo, transferFrom, specialBenefitGroup, okToRehire,
       dvtProjectName, dvtType, dvtCourse, dvtCourseOfTime, dvtAcademicYear,
-      dvtGraduationDate, dvtBondingEndDate, scholarship, probationaryPeriodEndDate,
+      dvtGraduationDate, dvtBondingEndDate, dvtPartnerUniversity, dvtDegreeLevel,
+      gpa, scholarship, probationaryPeriodEndDate,
       extendedProbationDate, pointOfSales, storeBrandFormat, brand, workLocation, setStepData])
 
   const validate = useCallback(
@@ -1236,6 +1245,52 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               type="date"
               value={dvtBondingEndDate}
               onChange={(e) => setDvtBondingEndDate(e.target.value)}
+              className="humi-input w-full"
+            />
+          </fieldset>
+
+          {/* DVT: Partner University (BA row 210 — DVT_PARTNER_UNIVERSITY) */}
+          <fieldset>
+            <label htmlFor="dvt-partner-university" className="humi-label">DVT: Partner University / มหาวิทยาลัยคู่ร่วม DVT</label>
+            <select
+              id="dvt-partner-university"
+              value={dvtPartnerUniversity}
+              onChange={(e) => setDvtPartnerUniversity(e.target.value)}
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              {PARTNER_UNIVERSITY_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
+            </select>
+          </fieldset>
+
+          {/* DVT: Degree Level (BA row 212 — DVT_DEGREE_LEVEL) */}
+          <fieldset>
+            <label htmlFor="dvt-degree-level" className="humi-label">DVT: Degree Level / ระดับการศึกษา</label>
+            <select
+              id="dvt-degree-level"
+              value={dvtDegreeLevel}
+              onChange={(e) => setDvtDegreeLevel(e.target.value)}
+              className="humi-select w-full"
+            >
+              <option value="">— เลือก —</option>
+              {DEGREE_LEVEL_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
+              ))}
+            </select>
+          </fieldset>
+
+          {/* GPA — Formal Education (BA row 355, process=Hiring per user decision) */}
+          <fieldset>
+            <label htmlFor="gpa" className="humi-label">GPA / เกรดเฉลี่ย</label>
+            <input
+              id="gpa"
+              type="text"
+              inputMode="decimal"
+              value={gpa}
+              onChange={(e) => setGpa(e.target.value)}
+              placeholder="เช่น 3.50"
               className="humi-input w-full"
             />
           </fieldset>

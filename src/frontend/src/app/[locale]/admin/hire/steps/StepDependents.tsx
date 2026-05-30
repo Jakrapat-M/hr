@@ -56,6 +56,8 @@ const EMPTY_DEP: DependentEntry = {
   addressLine1: '',
   building: '',
   floor: '',
+  moo: '',
+  soi: '',
   street: '',
   attachmentName: null,
 }
@@ -469,6 +471,36 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="เช่น 3, ชั้น 3"
                     value={dep.floor}
                     onChange={(e) => updateEntry(idx, { floor: e.target.value })}
+                    className="humi-input w-full"
+                  />
+                </fieldset>
+
+                {/* BA row 130: Moo (หมู่ที่) */}
+                <fieldset>
+                  <label htmlFor={`dep-moo-${idx}`} className="humi-label">
+                    หมู่ที่ / Moo
+                  </label>
+                  <input
+                    id={`dep-moo-${idx}`}
+                    type="text"
+                    placeholder="เช่น 5"
+                    value={dep.moo}
+                    onChange={(e) => updateEntry(idx, { moo: e.target.value })}
+                    className="humi-input w-full"
+                  />
+                </fieldset>
+
+                {/* BA row 131: Lane/Soi (ซอย) */}
+                <fieldset>
+                  <label htmlFor={`dep-soi-${idx}`} className="humi-label">
+                    ซอย / Lane / Soi
+                  </label>
+                  <input
+                    id={`dep-soi-${idx}`}
+                    type="text"
+                    placeholder="เช่น สนามบินน้ำ"
+                    value={dep.soi}
+                    onChange={(e) => updateEntry(idx, { soi: e.target.value })}
                     className="humi-input w-full"
                   />
                 </fieldset>
