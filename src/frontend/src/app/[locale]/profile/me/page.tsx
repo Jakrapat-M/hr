@@ -1499,6 +1499,42 @@ export default function HumiProfileMePage({
               />
             </div>
           )}
+
+          {/* ── Batch 8: Assessments (STA-82 EC maintain) ───────────────────── */}
+          {p.assessments.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('assessmentsEyebrow')}
+                title={t('assessmentsTitle')}
+                rows={p.assessments}
+                labelW={160}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 8: Professional Memberships (STA-82 EC maintain) ─────── */}
+          {p.memberships.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('membershipsEyebrow')}
+                title={t('membershipsTitle')}
+                rows={p.memberships}
+                labelW={160}
+              />
+            </div>
+          )}
+
+          {/* ── Batch 8: Special Projects / Community (STA-82 EC maintain) ─── */}
+          {p.specialProjects.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <FieldCard
+                eyebrow={t('specialProjectsEyebrow')}
+                title={t('specialProjectsTitle')}
+                rows={p.specialProjects}
+                labelW={160}
+              />
+            </div>
+          )}
         </>
       )}
 

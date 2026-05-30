@@ -3830,7 +3830,13 @@
     "prevEmploymentEyebrow": "Previous employment",
     "prevEmploymentTitle": "Work history before joining",
     "certificationsEyebrow": "Certifications & licences",
-    "certificationsTitle": "Professional certifications"
+    "certificationsTitle": "Professional certifications",
+    "assessmentsEyebrow": "Assessments",
+    "assessmentsTitle": "Assessment history & feedback",
+    "membershipsEyebrow": "Professional memberships",
+    "membershipsTitle": "Memberships & positions",
+    "specialProjectsEyebrow": "Special projects & community",
+    "specialProjectsTitle": "Assignments, projects & volunteer work"
   },
   "humiAnnouncements": {
     "subtitle": "Team and company feed",

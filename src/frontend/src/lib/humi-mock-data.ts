@@ -1179,9 +1179,54 @@ export const HUMI_MY_PROFILE = {
     ['Name as on Certificate', 'Jongrak Tanaka'],
     ['Country', 'United States'],
   ] as ReadonlyArray<readonly [string, string]>,
-  assessments: [] as ReadonlyArray<readonly [string, string]>,             // Batch 8
-  memberships: [] as ReadonlyArray<readonly [string, string]>,             // Batch 8
-  specialProjects: [] as ReadonlyArray<readonly [string, string]>,         // Batch 8
+  // ── Assessments (Batch 8): Personal Assessment Summary + Business Driver Assessment + Coaching Feedback
+  assessments: [
+    ['──── Personal Assessment Summary ────', ''],
+    ['Assessment Type', 'Annual Performance Review'],
+    ['Assessment Period', 'ม.ค. 2567 – ธ.ค. 2567'],
+    ['Overall Rating', '4 — Exceeds Expectations'],
+    ['Assessor', 'Krittinai Indradet'],
+    ['Assessment Date', '15 มกราคม 2568'],
+    ['Comments', 'Strong leadership demonstrated across cross-functional projects.'],
+    ['──── Business Driver Assessment ────', ''],
+    ['Business Driver', 'People Development'],
+    ['Rating', '4 — Exceeds Expectations'],
+    ['──── Coaching Feedback ────', ''],
+    ['Coach', 'Narumon Weerasak (นฤมล วีระศักดิ์)'],
+    ['Session Date', '20 พฤศจิกายน 2567'],
+    ['Focus Area', 'Strategic Thinking & Influence'],
+    ['Feedback Summary', 'Demonstrated strong ability to align HR initiatives with business goals.'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Professional Memberships (Batch 8): Professional Memberships Position/Role
+  memberships: [
+    ['──── สมาชิกองค์กรวิชาชีพ ────', ''],
+    ['Organisation', 'Society for Human Resource Management (SHRM)'],
+    ['Position / Role', 'Active Member'],
+    ['Member Since', 'January 2022'],
+    ['Organisation', 'People Management Association of Thailand (PMAT)'],
+    ['Position / Role', 'Committee Member — Education Sub-committee'],
+    ['Member Since', 'March 2023'],
+  ] as ReadonlyArray<readonly [string, string]>,
+
+  // ── Special Projects / Community (Batch 8): Special Assignments/Projects + Community/Volunteer Org
+  specialProjects: [
+    ['──── Special Assignments / Projects ────', ''],
+    ['Project Name', 'HRMS Platform Replacement — SAP EC Migration'],
+    ['Role', 'HR System Lead'],
+    ['Start Date', 'ตุลาคม 2566'],
+    ['End Date', 'ปัจจุบัน'],
+    ['Description', 'Lead the HR side of migrating legacy HRMS to SAP SuccessFactors EC + CRC custom modules.'],
+    ['Project Name', 'HR Digital Transformation Roadmap 2025'],
+    ['Role', 'Project Sponsor'],
+    ['Start Date', 'มกราคม 2567'],
+    ['End Date', 'ธันวาคม 2567'],
+    ['Description', 'Defined 3-year HR tech strategy covering payroll, talent, and workforce analytics.'],
+    ['──── Community / Volunteer Organisations ────', ''],
+    ['Organisation', 'Codeathon for Good — HR Track'],
+    ['Role', 'Mentor'],
+    ['Since', 'มิถุนายน 2566'],
+  ] as ReadonlyArray<readonly [string, string]>,
   documents: [] as ReadonlyArray<readonly [string, string]>,               // Batch 9
   advancedPersonal: [] as ReadonlyArray<readonly [string, string]>,        // Batch 9
   compensationExtra: [] as ReadonlyArray<readonly [string, string]>,       // Batch 9

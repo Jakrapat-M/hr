@@ -3709,7 +3709,13 @@
     "prevEmploymentEyebrow": "ประวัติการทำงานก่อนหน้า",
     "prevEmploymentTitle": "ประวัติการทำงานก่อนเข้าร่วม",
     "certificationsEyebrow": "ใบรับรองและใบอนุญาต",
-    "certificationsTitle": "ใบรับรองวิชาชีพ"
+    "certificationsTitle": "ใบรับรองวิชาชีพ",
+    "assessmentsEyebrow": "การประเมิน",
+    "assessmentsTitle": "ประวัติการประเมินและข้อคิดเห็น",
+    "membershipsEyebrow": "สมาชิกองค์กรวิชาชีพ",
+    "membershipsTitle": "สมาชิกภาพและตำแหน่ง",
+    "specialProjectsEyebrow": "โครงการพิเศษและกิจกรรมชุมชน",
+    "specialProjectsTitle": "งานพิเศษ โครงการ และงานอาสาสมัคร"
   },
   "humiAnnouncements": {
     "subtitle": "ฟีดของทีมและบริษัท",
