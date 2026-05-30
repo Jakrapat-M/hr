@@ -5154,5 +5154,20 @@
     "emptyDesc": "Submitted weekly timesheets from your team will appear here.",
     "noAccessTitle": "Not available",
     "noAccessDesc": "Timesheet review is available to managers and HR only."
+  },
+  "hrbpEmployees": {
+    "eyebrow": "People Partner",
+    "title": "Employee Registry",
+    "cardTitle": "Employees",
+    "scopeBu": "Your business unit ({count} people)",
+    "scopeAll": "All employees ({count} people)",
+    "colName": "Name",
+    "colPosition": "Position",
+    "colDepartment": "Department",
+    "colBu": "Business Unit",
+    "colStatus": "Status",
+    "caption": "Employees in your business unit",
+    "emptyTitle": "No employees in your business unit",
+    "emptyDesc": "When your business unit has members, they will appear here."
   }
 }

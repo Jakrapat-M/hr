@@ -134,6 +134,7 @@ const MODULES: ModuleGroup[] = [
     icon: IdCard,
     leaves: [
       { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris', 'sysadmin'] }, // P1 Item 2: dropped hrbp+spd — admin/layout admits neither; People-Partner BU view is P2
+      { id: 'employees-bu', label: 'Employees · My BU', labelTh: 'ทะเบียนพนักงาน · หน่วยงานของฉัน', href: '/hrbp/employees', show: ['hrbp', 'spd'] }, // P2 Item 1: BU-scoped read-only registry for People Partners — replaces the dead /admin/employees leaf PR-3 cut from hrbp/spd
       { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'sysadmin'] }, // merges lifecycle/onboarding
       { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'sysadmin'] },
       { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] }, // merges welfare+claims
