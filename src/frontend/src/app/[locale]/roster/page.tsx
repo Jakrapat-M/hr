@@ -12,6 +12,9 @@ import { useSearchParams } from 'next/navigation';
 import { CalendarRange, Download, Plus } from 'lucide-react';
 import { Card, Button, EmptyState } from '@/components/humi';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth-store';
+import { ALL_PORTED_EMPLOYEES, EMP_BY_LOGIN } from '@/lib/all-ported-employees';
+import { pickRosterScope, scopeRosterRows } from '@/lib/roster-scope';
 import { RosterGantt } from '@/components/roster/RosterGantt';
 import { CoverageStrip } from '@/components/roster/CoverageStrip';
 import { ShiftEditorDrawer } from '@/components/roster/ShiftEditorDrawer';
@@ -40,7 +43,18 @@ export default function RosterPage() {
   const isTh = locale !== 'en';
   const searchParams = useSearchParams();
 
-  const rows = ROSTER_ROWS;
+  // ── Persona scope (P2) — narrow the visible roster to the persona's slice ──
+  // manager → direct reports · hrbp → BU · spd/hr_admin/hr_manager → all rows.
+  // Open route (menu show: manager/hradmin/sysadmin) — scope data, never deny.
+  const roles = useAuthStore((s) => s.roles);
+  const email = useAuthStore((s) => s.email);
+  const currentEmpId = email ? EMP_BY_LOGIN[email] ?? null : null;
+  const scope = useMemo(
+    () => pickRosterScope(ALL_PORTED_EMPLOYEES, roles, currentEmpId, ROSTER_ROWS.length),
+    [roles, currentEmpId],
+  );
+  const rows = useMemo(() => scopeRosterRows(ROSTER_ROWS, scope), [scope]);
+  const isScoped = scope.mode !== 'all';
 
   // ── Drawer + modal local state (mockup only) ──────────────────────────────
   const [editor, setEditor] = useState<{
@@ -156,6 +170,22 @@ export default function RosterPage() {
           {isTh ? 'คลิกที่กะเพื่อแก้ไขเวลา' : 'Click a shift to override times.'}
         </p>
       </header>
+
+      {/* Persona scope banner — shown when the board is narrowed to a slice */}
+      {isScoped && (
+        <div
+          role="note"
+          className="rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-4 py-2.5 text-small text-ink-muted"
+        >
+          {scope.mode === 'bu'
+            ? isTh
+              ? `แสดงเฉพาะตารางกะในหน่วยงานของคุณ (${rows.length} คน)`
+              : `Showing roster for your business unit only (${rows.length} staff)`
+            : isTh
+              ? `แสดงเฉพาะตารางกะทีมของคุณ (${rows.length} คน)`
+              : `Showing your team's roster only (${rows.length} staff)`}
+        </div>
+      )}
 
       {/* Toolbar: LEFT filters · RIGHT actions */}
       <div className="flex flex-wrap items-center gap-3">
