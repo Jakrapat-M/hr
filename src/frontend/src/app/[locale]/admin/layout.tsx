@@ -1,22 +1,25 @@
 'use client';
 
 // admin/layout.tsx — role guard for /{locale}/admin/**
-//   - Not signed in   → redirect to /login
-//   - Signed in, not admin → redirect to /home (don't force a re-login just
-//     because the persona switcher swapped roles; that looks like a logout)
+//   - Not signed in       → redirect to /login
+//   - Signed in, not admin → render <AccessDenied> IN PLACE (no redirect, no
+//     flash-then-bounce; the persona switcher swapping roles must not feel like
+//     a logout). Uses hasRole() so hr_manager (top of hierarchy) is admitted.
 // Server-side enforcement is the Keycloak/NextAuth layer in src/lib/auth.ts
 // once /api/auth/[...nextauth] is activated.
 
 import { useEffect, type ReactNode } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
+import { hasRole } from '@/lib/rbac';
+import { AccessDenied } from '@/components/shared/access-denied';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'th';
   const { isAuthenticated, roles, _hasHydrated } = useAuthStore();
-  const isAdmin = roles.includes('hr_admin');
+  const isAdmin = hasRole(roles, 'hr_admin');
 
   useEffect(() => {
     // Wait for Zustand persist rehydration before redirecting — otherwise
@@ -24,19 +27,23 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     if (!_hasHydrated) return;
     if (!isAuthenticated) {
       router.replace(`/${locale}/login`);
-    } else if (!isAdmin) {
-      // Signed in but not admin — route to /home instead of /login so the
-      // persona switcher doesn't feel like a logout when an employee lands
-      // here directly.
-      router.replace(`/${locale}/home`);
     }
-  }, [_hasHydrated, isAuthenticated, isAdmin, locale, router]);
+  }, [_hasHydrated, isAuthenticated, locale, router]);
 
   // show nothing until hydrated (avoids flash-redirect)
   if (!_hasHydrated) return null;
 
-  if (!isAuthenticated || !isAdmin) {
-    return null;
+  // Unauthenticated → the effect above redirects to /login; render nothing meanwhile.
+  if (!isAuthenticated) return null;
+
+  // Signed in but not admin → explicit denial surface in place (no redirect).
+  if (!isAdmin) {
+    return (
+      <AccessDenied
+        reasonTh="ต้องมีสิทธิ์ HR Admin ขึ้นไป"
+        reason="Requires HR Admin or above"
+      />
+    );
   }
 
   return <>{children}</>;
