@@ -224,6 +224,7 @@ export function SimpleClaimForm({
         <FileUploadField
           label={isTh ? 'เอกสารแนบ' : 'Attachments'}
           required
+          maxFiles={5}
           helperText={requiredDocs.length > 0 ? requiredDocs.join(' · ') : undefined}
           className="sm:col-span-2"
           onUpload={(_, file) => setField('attachmentName', file?.filename ?? '')}
