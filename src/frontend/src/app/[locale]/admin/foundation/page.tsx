@@ -6,6 +6,8 @@
 import Link from 'next/link';
 import { Network, Briefcase, Building2, ArrowRight } from 'lucide-react';
 import { useFoundationSummary } from '@/hooks/use-foundation';
+import { AccessDenied } from '@/components/shared/access-denied';
+import { useAuthStore } from '@/stores/auth-store';
 
 const TILES = [
   {
@@ -38,7 +40,19 @@ const TILES = [
 ];
 
 export default function FoundationLandingPage() {
+  const roles = useAuthStore((state) => state.roles);
   const summary = useFoundationSummary();
+
+  // RBAC: EC Foundation is HRIS Admin (hr_manager) only — match the menu
+  // (admin/layout admits hr_admin+, so deny hr_admin here in place).
+  if (!roles.includes('hr_manager')) {
+    return (
+      <AccessDenied
+        reasonTh="เฉพาะ HRIS Admin (hr_manager)"
+        reason="HRIS Admin (hr_manager) only"
+      />
+    );
+  }
 
   return (
     <div className="pb-8">

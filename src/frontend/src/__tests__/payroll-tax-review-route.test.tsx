@@ -139,14 +139,23 @@ describe('payroll tax review route', () => {
     expect(screen.getByRole('link', { name: /ตรวจแผนภาษี/ })).toHaveAttribute('href', '/th/payroll/tax-review');
   });
 
-  it('reuses payroll-processing access until a payroll-specific role exists', async () => {
+  it('denies non-reviewers via the payroll-tax-review module gate', async () => {
     payrollMocks.roles = ['employee'];
     const { default: PayrollTaxReviewPage } = await import('@/app/[locale]/payroll/tax-review/page');
 
     render(<PayrollTaxReviewPage />);
 
     expect(screen.getByText('ไม่สามารถเข้าถึงการตรวจแผนภาษี')).toBeInTheDocument();
-    expect(screen.getByText(/payroll-processing/)).toBeInTheDocument();
+    expect(screen.getByText(/SPD \/ HR Admin/)).toBeInTheDocument();
+  });
+
+  it('allows SPD to access the review queue (payroll-tax-review module)', async () => {
+    payrollMocks.roles = ['spd'];
+    const { default: PayrollTaxReviewPage } = await import('@/app/[locale]/payroll/tax-review/page');
+
+    render(<PayrollTaxReviewPage />);
+
+    expect(screen.getByRole('heading', { name: 'ตรวจแผนภาษี' })).toBeInTheDocument();
   });
 
   it('renders rows from selectPayrollTaxPlanningInboxRows and never exposes raw tax identifiers', async () => {
@@ -202,7 +211,7 @@ describe('payroll tax review route', () => {
   it('documents route boundaries without importing PayrollProcessing', () => {
     const source = readFileSync(path.join(process.cwd(), 'src/app/[locale]/payroll/tax-review/page.tsx'), 'utf8');
 
-    expect(source).toMatch(/canAccessModule\(roles, 'payroll-processing'\)/);
+    expect(source).toMatch(/canAccessModule\(roles, 'payroll-tax-review'\)/);
     expect(source).toMatch(/selectPayrollTaxPlanningInboxRows/);
     expect(source).not.toMatch(/PayrollProcessing|payroll-processing\.tsx/);
   });

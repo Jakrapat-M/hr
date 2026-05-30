@@ -82,7 +82,7 @@ export default function PayrollTaxReviewPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   const locale = pathname?.startsWith('/th') ? 'th' : 'en';
-  const canReviewTaxPlanning = canAccessModule(roles, 'payroll-processing');
+  const canReviewTaxPlanning = canAccessModule(roles, 'payroll-tax-review');
 
   const rows = useMemo(() => {
     return taxPlanning.selectPayrollTaxPlanningInboxRows(drafts) as PayrollTaxReviewRow[];
@@ -92,9 +92,13 @@ export default function PayrollTaxReviewPage() {
     return (
       <Card variant="raised" size="lg">
         <CardEyebrow>Payroll tax review</CardEyebrow>
-        <CardTitle>ไม่สามารถเข้าถึงการตรวจแผนภาษี</CardTitle>
+        <CardTitle>
+          {locale === 'th' ? 'ไม่สามารถเข้าถึงการตรวจแผนภาษี' : 'No access to tax-plan review'}
+        </CardTitle>
         <p className="mt-2 text-small text-ink-muted">
-          ใช้สิทธิ์เดียวกับ payroll-processing ชั่วคราวเพราะยังไม่มี role เฉพาะสำหรับ Payroll reviewer ในรอบนี้
+          {locale === 'th'
+            ? 'เฉพาะ Payroll reviewer (SPD / HR Admin) เท่านั้นที่เข้าถึงการตรวจแผนภาษีได้'
+            : 'Only Payroll reviewers (SPD / HR Admin) can access tax-plan review.'}
         </p>
       </Card>
     );
@@ -147,8 +151,8 @@ export default function PayrollTaxReviewPage() {
         </Card>
         <Card variant="raised" size="md">
           <CardEyebrow>Access gate</CardEyebrow>
-          <p className="mt-1 text-body font-semibold text-ink">payroll-processing</p>
-          <p className="mt-1 text-small text-ink-muted">ใช้สิทธิ์เดิมจนกว่าจะมี Payroll reviewer role เฉพาะ</p>
+          <p className="mt-1 text-body font-semibold text-ink">payroll-tax-review</p>
+          <p className="mt-1 text-small text-ink-muted">SPD / HR Admin / HR Manager</p>
         </Card>
         <Card variant="raised" size="md">
           <CardEyebrow>PII guardrail</CardEyebrow>

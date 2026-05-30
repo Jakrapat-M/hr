@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { resolveCapabilities } from '@/lib/capabilities';
+import { pickScopeMode } from '@/lib/scope-filter';
 
 // Source of truth: extracted-context-2026-05-02/01-sf-system-baseline.md §3
 // 75 entities × 4 personas = 300 OData probes against live SF (Ken/Rungrote/Apinya/Worawee).
@@ -85,5 +86,17 @@ describe('resolveCapabilities — SF RBAC matrix', () => {
     expect(resolveCapabilities(['employee']).entities.Foundation).toBe('full');
     expect(resolveCapabilities(['manager']).entities.Foundation).toBe('full');
     expect(resolveCapabilities(['hr_admin']).entities.Foundation).toBe('full');
+  });
+
+  // Two-axis scope model (capabilities.ts comment): the approver-queue tier
+  // (queueScope) is distinct from the data-row scope (pickScopeMode).
+  it('HRBP: queueScope=company (queue tier) but data-row scope=bu', () => {
+    expect(resolveCapabilities(['hrbp']).queueScope).toBe('company');
+    expect(pickScopeMode(['hrbp'])).toBe('bu');
+  });
+
+  it('SPD: queueScope=company (queue tier) but data-row scope=all', () => {
+    expect(resolveCapabilities(['spd']).queueScope).toBe('company');
+    expect(pickScopeMode(['spd'])).toBe('all');
   });
 });

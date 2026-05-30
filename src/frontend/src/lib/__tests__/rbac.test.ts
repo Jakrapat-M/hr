@@ -87,9 +87,10 @@ describe('RBAC', () => {
  expect(getHighestRole(['hrbp','hr_admin'])).toBe('hr_admin');
  });
 
- it('ranks hrbp above spd in priority', () => {
- // hierarchy comment: hr_manager > hr_admin > hrbp > spd > manager > employee
- expect(getHighestRole(['spd','hrbp'])).toBe('hrbp');
+ it('ranks spd above hrbp in priority', () => {
+ // hierarchy comment: hr_manager > hr_admin > spd > hrbp > manager > employee
+ expect(getHighestRole(['spd','hrbp'])).toBe('spd');
+ expect(getHighestRole(['hrbp','spd'])).toBe('spd');
  });
  });
 
@@ -116,6 +117,22 @@ describe('RBAC', () => {
 
  it('employee cannot access spd-management', () => {
  expect(canAccessModule(['employee'],'spd-management')).toBe(false);
+ });
+
+ it('spd can access payroll-tax-review', () => {
+ expect(canAccessModule(['spd'],'payroll-tax-review')).toBe(true);
+ });
+
+ it('hr_admin can access payroll-tax-review', () => {
+ expect(canAccessModule(['hr_admin'],'payroll-tax-review')).toBe(true);
+ });
+
+ it('manager cannot access payroll-tax-review', () => {
+ expect(canAccessModule(['manager'],'payroll-tax-review')).toBe(false);
+ });
+
+ it('employee cannot access payroll-tax-review', () => {
+ expect(canAccessModule(['employee'],'payroll-tax-review')).toBe(false);
  });
  });
 });

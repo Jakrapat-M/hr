@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
 import { PageShell } from '@/components/shared/page-shell';
 import { Tabs } from '@/components/ui/tabs';
 import { Card, CardTitle } from '@/components/humi';
+import { AccessDenied } from '@/components/shared/access-denied';
 import { useAuthStore } from '@/stores/auth-store';
-import { isHR } from '@/lib/rbac';
 import { RjsfForm } from '@/components/permissions/rjsf-form';
 import {
  SCHEMA_REGISTRY,
@@ -16,16 +15,9 @@ import {
 
 export default function PermissionsPage() {
  const t = useTranslations('permissions');
- const router = useRouter();
  const { roles } = useAuthStore();
- const hrUser = isHR(roles);
-
- // RBAC: only HR roles can view. Non-HR → bounce to home.
- useEffect(() => {
- if (!hrUser) {
- router.replace('/home');
- }
- }, [hrUser, router]);
+ // RBAC: Roles/Permissions config is HRIS Admin (hr_manager) only — match the menu.
+ const canView = roles.includes('hr_manager');
 
  const [activeKey, setActiveKey] = useState<SchemaKey>('simple');
  const [formDataByKey, setFormDataByKey] = useState<
@@ -62,8 +54,13 @@ export default function PermissionsPage() {
  }));
  };
 
- if (!hrUser) {
- return null;
+ if (!canView) {
+ return (
+ <AccessDenied
+ reasonTh="เฉพาะ HRIS Admin (hr_manager)"
+ reason="HRIS Admin (hr_manager) only"
+ />
+ );
  }
 
  return (
