@@ -303,6 +303,9 @@ export const globalInfoEntrySchema = z.object({
 
 export const stepGlobalInfoSchema = z.object({
   globalInfo: globalInfoEntrySchema,
+  // STA-82 EC fields buildout — BA row 49 "Country/Region" (Global Information).
+  // Optional (mockup phase); default Thailand, editable. Reuses PICKLIST_COUNTRY_ISO at the UI.
+  countryRegion: z.string().optional(),
 })
 
 export type GlobalInfoEntryData = z.infer<typeof globalInfoEntrySchema>
@@ -347,6 +350,10 @@ export const dependentEntrySchema = z.object({
   email: z.string(),
   isTaxDependent: z.boolean(),
   addressLine1: z.string(),
+  // STA-82 EC fields buildout — BA dependent address rows 130 (Moo) / 131 (Lane-Soi).
+  // Optional (mockup phase); wired into the dependent address block by the Batch 5 leaf.
+  moo: z.string().optional(),
+  soi: z.string().optional(),
 })
 
 export const stepDependentsSchema = z.object({
@@ -482,6 +489,13 @@ export const stepJobSchema = z.object({
   emplStatus: z.string().optional().nullable(),
   event: z.string().optional().nullable(),
   employmentType: z.string().optional().nullable(),
+  // STA-82 EC fields buildout — DVT education cluster (gated by Scholarship = YES at the UI).
+  // BA row 210 Partner University (picklist DVT_PARTNER_UNIVERSITY) / row 212 Degree Level
+  // (picklist DVT_DEGREE_LEVEL). BA row marks GPA process=Hiring; surfaced here as optional
+  // so a hire-time capture is schema-valid (UI placement deferred to the leaf / maintain decision).
+  dvtPartnerUniversity: z.string().optional(),
+  dvtDegreeLevel: z.string().optional(),
+  gpa: z.union([z.string(), z.number()]).optional(),
 })
 
 const costDistributionRowSchema = z.object({

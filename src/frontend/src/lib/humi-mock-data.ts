@@ -1133,6 +1133,21 @@ export const HUMI_MY_PROFILE = {
     ['Work Location', 'Central World Tower, Bangkok'],
   ] as ReadonlyArray<readonly [string, string]>,
 
+  // ── STA-82 EC fields buildout — maintain profile sub-sections (SPINE stubs).
+  // Pre-created empty so the maintain leaf batches (7/8/9) only APPEND tuple rows
+  // rather than introduce new keys into this shared object literal. Each renders via
+  // FieldCard in profile/me/page.tsx once populated. Empty arrays add no field tokens →
+  // StepBAFieldCoverage regression stays GREEN (maintain rows are excluded from it anyway).
+  workExperienceCompany: [] as ReadonlyArray<readonly [string, string]>,   // Batch 7
+  previousEmployment: [] as ReadonlyArray<readonly [string, string]>,      // Batch 7
+  certifications: [] as ReadonlyArray<readonly [string, string]>,          // Batch 7
+  assessments: [] as ReadonlyArray<readonly [string, string]>,             // Batch 8
+  memberships: [] as ReadonlyArray<readonly [string, string]>,             // Batch 8
+  specialProjects: [] as ReadonlyArray<readonly [string, string]>,         // Batch 8
+  documents: [] as ReadonlyArray<readonly [string, string]>,               // Batch 9
+  advancedPersonal: [] as ReadonlyArray<readonly [string, string]>,        // Batch 9
+  compensationExtra: [] as ReadonlyArray<readonly [string, string]>,       // Batch 9
+
   // Compensation portlet not yet extracted from SF (Phase 4 work).
   // Values below are illustrative — schema TBD via cnext follow-up.
   comp: {

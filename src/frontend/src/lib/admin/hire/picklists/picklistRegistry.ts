@@ -31,6 +31,8 @@ export { OTHER_TITLE_TH_OPTIONS } from './otherTitleTh'
 export { POS_OPTIONS } from './pos'
 export { STORE_BRAND_FORMAT_OPTIONS } from './storeBrandFormat'
 export { BRAND_OPTIONS } from './brand'
+export { PARTNER_UNIVERSITY_OPTIONS } from './partnerUniversity'
+export { DEGREE_LEVEL_OPTIONS } from './degreeLevel'
 
 // Local re-imports for the keyed registry below.
 import { OK_TO_REHIRE_OPTIONS } from './okToRehire'
@@ -48,6 +50,8 @@ import { OTHER_TITLE_TH_OPTIONS } from './otherTitleTh'
 import { POS_OPTIONS } from './pos'
 import { STORE_BRAND_FORMAT_OPTIONS } from './storeBrandFormat'
 import { BRAND_OPTIONS } from './brand'
+import { PARTNER_UNIVERSITY_OPTIONS } from './partnerUniversity'
+import { DEGREE_LEVEL_OPTIONS } from './degreeLevel'
 
 /**
  * PICKLIST_REGISTRY — canonical id → options map.
@@ -73,6 +77,8 @@ export const PICKLIST_REGISTRY = {
   pos: POS_OPTIONS,
   storeBrandFormat: STORE_BRAND_FORMAT_OPTIONS,
   brand: BRAND_OPTIONS,
+  DVT_PARTNER_UNIVERSITY: PARTNER_UNIVERSITY_OPTIONS,
+  DVT_DEGREE_LEVEL: DEGREE_LEVEL_OPTIONS,
 } as const satisfies Record<string, PicklistDefinition>
 
 export type PicklistId = keyof typeof PICKLIST_REGISTRY
