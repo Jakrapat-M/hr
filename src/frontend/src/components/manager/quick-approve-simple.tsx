@@ -14,8 +14,10 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Card } from '@/components/humi';
 import { Button } from '@/components/humi';
 import { DataTable, type DataTableColumn } from '@/components/humi';
-import { APPROVAL_REGISTRY, useSelectPendingApprovals } from '@/lib/approval-registry';
+import { APPROVAL_REGISTRY, useSelectPendingApprovals, type QueueApproval } from '@/lib/approval-registry';
 import type { PendingRequest } from '@/lib/quick-approve-api';
+import { useAuthStore } from '@/stores/auth-store';
+import { canActOn, countActionable } from '@/lib/claim-permissions';
 
 // Demo manager actor for mock dispatch (mirrors workflows/benefit-claim/[id]).
 const MANAGER_NAME = 'ผู้จัดการ / Manager';
@@ -61,8 +63,17 @@ export function QuickApproveSimple() {
   // status enums (pending_spd/pending_hr/pending_manager(_approval)) → pending for
   // the 3-state filter below.
   const locale = useLocale();
+  const roles = useAuthStore((s) => s.roles);
   const queue = useSelectPendingApprovals();
   const rows = useMemo<PendingRequest[]>(() => queue.map((q) => q.row), [queue]);
+  // Look up the full QueueApproval (status + awaitingNext) by row id so the
+  // actions column can ask the DEFAULT-SCOPE predicate canActOn(item, roles).
+  const queueById = useMemo<Record<string, QueueApproval>>(
+    () => Object.fromEntries(queue.map((q) => [q.row.id, q])),
+    [queue],
+  );
+  // HONEST COUNT — rows THIS persona can actually act on (not a global number).
+  const actionableCount = useMemo(() => countActionable(queue, roles), [queue, roles]);
   // PR-1c: status DERIVES from the store (via the selector) — no local override
   // map. Approve/reject dispatch to the source store and the row re-renders from
   // the new store status.
@@ -206,15 +217,35 @@ export function QuickApproveSimple() {
       headerVisuallyHidden: true,
       cell: (row) => {
         const status = effectiveStatus(row);
+        const viewLink = (
+          <Link
+            href={`/${locale}/quick-approve/${row.id}`}
+            className="humi-button humi-button--ghost"
+            style={{ fontSize: 12, padding: '4px 10px' }}
+          >
+            {t('actions.view')}
+          </Link>
+        );
         if (status !== 'pending') {
+          return viewLink;
+        }
+        // DEFAULT-SCOPE gate: only the routed approver gets approve/reject; a
+        // non-approver persona (incl. a manager who is NOT this row's approver)
+        // sees the SAME row VIEW-ONLY — never hidden (transparency, AC).
+        const item = queueById[row.id];
+        const actable = item ? canActOn(item, roles) : false;
+        if (!actable) {
           return (
-            <Link
-              href={`/${locale}/quick-approve/${row.id}`}
-              className="humi-button humi-button--ghost"
-              style={{ fontSize: 12, padding: '4px 10px' }}
-            >
-              {t('actions.view')}
-            </Link>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span
+                className="humi-tag"
+                style={{ fontSize: 12 }}
+                data-testid="view-only-badge"
+              >
+                {t('actions.viewOnly')}
+              </span>
+              {viewLink}
+            </div>
           );
         }
         return (
@@ -233,13 +264,7 @@ export function QuickApproveSimple() {
             >
               {t('actions.reject')}
             </Button>
-            <Link
-              href={`/${locale}/quick-approve/${row.id}`}
-              className="humi-button humi-button--ghost"
-              style={{ fontSize: 12, padding: '4px 10px' }}
-            >
-              {t('actions.view')}
-            </Link>
+            {viewLink}
           </div>
         );
       },
@@ -249,9 +274,11 @@ export function QuickApproveSimple() {
 
   // ── Render ───────────────────────────────────────────────
 
+  // HONEST COUNT on the Pending tab: show what THIS persona can act on, not the
+  // global pending total (which would imply false workload for a view-only role).
   const tabs: { key: FilterTab; count: number }[] = [
     { key: 'all',      count: rows.length },
-    { key: 'pending',  count: pendingCount },
+    { key: 'pending',  count: actionableCount },
     { key: 'approved', count: approvedCount },
     { key: 'rejected', count: rejectedCount },
   ];
@@ -267,8 +294,10 @@ export function QuickApproveSimple() {
       <h1 className="font-display text-2xl font-bold tracking-tight text-ink" style={{ marginBottom: 4 }}>
         {t('title')}
       </h1>
+      {/* HONEST COUNT: actionable (what THIS persona can decide) vs total pending.
+          A view-only persona sees actionable=0 even when rows are visible. */}
       <p style={{ fontSize: 14, color: 'var(--color-ink-muted)', marginBottom: 20 }}>
-        {t('subtitlePending', { n: pendingCount })}
+        {t('subtitleActionable', { actionable: actionableCount, total: pendingCount })}
       </p>
 
       {/* Segmented filter tabs */}

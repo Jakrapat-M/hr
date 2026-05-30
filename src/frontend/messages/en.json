@@ -3145,7 +3145,8 @@
       "actions": {
         "approve": "Approve",
         "reject": "Reject",
-        "view": "View"
+        "view": "View",
+        "viewOnly": "View only"
       },
       "status": {
         "pending": "Pending",
@@ -3153,7 +3154,8 @@
         "approved": "Approved",
         "rejected": "Rejected",
         "awaitingNext": "Awaiting next approver"
-      }
+      },
+      "subtitleActionable": "{actionable} of {total} pending items you can decide"
     },
     "slideOver": {
       "title": "Request Details",

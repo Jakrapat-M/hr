@@ -3110,7 +3110,8 @@
       "actions": {
         "approve": "อนุมัติ",
         "reject": "ปฏิเสธ",
-        "view": "ดูรายละเอียด"
+        "view": "ดูรายละเอียด",
+        "viewOnly": "ดูอย่างเดียว"
       },
       "status": {
         "pending": "รออนุมัติ",
@@ -3118,7 +3119,8 @@
         "approved": "อนุมัติแล้ว",
         "rejected": "ปฏิเสธแล้ว",
         "awaitingNext": "รอผู้อนุมัติถัดไป"
-      }
+      },
+      "subtitleActionable": "คุณตัดสินใจได้ {actionable} จาก {total} รายการที่รออนุมัติ"
     },
     "slideOver": {
       "title": "รายละเอียดคำขอ",
