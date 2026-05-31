@@ -4864,7 +4864,8 @@
     "adminSubtitle": "รายการคำขอเอกสารจากพนักงานทั้งหมด",
     "viewSwitchLabel": "สลับมุมมอง",
     "viewQueue": "คำขอ",
-    "viewGenerate": "สร้างเอกสาร"
+    "viewGenerate": "สร้างเอกสาร",
+    "generateNote": "ตัวอย่างเอกสาร — สร้างจากข้อมูลพนักงานในระบบ (ข้อมูลจำลองสำหรับสาธิต)"
   },
   "doc_generate": {
     "ctaTitle": "สร้างเอกสารทันที",
@@ -5312,6 +5313,7 @@
     "reportNamePlaceholder": "เช่น รายงานกำลังคนประจำเดือน",
     "save": "บันทึกรายงาน",
     "saved": "บันทึกแล้ว",
-    "rowCount": "{count} แถว"
+    "rowCount": "{count} แถว",
+    "previewCap": "แสดง {shown} อันดับแรกจาก {total} รายการ — ดาวน์โหลด CSV เพื่อดูทั้งหมด"
   }
 }
