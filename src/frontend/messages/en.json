@@ -3780,6 +3780,16 @@
       "externalNote": "Recruiting is managed in the Talent Acquisition portal."
     }
   },
+  "compHistory": {
+    "title": "Compensation history",
+    "readOnly": "Read-only",
+    "effective": "Effective",
+    "maskedNote": "Amounts are masked because you are not the owner of this record.",
+    "typePromotion": "Promotion",
+    "typeMerit": "Merit increase",
+    "typeAdjustment": "Market adjustment",
+    "typeHire": "Initial hire"
+  },
   "humiProfile": {
     "subtitle": "Employee ID",
     "save": "Save changes",

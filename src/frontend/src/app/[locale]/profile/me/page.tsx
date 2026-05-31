@@ -59,6 +59,7 @@ import { Address8Editor, isAddress8Valid } from '@/components/profile/Address8Ed
 import { BankDetailsEditor, isBankValid } from '@/components/profile/BankDetailsEditor';
 import { ContactArrayEditor, isContactArrayValid } from '@/components/profile/ContactArrayEditor';
 import CompensationSummary from '@/components/profile/CompensationSummary';
+import CompensationHistory from '@/components/profile/CompensationHistory';
 
 // Map slice tab keys → display keys used by existing tab panels
 type TabKey = 'personal' | 'job' | 'emergency' | 'benefits' | 'docs' | 'tax';
@@ -1463,6 +1464,9 @@ export default function HumiProfileMePage({
 
           {/* ── BRD #170 ESS Compensation Summary ─────────────────────────── */}
           <CompensationSummary />
+
+          {/* ── P3 read-only Compensation History (self view = owner) ──────── */}
+          <CompensationHistory />
 
           {/* ── Batch 7: Work Experience Within Company (STA-82 EC maintain) ── */}
           {p.workExperienceCompany.length > 0 && (

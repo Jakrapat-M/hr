@@ -3659,6 +3659,16 @@
     "replyCta": "ตอบกลับ",
     "weekGreetCta": "ส่งข้อความอวยพร"
   },
+  "compHistory": {
+    "title": "ประวัติค่าตอบแทน",
+    "readOnly": "อ่านอย่างเดียว",
+    "effective": "มีผล",
+    "maskedNote": "ตัวเลขถูกปิดบังเนื่องจากคุณไม่ใช่เจ้าของข้อมูลนี้",
+    "typePromotion": "เลื่อนตำแหน่ง",
+    "typeMerit": "ปรับขึ้นตามผลงาน",
+    "typeAdjustment": "ปรับตามตลาด",
+    "typeHire": "เริ่มงาน"
+  },
   "humiProfile": {
     "subtitle": "รหัสพนักงาน",
     "save": "บันทึกการเปลี่ยนแปลง",

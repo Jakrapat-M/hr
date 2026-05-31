@@ -43,6 +43,7 @@ import { usePromotionApprovals, PROMOTION_STEP_LABEL } from '@/stores/promotion-
 import { calcAge, calcGeneration, calcYearOfService, calcYearsInJob, calcYearsInCorpTitle, calcYearsInPosition, calcYearsInBU } from '@/lib/calculations'
 import type { LifecycleEvent } from '@/lib/calculations'
 import { mapEmplStatusCode } from '@/lib/employee/empStatus'
+import CompensationHistory from '@/components/profile/CompensationHistory'
 
 // ── Avatar color by status ───────────────────────────────────
 function avatarClass(status: string): string {
@@ -895,6 +896,9 @@ export default function EmployeeDetailPage() {
           )}
         </div>
       </div>
+
+      {/* ── P3 read-only Compensation History (admin/HRBP cross-user view) ── */}
+      <CompensationHistory employeeId={employee.employee_id} viewerIsOwner={false} />
 
       {/* ── Section C: Action menu (5 cards, C8 guardrail) ── */}
       <div className="humi-card">
