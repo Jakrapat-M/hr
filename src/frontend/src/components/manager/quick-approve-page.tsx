@@ -74,6 +74,8 @@ const TYPE_LABELS_TH: Record<RequestType | 'all', string> = {
   transfer: 'ย้าย',
   change_request: 'เปลี่ยนข้อมูล',
   probation: 'ทดลองงาน',
+  pay_rate: 'ปรับเงินเดือน',
+  tax_planning: 'วางแผนภาษี',
 };
 
 const TYPE_LABELS_EN: Record<RequestType | 'all', string> = {
@@ -84,6 +86,8 @@ const TYPE_LABELS_EN: Record<RequestType | 'all', string> = {
   transfer: 'Transfer',
   change_request: 'Change',
   probation: 'Probation',
+  pay_rate: 'Pay rate',
+  tax_planning: 'Tax planning',
 };
 
 const URGENCY_LABELS_TH: Record<Urgency | 'all', string> = {
@@ -644,6 +648,8 @@ export function QuickApprovePage() {
     transfer: allItems.filter((i) => i.type === 'transfer').length,
     change_request: allItems.filter((i) => i.type === 'change_request').length,
     probation: allItems.filter((i) => i.type === 'probation').length,
+    pay_rate: allItems.filter((i) => i.type === 'pay_rate').length,
+    tax_planning: allItems.filter((i) => i.type === 'tax_planning').length,
   }), [allItems]);
 
   // DataTable columns

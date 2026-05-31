@@ -4689,6 +4689,8 @@
     "type_claim": "Claim",
     "type_transfer": "Transfer",
     "type_change_request": "Change Request",
+    "type_pay_rate": "Pay rate change",
+    "type_tax_planning": "Tax planning",
     "leaveType": "Leave Type",
     "startDate": "Start Date",
     "endDate": "End Date",

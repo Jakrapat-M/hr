@@ -64,6 +64,8 @@ const QUEUE_TYPE_TO_WORKFLOW_TYPE: Record<QueueWorkflowRow['type'], WorkflowType
   transfer: 'transfer',
   change_request: 'personal_info',
   probation: 'personal_info',
+  pay_rate: 'payroll_change',
+  tax_planning: 'payroll_change',
 };
 
 function queueRowToWorkflowItem(row: QueueWorkflowRow): WorkflowItem {

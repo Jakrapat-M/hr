@@ -4568,6 +4568,8 @@
     "type_claim": "เบิกค่าใช้จ่าย",
     "type_transfer": "โอนย้าย",
     "type_change_request": "คำขอเปลี่ยนแปลงข้อมูล",
+    "type_pay_rate": "ปรับเงินเดือน",
+    "type_tax_planning": "วางแผนภาษี",
     "leaveType": "ประเภทการลา",
     "startDate": "วันที่เริ่ม",
     "endDate": "วันที่สิ้นสุด",

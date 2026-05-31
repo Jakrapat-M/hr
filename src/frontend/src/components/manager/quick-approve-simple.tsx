@@ -43,8 +43,18 @@ function typeLabel(type: PendingRequest['type']): string {
     transfer: 'โอนย้าย',
     change_request: 'แก้ไขข้อมูล',
     probation: 'ทดลองงาน',
+    pay_rate: 'ปรับเงินเดือน',
+    tax_planning: 'วางแผนภาษี',
   };
   return map[type] ?? type;
+}
+
+// Detail drill-in route. pay_rate / tax_planning live under /workflows/<type>/[id]
+// (their own detail pages); everything else opens the unified /quick-approve/[id].
+function detailHref(locale: string, row: PendingRequest): string {
+  if (row.type === 'pay_rate') return `/${locale}/workflows/pay-rate/${row.id}`;
+  if (row.type === 'tax_planning') return `/${locale}/workflows/tax-planning/${row.id}`;
+  return `/${locale}/quick-approve/${row.id}`;
 }
 
 // Seed a REQ-#### display ref from the WF id.
@@ -219,7 +229,7 @@ export function QuickApproveSimple() {
         const status = effectiveStatus(row);
         const viewLink = (
           <Link
-            href={`/${locale}/quick-approve/${row.id}`}
+            href={detailHref(locale, row)}
             className="humi-button humi-button--ghost"
             style={{ fontSize: 12, padding: '4px 10px' }}
           >

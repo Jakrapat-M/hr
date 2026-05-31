@@ -20,6 +20,8 @@ import { useLeaveApprovals } from '@/stores/leave-approvals';
 import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { useTransferApprovals } from '@/stores/transfer-approvals';
+import { usePayRateApprovals } from '@/stores/pay-rate-approvals';
+import { useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
 const ACTOR = { name: 'Manager', role: 'spd' };
 
@@ -28,6 +30,8 @@ function clearAll() {
   useWorkflowApprovals.getState().clear();
   useBenefitClaimsStore.getState().clear();
   useTransferApprovals.getState().clear();
+  usePayRateApprovals.getState().clear();
+  useBenefitTaxPlanningStore.getState().clear();
 }
 
 function reseed() {
