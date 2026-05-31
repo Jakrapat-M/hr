@@ -157,11 +157,10 @@ export const MODULES: ModuleGroup[] = [
     leaves: [
       { id: 'roles', label: 'Roles & Permissions', labelTh: 'สิทธิ์ตามบทบาท', href: '/permissions', show: ['sysadmin'] },
       { id: 'catalog', label: 'Master Catalog', labelTh: 'ฐานข้อมูลกลาง', href: '/admin/foundation', show: ['hris', 'sysadmin'] }, // merges assets
-      // docreview shares /admin/documents with hr-docs (HR group) — documented Principle-1
-      // exception: no distinct doc-review-queue route exists; same screen, two persona contexts.
-      // P2-follow-up: doc-review URL split deferred — restore an spd-visible /admin/doc-review surface when built.
-      // P2 Item 3: dropped spd — /admin/documents is gated hr_admin+ by admin/layout, so spd dead-ended in AccessDenied here.
-      { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/admin/documents', show: ['sysadmin'] },
+      // P2 follow-up (PR-4) DONE: doc-review URL split out of /admin/documents. SPD now has its
+      // own reachable review queue at /hrbp/doc-review (outside admin/layout's hr_admin+ gate, so
+      // the route's own guard admits spd + hr_admin + hr_manager). hr-docs keeps /admin/documents.
+      { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/hrbp/doc-review', show: ['spd', 'sysadmin'] },
       { id: 'audit', label: 'Audit & System', labelTh: 'บันทึก · ระบบ', href: '/admin/system', show: ['hradmin', 'hris', 'sysadmin'] }, // merges impers; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
       // CUT ENTIRELY: Integrations, Policy Builder, Approval Workflows, Branding, Notifications-as-integration.
       // Notifications has a real page (/admin/system/notifications) but is left reachable via /admin/system.

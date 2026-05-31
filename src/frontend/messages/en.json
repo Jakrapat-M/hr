@@ -4936,6 +4936,24 @@
     "adminTitle": "Document Request Queue",
     "adminSubtitle": "All employee document requests"
   },
+  "doc_review": {
+    "eyebrow": "SPD · Documents",
+    "title": "Document Review Queue",
+    "subtitle": "Documents awaiting your review before they are issued.",
+    "boundary": "Mockup: review actions update this screen only — no document is generated or sent.",
+    "colRequestId": "Request ID",
+    "colEmployee": "Employee",
+    "colDocType": "Document Type",
+    "colPurpose": "Purpose",
+    "colSubmitted": "Submitted",
+    "colStatus": "Status",
+    "colAction": "Action",
+    "statusAwaiting": "Awaiting review",
+    "statusReviewed": "Reviewed",
+    "markReviewed": "Mark reviewed",
+    "done": "Done",
+    "empty": "No documents awaiting review."
+  },
   "notifications_page": {
     "eyebrow": "System · Notifications",
     "title": "Notification Templates",

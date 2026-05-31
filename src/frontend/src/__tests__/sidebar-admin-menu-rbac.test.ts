@@ -49,8 +49,10 @@ describe('P2 Item 3 — admin leaves cut from personas their route guard blocks'
     expect(leafVisible(leaf('audit'), HR_MANAGER)).toBe(true);
   });
 
-  test('docreview no longer shown to spd (doc-review URL split deferred)', () => {
-    expect(leafVisible(leaf('docreview'), SPD)).toBe(false);
+  test('docreview is shown to spd again (P4 PR-4: doc-review split to /hrbp/doc-review)', () => {
+    // The deferred URL split is done — docreview now points at /hrbp/doc-review,
+    // a route whose own guard admits spd, so SPD sees the leaf again.
+    expect(leafVisible(leaf('docreview'), SPD)).toBe(true);
     // sysadmin (hr_manager) keeps it
     expect(leafVisible(leaf('docreview'), HR_MANAGER)).toBe(true);
   });
