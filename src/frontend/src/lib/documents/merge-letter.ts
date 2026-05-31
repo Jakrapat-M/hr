@@ -22,6 +22,21 @@ export interface MergeOptions {
   companyEn?: string;
 }
 
+/**
+ * Deterministic mock monthly salary (THB) for the salary certificate.
+ *
+ * The `HumiEmployee` pool carries NO salary field (real comp lives only on the
+ * richer single-profile object). For the mockup we derive a stable, plausible
+ * figure from the employee id so the same person always certifies the same
+ * amount. Range ≈ ฿28,000–฿98,000, rounded to the nearest ฿500.
+ */
+export function mockMonthlySalary(emp: HumiEmployee): number {
+  let hash = 0;
+  for (const ch of emp.id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  const base = 28000 + (hash % 70001); // 28,000 .. 98,000
+  return Math.round(base / 500) * 500;
+}
+
 export interface MergeResult {
   /** Localised letter title (the template name). */
   title: string;

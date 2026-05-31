@@ -4938,7 +4938,10 @@
     "submitting": "Submitting...",
     "submitSuccess": "Document request submitted. HR will process it within the SLA.",
     "adminTitle": "Document Request Queue",
-    "adminSubtitle": "All employee document requests"
+    "adminSubtitle": "All employee document requests",
+    "viewSwitchLabel": "Switch view",
+    "viewQueue": "Requests",
+    "viewGenerate": "Generate"
   },
   "doc_generate": {
     "ctaTitle": "Generate now",
@@ -4955,7 +4958,16 @@
     "print": "Print",
     "close": "Close",
     "boundary": "Mockup: the letter is generated instantly from your own data — no approval and no request queue.",
-    "selfBadge": "Self-service"
+    "selfBadge": "Self-service",
+    "employeeLabel": "Employee",
+    "employeePlaceholder": "Search by name, code, position…",
+    "noEmployees": "No matching employees",
+    "letterLabel": "Letter",
+    "previewTitle": "Preview",
+    "previewEmpty": "Pick an employee and a letter to preview it here.",
+    "missingNote": "Some fields have no data on file and are shown as blank lines: {fields}.",
+    "downloaded": "Letter downloaded",
+    "printBlocked": "Please allow pop-ups to print"
   },
   "doc_review": {
     "eyebrow": "SPD · Documents",
