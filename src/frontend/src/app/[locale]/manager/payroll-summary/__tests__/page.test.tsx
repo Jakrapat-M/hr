@@ -100,14 +100,18 @@ describe('ManagerPayrollSummaryPage — read-only team comp rollup', () => {
   it('figures are masked by default and reveal toggles them', () => {
     render(<ManagerPayrollSummaryPage />);
 
-    // Masked tokens present before reveal.
-    expect(screen.getAllByText(/••••/).length).toBeGreaterThan(0);
+    // Masked figures present before reveal: every digit is replaced by a
+    // bullet while the currency shape (฿ , .) is kept, e.g. "฿••,•••.••".
+    // So no digits should be visible and bullet-masked cells must exist.
+    const maskedCells = screen.getAllByText(/•/);
+    expect(maskedCells.length).toBeGreaterThan(0);
+    maskedCells.forEach((el) => expect(el.textContent ?? '').not.toMatch(/[0-9]/));
 
     const toggle = screen.getByTestId('payroll-summary-reveal-toggle');
     fireEvent.click(toggle);
 
     // After reveal the mask tokens are gone (full figures shown).
-    expect(screen.queryByText(/••••/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/•/)).not.toBeInTheDocument();
   });
 });
 

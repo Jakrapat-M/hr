@@ -64,10 +64,10 @@ function compFor(emp: HumiEmployee): CompRow {
   return { emp, base, allowances, total: base + allowances };
 }
 
-// Mask a currency string keeping only the last 4 chars visible.
+// Mask a currency string: replace every digit (ASCII or Thai) with a bullet,
+// keeping the shape (฿, separators, decimal point) so it reads "฿••,•••.••".
 function maskCurrency(formatted: string): string {
-  if (formatted.length <= 4) return formatted;
-  return `••••${formatted.slice(-4)}`;
+  return formatted.replace(/[0-9๐-๙]/g, '•');
 }
 
 export default function ManagerPayrollSummaryPage() {
