@@ -5207,5 +5207,23 @@
     "caption": "Your direct reports",
     "emptyTitle": "No direct reports",
     "emptyDesc": "When team members report to you, they will appear here."
+  },
+  "managerPayrollSummary": {
+    "eyebrow": "Team Compensation",
+    "title": "Team Compensation Summary",
+    "scope": "Your direct reports ({count} people)",
+    "readOnlyNote": "Read-only · Managers can view but cannot edit or approve compensation",
+    "cardTitle": "Per-person Compensation (monthly)",
+    "colName": "Name",
+    "colPosition": "Position",
+    "colBase": "Base pay",
+    "colAllowances": "Allowances",
+    "colTotal": "Total",
+    "teamTotalLabel": "Team compensation total",
+    "reveal": "Reveal figures",
+    "hide": "Hide figures",
+    "caption": "Compensation summary for your direct reports",
+    "emptyTitle": "No direct reports",
+    "emptyDesc": "When team members report to you, their compensation summary appears here."
   }
 }

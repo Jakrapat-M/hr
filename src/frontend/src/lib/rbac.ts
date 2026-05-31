@@ -27,6 +27,7 @@ const MODULE_ACCESS: Record<string, Role[]> = {
 'payroll-setup': ['hr_admin','hr_manager'],
 'payroll-processing': ['hr_admin','hr_manager'],
 'payroll-tax-review': ['spd','hr_admin','hr_manager'],
+'payroll-team-summary': ['manager','hr_admin','hr_manager'], // P3: read-only manager surface — team comp rollup, NO write
 'time-management': ['hr_admin','hr_manager'],
 'government-reports': ['hr_admin','hr_manager'],
  settings: ['hr_admin','hr_manager'],
