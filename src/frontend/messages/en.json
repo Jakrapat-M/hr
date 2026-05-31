@@ -4741,7 +4741,9 @@
     "submitting": "Submitting…",
     "toastApproved": "Request approved",
     "toastRejected": "Request rejected",
-    "toastReturned": "Request returned"
+    "toastReturned": "Request returned",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You can review this request, but it is routed to another approver to decide."
   },
   "quick_approve_bulk": {
     "title": "Bulk Approve Queue",

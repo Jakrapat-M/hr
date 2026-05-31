@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { CheckCircle2, XCircle, RotateCcw, Route, ShieldAlert } from 'lucide-react';
+import { CheckCircle2, XCircle, RotateCcw, Route, ShieldAlert, Eye } from 'lucide-react';
 import { Button, Modal, FormField, Capability } from '@/components/humi';
 import { cn } from '@/lib/utils';
 import type { RequestType } from '@/lib/quick-approve-api';
@@ -10,6 +10,14 @@ import type { RequestType } from '@/lib/quick-approve-api';
 interface ActionPanelProps {
   requestId: string;
   requestType?: RequestType;
+  /**
+   * DEFAULT-SCOPE gate (P2): does the active persona's role entitle it to ACT on
+   * this row, per canActOn() from lib/claim-permissions? When false, the panel
+   * renders a transparent VIEW-ONLY state (the row stays visible — no hidden
+   * data — but the approve/reject/return controls are withheld). Defaults to
+   * `true` so legacy callers that don't thread the gate keep their controls.
+   */
+  actable?: boolean;
   onApprove?: (id: string, comment: string) => void;
   onReject?: (id: string, reason: string) => void;
   onReturn?: (id: string, reason: string) => void;
@@ -22,6 +30,7 @@ type ActionType = 'approve' | 'reject' | 'return' | 'reroute' | 'override';
 export function ActionPanel({
   requestId,
   requestType,
+  actable = true,
   onApprove,
   onReject,
   onReturn,
@@ -98,6 +107,25 @@ export function ActionPanel({
     ? !inputRequired[activeAction] || inputValue.trim().length > 0
     : false;
   const isClaim = requestType === 'claim';
+
+  // DEFAULT-SCOPE view-only state (P2): persona is NOT the routed approver for this
+  // row. Mirror the list (quick-approve-simple) — the row stays fully visible, but
+  // the approve/reject/return controls are withheld and replaced by an honest
+  // "view only" panel so the detail page can't act where the list says it can't.
+  if (!actable) {
+    return (
+      <div
+        className="flex flex-wrap items-center gap-3 rounded-[var(--radius-lg)] border border-hairline bg-canvas-soft p-4"
+        data-testid="action-panel-view-only"
+      >
+        <span className="inline-flex items-center gap-2 text-small font-semibold text-ink">
+          <Eye className="h-4 w-4 text-ink-muted" aria-hidden />
+          {t('viewOnly')}
+        </span>
+        <span className="text-small text-ink-muted">{t('viewOnlyHint')}</span>
+      </div>
+    );
+  }
 
   return (
     <>

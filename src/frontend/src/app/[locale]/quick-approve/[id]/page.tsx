@@ -11,8 +11,31 @@ import { RequestPayload } from '@/components/quick-approve/detail/RequestPayload
 import { HistoryTimeline } from '@/components/quick-approve/detail/HistoryTimeline';
 import { ActionPanel } from '@/components/quick-approve/detail/ActionPanel';
 import { RejectReturnDrawer, type DrawerMode } from '@/components/quick-approve/detail/RejectReturnDrawer';
-import { APPROVAL_REGISTRY, useSelectPendingApprovals } from '@/lib/approval-registry';
+import { APPROVAL_REGISTRY, useSelectPendingApprovals, type QueueApproval, type QueueStatus } from '@/lib/approval-registry';
 import type { PendingRequest } from '@/lib/quick-approve-api';
+import { canActOn } from '@/lib/claim-permissions';
+import { useAuthStore } from '@/stores/auth-store';
+
+// Build the QueueApproval for a LEGACY fallback row (which has no store record)
+// from its own approval timeline, mirroring how the store-derived selector tags
+// live rows so canActOn() stays consistent on the detail page:
+//   • status: any pending step → pending, any rejected → rejected, else approved.
+//   • awaitingNext: the FIRST step has already been decided but a later step is
+//     still pending (e.g. Manager approved → HRBP pending). canActOn() reads this
+//     to keep a plain manager VIEW-ONLY once the row has moved past their step.
+function queueApprovalFromTimeline(request: PendingRequest): QueueApproval {
+  const steps = request.approvalTimeline ?? [];
+  let status: QueueStatus;
+  if (steps.some((s) => s.status === 'rejected')) status = 'rejected';
+  else if (steps.length === 0 || steps.some((s) => s.status === 'pending')) status = 'pending';
+  else status = 'approved';
+
+  const firstDecided = steps.length > 0 && steps[0].status !== 'pending';
+  const laterPending = steps.slice(1).some((s) => s.status === 'pending');
+  const awaitingNext = status === 'pending' && firstDecided && laterPending;
+
+  return { row: request, status, awaitingNext };
+}
 
 // Demo manager actor for mock dispatch (mirrors quick-approve-simple).
 const MANAGER_NAME = 'ผู้จัดการ / Manager';
@@ -448,9 +471,20 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
   // PR-1b (R3): resolve from the store-derived queue first (live status), then the
   // legacy detail-only fallback. Order guarantees no listed row 404s.
   const queue = useSelectPendingApprovals();
+  const roles = useAuthStore((s) => s.roles);
+  const queueItem = queue.find((q) => q.row.id === id);
   const request =
-    queue.find((q) => q.row.id === id)?.row ??
+    queueItem?.row ??
     LEGACY_DETAIL_FALLBACK.find((r) => r.id === id);
+
+  // P2 DEFAULT-SCOPE gate: does THIS persona's role entitle it to act on THIS row?
+  // Resolve the QueueApproval the list selector would produce — directly when the
+  // row is in the live queue, else synthesize one from the legacy fallback's own
+  // status/timeline so canActOn() applies the SAME honest predicate as the list
+  // (quick-approve-simple). actable=false → ActionPanel renders view-only.
+  const queueApproval: QueueApproval | undefined =
+    queueItem ?? (request ? queueApprovalFromTimeline(request) : undefined);
+  const actable = queueApproval ? canActOn(queueApproval, roles) : false;
 
   // PR-1c: dispatch approve/reject to the correct source store by request type,
   // then toast. The benefit adapter is mock-async (Promise) — fire it; the page
@@ -519,6 +553,7 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
         <ActionPanel
           requestId={request.id}
           requestType={request.type}
+          actable={actable}
           onApprove={handleApprove}
           onReject={() => openDrawer('reject')}
           onReturn={() => openDrawer('return')}

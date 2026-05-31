@@ -73,7 +73,16 @@ import { useLeaveApprovals } from '@/stores/leave-approvals';
 import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { useTransferApprovals } from '@/stores/transfer-approvals';
+import { useAuthStore } from '@/stores/auth-store';
+import type { Role } from '@/lib/rbac';
 import { ensureDemoSeed, resetEnsureDemoSeedForTests } from '@/lib/demo-seed';
+
+// P2: the detail ActionPanel gates approve/reject via canActOn(row, roles). Tests
+// must seed the acting persona's roles into the real auth-store. A senior approver
+// (hr_admin) can act on every pending row; a plain employee gets view-only.
+function setRoles(roles: Role[]) {
+  useAuthStore.getState().setUser({ id: 'TEST', name: 'Test', email: 't@x.io', roles });
+}
 
 // ── Subject ───────────────────────────────────────────────────────────────────
 
@@ -114,6 +123,9 @@ describe('QuickApproveDetailPage', () => {
     resetEnsureDemoSeedForTests();
     ensureDemoSeed();
     capabilityMock.canSeeBenefitEmployeeClaim = true;
+    // Default acting persona = senior approver (hr_admin) so existing assertions
+    // about action controls still hold; per-test overrides exercise the gate.
+    setRoles(['hr_admin']);
   });
 
   it('renders request summary for a known ID', async () => {
@@ -168,10 +180,44 @@ describe('QuickApproveDetailPage', () => {
     expect(screen.getByText('quick_approve_detail.claimHidden')).toBeInTheDocument();
   });
 
-  it('renders action buttons (approve gate allowed in mock)', async () => {
+  it('renders action buttons for an entitled approver persona', async () => {
+    setRoles(['hr_admin']);
     await renderPage('WF-002');
     expect(screen.getByText('quick_approve_detail.approve')).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.reject')).toBeInTheDocument();
+    expect(screen.queryByTestId('action-panel-view-only')).not.toBeInTheDocument();
+  });
+
+  it('shows action buttons for a manager who is this row’s first-line approver', async () => {
+    // WF-002 (overtime) first step approver = Manager, still pending → a plain
+    // manager is the routed first-line approver and CAN act (canActOn = true).
+    setRoles(['manager']);
+    await renderPage('WF-002');
+    expect(screen.getByText('quick_approve_detail.approve')).toBeInTheDocument();
+    expect(screen.getByText('quick_approve_detail.reject')).toBeInTheDocument();
+    expect(screen.queryByTestId('action-panel-view-only')).not.toBeInTheDocument();
+  });
+
+  it('renders VIEW-ONLY (no action controls) for a non-approver persona', async () => {
+    // A plain employee is not an approver-capable role → canActOn = false. The row
+    // stays fully visible (transparency) but the action controls are withheld.
+    setRoles(['employee']);
+    await renderPage('WF-002');
+    expect(screen.getByText('quick_approve_detail.viewOnly')).toBeInTheDocument();
+    expect(screen.getByTestId('action-panel-view-only')).toBeInTheDocument();
+    expect(screen.queryByText('quick_approve_detail.approve')).not.toBeInTheDocument();
+    expect(screen.queryByText('quick_approve_detail.reject')).not.toBeInTheDocument();
+    // Request facts still render — view-only does not hide the row.
+    expect(screen.getByText('มณี สุขใจ')).toBeInTheDocument();
+  });
+
+  it('renders VIEW-ONLY for a manager on a row already past the manager step', async () => {
+    // WF-001 (leave): step 1 Manager APPROVED, step 2 HRBP pending → awaitingNext.
+    // A plain manager is no longer the routed approver → view-only on detail too.
+    setRoles(['manager']);
+    await renderPage('WF-001');
+    expect(screen.getByTestId('action-panel-view-only')).toBeInTheDocument();
+    expect(screen.queryByText('quick_approve_detail.approve')).not.toBeInTheDocument();
   });
 
   it('renders leave details for a leave request', async () => {
