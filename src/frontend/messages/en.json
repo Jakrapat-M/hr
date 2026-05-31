@@ -5268,5 +5268,21 @@
     "caption": "Compensation summary for your direct reports",
     "emptyTitle": "No direct reports",
     "emptyDesc": "When team members report to you, their compensation summary appears here."
+  },
+  "reportBuilder": {
+    "title": "Report builder",
+    "subtitle": "Pick a subject, apply filters, preview the table, then export to CSV.",
+    "subject": "Subject",
+    "filters": "Filters",
+    "noFilters": "This subject has no filters.",
+    "allOption": "— All —",
+    "preview": "Preview",
+    "exportCsv": "Export CSV",
+    "saveReport": "Save report",
+    "reportName": "Report name",
+    "reportNamePlaceholder": "e.g. Monthly headcount report",
+    "save": "Save report",
+    "saved": "Saved",
+    "rowCount": "{count} rows"
   }
 }
