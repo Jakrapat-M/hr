@@ -74,6 +74,8 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   // first match, so these must precede the broad '/th/admin' entry below).
   { prefix: '/th/admin/hire', title: 'รับพนักงานใหม่' },
   { prefix: '/en/admin/hire', title: 'Hire Employee' },
+  { prefix: '/th/admin/employees/import', title: 'นำเข้าพนักงาน' },
+  { prefix: '/en/admin/employees/import', title: 'Import Employees' },
   { prefix: '/th/admin/employees', title: 'ทะเบียนพนักงาน' },
   { prefix: '/en/admin/employees', title: 'Employees' },
   { prefix: '/th/admin/foundation', title: 'โครงสร้างองค์กร' },
