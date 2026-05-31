@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useAuthStore } from '@/stores/auth-store';
+import { hasAnyRole } from '@/lib/rbac';
 import { Check, X, Heart, Coffee, Sun, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import {
   Avatar,
@@ -144,7 +146,13 @@ function useToast() {
 
 export default function HumiTimeoffPage() {
   const searchParams = useSearchParams();
-  const initialTab = (searchParams.get('tab') as TabKey | null) ?? 'request';
+  const roles = useAuthStore((s) => s.roles);
+  // Manager approval tab is reviewer-only (remove-not-hide). Employees never
+  // see it; the canonical approval inbox stays /quick-approve.
+  const canReview = hasAnyRole(roles, ['manager', 'hrbp', 'spd', 'hr_admin', 'hr_manager']);
+  const requestedTab = (searchParams.get('tab') as TabKey | null) ?? 'request';
+  // Deep-link to ?tab=approve as a non-reviewer falls back to the request tab.
+  const initialTab: TabKey = requestedTab === 'approve' && !canReview ? 'request' : requestedTab;
   const [tab, setTab] = useState<TabKey>(initialTab);
   const { toast, show: showToast } = useToast();
 
@@ -259,12 +267,14 @@ export default function HumiTimeoffPage() {
             <TabButton active={tab === 'history'} onClick={() => setTab('history')}>
               ประวัติของฉัน
             </TabButton>
-            <TabButton active={tab === 'approve'} onClick={() => setTab('approve')}>
-              รออนุมัติ{' '}
-              <span className="font-normal text-ink-muted">
-                ({HUMI_LEAVE_PENDING.length})
-              </span>
-            </TabButton>
+            {canReview && (
+              <TabButton active={tab === 'approve'} onClick={() => setTab('approve')}>
+                รออนุมัติ{' '}
+                <span className="font-normal text-ink-muted">
+                  ({HUMI_LEAVE_PENDING.length})
+                </span>
+              </TabButton>
+            )}
           </div>
 
           {tab === 'request' && (
@@ -276,7 +286,7 @@ export default function HumiTimeoffPage() {
 
           {tab === 'history' && <HistoryTab />}
 
-          {tab === 'approve' && (
+          {tab === 'approve' && canReview && (
             <ul role="list" className="divide-y divide-hairline pt-2">
               {HUMI_LEAVE_PENDING.map((p) => {
                 const decision = pendingDecisions[p.id];
@@ -699,8 +709,9 @@ function HistoryRow({ h, locale }: { h: TimeoffHistoryItem; locale: string }) {
 
 function HistoryTab() {
   const history = useTimeoffStore((s) => s.history);
-  const searchParams = useSearchParams();
-  const locale = searchParams.get('locale') ?? 'th';
+  const params = useParams();
+  // locale is a path segment (/[locale]/timeoff), not a query param.
+  const locale = (params?.locale as string) ?? 'th';
 
   if (history.length === 0) {
     return (

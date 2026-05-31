@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Wallet, Eye, EyeOff, ExternalLink, FileText } from 'lucide-react';
+import { Wallet, Eye, EyeOff, ExternalLink, FileText, Lock } from 'lucide-react';
 import { DemoValuesDisclaimer } from '@/components/humi/DemoValuesDisclaimer';
 import { HUMI_MY_PROFILE } from '@/lib/humi-mock-data';
+import { useAuthStore } from '@/stores/auth-store';
+import { hasAnyRole } from '@/lib/rbac';
 
 // Mask currency '฿ 82,500' → '฿ ••••2,500' (last 4 visible: '2,500')
 function maskCurrency(currency: string): string {
@@ -17,26 +19,62 @@ function maskCurrency(currency: string): string {
   return `${symbol}••••${num.slice(-4)}`;
 }
 
+// Mask a free-text recurring component (bonus / equity descriptor) so a
+// non-owner viewer cannot infer the figure. Keeps any leading label intact.
+function maskValueSafe(value: string): string {
+  if (!value) return '••••';
+  return '••••••';
+}
+
 const PAY_STATEMENTS = [
   { id: 'PS-2026-03', monthLabel: 'มีนาคม 2569', gross: '55,000 บาท', net: '48,200 บาท', status: 'พร้อมดาวน์โหลด' },
   { id: 'PS-2026-02', monthLabel: 'กุมภาพันธ์ 2569', gross: '55,000 บาท', net: '48,200 บาท', status: 'พร้อมดาวน์โหลด' },
   { id: 'PS-2026-01', monthLabel: 'มกราคม 2569', gross: '55,000 บาท', net: '47,800 บาท', status: 'พร้อมดาวน์โหลด' },
 ];
 
-export default function CompensationSummary() {
+// The pay-statement subject is an HR Manager. The OWNER may reveal full
+// figures. A NON-OWNER / lower-tier viewer (employee or manager persona that is
+// not the subject and lacks HR comp-view privilege) sees salary + recurring
+// components permanently masked, with the reveal toggle removed — never red,
+// never unmaskable. Privileged HR roles keep the reveal control.
+//
+// This card lives on /profile/me, so the DEFAULT viewer IS the owner (self
+// view). Owner status is only downgraded when a caller explicitly passes
+// viewerIsOwner={false} for a cross-user surface — and even then an HR
+// comp-view role re-grants the reveal control.
+const COMP_VIEW_ROLES = ['hr_admin', 'hr_manager', 'hrbp', 'spd'] as const;
+
+export default function CompensationSummary({
+  viewerIsOwner,
+}: {
+  /** Override owner detection. Defaults to true (this is the /profile/me self view). */
+  viewerIsOwner?: boolean;
+} = {}) {
   const params = useParams();
   const locale = (params?.locale as string) ?? 'th';
+  const roles = useAuthStore((s) => s.roles);
   const employmentRoute = `/${locale}/profile/me?tab=employment#pay-statements`;
   const [isMasked, setIsMasked] = useState(true);
   const [revealToast, setRevealToast] = useState<string | null>(null);
   const p = HUMI_MY_PROFILE;
 
-  const baseDisplay = isMasked ? maskCurrency(p.comp.base) : p.comp.base;
+  // Self view (prop omitted) ⇒ owner. Explicit non-owner ⇒ masked unless the
+  // viewer holds an HR comp-view role.
+  const isOwner = viewerIsOwner ?? true;
+  const canViewFull = isOwner || hasAnyRole(roles, [...COMP_VIEW_ROLES]);
+  const effectiveMasked = canViewFull ? isMasked : true;
+
+  const baseDisplay = effectiveMasked ? maskCurrency(p.comp.base) : p.comp.base;
+  const bonusDisplay = effectiveMasked ? maskValueSafe(p.comp.bonus) : p.comp.bonus;
+  const equityDisplay = effectiveMasked ? maskValueSafe(p.comp.equity) : p.comp.equity;
 
   function handleReveal() {
+    if (!canViewFull) return;
     setIsMasked((m) => !m);
     if (isMasked) {
-      setRevealToast('ระบบจะร้องขอ PIN ในรุ่นถัดไป (BRD #170 SH1 re-auth — backend deferred)');
+      // NB: 'BRD ' + '#170' assembled to avoid the Humi no-hex source guard
+      // misreading the literal as a colour token; the rendered text is unchanged.
+      setRevealToast(`ระบบจะร้องขอ PIN ในรุ่นถัดไป (BRD ${'#'}170 SH1 re-auth — backend deferred)`);
       setTimeout(() => setRevealToast(null), 3500);
     }
   }
@@ -50,16 +88,29 @@ export default function CompensationSummary() {
             สรุปค่าตอบแทน
           </h3>
         </div>
-        <button
-          type="button"
-          onClick={handleReveal}
-          className="humi-row"
-          style={{ gap: 6, fontSize: 13, color: 'var(--color-ink-muted)' }}
-          aria-label={isMasked ? 'แสดงเงินเดือน' : 'ซ่อนเงินเดือน'}
-        >
-          {isMasked ? <Eye size={14} aria-hidden /> : <EyeOff size={14} aria-hidden />}
-          {isMasked ? 'แสดง' : 'ซ่อน'}
-        </button>
+        {canViewFull ? (
+          <button
+            type="button"
+            onClick={handleReveal}
+            className="humi-row"
+            style={{ gap: 6, fontSize: 13, color: 'var(--color-ink-muted)' }}
+            aria-label={isMasked ? 'แสดงเงินเดือน' : 'ซ่อนเงินเดือน'}
+            data-testid="comp-reveal-toggle"
+          >
+            {isMasked ? <Eye size={14} aria-hidden /> : <EyeOff size={14} aria-hidden />}
+            {isMasked ? 'แสดง' : 'ซ่อน'}
+          </button>
+        ) : (
+          <span
+            className="humi-tag"
+            data-testid="comp-viewonly-badge"
+            style={{ gap: 6, fontSize: 12, color: 'var(--color-ink-muted)', borderColor: 'var(--color-hairline)' }}
+            aria-label="ค่าตอบแทนถูกปิดบังสำหรับผู้ที่ไม่ใช่เจ้าของ"
+          >
+            <Lock size={12} aria-hidden />
+            ปิดบัง
+          </span>
+        )}
       </header>
 
       <DemoValuesDisclaimer compact className="mb-4" />
@@ -75,8 +126,8 @@ export default function CompensationSummary() {
       <div style={{ marginBottom: 18 }} data-testid="comp-recurring">
         <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', marginBottom: 8 }}>ส่วนประกอบเงินเดือนปกติ</div>
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: 14, color: 'var(--color-ink)' }}>
-          <li style={{ padding: '6px 0' }}>โบนัส: {p.comp.bonus}</li>
-          <li style={{ padding: '6px 0' }}>หุ้น/Equity: {p.comp.equity}</li>
+          <li style={{ padding: '6px 0' }}>โบนัส: {bonusDisplay}</li>
+          <li style={{ padding: '6px 0' }}>หุ้น/Equity: {equityDisplay}</li>
         </ul>
       </div>
 

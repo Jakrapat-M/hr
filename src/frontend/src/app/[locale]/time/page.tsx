@@ -64,7 +64,6 @@ export default function TimeLandingPage() {
 
   const roles = useAuthStore((s) => s.roles);
   const canReview = hasAnyRole(roles, ['manager', 'hrbp', 'spd', 'hr_admin', 'hr_manager']);
-  const tiles = canReview ? [...TILES, REVIEW_TILE] : TILES;
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8">
@@ -85,34 +84,75 @@ export default function TimeLandingPage() {
 
       <DemoValuesDisclaimer />
 
-      {/* 4-tile grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {tiles.map(({ key, icon: Icon, titleEn, titleTh, descEn, descTh, href }) => (
-          <Link key={key} href={`/${locale}/${href}`} className="group block no-underline">
-            <Card className="h-full hover:shadow-[var(--shadow-card)] transition-shadow">
-              <div className="flex items-start gap-4 p-5">
-                <span
-                  className="flex items-center justify-center rounded-full shrink-0"
-                  style={{
-                    width: 48,
-                    height: 48,
-                    background: 'var(--color-accent-soft)',
-                    color: 'var(--color-accent)',
-                  }}
-                >
-                  <Icon size={22} aria-hidden />
-                </span>
-                <div>
-                  <CardTitle className="text-base font-semibold group-hover:text-accent transition-colors">
-                    {isTh ? titleTh : titleEn}
-                  </CardTitle>
-                  <p className="mt-1 text-sm text-ink-muted">{isTh ? descTh : descEn}</p>
-                </div>
-              </div>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      {/* Employee surface — self time view (open to everyone) */}
+      <section aria-labelledby="time-self-heading" className="space-y-3">
+        <h2 id="time-self-heading" className="text-xs font-semibold uppercase tracking-widest text-ink-muted">
+          {isTh ? 'ของฉัน' : 'My Time'}
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {TILES.map((tile) => (
+            <TimeTile key={tile.key} tile={tile} locale={locale} isTh={isTh} />
+          ))}
+        </div>
+      </section>
+
+      {/* Review surface — manager/HR only (remove-not-hide). The /time/review
+          route itself renders AccessDenied in place for non-reviewers. */}
+      {canReview && (
+        <section aria-labelledby="time-review-heading" className="space-y-3">
+          <h2 id="time-review-heading" className="text-xs font-semibold uppercase tracking-widest text-ink-muted">
+            {isTh ? 'สำหรับผู้จัดการ · ตรวจสอบ' : 'For Managers · Review'}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <TimeTile tile={REVIEW_TILE} locale={locale} isTh={isTh} />
+          </div>
+        </section>
+      )}
     </div>
+  );
+}
+
+function TimeTile({
+  tile,
+  locale,
+  isTh,
+}: {
+  tile: {
+    key: string;
+    icon: typeof Clock;
+    titleEn: string;
+    titleTh: string;
+    descEn: string;
+    descTh: string;
+    href: string;
+  };
+  locale: string;
+  isTh: boolean;
+}) {
+  const { icon: Icon, titleEn, titleTh, descEn, descTh, href } = tile;
+  return (
+    <Link href={`/${locale}/${href}`} className="group block no-underline">
+      <Card className="h-full hover:shadow-[var(--shadow-card)] transition-shadow">
+        <div className="flex items-start gap-4 p-5">
+          <span
+            className="flex items-center justify-center rounded-full shrink-0"
+            style={{
+              width: 48,
+              height: 48,
+              background: 'var(--color-accent-soft)',
+              color: 'var(--color-accent)',
+            }}
+          >
+            <Icon size={22} aria-hidden />
+          </span>
+          <div>
+            <CardTitle className="text-base font-semibold group-hover:text-accent transition-colors">
+              {isTh ? titleTh : titleEn}
+            </CardTitle>
+            <p className="mt-1 text-sm text-ink-muted">{isTh ? descTh : descEn}</p>
+          </div>
+        </div>
+      </Card>
+    </Link>
   );
 }
