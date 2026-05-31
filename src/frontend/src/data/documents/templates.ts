@@ -88,6 +88,182 @@ export const DOCUMENT_TEMPLATES: DocumentTemplate[] = [
   },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Curated generatable letters (SF SuccessFactors "Document Generation" model)
+//
+// Each letter is a TEMPLATE with bilingual bodies and {{placeholder}} tokens that
+// merge against real employee fields. This is the self-service / generate-for-any
+// surface — INSTANT merge → preview → download, NOT the SLA request queue above.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Placeholder keys supported by the merge engine (mapped to employee fields). */
+export type LetterPlaceholder =
+  | 'firstName'
+  | 'lastName'
+  | 'fullName'
+  | 'position'
+  | 'department'
+  | 'employeeCode'
+  | 'startDate'
+  | 'salary'
+  | 'today'
+  | 'company';
+
+export interface GeneratableLetter {
+  id: string;
+  nameTh: string;
+  nameEn: string;
+  category: 'certificate' | 'relieving' | 'salary';
+  /** Ordered placeholder keys this letter consumes. */
+  placeholders: LetterPlaceholder[];
+  /** Bilingual letter bodies with {{token}} markers. */
+  bodyTh: string;
+  bodyEn: string;
+}
+
+/** Default company name stamped into the {{company}} placeholder for the mockup. */
+export const LETTER_COMPANY_TH = 'บริษัท เซ็นทรัล กรุ๊ป จำกัด';
+export const LETTER_COMPANY_EN = 'Central Group Co., Ltd.';
+
+export const GENERATABLE_LETTERS: GeneratableLetter[] = [
+  {
+    id: 'employment-cert',
+    nameTh: 'หนังสือรับรองการทำงาน',
+    nameEn: 'Certificate of Employment',
+    category: 'certificate',
+    placeholders: ['fullName', 'employeeCode', 'position', 'department', 'startDate', 'company', 'today'],
+    bodyTh: `หนังสือรับรองการทำงาน
+
+วันที่ {{today}}
+
+{{company}} ขอรับรองว่า {{fullName}} (รหัสพนักงาน {{employeeCode}}) เป็นพนักงานของบริษัท
+ปฏิบัติงานในตำแหน่ง {{position}} สังกัด{{department}}
+เริ่มปฏิบัติงานตั้งแต่วันที่ {{startDate}} จนถึงปัจจุบัน
+
+หนังสือฉบับนี้ออกให้เพื่อรับรองสถานภาพการเป็นพนักงาน
+
+ลงชื่อ ......................................
+       ฝ่ายทรัพยากรบุคคล
+       {{company}}`,
+    bodyEn: `CERTIFICATE OF EMPLOYMENT
+
+Date: {{today}}
+
+This is to certify that {{fullName}} (Employee Code {{employeeCode}}) is an employee of {{company}},
+currently holding the position of {{position}} in the {{department}} department,
+employed from {{startDate}} to the present.
+
+This certificate is issued to confirm the said person's employment status.
+
+Signed ......................................
+       Human Resources Department
+       {{company}}`,
+  },
+  {
+    id: 'relieving-letter',
+    nameTh: 'ใบผ่านงาน',
+    nameEn: 'Relieving / Experience Letter',
+    category: 'relieving',
+    placeholders: ['fullName', 'employeeCode', 'position', 'department', 'startDate', 'company', 'today'],
+    bodyTh: `ใบผ่านงาน
+
+วันที่ {{today}}
+
+{{company}} ขอรับรองว่า {{fullName}} (รหัสพนักงาน {{employeeCode}})
+ได้ปฏิบัติงานในตำแหน่ง {{position}} สังกัด{{department}}
+ตั้งแต่วันที่ {{startDate}}
+
+ในระหว่างการปฏิบัติงานได้ตั้งใจปฏิบัติหน้าที่ด้วยความวิริยะอุตสาหะ
+บริษัทขอออกใบผ่านงานฉบับนี้ไว้เป็นหลักฐาน
+
+ลงชื่อ ......................................
+       ฝ่ายทรัพยากรบุคคล
+       {{company}}`,
+    bodyEn: `RELIEVING / EXPERIENCE LETTER
+
+Date: {{today}}
+
+This is to certify that {{fullName}} (Employee Code {{employeeCode}})
+worked in the position of {{position}} in the {{department}} department
+from {{startDate}}.
+
+During the tenure the said person carried out the assigned duties diligently.
+This letter is issued as a record of service.
+
+Signed ......................................
+       Human Resources Department
+       {{company}}`,
+  },
+  {
+    id: 'salary-cert',
+    nameTh: 'หนังสือรับรองเงินเดือน',
+    nameEn: 'Salary Certificate',
+    category: 'salary',
+    placeholders: ['fullName', 'employeeCode', 'position', 'department', 'salary', 'company', 'today'],
+    bodyTh: `หนังสือรับรองเงินเดือน
+
+วันที่ {{today}}
+
+{{company}} ขอรับรองว่า {{fullName}} (รหัสพนักงาน {{employeeCode}})
+ปฏิบัติงานในตำแหน่ง {{position}} สังกัด{{department}}
+มีรายได้ประจำเดือนเท่ากับ {{salary}}
+
+หนังสือฉบับนี้ออกให้เพื่อใช้ประกอบการยื่นต่อสถาบันการเงินตามที่ร้องขอ
+
+ลงชื่อ ......................................
+       ฝ่ายทรัพยากรบุคคล
+       {{company}}`,
+    bodyEn: `SALARY CERTIFICATE
+
+Date: {{today}}
+
+This is to certify that {{fullName}} (Employee Code {{employeeCode}})
+holds the position of {{position}} in the {{department}} department
+with a monthly income of {{salary}}.
+
+This certificate is issued for submission to financial institutions as requested.
+
+Signed ......................................
+       Human Resources Department
+       {{company}}`,
+  },
+  {
+    id: 'probation-pass',
+    nameTh: 'หนังสือรับรองการผ่านทดลองงาน',
+    nameEn: 'Probation Completion Certificate',
+    category: 'certificate',
+    placeholders: ['fullName', 'employeeCode', 'position', 'department', 'startDate', 'company', 'today'],
+    bodyTh: `หนังสือรับรองการผ่านทดลองงาน
+
+วันที่ {{today}}
+
+{{company}} ขอรับรองว่า {{fullName}} (รหัสพนักงาน {{employeeCode}})
+ตำแหน่ง {{position}} สังกัด{{department}} ซึ่งเริ่มปฏิบัติงานตั้งแต่วันที่ {{startDate}}
+ได้ผ่านการประเมินผลการทดลองปฏิบัติงานเรียบร้อยแล้ว
+และได้รับการบรรจุเป็นพนักงานประจำของบริษัท
+
+ลงชื่อ ......................................
+       ฝ่ายทรัพยากรบุคคล
+       {{company}}`,
+    bodyEn: `PROBATION COMPLETION CERTIFICATE
+
+Date: {{today}}
+
+This is to certify that {{fullName}} (Employee Code {{employeeCode}}),
+position {{position}} in the {{department}} department, who joined on {{startDate}},
+has successfully passed the probation evaluation
+and has been confirmed as a permanent employee of {{company}}.
+
+Signed ......................................
+       Human Resources Department
+       {{company}}`,
+  },
+];
+
+export function getGeneratableLetter(id: string): GeneratableLetter | undefined {
+  return GENERATABLE_LETTERS.find((l) => l.id === id);
+}
+
 export type DocRequestStatus = 'pending' | 'processing' | 'ready' | 'delivered';
 
 export interface DocRequest {
