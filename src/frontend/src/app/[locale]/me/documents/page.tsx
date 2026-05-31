@@ -11,6 +11,9 @@ import Link from 'next/link';
 import { HUMI_HR_DOCS, HR_DOC_TYPE_LABELS, type HrDocType, type HumiHrDoc } from '@/lib/humi-mock-data';
 import { formatDate } from '@/lib/date';
 import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
+import { useAuthStore } from '@/stores/auth-store';
+import { employeeForLogin, ALL_PORTED_EMPLOYEES } from '@/lib/all-ported-employees';
+import { LetterGeneratorModal } from '@/components/documents/LetterGeneratorModal';
 
 type FilterValue = 'all' | HrDocType;
 
@@ -26,6 +29,13 @@ export default function MeDocumentsPage() {
   const params = useParams();
   const locale = (params?.locale as string) ?? 'th';
   const [filter, setFilter] = useState<FilterValue>('all');
+  const [generatorOpen, setGeneratorOpen] = useState(false);
+
+  // Self-service = own data only. Resolve the signed-in employee record;
+  // for the demo fall back to the first ported employee so the mockup is
+  // always clickable even before a persona is selected.
+  const email = useAuthStore((s) => s.email);
+  const selfEmployee = employeeForLogin(email) ?? ALL_PORTED_EMPLOYEES[0] ?? null;
 
   const filtered: HumiHrDoc[] = filter === 'all'
     ? HUMI_HR_DOCS
@@ -45,14 +55,25 @@ export default function MeDocumentsPage() {
             {DOCUMENT_STORYBOARD_BOUNDARY_TH}
           </p>
         </div>
-        <Link
-          href={`/${locale}/me/documents/request`}
-          data-testid="request-doc-cta"
-          className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-small font-semibold text-white transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          <Plus size={15} aria-hidden />
-          ขอเอกสารใหม่
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setGeneratorOpen(true)}
+            data-testid="generate-doc-cta"
+            className="inline-flex items-center gap-2 rounded-md border border-accent bg-surface px-4 py-2 text-small font-semibold text-accent transition-colors hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <FileText size={15} aria-hidden />
+            สร้างเอกสารทันที
+          </button>
+          <Link
+            href={`/${locale}/me/documents/request`}
+            data-testid="request-doc-cta"
+            className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-small font-semibold text-white transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <Plus size={15} aria-hidden />
+            ขอเอกสารใหม่
+          </Link>
+        </div>
       </header>
 
       {/* ── Filter ──────────────────────────────────────────────── */}
@@ -126,6 +147,17 @@ export default function MeDocumentsPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Instant self-service generator — own data only, no queue.
+          Mounted only while open so the closed page never pulls in
+          next-intl hooks (keeps the lightweight page test green). */}
+      {generatorOpen && (
+        <LetterGeneratorModal
+          open={generatorOpen}
+          onClose={() => setGeneratorOpen(false)}
+          employee={selfEmployee}
+        />
       )}
     </div>
   );

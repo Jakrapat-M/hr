@@ -4940,6 +4940,23 @@
     "adminTitle": "Document Request Queue",
     "adminSubtitle": "All employee document requests"
   },
+  "doc_generate": {
+    "ctaTitle": "Generate now",
+    "ctaSubtitle": "Pick a standard letter — your details are filled in automatically and you can download it instantly.",
+    "openButton": "Generate now",
+    "modalTitle": "Generate a document",
+    "pickLetter": "Choose a letter",
+    "forEmployee": "For",
+    "previewHeading": "Preview",
+    "previewHint": "Your own details have been merged into the template below.",
+    "missingNotice": "Some fields have no data on file and are shown as blank lines: {fields}.",
+    "noEmployee": "We could not find your employee record, so this letter cannot be generated.",
+    "download": "Download",
+    "print": "Print",
+    "close": "Close",
+    "boundary": "Mockup: the letter is generated instantly from your own data — no approval and no request queue.",
+    "selfBadge": "Self-service"
+  },
   "doc_review": {
     "eyebrow": "SPD · Documents",
     "title": "Document Review Queue",
