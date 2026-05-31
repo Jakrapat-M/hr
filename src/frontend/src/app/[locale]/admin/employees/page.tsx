@@ -8,11 +8,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Search, Users2, Lock, Download } from 'lucide-react';
+import { Search, Users2, Lock, Download, Upload } from 'lucide-react';
 import { useEmployees } from '@/lib/admin/store/useEmployees';
 import type { MockEmployee } from '@/mocks/employees';
 import { useAuthStore } from '@/stores/auth-store';
 import { pickScopeMode } from '@/lib/scope-filter';
+import { exportToCSV, type CsvColumn } from '@/lib/admin/utils/csvExport';
+import { maskValue } from '@/lib/date';
 
 // ──────────────────────────────────────────────
 // Constants
@@ -115,40 +117,21 @@ const COLUMNS = [
   { key: 'status',           label: 'สถานะ',        width: 90  },
 ]
 
-const CSV_HEADERS = [
-  'employee_id',
-  'name_th',
-  'employee_class',
-  'hire_date',
-  'company',
-  'position_title',
-  'probation_status',
-  'status',
-] as const
-
-function quoteCsvField(value: string) {
-  if (/[",\r\n]/.test(value)) {
-    return `"${value.replaceAll('"', '""')}"`
-  }
-  return value
-}
-
-function buildEmployeesCsv(employees: MockEmployee[]) {
-  const rows = employees.map((employee) => [
-    employee.employee_id,
-    `${employee.first_name_th} ${employee.last_name_th}`,
-    employee.employee_class,
-    employee.hire_date,
-    employee.company,
-    employee.position_title,
-    employee.probation_status,
-    employee.status,
-  ])
-
-  return `\uFEFF${[CSV_HEADERS, ...rows]
-    .map((row) => row.map(quoteCsvField).join(','))
-    .join('\r\n')}`
-}
+// CSV column config for the shared exportToCSV util (UTF-8 BOM + Thai headers).
+// employee_id is treated as a sensitive identifier \u2192 masked via maskValue()
+// (keeps last 4 chars visible) per the CLAUDE.md "mask sensitive fields in
+// exports" rule. No real PII (bank / national id) exists on MockEmployee.
+const EMPLOYEE_CSV_COLUMNS: CsvColumn<MockEmployee>[] = [
+  { header: '\u0E23\u0E2B\u0E31\u0E2A\u0E1E\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19', accessor: (e) => maskValue(e.employee_id, 4) },
+  { header: '\u0E0A\u0E37\u0E48\u0E2D-\u0E19\u0E32\u0E21\u0E2A\u0E01\u0E38\u0E25 (TH)', accessor: (e) => `${e.first_name_th} ${e.last_name_th}` },
+  { header: '\u0E1B\u0E23\u0E30\u0E40\u0E20\u0E17', accessor: 'employee_class' },
+  { header: '\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48\u0E40\u0E23\u0E34\u0E48\u0E21\u0E07\u0E32\u0E19', accessor: 'hire_date' },
+  { header: '\u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17', accessor: 'company' },
+  { header: '\u0E15\u0E33\u0E41\u0E2B\u0E19\u0E48\u0E07', accessor: 'position_title' },
+  { header: '\u0E2B\u0E19\u0E48\u0E27\u0E22\u0E07\u0E32\u0E19', accessor: 'org_unit' },
+  { header: '\u0E17\u0E14\u0E25\u0E2D\u0E07\u0E07\u0E32\u0E19', accessor: 'probation_status' },
+  { header: '\u0E2A\u0E16\u0E32\u0E19\u0E30', accessor: 'status' },
+]
 
 function getUtcDateStamp() {
   return new Date().toISOString().slice(0, 10)
@@ -276,21 +259,12 @@ export default function EmployeesPage() {
 
   const handleCsvDownload = useCallback(() => {
     if (filtered.length === 0) return
-
-    const blob = new Blob([buildEmployeesCsv(filtered)], {
-      type: 'text/csv;charset=utf-8',
-    })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-
-    link.href = url
-    link.download = `employees-${getUtcDateStamp()}.csv`
-    link.style.display = 'none'
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
+    exportToCSV(filtered, EMPLOYEE_CSV_COLUMNS, `employees-${getUtcDateStamp()}.csv`)
   }, [filtered])
+
+  const handleImportClick = useCallback(() => {
+    router.push(`/${locale}/admin/employees/import`)
+  }, [router, locale])
 
   // Virtualizer — row count × fixed row height
   const virtualizer = useVirtualizer({
@@ -498,6 +472,31 @@ export default function EmployeesPage() {
           >
             <Download size={16} aria-hidden />
             ดาวน์โหลด CSV
+          </button>
+          <button
+            type="button"
+            onClick={handleImportClick}
+            aria-label="นำเข้าพนักงานแบบกลุ่ม"
+            style={{
+              minHeight: 44,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              padding: '9px 14px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--color-hairline)',
+              background: 'var(--color-surface)',
+              color: 'var(--color-ink)',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: 'var(--shadow-[var(--shadow-sm)])',
+              transition: 'border-color 120ms, box-shadow 120ms',
+            }}
+          >
+            <Upload size={16} aria-hidden />
+            นำเข้า CSV
           </button>
         </div>
       </div>

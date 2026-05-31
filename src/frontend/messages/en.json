@@ -2939,6 +2939,10 @@
     "totalNet": "Total Net Pay",
     "reviewTable": "Payroll Review",
     "exportExcel": "Export to Excel",
+    "exportCsv": "Export CSV",
+    "importPayroll": "Import CSV",
+    "importPayrollAria": "Bulk import payroll from CSV",
+    "exportEmpty": "Run a calculation first to export payroll",
     "employee": "Employee",
     "department": "Department",
     "gross": "Gross",
@@ -5209,7 +5213,15 @@
     "ttFlagOk": "On track",
     "ttTableCaption": "Per-report late, absence, and overtime",
     "ttEmptyTitle": "No team members in scope",
-    "ttEmptyDesc": "When team members are assigned to you, their attendance summary appears here."
+    "ttEmptyDesc": "When team members are assigned to you, their attendance summary appears here.",
+    "exportCsv": "Export CSV",
+    "importCsv": "Import",
+    "importAria": "Open bulk timesheet import",
+    "csvColEmployeeId": "Employee ID",
+    "csvColEmployee": "Employee name",
+    "csvColWeek": "Week of",
+    "csvColTotal": "Total hours",
+    "csvColSubmittedAt": "Submitted"
   },
   "hrbpEmployees": {
     "eyebrow": "People Partner",

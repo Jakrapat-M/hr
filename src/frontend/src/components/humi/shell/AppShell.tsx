@@ -74,6 +74,8 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   // first match, so these must precede the broad '/th/admin' entry below).
   { prefix: '/th/admin/hire', title: 'รับพนักงานใหม่' },
   { prefix: '/en/admin/hire', title: 'Hire Employee' },
+  { prefix: '/th/admin/employees/import', title: 'นำเข้าพนักงาน' },
+  { prefix: '/en/admin/employees/import', title: 'Import Employees' },
   { prefix: '/th/admin/employees', title: 'ทะเบียนพนักงาน' },
   { prefix: '/en/admin/employees', title: 'Employees' },
   { prefix: '/th/admin/foundation', title: 'โครงสร้างองค์กร' },
@@ -97,6 +99,8 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/th/ess', title: 'บริการตนเอง' },
   { prefix: '/en/ess', title: 'บริการตนเอง' },
   // ── Blueprint sidebar destinations (port 2026-05-25) ──
+  { prefix: '/th/time/import', title: 'นำเข้าใบลงเวลา' },
+  { prefix: '/en/time/import', title: 'Import Timesheets' },
   { prefix: '/th/time', title: 'ลงเวลา' },
   { prefix: '/en/time', title: 'ลงเวลา' },
   { prefix: '/th/payslip', title: 'สลิปเงินเดือน' },
@@ -107,6 +111,8 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/en/manager-dashboard', title: 'การจัดการทีม' },
   { prefix: '/th/roster', title: 'ตารางกะ' },
   { prefix: '/en/roster', title: 'Roster & Shifts' },
+  { prefix: '/th/payroll/import', title: 'นำเข้าเงินเดือน' },
+  { prefix: '/en/payroll/import', title: 'Import Payroll' },
   { prefix: '/th/payroll', title: 'ค่าตอบแทน' },
   { prefix: '/en/payroll', title: 'ค่าตอบแทน' },
   { prefix: '/th/resignation', title: 'ลาออก' },
