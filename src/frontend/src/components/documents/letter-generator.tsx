@@ -21,6 +21,7 @@ import {
   letterToHtml,
   downloadLetter,
   mockMonthlySalary,
+  mockHireDate,
   type MergeResult,
 } from '@/lib/documents/merge-letter';
 import { formatDate } from '@/lib/date';
@@ -78,6 +79,8 @@ export function LetterGenerator() {
       today: formatDate(new Date(), 'long', locale),
       // Salary pool has no real figure → deterministic mock so the cert is complete.
       salaryMonthly: mockMonthlySalary(emp),
+      // Synthetic-core rows have no hireDate → deterministic mock so {{startDate}} fills.
+      hireDate: emp.hireDate ?? mockHireDate(emp),
     });
   }, [emp, letter, isTh, locale]);
 

@@ -75,6 +75,19 @@ describe('mergeLetter', () => {
     expect(filledBody).toContain('CG-9002');
   });
 
+  it('fills startDate and drops it from missingFields when opts.hireDate is supplied', () => {
+    const tpl = getGeneratableLetter('employment-cert')!;
+
+    // Without a hireDate source → startDate is missing.
+    const without = mergeLetter(tpl, empNoHire, 'th', baseOpts);
+    expect(without.missingFields).toContain('startDate');
+
+    // Supplying opts.hireDate fills it and removes it from missingFields.
+    const withHire = mergeLetter(tpl, empNoHire, 'th', { ...baseOpts, hireDate: '2018-07-09' });
+    expect(withHire.missingFields).not.toContain('startDate');
+    expect(withHire.filledBody).toContain('2561'); // Buddhist-era year for 2018
+  });
+
   it('reports salary missing when no salaryMonthly supplied; fills it when given', () => {
     const tpl = getGeneratableLetter('salary-cert')!;
 

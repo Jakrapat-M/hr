@@ -24,6 +24,7 @@ import {
   mergeLetter,
   letterToHtml,
   downloadLetter,
+  mockHireDate,
 } from '@/lib/documents/merge-letter';
 import type { HumiEmployee } from '@/lib/humi-mock-data';
 import { formatDate } from '@/lib/date';
@@ -63,6 +64,7 @@ export function LetterGeneratorModal({ open, onClose, employee }: LetterGenerato
     return mergeLetter(selected, employee, locale, {
       today: formatDate(new Date().toISOString().slice(0, 10), 'long', locale),
       salaryMonthly: mockMonthlySalary(employee),
+      hireDate: employee.hireDate ?? mockHireDate(employee),
     });
   }, [employee, selected, locale]);
 
