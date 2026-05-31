@@ -51,8 +51,10 @@ export function mockHireDate(emp: HumiEmployee): string {
   let hash = 0;
   for (const ch of emp.id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   const year = 2014 + (hash % 10); // 2014..2023
-  const month = 1 + ((hash >> 4) % 12); // 1..12
-  const day = 1 + ((hash >> 8) % 28); // 1..28
+  // UNSIGNED shifts — hash can exceed 2^31; signed `>>` would flip it negative,
+  // yielding a negative month/day and an invalid ISO string (formatDate → "-").
+  const month = 1 + ((hash >>> 4) % 12); // 1..12
+  const day = 1 + ((hash >>> 8) % 28); // 1..28
   const mm = String(month).padStart(2, '0');
   const dd = String(day).padStart(2, '0');
   return `${year}-${mm}-${dd}`;
