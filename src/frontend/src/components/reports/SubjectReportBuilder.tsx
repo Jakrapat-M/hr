@@ -24,7 +24,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { ALL_PORTED_EMPLOYEES, EMP_BY_LOGIN } from '@/lib/all-ported-employees';
 import { filterEmployeesByPersona } from '@/lib/scope-filter';
 import {
-  buildSubjects,
+  subjectsForScope,
   type ReportRow,
   type SubjectId,
 } from '@/lib/report-builder-subjects';
@@ -46,17 +46,29 @@ export function SubjectReportBuilder() {
     [roles, currentEmpId],
   );
 
-  const subjects = useMemo(() => buildSubjects(scope.employees), [scope.employees]);
+  // Subject SET is persona-scoped: a manager sees employee subjects only; HRBP+
+  // additionally see the org-wide benefits subjects. So the available report set
+  // is strictly smaller for lower-tier personas (data is scoped too — below).
+  const subjects = useMemo(
+    () => subjectsForScope(scope.employees, scope.mode),
+    [scope.employees, scope.mode],
+  );
 
   const [subjectId, setSubjectId] = useState<SubjectId>(subjects[0].id);
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
   const [reportName, setReportName] = useState('');
   const [saved, setSaved] = useState(false);
 
+  // If the persona changes such that the current subject is no longer in the
+  // available set, fall back to the first available subject.
   const subject = useMemo(
     () => subjects.find((s) => s.id === subjectId) ?? subjects[0],
     [subjects, subjectId],
   );
+  if (subject.id !== subjectId) {
+    // Reconcile state during render (no effect needed — derived-state pattern).
+    setSubjectId(subject.id);
+  }
 
   const rows: ReportRow[] = useMemo(
     () => subject.compute(scope.employees, activeFilters, locale),

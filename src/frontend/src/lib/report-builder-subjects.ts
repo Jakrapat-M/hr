@@ -16,6 +16,7 @@
 import type { HumiEmployee } from './humi-mock-data';
 import { getClaimReportData, getEnrollmentByPlan } from './hrbp-reports-mock';
 import { formatDate } from './date';
+import type { ScopeMode } from './scope-filter';
 
 export type SubjectId =
   | 'headcount-by-dept'
@@ -49,12 +50,43 @@ export interface ReportSubject {
   labelEn: string;
   columns: SubjectColumn[];
   filters: SubjectFilter[];
+  /**
+   * Minimum persona scope that may see this subject. Drives the per-persona
+   * report SET: a manager (direct-reports) sees only employee subjects; HRBP+
+   * (bu / all) additionally see the org-wide benefits subjects. Defaults to
+   * 'direct-reports' (visible to manager and above).
+   */
+  minScope?: ScopeMode;
   /** Pure aggregation. `employees` is already persona-scoped by the caller. */
   compute: (
     employees: ReadonlyArray<HumiEmployee>,
     filters: Record<string, string>,
     locale: string,
   ) => ReportRow[];
+}
+
+/** Scope-mode ranking — higher number = wider entitlement. */
+const SCOPE_RANK: Record<ScopeMode, number> = {
+  self: 0,
+  'direct-reports': 1,
+  bu: 2,
+  all: 3,
+};
+
+/**
+ * Filter the full subject registry down to what a persona's scope may see.
+ * Benefits subjects require `bu` scope (HRBP) or wider; employee subjects are
+ * visible to managers and above. This is what makes a manager's report set
+ * strictly smaller than an admin's.
+ */
+export function subjectsForScope(
+  employees: ReadonlyArray<HumiEmployee>,
+  mode: ScopeMode,
+): ReportSubject[] {
+  const rank = SCOPE_RANK[mode];
+  return buildSubjects(employees).filter(
+    (s) => rank >= SCOPE_RANK[s.minScope ?? 'direct-reports'],
+  );
 }
 
 const STATUS_FILTER: SubjectFilter = {
@@ -221,6 +253,7 @@ export function buildSubjects(
       id: 'benefits-enrollment',
       labelTh: 'การลงทะเบียนสวัสดิการ',
       labelEn: 'Benefits enrollment',
+      minScope: 'bu',
       columns: [
         { id: 'planCode', labelTh: 'รหัสแผน', labelEn: 'Plan code' },
         { id: 'planName', labelTh: 'ชื่อแผน', labelEn: 'Plan' },
@@ -244,6 +277,7 @@ export function buildSubjects(
       id: 'benefits-claims',
       labelTh: 'เคลมสวัสดิการ',
       labelEn: 'Benefits claims',
+      minScope: 'bu',
       columns: [
         { id: 'claimId', labelTh: 'เลขที่เคลม', labelEn: 'Claim ID' },
         { id: 'name', labelTh: 'ชื่อ-สกุล', labelEn: 'Name' },

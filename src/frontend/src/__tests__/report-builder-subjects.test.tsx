@@ -15,7 +15,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { useAuthStore } from '@/stores/auth-store';
 import { SubjectReportBuilder } from '@/components/reports/SubjectReportBuilder';
 import { ALL_PORTED_EMPLOYEES } from '@/lib/all-ported-employees';
-import { buildSubjects } from '@/lib/report-builder-subjects';
+import { buildSubjects, subjectsForScope } from '@/lib/report-builder-subjects';
 import { buildCsvText } from '@/lib/admin/utils/csvExport';
 import enMessages from '../../messages/en.json';
 
@@ -31,6 +31,18 @@ function setAdmin() {
     username: 'admin',
     email: 'admin@humi.test',
     roles: ['hr_admin'],
+    isAuthenticated: true,
+    originalUser: null,
+    _hasHydrated: true,
+  } as any);
+}
+
+function setManager() {
+  useAuthStore.setState({
+    userId: 'TEST',
+    username: 'manager',
+    email: 'manager@humi.test',
+    roles: ['manager'],
     isAuthenticated: true,
     originalUser: null,
     _hasHydrated: true,
@@ -71,6 +83,31 @@ describe('SubjectReportBuilder', () => {
     renderBuilder();
     expect(screen.getByRole('button', { name: /Export CSV/i })).toBeTruthy();
   });
+
+  test('manager sees a reduced subject set vs admin (no benefits subjects)', () => {
+    // Admin (all scope) → full set including benefits subjects.
+    setAdmin();
+    const { unmount } = renderBuilder();
+    expect(screen.queryByRole('button', { name: 'Benefits enrollment' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Benefits claims' })).toBeTruthy();
+    const adminPills = screen
+      .getByRole('group', { name: 'Subject' })
+      .querySelectorAll('button').length;
+    unmount();
+
+    // Manager (direct-reports scope) → employee subjects only, benefits hidden.
+    setManager();
+    renderBuilder();
+    expect(screen.queryByRole('button', { name: 'Benefits enrollment' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Benefits claims' })).toBeNull();
+    // Employee subjects still present.
+    expect(screen.queryByRole('button', { name: 'Headcount by department' })).toBeTruthy();
+    const managerPills = screen
+      .getByRole('group', { name: 'Subject' })
+      .querySelectorAll('button').length;
+
+    expect(managerPills).toBeLessThan(adminPills);
+  });
 });
 
 describe('report-builder-subjects compute + filters (unit)', () => {
@@ -82,6 +119,19 @@ describe('report-builder-subjects compute + filters (unit)', () => {
     // Active filter must be a strict subset (some employees are on leave/terminated).
     expect(activeOnly.length).toBeLessThanOrEqual(all.length);
     expect(activeOnly.every((r) => r.status === 'active')).toBe(true);
+  });
+
+  test('subjectsForScope: manager set is a strict subset of admin set', () => {
+    const adminSet = subjectsForScope(ALL_PORTED_EMPLOYEES, 'all').map((s) => s.id);
+    const managerSet = subjectsForScope(ALL_PORTED_EMPLOYEES, 'direct-reports').map((s) => s.id);
+    // Benefits subjects are gated to bu (HRBP) or wider.
+    expect(adminSet).toEqual(expect.arrayContaining(['benefits-enrollment', 'benefits-claims']));
+    expect(managerSet).not.toContain('benefits-enrollment');
+    expect(managerSet).not.toContain('benefits-claims');
+    // Manager keeps the employee subjects.
+    expect(managerSet).toEqual(expect.arrayContaining(['headcount-by-dept', 'headcount-roster']));
+    expect(managerSet.length).toBeLessThan(adminSet.length);
+    expect(managerSet.every((id) => adminSet.includes(id))).toBe(true);
   });
 
   test('benefits-enrollment compute produces plan rows exportable as CSV', () => {
