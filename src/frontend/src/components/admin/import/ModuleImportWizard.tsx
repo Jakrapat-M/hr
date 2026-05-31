@@ -85,9 +85,9 @@ export interface ModuleImportConfig<Row> {
 
 const WIZARD_STEPS = [
   { number: 1, labelTh: 'อัปโหลด', labelEn: 'Upload', descTh: 'เลือกไฟล์ CSV ที่จะนำเข้า' },
-  { number: 2, labelTh: 'ตรวจสอบ', labelEn: 'Preview', descTh: 'ดูตัวอย่างข้อมูล 10 แถวแรก' },
-  { number: 3, labelTh: 'ยืนยัน', labelEn: 'Validate', descTh: 'ตรวจสอบความถูกต้องของข้อมูล' },
-  { number: 4, labelTh: 'รันงาน', labelEn: 'Run', descTh: 'ยืนยันและประมวลผลการนำเข้า' },
+  { number: 2, labelTh: 'ดูตัวอย่าง', labelEn: 'Preview', descTh: 'ดูตัวอย่างข้อมูล 10 แถวแรก' },
+  { number: 3, labelTh: 'ตรวจสอบความถูกต้อง', labelEn: 'Validate', descTh: 'ตรวจสอบความถูกต้องของข้อมูล' },
+  { number: 4, labelTh: 'นำเข้า', labelEn: 'Import', descTh: 'ยืนยันและประมวลผลการนำเข้า' },
 ] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -344,7 +344,7 @@ export function ModuleImportWizard<Row>({
 
       <div className="flex justify-end">
         <Button onClick={() => setStep(2)} disabled={!selectedFile}>
-          {isTh ? 'ถัดไป: ตรวจสอบ →' : 'Next: Preview →'}
+          {isTh ? 'ถัดไป: ดูตัวอย่าง →' : 'Next: Preview →'}
         </Button>
       </div>
     </div>
@@ -368,7 +368,7 @@ export function ModuleImportWizard<Row>({
       </div>
       <div className="flex justify-between">
         <Button variant="ghost" onClick={() => setStep(1)}>{isTh ? '← ย้อนกลับ' : '← Back'}</Button>
-        <Button onClick={() => setStep(3)}>{isTh ? 'ถัดไป: ยืนยัน →' : 'Next: Validate →'}</Button>
+        <Button onClick={() => setStep(3)}>{isTh ? 'ถัดไป: ตรวจสอบความถูกต้อง →' : 'Next: Validate →'}</Button>
       </div>
     </div>
   );
@@ -440,7 +440,7 @@ export function ModuleImportWizard<Row>({
 
         <div className="flex justify-between">
           <Button variant="ghost" onClick={() => setStep(2)}>{isTh ? '← ย้อนกลับ' : '← Back'}</Button>
-          <Button onClick={() => setStep(4)} disabled={validError > 0}>{isTh ? 'ถัดไป: รันงาน →' : 'Next: Run →'}</Button>
+          <Button onClick={() => setStep(4)} disabled={validError > 0}>{isTh ? 'ถัดไป: นำเข้า →' : 'Next: Import →'}</Button>
         </div>
       </div>
     );
