@@ -19,6 +19,8 @@ import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { useTransferApprovals } from '@/stores/transfer-approvals';
 import { ensureDemoSeed, resetEnsureDemoSeedForTests } from '@/lib/demo-seed';
+import { useAuthStore } from '@/stores/auth-store';
+import type { Role } from '@/lib/rbac';
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
@@ -28,6 +30,16 @@ vi.mock('next/navigation', () => ({
 
 // PR-1b: run the SINGLE seed authority before each test so the derived inbox has
 // the canonical rows (mirrors AppShell mounting ensureDemoSeed before the route).
+// Set the acting persona's roles (drives canActOn / honest count). Default tests
+// run as a senior approver (hr_admin) so the legacy action-button assertions hold.
+function setRoles(roles: Role[]) {
+  useAuthStore.setState({
+    roles,
+    isAuthenticated: true,
+    _hasHydrated: true,
+  } as Parameters<typeof useAuthStore.setState>[0]);
+}
+
 beforeEach(() => {
   useLeaveApprovals.getState().clear();
   useWorkflowApprovals.getState().clear();
@@ -35,6 +47,8 @@ beforeEach(() => {
   useTransferApprovals.getState().clear();
   resetEnsureDemoSeedForTests();
   ensureDemoSeed();
+  // Default acting persona = senior approver (acts on every row).
+  setRoles(['hr_admin']);
 });
 
 // Wrap component in required providers.
@@ -210,5 +224,66 @@ describe('QuickApproveSimple — AC7.7 bilingual labels', () => {
   it('table has an accessible caption', () => {
     renderComponent();
     expect(screen.getByRole('table')).toBeInTheDocument();
+  });
+});
+
+// ────────────────────────────────────────────────────────────
+// P2 Item 2 — DEFAULT SCOPE: view-only + honest actionable count
+// (full per-claim approver-routing matrix is DEFERRED)
+// ────────────────────────────────────────────────────────────
+describe('QuickApproveSimple — P2 view-only + honest count', () => {
+  it('approver persona (hr_admin) gets Approve action buttons', () => {
+    setRoles(['hr_admin']);
+    renderComponent();
+    const approveBtns = screen.getAllByRole('button', { name: /อนุมัติ/ });
+    expect(approveBtns.length).toBeGreaterThanOrEqual(1);
+    // No view-only badge for a full approver.
+    expect(screen.queryAllByTestId('view-only-badge')).toHaveLength(0);
+  });
+
+  it('non-approver persona (employee) gets NO action buttons — view-only', () => {
+    setRoles(['employee']);
+    renderComponent();
+    // Action buttons absent for every row...
+    expect(screen.queryAllByRole('button', { name: /อนุมัติ/ })).toHaveLength(0);
+    expect(screen.queryAllByRole('button', { name: /ปฏิเสธ/ })).toHaveLength(0);
+    // ...but rows are NOT hidden — view-only badges render instead (transparency).
+    expect(screen.getAllByTestId('view-only-badge').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('rows stay visible for a view-only persona (table still rendered)', () => {
+    setRoles(['employee']);
+    renderComponent();
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    // The "all" tab count reflects total rows regardless of persona.
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs[0].textContent).toMatch(/\d/);
+  });
+
+  it('honest count: Pending tab shows 0 actionable for a view-only persona', () => {
+    setRoles(['employee']);
+    renderComponent();
+    const tabs = screen.getAllByRole('tab');
+    // index 1 = pending tab → actionable count = 0 for a non-approver.
+    expect(tabs[1].textContent).toMatch(/0/);
+  });
+
+  it('honest count: subtitle shows actionable=0 of total for a view-only persona', () => {
+    setRoles(['employee']);
+    renderComponent();
+    const totalPending = APPROVAL_SEED_COUNT;
+    // subtitle <p> reads "0 of {total} ..." — contains both 0 and the total.
+    const matches = screen.getAllByText(
+      (txt) => txt.includes(String(totalPending)) && /(^|\D)0(\D|$)/.test(txt),
+    );
+    expect(matches.some((el) => el.tagName === 'P')).toBe(true);
+  });
+
+  it('Pending-tab actionable count for an approver matches total pending', () => {
+    setRoles(['hr_admin']);
+    renderComponent();
+    const tabs = screen.getAllByRole('tab');
+    // hr_admin acts on every pending row → pending tab count = APPROVAL_SEED_COUNT.
+    expect(tabs[1].textContent).toMatch(new RegExp(String(APPROVAL_SEED_COUNT)));
   });
 });

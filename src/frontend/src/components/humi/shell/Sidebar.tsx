@@ -93,7 +93,7 @@ const ALL6: PersonaId[] = ['employee', 'manager', 'hradmin', 'hris', 'spd', 'sys
 //    `href` is the Next.js route each leaf navigates to. Leaves whose blueprint
 //    concept has no dedicated screen point at the closest existing route so the
 //    mockup never dead-ends (annotated PLACEHOLDER).
-const MODULES: ModuleGroup[] = [
+export const MODULES: ModuleGroup[] = [
   {
     id: 'workspace',
     label: 'My Workspace',
@@ -134,10 +134,11 @@ const MODULES: ModuleGroup[] = [
     icon: IdCard,
     leaves: [
       { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris', 'sysadmin'] }, // P1 Item 2: dropped hrbp+spd — admin/layout admits neither; People-Partner BU view is P2
+      { id: 'employees-bu', label: 'Employees · My BU', labelTh: 'ทะเบียนพนักงาน · หน่วยงานของฉัน', href: '/hrbp/employees', show: ['hrbp', 'spd'] }, // P2 Item 1: BU-scoped read-only registry for People Partners — replaces the dead /admin/employees leaf PR-3 cut from hrbp/spd
       { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'sysadmin'] }, // merges lifecycle/onboarding
       { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'sysadmin'] },
-      { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] }, // merges welfare+claims
-      { id: 'hr-docs', label: 'HR Documents', labelTh: 'เอกสารบุคคล', href: '/admin/documents', show: ['hrbp', 'hradmin', 'sysadmin'] }, // merges confirm
+      { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'hris', 'sysadmin'] }, // merges welfare+claims; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
+      { id: 'hr-docs', label: 'HR Documents', labelTh: 'เอกสารบุคคล', href: '/admin/documents', show: ['hradmin', 'sysadmin'] }, // merges confirm; P2 Item 3: dropped hrbp — admin/layout gates hr_admin+ → hrbp dead-ended in AccessDenied
       { id: 'changes', label: 'Change Requests', labelTh: 'คำขอเปลี่ยนแปลง', href: '/admin/change-requests', show: ['hradmin', 'hris', 'sysadmin'] }, // merges transfer+regular; P1 Item 2: dropped hrbp (change-requests approver roles exclude hrbp → barrier)
       // REMOVED 2026-05-27 (user: "ลาออกไม่ควรอยู่ใน บุคคล"): /resignation is an
       // employee SELF-SERVICE submission ("ยื่นคำขอลาออก … SPD รับทราบและดำเนินการต่อ"),
@@ -156,8 +157,10 @@ const MODULES: ModuleGroup[] = [
       { id: 'catalog', label: 'Master Catalog', labelTh: 'ฐานข้อมูลกลาง', href: '/admin/foundation', show: ['hris', 'sysadmin'] }, // merges assets
       // docreview shares /admin/documents with hr-docs (HR group) — documented Principle-1
       // exception: no distinct doc-review-queue route exists; same screen, two persona contexts.
-      { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/admin/documents', show: ['spd', 'sysadmin'] },
-      { id: 'audit', label: 'Audit & System', labelTh: 'บันทึก · ระบบ', href: '/admin/system', show: ['hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] }, // merges impers
+      // P2-follow-up: doc-review URL split deferred — restore an spd-visible /admin/doc-review surface when built.
+      // P2 Item 3: dropped spd — /admin/documents is gated hr_admin+ by admin/layout, so spd dead-ended in AccessDenied here.
+      { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/admin/documents', show: ['sysadmin'] },
+      { id: 'audit', label: 'Audit & System', labelTh: 'บันทึก · ระบบ', href: '/admin/system', show: ['hradmin', 'hris', 'sysadmin'] }, // merges impers; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
       // CUT ENTIRELY: Integrations, Policy Builder, Approval Workflows, Branding, Notifications-as-integration.
       // Notifications has a real page (/admin/system/notifications) but is left reachable via /admin/system.
     ],
@@ -170,13 +173,13 @@ const MODULES: ModuleGroup[] = [
 /** A persona is "granted" for the current user when the user owns the mapped
  *  Role directly. (Role hierarchy is handled by listing personas explicitly in
  *  each leaf's `show`, mirroring the Blueprint.) */
-function personaGranted(persona: PersonaId, userRoles: Role[]): boolean {
+export function personaGranted(persona: PersonaId, userRoles: Role[]): boolean {
   // employee persona = baseline, always granted for any authenticated user.
   if (persona === 'employee') return true;
   return userRoles.includes(PERSONA_ROLE[persona]);
 }
 
-const leafVisible = (leaf: Leaf, userRoles: Role[]): boolean =>
+export const leafVisible = (leaf: Leaf, userRoles: Role[]): boolean =>
   !leaf.show || leaf.show.some((p) => personaGranted(p, userRoles));
 
 /** Strip locale prefix (/th/ or /en/) to get bare path e.g. /home */
