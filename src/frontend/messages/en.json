@@ -3155,7 +3155,8 @@
         "rejected": "Rejected",
         "awaitingNext": "Awaiting next approver"
       },
-      "subtitleActionable": "{actionable} of {total} pending items you can decide"
+      "subtitleActionable": "{actionable} of {total} pending items you can decide",
+      "nextApprover": "Next: {approver}"
     },
     "slideOver": {
       "title": "Request Details",
@@ -4703,6 +4704,8 @@
     "type_change_request": "Change Request",
     "type_pay_rate": "Pay rate change",
     "type_tax_planning": "Tax planning",
+    "routingChain": "Approval route",
+    "nextApprover": "Next approver: {approver}",
     "leaveType": "Leave Type",
     "startDate": "Start Date",
     "endDate": "End Date",
@@ -4932,6 +4935,24 @@
     "submitSuccess": "Document request submitted. HR will process it within the SLA.",
     "adminTitle": "Document Request Queue",
     "adminSubtitle": "All employee document requests"
+  },
+  "doc_review": {
+    "eyebrow": "SPD · Documents",
+    "title": "Document Review Queue",
+    "subtitle": "Documents awaiting your review before they are issued.",
+    "boundary": "Mockup: review actions update this screen only — no document is generated or sent.",
+    "colRequestId": "Request ID",
+    "colEmployee": "Employee",
+    "colDocType": "Document Type",
+    "colPurpose": "Purpose",
+    "colSubmitted": "Submitted",
+    "colStatus": "Status",
+    "colAction": "Action",
+    "statusAwaiting": "Awaiting review",
+    "statusReviewed": "Reviewed",
+    "markReviewed": "Mark reviewed",
+    "done": "Done",
+    "empty": "No documents awaiting review."
   },
   "notifications_page": {
     "eyebrow": "System · Notifications",

@@ -137,6 +137,8 @@ export const MODULES: ModuleGroup[] = [
     leaves: [
       { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris', 'sysadmin'] }, // P1 Item 2: dropped hrbp+spd — admin/layout admits neither; People-Partner BU view is P2
       { id: 'employees-bu', label: 'Employees · My BU', labelTh: 'ทะเบียนพนักงาน · หน่วยงานของฉัน', href: '/hrbp/employees', show: ['hrbp', 'spd'] }, // P2 Item 1: BU-scoped read-only registry for People Partners — replaces the dead /admin/employees leaf PR-3 cut from hrbp/spd
+      { id: 'talent-search', label: 'Talent Search', labelTh: 'ค้นหาคนเก่ง', href: '/hrbp/talent-search', show: ['hrbp', 'spd'] }, // P4 Item 3: surface existing-but-orphan /hrbp/talent-search (was reachable only via hrbp/dashboard shortcut). Route Capability-gated talentSearch.
+      { id: 'benefits-reports', label: 'Benefits · Reports', labelTh: 'สวัสดิการ · รายงาน', href: '/hrbp/benefits/reports', show: ['hrbp', 'spd'] }, // P4 Item 3: surface existing-but-orphan /hrbp/benefits reports (no /hrbp/benefits index page → point at the real reports subroute). People-Partner only; menu removal is the gate (open route, no contradicting guard).
       { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'sysadmin'] }, // merges lifecycle/onboarding
       { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'sysadmin'] },
       { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'hris', 'sysadmin'] }, // merges welfare+claims; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
@@ -157,11 +159,10 @@ export const MODULES: ModuleGroup[] = [
     leaves: [
       { id: 'roles', label: 'Roles & Permissions', labelTh: 'สิทธิ์ตามบทบาท', href: '/permissions', show: ['sysadmin'] },
       { id: 'catalog', label: 'Master Catalog', labelTh: 'ฐานข้อมูลกลาง', href: '/admin/foundation', show: ['hris', 'sysadmin'] }, // merges assets
-      // docreview shares /admin/documents with hr-docs (HR group) — documented Principle-1
-      // exception: no distinct doc-review-queue route exists; same screen, two persona contexts.
-      // P2-follow-up: doc-review URL split deferred — restore an spd-visible /admin/doc-review surface when built.
-      // P2 Item 3: dropped spd — /admin/documents is gated hr_admin+ by admin/layout, so spd dead-ended in AccessDenied here.
-      { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/admin/documents', show: ['sysadmin'] },
+      // P2 follow-up (PR-4) DONE: doc-review URL split out of /admin/documents. SPD now has its
+      // own reachable review queue at /hrbp/doc-review (outside admin/layout's hr_admin+ gate, so
+      // the route's own guard admits spd + hr_admin + hr_manager). hr-docs keeps /admin/documents.
+      { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/hrbp/doc-review', show: ['spd', 'sysadmin'] },
       { id: 'audit', label: 'Audit & System', labelTh: 'บันทึก · ระบบ', href: '/admin/system', show: ['hradmin', 'hris', 'sysadmin'] }, // merges impers; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
       // CUT ENTIRELY: Integrations, Policy Builder, Approval Workflows, Branding, Notifications-as-integration.
       // Notifications has a real page (/admin/system/notifications) but is left reachable via /admin/system.

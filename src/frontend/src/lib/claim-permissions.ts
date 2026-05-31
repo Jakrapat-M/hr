@@ -1,19 +1,24 @@
-// lib/claim-permissions.ts — P2 Item 2 (DEFAULT SCOPE = view-only + honest-count)
+// lib/claim-permissions.ts — P2 Item 2 + P4 Item 1 (STEP-AWARE approver routing)
 //
 // canActOn(row, roles): can the current persona ACT (approve/reject) on this
-// approval row, or only VIEW it? This is the DEFAULT-SCOPE predicate for the
-// unified /quick-approve inbox — NOT the full per-claim approver-routing matrix
-// (that real routing is deferred per the handoff decision gate).
+// approval row, or only VIEW it? This is the action predicate for the unified
+// /quick-approve inbox.
+//
+// P4: this now consults the per-type approver-routing matrix (lib/approval-routing.ts)
+// so ONLY the CURRENT step's approver role(s) can act; everyone else who can see
+// the row is view-only.
 //
 // Rule (mockup phase):
 //   • Approver-capable roles are those in MODULE_ACCESS['quick-approve']:
 //     manager, hrbp, spd, hr_admin, hr_manager.
-//   • Senior approvers (hrbp / spd / hr_admin / hr_manager) can act on EVERY row
-//     — they sit above the manager in the routing chain (hasRole inheritance).
-//   • A plain manager can act ONLY on rows they are the routed first-line approver
-//     for — i.e. rows still `pending` whose first approval step is the manager
-//     step (`หัวหน้างาน` / Manager). A manager viewing a claim already past the
-//     manager step (awaiting SPD/HR) sees it VIEW-ONLY.
+//   • Senior approvers (hrbp / spd / hr_admin / hr_manager) sit ABOVE the manager
+//     in the chain and, through role-hierarchy inheritance (hasAnyRole), satisfy
+//     the routed role at every step — so they still act on EVERY queue row.
+//   • A plain manager can act ONLY where the manager IS the current routed step
+//     — i.e. a row still `pending` whose CURRENT routing step grants the manager
+//     role AND that the row has not already advanced past (awaitingNext). A
+//     manager viewing a claim already past the manager step (awaiting SPD/HR)
+//     sees it VIEW-ONLY.
 //   • Everyone else → view-only.
 //
 // View-only rows are NEVER hidden (transparency) — they render without
@@ -21,28 +26,14 @@
 
 import type { Role } from '@/lib/rbac';
 import { hasRole, hasAnyRole } from '@/lib/rbac';
-import type { PendingRequest } from '@/lib/quick-approve-api';
 import type { QueueApproval } from '@/lib/approval-registry';
+import { rolesActAtCurrentStep, currentStepRoles } from '@/lib/approval-routing';
 
 /** Roles that sit ABOVE the manager in the approval chain — act on every row. */
 const SENIOR_APPROVER_ROLES: Role[] = ['hrbp', 'spd', 'hr_admin', 'hr_manager'];
 
 /**
- * Is the FIRST approval step on this row the manager (first-line) step?
- * The seeded timelines label the manager step `หัวหน้างาน` (see
- * benefitClaimToPendingRequest / probationToPendingRequest). A row with no
- * timeline (generic leave/overtime/transfer/change rows) is treated as a
- * manager first-line step so a manager can act on their team's basics.
- */
-function firstStepIsManager(row: PendingRequest): boolean {
-  const timeline = row.approvalTimeline ?? [];
-  if (timeline.length === 0) return true;
-  const first = timeline[0];
-  return first.approver === 'หัวหน้างาน' || /manager/i.test(first.approver);
-}
-
-/**
- * canActOn — DEFAULT-SCOPE action predicate for the unified inbox.
+ * canActOn — STEP-AWARE action predicate for the unified inbox.
  *
  * @param item  the queue row (carries collapsed status + awaitingNext)
  * @param roles the acting persona's roles
@@ -54,13 +45,24 @@ export function canActOn(item: QueueApproval, roles: Role[]): boolean {
   // Must be an approver-capable persona at all.
   if (!hasRole(roles, 'manager')) return false;
 
-  // Senior approvers act on everything in the queue.
+  // Senior approvers act on everything in the queue (role-hierarchy inheritance
+  // makes them satisfy every routed step). Kept as an explicit short-circuit so
+  // a row already past its in-matrix steps (awaitingNext on a single-step chain)
+  // still lets a senior approver act.
   if (hasAnyRole(roles, SENIOR_APPROVER_ROLES)) return true;
 
-  // Plain manager: only the routed first-line approver. A row already past the
-  // manager step (awaitingNext → awaiting SPD/HR) is view-only for the manager.
+  // A row already advanced past its first approver (awaitingNext → awaiting the
+  // NEXT step) is view-only for a plain manager — the manager step is done.
   if (item.awaitingNext) return false;
-  return firstStepIsManager(item.row);
+
+  // Otherwise the persona may act only when its role satisfies the CURRENT routed
+  // step. For a plain manager this is true exactly when the manager is the
+  // current routing approver (the per-type matrix decides this).
+  const stepRoles = currentStepRoles(item);
+  // No routing defined (defensive) → fall back to the previous first-line-manager
+  // default so generic rows stay actionable for a manager.
+  if (stepRoles.length === 0) return true;
+  return rolesActAtCurrentStep(item, roles);
 }
 
 /** Count of rows the persona can actually act on (honest workload count). */

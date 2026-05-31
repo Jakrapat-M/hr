@@ -61,6 +61,7 @@ vi.mock('@/components/humi', () => ({
 
 vi.mock('@/components/quick-approve/ApprovalChain', () => ({
   ApprovalTimelineChain: () => <div data-testid="approval-chain" />,
+  ApprovalChain: () => <div data-testid="routing-chain" />,
 }));
 
 vi.mock('@/components/quick-approve/UrgencyBadge', () => ({

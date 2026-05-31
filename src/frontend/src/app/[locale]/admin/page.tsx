@@ -8,6 +8,7 @@
 // admin-only surface. 5 entry groups cover BRD-EC Parts A-E.
 
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   UserPlus,
   Settings,
@@ -19,10 +20,17 @@ import {
   Sparkles,
   ArrowRight,
 } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth-store';
+import { canAccessModule } from '@/lib/rbac';
 
+// Each tile carries the MODULE_ACCESS key that gates its destination, so the
+// landing only renders Quick-Links the current persona can actually reach
+// (remove-not-hide). `path` is locale-agnostic; the locale prefix is applied
+// at render time from the route param.
 const ADMIN_SECTIONS = [
   {
-    href: '/th/admin/hire',
+    path: '/admin/hire',
+    module: 'onboarding',
     icon: UserPlus,
     eyebrow: 'Lifecycle Actions',
     title: 'การจ้างพนักงาน',
@@ -31,7 +39,8 @@ const ADMIN_SECTIONS = [
     tone: 'default' as const,
   },
   {
-    href: '/th/admin/employees',
+    path: '/admin/employees',
+    module: 'profile',
     icon: Users,
     eyebrow: 'Employee Data',
     title: 'ข้อมูลพนักงาน',
@@ -40,7 +49,8 @@ const ADMIN_SECTIONS = [
     tone: 'cream' as const,
   },
   {
-    href: '/th/admin/self-service',
+    path: '/admin/self-service',
+    module: 'settings',
     icon: Settings,
     eyebrow: 'Self-Service Config',
     title: 'ตั้งค่า Self-Service',
@@ -49,7 +59,8 @@ const ADMIN_SECTIONS = [
     tone: 'default' as const,
   },
   {
-    href: '/th/admin/users',
+    path: '/admin/users',
+    module: 'settings',
     icon: ShieldCheck,
     eyebrow: 'Users & Permissions',
     title: 'ผู้ใช้และสิทธิ์',
@@ -58,7 +69,8 @@ const ADMIN_SECTIONS = [
     tone: 'default' as const,
   },
   {
-    href: '/th/admin/system',
+    path: '/admin/system',
+    module: 'settings',
     icon: Database,
     eyebrow: 'Data Management',
     title: 'จัดการระบบ',
@@ -67,7 +79,8 @@ const ADMIN_SECTIONS = [
     tone: 'cream' as const,
   },
   {
-    href: '/th/admin/reports',
+    path: '/admin/reports',
+    module: 'government-reports',
     icon: FileText,
     eyebrow: 'Reports',
     title: 'รายงาน',
@@ -76,7 +89,8 @@ const ADMIN_SECTIONS = [
     tone: 'default' as const,
   },
   {
-    href: '/th/admin/foundation',
+    path: '/admin/foundation',
+    module: 'positions',
     icon: Layers,
     eyebrow: 'EC Foundation',
     title: 'โครงสร้างองค์กร',
@@ -84,7 +98,7 @@ const ADMIN_SECTIONS = [
     stat: '3 sections',
     tone: 'cream' as const,
   },
-];
+] as const;
 
 const STATS = [
   { label: 'พนักงาน', value: '240K+', tone: 'ink' },
@@ -94,6 +108,18 @@ const STATS = [
 ] as const;
 
 export default function AdminDashboardPage() {
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale ?? 'th';
+  const roles = useAuthStore((s) => s.roles);
+
+  // Remove-not-hide: keep only tiles whose destination module the current
+  // persona can reach. The /admin route guard already admits hr_admin+, so
+  // for legitimate admins every tile passes; the filter keeps the surface
+  // honest if RBAC tightens or a narrower persona ever lands here.
+  const visibleSections = ADMIN_SECTIONS.filter((s) =>
+    canAccessModule(roles, s.module),
+  );
+
   return (
     <div className="pb-8">
       {/* Row 1 — hero greeting (grain + blobs) + live workload tag */}
@@ -129,14 +155,14 @@ export default function AdminDashboardPage() {
           </h1>
           <div className="humi-row" style={{ marginTop: 22, gap: 10, flexWrap: 'wrap' }}>
             <Link
-              href="/th/admin/hire"
+              href={`/${locale}/admin/hire`}
               className="humi-button humi-button--primary"
             >
               <UserPlus size={16} />
               จ้างพนักงานใหม่
             </Link>
             <Link
-              href="/th/admin/employees"
+              href={`/${locale}/admin/employees`}
               className="humi-button humi-button--ghost"
             >
               <Users size={16} />
@@ -200,14 +226,14 @@ export default function AdminDashboardPage() {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {ADMIN_SECTIONS.map((section) => {
+          {visibleSections.map((section) => {
             const Icon = section.icon;
             const cardClass =
               section.tone === 'cream' ? 'humi-card humi-card--cream' : 'humi-card';
             return (
               <Link
-                key={section.href}
-                href={section.href}
+                key={section.path}
+                href={`/${locale}${section.path}`}
                 className={`${cardClass} group relative transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2`}
               >
                 <div className="humi-row" style={{ alignItems: 'flex-start', gap: 12 }}>

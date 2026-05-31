@@ -1,17 +1,26 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+// performance-form/page.tsx — honest external-system placeholder.
+//
+// Performance Management is an EXTERNAL system (see project memory): it is NOT
+// implemented inside this HRMS. We keep the menu leaf (do not remove it), but
+// render an explicit, honest EmptyState that says so in both TH/EN instead of
+// faking a "coming soon" form. Bilingual copy is passed as EmptyState props
+// (the canonical TH/EN-at-call-site convention used across the app).
+
+import { ExternalLink } from 'lucide-react';
+import { EmptyState } from '@/components/humi';
 
 export default function PerformanceFormPage() {
-  const t = useTranslations();
   return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="humi-card max-w-md w-full text-center p-8">
-        <h1 className="font-display text-2xl font-semibold text-ink mb-3">
-          {t('pages.performanceForm.title')}
-        </h1>
-        <p className="text-sm text-ink-muted">{t('placeholders.comingSoon')}</p>
-      </div>
+    <div className="mx-auto w-full max-w-2xl py-6">
+      <EmptyState
+        icon={ExternalLink}
+        titleTh="การประเมินผลงานอยู่ในระบบภายนอก"
+        titleEn="Performance management lives in an external system"
+        descTh="โมดูลประเมินผลงานไม่ได้เป็นส่วนหนึ่งของระบบ HR นี้ — ใช้งานผ่านระบบประเมินผลงานขององค์กรโดยตรง หน้านี้เป็นเพียงทางลัดในเมนูเท่านั้น"
+        descEn="The performance review module is not part of this HR system. It runs in the organization's dedicated performance platform. This page is only a menu shortcut, not a form."
+      />
     </div>
   );
 }
