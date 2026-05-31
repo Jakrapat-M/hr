@@ -4085,7 +4085,9 @@
       "pending": "Pending Approval",
       "cancel": "Cancel Request",
       "effectiveDate": "Effective Date",
-      "note": "Additional Note (optional)"
+      "note": "Additional Note (optional)",
+      "badge": "Requires SPD approval",
+      "badgeHint": "Your edits are not saved instantly — they are sent to SPD for review and only take effect once approved."
     },
     "emergencyContact": {
       "add": "Add Contact",
@@ -4689,6 +4691,8 @@
     "type_claim": "Claim",
     "type_transfer": "Transfer",
     "type_change_request": "Change Request",
+    "type_pay_rate": "Pay rate change",
+    "type_tax_planning": "Tax planning",
     "leaveType": "Leave Type",
     "startDate": "Start Date",
     "endDate": "End Date",
@@ -4739,7 +4743,9 @@
     "submitting": "Submitting…",
     "toastApproved": "Request approved",
     "toastRejected": "Request rejected",
-    "toastReturned": "Request returned"
+    "toastReturned": "Request returned",
+    "viewOnly": "View only",
+    "viewOnlyHint": "You can review this request, but it is routed to another approver to decide."
   },
   "quick_approve_bulk": {
     "title": "Bulk Approve Queue",
@@ -5171,5 +5177,18 @@
     "caption": "Employees in your business unit",
     "emptyTitle": "No employees in your business unit",
     "emptyDesc": "When your business unit has members, they will appear here."
+  },
+  "managerTeam": {
+    "eyebrow": "My Team",
+    "title": "Direct Reports",
+    "cardTitle": "Team Members",
+    "scope": "Your direct reports ({count} people)",
+    "colName": "Name",
+    "colPosition": "Position",
+    "colDepartment": "Department",
+    "colStatus": "Status",
+    "caption": "Your direct reports",
+    "emptyTitle": "No direct reports",
+    "emptyDesc": "When team members report to you, they will appear here."
   }
 }

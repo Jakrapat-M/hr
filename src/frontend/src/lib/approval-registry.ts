@@ -21,6 +21,11 @@ import { useLeaveApprovals } from '@/stores/leave-approvals';
 import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useProbationApprovals } from '@/stores/probation-approvals';
 import { useTransferApprovals } from '@/stores/transfer-approvals';
+import { usePayRateApprovals, type PayRateRequest } from '@/stores/pay-rate-approvals';
+import {
+  useBenefitTaxPlanningStore,
+  type TaxPlanningDraft,
+} from '@/stores/benefit-tax-planning';
 
 // ── Actor (caller-facing) ─────────────────────────────────────────────────────
 // Call sites pass one neutral actor shape; each adapter maps it to the store's
@@ -139,6 +144,66 @@ export function benefitClaimToPendingRequest(c: BenefitClaimRequest): PendingReq
   };
 }
 
+// P2 (pay-rate + tax-planning into the unified queue) — read-side bridges.
+// Both stores live OUTSIDE the legacy quick-approve umbrella; these mappers
+// reconstruct a PendingRequest display row so the records interleave in the
+// unified inbox. No store mutation, no schema change.
+
+// pay_rate → pay-rate-approvals: SPD review chain. Timeline first step is the SPD
+// approver (NOT the manager), so canActOn() lets only senior approvers act and a
+// plain manager sees it VIEW-ONLY. Drill-in is special-cased to
+// /workflows/pay-rate/<id>.
+export function payRateToPendingRequest(r: PayRateRequest): PendingRequest {
+  const elapsedMs = Date.now() - new Date(r.submittedAt).getTime();
+  const slaHours = elapsedMs / (1000 * 60 * 60);
+  const urgency: Urgency = slaHours > 48 ? 'urgent' : slaHours > 24 ? 'normal' : 'low';
+  const waitingDays = Math.max(0, Math.floor(elapsedMs / 86400000));
+  return {
+    id: r.id,
+    type: 'pay_rate',
+    requester: {
+      id: r.employeeId,
+      name: r.employeeName,
+      position: r.payComponent,
+      department: r.payGroup,
+    },
+    description: `ปรับเงินเดือน — ${r.employeeName} (${r.amountType === 'percent' ? `${r.amount}%` : `฿${r.amount.toLocaleString('th-TH')}`})`,
+    submittedAt: r.submittedAt,
+    urgency,
+    waitingDays,
+    details: {},
+    approvalTimeline: [{ step: 1, approver: 'SPD', status: 'pending' }],
+  };
+}
+
+// tax_planning → benefit-tax-planning: a rich 8-state machine collapsed to
+// pending/approved/rejected. Payroll is the routed approver (not the manager), so
+// canActOn() keeps it VIEW-ONLY for a plain manager. Drill-in is special-cased to
+// /workflows/tax-planning/<id>.
+export function taxPlanToPendingRequest(d: TaxPlanningDraft): PendingRequest {
+  const submittedAt = d.submittedAt ?? d.updatedAt;
+  const elapsedMs = Date.now() - new Date(submittedAt).getTime();
+  const slaHours = elapsedMs / (1000 * 60 * 60);
+  const urgency: Urgency = slaHours > 48 ? 'urgent' : slaHours > 24 ? 'normal' : 'low';
+  const waitingDays = Math.max(0, Math.floor(elapsedMs / 86400000));
+  return {
+    id: d.id,
+    type: 'tax_planning',
+    requester: {
+      id: d.employeeId,
+      name: d.employeeName,
+      position: `ปีภาษี ${d.taxYear}`,
+      department: 'Payroll review',
+    },
+    description: `วางแผนภาษี — ${d.employeeName} · ${d.maskedTaxId}`,
+    submittedAt,
+    urgency,
+    waitingDays,
+    details: {},
+    approvalTimeline: [{ step: 1, approver: 'Payroll', status: 'pending' }],
+  };
+}
+
 // ── Shared queue-item shape for store records lacking a bespoke bridge ─────────
 // leave / overtime / change_request stores expose simpler records; map them to a
 // minimal PendingRequest so they interleave in the queue. (Full field mapping is
@@ -238,6 +303,62 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     labels: { th: 'เปลี่ยนข้อมูล', en: 'Change' },
   },
 
+  // pay_rate → pay-rate-approvals: approve({role,name}) / reject({role,name},reason).
+  // SPD-chain. Default role 'spd' (the routed pay-rate approver) when the neutral
+  // actor omits one. Seed is a no-op: pay-rate records are created by the submit
+  // form; ensureDemoSeed injects a few demo records directly into the store.
+  pay_rate: {
+    toQueueItem: (record) => payRateToPendingRequest(record as PayRateRequest),
+    approve: (id, actor) =>
+      usePayRateApprovals
+        .getState()
+        .approve(id, { role: (actor.role as never) ?? ('spd' as never), name: actor.name }),
+    reject: (id, actor, reason) =>
+      usePayRateApprovals
+        .getState()
+        .reject(id, { role: (actor.role as never) ?? ('spd' as never), name: actor.name }, reason),
+    seed: () => {
+      // No-op: pay-rate records originate from the submit form (admin/employees/
+      // [id]/pay-rate-change). Demo rows are injected by ensureDemoSeed directly.
+    },
+    labels: { th: 'ปรับเงินเดือน', en: 'Pay rate' },
+  },
+
+  // tax_planning → benefit-tax-planning: an 8-state machine. The unified queue only
+  // needs approve/reject; the store's transition guard requires the draft be under
+  // Payroll review, so the adapter advances it through start_review first when it is
+  // still `submitted_payroll` (mock dispatch — never throws). Seed is a no-op.
+  tax_planning: {
+    toQueueItem: (record) => taxPlanToPendingRequest(record as TaxPlanningDraft),
+    approve: (id, actor) => {
+      const store = useBenefitTaxPlanningStore.getState();
+      const draft = store.drafts.find((d) => d.id === id);
+      if (!draft) return;
+      const payrollActor = { role: 'payroll' as const, name: actor.name };
+      if (draft.status === 'submitted_payroll') store.startPayrollTaxPlanningReview(id, payrollActor);
+      const fresh = useBenefitTaxPlanningStore.getState().drafts.find((d) => d.id === id);
+      if (fresh && fresh.status === 'payroll_reviewing') {
+        store.approvePayrollTaxPlanningReview(id, payrollActor);
+      }
+    },
+    reject: (id, actor, reason) => {
+      const store = useBenefitTaxPlanningStore.getState();
+      const draft = store.drafts.find((d) => d.id === id);
+      if (!draft) return;
+      const payrollActor = { role: 'payroll' as const, name: actor.name };
+      if (draft.status === 'submitted_payroll') store.startPayrollTaxPlanningReview(id, payrollActor);
+      const fresh = useBenefitTaxPlanningStore.getState().drafts.find((d) => d.id === id);
+      if (fresh && fresh.status === 'payroll_reviewing') {
+        store.rejectPayrollTaxPlanningReview(id, payrollActor, reason || 'ไม่รับแผนภาษี');
+      }
+    },
+    seed: () => {
+      // No-op: tax-planning drafts originate from the employee tax-planning form.
+      // Demo rows are injected by ensureDemoSeed directly into the store.
+    },
+    labels: { th: 'วางแผนภาษี', en: 'Tax planning' },
+  },
+
   // probation → probation-approvals: approveEvaluation(id,{name}) / rejectEvaluation.
   probation: {
     toQueueItem: (record) => probationToPendingRequest(record as ProbationCase),
@@ -296,11 +417,24 @@ export function collapseQueueStatus(raw: string | undefined): QueueStatus {
  * this stays testable and SSR-safe. Returns the canonical 20 rows (or fewer if a
  * store was cleared), each tagged with its collapsed status.
  */
+/**
+ * Collapse the tax-planning 8-state machine to the 3-state queue status. Drafts
+ * not yet submitted (`draft` / `estimated`) are NOT queue-eligible and are filtered
+ * out before this is called; `cancelled` collapses to rejected (terminal).
+ */
+function collapseTaxPlanStatus(raw: string): QueueStatus {
+  if (raw === 'approved') return 'approved';
+  if (raw === 'rejected' || raw === 'cancelled') return 'rejected';
+  return 'pending'; // submitted_payroll / payroll_reviewing / send_back
+}
+
 export function selectPendingApprovals(input: {
   leave: { id: string; status: string; queueSnapshot?: PendingRequest }[];
   workflow: { id: string; status: string; queueSnapshot?: PendingRequest }[];
   claims: { id: string; status: string; queueSnapshot?: PendingRequest }[];
   transfers: { id: string; terminalStatus?: QueueStatus; snapshot: PendingRequest }[];
+  payRates?: PayRateRequest[];
+  taxPlans?: TaxPlanningDraft[];
 }): QueueApproval[] {
   const out: QueueApproval[] = [];
 
@@ -328,6 +462,23 @@ export function selectPendingApprovals(input: {
   for (const e of input.transfers) {
     out.push({ row: e.snapshot, status: e.terminalStatus ?? 'pending' });
   }
+  // pay_rate rows derive natively from the pay-rate-approvals store (PayRateStep
+  // already maps cleanly: pending_spd → pending, approved/rejected passthrough).
+  for (const r of input.payRates ?? []) {
+    out.push({
+      row: APPROVAL_REGISTRY.pay_rate.toQueueItem(r),
+      status: collapseQueueStatus(r.status),
+    });
+  }
+  // tax_planning rows: only drafts that have been submitted for Payroll review are
+  // queue-eligible (draft/estimated stay on the employee's own page).
+  for (const d of input.taxPlans ?? []) {
+    if (d.status === 'draft' || d.status === 'estimated') continue;
+    out.push({
+      row: APPROVAL_REGISTRY.tax_planning.toQueueItem(d),
+      status: collapseTaxPlanStatus(d.status),
+    });
+  }
 
   // Stable order by submittedAt desc, then id, so the inbox renders deterministically.
   out.sort((a, b) => {
@@ -343,7 +494,9 @@ export function useSelectPendingApprovals(): QueueApproval[] {
   const workflow = useWorkflowApprovals((s) => s.requests);
   const claims = useBenefitClaimsStore((s) => s.claims);
   const transfers = useTransferApprovals((s) => s.entries);
-  return selectPendingApprovals({ leave, workflow, claims, transfers });
+  const payRates = usePayRateApprovals((s) => s.requests);
+  const taxPlans = useBenefitTaxPlanningStore((s) => s.drafts);
+  return selectPendingApprovals({ leave, workflow, claims, transfers, payRates, taxPlans });
 }
 
 /** Non-reactive read (getState) — for one-shot lookups (e.g. detail route). */
@@ -353,6 +506,8 @@ export function getPendingApprovals(): QueueApproval[] {
     workflow: useWorkflowApprovals.getState().requests,
     claims: useBenefitClaimsStore.getState().claims,
     transfers: useTransferApprovals.getState().entries,
+    payRates: usePayRateApprovals.getState().requests,
+    taxPlans: useBenefitTaxPlanningStore.getState().drafts,
   });
 }
 
@@ -439,7 +594,13 @@ export function queueApprovalToRequestRow(q: QueueApproval, locale: 'th' | 'en' 
  */
 export function useQueueRequestRows(locale: 'th' | 'en' = 'th'): QueueRequestRow[] {
   const queue = useSelectPendingApprovals();
-  return queue.map((q) => queueApprovalToRequestRow(q, locale));
+  // pay_rate is an ADMIN-initiated change (not an employee self-service request),
+  // and tax_planning already has its OWN domain projection on /requests
+  // (selectTaxPlanningRequestSummaries). Exclude both here so the employee request
+  // tracker neither double-renders the tax row nor surfaces an admin pay-rate row.
+  return queue
+    .filter((q) => q.row.type !== 'pay_rate' && q.row.type !== 'tax_planning')
+    .map((q) => queueApprovalToRequestRow(q, locale));
 }
 
 /**

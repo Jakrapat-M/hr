@@ -115,6 +115,8 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/en/permissions', title: 'สิทธิ์ตามบทบาท' },
   { prefix: '/th/hrbp/employees', title: 'พนักงานในหน่วยงาน' },
   { prefix: '/en/hrbp/employees', title: 'BU Employees' },
+  { prefix: '/th/manager/team', title: 'ทีมของฉัน' },
+  { prefix: '/en/manager/team', title: 'My Team' },
 ];
 
 type ReadonlyURLSearchParamsLike = {

@@ -7,14 +7,15 @@
 // เมื่อ submit: addRequest() → toast "ส่งคำขอลาออกแล้ว — รอ SPD อนุมัติ"
 
 import { useState } from 'react';
-import { FileX, CheckCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { CheckCircle, AlertTriangle } from 'lucide-react';
 import {
   useTerminationApprovals,
   TERMINATION_REASON_LABEL,
   type TerminationReasonCode,
 } from '@/stores/termination-approvals';
 import { useAuthStore } from '@/stores/auth-store';
-import { Button, FormField, FormInput } from '@/components/humi';
+import { Button, FormField, FormInput, Modal } from '@/components/humi';
 
 const selectClassName =
   'h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
@@ -26,6 +27,7 @@ function formatDateTh(iso: string): string {
 }
 
 export function ResignationPage() {
+  const t = useTranslations('resignation');
   const addRequest = useTerminationApprovals((s) => s.addRequest);
   const requests = useTerminationApprovals((s) => s.requests);
   const userId = useAuthStore((s) => s.userId) ?? 'EMP001';
@@ -37,6 +39,7 @@ export function ResignationPage() {
   const [attachmentName, setAttachmentName] = useState<string | undefined>(undefined);
   const [submitted, setSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Find a pending or approved request by this user.
   // If the most recent request is `rejected`, allow re-submission — the form
@@ -56,7 +59,15 @@ export function ResignationPage() {
   const isFormValid =
     !!lastWorkingDate && !!reasonCode && !hasPending && !isApproved;
 
-  const handleSubmit = () => {
+  // Two-step submit: clicking ส่งคำขอลาออก opens a confirmation Modal first
+  // (mockup confirm, no backend) so resignation is never a single irreversible-
+  // looking click. Actual store write happens only in confirmSubmit().
+  const requestSubmit = () => {
+    if (!isFormValid || !reasonCode) return;
+    setConfirmOpen(true);
+  };
+
+  const confirmSubmit = () => {
     if (!isFormValid || !reasonCode) return;
     const id = addRequest({
       employeeId: userId,
@@ -67,6 +78,7 @@ export function ResignationPage() {
       attachments: attachmentName ? [attachmentName] : undefined,
       submittedBy: { id: userId, name: userName, role: 'employee' },
     });
+    setConfirmOpen(false);
     setSubmittedId(id);
     setSubmitted(true);
   };
@@ -271,7 +283,7 @@ export function ResignationPage() {
         <div className="flex justify-end gap-2 mt-5">
           <Button
             variant="primary"
-            onClick={handleSubmit}
+            onClick={requestSubmit}
             disabled={!isFormValid}
           >
             ส่งคำขอลาออก
@@ -285,6 +297,50 @@ export function ResignationPage() {
           เมื่อส่งคำขอแล้ว SPD จะรับทราบผ่านกล่องอนุมัติ และดำเนินการกระบวนการสิ้นสุดการจ้างงานต่อไป
         </div>
       </div>
+
+      {/* Confirmation step — mockup confirm before the resignation is actually submitted */}
+      <Modal
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title={t('confirmSubmitTitle')}
+        widthClass="max-w-md"
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-3">
+            <span
+              aria-hidden
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-soft text-[color:var(--color-danger-ink)]"
+            >
+              <AlertTriangle size={20} />
+            </span>
+            <p className="text-body text-ink">{t('confirmSubmitMessage')}</p>
+          </div>
+
+          {reasonCode && (
+            <dl className="rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-3 text-small">
+              <div className="flex justify-between gap-3 py-1">
+                <dt className="text-ink-muted">{t('lastWorkingDate')}</dt>
+                <dd className="font-medium text-ink">{formatDateTh(lastWorkingDate)}</dd>
+              </div>
+              <div className="flex justify-between gap-3 py-1">
+                <dt className="text-ink-muted">{t('reasonType')}</dt>
+                <dd className="font-medium text-ink">
+                  {TERMINATION_REASON_LABEL[reasonCode as TerminationReasonCode]}
+                </dd>
+              </div>
+            </dl>
+          )}
+
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="ghost" onClick={() => setConfirmOpen(false)}>
+              {t('cancel')}
+            </Button>
+            <Button variant="primary" onClick={confirmSubmit}>
+              {t('submitResignation')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

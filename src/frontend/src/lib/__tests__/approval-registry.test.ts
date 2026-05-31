@@ -31,6 +31,8 @@ const ALL_REQUEST_TYPES: RequestType[] = [
   'transfer',
   'change_request',
   'probation',
+  'pay_rate',
+  'tax_planning',
 ];
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -105,7 +107,7 @@ describe('APPROVAL_REGISTRY — non-throwing approve/reject (AC-1a.3)', () => {
   });
 
   it('store-backed approve/reject do not throw for unknown ids (no-op map)', () => {
-    const storeBacked: RequestType[] = ['leave', 'overtime', 'change_request', 'probation'];
+    const storeBacked: RequestType[] = ['leave', 'overtime', 'change_request', 'probation', 'pay_rate', 'tax_planning'];
     for (const type of storeBacked) {
       expect(() => APPROVAL_REGISTRY[type].approve('MISSING', { name: 'A', role: 'spd' })).not.toThrow();
       expect(() =>

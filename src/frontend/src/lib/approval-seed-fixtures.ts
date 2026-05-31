@@ -28,4 +28,9 @@ export const APPROVAL_SEED_BY_TYPE: Record<RequestType, PendingRequest[]> = {
   transfer: APPROVAL_SEED_ROWS.filter((r) => r.type === 'transfer'),
   change_request: APPROVAL_SEED_ROWS.filter((r) => r.type === 'change_request'),
   probation: APPROVAL_SEED_ROWS.filter((r) => r.type === 'probation'),
+  // pay_rate + tax_planning are not part of the canonical 20 PendingRequest seed
+  // rows; their demo records are injected directly into their own stores by
+  // ensureDemoSeed (the registry adapters' seed() is a documented no-op).
+  pay_rate: APPROVAL_SEED_ROWS.filter((r) => r.type === 'pay_rate'),
+  tax_planning: APPROVAL_SEED_ROWS.filter((r) => r.type === 'tax_planning'),
 };

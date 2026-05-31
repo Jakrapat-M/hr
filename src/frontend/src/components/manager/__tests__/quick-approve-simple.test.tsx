@@ -18,7 +18,18 @@ import { useLeaveApprovals } from '@/stores/leave-approvals';
 import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { useTransferApprovals } from '@/stores/transfer-approvals';
-import { ensureDemoSeed, resetEnsureDemoSeedForTests } from '@/lib/demo-seed';
+import { usePayRateApprovals } from '@/stores/pay-rate-approvals';
+import { useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
+import {
+  ensureDemoSeed,
+  resetEnsureDemoSeedForTests,
+  PAY_RATE_DEMO_COUNT,
+  TAX_PLANNING_DEMO_COUNT,
+} from '@/lib/demo-seed';
+
+// P2: the unified inbox now also seeds pay-rate + tax-planning demo rows, so the
+// honest total = the 20 canonical rows + those two demo row sets.
+const TOTAL_SEED_COUNT = APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT;
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
 
@@ -45,6 +56,8 @@ beforeEach(() => {
   useWorkflowApprovals.getState().clear();
   useBenefitClaimsStore.getState().clear();
   useTransferApprovals.getState().clear();
+  usePayRateApprovals.getState().clear();
+  useBenefitTaxPlanningStore.getState().clear();
   resetEnsureDemoSeedForTests();
   ensureDemoSeed();
   // Default acting persona = senior approver (acts on every row).
@@ -85,7 +98,7 @@ describe('QuickApproveSimple — AC7.1 header', () => {
 
   it('renders subtitle with pending count', () => {
     renderComponent();
-    const totalPending = APPROVAL_SEED_COUNT;
+    const totalPending = TOTAL_SEED_COUNT;
     // subtitle is a <p> element — scope to elements that exactly contain the count
     const matches = screen.getAllByText((t) => t.includes(String(totalPending)));
     expect(matches.some((el) => el.tagName === 'P')).toBe(true);
@@ -149,11 +162,31 @@ describe('QuickApproveSimple — AC7.4 inline actions', () => {
     expect(btns.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('View links point to /quick-approve/{id}', () => {
+  it('View links point to a detail route (/quick-approve/{id} or /workflows/<type>/{id})', () => {
     renderComponent();
     const viewLinks = screen.getAllByRole('link', { name: /ดูรายละเอียด/ });
     expect(viewLinks.length).toBeGreaterThanOrEqual(1);
-    expect(viewLinks[0]).toHaveAttribute('href', expect.stringMatching(/\/quick-approve\//));
+    // Most rows open the unified /quick-approve/[id] detail; pay-rate + tax-planning
+    // rows open their own /workflows/<type>/[id] page (P2). Every view link must
+    // resolve to one of those detail routes.
+    viewLinks.forEach((link) => {
+      expect(link).toHaveAttribute(
+        'href',
+        expect.stringMatching(/\/(quick-approve|workflows\/(pay-rate|tax-planning))\//),
+      );
+    });
+    // At least one canonical row still opens the unified /quick-approve detail.
+    expect(
+      viewLinks.some((l) => /\/quick-approve\//.test(l.getAttribute('href') ?? '')),
+    ).toBe(true);
+  });
+
+  it('pay-rate + tax-planning view links route to /workflows/<type>/{id}', () => {
+    renderComponent();
+    const viewLinks = screen.getAllByRole('link', { name: /ดูรายละเอียด/ });
+    const hrefs = viewLinks.map((l) => l.getAttribute('href') ?? '');
+    expect(hrefs.some((h) => /\/workflows\/pay-rate\//.test(h))).toBe(true);
+    expect(hrefs.some((h) => /\/workflows\/tax-planning\//.test(h))).toBe(true);
   });
 });
 
@@ -163,7 +196,7 @@ describe('QuickApproveSimple — AC7.4 inline actions', () => {
 describe('QuickApproveSimple — AC7.5 approve state change', () => {
   it('clicking Approve reduces pending subtitle count by 1', () => {
     renderComponent();
-    const totalPending = APPROVAL_SEED_COUNT;
+    const totalPending = TOTAL_SEED_COUNT;
     const approveBtns = screen.getAllByRole('button', { name: /อนุมัติ/ });
     fireEvent.click(approveBtns[0]);
     // subtitle <p> should now contain totalPending - 1
@@ -271,7 +304,7 @@ describe('QuickApproveSimple — P2 view-only + honest count', () => {
   it('honest count: subtitle shows actionable=0 of total for a view-only persona', () => {
     setRoles(['employee']);
     renderComponent();
-    const totalPending = APPROVAL_SEED_COUNT;
+    const totalPending = TOTAL_SEED_COUNT;
     // subtitle <p> reads "0 of {total} ..." — contains both 0 and the total.
     const matches = screen.getAllByText(
       (txt) => txt.includes(String(totalPending)) && /(^|\D)0(\D|$)/.test(txt),
@@ -283,7 +316,8 @@ describe('QuickApproveSimple — P2 view-only + honest count', () => {
     setRoles(['hr_admin']);
     renderComponent();
     const tabs = screen.getAllByRole('tab');
-    // hr_admin acts on every pending row → pending tab count = APPROVAL_SEED_COUNT.
-    expect(tabs[1].textContent).toMatch(new RegExp(String(APPROVAL_SEED_COUNT)));
+    // hr_admin acts on every pending row → pending tab count = TOTAL_SEED_COUNT
+    // (the canonical rows + the pay-rate + tax-planning demo rows).
+    expect(tabs[1].textContent).toMatch(new RegExp(String(TOTAL_SEED_COUNT)));
   });
 });

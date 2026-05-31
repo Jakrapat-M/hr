@@ -15,6 +15,13 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(mockTab ? `tab=${mockTab}` : ''),
 }));
 
+// The approve tab is reviewer-gated (canReview, /timeoff page.tsx ~152). These
+// dead-button tests target the manager approval surface, so render as a manager.
+vi.mock('@/stores/auth-store', () => ({
+  useAuthStore: (selector: (s: { roles: string[] }) => unknown) =>
+    selector({ roles: ['manager'] }),
+}));
+
 beforeEach(() => {
   mockTab = 'approve';
 });

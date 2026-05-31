@@ -11,7 +11,8 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, UploadCloud, FileText, X, CalendarDays } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { ChevronDown, UploadCloud, FileText, X, CalendarDays, ShieldCheck } from 'lucide-react'
 import { useProfileEdit } from '@/lib/admin/store/useProfileEdit'
 import type { Attachment } from '@/stores/workflow-approvals'
 import { Button } from '@/components/humi'
@@ -63,6 +64,7 @@ const inputCls =
 
 export default function ProfileEditPage() {
   const router = useRouter()
+  const tCr = useTranslations('ess.changeRequest')
   const { draft, baseline, isDirty, isSubmitting, setField, loadFromEmployee, submit } = useProfileEdit()
   const [toast, setToast] = useState<string | null>(null)
   const [attachments, setAttachments] = useState<Attachment[]>([])
@@ -179,10 +181,19 @@ export default function ProfileEditPage() {
 
       {/* Header */}
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">แก้ไขข้อมูลส่วนตัว</h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          การแก้ไขจะถูกส่งให้ SPD พิจารณาอนุมัติก่อนมีผลในระบบ (BRD #166)
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="font-display text-2xl font-semibold text-ink">แก้ไขข้อมูลส่วนตัว</h1>
+          {/* Change-request affordance badge — clarifies these edits are not instant
+              and route through SPD approval (tooltip on hover via title). */}
+          <span
+            className="humi-tag humi-tag--accent inline-flex items-center gap-1"
+            title={tCr('badgeHint')}
+          >
+            <ShieldCheck size={12} aria-hidden />
+            {tCr('badge')}
+          </span>
+        </div>
+        <p className="mt-1 text-sm text-ink-muted">{tCr('badgeHint')}</p>
       </div>
 
       <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

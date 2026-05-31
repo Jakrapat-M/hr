@@ -15,6 +15,13 @@
 
 import { useTerminationApprovals, type TerminationRequest } from '@/stores/termination-approvals';
 import { usePromotionApprovals, type PromotionRequest } from '@/stores/promotion-approvals';
+import { usePayRateApprovals, type PayRateRequest } from '@/stores/pay-rate-approvals';
+import {
+  useBenefitTaxPlanningStore,
+  submitTaxPlanningForPayrollReview,
+  type TaxPlanningDraft,
+} from '@/stores/benefit-tax-planning';
+import { calculateThaiPitEstimate } from '@/lib/tax-planning';
 import { APPROVAL_REGISTRY } from '@/lib/approval-registry';
 import { APPROVAL_SEED_BY_TYPE } from '@/lib/approval-seed-fixtures';
 
@@ -164,6 +171,117 @@ const MOCK_PROMOTION_REQUESTS: PromotionRequest[] = [
   },
 ];
 
+// ── P2: pay-rate + tax-planning demo rows for the unified /quick-approve queue ──
+// These two stores live outside the registry-owned seed (their records normally
+// originate from the submit forms). To keep the unified inbox demo-complete, seed
+// a couple of fully-formed pending records directly into each store. Counts are
+// exported so the selector tests can assert the seeded total without a magic number.
+
+export const MOCK_PAY_RATE_REQUESTS: PayRateRequest[] = [
+  {
+    id: 'PR-20260424-0930-A1BC',
+    employeeId: 'EMP-0142',
+    employeeName: 'กมลรัตน์ จันทร์แดง',
+    effectiveDate: '2026-06-01',
+    eventReasonCode: 'PRCHG_MERINC',
+    payGroup: 'PG-MONTHLY',
+    payrollId: 'PRL-001',
+    payComponent: 'Base Salary',
+    amountType: 'percent',
+    amount: 8,
+    currency: 'THB',
+    frequency: 'Monthly',
+    recurringPayments: [],
+    notes: 'ผลประเมินดีเยี่ยม 2 ปีติดต่อกัน',
+    status: 'pending_spd',
+    submittedAt: '2026-04-24T09:30:00+07:00',
+    submittedBy: { id: 'ADM001', name: 'สมชาย HR Admin', role: 'hr_admin' },
+    audit: [
+      {
+        actorRole: 'hr_admin',
+        actorName: 'สมชาย HR Admin',
+        action: 'submit',
+        at: '2026-04-24T09:30:00+07:00',
+      },
+    ],
+  },
+  {
+    id: 'PR-20260423-1100-D4EF',
+    employeeId: 'EMP-0087',
+    employeeName: 'ธนวัฒน์ สุขเกษม',
+    effectiveDate: '2026-05-01',
+    eventReasonCode: 'PRCHG_ADJPOS',
+    payGroup: 'PG-MONTHLY',
+    payrollId: 'PRL-001',
+    payComponent: 'Base Salary',
+    amountType: 'flat',
+    amount: 5000,
+    currency: 'THB',
+    frequency: 'Monthly',
+    recurringPayments: [],
+    status: 'pending_spd',
+    submittedAt: '2026-04-23T11:00:00+07:00',
+    submittedBy: { id: 'ADM001', name: 'สมชาย HR Admin', role: 'hr_admin' },
+    audit: [
+      {
+        actorRole: 'hr_admin',
+        actorName: 'สมชาย HR Admin',
+        action: 'submit',
+        at: '2026-04-23T11:00:00+07:00',
+      },
+    ],
+  },
+];
+
+export const PAY_RATE_DEMO_COUNT = MOCK_PAY_RATE_REQUESTS.length;
+
+/** Build a single tax-planning draft that is already submitted for Payroll review. */
+function buildTaxPlanningDemoDraft(): TaxPlanningDraft {
+  const at = '2026-04-22T10:00:00+07:00';
+  const allowances = {
+    spouse: 0,
+    children: 60000,
+    parents: 0,
+    disability: 0,
+    lifeInsurance: 25000,
+    providentFund: 0,
+    retirementFund: 0,
+    socialSecurity: 9000,
+    donations: 0,
+    other: 0,
+  };
+  const estimate = calculateThaiPitEstimate({
+    ytdIncome: 840000,
+    ytdWithholding: 56000,
+    expectedAdditionalIncome: 0,
+    allowances,
+  });
+  const base: TaxPlanningDraft = {
+    id: 'TAX-PLAN-9001',
+    workflowRequestId: 'REQ-TAX-9001',
+    employeeId: 'EMP001',
+    employeeName: 'จงรักษ์ ทานากะ',
+    maskedTaxId: '1-1xxx-xxxxx-xx-1',
+    taxYear: 2026,
+    status: 'estimated',
+    expectedAdditionalIncome: 0,
+    allowances,
+    estimate,
+    submittedAt: undefined,
+    reviewedAt: undefined,
+    updatedAt: at,
+    audit: [
+      { at, actorRole: 'employee', actorName: 'จงรักษ์ ทานากะ', action: 'create', note: 'สร้างร่างแผนภาษี' },
+      { at, actorRole: 'employee', actorName: 'จงรักษ์ ทานากะ', action: 'estimate', note: 'คำนวณประมาณการภาษี' },
+    ],
+  };
+  // Advance to submitted_payroll via the pure transition so the record is valid +
+  // queue-eligible (a pending Payroll-review row in the unified inbox).
+  return submitTaxPlanningForPayrollReview(base);
+}
+
+export const TAX_PLANNING_DEMO_COUNT = 1;
+
 let seeded = false;
 
 /** Reset the once-per-session guard. Test-only — lets a suite re-run the single
@@ -201,5 +319,18 @@ export function ensureDemoSeed(): void {
   const promotionState = usePromotionApprovals.getState();
   if (promotionState.requests.length === 0) {
     usePromotionApprovals.setState({ requests: MOCK_PROMOTION_REQUESTS });
+  }
+
+  // ── P2: pay-rate + tax-planning rows now surface in the unified queue ────────
+  // Both stores live outside the registry-owned seed; inject demo records directly
+  // (init-overwrite-empties) so the unified /quick-approve inbox is demo-complete.
+  const payRateState = usePayRateApprovals.getState();
+  if (payRateState.requests.length === 0) {
+    usePayRateApprovals.setState({ requests: MOCK_PAY_RATE_REQUESTS });
+  }
+
+  const taxPlanningState = useBenefitTaxPlanningStore.getState();
+  if (taxPlanningState.drafts.length === 0) {
+    useBenefitTaxPlanningStore.setState({ drafts: [buildTaxPlanningDemoDraft()] });
   }
 }
