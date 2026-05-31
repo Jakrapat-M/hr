@@ -5171,5 +5171,18 @@
     "caption": "Employees in your business unit",
     "emptyTitle": "No employees in your business unit",
     "emptyDesc": "When your business unit has members, they will appear here."
+  },
+  "managerTeam": {
+    "eyebrow": "My Team",
+    "title": "Direct Reports",
+    "cardTitle": "Team Members",
+    "scope": "Your direct reports ({count} people)",
+    "colName": "Name",
+    "colPosition": "Position",
+    "colDepartment": "Department",
+    "colStatus": "Status",
+    "caption": "Your direct reports",
+    "emptyTitle": "No direct reports",
+    "emptyDesc": "When team members report to you, they will appear here."
   }
 }
