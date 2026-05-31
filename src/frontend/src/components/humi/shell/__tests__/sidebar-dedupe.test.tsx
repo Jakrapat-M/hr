@@ -178,13 +178,14 @@ describe('AC5.1 — no two visible leaves share a bare href (per persona)', () =
 
 describe('Req5 — menu simplification (cut placeholder clutter)', () => {
   it('the full menu (sysadmin sees every group) stays at the simplified size', () => {
-    // workspace 10 + team 6 + hr 6 + system 4 = 26 defined leaves.
+    // workspace 10 + team 7 + hr 6 + system 4 = 27 defined leaves.
     // hr-docs and docreview both resolve to /admin/documents so the href Set
-    // dedupes them → 25 unique hrefs collected by collectLeafHrefs.
+    // dedupes them → 26 unique hrefs collected by collectLeafHrefs.
     // (This reflects the 2026-05-25 simplification: 40 → 25 leaves; the team group
-    // then gained the real /manager/team direct-reports leaf → 25 unique hrefs.)
+    // then gained the real /manager/team direct-reports leaf → 25, and the P3
+    // read-only /manager/payroll-summary team-comp leaf → 26 unique hrefs.)
     const total = collectLeafHrefs(PERSONA_ROLES.sysadmin).length;
-    expect(total).toBe(25);
+    expect(total).toBe(26);
   });
 
   it('no leaf is a bare ?section= deep-link onto a page another leaf already owns', () => {

@@ -121,6 +121,7 @@ export const MODULES: ModuleGroup[] = [
     leaves: [
       { id: 'approvals', label: 'Team Inbox · Approvals', labelTh: 'กล่องงาน · อนุมัติ', href: '/quick-approve', badge: '12', show: ['manager', 'hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] }, // merged inbox+approvals; HRBP added 2026-05-28 (People Partner approval surface)
       { id: 'my-team', label: 'My Team', labelTh: 'ทีมของฉัน', href: '/manager/team', show: ['manager', 'hradmin', 'sysadmin'] }, // P2: Manager direct-reports read-only directory — restores the /admin/employees?scope=team affordance PR-3 cut from manager-dashboard
+      { id: 'team-payroll', label: 'Team Pay Summary', labelTh: 'สรุปค่าตอบแทนทีม', href: '/manager/payroll-summary', show: ['manager', 'hradmin', 'sysadmin'] }, // P3: read-only team comp rollup — Manager view-only (no write on payroll)
       { id: 'roster', label: 'Roster & Shifts', labelTh: 'ตารางกะ', href: '/roster', show: ['manager', 'hradmin', 'sysadmin'] }, // repointed → real /roster page
       { id: 'perf', label: 'Team Performance', labelTh: 'ผลงานทีม', href: '/performance-form', show: ['manager', 'hrbp', 'hradmin', 'sysadmin'] },
       { id: 'probation', label: 'Probation Reviews', labelTh: 'ทดลองงาน', href: '/manager-dashboard/probations', show: ['manager', 'hrbp', 'hradmin', 'sysadmin'] },

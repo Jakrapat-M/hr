@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Clock, CalendarOff, Timer, CheckSquare, ClipboardList } from 'lucide-react';
+import { Clock, CalendarOff, Timer, CheckSquare, ClipboardList, PencilLine } from 'lucide-react';
 import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
@@ -34,6 +34,15 @@ const TILES = [
     descEn: 'Submit OT requests (Thai Labor Law)',
     descTh: 'ยื่นขอทำงานล่วงเวลาตามกฎหมายแรงงานไทย',
     href: 'overtime',
+  },
+  {
+    key: 'corrections',
+    icon: PencilLine,
+    titleEn: 'Time Correction',
+    titleTh: 'แก้ไขเวลา',
+    descEn: 'Fix a mis-recorded clock-in / clock-out',
+    descTh: 'ขอแก้ไขเวลาเข้า-ออกงานที่บันทึกผิดพลาด',
+    href: 'time/corrections',
   },
   {
     key: 'approvals',

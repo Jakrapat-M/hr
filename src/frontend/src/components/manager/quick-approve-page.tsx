@@ -76,6 +76,7 @@ const TYPE_LABELS_TH: Record<RequestType | 'all', string> = {
   probation: 'ทดลองงาน',
   pay_rate: 'ปรับเงินเดือน',
   tax_planning: 'วางแผนภาษี',
+  time_correction: 'แก้ไขเวลา',
 };
 
 const TYPE_LABELS_EN: Record<RequestType | 'all', string> = {
@@ -88,6 +89,7 @@ const TYPE_LABELS_EN: Record<RequestType | 'all', string> = {
   probation: 'Probation',
   pay_rate: 'Pay rate',
   tax_planning: 'Tax planning',
+  time_correction: 'Time correction',
 };
 
 const URGENCY_LABELS_TH: Record<Urgency | 'all', string> = {
@@ -650,6 +652,7 @@ export function QuickApprovePage() {
     probation: allItems.filter((i) => i.type === 'probation').length,
     pay_rate: allItems.filter((i) => i.type === 'pay_rate').length,
     tax_planning: allItems.filter((i) => i.type === 'tax_planning').length,
+    time_correction: allItems.filter((i) => i.type === 'time_correction').length,
   }), [allItems]);
 
   // DataTable columns

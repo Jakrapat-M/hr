@@ -23,30 +23,31 @@ export default function ManagerLayout({ children }: { children: ReactNode }) {
     roles.includes('hr_admin') ||
     roles.includes('hr_manager');
 
-  // P2 — /manager/team has its OWN guard (manager/team/layout.tsx) that admits
-  // People-Partners too and renders <AccessDenied> IN PLACE (no redirect, URL
-  // stays /manager/team). Defer entirely to that nested layout so we don't
-  // redirect hrbp/spd to /home before the child can gate them.
-  const isTeamSubtree = /\/manager\/team(\/|$)/.test(pathname);
+  // Subtrees with their OWN nested layout guard that renders <AccessDenied> IN
+  // PLACE (no redirect, URL preserved). Defer entirely to those child layouts so
+  // we don't redirect a denied persona to /home before the child can gate them:
+  //   - /manager/team            (P2) — admits People-Partners too
+  //   - /manager/payroll-summary (P3) — module gate payroll-team-summary
+  const isNestedGuarded = /\/manager\/(team|payroll-summary)(\/|$)/.test(pathname);
 
   useEffect(() => {
     // Wait for Zustand persist rehydration before redirecting — prevents flash
     // on fresh tab while the store is still in default (logged-out) state.
     if (!_hasHydrated) return;
-    if (isTeamSubtree) return; // child layout owns this subtree's gating
+    if (isNestedGuarded) return; // child layout owns this subtree's gating
     if (!isAuthenticated) {
       router.replace(`/${locale}/login`);
     } else if (!isManager) {
       // Signed in but wrong persona — send to /home, not /login
       router.replace(`/${locale}/home`);
     }
-  }, [_hasHydrated, isAuthenticated, isManager, isTeamSubtree, locale, router]);
+  }, [_hasHydrated, isAuthenticated, isManager, isNestedGuarded, locale, router]);
 
   // Show nothing until hydrated (avoids flash-redirect)
   if (!_hasHydrated) return null;
 
   // Team subtree: pass through to the nested guard regardless of persona.
-  if (isTeamSubtree) return <>{children}</>;
+  if (isNestedGuarded) return <>{children}</>;
 
   if (!isAuthenticated || !isManager) {
     return null;

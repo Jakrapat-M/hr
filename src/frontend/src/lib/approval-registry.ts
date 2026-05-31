@@ -26,6 +26,11 @@ import {
   useBenefitTaxPlanningStore,
   type TaxPlanningDraft,
 } from '@/stores/benefit-tax-planning';
+import {
+  useTimeCorrections,
+  type TimeCorrectionRequest,
+  TIME_CORRECTION_KIND_LABEL,
+} from '@/stores/time-corrections';
 
 // ── Actor (caller-facing) ─────────────────────────────────────────────────────
 // Call sites pass one neutral actor shape; each adapter maps it to the store's
@@ -204,6 +209,35 @@ export function taxPlanToPendingRequest(d: TaxPlanningDraft): PendingRequest {
   };
 }
 
+// P3 — time_correction → time-corrections store. Employee self-service correction
+// of a timesheet/attendance punch. Manager (first-line) is the routed approver, so
+// the timeline's first step is `หัวหน้างาน` → canActOn() lets a team manager act and
+// a non-approver sees it VIEW-ONLY. Drill-in is special-cased to
+// /workflows/time-correction/<id>.
+export function timeCorrectionToPendingRequest(r: TimeCorrectionRequest): PendingRequest {
+  const elapsedMs = Date.now() - new Date(r.submittedAt).getTime();
+  const slaHours = elapsedMs / (1000 * 60 * 60);
+  const urgency: Urgency = slaHours > 48 ? 'urgent' : slaHours > 24 ? 'normal' : 'low';
+  const waitingDays = Math.max(0, Math.floor(elapsedMs / 86400000));
+  const kindLabel = TIME_CORRECTION_KIND_LABEL[r.kind]?.th ?? r.kind;
+  return {
+    id: r.id,
+    type: 'time_correction',
+    requester: {
+      id: r.employeeId,
+      name: r.employeeName,
+      position: kindLabel,
+      department: r.department,
+    },
+    description: `แก้ไขเวลา (${kindLabel}) — ${r.date} · ${r.correctedTime}`,
+    submittedAt: r.submittedAt,
+    urgency,
+    waitingDays,
+    details: {},
+    approvalTimeline: [{ step: 1, approver: 'หัวหน้างาน', status: 'pending' }],
+  };
+}
+
 // ── Shared queue-item shape for store records lacking a bespoke bridge ─────────
 // leave / overtime / change_request stores expose simpler records; map them to a
 // minimal PendingRequest so they interleave in the queue. (Full field mapping is
@@ -359,6 +393,22 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     labels: { th: 'วางแผนภาษี', en: 'Tax planning' },
   },
 
+  // time_correction → time-corrections: manager (first-line) approve/reject by
+  // {name}. Native fit — the store's approve/reject already take an actor name and
+  // flip status to approved/rejected. Seed is a no-op: records originate from the
+  // employee /time/corrections form.
+  time_correction: {
+    toQueueItem: (record) => timeCorrectionToPendingRequest(record as TimeCorrectionRequest),
+    approve: (id, actor) => useTimeCorrections.getState().approve(id, { name: actor.name }),
+    reject: (id, actor, reason) =>
+      useTimeCorrections.getState().reject(id, { name: actor.name }, reason),
+    seed: () => {
+      // No-op: time-correction records are created by the employee correction
+      // form (/time/corrections). No demo rows are seeded into the unified queue.
+    },
+    labels: { th: 'แก้ไขเวลา', en: 'Time correction' },
+  },
+
   // probation → probation-approvals: approveEvaluation(id,{name}) / rejectEvaluation.
   probation: {
     toQueueItem: (record) => probationToPendingRequest(record as ProbationCase),
@@ -435,6 +485,7 @@ export function selectPendingApprovals(input: {
   transfers: { id: string; terminalStatus?: QueueStatus; snapshot: PendingRequest }[];
   payRates?: PayRateRequest[];
   taxPlans?: TaxPlanningDraft[];
+  timeCorrections?: TimeCorrectionRequest[];
 }): QueueApproval[] {
   const out: QueueApproval[] = [];
 
@@ -480,6 +531,15 @@ export function selectPendingApprovals(input: {
     });
   }
 
+  // time_correction rows derive natively from the time-corrections store. Status
+  // maps cleanly: pending_manager → pending, approved/rejected passthrough.
+  for (const r of input.timeCorrections ?? []) {
+    out.push({
+      row: APPROVAL_REGISTRY.time_correction.toQueueItem(r),
+      status: collapseQueueStatus(r.status),
+    });
+  }
+
   // Stable order by submittedAt desc, then id, so the inbox renders deterministically.
   out.sort((a, b) => {
     const t = new Date(b.row.submittedAt).getTime() - new Date(a.row.submittedAt).getTime();
@@ -496,7 +556,8 @@ export function useSelectPendingApprovals(): QueueApproval[] {
   const transfers = useTransferApprovals((s) => s.entries);
   const payRates = usePayRateApprovals((s) => s.requests);
   const taxPlans = useBenefitTaxPlanningStore((s) => s.drafts);
-  return selectPendingApprovals({ leave, workflow, claims, transfers, payRates, taxPlans });
+  const timeCorrections = useTimeCorrections((s) => s.requests);
+  return selectPendingApprovals({ leave, workflow, claims, transfers, payRates, taxPlans, timeCorrections });
 }
 
 /** Non-reactive read (getState) — for one-shot lookups (e.g. detail route). */
@@ -508,6 +569,7 @@ export function getPendingApprovals(): QueueApproval[] {
     transfers: useTransferApprovals.getState().entries,
     payRates: usePayRateApprovals.getState().requests,
     taxPlans: useBenefitTaxPlanningStore.getState().drafts,
+    timeCorrections: useTimeCorrections.getState().requests,
   });
 }
 
