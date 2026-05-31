@@ -3120,7 +3120,8 @@
         "rejected": "ปฏิเสธแล้ว",
         "awaitingNext": "รอผู้อนุมัติถัดไป"
       },
-      "subtitleActionable": "คุณตัดสินใจได้ {actionable} จาก {total} รายการที่รออนุมัติ"
+      "subtitleActionable": "คุณตัดสินใจได้ {actionable} จาก {total} รายการที่รออนุมัติ",
+      "nextApprover": "ถัดไป: {approver}"
     },
     "slideOver": {
       "title": "รายละเอียดคำขอ",
@@ -4582,6 +4583,8 @@
     "type_change_request": "คำขอเปลี่ยนแปลงข้อมูล",
     "type_pay_rate": "ปรับเงินเดือน",
     "type_tax_planning": "วางแผนภาษี",
+    "routingChain": "เส้นทางอนุมัติ",
+    "nextApprover": "ผู้อนุมัติถัดไป: {approver}",
     "leaveType": "ประเภทการลา",
     "startDate": "วันที่เริ่ม",
     "endDate": "วันที่สิ้นสุด",

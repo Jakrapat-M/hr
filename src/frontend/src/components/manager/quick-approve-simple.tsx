@@ -18,6 +18,7 @@ import { APPROVAL_REGISTRY, useSelectPendingApprovals, type QueueApproval } from
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { useAuthStore } from '@/stores/auth-store';
 import { canActOn, countActionable } from '@/lib/claim-permissions';
+import { nextApproverLabel } from '@/lib/approval-routing';
 
 // Demo manager actor for mock dispatch (mirrors workflows/benefit-claim/[id]).
 const MANAGER_NAME = 'ผู้จัดการ / Manager';
@@ -206,20 +207,38 @@ export function QuickApproveSimple() {
       header: t('columns.status'),
       cell: (row) => {
         const status = effectiveStatus(row);
+        // P4: a small "next: <routed approver>" hint under the status chip so the
+        // queue speaks truth about WHO the row is currently routed to.
+        const item = queueById[row.id];
+        const nextLabel =
+          status === 'pending' && item ? nextApproverLabel(item, locale) : null;
+        const nextHint = nextLabel ? (
+          <div style={{ fontSize: 11, color: 'var(--color-ink-muted)', marginTop: 2 }}>
+            {t('nextApprover', { approver: nextLabel })}
+          </div>
+        ) : null;
         // AC-1c.2: a still-pending row whose first approver has acted shows an
         // explicit "awaiting next approver" chip instead of looking unactioned.
         if (status === 'pending' && awaitingNext[row.id]) {
           return (
-            <span className="humi-tag humi-tag--butter" style={{ fontSize: 12 }}>
-              {t('status.awaitingNext')}
-            </span>
+            <div>
+              <span className="humi-tag humi-tag--butter" style={{ fontSize: 12 }}>
+                {t('status.awaitingNext')}
+              </span>
+              {nextHint}
+            </div>
           );
         }
         const badgeClass =
           status === 'approved' ? 'humi-tag humi-tag--accent' :
           status === 'rejected' ? 'humi-tag' :
           'humi-tag humi-tag--butter';
-        return <span className={badgeClass} style={{ fontSize: 12 }}>{t(`status.${status}`)}</span>;
+        return (
+          <div>
+            <span className={badgeClass} style={{ fontSize: 12 }}>{t(`status.${status}`)}</span>
+            {nextHint}
+          </div>
+        );
       },
       className: 'w-28',
     },
