@@ -52,15 +52,15 @@ describe('ModuleImportWizard (employees) — steps + commit', () => {
     await user.upload(fileInput, file);
 
     // Next → Preview
-    await user.click(screen.getByRole('button', { name: /ตรวจสอบ →/ }));
+    await user.click(screen.getByRole('button', { name: /ดูตัวอย่าง →/ }));
     expect(screen.getByText(/แสดง 10 แถวแรก/)).toBeTruthy();
 
     // Next → Validate
-    await user.click(screen.getByRole('button', { name: /ยืนยัน →/ }));
+    await user.click(screen.getByRole('button', { name: /ตรวจสอบความถูกต้อง →/ }));
     expect(screen.getByText(/ตัวเลือกการนำเข้า/)).toBeTruthy();
 
     // Next → Run
-    await user.click(screen.getByRole('button', { name: /รันงาน →/ }));
+    await user.click(screen.getByRole('button', { name: /นำเข้า →/ }));
 
     // Run import — animate the 8-step mock progress.
     await user.click(screen.getByRole('button', { name: /เริ่มนำเข้าข้อมูล/ }));
@@ -121,9 +121,9 @@ describe('ModuleImportWizard (payroll) — commit + HR-Admin guard', () => {
     const file = new File(['employeeId\nEMP-7001'], 'payroll_may.csv', { type: 'text/csv' });
     await user.upload(fileInput, file);
 
-    await user.click(screen.getByRole('button', { name: /ตรวจสอบ →/ }));
-    await user.click(screen.getByRole('button', { name: /ยืนยัน →/ }));
-    await user.click(screen.getByRole('button', { name: /รันงาน →/ }));
+    await user.click(screen.getByRole('button', { name: /ดูตัวอย่าง →/ }));
+    await user.click(screen.getByRole('button', { name: /ตรวจสอบความถูกต้อง →/ }));
+    await user.click(screen.getByRole('button', { name: /นำเข้า →/ }));
     await user.click(screen.getByRole('button', { name: /เริ่มนำเข้าข้อมูล/ }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(8 * 400 + 50);
@@ -208,9 +208,9 @@ describe('ModuleImportWizard (time) — commit + HR-Admin guard', () => {
     const file = new File(['employeeId\nEMP-8001'], 'timesheets_wk20.csv', { type: 'text/csv' });
     await user.upload(fileInput, file);
 
-    await user.click(screen.getByRole('button', { name: /ตรวจสอบ →/ }));
-    await user.click(screen.getByRole('button', { name: /ยืนยัน →/ }));
-    await user.click(screen.getByRole('button', { name: /รันงาน →/ }));
+    await user.click(screen.getByRole('button', { name: /ดูตัวอย่าง →/ }));
+    await user.click(screen.getByRole('button', { name: /ตรวจสอบความถูกต้อง →/ }));
+    await user.click(screen.getByRole('button', { name: /นำเข้า →/ }));
     await user.click(screen.getByRole('button', { name: /เริ่มนำเข้าข้อมูล/ }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(8 * 400 + 50);

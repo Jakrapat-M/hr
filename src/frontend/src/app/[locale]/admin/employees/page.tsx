@@ -231,7 +231,8 @@ export default function EmployeesPage() {
   const scopeMode = pickScopeMode(currentRoles)
 
   const { setSearchQuery, searchQuery, getFiltered } = useEmployees()
-  const allEmployeesCount = useEmployees((s) => s.all.length)
+  const allEmployees = useEmployees((s) => s.all)
+  const allEmployeesCount = allEmployees.length
   const [localQuery, setLocalQuery] = useState(searchQuery)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -241,14 +242,15 @@ export default function EmployeesPage() {
     return () => clearTimeout(t)
   }, [localQuery, setSearchQuery])
 
-  // Empty-by-default: don't render the full 1K row list until the user actually
-  // types a search. Ken 2026-04-24: "ข้อมูลยังไม่ควรโหลดขึ้นมาถ้ายังไม่มีการ
-  // Search" — avoids accidental-weight first paint + signals search-driven UX.
+  // Default slice on empty search: show the first DEFAULT_PREVIEW_ROWS of the
+  // pool so the demo opens with visible data + an enabled export, instead of an
+  // empty table. Typing a query filters the full pool.
+  const DEFAULT_PREVIEW_ROWS = 25
   const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return []
+    if (!searchQuery.trim()) return allEmployees.slice(0, DEFAULT_PREVIEW_ROWS)
     return getFiltered()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery])
+  }, [searchQuery, allEmployees])
 
   const handleRowClick = useCallback(
     (id: string) => {
@@ -398,7 +400,9 @@ export default function EmployeesPage() {
               color: 'var(--color-ink-soft)',
             }}
           >
-            {filtered.length.toLocaleString('th-TH')} รายการ
+            {searchQuery.trim()
+              ? `${filtered.length.toLocaleString('th-TH')} รายการ`
+              : `${allEmployeesCount.toLocaleString('th-TH')} คนในระบบ`}
           </span>
         </div>
 

@@ -4941,7 +4941,8 @@
     "adminSubtitle": "All employee document requests",
     "viewSwitchLabel": "Switch view",
     "viewQueue": "Requests",
-    "viewGenerate": "Generate"
+    "viewGenerate": "Generate",
+    "generateNote": "Document preview — generated from employee data (demo data)."
   },
   "doc_generate": {
     "ctaTitle": "Generate now",
@@ -5312,6 +5313,7 @@
     "reportNamePlaceholder": "e.g. Monthly headcount report",
     "save": "Save report",
     "saved": "Saved",
-    "rowCount": "{count} rows"
+    "rowCount": "{count} rows",
+    "previewCap": "Showing top {shown} of {total} — export the CSV for all rows."
   }
 }

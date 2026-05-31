@@ -14,7 +14,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import type { HumiEmployee } from '@/lib/humi-mock-data';
-import { buildTeamTimeSummary, LATE_ALERT_THRESHOLD } from '@/lib/team-time-metrics';
+import {
+  buildTeamTimeSummary,
+  LATE_ALERT_THRESHOLD,
+  ABSENCE_ALERT_THRESHOLD,
+} from '@/lib/team-time-metrics';
 
 let mockRoles: string[] = [];
 let mockEmail: string | null = null;
@@ -80,13 +84,20 @@ describe('P3 — buildTeamTimeSummary helper', () => {
     expect(a.rows.every((r) => r.lateCount >= 0 && r.absenceCount >= 0 && r.otHours >= 0)).toBe(true);
   });
 
-  it('flags rows that breach the late threshold', () => {
+  it('flags only rows that breach the late or absence threshold', () => {
     const { rows } = buildTeamTimeSummary(POOL);
     rows.forEach((r) => {
-      if (r.lateCount >= LATE_ALERT_THRESHOLD || r.absenceCount >= 1) {
-        expect(r.hasAlert).toBe(true);
-      }
+      const shouldAlert =
+        r.lateCount >= LATE_ALERT_THRESHOLD || r.absenceCount >= ABSENCE_ALERT_THRESHOLD;
+      expect(r.hasAlert).toBe(shouldAlert);
     });
+  });
+
+  it('flags only a realistic minority of the team (not everyone)', () => {
+    const { rows } = buildTeamTimeSummary(POOL);
+    const flagged = rows.filter((r) => r.hasAlert).length;
+    // A minority — strictly fewer than half the team carries the follow-up flag.
+    expect(flagged).toBeLessThan(rows.length / 2);
   });
 
   it('returns an empty summary for an empty team', () => {

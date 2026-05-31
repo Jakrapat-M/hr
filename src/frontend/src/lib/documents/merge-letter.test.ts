@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mergeLetter, letterToHtml, type MergeOptions } from './merge-letter';
+import { mergeLetter, letterToHtml, mockHireDate, type MergeOptions } from './merge-letter';
 import { getGeneratableLetter, GENERATABLE_LETTERS } from '@/data/documents/templates';
 import type { HumiEmployee } from '@/lib/humi-mock-data';
 
@@ -75,6 +75,19 @@ describe('mergeLetter', () => {
     expect(filledBody).toContain('CG-9002');
   });
 
+  it('fills startDate and drops it from missingFields when opts.hireDate is supplied', () => {
+    const tpl = getGeneratableLetter('employment-cert')!;
+
+    // Without a hireDate source → startDate is missing.
+    const without = mergeLetter(tpl, empNoHire, 'th', baseOpts);
+    expect(without.missingFields).toContain('startDate');
+
+    // Supplying opts.hireDate fills it and removes it from missingFields.
+    const withHire = mergeLetter(tpl, empNoHire, 'th', { ...baseOpts, hireDate: '2018-07-09' });
+    expect(withHire.missingFields).not.toContain('startDate');
+    expect(withHire.filledBody).toContain('2561'); // Buddhist-era year for 2018
+  });
+
   it('reports salary missing when no salaryMonthly supplied; fills it when given', () => {
     const tpl = getGeneratableLetter('salary-cert')!;
 
@@ -116,5 +129,26 @@ describe('letterToHtml', () => {
     expect(html).toContain('<title>หนังสือรับรองการทำงาน</title>');
     expect(html).toContain('สมชาย ใจดี');
     expect(html).toContain('lang="th"');
+  });
+});
+
+describe('mockHireDate — deterministic, always a valid date (regression: signed-shift bug)', () => {
+  // emp-003's id hashes above 2^31; a signed `>>` shift produced a negative
+  // month/day and an invalid ISO ("2022--1-..") that rendered as "-".
+  const ids = ['emp-003', 'emp-001', 'emp-007', 'emp-sf-42', 'CG-0425', 'x', 'zzzzzzzz', 'emp-999999'];
+  it.each(ids)('produces a parseable YYYY-MM-DD with valid month/day for "%s"', (id) => {
+    const d = mockHireDate({ id } as HumiEmployee);
+    expect(d).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    const [y, m, day] = d.split('-').map(Number);
+    expect(m).toBeGreaterThanOrEqual(1);
+    expect(m).toBeLessThanOrEqual(12);
+    expect(day).toBeGreaterThanOrEqual(1);
+    expect(day).toBeLessThanOrEqual(28);
+    expect(y).toBeGreaterThanOrEqual(2014);
+    expect(y).toBeLessThanOrEqual(2023);
+    expect(Number.isNaN(new Date(d).getTime())).toBe(false);
+  });
+  it('is deterministic (same id → same date)', () => {
+    expect(mockHireDate({ id: 'emp-003' } as HumiEmployee)).toBe(mockHireDate({ id: 'emp-003' } as HumiEmployee));
   });
 });

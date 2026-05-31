@@ -75,6 +75,12 @@ export function SubjectReportBuilder() {
     [subject, scope.employees, activeFilters, locale],
   );
 
+  // Keep the on-screen preview tidy for high-cardinality subjects: cap to the
+  // top PREVIEW_CAP rows (compute already sorts grouped subjects descending by
+  // metric). CSV export still includes the full row set.
+  const PREVIEW_CAP = 15;
+  const previewRows = useMemo(() => rows.slice(0, PREVIEW_CAP), [rows]);
+
   const columns: DataTableColumn<ReportRow>[] = useMemo(
     () =>
       subject.columns.map((c) => ({
@@ -270,7 +276,7 @@ export function SubjectReportBuilder() {
                 captionVisuallyHidden
                 dense
                 columns={columns}
-                rows={rows}
+                rows={previewRows}
                 rowKey={(_r, i) => String(i)}
                 emptyState={
                   <EmptyState
@@ -285,7 +291,9 @@ export function SubjectReportBuilder() {
             </div>
           </Card>
           <p className="text-xs text-ink-faint">
-            {t('rowCount', { count: rows.length })}
+            {rows.length > PREVIEW_CAP
+              ? t('previewCap', { shown: previewRows.length, total: rows.length })
+              : t('rowCount', { count: rows.length })}
           </p>
         </div>
       </div>

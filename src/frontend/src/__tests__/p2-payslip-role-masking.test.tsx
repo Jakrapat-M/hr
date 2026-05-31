@@ -39,7 +39,8 @@ vi.mock('@/stores/auth-store', () => ({
 
 import CompensationSummary from '@/components/profile/CompensationSummary'
 
-const MASKED_PATTERN = /••••,500/
+// Masking now hides EVERY digit (no trailing-digit leak): '฿ 82,500' → '฿ ••,•••'
+const MASKED_PATTERN = /฿ ••,•••/
 const UNMASKED_PATTERN = /82,500/
 
 beforeEach(() => {

@@ -9,14 +9,17 @@ import { HUMI_MY_PROFILE } from '@/lib/humi-mock-data';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
 
-// Mask currency '฿ 82,500' → '฿ ••••2,500' (last 4 visible: '2,500')
+// Mask currency '฿ 82,500' → '฿ ••,•••' — every digit hidden (consistent with
+// the team payroll summary + comp history; no trailing-digit leak).
 function maskCurrency(currency: string): string {
   const m = currency.match(/(฿\s*)(.+)$/);
   if (!m) return '••••';
-  const symbol = m[1];
-  const num = m[2];
-  if (num.length <= 4) return `${symbol}${num}`;
-  return `${symbol}••••${num.slice(-4)}`;
+  return `${m[1]}${m[2].replace(/[0-9๐-๙]/g, '•')}`;
+}
+
+// Mask a "48,200 บาท" style money string keeping non-digit chrome (comma, unit).
+function maskMoneyText(value: string): string {
+  return value.replace(/[0-9๐-๙]/g, '•');
 }
 
 // Mask a free-text recurring component (bonus / equity descriptor) so a
@@ -185,7 +188,7 @@ export default function CompensationSummary({
                 <span style={{ fontSize: 14, fontWeight: 600 }}>{statement.monthLabel}</span>
               </span>
               <span className="font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>
-                สุทธิ {statement.net}
+                สุทธิ {effectiveMasked ? maskMoneyText(statement.net) : statement.net}
               </span>
             </Link>
           ))}

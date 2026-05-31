@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 
 // Mock next/navigation — useParams returns locale 'th'
 vi.mock('next/navigation', () => ({
@@ -30,6 +30,8 @@ vi.mock('lucide-react', () => ({
   Lock: () => null,
   ArrowRight: () => null,
   Info: () => null,
+  Eye: () => null,
+  EyeOff: () => null,
 }))
 
 // Controllable auth-store roles mock
@@ -57,42 +59,48 @@ describe('P3 — CompensationHistory (read-only comp history)', () => {
     expect(screen.getAllByTestId('comp-history-row').length).toBeGreaterThan(0)
   })
 
-  it('is READ-ONLY — renders no edit controls (no buttons, inputs, or textboxes)', () => {
+  it('is READ-ONLY — no edit inputs (the reveal eye toggle is allowed, edit controls are not)', () => {
     render(<CompensationHistory />)
-    expect(screen.queryByRole('button')).toBeNull()
+    // No data-entry controls — read-only surface.
     expect(screen.queryByRole('textbox')).toBeNull()
     expect(document.querySelector('input')).toBeNull()
     expect(document.querySelector('textarea')).toBeNull()
+    // Read-only badge present; the only interactive control is the mask reveal.
+    expect(screen.getByTestId('comp-history-readonly-badge')).toBeInTheDocument()
   })
 
-  it('self view (owner) shows FULL unmasked amounts (no mask dots)', () => {
+  const amountText = () =>
+    screen.getAllByTestId('comp-history-amount').map((a) => a.textContent).join(' ')
+
+  it('self view (owner) MASKS amounts BY DEFAULT; eye toggle reveals the full figure', () => {
     render(<CompensationHistory />)
-    const amounts = screen.getAllByTestId('comp-history-amount')
-    const text = amounts.map((a) => a.textContent).join(' ')
-    // SELF_COMP_HISTORY newest = 82,500 base; owner sees the grouped figure
-    expect(text).toMatch(/82,500/)
-    expect(text).not.toMatch(/••/)
-    // owner is not warned about masking
-    expect(screen.queryByTestId('comp-history-masked-note')).toBeNull()
+    // Masked by default — even the owner must opt in to see the numbers.
+    expect(amountText()).toMatch(/••/)
+    expect(amountText()).not.toMatch(/82,500/)
+    expect(screen.getByTestId('comp-history-reveal-toggle')).toBeInTheDocument()
+    // Reveal.
+    fireEvent.click(screen.getByTestId('comp-history-reveal-toggle'))
+    expect(amountText()).toMatch(/82,500/)
+    expect(amountText()).not.toMatch(/••/)
   })
 
-  it('non-owner manager view MASKS amounts (mask dots present, full figure hidden)', () => {
+  it('non-owner manager view is MASKED and LOCKED (no reveal toggle)', () => {
     rolesRef.current = ['manager']
     render(<CompensationHistory employeeId="EMP001" viewerIsOwner={false} />)
-    const amounts = screen.getAllByTestId('comp-history-amount')
-    const text = amounts.map((a) => a.textContent).join(' ')
-    expect(text).toMatch(/••/)
-    expect(text).not.toMatch(/82,500/)
+    expect(amountText()).toMatch(/••/)
+    expect(amountText()).not.toMatch(/82,500/)
     expect(screen.getByTestId('comp-history-masked-note')).toBeInTheDocument()
+    // A non-owner without comp-view privilege cannot reveal.
+    expect(screen.queryByTestId('comp-history-reveal-toggle')).toBeNull()
   })
 
-  it('non-owner HR comp-view role (hr_admin) sees FULL amounts', () => {
+  it('non-owner HR comp-view role (hr_admin) is MASKED by default but CAN reveal', () => {
     rolesRef.current = ['hr_admin']
     render(<CompensationHistory employeeId="EMP001" viewerIsOwner={false} />)
-    const amounts = screen.getAllByTestId('comp-history-amount')
-    const text = amounts.map((a) => a.textContent).join(' ')
-    expect(text).toMatch(/82,500/)
-    expect(text).not.toMatch(/••/)
+    expect(amountText()).toMatch(/••/)
+    expect(amountText()).not.toMatch(/82,500/)
+    fireEvent.click(screen.getByTestId('comp-history-reveal-toggle'))
+    expect(amountText()).toMatch(/82,500/)
   })
 
   it('effective dates render in Buddhist Era (2026 → 2569)', () => {

@@ -17,6 +17,8 @@ export interface MergeOptions {
   today: string;
   /** Optional monthly salary (THB) for the salary certificate's {{salary}}. */
   salaryMonthly?: number;
+  /** Optional hire date (ISO 'YYYY-MM-DD') for the {{startDate}} placeholder. */
+  hireDate?: string;
   /** Override the default company name. */
   companyTh?: string;
   companyEn?: string;
@@ -35,6 +37,27 @@ export function mockMonthlySalary(emp: HumiEmployee): number {
   for (const ch of emp.id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   const base = 28000 + (hash % 70001); // 28,000 .. 98,000
   return Math.round(base / 500) * 500;
+}
+
+/**
+ * Deterministic mock hire date (ISO 'YYYY-MM-DD') for the demo.
+ *
+ * The synthetic `HumiEmployee` core pool carries NO hireDate, so a certificate
+ * would otherwise render a blank "เริ่มปฏิบัติงานตั้งแต่วันที่ ____". Derive a
+ * stable, plausible date from the employee id — year ≈ 2014..2023, month 1..12,
+ * day 1..28 — so the same person always shows the same date. No live clock.
+ */
+export function mockHireDate(emp: HumiEmployee): string {
+  let hash = 0;
+  for (const ch of emp.id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  const year = 2014 + (hash % 10); // 2014..2023
+  // UNSIGNED shifts — hash can exceed 2^31; signed `>>` would flip it negative,
+  // yielding a negative month/day and an invalid ISO string (formatDate → "-").
+  const month = 1 + ((hash >>> 4) % 12); // 1..12
+  const day = 1 + ((hash >>> 8) % 28); // 1..28
+  const mm = String(month).padStart(2, '0');
+  const dd = String(day).padStart(2, '0');
+  return `${year}-${mm}-${dd}`;
 }
 
 export interface MergeResult {
@@ -76,9 +99,12 @@ function resolvePlaceholder(
       return emp.department || null;
     case 'employeeCode':
       return emp.employeeCode || null;
-    case 'startDate':
-      // hireDate only present on SF-real rows; null-guard for synthetic core.
-      return emp.hireDate ? formatDate(emp.hireDate, 'long', locale) : null;
+    case 'startDate': {
+      // hireDate only present on SF-real rows; the caller may supply a mock for
+      // synthetic core rows. Null-guard so missingFields stays accurate.
+      const hd = opts.hireDate ?? emp.hireDate;
+      return hd ? formatDate(hd, 'long', locale) : null;
+    }
     case 'salary':
       return typeof opts.salaryMonthly === 'number'
         ? formatCurrency(opts.salaryMonthly, 'THB')

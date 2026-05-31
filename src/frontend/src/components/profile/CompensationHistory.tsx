@@ -17,9 +17,10 @@
 // Never red — masking uses neutral ink tokens.
 // ════════════════════════════════════════════════════════════
 
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { History, Lock, ArrowRight } from 'lucide-react';
+import { History, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
 import { formatDate } from '@/lib/date';
@@ -33,16 +34,15 @@ import {
 
 const COMP_VIEW_ROLES = ['hr_admin', 'hr_manager', 'hrbp', 'spd'] as const;
 
-// Mask a THB amount keeping the last 3 digits, e.g. 82500 → '฿ ••,500'
-function maskAmount(amount: number): string {
-  const digits = String(amount);
-  if (digits.length <= 3) return `฿ ${digits}`;
-  const tail = digits.slice(-3);
-  return `฿ ••,${tail}`;
-}
-
 function formatAmount(amount: number): string {
   return `฿ ${new Intl.NumberFormat('en-US').format(amount)}`;
+}
+
+// Mask a THB amount — every digit hidden, keeping the grouped shape, e.g.
+// 82500 → '฿ ••,•••'. Consistent with payroll summary + comp summary (no
+// trailing-digit leak).
+function maskAmount(amount: number): string {
+  return formatAmount(amount).replace(/[0-9๐-๙]/g, '•');
 }
 
 const TYPE_TONE: Record<CompChangeType, string> = {
@@ -67,7 +67,12 @@ export default function CompensationHistory({
   const t = useTranslations('compHistory');
 
   const isOwner = viewerIsOwner ?? true;
-  const canViewFull = isOwner || hasAnyRole(roles, [...COMP_VIEW_ROLES]);
+  // Who is ALLOWED to reveal: the owner + HR comp-view roles. Everyone else is
+  // permanently masked. But even an allowed viewer sees figures MASKED BY
+  // DEFAULT — they must click the eye toggle to reveal (matches CompensationSummary).
+  const canReveal = isOwner || hasAnyRole(roles, [...COMP_VIEW_ROLES]);
+  const [isMasked, setIsMasked] = useState(true);
+  const effectiveMasked = canReveal ? isMasked : true;
 
   const entries: CompHistoryEntry[] = employeeId
     ? getCompHistory(employeeId)
@@ -96,24 +101,49 @@ export default function CompensationHistory({
             {t('title')}
           </h3>
         </div>
-        <span
-          className="humi-tag"
-          data-testid="comp-history-readonly-badge"
-          style={{
-            gap: 6,
-            fontSize: 12,
-            color: 'var(--color-ink-muted)',
-            borderColor: 'var(--color-hairline)',
-          }}
-        >
-          <Lock size={12} aria-hidden />
-          {t('readOnly')}
-        </span>
+        <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+          {canReveal ? (
+            <button
+              type="button"
+              onClick={() => setIsMasked((m) => !m)}
+              className="humi-row"
+              style={{ gap: 6, fontSize: 13, color: 'var(--color-ink-muted)' }}
+              aria-label={isMasked ? 'แสดงค่าตอบแทนย้อนหลัง' : 'ซ่อนค่าตอบแทนย้อนหลัง'}
+              data-testid="comp-history-reveal-toggle"
+            >
+              {isMasked ? <Eye size={14} aria-hidden /> : <EyeOff size={14} aria-hidden />}
+              {isMasked ? 'แสดง' : 'ซ่อน'}
+            </button>
+          ) : (
+            <span
+              className="humi-tag"
+              data-testid="comp-history-locked-badge"
+              style={{ gap: 6, fontSize: 12, color: 'var(--color-ink-muted)', borderColor: 'var(--color-hairline)' }}
+              aria-label="ค่าตอบแทนย้อนหลังถูกปิดบัง"
+            >
+              <Lock size={12} aria-hidden />
+              ปิดบัง
+            </span>
+          )}
+          <span
+            className="humi-tag"
+            data-testid="comp-history-readonly-badge"
+            style={{
+              gap: 6,
+              fontSize: 12,
+              color: 'var(--color-ink-muted)',
+              borderColor: 'var(--color-hairline)',
+            }}
+          >
+            <Lock size={12} aria-hidden />
+            {t('readOnly')}
+          </span>
+        </div>
       </header>
 
       <DemoValuesDisclaimer compact className="mb-4" />
 
-      {!canViewFull && (
+      {!canReveal && (
         <p
           className="text-small text-ink-muted"
           style={{ marginBottom: 12 }}
@@ -125,13 +155,13 @@ export default function CompensationHistory({
 
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }} data-testid="comp-history-list">
         {entries.map((entry) => {
-          const newDisplay = canViewFull ? formatAmount(entry.newAmount) : maskAmount(entry.newAmount);
+          const newDisplay = effectiveMasked ? maskAmount(entry.newAmount) : formatAmount(entry.newAmount);
           const oldDisplay =
             entry.oldAmount === null
               ? null
-              : canViewFull
-                ? formatAmount(entry.oldAmount)
-                : maskAmount(entry.oldAmount);
+              : effectiveMasked
+                ? maskAmount(entry.oldAmount)
+                : formatAmount(entry.oldAmount);
           return (
             <li
               key={entry.id}
