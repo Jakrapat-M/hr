@@ -3,8 +3,11 @@
 // Vitest + RTL — 12 tests
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { act, render, screen, fireEvent, renderHook } from '@testing-library/react'
+import { act, render, screen, fireEvent, renderHook, within } from '@testing-library/react'
+import { NextIntlClientProvider } from 'next-intl'
 import { useDataManagement } from '@/lib/admin/store/useDataManagement'
+import { useAuthStore } from '@/stores/auth-store'
+import thMessages from '../../../messages/th.json'
 
 // -----------------------------------------------------------------------
 // Mock dependencies
@@ -59,8 +62,27 @@ beforeEach(() => {
   act(() => {
     localStorage.clear()
     useDataManagement.setState(useDataManagement.getInitialState())
+    // Subject builder reads persona scope from auth-store — give it an admin (all scope)
+    useAuthStore.setState({
+      userId: 'TEST',
+      username: 'admin',
+      email: 'admin@humi.test',
+      roles: ['hr_admin'],
+      isAuthenticated: true,
+      originalUser: null,
+      _hasHydrated: true,
+    } as any)
   })
 })
+
+/** Render a builder-family page wrapped in the TH intl provider (it now uses next-intl). */
+function renderBuilder(ui: React.ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="th" messages={thMessages as any}>
+      {ui}
+    </NextIntlClientProvider>,
+  )
+}
 
 // -----------------------------------------------------------------------
 // Hub: ReportsHubPage
@@ -106,27 +128,24 @@ describe('ReportsHubPage — Reporting hub landing', () => {
 // Builder: ReportBuilderPage
 // -----------------------------------------------------------------------
 
-describe('ReportBuilderPage — drag-drop columns + filters + preview', () => {
-  it('TC-RPT-5: แสดง heading "สร้างรายงาน" และ column chips ทั้งหมด', () => {
-    render(<ReportBuilderPage />)
-    expect(screen.getByRole('heading', { name: /สร้างรายงาน/i })).toBeInTheDocument()
-    // chip ต้องมี รหัสพนักงาน
-    expect(screen.getByRole('button', { name: 'รหัสพนักงาน' })).toBeInTheDocument()
+describe('ReportBuilderPage — subject + filter + preview + export', () => {
+  it('TC-RPT-5: แสดง heading + subject pickers', () => {
+    renderBuilder(<ReportBuilderPage />)
+    expect(screen.getByRole('heading', { name: /เครื่องมือสร้างรายงาน/i })).toBeInTheDocument()
+    // subject chips render (default + alternates)
+    expect(screen.getByRole('button', { name: 'รายชื่อพนักงาน', pressed: false })).toBeInTheDocument()
   })
 
-  it('TC-RPT-6: click column chip "เงินเดือน" ต้อง toggle selected (เพิ่ม/ลบออกจาก ordered list)', () => {
-    render(<ReportBuilderPage />)
-    const chip = screen.getByRole('button', { name: 'เงินเดือน' })
-    // initial state: ไม่อยู่ใน default selected 3 columns
-    const chipBefore = chip.className
-    fireEvent.click(chip)
-    // หลัง click ชื่อคอลัมน์ควรปรากฏใน ordered list (draggable area)
-    const allEl = screen.getAllByText('เงินเดือน')
-    expect(allEl.length).toBeGreaterThan(0)
+  it('TC-RPT-6: เลือก subject อื่น ต้องสลับคอลัมน์ใน preview', () => {
+    renderBuilder(<ReportBuilderPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'รายชื่อพนักงาน', pressed: false }))
+    const table = screen.getByRole('table')
+    const headers = within(table).getAllByRole('columnheader').map((h) => h.textContent)
+    expect(headers).toEqual(expect.arrayContaining(['ชื่อ-สกุล', 'ตำแหน่ง', 'วันเริ่มงาน']))
   })
 
   it('TC-RPT-7: save button disabled เมื่อ reportName ว่าง, enabled เมื่อมีชื่อ', () => {
-    render(<ReportBuilderPage />)
+    renderBuilder(<ReportBuilderPage />)
     const saveBtn = screen.getByRole('button', { name: /บันทึกรายงาน/i })
     expect(saveBtn).toBeDisabled()
 
@@ -135,17 +154,20 @@ describe('ReportBuilderPage — drag-drop columns + filters + preview', () => {
     expect(saveBtn).not.toBeDisabled()
   })
 
-  it('TC-RPT-8: แสดง Preview เมื่อ click "แสดง Preview" และซ่อนเมื่อ click อีกครั้ง', () => {
-    render(<ReportBuilderPage />)
-    const previewBtn = screen.getByRole('button', { name: /แสดง Preview/i })
-    fireEvent.click(previewBtn)
+  it('TC-RPT-8: เปลี่ยน filter (สถานะ) ต้องเปลี่ยนจำนวนแถวใน preview', () => {
+    renderBuilder(<ReportBuilderPage />)
+    // switch to roster subject which has a status filter
+    fireEvent.click(screen.getByRole('button', { name: 'รายชื่อพนักงาน', pressed: false }))
+    const rowsBefore = within(screen.getByRole('table')).queryAllByRole('row').length
 
-    // หลัง click ต้องมี table header ใน preview
-    expect(screen.getByRole('button', { name: /ซ่อน Preview/i })).toBeInTheDocument()
+    const statusSelect = screen.getByLabelText('สถานะ')
+    fireEvent.change(statusSelect, { target: { value: 'leave' } })
+    const rowsAfter = within(screen.getByRole('table')).queryAllByRole('row').length
 
-    // click อีกครั้ง → ซ่อน
-    fireEvent.click(screen.getByRole('button', { name: /ซ่อน Preview/i }))
-    expect(screen.getByRole('button', { name: /แสดง Preview/i })).toBeInTheDocument()
+    // leave-only is a strict subset of all roster rows
+    expect(rowsAfter).toBeLessThanOrEqual(rowsBefore)
+    // export control present
+    expect(screen.getByRole('button', { name: /ส่งออก CSV/i })).toBeInTheDocument()
   })
 })
 

@@ -9,7 +9,8 @@
 
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { BarChart3, Users } from 'lucide-react';
+import { BarChart3, Users, Wrench } from 'lucide-react';
+import Link from 'next/link';
 import { Card, DataTable, EmptyState, type DataTableColumn } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
 import { ALL_PORTED_EMPLOYEES, EMP_BY_LOGIN } from '@/lib/all-ported-employees';
@@ -105,26 +106,35 @@ export default function ReportsPage() {
   return (
     <div className="pb-8 flex flex-col gap-6">
       {/* Header */}
-      <header className="flex flex-col gap-1">
-        <span className="font-mono text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-faint">
-          {isTh ? 'HUMI • รายงาน' : 'HUMI • REPORTS'}
-        </span>
-        <h1 className="font-display text-[length:var(--text-display-h1)] font-semibold leading-[var(--text-display-h1--line-height)] tracking-tight text-ink">
-          {t('pages.reports.title')}
-        </h1>
-        <p className="text-small text-ink-muted mt-1">
-          {isScoped
-            ? scope.mode === 'bu'
-              ? isTh
-                ? 'สรุปกำลังคนเฉพาะหน่วยงานของคุณ'
-                : 'Workforce summary for your business unit only'
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <span className="font-mono text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-faint">
+            {isTh ? 'HUMI • รายงาน' : 'HUMI • REPORTS'}
+          </span>
+          <h1 className="font-display text-[length:var(--text-display-h1)] font-semibold leading-[var(--text-display-h1--line-height)] tracking-tight text-ink">
+            {t('pages.reports.title')}
+          </h1>
+          <p className="text-small text-ink-muted mt-1">
+            {isScoped
+              ? scope.mode === 'bu'
+                ? isTh
+                  ? 'สรุปกำลังคนเฉพาะหน่วยงานของคุณ'
+                  : 'Workforce summary for your business unit only'
+                : isTh
+                  ? 'สรุปกำลังคนเฉพาะทีมของคุณ'
+                  : "Workforce summary for your team only"
               : isTh
-                ? 'สรุปกำลังคนเฉพาะทีมของคุณ'
-                : "Workforce summary for your team only"
-            : isTh
-              ? 'สรุปกำลังคนทั้งองค์กร'
-              : 'Organization-wide workforce summary'}
-        </p>
+                ? 'สรุปกำลังคนทั้งองค์กร'
+                : 'Organization-wide workforce summary'}
+          </p>
+        </div>
+        <Link
+          href={`/${locale}/reports/builder`}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-[var(--radius-sm)] bg-accent px-4 py-2 text-small font-medium text-white shadow-[var(--shadow-sm)] transition-colors hover:bg-[color-mix(in_oklab,var(--color-accent)_92%,black)]"
+        >
+          <Wrench size={16} aria-hidden />
+          {isTh ? 'สร้างรายงาน' : 'Build a report'}
+        </Link>
       </header>
 
       {/* KPI row */}
