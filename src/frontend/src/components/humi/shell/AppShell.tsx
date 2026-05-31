@@ -99,6 +99,8 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/th/ess', title: 'บริการตนเอง' },
   { prefix: '/en/ess', title: 'บริการตนเอง' },
   // ── Blueprint sidebar destinations (port 2026-05-25) ──
+  { prefix: '/th/time/import', title: 'นำเข้าใบลงเวลา' },
+  { prefix: '/en/time/import', title: 'Import Timesheets' },
   { prefix: '/th/time', title: 'ลงเวลา' },
   { prefix: '/en/time', title: 'ลงเวลา' },
   { prefix: '/th/payslip', title: 'สลิปเงินเดือน' },

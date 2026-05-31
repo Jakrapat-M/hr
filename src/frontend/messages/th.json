@@ -5213,7 +5213,15 @@
     "ttFlagOk": "ปกติ",
     "ttTableCaption": "มาสาย ขาดงาน และล่วงเวลา รายบุคคล",
     "ttEmptyTitle": "ไม่มีสมาชิกทีมในขอบเขต",
-    "ttEmptyDesc": "เมื่อมีสมาชิกทีมที่รายงานตรงต่อคุณ สรุปการเข้างานจะแสดงที่นี่"
+    "ttEmptyDesc": "เมื่อมีสมาชิกทีมที่รายงานตรงต่อคุณ สรุปการเข้างานจะแสดงที่นี่",
+    "exportCsv": "ส่งออก CSV",
+    "importCsv": "นำเข้า",
+    "importAria": "เปิดหน้านำเข้าใบลงเวลาแบบกลุ่ม",
+    "csvColEmployeeId": "รหัสพนักงาน",
+    "csvColEmployee": "ชื่อพนักงาน",
+    "csvColWeek": "สัปดาห์เริ่ม",
+    "csvColTotal": "ชั่วโมงรวม",
+    "csvColSubmittedAt": "ส่งเมื่อ"
   },
   "hrbpEmployees": {
     "eyebrow": "People Partner",

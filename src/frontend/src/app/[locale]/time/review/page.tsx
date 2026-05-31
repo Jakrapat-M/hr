@@ -3,9 +3,12 @@
 import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Card, CardTitle, DataTable, type DataTableColumn } from '@/components/humi';
+import { Download, Upload } from 'lucide-react';
+import { Card, CardTitle, Button, DataTable, type DataTableColumn } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
-import { hasAnyRole } from '@/lib/rbac';
+import { hasAnyRole, hasRole } from '@/lib/rbac';
+import { exportToCSV, type CsvColumn } from '@/lib/admin/utils/csvExport';
+import { formatDate } from '@/lib/date';
 import {
   useTimesheetSubmissions,
   selectSubmittedTimesheets,
@@ -48,6 +51,23 @@ export default function TimesheetReviewPage() {
   const teamTime = useMemo(() => buildTeamTimeSummary(team), [team]);
 
   const rows = useMemo(() => selectSubmittedTimesheets(submissions), [submissions]);
+
+  const canImport = hasRole(roles, 'hr_admin');
+
+  // Export submitted timesheets to CSV (UTF-8 BOM + Thai headers via shared
+  // util). Buddhist-era dates via formatDate. No sensitive PII in timesheet
+  // rows, so no masking needed here.
+  const handleExportCsv = () => {
+    const cols: CsvColumn<TimesheetSubmission>[] = [
+      { header: t('csvColEmployeeId'), accessor: (r) => r.employeeId },
+      { header: t('csvColEmployee'), accessor: (r) => r.employeeName },
+      { header: t('csvColWeek'), accessor: (r) => formatDate(r.weekStart, 'medium', locale === 'th' ? 'th' : 'en') },
+      { header: t('csvColTotal'), accessor: (r) => r.totalHours },
+      { header: t('csvColSubmittedAt'), accessor: (r) => formatDate(r.submittedAt, 'medium', locale === 'th' ? 'th' : 'en') },
+    ];
+    const stamp = new Date().toISOString().slice(0, 10);
+    exportToCSV(rows, cols, `timesheets-${stamp}.csv`);
+  };
 
   const dateFmt = useMemo(
     () => new Intl.DateTimeFormat(locale === 'th' ? 'th-TH' : 'en-GB', { dateStyle: 'medium' }),
@@ -278,7 +298,28 @@ export default function TimesheetReviewPage() {
 
       <Card>
         <div className="p-4">
-          <CardTitle className="text-base font-semibold mb-3">{t('tableTitle')}</CardTitle>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <CardTitle className="text-base font-semibold">{t('tableTitle')}</CardTitle>
+            <div className="flex items-center gap-2">
+              {canImport && (
+                <a href={`/${locale}/time/import`} aria-label={t('importAria')}>
+                  <Button variant="secondary" size="sm">
+                    <Upload className="h-4 w-4 mr-2" />
+                    {t('importCsv')}
+                  </Button>
+                </a>
+              )}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleExportCsv}
+                disabled={rows.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {t('exportCsv')}
+              </Button>
+            </div>
+          </div>
           <DataTable<TimesheetSubmission>
             caption={t('tableCaption')}
             columns={columns}

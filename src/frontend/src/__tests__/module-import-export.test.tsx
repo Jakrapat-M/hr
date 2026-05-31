@@ -177,6 +177,90 @@ describe('Payroll export — masked tax/net + Thai headers', () => {
   });
 });
 
+// ─── Time import — commit + guard ───────────────────────────────────────────────
+
+describe('ModuleImportWizard (time) — commit + HR-Admin guard', () => {
+  beforeEach(async () => {
+    vi.resetModules();
+    const { useImportJobs } = await import('@/stores/import-jobs-store');
+    const { useTimesheetImport } = await import('@/stores/timesheet-import-store');
+    const { useAuthStore } = await import('@/stores/auth-store');
+    act(() => {
+      useImportJobs.setState({ jobs: [] });
+      useTimesheetImport.setState({ imported: [] });
+      useAuthStore.setState({ roles: ['hr_admin'] });
+    });
+  });
+
+  it('commits timesheet rows into the timesheet-import store + appends an import job', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    const { default: Page } = await import('@/app/[locale]/time/import/page');
+    const { useTimesheetImport } = await import('@/stores/timesheet-import-store');
+    const { useImportJobs } = await import('@/stores/import-jobs-store');
+
+    expect(useTimesheetImport.getState().imported.length).toBe(0);
+
+    render(<Page />);
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['employeeId\nEMP-8001'], 'timesheets_wk20.csv', { type: 'text/csv' });
+    await user.upload(fileInput, file);
+
+    await user.click(screen.getByRole('button', { name: /ตรวจสอบ →/ }));
+    await user.click(screen.getByRole('button', { name: /ยืนยัน →/ }));
+    await user.click(screen.getByRole('button', { name: /รันงาน →/ }));
+    await user.click(screen.getByRole('button', { name: /เริ่มนำเข้าข้อมูล/ }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8 * 400 + 50);
+    });
+
+    await waitFor(() => {
+      expect(useTimesheetImport.getState().imported.some((r) => r.employeeId === 'EMP-8001')).toBe(true);
+    });
+    expect(useTimesheetImport.getState().imported.length).toBe(10);
+
+    const jobs = useImportJobs.getState().jobs.filter((j) => j.module === 'time');
+    expect(jobs.some((j) => j.status === 'completed' && j.filename === 'timesheets_wk20.csv')).toBe(true);
+
+    vi.useRealTimers();
+  });
+
+  it('denies in place (AccessDenied) for a non HR-Admin persona', async () => {
+    const { useAuthStore } = await import('@/stores/auth-store');
+    act(() => useAuthStore.setState({ roles: ['manager'] }));
+
+    const { default: Page } = await import('@/app/[locale]/time/import/page');
+    render(<Page />);
+
+    expect(screen.getByText(/Access Denied/)).toBeTruthy();
+    expect(document.querySelector('input[type="file"]')).toBeNull();
+  });
+});
+
+describe('Time export — Buddhist-era dates + Thai headers', () => {
+  it('emits BOM + Thai headers and Buddhist-era weekStart dates', async () => {
+    const { buildCsvText } = await import('@/lib/admin/utils/csvExport');
+    const { formatDate } = await import('@/lib/date');
+
+    type Row = { employeeId: string; weekStart: string; totalHours: number };
+    const rows: Row[] = [{ employeeId: 'EMP-8001', weekStart: '2026-05-18', totalHours: 40 }];
+    const cols = [
+      { header: 'รหัสพนักงาน', accessor: (r: Row) => r.employeeId },
+      { header: 'สัปดาห์เริ่ม', accessor: (r: Row) => formatDate(r.weekStart, 'medium', 'th') },
+      { header: 'ชั่วโมงรวม', accessor: (r: Row) => r.totalHours },
+    ];
+
+    const text = buildCsvText(rows, cols);
+    expect(text.charCodeAt(0)).toBe(0xfeff);
+    expect(text).toContain('สัปดาห์เริ่ม');
+    // Buddhist era: 2026 + 543 = 2569 must appear, Gregorian 2026 must not.
+    expect(text).toContain('2569');
+    expect(text).not.toContain('2026');
+  });
+});
+
 // ─── Export — masking + Thai headers ───────────────────────────────────────────
 
 describe('Employees export — masked sensitive id + Thai headers', () => {
