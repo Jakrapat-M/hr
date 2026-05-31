@@ -2,15 +2,34 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { CheckCircle, AlertTriangle, ArrowLeft, ArrowRight, Download, ChevronUp, ChevronDown } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { CheckCircle, AlertTriangle, ArrowLeft, ArrowRight, Download, Upload, ChevronUp, ChevronDown } from 'lucide-react';
 import { Card, CardTitle, Button, DemoValuesDisclaimer } from '@/components/humi';
 import { FormField } from '@/components/ui/form-field';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
-import { usePayroll, type PayrollStage } from '@/hooks/use-payroll';
+import { usePayroll, type PayrollStage, type PayslipSummary } from '@/hooks/use-payroll';
 import { useAuthStore } from '@/stores/auth-store';
-import { canAccessModule } from '@/lib/rbac';
+import { canAccessModule, hasRole } from '@/lib/rbac';
+import { exportToCSV, type CsvColumn } from '@/lib/admin/utils/csvExport';
+import { maskValue } from '@/lib/date';
+
+// CSV columns for payroll export (UTF-8 BOM + Thai headers via shared util).
+// Sensitive money columns (tax / net pay) are masked via maskValue() per the
+// CLAUDE.md "mask sensitive fields in exports" rule; gross/deductions stay
+// readable for reconciliation.
+const PAYROLL_CSV_COLUMNS: CsvColumn<PayslipSummary>[] = [
+  { header: 'รหัสพนักงาน', accessor: 'employeeId' },
+  { header: 'ชื่อพนักงาน', accessor: 'employeeName' },
+  { header: 'แผนก', accessor: 'department' },
+  { header: 'รายได้รวม', accessor: 'totalGross' },
+  { header: 'ภาษีหัก ณ ที่จ่าย', accessor: (p) => maskValue(String(p.incomeTax), 2) },
+  { header: 'ประกันสังคม', accessor: 'sso' },
+  { header: 'กองทุนสำรองเลี้ยงชีพ', accessor: 'pf' },
+  { header: 'รายการหักรวม', accessor: 'totalDeductions' },
+  { header: 'เงินได้สุทธิ', accessor: (p) => maskValue(String(p.netPay), 2) },
+];
 
 const STAGES: PayrollStage[] = ['period_selection','calculation','review','approval'];
 
@@ -50,6 +69,8 @@ export function PayrollProcessing() {
  const t = useTranslations();
  const { toast } = useToast();
  const { roles } = useAuthStore();
+ const params = useParams();
+ const locale = (params?.locale as string) ?? 'th';
  const { payslips, runSummary, calculating, runCalculation, approvePayroll } = usePayroll();
  const [stage, setStage] = useState<PayrollStage>('period_selection');
  const [selectedMonth, setSelectedMonth] = useState('2');
@@ -95,6 +116,17 @@ export function PayrollProcessing() {
  };
 
  const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+ const canImport = hasRole(roles, 'hr_admin');
+
+ const handleExportCsv = () => {
+ if (sortedPayslips.length === 0) {
+ toast('warning', t('payrollProcessing.exportEmpty'));
+ return;
+ }
+ const stamp = new Date().toISOString().slice(0, 10);
+ exportToCSV(sortedPayslips, PAYROLL_CSV_COLUMNS, `payroll-${stamp}.csv`);
+ };
 
  return (
  <div className="space-y-6">
@@ -170,7 +202,7 @@ export function PayrollProcessing() {
  <Card><div className="pt-6"><p className="text-xs text-ink-muted">{t('payrollProcessing.totalNet')}</p><p className="text-2xl font-bold text-ink">{fmt(runSummary.totalNet)}</p></div></Card>
  </div>
 
- <Card header={<><CardTitle>{t('payrollProcessing.reviewTable')}</CardTitle><Button variant="secondary" size="sm"><Download className="h-4 w-4 mr-2" />{t('payrollProcessing.exportExcel')}</Button></>}>
+ <Card header={<><CardTitle>{t('payrollProcessing.reviewTable')}</CardTitle><div className="flex items-center gap-2">{canImport && (<a href={`/${locale}/payroll/import`} aria-label={t('payrollProcessing.importPayrollAria')}><Button variant="secondary" size="sm"><Upload className="h-4 w-4 mr-2" />{t('payrollProcessing.importPayroll')}</Button></a>)}<Button variant="secondary" size="sm" onClick={handleExportCsv}><Download className="h-4 w-4 mr-2" />{t('payrollProcessing.exportCsv')}</Button></div></>}>
  <div className="overflow-x-auto">
  <table className="w-full text-sm">
  <thead>

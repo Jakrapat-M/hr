@@ -90,6 +90,93 @@ describe('ModuleImportWizard (employees) — steps + commit', () => {
   });
 });
 
+// ─── Payroll import — commit + guard ────────────────────────────────────────────
+
+describe('ModuleImportWizard (payroll) — commit + HR-Admin guard', () => {
+  beforeEach(async () => {
+    vi.resetModules();
+    const { useImportJobs } = await import('@/stores/import-jobs-store');
+    const { usePayrollImport } = await import('@/stores/payroll-import-store');
+    const { useAuthStore } = await import('@/stores/auth-store');
+    act(() => {
+      useImportJobs.setState({ jobs: [] });
+      usePayrollImport.setState({ imported: [] });
+      useAuthStore.setState({ roles: ['hr_admin'] });
+    });
+  });
+
+  it('commits payslip rows into the payroll-import store + appends an import job', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    const { default: Page } = await import('@/app/[locale]/payroll/import/page');
+    const { usePayrollImport } = await import('@/stores/payroll-import-store');
+    const { useImportJobs } = await import('@/stores/import-jobs-store');
+
+    expect(usePayrollImport.getState().imported.length).toBe(0);
+
+    render(<Page />);
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['employeeId\nEMP-7001'], 'payroll_may.csv', { type: 'text/csv' });
+    await user.upload(fileInput, file);
+
+    await user.click(screen.getByRole('button', { name: /ตรวจสอบ →/ }));
+    await user.click(screen.getByRole('button', { name: /ยืนยัน →/ }));
+    await user.click(screen.getByRole('button', { name: /รันงาน →/ }));
+    await user.click(screen.getByRole('button', { name: /เริ่มนำเข้าข้อมูล/ }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8 * 400 + 50);
+    });
+
+    await waitFor(() => {
+      expect(usePayrollImport.getState().imported.some((p) => p.employeeId === 'EMP-7001')).toBe(true);
+    });
+    expect(usePayrollImport.getState().imported.length).toBe(10);
+
+    const jobs = useImportJobs.getState().jobs.filter((j) => j.module === 'payroll');
+    expect(jobs.some((j) => j.status === 'completed' && j.filename === 'payroll_may.csv')).toBe(true);
+
+    vi.useRealTimers();
+  });
+
+  it('denies in place (AccessDenied) for a non HR-Admin persona', async () => {
+    const { useAuthStore } = await import('@/stores/auth-store');
+    act(() => useAuthStore.setState({ roles: ['manager'] }));
+
+    const { default: Page } = await import('@/app/[locale]/payroll/import/page');
+    render(<Page />);
+
+    expect(screen.getByText(/Access Denied/)).toBeTruthy();
+    // The upload dropzone must NOT render when denied.
+    expect(document.querySelector('input[type="file"]')).toBeNull();
+  });
+});
+
+describe('Payroll export — masked tax/net + Thai headers', () => {
+  it('masks incomeTax and netPay, keeps gross readable, emits BOM + Thai headers', async () => {
+    const { buildCsvText } = await import('@/lib/admin/utils/csvExport');
+    const { maskValue } = await import('@/lib/date');
+
+    type Row = { employeeId: string; totalGross: number; incomeTax: number; netPay: number };
+    const rows: Row[] = [{ employeeId: 'EMP-7001', totalGross: 89000, incomeTax: 6800, netPay: 77350 }];
+    const cols = [
+      { header: 'รหัสพนักงาน', accessor: (r: Row) => r.employeeId },
+      { header: 'รายได้รวม', accessor: (r: Row) => r.totalGross },
+      { header: 'ภาษีหัก ณ ที่จ่าย', accessor: (r: Row) => maskValue(String(r.incomeTax), 2) },
+      { header: 'เงินได้สุทธิ', accessor: (r: Row) => maskValue(String(r.netPay), 2) },
+    ];
+
+    const text = buildCsvText(rows, cols);
+    expect(text.charCodeAt(0)).toBe(0xfeff);
+    expect(text).toContain('ภาษีหัก ณ ที่จ่าย');
+    // sensitive money columns masked (full value must not leak); gross stays readable
+    expect(text).not.toContain('6800');
+    expect(text).not.toContain('77350');
+    expect(text).toContain('89000');
+  });
+});
+
 // ─── Export — masking + Thai headers ───────────────────────────────────────────
 
 describe('Employees export — masked sensitive id + Thai headers', () => {
