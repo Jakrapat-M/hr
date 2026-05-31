@@ -2399,7 +2399,7 @@ function FieldCard({
         className={paired ? 'grid gap-x-8 gap-y-3.5 sm:grid-cols-2' : 'humi-col'}
         style={paired ? undefined : { gap: 14 }}
       >
-        {rows.map(([l, v]) => {
+        {rows.map(([l, v], i) => {
           // Section divider row: label starts with "────" and value is empty.
           // Render as full-width eyebrow heading instead of a label/value pair —
           // mirrors SF EC Core sub-section structure (Employment Details, Org Info, ...)
@@ -2407,7 +2407,7 @@ function FieldCard({
             const heading = l.replace(/────/g, '').trim();
             return (
               <div
-                key={l}
+                key={i}
                 className={paired ? 'sm:col-span-2' : undefined}
                 style={{
                   fontSize: 11,
@@ -2431,7 +2431,7 @@ function FieldCard({
             paired && (l.includes('Effective Date') || l.includes('Years in'));
           return (
             <div
-              key={l}
+              key={i}
               className={paired && !isDateOrYearsField ? 'humi-row sm:col-span-2' : 'humi-row'}
               style={{
                 borderBottom: '1px solid var(--color-hairline-soft)',
