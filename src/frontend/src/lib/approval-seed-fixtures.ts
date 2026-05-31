@@ -33,4 +33,7 @@ export const APPROVAL_SEED_BY_TYPE: Record<RequestType, PendingRequest[]> = {
   // ensureDemoSeed (the registry adapters' seed() is a documented no-op).
   pay_rate: APPROVAL_SEED_ROWS.filter((r) => r.type === 'pay_rate'),
   tax_planning: APPROVAL_SEED_ROWS.filter((r) => r.type === 'tax_planning'),
+  // time_correction records originate from the employee /time/corrections form;
+  // they are not part of the canonical 20-row seed (adapter seed() is a no-op).
+  time_correction: APPROVAL_SEED_ROWS.filter((r) => r.type === 'time_correction'),
 };

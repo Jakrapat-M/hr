@@ -45,6 +45,7 @@ function typeLabel(type: PendingRequest['type']): string {
     probation: 'ทดลองงาน',
     pay_rate: 'ปรับเงินเดือน',
     tax_planning: 'วางแผนภาษี',
+    time_correction: 'แก้ไขเวลา',
   };
   return map[type] ?? type;
 }
@@ -54,6 +55,7 @@ function typeLabel(type: PendingRequest['type']): string {
 function detailHref(locale: string, row: PendingRequest): string {
   if (row.type === 'pay_rate') return `/${locale}/workflows/pay-rate/${row.id}`;
   if (row.type === 'tax_planning') return `/${locale}/workflows/tax-planning/${row.id}`;
+  if (row.type === 'time_correction') return `/${locale}/workflows/time-correction/${row.id}`;
   return `/${locale}/quick-approve/${row.id}`;
 }
 
