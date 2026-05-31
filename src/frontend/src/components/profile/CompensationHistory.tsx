@@ -33,16 +33,15 @@ import {
 
 const COMP_VIEW_ROLES = ['hr_admin', 'hr_manager', 'hrbp', 'spd'] as const;
 
-// Mask a THB amount keeping the last 3 digits, e.g. 82500 → '฿ ••,500'
-function maskAmount(amount: number): string {
-  const digits = String(amount);
-  if (digits.length <= 3) return `฿ ${digits}`;
-  const tail = digits.slice(-3);
-  return `฿ ••,${tail}`;
-}
-
 function formatAmount(amount: number): string {
   return `฿ ${new Intl.NumberFormat('en-US').format(amount)}`;
+}
+
+// Mask a THB amount — every digit hidden, keeping the grouped shape, e.g.
+// 82500 → '฿ ••,•••'. Consistent with payroll summary + comp summary (no
+// trailing-digit leak).
+function maskAmount(amount: number): string {
+  return formatAmount(amount).replace(/[0-9๐-๙]/g, '•');
 }
 
 const TYPE_TONE: Record<CompChangeType, string> = {

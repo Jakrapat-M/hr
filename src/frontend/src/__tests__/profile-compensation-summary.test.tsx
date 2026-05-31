@@ -55,10 +55,10 @@ afterEach(() => {
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 /** HUMI_MY_PROFILE.comp.base = '฿ 82,500'
- *  maskCurrency: num = '82,500' (length 6), last 4 = ',500'
- *  masked output = '฿ ••••,500'
+ *  maskCurrency now hides EVERY digit (no trailing-digit leak):
+ *  masked output = '฿ ••,•••'
  */
-const MASKED_PATTERN = /••••,500/
+const MASKED_PATTERN = /฿ ••,•••/
 const UNMASKED_PATTERN = /82,500/
 
 describe('hr#83 BRD #170 — CompensationSummary', () => {
