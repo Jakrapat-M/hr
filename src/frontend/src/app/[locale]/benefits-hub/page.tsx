@@ -72,6 +72,9 @@ interface ServiceCardSpec {
   badgeTone?: 'accent' | 'success' | 'warning';
 }
 
+// Eligibility badges (mockup) — reflect whether the signed-in employee can use each
+// service. Static/registry-style seed for the demo; teal = eligible, butter = waiting
+// period, pumpkin (warning) = not eligible. NO-RED: warning tone uses pumpkin tokens.
 const SERVICES: ServiceCardSpec[] = [
   {
     id: 'referral',
@@ -81,6 +84,9 @@ const SERVICES: ServiceCardSpec[] = [
     descTh: 'ใบส่งตัว ePatient ก่อนเข้ารับบริการที่โรงพยาบาลในเครือ',
     descEn: 'ePatient referral for partner hospitals before your visit',
     href: (l) => benefitReferralRoute(l),
+    badgeTh: 'มีสิทธิ์',
+    badgeEn: 'Eligible',
+    badgeTone: 'success',
   },
   {
     id: 'reimbursement',
@@ -90,6 +96,9 @@ const SERVICES: ServiceCardSpec[] = [
     descTh: 'เบิกค่ารักษา ตรวจสุขภาพ ค่าเดินทาง และอื่น ๆ ตามวงเงิน',
     descEn: 'Submit claims for medical, checkup, travel and other allowances',
     href: (l) => benefitReimbursementRoute(l),
+    badgeTh: 'มีสิทธิ์',
+    badgeEn: 'Eligible',
+    badgeTone: 'success',
   },
   {
     id: 'hospital-claim',
@@ -99,6 +108,9 @@ const SERVICES: ServiceCardSpec[] = [
     descTh: 'ส่งใบเสร็จค่ารักษาพร้อมเอกสารแพทย์เพื่อเบิกย้อนหลัง',
     descEn: 'Submit hospital receipts with physician notes for reimbursement',
     href: (l) => benefitHospitalClaimRoute(l),
+    badgeTh: 'มีสิทธิ์',
+    badgeEn: 'Eligible',
+    badgeTone: 'success',
   },
   {
     id: 'physical-checkup',
@@ -108,6 +120,9 @@ const SERVICES: ServiceCardSpec[] = [
     descTh: 'แพ็คเกจตรวจสุขภาพประจำปีและสิทธิ์ของผู้รับสิทธิ์ร่วม',
     descEn: 'Yearly health screening and dependent coverage',
     href: (l) => `/${l}/benefits-hub/physical-checkup`,
+    badgeTh: 'รอครบกำหนดสิทธิ์',
+    badgeEn: 'Waiting period',
+    badgeTone: 'warning',
   },
   {
     id: 'life-accident',
@@ -117,6 +132,9 @@ const SERVICES: ServiceCardSpec[] = [
     descTh: 'รายละเอียดทุนประกัน เบนิฟิตและกรมธรรม์',
     descEn: 'Sum insured, policy details and benefit summary',
     href: (l) => `/${l}/benefits-hub/life-accident`,
+    badgeTh: 'มีสิทธิ์',
+    badgeEn: 'Eligible',
+    badgeTone: 'success',
   },
   {
     id: 'beneficiary',
@@ -126,8 +144,18 @@ const SERVICES: ServiceCardSpec[] = [
     descTh: 'จัดการรายชื่อผู้รับผลประโยชน์ตามกรมธรรม์',
     descEn: 'Maintain beneficiary records linked to your policies',
     href: (l) => `/${l}/benefits-hub/beneficiary`,
+    badgeTh: 'มีสิทธิ์',
+    badgeEn: 'Eligible',
+    badgeTone: 'success',
   },
 ];
+
+// Eligibility badge tone → Humi token classes (NO-RED: warning = pumpkin).
+const BADGE_TONE_CLASS: Record<NonNullable<ServiceCardSpec['badgeTone']>, string> = {
+  success: 'bg-success-soft text-[color:var(--color-success)]',
+  accent: 'bg-accent-soft text-accent-ink',
+  warning: 'bg-danger-soft text-[color:var(--color-danger-ink)]',
+};
 
 const DOCS = [
   { n: 'ลงทะเบียนสวัสดิการปี 2569',     k: 'แบบฟอร์ม',          d: 'ครบกำหนด 29 เม.ย.',   action: 'sign'     as const },
@@ -350,11 +378,23 @@ export default function HumiBenefitsHubPage() {
                     >
                       <Icon size={20} />
                     </span>
-                    <ArrowRight
-                      size={16}
-                      aria-hidden
-                      className="text-ink-faint transition-colors group-hover:text-accent"
-                    />
+                    <div className="flex items-center gap-2">
+                      {svc.badgeTone && (svc.badgeTh || svc.badgeEn) && (
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.12em] whitespace-nowrap',
+                            BADGE_TONE_CLASS[svc.badgeTone],
+                          )}
+                        >
+                          {locale === 'en' ? svc.badgeEn : svc.badgeTh}
+                        </span>
+                      )}
+                      <ArrowRight
+                        size={16}
+                        aria-hidden
+                        className="text-ink-faint transition-colors group-hover:text-accent"
+                      />
+                    </div>
                   </div>
                   <div className="min-w-0">
                     <p className="text-body font-semibold text-ink">

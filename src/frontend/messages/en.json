@@ -4085,7 +4085,9 @@
       "pending": "Pending Approval",
       "cancel": "Cancel Request",
       "effectiveDate": "Effective Date",
-      "note": "Additional Note (optional)"
+      "note": "Additional Note (optional)",
+      "badge": "Requires SPD approval",
+      "badgeHint": "Your edits are not saved instantly — they are sent to SPD for review and only take effect once approved."
     },
     "emergencyContact": {
       "add": "Add Contact",
