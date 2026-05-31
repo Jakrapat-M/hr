@@ -5,8 +5,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { NextIntlClientProvider } from 'next-intl'
 import ProfileEditPage from '@/app/[locale]/ess/profile/edit/page'
 import { useProfileEdit } from '@/lib/admin/store/useProfileEdit'
+import thMessages from '../../../messages/th.json'
+
+// ProfileEditPage uses useTranslations('ess.changeRequest') — renders must carry
+// next-intl context (TH locale) or the hook throws.
+const renderPage = () =>
+  render(
+    <NextIntlClientProvider locale="th" messages={thMessages}>
+      <ProfileEditPage />
+    </NextIntlClientProvider>,
+  )
 
 // mock next/navigation — ProfileEditPage ใช้ useRouter().push
 vi.mock('next/navigation', () => ({
@@ -25,7 +36,7 @@ beforeEach(() => {
 
 describe('ProfileEditPage — 4 sections render', () => {
   it('แสดง section headings: ข้อมูลส่วนตัว, ที่อยู่, ผู้ติดต่อฉุกเฉิน', () => {
-    const { container } = render(<ProfileEditPage />)
+    const { container } = renderPage()
 
     // sections ใช้ humi-eyebrow class (div) ไม่ใช่ h2
     const eyebrows = container.querySelectorAll('.humi-eyebrow')
@@ -37,7 +48,7 @@ describe('ProfileEditPage — 4 sections render', () => {
   })
 
   it('National ID section ต้องแสดงเป็น read-only (ไม่มี editable input)', () => {
-    render(<ProfileEditPage />)
+    renderPage()
 
     // มี section เลขบัตรประชาชน (label ใน component = "เลขบัตรประชาชน (National ID)")
     expect(screen.getByText(/เลขบัตรประชาชน/i)).toBeInTheDocument()
@@ -50,7 +61,7 @@ describe('ProfileEditPage — 4 sections render', () => {
   })
 
   it('required fields ต้องมี asterisk (*) กำกับ', () => {
-    const { container } = render(<ProfileEditPage />)
+    const { container } = renderPage()
 
     // component ใช้ span[class*="color-danger"] สำหรับ * ไม่ใช่ text-red-500
     const asterisks = container.querySelectorAll('span[class*="color-danger"]')
@@ -62,7 +73,7 @@ describe('ProfileEditPage — 4 sections render', () => {
 describe('ProfileEditPage — บันทึกร่าง', () => {
   it('คลิก "บันทึกร่าง" ต้องแสดง toast "บันทึกร่างแล้ว"', async () => {
     const user = userEvent.setup()
-    render(<ProfileEditPage />)
+    renderPage()
 
     const saveDraftBtn = screen.getByRole('button', { name: /บันทึกร่าง/i })
     await user.click(saveDraftBtn)
@@ -88,7 +99,7 @@ describe('ProfileEditPage — ส่งเพื่ออนุมัติ', ()
       })
     })
 
-    render(<ProfileEditPage />)
+    renderPage()
     await act(async () => {})
 
     const submitBtn = screen.getByRole('button', { name: /ส่งเพื่ออนุมัติ/i })
@@ -109,7 +120,7 @@ describe('ProfileEditPage — ส่งเพื่ออนุมัติ', ()
     // ตั้ง state ตรงๆ ผ่าน setState — หลบ vi.spyOn Zustand incompat
     useProfileEdit.setState({ isSubmitting: true })
 
-    render(<ProfileEditPage />)
+    renderPage()
     await act(async () => {})
 
     // ปุ่มต้อง disabled + text = "กำลังส่ง..."
