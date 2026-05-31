@@ -10,6 +10,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { FileText, Printer, Filter, Clock, CheckCircle, PackageCheck, Send } from 'lucide-react';
 import { Button } from '@/components/humi';
 import { useToast } from '@/components/ui/toast';
+import { LetterGenerator } from '@/components/documents/letter-generator';
 import { DOCUMENT_STORYBOARD_BOUNDARY_EN, DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import {
   DOCUMENT_TEMPLATES,
@@ -72,6 +73,7 @@ export default function AdminDocumentsPage() {
   const t = useTranslations('doc_request');
   const { toast } = useToast();
 
+  const [view, setView] = useState<'queue' | 'generate'>('queue');
   const [filter, setFilter] = useState<FilterValue>('all');
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -127,24 +129,63 @@ export default function AdminDocumentsPage() {
             {locale === 'th' ? DOCUMENT_STORYBOARD_BOUNDARY_TH : DOCUMENT_STORYBOARD_BOUNDARY_EN}
           </p>
         </div>
-        {pendingCount > 0 && (
+        {view === 'queue' && pendingCount > 0 && (
           <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-accent px-2 text-small font-semibold text-white">
             {pendingCount}
           </span>
         )}
-        <Button
-          variant="secondary"
-          leadingIcon={<Printer size={15} />}
-          onClick={handleBulkPrint}
-          disabled={printableSelected.length === 0}
-          data-testid="bulk-print-btn"
-        >
-          {locale === 'th'
-            ? `พิมพ์${printableSelected.length > 0 ? ` (${printableSelected.length})` : ''}`
-            : `Print${printableSelected.length > 0 ? ` (${printableSelected.length})` : ''}`}
-        </Button>
+        {view === 'queue' && (
+          <Button
+            variant="secondary"
+            leadingIcon={<Printer size={15} />}
+            onClick={handleBulkPrint}
+            disabled={printableSelected.length === 0}
+            data-testid="bulk-print-btn"
+          >
+            {locale === 'th'
+              ? `พิมพ์${printableSelected.length > 0 ? ` (${printableSelected.length})` : ''}`
+              : `Print${printableSelected.length > 0 ? ` (${printableSelected.length})` : ''}`}
+          </Button>
+        )}
       </div>
 
+      {/* View switcher: request queue ↔ generate-for-employee */}
+      <div
+        className="mb-5 inline-flex rounded-[var(--radius-md)] border border-hairline bg-surface p-1"
+        role="tablist"
+        aria-label={t('viewSwitchLabel')}
+        data-testid="docs-view-switch"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'queue'}
+          onClick={() => setView('queue')}
+          data-testid="docs-view-queue"
+          className={`rounded-[var(--radius-sm)] px-4 py-1.5 text-sm font-medium transition-colors ${
+            view === 'queue' ? 'bg-accent-soft text-accent-ink' : 'text-ink-muted hover:text-ink'
+          }`}
+        >
+          {t('viewQueue')}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'generate'}
+          onClick={() => setView('generate')}
+          data-testid="docs-view-generate"
+          className={`rounded-[var(--radius-sm)] px-4 py-1.5 text-sm font-medium transition-colors ${
+            view === 'generate' ? 'bg-accent-soft text-accent-ink' : 'text-ink-muted hover:text-ink'
+          }`}
+        >
+          {t('viewGenerate')}
+        </button>
+      </div>
+
+      {view === 'generate' ? (
+        <LetterGenerator />
+      ) : (
+      <>
       {/* Status filter */}
       <div className="mb-5 flex flex-wrap items-center gap-2" data-testid="status-filter">
         <Filter size={15} aria-hidden className="text-ink-muted" />
@@ -255,6 +296,8 @@ export default function AdminDocumentsPage() {
             </tbody>
           </table>
         </div>
+      )}
+      </>
       )}
     </div>
   );
