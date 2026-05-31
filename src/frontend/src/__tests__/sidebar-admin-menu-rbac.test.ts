@@ -75,6 +75,33 @@ describe('P2 Item 3 — hrbp/spd are not stranded with zero legitimate menu entr
     expect(leafVisible(leaf('employees-bu'), SPD)).toBe(true);
     expect(leafVisible(leaf('reports'), SPD)).toBe(true);
   });
+});
+
+describe('P4 Item 3 — People-Partner menu surfaces talent-search + benefits reports', () => {
+  const EMPLOYEE: Role[] = ['employee'];
+  const MANAGER: Role[] = ['manager'];
+
+  test('talent-search leaf shown to hrbp + spd only', () => {
+    expect(leafVisible(leaf('talent-search'), HRBP)).toBe(true);
+    expect(leafVisible(leaf('talent-search'), SPD)).toBe(true);
+    // remove-not-hide: non-People-Partner personas do NOT see it
+    expect(leafVisible(leaf('talent-search'), EMPLOYEE)).toBe(false);
+    expect(leafVisible(leaf('talent-search'), MANAGER)).toBe(false);
+    expect(leafVisible(leaf('talent-search'), HR_ADMIN)).toBe(false);
+  });
+
+  test('benefits-reports leaf shown to hrbp + spd only', () => {
+    expect(leafVisible(leaf('benefits-reports'), HRBP)).toBe(true);
+    expect(leafVisible(leaf('benefits-reports'), SPD)).toBe(true);
+    expect(leafVisible(leaf('benefits-reports'), EMPLOYEE)).toBe(false);
+    expect(leafVisible(leaf('benefits-reports'), MANAGER)).toBe(false);
+    expect(leafVisible(leaf('benefits-reports'), HR_ADMIN)).toBe(false);
+  });
+
+  test('both new leaves point at the existing hrbp routes', () => {
+    expect(leaf('talent-search').href).toBe('/hrbp/talent-search');
+    expect(leaf('benefits-reports').href).toBe('/hrbp/benefits/reports');
+  });
 
   test('every persona retains at least one visible leaf', () => {
     for (const roles of [HRBP, SPD, HR_ADMIN, HR_MANAGER, ['manager'] as Role[], ['employee'] as Role[]]) {

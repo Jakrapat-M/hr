@@ -137,6 +137,8 @@ export const MODULES: ModuleGroup[] = [
     leaves: [
       { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris', 'sysadmin'] }, // P1 Item 2: dropped hrbp+spd — admin/layout admits neither; People-Partner BU view is P2
       { id: 'employees-bu', label: 'Employees · My BU', labelTh: 'ทะเบียนพนักงาน · หน่วยงานของฉัน', href: '/hrbp/employees', show: ['hrbp', 'spd'] }, // P2 Item 1: BU-scoped read-only registry for People Partners — replaces the dead /admin/employees leaf PR-3 cut from hrbp/spd
+      { id: 'talent-search', label: 'Talent Search', labelTh: 'ค้นหาคนเก่ง', href: '/hrbp/talent-search', show: ['hrbp', 'spd'] }, // P4 Item 3: surface existing-but-orphan /hrbp/talent-search (was reachable only via hrbp/dashboard shortcut). Route Capability-gated talentSearch.
+      { id: 'benefits-reports', label: 'Benefits · Reports', labelTh: 'สวัสดิการ · รายงาน', href: '/hrbp/benefits/reports', show: ['hrbp', 'spd'] }, // P4 Item 3: surface existing-but-orphan /hrbp/benefits reports (no /hrbp/benefits index page → point at the real reports subroute). People-Partner only; menu removal is the gate (open route, no contradicting guard).
       { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'sysadmin'] }, // merges lifecycle/onboarding
       { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'sysadmin'] },
       { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'hris', 'sysadmin'] }, // merges welfare+claims; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
