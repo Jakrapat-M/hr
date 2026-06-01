@@ -69,7 +69,9 @@ type TabKey = 'personal' | 'job' | 'emergency' | 'benefits' | 'docs' | 'tax';
 // Compensation was a standalone tab. Today's tab #3 displays "ติดต่อฉุกเฉิน"
 // and must route to the emergency panel. Compensation cards are
 // rendered inside the `job` panel.
-const SLICE_TO_PANEL: Record<ProfileTab, TabKey> = {
+// Exported for the tab-routing regression test (D2). Unknown named exports from an
+// App Router page file are inert — the router only consumes the default export.
+export const SLICE_TO_PANEL: Record<ProfileTab, TabKey> = {
   personal: 'personal',
   employment: 'job',
   compensation: 'emergency',
@@ -78,7 +80,7 @@ const SLICE_TO_PANEL: Record<ProfileTab, TabKey> = {
   activity: 'tax', // activity mapped to tax tab panel — now shows pendingChanges
 };
 
-const PROFILE_TAB_QUERY: Record<ProfileTab, string | null> = {
+export const PROFILE_TAB_QUERY: Record<ProfileTab, string | null> = {
   personal: null,
   employment: 'employment',
   compensation: 'emergency',
@@ -87,12 +89,20 @@ const PROFILE_TAB_QUERY: Record<ProfileTab, string | null> = {
   activity: 'tax',
 };
 
-const PROFILE_TAB_FROM_QUERY: Record<string, ProfileTab> = {
+// KNOWN URL-divergence seam (mockup phase): inbound `?tab=compensation` is mapped
+// to the `employment` slice → SLICE_TO_PANEL.employment === 'job' → the job panel
+// that actually renders CompensationSummary + CompensationHistory. So both
+// `?tab=compensation` and `?tab=employment` deep-link to the same job/comp panel.
+// Meanwhile an in-app compensation-tab click still emits `?tab=emergency` via the
+// (intentionally asymmetric) PROFILE_TAB_QUERY map above, so `?tab=emergency` keeps
+// reaching the emergency panel (emergency → 'compensation' slice → emergency panel).
+// Acceptable asymmetry for the mockup; revisit when comp gets its own panel.
+export const PROFILE_TAB_FROM_QUERY: Record<string, ProfileTab> = {
   personal: 'personal',
   employment: 'employment',
   job: 'employment',
   emergency: 'compensation',
-  compensation: 'compensation',
+  compensation: 'employment',
   benefits: 'benefits',
   documents: 'documents',
   docs: 'documents',
@@ -107,7 +117,7 @@ function profileTabHref(locale: string, tab: ProfileTab) {
 
 type ProfileSearchParams = Pick<URLSearchParams, 'get'>;
 
-function resolveProfileTab(
+export function resolveProfileTab(
   searchParams: ProfileSearchParams | null | undefined,
   fallbackTab: ProfileTab = 'personal',
 ): ProfileTab {

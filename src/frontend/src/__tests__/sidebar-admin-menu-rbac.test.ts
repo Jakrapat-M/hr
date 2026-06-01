@@ -81,13 +81,18 @@ describe('P4 Item 3 — People-Partner menu surfaces talent-search + benefits re
   const EMPLOYEE: Role[] = ['employee'];
   const MANAGER: Role[] = ['manager'];
 
-  test('talent-search leaf shown to hrbp + spd only', () => {
+  test('talent-search leaf shown to hrbp only (SPD excluded — capabilities.ts SPD bundle has no talentSearch)', () => {
     expect(leafVisible(leaf('talent-search'), HRBP)).toBe(true);
-    expect(leafVisible(leaf('talent-search'), SPD)).toBe(true);
+    // D1 fix: SPD must NOT see talent-search — /hrbp/talent-search is Capability-gated
+    // talentSearch which the SPD bundle lacks (SF baseline §3: 'No Background/Talent'),
+    // so showing it dead-ends SPD on NotAuthorized (remove-not-hide).
+    expect(leafVisible(leaf('talent-search'), SPD)).toBe(false);
     // remove-not-hide: non-People-Partner personas do NOT see it
     expect(leafVisible(leaf('talent-search'), EMPLOYEE)).toBe(false);
     expect(leafVisible(leaf('talent-search'), MANAGER)).toBe(false);
     expect(leafVisible(leaf('talent-search'), HR_ADMIN)).toBe(false);
+    // strict: pin the show array so coverage can't silently erode back to including spd
+    expect(leaf('talent-search').show).toEqual(['hrbp']);
   });
 
   test('benefits-reports leaf shown to hrbp + spd only', () => {
