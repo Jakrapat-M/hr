@@ -1074,6 +1074,10 @@ export const HUMI_MY_PROFILE = {
   status: 'active' as const,
   employmentType: 'Permanent · พนักงานประจำ',
   startLabel: 'Hire Date · 14 ต.ค. 2566',
+  // Original Start Date (NOT the 2566 re-hire date) — single tenure semantic:
+  // calcYearOfService(hireDate, lifecycleEvents) here equals _yos.display on the
+  // Job tab (~7 ปี). The re-hire/job-row 2566 date is forbidden as a source.
+  hireDate: '2019-03-01',
   lifecycleEvents: HUMI_LIFECYCLE_EVENTS,
 
   // ── Personal Information (14 fields — SF EC Core "Personal Information" portlet)
