@@ -3844,7 +3844,20 @@
     "statusPending": "รออนุมัติ",
     "balanceLabel": "ยอดวันลาคงเหลือ",
     "teamCoverage": "การครอบคลุมของทีม",
-    "policyTitle": "การยกยอดวันลา"
+    "policyTitle": "การยกยอดวันลา",
+    "selectRange": "เลือกช่วงวันที่ลา",
+    "calendarPrevMonth": "เดือนก่อนหน้า",
+    "calendarNextMonth": "เดือนถัดไป",
+    "calendarHoliday": "วันหยุดนักขัตฤกษ์",
+    "calendarWeekend": "เสาร์–อาทิตย์",
+    "calendarSelectedRange": "ช่วงที่เลือก",
+    "halfDay": "ลาครึ่งวัน",
+    "halfDayHint": "นับเป็น 0.5 วัน (เฉพาะการลาวันเดียว)",
+    "totalDays": "รวมวันลา",
+    "remainingAfter": "คงเหลือหลังลา",
+    "unlimited": "ไม่จำกัด",
+    "overQuota": "เกินสิทธิ",
+    "chainPreview": "เส้นทางอนุมัติ"
   },
   "requests": {
     "title": "คำร้องและแบบฟอร์ม",

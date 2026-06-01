@@ -43,3 +43,6 @@ export { Textarea } from './Textarea';
 export type { TextareaProps } from './Textarea';
 
 export { DemoValuesDisclaimer } from './DemoValuesDisclaimer';
+
+export { LeaveRangeCalendar } from './LeaveRangeCalendar';
+export type { LeaveRangeCalendarProps } from './LeaveRangeCalendar';

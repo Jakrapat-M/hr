@@ -3965,7 +3965,20 @@
     "statusPending": "Pending",
     "balanceLabel": "Leave Balance",
     "teamCoverage": "Team Coverage",
-    "policyTitle": "Leave Carryover"
+    "policyTitle": "Leave Carryover",
+    "selectRange": "Select leave date range",
+    "calendarPrevMonth": "Previous month",
+    "calendarNextMonth": "Next month",
+    "calendarHoliday": "Public holiday",
+    "calendarWeekend": "Weekend",
+    "calendarSelectedRange": "Selected range",
+    "halfDay": "Half day",
+    "halfDayHint": "Counts as 0.5 day (single-day leave only)",
+    "totalDays": "Total leave days",
+    "remainingAfter": "Remaining after leave",
+    "unlimited": "Unlimited",
+    "overQuota": "Exceeds entitlement",
+    "chainPreview": "Approval path"
   },
   "requests": {
     "title": "Requests & Forms",
