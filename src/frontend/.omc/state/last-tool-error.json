@@ -1,7 +1,7 @@
 {
-  "tool_name": "mcp__playwright__browser_close",
-  "tool_input_preview": "{}",
-  "error": "### Error\nError: Browser is already in use for /Users/tachongrak/Library/Caches/ms-playwright/mcp-chrome-d8dd2c2, use --isolated to run multiple instances of the same browser",
-  "timestamp": "2026-05-25T12:22:14.890Z",
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /Users/tachongrak/Projects/hr && node /Users/tachongrak/claude-artifacts/hr/2026-06-01/ux-review/nav-review.mjs 2>&1\",\"timeout\":180000,\"description\":\"Run Playwright nav usability review...",
+  "error": "Exit code 1\n== UX Review: Sidebar Navigation ==\n\n  [ss] 00-superuser-home.png\nSUPER-USER nav state: {\n  \"railCount\": 0,\n  \"railGroups\": [],\n  \"panelTitle\": \"\",\n  \"panelLeafCount\": 0,\n  \"panelLeaves\": []\n}\nSUPER-USER all leaves across groups:\n  [ss] 00-superuser-sidebar-group1.png\n  [WARN] collapse button not found\n  [ss] 01-sidebar-no-collapse-btn.png\n\n--- Switching to: สมชาย ---\n  [ss] avatar-dropdown-สมชาย.png\n  [ss] persona-modal-open.png\n  Clicking row: \"สมสมชาย ใจดีEmployee · EMP001Associat...",
+  "timestamp": "2026-05-31T17:23:36.701Z",
   "retry_count": 2
 }

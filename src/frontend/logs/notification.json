@@ -326,5 +326,125 @@
     "hook_event_name": "Notification",
     "message": "Claude is waiting for your input",
     "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "14839dbd-4588-49d9-b673-6e170faf30a0",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/14839dbd-4588-49d9-b673-6e170faf30a0.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "14839dbd-4588-49d9-b673-6e170faf30a0",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/14839dbd-4588-49d9-b673-6e170faf30a0.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "14839dbd-4588-49d9-b673-6e170faf30a0",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/14839dbd-4588-49d9-b673-6e170faf30a0.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "14839dbd-4588-49d9-b673-6e170faf30a0",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/14839dbd-4588-49d9-b673-6e170faf30a0.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "47fb5218-72f0-474a-a77e-422f638414f1",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/47fb5218-72f0-474a-a77e-422f638414f1.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "47fb5218-72f0-474a-a77e-422f638414f1",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/47fb5218-72f0-474a-a77e-422f638414f1.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude needs your permission",
+    "notification_type": "permission_prompt"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude needs your permission",
+    "notification_type": "permission_prompt"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input",
+    "notification_type": "idle_prompt"
   }
 ]

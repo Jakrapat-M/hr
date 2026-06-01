@@ -367,5 +367,131 @@
     "agent_type": "oh-my-claudecode:executor",
     "hook_event_name": "SubagentStart",
     "logged_at": "2026-05-25T18:25:45.061196"
+  },
+  {
+    "session_id": "14839dbd-4588-49d9-b673-6e170faf30a0",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/14839dbd-4588-49d9-b673-6e170faf30a0.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a39b0288437bd355e",
+    "agent_type": "oh-my-claudecode:executor",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-31T18:11:19.013787"
+  },
+  {
+    "session_id": "47fb5218-72f0-474a-a77e-422f638414f1",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/47fb5218-72f0-474a-a77e-422f638414f1.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "ab6a6d08a3d59a6fc",
+    "agent_type": "explore",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-31T21:59:45.432942"
+  },
+  {
+    "session_id": "47fb5218-72f0-474a-a77e-422f638414f1",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/47fb5218-72f0-474a-a77e-422f638414f1.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "abf58760f3043ad49",
+    "agent_type": "explore",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-31T22:01:57.322211"
+  },
+  {
+    "session_id": "47fb5218-72f0-474a-a77e-422f638414f1",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/47fb5218-72f0-474a-a77e-422f638414f1.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "af183edc1d642893d",
+    "agent_type": "oh-my-claudecode:critic",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-05-31T22:44:32.836562"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a78eb750c875ddb80",
+    "agent_type": "oh-my-claudecode:designer",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-06-01T00:19:57.629271"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "af67496cab78cb67e",
+    "agent_type": "oh-my-claudecode:planner",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-06-01T00:51:08.306649"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a4ec743af70d75027",
+    "agent_type": "oh-my-claudecode:architect",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-06-01T00:54:03.485317"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a7a594866187a9b1f",
+    "agent_type": "oh-my-claudecode:executor",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-06-01T10:38:29.191869"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a5b3b55ada22687af",
+    "agent_type": "oh-my-claudecode:planner",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-06-01T23:00:08.490603"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "ae171052a76c2b827",
+    "agent_type": "oh-my-claudecode:architect",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-06-01T23:04:29.937069"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a5b3b55ada22687af",
+    "agent_type": "oh-my-claudecode:planner",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-06-01T23:07:52.096674"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a66415022da9c6db4",
+    "agent_type": "oh-my-claudecode:critic",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-06-01T23:13:29.743198"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a5b3b55ada22687af",
+    "agent_type": "oh-my-claudecode:planner",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-06-01T23:18:04.586112"
+  },
+  {
+    "session_id": "03473f85-50a8-40d4-9634-491db6cae05b",
+    "transcript_path": "/Users/tachongrak/.claude/projects/-Users-tachongrak-Projects-hr/03473f85-50a8-40d4-9634-491db6cae05b.jsonl",
+    "cwd": "/Users/tachongrak/Projects/hr/src/frontend",
+    "agent_id": "a66415022da9c6db4",
+    "agent_type": "oh-my-claudecode:critic",
+    "hook_event_name": "SubagentStart",
+    "logged_at": "2026-06-01T23:21:15.991485"
   }
 ]

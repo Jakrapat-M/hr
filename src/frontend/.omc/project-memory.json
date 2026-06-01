@@ -52,8 +52,8 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "cd /Users/tachongrak/Projects/hr/src/frontend\necho \"=== tsc ===\"; npx tsc --noEmit -p tsconfig.json 2>&1 | grep -iE \"sidebar-ia|Sidebar\\.tsx\"; echo \"tsc-done\"\necho \"=== sidebar tests ===\"; npx vitest --run sidebar-ia sidebar-dedupe 2>&1 | grep -E \"Test Files|Tests |× \" | tail -12",
-    "testCommand": "cd /Users/tachongrak/Projects/hr/src/frontend\necho \"=== tsc ===\"; npx tsc --noEmit -p tsconfig.json 2>&1 | grep -iE \"sidebar-ia|Sidebar\\.tsx\"; echo \"tsc-done\"\necho \"=== sidebar tests ===\"; npx vitest --run sidebar-ia sidebar-dedupe 2>&1 | grep -E \"Test Files|Tests |× \" | tail -12",
+    "buildCommand": "npm run build 2>&1 | tail -20",
+    "testCommand": "cd /Users/tachongrak/Projects/hr/src/frontend\n# MUTATION: reintroduce the SPD bug\nsed -i.bak \"140s/show: \\['hrbp'\\]/show: ['hrbp', 'spd']/\" src/components/humi/shell/Sidebar.tsx\ngrep -n \"id: 'talent-search'\" src/components/humi/shell/Sidebar.tsx | head -1 | cut -c1-90\necho \"=== run matrix test against mutated source (EXPECT FAIL) ===\"\nnpx vitest run src/components/humi/shell/__tests__/sidebar-guard-coverage.test.tsx 2>&1 | grep -iE \"✓|✗|×|fail|pass|talent|spd|denied|Test Files|Tests \" | head -30\necho \"=== REVERT mutation ===\"\nmv src/components/humi/shell/Sidebar.tsx.bak src/components/humi/shell/Sidebar.tsx\ngrep -n \"id: 'talent-search'\" src/components/humi/shell/Sidebar.tsx | head -1 | grep -o \"show: \\[[^]]*\\]\"\necho \"reverted ✓\"; git diff --stat src/components/humi/shell/Sidebar.tsx",
     "lintCommand": "npm run lint",
     "devCommand": "npm run dev",
     "scripts": {
@@ -239,8 +239,14 @@
   "hotPaths": [
     {
       "path": "src/components/humi/shell/Sidebar.tsx",
-      "accessCount": 32,
-      "lastAccessed": 1779719665862,
+      "accessCount": 38,
+      "lastAccessed": 1780285122053,
+      "type": "file"
+    },
+    {
+      "path": "src/app/[locale]/profile/me/page.tsx",
+      "accessCount": 16,
+      "lastAccessed": 1780329627236,
       "type": "file"
     },
     {
@@ -287,20 +293,32 @@
     },
     {
       "path": "src/components/humi/shell/Topbar.tsx",
-      "accessCount": 8,
-      "lastAccessed": 1779711244265,
+      "accessCount": 9,
+      "lastAccessed": 1780248068485,
       "type": "file"
     },
     {
       "path": "src/components/humi/shell/AppShell.tsx",
-      "accessCount": 7,
-      "lastAccessed": 1779702781507,
+      "accessCount": 8,
+      "lastAccessed": 1780161379717,
       "type": "file"
     },
     {
       "path": "src/app/[locale]/admin/benefits/plans/page.tsx",
       "accessCount": 7,
       "lastAccessed": 1779709991171,
+      "type": "file"
+    },
+    {
+      "path": "messages/en.json",
+      "accessCount": 7,
+      "lastAccessed": 1780226152881,
+      "type": "file"
+    },
+    {
+      "path": "messages/th.json",
+      "accessCount": 7,
+      "lastAccessed": 1780226157881,
       "type": "file"
     },
     {
@@ -322,9 +340,21 @@
       "type": "file"
     },
     {
+      "path": "src/app/[locale]/timeoff/page.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1780330501360,
+      "type": "file"
+    },
+    {
       "path": "src/components/benefits/Tab1IdentityFields.tsx",
       "accessCount": 5,
       "lastAccessed": 1779709967041,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/shell/PersonaSwitcher.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1780248073449,
       "type": "file"
     },
     {
@@ -337,12 +367,6 @@
       "path": "src/components/humi/shell/__tests__/persona-switcher.test.tsx",
       "accessCount": 3,
       "lastAccessed": 1779697518657,
-      "type": "file"
-    },
-    {
-      "path": "src/components/humi/shell/PersonaSwitcher.tsx",
-      "accessCount": 3,
-      "lastAccessed": 1779698339465,
       "type": "file"
     },
     {
@@ -376,33 +400,9 @@
       "type": "file"
     },
     {
-      "path": "src/app/[locale]/timeoff/page.tsx",
-      "accessCount": 3,
-      "lastAccessed": 1779711670190,
-      "type": "file"
-    },
-    {
       "path": "src/components/humi/TodoBell.tsx",
       "accessCount": 2,
       "lastAccessed": 1779693803781,
-      "type": "file"
-    },
-    {
-      "path": "messages/en.json",
-      "accessCount": 2,
-      "lastAccessed": 1779698751518,
-      "type": "file"
-    },
-    {
-      "path": "messages/th.json",
-      "accessCount": 2,
-      "lastAccessed": 1779698758249,
-      "type": "file"
-    },
-    {
-      "path": "src/app/[locale]/profile/me/page.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1779699605184,
       "type": "file"
     },
     {
@@ -427,6 +427,12 @@
       "path": "src/lib/admin/store/useAdminSelfService.ts",
       "accessCount": 2,
       "lastAccessed": 1779708436373,
+      "type": "file"
+    },
+    {
+      "path": "src/components/humi/FileUploadField.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780144551795,
       "type": "file"
     },
     {
@@ -517,6 +523,18 @@
       "path": "src/__tests__/benefit-plan-record-type-derivation.test.tsx",
       "accessCount": 1,
       "lastAccessed": 1779709817380,
+      "type": "file"
+    },
+    {
+      "path": "src/components/benefits/templates/SimpleClaimForm.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780143844123,
+      "type": "file"
+    },
+    {
+      "path": "src/components/benefits/templates/HospitalClaimForm.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780143882507,
       "type": "file"
     }
   ],
