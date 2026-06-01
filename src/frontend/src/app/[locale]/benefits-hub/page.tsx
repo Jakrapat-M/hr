@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
+  AlertCircle,
   ArrowRight,
   Clock,
   Download,
@@ -23,6 +24,7 @@ import {
   Card,
   CardEyebrow,
   CardTitle,
+  ClaimStepper,
   DataTable,
   DemoValuesDisclaimer,
   FormField,
@@ -31,6 +33,7 @@ import {
 } from '@/components/humi';
 import type { DataTableColumn } from '@/components/humi';
 import { cn } from '@/lib/utils';
+import { claimPipeline, type ClaimPipeline } from '@/lib/benefit-claim-steps';
 import {
   benefitHospitalClaimRoute,
   benefitProfileRoute,
@@ -239,6 +242,7 @@ export default function HumiBenefitsHubPage() {
     statusLabel: string;
     statusTone: string;
     href: string;
+    pipeline: ClaimPipeline;
   };
   const inFlight: InFlightItem[] = useMemo(() => {
     const fromReferrals: InFlightItem[] = referrals
@@ -253,6 +257,7 @@ export default function HumiBenefitsHubPage() {
         statusLabel: r.status === 'pending_spd' ? 'รอ HRBP' : r.status === 'spd_reviewing' ? 'SPD ตรวจ' : r.status === 'approved' ? 'รอออกใบ' : 'ส่งกลับแก้',
         statusTone: 'bg-warning-soft text-[color:var(--color-warning)]',
         href: benefitReferralRoute(locale),
+        pipeline: claimPipeline('referral', r.status),
       }));
 
     const fromClaims: InFlightItem[] = HUMI_CLAIM_HISTORY.filter(
@@ -270,6 +275,7 @@ export default function HumiBenefitsHubPage() {
           statusLabel: meta.label,
           statusTone: meta.toneClass,
           href: benefitReimbursementRoute(locale),
+          pipeline: claimPipeline('claim', r.status),
         };
       });
 
@@ -459,6 +465,20 @@ export default function HumiBenefitsHubPage() {
                                 <Clock size={10} aria-hidden />
                                 {item.days}ด.
                               </span>
+                            )}
+                          </div>
+                          {/* Status-faithful stepper (rework → chip, never a node) */}
+                          <div className="mt-2">
+                            {item.pipeline.rework ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--color-danger-soft)] px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold text-[color:var(--color-danger)]">
+                                <AlertCircle size={11} aria-hidden />
+                                ส่งกลับแก้
+                              </span>
+                            ) : (
+                              <ClaimStepper
+                                steps={item.pipeline.steps}
+                                activeIndex={item.pipeline.activeIndex}
+                              />
                             )}
                           </div>
                         </div>
