@@ -704,47 +704,6 @@ function RequestTab({
         </div>
       </div>
 
-      {/* Team-on-leave conflict + coverage-floor note for the selected range */}
-      {fromISO && (
-        <div className="mt-3 rounded-[var(--radius-md)] border border-hairline bg-surface p-4">
-          <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">
-            ทีมที่ลาช่วงนี้
-          </p>
-          {HUMI_LEAVE_COVERAGE.length > 0 ? (
-            <ul role="list" className="mt-2 flex flex-col gap-2">
-              {HUMI_LEAVE_COVERAGE.map((c) => (
-                <li key={c.id} className="flex items-center gap-2">
-                  <Avatar name={c.name} tone={c.tone} size="sm" />
-                  <span className="flex-1 truncate text-small text-ink">{c.name}</span>
-                  <span className="shrink-0 text-small text-ink-muted">{c.dateLabel}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-small text-ink-muted">ไม่มีเพื่อนร่วมทีมลาในช่วงนี้</p>
-          )}
-          {(() => {
-            const teamSize = 8;
-            const onLeave = HUMI_LEAVE_COVERAGE.length + 1; // +1 = this request
-            const present = teamSize - onLeave;
-            const floorPct = 60;
-            const presentPct = Math.round((present / teamSize) * 100);
-            const belowFloor = presentPct < floorPct;
-            return (
-              <p
-                className={cn(
-                  'mt-3 text-small',
-                  belowFloor ? 'text-[color:var(--color-danger)] font-medium' : 'text-ink-muted',
-                )}
-              >
-                {belowFloor && <AlertCircle size={13} className="mr-1 inline align-[-2px]" aria-hidden />}
-                ทีมเหลือ {present}/{teamSize} คน · {belowFloor ? 'ต่ำกว่าเกณฑ์' : 'ผ่านเกณฑ์'} {floorPct}%
-              </p>
-            );
-          })()}
-        </div>
-      )}
-
       {/* Actions */}
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <Button variant="primary" className="h-11" onClick={handleSubmit}>
