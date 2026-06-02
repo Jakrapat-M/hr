@@ -281,28 +281,22 @@ describe('AC-13 — /timeoff functional', () => {
     expect(useTimeoffStore.getState().history[0].fromDate).toBe('25 เม.ย.');
   });
 
-  it('renders validation error when fromDate > toDate', async () => {
+  it('renders the range calendar and requires a selected date before submit', async () => {
     const user = userEvent.setup();
     const { default: Page } = await import('@/app/[locale]/timeoff/page');
     render(<Page />);
 
-    // Default tab is 'request' — fill dates with invalid range via label-based query
-    // Placeholders: from = "เช่น 28 เม.ย.", to = "เช่น 2 พ.ค."
-    const fromInput = screen.getByPlaceholderText(/เช่น 28/);
-    const toInput = screen.getByPlaceholderText(/เช่น 2 พ/);
+    // Free-text date inputs were replaced by a selectable range calendar — the
+    // calendar enforces start/end ordering, so the old "end before start" error
+    // can no longer occur. Submitting with no date selected fires the
+    // required-date error instead.
+    expect(screen.getByText(/เลือกช่วงวันที่ลา/)).toBeTruthy();
 
-    await user.clear(fromInput);
-    await user.type(fromInput, '30 เม.ย.');
-    await user.clear(toInput);
-    await user.type(toInput, '01 เม.ย.');
-
-    // Submit — button label is "ส่งคำขอ" (short form, not "ส่งคำขอลา")
     const submitBtn = screen.getByRole('button', { name: /ส่งคำขอ$/i });
     await user.click(submitBtn);
 
-    // Error message should appear — rendered in <p role="alert"> inside Field
     await waitFor(() => {
-      expect(screen.getByText(/วันสิ้นสุดต้องไม่ก่อนวันเริ่ม/)).toBeTruthy();
+      expect(screen.getByText(/กรุณาเลือกวันที่เริ่มลา/)).toBeTruthy();
     });
   });
 });

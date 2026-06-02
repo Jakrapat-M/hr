@@ -12,13 +12,18 @@ import {
   CardEyebrow,
   CardTitle,
   Modal,
+  Toggle,
+  LeaveRangeCalendar,
 } from '@/components/humi';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/date';
+import { countLeaveDays, remainingAfter, isOverQuota } from '@/lib/leave-math';
 import { DOCUMENT_UPLOAD_HELPER_TH } from '@/lib/document-boundary';
 import {
   HUMI_LEAVE_BALANCES,
   HUMI_LEAVE_PENDING,
   HUMI_LEAVE_COVERAGE,
+  HUMI_TH_HOLIDAYS,
   type LeaveKind,
 } from '@/lib/humi-mock-data';
 import { useTimeoffStore, type TimeoffHistoryItem, type LeaveStatus } from '@/stores/humi-timeoff-slice';
@@ -449,22 +454,38 @@ function RequestTab({
   onSavedDraft: (msg: string) => void;
 }) {
   const submit = useTimeoffStore((s) => s.submit);
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'th';
   const [kind, setKind] = useState<LeaveKind>('vacation');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  // Range is stored as ISO (YYYY-MM-DD) from the calendar; reformatted to a
+  // BE/TH label only at submit time (the History tab renders fromDate verbatim).
+  const [fromISO, setFromISO] = useState('');
+  const [toISO, setToISO] = useState('');
+  const [halfDay, setHalfDay] = useState(false);
   const [reason, setReason] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const kindLabel =
     LEAVE_TYPES.find((t) => t.key === kind)?.label ?? 'ลางาน';
 
+  const selectedBalance = HUMI_LEAVE_BALANCES.find((b) => b.kind === kind);
+  const isSingleDay = !!fromISO && (!toISO || toISO === fromISO);
+
+  // Live total-days via the single leave-day semantic (weekend + holiday aware).
+  const totalDays = fromISO
+    ? countLeaveDays(fromISO, toISO || fromISO, {
+        holidays: HUMI_TH_HOLIDAYS,
+        halfDay: isSingleDay && halfDay ? 'morning' : 'none',
+      })
+    : 0;
+
+  const balanceRemaining = selectedBalance?.remaining ?? '0';
+  const after = totalDays > 0 ? remainingAfter(balanceRemaining, totalDays) : null;
+  const overQuota = totalDays > 0 && isOverQuota(balanceRemaining, totalDays);
+
   function validate() {
     const errs: Record<string, string> = {};
-    if (!fromDate.trim()) errs.fromDate = 'กรุณาระบุวันที่เริ่มลา';
-    if (!toDate.trim()) errs.toDate = 'กรุณาระบุวันที่สิ้นสุด';
-    if (fromDate.trim() && toDate.trim() && fromDate.trim() > toDate.trim()) {
-      errs.toDate = 'วันสิ้นสุดต้องไม่ก่อนวันเริ่ม';
-    }
+    if (!fromISO) errs.fromDate = 'กรุณาเลือกวันที่เริ่มลา';
     if (reason.trim().length > 0 && reason.trim().length < 5) {
       errs.reason = 'เหตุผลต้องมีอย่างน้อย 5 ตัวอักษร';
     }
@@ -477,9 +498,15 @@ function RequestTab({
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
-    submit({ kind, kindLabel, fromDate: fromDate.trim(), toDate: toDate.trim(), reason: reason.trim() });
-    setFromDate('');
-    setToDate('');
+    // Reformat ISO → BE/TH label BEFORE it reaches the History tab (verbatim render).
+    const endISO = toISO || fromISO;
+    const fromLabel = formatDate(fromISO, 'medium', 'th');
+    const toLabel = formatDate(endISO, 'medium', 'th');
+
+    submit({ kind, kindLabel, fromDate: fromLabel, toDate: toLabel, reason: reason.trim() });
+    setFromISO('');
+    setToISO('');
+    setHalfDay(false);
     setReason('');
     setErrors({});
     onSubmitted('ส่งคำขอลางานเรียบร้อยแล้ว · สถานะ: รออนุมัติ');
@@ -540,32 +567,60 @@ function RequestTab({
         })}
       </div>
 
-      {/* Date range */}
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field label="ตั้งแต่วันที่ *" htmlFor="leave-from" error={errors.fromDate}>
-          <input
-            id="leave-from"
-            type="text"
-            placeholder="เช่น 28 เม.ย."
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            aria-invalid={!!errors.fromDate}
-            aria-describedby={errors.fromDate ? 'err-from' : undefined}
-            className={cn(inputClass, errors.fromDate && 'border-[color:var(--color-warning)]')}
-          />
-        </Field>
-        <Field label="ถึงวันที่ *" htmlFor="leave-to" error={errors.toDate}>
-          <input
-            id="leave-to"
-            type="text"
-            placeholder="เช่น 2 พ.ค."
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            aria-invalid={!!errors.toDate}
-            aria-describedby={errors.toDate ? 'err-to' : undefined}
-            className={cn(inputClass, errors.toDate && 'border-[color:var(--color-warning)]')}
-          />
-        </Field>
+      {/* Date range — selectable month calendar (range + weekend/holiday markers) */}
+      <div className="mt-5">
+        <p className="mb-2 text-small font-medium text-ink-soft">เลือกช่วงวันที่ลา *</p>
+        <LeaveRangeCalendar
+          from={fromISO}
+          to={toISO}
+          holidays={HUMI_TH_HOLIDAYS}
+          onChange={({ from, to }) => {
+            setFromISO(from);
+            setToISO(to);
+            if (halfDay && from && to && from !== to) setHalfDay(false);
+          }}
+        />
+        {errors.fromDate && (
+          <p role="alert" className="mt-1.5 flex items-center gap-1 text-[length:var(--text-eyebrow)] text-[color:var(--color-warning)]">
+            <AlertCircle size={12} aria-hidden />
+            {errors.fromDate}
+          </p>
+        )}
+
+        {/* Half-day toggle (single working day only) */}
+        {isSingleDay && fromISO && (
+          <div className="mt-3">
+            <Toggle
+              checked={halfDay}
+              onChange={setHalfDay}
+              label="ลาครึ่งวัน"
+              description="นับเป็น 0.5 วัน (เฉพาะการลาวันเดียว)"
+            />
+          </div>
+        )}
+
+        {/* Live day-count + remaining-after + over-quota chip */}
+        {totalDays > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-[var(--radius-md)] bg-canvas-soft px-4 py-3">
+            <div>
+              <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">รวมวันลา</p>
+              <p className="text-body font-semibold text-ink tabular-nums">{totalDays} วัน</p>
+            </div>
+            <div className="h-8 w-px bg-hairline" aria-hidden />
+            <div>
+              <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">คงเหลือหลังลา</p>
+              <p className="text-body font-semibold text-ink tabular-nums">
+                {after === null ? 'ไม่จำกัด' : `${after} วัน`}
+              </p>
+            </div>
+            {overQuota && (
+              <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-danger-soft)] px-3 py-1 text-small font-semibold text-[color:var(--color-danger)]">
+                <AlertCircle size={14} aria-hidden />
+                เกินสิทธิ
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Reason */}
@@ -602,6 +657,57 @@ function RequestTab({
       <p className="mt-1 text-small text-ink-muted" data-testid="timeoff-attachment-boundary">
         {DOCUMENT_UPLOAD_HELPER_TH}
       </p>
+
+      {/* Pre-submit approval chain preview (reuses ApprovalChain, all-inactive) */}
+      <div className="mt-5 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-4">
+        <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">
+          เส้นทางอนุมัติ
+        </p>
+        <div className="mt-2">
+          <ApprovalChain chain={TIMEOFF_CHAIN} locale={locale} activeStage={undefined} size="sm" />
+        </div>
+      </div>
+
+      {/* Team-on-leave conflict + coverage-floor note for the selected range */}
+      {fromISO && (
+        <div className="mt-3 rounded-[var(--radius-md)] border border-hairline bg-surface p-4">
+          <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">
+            ทีมที่ลาช่วงนี้
+          </p>
+          {HUMI_LEAVE_COVERAGE.length > 0 ? (
+            <ul role="list" className="mt-2 flex flex-col gap-2">
+              {HUMI_LEAVE_COVERAGE.map((c) => (
+                <li key={c.id} className="flex items-center gap-2">
+                  <Avatar name={c.name} tone={c.tone} size="sm" />
+                  <span className="flex-1 truncate text-small text-ink">{c.name}</span>
+                  <span className="shrink-0 text-small text-ink-muted">{c.dateLabel}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-small text-ink-muted">ไม่มีเพื่อนร่วมทีมลาในช่วงนี้</p>
+          )}
+          {(() => {
+            const teamSize = 8;
+            const onLeave = HUMI_LEAVE_COVERAGE.length + 1; // +1 = this request
+            const present = teamSize - onLeave;
+            const floorPct = 60;
+            const presentPct = Math.round((present / teamSize) * 100);
+            const belowFloor = presentPct < floorPct;
+            return (
+              <p
+                className={cn(
+                  'mt-3 text-small',
+                  belowFloor ? 'text-[color:var(--color-danger)] font-medium' : 'text-ink-muted',
+                )}
+              >
+                {belowFloor && <AlertCircle size={13} className="mr-1 inline align-[-2px]" aria-hidden />}
+                ทีมเหลือ {present}/{teamSize} คน · {belowFloor ? 'ต่ำกว่าเกณฑ์' : 'ผ่านเกณฑ์'} {floorPct}%
+              </p>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="mt-5 flex flex-wrap items-center gap-3">

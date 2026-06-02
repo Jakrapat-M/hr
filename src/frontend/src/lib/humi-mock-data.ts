@@ -1074,6 +1074,10 @@ export const HUMI_MY_PROFILE = {
   status: 'active' as const,
   employmentType: 'Permanent · พนักงานประจำ',
   startLabel: 'Hire Date · 14 ต.ค. 2566',
+  // Original Start Date (NOT the 2566 re-hire date) — single tenure semantic:
+  // calcYearOfService(hireDate, lifecycleEvents) here equals _yos.display on the
+  // Job tab (~7 ปี). The re-hire/job-row 2566 date is forbidden as a source.
+  hireDate: '2019-03-01',
   lifecycleEvents: HUMI_LIFECYCLE_EVENTS,
 
   // ── Personal Information (14 fields — SF EC Core "Personal Information" portlet)
@@ -1300,6 +1304,33 @@ export interface HumiLeaveBalance {
   note: string;
   barClass: string;
 }
+
+/**
+ * Thai public-holiday seed (ISO YYYY-MM-DD) for 2026 — used by the leave-day
+ * math (`lib/leave-math.ts`) to exclude holidays from working-day counts and by
+ * the leave calendar to mark holiday cells. Realistic 2026 TH public holidays.
+ */
+export const HUMI_TH_HOLIDAYS: string[] = [
+  '2026-01-01', // วันขึ้นปีใหม่
+  '2026-03-03', // วันมาฆบูชา
+  '2026-04-06', // วันจักรี
+  '2026-04-13', // วันสงกรานต์
+  '2026-04-14', // วันสงกรานต์
+  '2026-04-15', // วันสงกรานต์
+  '2026-05-01', // วันแรงงานแห่งชาติ
+  '2026-05-04', // วันฉัตรมงคล
+  '2026-06-01', // วันวิสาขบูชา
+  '2026-06-03', // วันเฉลิมพระชนมพรรษา สมเด็จพระราชินี
+  '2026-07-28', // วันเฉลิมพระชนมพรรษา ร.10
+  '2026-07-29', // วันอาสาฬหบูชา
+  '2026-07-30', // วันเข้าพรรษา
+  '2026-08-12', // วันแม่แห่งชาติ
+  '2026-10-13', // วันคล้ายวันสวรรคต ร.9
+  '2026-10-23', // วันปิยมหาราช
+  '2026-12-05', // วันพ่อแห่งชาติ
+  '2026-12-10', // วันรัฐธรรมนูญ
+  '2026-12-31', // วันสิ้นปี
+];
 
 export const HUMI_LEAVE_BALANCES: HumiLeaveBalance[] = [
   {

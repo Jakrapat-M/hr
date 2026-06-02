@@ -39,3 +39,17 @@
 [2026-05-25T16:42:15.527810] [START] Logged SubagentStart: agent_id=a6aecc3119c05519b, agent_type=oh-my-claudecode:executor
 [2026-05-25T16:47:57.376468] [START] Logged SubagentStart: agent_id=a41fc58aa11a69b8c, agent_type=worker-roster
 [2026-05-25T18:25:45.062964] [START] Logged SubagentStart: agent_id=a864e49c08375122a, agent_type=oh-my-claudecode:executor
+[2026-05-31T18:11:19.014953] [START] Logged SubagentStart: agent_id=a39b0288437bd355e, agent_type=oh-my-claudecode:executor
+[2026-05-31T21:59:45.433668] [START] Logged SubagentStart: agent_id=ab6a6d08a3d59a6fc, agent_type=explore
+[2026-05-31T22:01:57.322796] [START] Logged SubagentStart: agent_id=abf58760f3043ad49, agent_type=explore
+[2026-05-31T22:44:32.837220] [START] Logged SubagentStart: agent_id=af183edc1d642893d, agent_type=oh-my-claudecode:critic
+[2026-06-01T00:19:57.630058] [START] Logged SubagentStart: agent_id=a78eb750c875ddb80, agent_type=oh-my-claudecode:designer
+[2026-06-01T00:51:08.307375] [START] Logged SubagentStart: agent_id=af67496cab78cb67e, agent_type=oh-my-claudecode:planner
+[2026-06-01T00:54:03.485808] [START] Logged SubagentStart: agent_id=a4ec743af70d75027, agent_type=oh-my-claudecode:architect
+[2026-06-01T10:38:29.192770] [START] Logged SubagentStart: agent_id=a7a594866187a9b1f, agent_type=oh-my-claudecode:executor
+[2026-06-01T23:00:08.491413] [START] Logged SubagentStart: agent_id=a5b3b55ada22687af, agent_type=oh-my-claudecode:planner
+[2026-06-01T23:04:29.937803] [START] Logged SubagentStart: agent_id=ae171052a76c2b827, agent_type=oh-my-claudecode:architect
+[2026-06-01T23:07:52.097326] [START] Logged SubagentStart: agent_id=a5b3b55ada22687af, agent_type=oh-my-claudecode:planner
+[2026-06-01T23:13:29.744208] [START] Logged SubagentStart: agent_id=a66415022da9c6db4, agent_type=oh-my-claudecode:critic
+[2026-06-01T23:18:04.586892] [START] Logged SubagentStart: agent_id=a5b3b55ada22687af, agent_type=oh-my-claudecode:planner
+[2026-06-01T23:21:15.992133] [START] Logged SubagentStart: agent_id=a66415022da9c6db4, agent_type=oh-my-claudecode:critic

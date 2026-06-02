@@ -13,6 +13,8 @@ import HumiTimeoffPage from '../page';
 let mockTab = 'approve';
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(mockTab ? `tab=${mockTab}` : ''),
+  // RequestTab + HistoryTab read the locale path segment via useParams.
+  useParams: () => ({ locale: 'th' }),
 }));
 
 // The approve tab is reviewer-gated (canReview, /timeoff page.tsx ~152). These

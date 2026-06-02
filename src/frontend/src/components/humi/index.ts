@@ -43,3 +43,9 @@ export { Textarea } from './Textarea';
 export type { TextareaProps } from './Textarea';
 
 export { DemoValuesDisclaimer } from './DemoValuesDisclaimer';
+
+export { LeaveRangeCalendar } from './LeaveRangeCalendar';
+export type { LeaveRangeCalendarProps } from './LeaveRangeCalendar';
+
+export { ClaimStepper } from './ClaimStepper';
+export type { ClaimStepperProps } from './ClaimStepper';

@@ -38,6 +38,7 @@ import {
   HUMI_MY_PROFILE,
   type HumiEmployee,
 } from '@/lib/humi-mock-data';
+import { calcYearOfService } from '@/lib/calculations/calcYearOfService';
 import {
   ALL_PORTED_EMPLOYEES,
   EMP_BY_LOGIN,
@@ -328,6 +329,15 @@ export default function HumiProfileMePage({
   const locale = (params?.locale as string) ?? 'th';
   const p = HUMI_MY_PROFILE;
 
+  // Tenure — reuse calcYearOfService bound to the Original Start Date (p.hireDate),
+  // the SAME semantic shown on the Job tab (_yos). .display is TH-only, so format
+  // EN from {years, months} for parity.
+  const _tenure = calcYearOfService(p.hireDate, p.lifecycleEvents);
+  const tenureLabel =
+    locale === 'en'
+      ? t('tenure', { years: _tenure.years, months: _tenure.months })
+      : _tenure.display;
+
   const {
     activeTab,
     isEditing,
@@ -343,6 +353,9 @@ export default function HumiProfileMePage({
     submitChangeRequest,
     withdrawPendingChange,
   } = useHumiProfileStore();
+
+  // Live count of change requests still awaiting the employee (pending state).
+  const pendingTaskCount = pendingChanges.filter((c) => c.status === 'pending').length;
 
   const [toast, setToast] = useState<string | null>(null);
   const [showToastOk, setShowToastOk] = useState(false);
@@ -896,7 +909,37 @@ export default function HumiProfileMePage({
           <span className="humi-tag humi-tag--sage">{t('statusActive')}</span>
           <span className="humi-tag">{p.employmentType}</span>
           <span className="humi-tag">{p.startLabel}</span>
+          {/* Tenure — bound to Original Start Date (matches Job tab _yos), no red */}
+          <span className="humi-tag" data-testid="profile-tenure">
+            {t('tenurePrefix')} {tenureLabel}
+          </span>
         </div>
+      </div>
+
+      {/* Pending-tasks callout — N change requests still awaiting the employee */}
+      <div
+        className={cn(
+          'mb-5 flex items-center gap-3 rounded-[var(--radius-md)] border border-hairline px-4 py-3',
+          pendingTaskCount > 0 ? 'bg-warning-soft' : 'bg-canvas-soft',
+        )}
+        data-testid="profile-tasks-callout"
+      >
+        <span
+          aria-hidden
+          className={cn(
+            'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+            pendingTaskCount > 0
+              ? 'bg-[color:var(--color-warning)] text-white'
+              : 'bg-hairline text-ink-muted',
+          )}
+        >
+          {pendingTaskCount > 0 ? <FileText size={15} /> : <Check size={15} />}
+        </span>
+        <p className="text-body text-ink">
+          {pendingTaskCount > 0
+            ? t('tasksPending', { count: pendingTaskCount })
+            : t('tasksNone')}
+        </p>
       </div>
 
       {/* Tabs — controlled by Zustand slice */}
