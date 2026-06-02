@@ -94,10 +94,10 @@ const ROUTE_GUARDS: Record<string, (roles: Role[]) => boolean> = {
   '/manager/team': (roles) =>
     hasAnyRole(roles, ['manager', 'hrbp', 'spd', 'hr_admin', 'hr_manager']),
 
-  // manager/payroll-summary/layout.tsx:28 → hasAnyRole(roles,['manager','hr_admin','hr_manager'])
+  // manager/payroll-summary/layout.tsx:28 → hasAnyRole(roles,['hr_admin','hr_manager'])
   //   (the canAccessModule('payroll-team-summary') half resolves to the same set)
   '/manager/payroll-summary': (roles) =>
-    hasAnyRole(roles, ['manager', 'hr_admin', 'hr_manager']),
+    hasAnyRole(roles, ['hr_admin', 'hr_manager']),
 
   // hrbp/employees/layout.tsx:22 → hasAnyRole(roles,['hrbp','spd','hr_admin','hr_manager'])
   '/hrbp/employees': (roles) => hasAnyRole(roles, ['hrbp', 'spd', 'hr_admin', 'hr_manager']),

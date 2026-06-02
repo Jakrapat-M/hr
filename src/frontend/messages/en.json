@@ -5301,8 +5301,8 @@
   "managerPayrollSummary": {
     "eyebrow": "Team Compensation",
     "title": "Team Compensation Summary",
-    "scope": "Your direct reports ({count} people)",
-    "readOnlyNote": "Read-only · Managers can view but cannot edit or approve compensation",
+    "scope": "Employees in your scope ({count} people)",
+    "readOnlyNote": "Read-only · HR can view but cannot edit or approve compensation here",
     "cardTitle": "Per-person Compensation (monthly)",
     "colName": "Name",
     "colPosition": "Position",
@@ -5312,9 +5312,9 @@
     "teamTotalLabel": "Team compensation total",
     "reveal": "Reveal figures",
     "hide": "Hide figures",
-    "caption": "Compensation summary for your direct reports",
-    "emptyTitle": "No direct reports",
-    "emptyDesc": "When team members report to you, their compensation summary appears here."
+    "caption": "Compensation summary for employees in your scope",
+    "emptyTitle": "No employees in scope",
+    "emptyDesc": "When employees are in your scope, their compensation summary appears here."
   },
   "reportBuilder": {
     "title": "Report builder",
