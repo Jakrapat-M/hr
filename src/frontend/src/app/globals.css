@@ -96,7 +96,7 @@
   --text-eyebrow--letter-spacing: 0.14em;
 
   /* ── Layout ─────────────────────────────────────────────── */
-  --max-width-page: 1680px;
+  --max-width-page: 1440px;
 
   /* ── Radius (cream-soft curves) ─────────────────────────── */
   --radius-xs: 6px;
@@ -186,7 +186,7 @@
    measurement. Tune here (17.5–20px range) to dial the overall scale.
    px-based chrome (sidebar/topbar inline styles) renders at its literal size;
    any chrome that now reads too small is a follow-up "size up px chrome" pass. */
-html { font-size: 22px; }
+html { font-size: 18px; }
 
 .humi-app {
   display: grid;
