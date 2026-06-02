@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
-import { Check, X, Heart, Coffee, Sun, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Check, X, Heart, Coffee, Sun, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight, Baby, Flower2, Shield, Users, Ban } from 'lucide-react';
 import {
   Avatar,
   Button,
@@ -124,6 +124,42 @@ const LEAVE_TYPES: Array<{
     hint: 'ได้รับค่าจ้าง',
     icon: Coffee,
     tileClass: 'bg-[color:var(--color-sage-soft)] text-ink',
+  },
+  {
+    key: 'maternity',
+    label: 'ลาคลอด',
+    hint: '98 วัน/ครั้ง · ได้รับค่าจ้างตามกฎหมาย',
+    icon: Baby,
+    tileClass: 'bg-accent-soft text-accent',
+  },
+  {
+    key: 'ordination',
+    label: 'ลาอุปสมบท',
+    hint: 'ตามสิทธิ์บริษัท',
+    icon: Flower2,
+    tileClass:
+      'bg-[color:var(--color-accent-alt-soft)] text-[color:var(--color-accent-alt)]',
+  },
+  {
+    key: 'military',
+    label: 'ลารับราชการทหาร',
+    hint: 'ตามหมายเรียก',
+    icon: Shield,
+    tileClass: 'bg-[color:var(--color-sage-soft)] text-ink',
+  },
+  {
+    key: 'parental',
+    label: 'ลาเลี้ยงดูบุตร',
+    hint: 'ตามสิทธิ์บริษัท',
+    icon: Users,
+    tileClass: 'bg-warning-soft text-[color:var(--color-warning)]',
+  },
+  {
+    key: 'unpaid',
+    label: 'ลาไม่รับค่าจ้าง',
+    hint: 'ไม่ได้รับค่าจ้าง',
+    icon: Ban,
+    tileClass: 'bg-[color:var(--color-butter-soft)] text-ink',
   },
 ];
 
