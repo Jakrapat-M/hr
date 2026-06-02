@@ -127,8 +127,6 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/en/hrbp/talent-search', title: 'Talent Search' },
   { prefix: '/th/hrbp/benefits', title: 'สวัสดิการ · รายงาน' },
   { prefix: '/en/hrbp/benefits', title: 'Benefits · Reports' },
-  { prefix: '/th/manager/payroll-summary', title: 'สรุปค่าตอบแทนทีม' },
-  { prefix: '/en/manager/payroll-summary', title: 'Team Pay Summary' },
   { prefix: '/th/manager/team', title: 'ทีมของฉัน' },
   { prefix: '/en/manager/team', title: 'My Team' },
 ];

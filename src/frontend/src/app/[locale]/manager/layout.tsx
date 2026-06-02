@@ -27,8 +27,7 @@ export default function ManagerLayout({ children }: { children: ReactNode }) {
   // PLACE (no redirect, URL preserved). Defer entirely to those child layouts so
   // we don't redirect a denied persona to /home before the child can gate them:
   //   - /manager/team            (P2) — admits People-Partners too
-  //   - /manager/payroll-summary (P3) — module gate payroll-team-summary
-  const isNestedGuarded = /\/manager\/(team|payroll-summary)(\/|$)/.test(pathname);
+  const isNestedGuarded = /\/manager\/team(\/|$)/.test(pathname);
 
   useEffect(() => {
     // Wait for Zustand persist rehydration before redirecting — prevents flash
