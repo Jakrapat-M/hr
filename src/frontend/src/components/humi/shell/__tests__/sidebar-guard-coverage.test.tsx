@@ -94,11 +94,6 @@ const ROUTE_GUARDS: Record<string, (roles: Role[]) => boolean> = {
   '/manager/team': (roles) =>
     hasAnyRole(roles, ['manager', 'hrbp', 'spd', 'hr_admin', 'hr_manager']),
 
-  // manager/payroll-summary/layout.tsx:28 → hasAnyRole(roles,['hr_admin','hr_manager'])
-  //   (the canAccessModule('payroll-team-summary') half resolves to the same set)
-  '/manager/payroll-summary': (roles) =>
-    hasAnyRole(roles, ['hr_admin', 'hr_manager']),
-
   // hrbp/employees/layout.tsx:22 → hasAnyRole(roles,['hrbp','spd','hr_admin','hr_manager'])
   '/hrbp/employees': (roles) => hasAnyRole(roles, ['hrbp', 'spd', 'hr_admin', 'hr_manager']),
 
@@ -123,9 +118,9 @@ const ROUTE_GUARDS: Record<string, (roles: Role[]) => boolean> = {
 
 // NOTE (documented, not in the leaf matrix): bare /manager (e.g. /manager/dashboard)
 // uses an EXACT roles.includes('manager'|'hr_admin'|'hr_manager') gate and redirects
-// hrbp/spd to /home. No menu leaf points at bare /manager (my-team → /manager/team and
-// team-payroll → /manager/payroll-summary are carved-out subtrees with their own
-// hierarchy-aware guards above), so it need not appear in ROUTE_GUARDS.
+// hrbp/spd to /home. No menu leaf points at bare /manager (my-team → /manager/team is a
+// carved-out subtree with its own hierarchy-aware guard above), so it need not appear
+// in ROUTE_GUARDS.
 
 /** The benefits-hub leaf uses the __BENEFITS__ sentinel href. Resolve it to its
  *  real bare route so longest-prefix matching can run; it is ungated (no entry in
@@ -230,7 +225,6 @@ describe('P3-9 — gating coverage matrix: menu show ⊆ route guard for every l
         'my-team', // → /manager/team
         'roles', // → /permissions
         'talent-search', // → /hrbp/talent-search
-        'team-payroll', // → /manager/payroll-summary
       ].sort(),
     );
   });
