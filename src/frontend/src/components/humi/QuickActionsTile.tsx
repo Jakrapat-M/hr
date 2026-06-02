@@ -79,7 +79,7 @@ export const DEFAULT_ESS_ACTIONS: QuickAction[] = [
     icon: makeIcon(FileText),
     labelTh: 'สลิปเงินเดือน',
     labelEn: 'Payslip',
-    href: '/th/profile/me?tab=employment#pay-statements',
+    href: '/th/payslip',
     tone: 'teal',
   },
   {

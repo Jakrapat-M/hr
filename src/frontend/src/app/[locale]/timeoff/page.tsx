@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
-import { Check, X, Heart, Coffee, Sun, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Check, X, Heart, Coffee, Sun, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight, Baby, Flower2, Shield, Users, Ban } from 'lucide-react';
 import {
   Avatar,
   Button,
@@ -124,6 +124,42 @@ const LEAVE_TYPES: Array<{
     hint: 'ได้รับค่าจ้าง',
     icon: Coffee,
     tileClass: 'bg-[color:var(--color-sage-soft)] text-ink',
+  },
+  {
+    key: 'maternity',
+    label: 'ลาคลอด',
+    hint: '98 วัน/ครั้ง · ได้รับค่าจ้างตามกฎหมาย',
+    icon: Baby,
+    tileClass: 'bg-accent-soft text-accent',
+  },
+  {
+    key: 'ordination',
+    label: 'ลาอุปสมบท',
+    hint: 'ตามสิทธิ์บริษัท',
+    icon: Flower2,
+    tileClass:
+      'bg-[color:var(--color-accent-alt-soft)] text-[color:var(--color-accent-alt)]',
+  },
+  {
+    key: 'military',
+    label: 'ลารับราชการทหาร',
+    hint: 'ตามหมายเรียก',
+    icon: Shield,
+    tileClass: 'bg-[color:var(--color-sage-soft)] text-ink',
+  },
+  {
+    key: 'parental',
+    label: 'ลาเลี้ยงดูบุตร',
+    hint: 'ตามสิทธิ์บริษัท',
+    icon: Users,
+    tileClass: 'bg-warning-soft text-[color:var(--color-warning)]',
+  },
+  {
+    key: 'unpaid',
+    label: 'ลาไม่รับค่าจ้าง',
+    hint: 'ไม่ได้รับค่าจ้าง',
+    icon: Ban,
+    tileClass: 'bg-[color:var(--color-butter-soft)] text-ink',
   },
 ];
 
@@ -667,47 +703,6 @@ function RequestTab({
           <ApprovalChain chain={TIMEOFF_CHAIN} locale={locale} activeStage={undefined} size="sm" />
         </div>
       </div>
-
-      {/* Team-on-leave conflict + coverage-floor note for the selected range */}
-      {fromISO && (
-        <div className="mt-3 rounded-[var(--radius-md)] border border-hairline bg-surface p-4">
-          <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">
-            ทีมที่ลาช่วงนี้
-          </p>
-          {HUMI_LEAVE_COVERAGE.length > 0 ? (
-            <ul role="list" className="mt-2 flex flex-col gap-2">
-              {HUMI_LEAVE_COVERAGE.map((c) => (
-                <li key={c.id} className="flex items-center gap-2">
-                  <Avatar name={c.name} tone={c.tone} size="sm" />
-                  <span className="flex-1 truncate text-small text-ink">{c.name}</span>
-                  <span className="shrink-0 text-small text-ink-muted">{c.dateLabel}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-small text-ink-muted">ไม่มีเพื่อนร่วมทีมลาในช่วงนี้</p>
-          )}
-          {(() => {
-            const teamSize = 8;
-            const onLeave = HUMI_LEAVE_COVERAGE.length + 1; // +1 = this request
-            const present = teamSize - onLeave;
-            const floorPct = 60;
-            const presentPct = Math.round((present / teamSize) * 100);
-            const belowFloor = presentPct < floorPct;
-            return (
-              <p
-                className={cn(
-                  'mt-3 text-small',
-                  belowFloor ? 'text-[color:var(--color-danger)] font-medium' : 'text-ink-muted',
-                )}
-              >
-                {belowFloor && <AlertCircle size={13} className="mr-1 inline align-[-2px]" aria-hidden />}
-                ทีมเหลือ {present}/{teamSize} คน · {belowFloor ? 'ต่ำกว่าเกณฑ์' : 'ผ่านเกณฑ์'} {floorPct}%
-              </p>
-            );
-          })()}
-        </div>
-      )}
 
       {/* Actions */}
       <div className="mt-5 flex flex-wrap items-center gap-3">

@@ -1293,7 +1293,15 @@ export const HUMI_MY_PROFILE = {
 /** Subset of HumiEmployee.avatarTone that the Avatar primitive accepts directly. */
 export type AvatarTone = 'teal' | 'sage' | 'butter' | 'ink';
 
-export type LeaveKind = 'vacation' | 'sick' | 'personal';
+export type LeaveKind =
+  | 'vacation'
+  | 'sick'
+  | 'personal'
+  | 'maternity'
+  | 'ordination'
+  | 'military'
+  | 'parental'
+  | 'unpaid';
 
 export interface HumiLeaveBalance {
   kind: LeaveKind;
@@ -1359,6 +1367,51 @@ export const HUMI_LEAVE_BALANCES: HumiLeaveBalance[] = [
     percentUsed: 0,
     note: 'ใช้ไปแล้ว 2 วันในปีนี้',
     barClass: 'bg-[color:var(--color-sage)]',
+  },
+  {
+    kind: 'maternity',
+    label: 'ลาคลอด',
+    remaining: '98',
+    unitLabel: 'วันคงเหลือ',
+    percentUsed: 0,
+    note: 'จาก 98 วันต่อการคลอด',
+    barClass: 'bg-[color:var(--color-accent-alt)]',
+  },
+  {
+    kind: 'ordination',
+    label: 'ลาอุปสมบท',
+    remaining: '15',
+    unitLabel: 'วันคงเหลือ',
+    percentUsed: 0,
+    note: 'จาก 15 วันต่อปี',
+    barClass: 'bg-accent',
+  },
+  {
+    kind: 'military',
+    label: 'ลารับราชการทหาร',
+    remaining: 'ตามหมายเรียก',
+    unitLabel: 'ตามจำเป็น',
+    percentUsed: 0,
+    note: 'ลาตามหมายเรียกของทางราชการ',
+    barClass: 'bg-[color:var(--color-sage)]',
+  },
+  {
+    kind: 'parental',
+    label: 'ลาเลี้ยงดูบุตร',
+    remaining: '30',
+    unitLabel: 'วันคงเหลือ',
+    percentUsed: 0,
+    note: 'จาก 30 วันต่อปี',
+    barClass: 'bg-[color:var(--color-warning)]',
+  },
+  {
+    kind: 'unpaid',
+    label: 'ลาไม่รับค่าจ้าง',
+    remaining: 'ไม่จำกัด',
+    unitLabel: 'ไม่รับค่าจ้าง',
+    percentUsed: 0,
+    note: 'หักจากเงินเดือนตามจำนวนวัน',
+    barClass: 'bg-[color:var(--color-butter)]',
   },
 ];
 

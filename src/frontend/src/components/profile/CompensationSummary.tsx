@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { Wallet, Eye, EyeOff, ExternalLink, FileText, Lock } from 'lucide-react';
+import { Wallet, Eye, EyeOff, Lock } from 'lucide-react';
 import { DemoValuesDisclaimer } from '@/components/humi/DemoValuesDisclaimer';
+import PayStatements from '@/components/profile/PayStatements';
 import { HUMI_MY_PROFILE } from '@/lib/humi-mock-data';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
@@ -17,23 +16,12 @@ function maskCurrency(currency: string): string {
   return `${m[1]}${m[2].replace(/[0-9๐-๙]/g, '•')}`;
 }
 
-// Mask a "48,200 บาท" style money string keeping non-digit chrome (comma, unit).
-function maskMoneyText(value: string): string {
-  return value.replace(/[0-9๐-๙]/g, '•');
-}
-
 // Mask a free-text recurring component (bonus / equity descriptor) so a
 // non-owner viewer cannot infer the figure. Keeps any leading label intact.
 function maskValueSafe(value: string): string {
   if (!value) return '••••';
   return '••••••';
 }
-
-const PAY_STATEMENTS = [
-  { id: 'PS-2026-03', monthLabel: 'มีนาคม 2569', gross: '55,000 บาท', net: '48,200 บาท', status: 'พร้อมดาวน์โหลด' },
-  { id: 'PS-2026-02', monthLabel: 'กุมภาพันธ์ 2569', gross: '55,000 บาท', net: '48,200 บาท', status: 'พร้อมดาวน์โหลด' },
-  { id: 'PS-2026-01', monthLabel: 'มกราคม 2569', gross: '55,000 บาท', net: '47,800 บาท', status: 'พร้อมดาวน์โหลด' },
-];
 
 // The pay-statement subject is an HR Manager. The OWNER may reveal full
 // figures. A NON-OWNER / lower-tier viewer (employee or manager persona that is
@@ -53,10 +41,7 @@ export default function CompensationSummary({
   /** Override owner detection. Defaults to true (this is the /profile/me self view). */
   viewerIsOwner?: boolean;
 } = {}) {
-  const params = useParams();
-  const locale = (params?.locale as string) ?? 'th';
   const roles = useAuthStore((s) => s.roles);
-  const employmentRoute = `/${locale}/profile/me?tab=employment#pay-statements`;
   const [isMasked, setIsMasked] = useState(true);
   const [revealToast, setRevealToast] = useState<string | null>(null);
   const p = HUMI_MY_PROFILE;
@@ -134,66 +119,7 @@ export default function CompensationSummary({
         </ul>
       </div>
 
-      <section id="pay-statements" data-testid="pay-statements" style={{ borderTop: '1px solid var(--color-hairline)', paddingTop: 16 }}>
-        <div className="humi-row" style={{ justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', marginBottom: 10 }}>
-          <div>
-            <div className="humi-row" style={{ gap: 8, alignItems: 'center', marginBottom: 4 }}>
-              <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>statement เงินเดือน</div>
-              <span
-                className="humi-tag"
-                data-testid="pay-statements-canonical-mark"
-                style={{
-                  color: 'var(--color-accent)',
-                  borderColor: 'var(--color-accent-soft)',
-                  background: 'var(--color-accent-soft)',
-                  fontSize: 11,
-                }}
-              >
-                ช่องทางหลักในแท็บการจ้างงาน
-              </span>
-            </div>
-            <h4 className="font-display text-base font-semibold leading-[1.2] tracking-tight text-ink">
-              ดู statement เงินเดือนและย้อนหลัง
-            </h4>
-          </div>
-          <Link
-            href={employmentRoute}
-            className="humi-row"
-            style={{ gap: 6, fontSize: 14, color: 'var(--color-accent)', textDecoration: 'underline' }}
-            data-testid="comp-payslip-link"
-          >
-            ดูย้อนหลัง
-            <ExternalLink size={14} aria-hidden />
-          </Link>
-        </div>
-
-        <div className="humi-col" style={{ gap: 8 }}>
-          {PAY_STATEMENTS.map((statement) => (
-            <Link
-              key={statement.id}
-              href={employmentRoute}
-              aria-label={`statement เงินเดือน ${statement.monthLabel}`}
-              className="humi-row"
-              style={{
-                justifyContent: 'space-between',
-                gap: 12,
-                padding: '10px 0',
-                borderTop: '1px solid var(--color-hairline-soft)',
-                color: 'var(--color-ink)',
-                textDecoration: 'none',
-              }}
-            >
-              <span className="humi-row" style={{ gap: 8 }}>
-                <FileText size={14} aria-hidden />
-                <span style={{ fontSize: 14, fontWeight: 600 }}>{statement.monthLabel}</span>
-              </span>
-              <span className="font-mono tabular-nums" style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>
-                สุทธิ {effectiveMasked ? maskMoneyText(statement.net) : statement.net}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
+      <PayStatements variant="embedded" masked={effectiveMasked} />
 
       {revealToast && (
         <div
