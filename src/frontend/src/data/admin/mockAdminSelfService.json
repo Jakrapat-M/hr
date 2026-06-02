@@ -412,7 +412,7 @@
       "id": "qa_pay_statement",
       "label": "สลิปเงินเดือน",
       "icon": "FileText",
-      "href": "/th/profile/me?tab=employment#pay-statements",
+      "href": "/th/payslip",
       "enabled": true,
       "order": 2,
       "labelEn": "Payslip",

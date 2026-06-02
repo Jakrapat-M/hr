@@ -23,7 +23,7 @@ export const HUMI_COMMANDS: HumiCommand[] = [
   { id: 'org-chart',          label: 'ผังองค์กร',              route: '/org-chart',          group: 'บุคลากร' },
   { id: 'announcements',      label: 'ประกาศ',                 route: '/announcements',      group: 'บริษัท' },
   { id: 'integrations',       label: 'จัดการระบบ',             route: '/integrations',       group: 'บริษัท' },
-  { id: 'payslip',            label: 'สลิปเงินเดือน',          route: '/profile/me?tab=employment#pay-statements', group: 'พื้นที่ทำงานของฉัน' },
+  { id: 'payslip',            label: 'สลิปเงินเดือน',          route: '/payslip',            group: 'พื้นที่ทำงานของฉัน' },
 ];
 
 /** Filter commands by query string (case-insensitive, searches label) */
