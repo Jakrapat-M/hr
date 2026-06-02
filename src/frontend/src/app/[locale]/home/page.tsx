@@ -68,7 +68,16 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 function makeAdminQuickActions(
-  tiles: { id: string; label: string; icon: string; href: string; enabled: boolean; order: number }[],
+  tiles: {
+    id: string;
+    label: string;
+    labelEn?: string;
+    icon: string;
+    href: string;
+    enabled: boolean;
+    order: number;
+    tone?: 'teal' | 'indigo' | 'amber' | 'coral';
+  }[],
 ): QuickAction[] {
   return tiles
     .filter((t) => t.enabled)
@@ -79,8 +88,9 @@ function makeAdminQuickActions(
         return Icon ? <Icon size={22} aria-hidden /> : <FileText size={22} aria-hidden />;
       })(),
       labelTh: t.label,
-      labelEn: t.label,
+      labelEn: t.labelEn ?? t.label,
       href: t.href,
+      tone: t.tone, // carry the design tone through so home chips aren't all-teal
     }));
 }
 
