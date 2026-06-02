@@ -4,8 +4,9 @@
 //   - Not signed in                         → redirect to /login
 //   - Signed in, no payroll-team-summary    → render <AccessDenied> IN PLACE (no redirect)
 //
-// P3 — READ-ONLY team comp rollup. Manager is admitted for READ only
-// (MODULE_ACCESS['payroll-team-summary'] = manager/hr_admin/hr_manager).
+// READ-ONLY team comp rollup, HR comp roles only. Manager is NOT admitted —
+// line managers must not see per-person team comp (privacy/data-minimization)
+// (MODULE_ACCESS['payroll-team-summary'] = hr_admin/hr_manager).
 // Mirrors manager/team/layout.tsx hydration/auth gating. Denial renders in
 // place (URL stays /manager/payroll-summary) per the route-denial rule.
 
@@ -21,11 +22,11 @@ export default function ManagerPayrollSummaryLayout({ children }: { children: Re
   const locale = params?.locale ?? 'th';
   const { isAuthenticated, roles, _hasHydrated } = useAuthStore();
 
-  // Module gate (manager/hr_admin/hr_manager). hasAnyRole fallback keeps the
+  // Module gate (hr_admin/hr_manager). hasAnyRole fallback keeps the
   // guard resilient if the module key is ever renamed.
   const canView =
     canAccessModule([...roles], 'payroll-team-summary') ||
-    hasAnyRole([...roles], ['manager', 'hr_admin', 'hr_manager']);
+    hasAnyRole([...roles], ['hr_admin', 'hr_manager']);
 
   useEffect(() => {
     // Wait for Zustand persist rehydration before redirecting — prevents flash
@@ -42,8 +43,8 @@ export default function ManagerPayrollSummaryLayout({ children }: { children: Re
   if (!canView) {
     return (
       <AccessDenied
-        reasonTh="หน้านี้สำหรับผู้จัดการดูสรุปค่าตอบแทนทีม (อ่านอย่างเดียว) และฝ่ายบุคคล"
-        reason="For managers viewing their team's compensation summary (read-only) and HR"
+        reasonTh="หน้านี้สำหรับฝ่ายบุคคลดูสรุปค่าตอบแทน (อ่านอย่างเดียว) เท่านั้น"
+        reason="For HR viewing the compensation summary (read-only) only"
       />
     );
   }

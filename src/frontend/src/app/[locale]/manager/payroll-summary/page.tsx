@@ -1,16 +1,17 @@
 'use client';
 
 // ════════════════════════════════════════════════════════════
-// /manager/payroll-summary — READ-ONLY team compensation rollup (P3)
+// /manager/payroll-summary — READ-ONLY team compensation rollup
 //
-// Manager persona sees a per-direct-report comp rollup (base / allowances /
-// total) for the employees who report to them. Scope resolves via
-// filterEmployeesByPersona (mode 'direct-reports' for a plain manager; HR
-// resolves to 'all' — super-set is fine, they may view their team too).
+// HR comp roles (hr_admin / hr_manager) view a per-person comp rollup (base /
+// allowances / total) for the employees in their scope. Manager is NOT admitted
+// — line managers must not see per-person team comp (privacy/data-minimization);
+// the route guard (./layout.tsx) denies them in place. Scope resolves via
+// filterEmployeesByPersona (HR resolves to mode 'all').
 //
-// HARD RULE: READ-ONLY. No edit / approve / write controls anywhere. Manager
-// has NO write on payroll (CLAUDE.md). Sensitive figures default-masked with a
-// reveal toggle (never red; pumpkin-free, token-only chrome).
+// HARD RULE: READ-ONLY. No edit / approve / write controls anywhere. Sensitive
+// figures default-masked with a reveal toggle (HR comp roles may reveal; never
+// red; pumpkin-free, token-only chrome).
 //
 // Comp figures are deterministic static mock derived from each employee id —
 // there is no real payroll backend this phase. Route guard lives in
@@ -189,10 +190,10 @@ export default function ManagerPayrollSummaryPage() {
         {count === 0 ? (
           <EmptyState
             icon={Wallet}
-            titleTh="ไม่มีผู้ใต้บังคับบัญชาโดยตรง"
-            titleEn="No direct reports"
-            descTh="เมื่อมีสมาชิกในทีมรายงานตรงต่อคุณ สรุปค่าตอบแทนจะแสดงที่นี่"
-            descEn="When team members report to you, their compensation summary appears here."
+            titleTh="ไม่มีพนักงานในขอบเขตของคุณ"
+            titleEn="No employees in scope"
+            descTh="เมื่อมีพนักงานในขอบเขตของคุณ สรุปค่าตอบแทนจะแสดงที่นี่"
+            descEn="When employees are in your scope, their compensation summary appears here."
           />
         ) : (
           <>
