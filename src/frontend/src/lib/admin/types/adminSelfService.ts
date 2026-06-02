@@ -33,11 +33,13 @@ export type VisibilityMatrix = Record<string, Record<RoleName, boolean>>
 // QuickActionTile — tile ใน Quick Actions Manager (#182)
 export interface QuickActionTile {
   id: string
-  label: string               // ชื่อที่แสดงให้ user เห็น
+  label: string               // ชื่อที่แสดงให้ user เห็น (TH)
+  labelEn?: string            // ชื่อภาษาอังกฤษ (EN parity บน ESS home)
   icon: string                // icon name (lucide-react compatible)
   href: string                // route href
   enabled: boolean            // เปิด/ปิดใน ESS home
   order: number               // ลำดับการแสดง (drag-drop)
+  tone?: 'teal' | 'indigo' | 'amber' | 'coral'  // สี icon-chip บน ESS home (design tone; default teal)
 }
 
 // HomePageTile — widget ใน Home Page Manager (#183)
