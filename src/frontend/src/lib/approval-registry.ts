@@ -238,6 +238,45 @@ export function timeCorrectionToPendingRequest(r: TimeCorrectionRequest): Pendin
   };
 }
 
+// Group 0 seam — OT mapper signature, mirroring timeCorrectionToPendingRequest.
+// The dedicated overtime store (overtime-requests.ts) does NOT exist yet; Group B
+// creates it. To keep the build green WITHOUT importing a missing module, this
+// accepts a minimal structural shape and returns a TODO-shaped PendingRequest.
+// Group B will retype `req` to the real OvertimeRequest and wire selectPendingApprovals.
+export type OvertimeRequestLike = {
+  id: string;
+  employeeId?: string;
+  employeeName?: string;
+  department?: string;
+  otType?: string;
+  date?: string;
+  submittedAt?: string;
+};
+
+export function otToPendingRequest(req: OvertimeRequestLike): PendingRequest {
+  const submittedAt = req.submittedAt ?? new Date().toISOString();
+  const elapsedMs = Date.now() - new Date(submittedAt).getTime();
+  const slaHours = elapsedMs / (1000 * 60 * 60);
+  const urgency: Urgency = slaHours > 48 ? 'urgent' : slaHours > 24 ? 'normal' : 'low';
+  const waitingDays = Math.max(0, Math.floor(elapsedMs / 86400000));
+  return {
+    id: req.id,
+    type: 'overtime',
+    requester: {
+      id: req.employeeId ?? '',
+      name: req.employeeName ?? '',
+      position: req.otType ?? 'OT',
+      department: req.department ?? '',
+    },
+    description: `OT — ${req.employeeName ?? ''}${req.date ? ` · ${req.date}` : ''}`,
+    submittedAt,
+    urgency,
+    waitingDays,
+    details: {},
+    approvalTimeline: [{ step: 1, approver: 'หัวหน้างาน', status: 'pending' }],
+  };
+}
+
 // ── Shared queue-item shape for store records lacking a bespoke bridge ─────────
 // leave / overtime / change_request stores expose simpler records; map them to a
 // minimal PendingRequest so they interleave in the queue. (Full field mapping is

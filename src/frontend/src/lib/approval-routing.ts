@@ -53,6 +53,7 @@ export interface RoutingStep {
 export const APPROVAL_ROUTING: Record<RequestType, RoutingStep[]> = {
   leave: [
     { roles: ['manager'], labelTh: 'หัวหน้างาน', labelEn: 'Manager', stage: 'manager' },
+    { roles: ['hr_admin'], labelTh: 'ฝ่ายบุคคล', labelEn: 'HR', stage: 'hr_admin' },
   ],
   overtime: [
     { roles: ['manager'], labelTh: 'หัวหน้างาน', labelEn: 'Manager', stage: 'manager' },
