@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
-import { hasAnyRole } from '@/lib/rbac';
-import { Check, X, Heart, Coffee, Sun, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight, Baby, Flower2, Shield, Users, Ban } from 'lucide-react';
+import { Check, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight, Sun, X } from 'lucide-react';
 import {
   Avatar,
   Button,
@@ -12,26 +11,39 @@ import {
   CardEyebrow,
   CardTitle,
   Modal,
-  Toggle,
   LeaveRangeCalendar,
 } from '@/components/humi';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/date';
-import { countLeaveDays, remainingAfter, isOverQuota } from '@/lib/leave-math';
+import { countLeaveDays } from '@/lib/leave-math';
 import { DOCUMENT_UPLOAD_HELPER_TH } from '@/lib/document-boundary';
 import {
   HUMI_LEAVE_BALANCES,
-  HUMI_LEAVE_PENDING,
   HUMI_LEAVE_COVERAGE,
   HUMI_TH_HOLIDAYS,
-  type LeaveKind,
 } from '@/lib/humi-mock-data';
-import { useTimeoffStore, type TimeoffHistoryItem, type LeaveStatus } from '@/stores/humi-timeoff-slice';
+import { useTimeoffStore, type TimeoffHistoryItem } from '@/stores/humi-timeoff-slice';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
 import type { ApproverStage } from '@/data/benefits/plan-registry';
+import { LEAVE_TYPES, getLeaveType, LEAVE_CODE_TO_BALANCE_KIND } from '@/lib/time/leave-types';
+import { requiredDocsFor } from '@/lib/time/doc-rules';
+import { levelsForLeaveType, appliedChainFor } from '@/lib/time/approval-rules';
+import { isWithinCurrentPeriod, currentPeriod } from '@/lib/time/period';
+import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
+import {
+  useLeaveApprovals,
+  type LeaveRequest,
+  type LeaveStatus as ApprovalLeaveStatus,
+} from '@/stores/leave-approvals';
+import { useRemainingFor } from '@/stores/leave-balances';
+import type { PendingRequest } from '@/lib/quick-approve-api';
+import { routingStagesFor } from '@/lib/approval-routing';
 
-// Timeoff approval chain: manager → hr_admin
+// Timeoff approval chain pills: manager → hr_admin (2-step max for the preview).
 const TIMEOFF_CHAIN: ApproverStage[] = ['manager', 'hr_admin'];
+
+// Demo employee identity for the ESS request portal (Tier D persona).
+const DEMO_EMPLOYEE = { id: 'EMP001', name: 'สมชาย ใจดี' };
 
 // Extended history item with audit + submittedAt as ISO for days-waiting
 type HistoryItemExtended = TimeoffHistoryItem & {
@@ -81,95 +93,27 @@ function dotColor(action: string) {
   return 'bg-accent-soft';
 }
 
-function activeStageForStatus(status: LeaveStatus): ApproverStage | undefined {
+function activeStageForStatus(status: 'pending' | 'approved' | 'rejected'): ApproverStage | undefined {
   if (status === 'pending') return 'manager';
   return undefined;
 }
 
 // ════════════════════════════════════════════════════════════
-// /timeoff — Leave request portal
-// Port of docs/design-ref/shelfly-bundle/project/screens/timeoff.jsx
-// 3 balance KPIs + 3-tab panel (request / history / approvals)
-// + right column with team coverage + policy callout.
-// c5: Zustand persist + validation + submit → history+1 + toast
+// /timeoff — Leave request portal (Group A reconcile)
+// ESS submit + status tracking ONLY. Approval happens in /quick-approve +
+// /workflows/leave/[id] (no inline approve/reject here).
+// Drives the 23-type registry, doc rules, quota reserve, and validation.
 // ════════════════════════════════════════════════════════════
 
-type TabKey = 'request' | 'history' | 'approve';
+type TabKey = 'request' | 'history';
 
-const LEAVE_TYPES: Array<{
-  key: LeaveKind;
-  label: string;
-  hint: string;
-  icon: typeof Sun;
-  tileClass: string;
-}> = [
-  {
-    key: 'vacation',
-    label: 'ลาพักร้อน',
-    hint: 'ได้รับค่าจ้าง',
-    icon: Sun,
-    tileClass: 'bg-accent-soft text-accent',
-  },
-  {
-    key: 'sick',
-    label: 'ลาป่วย',
-    hint: 'ได้รับค่าจ้าง',
-    icon: Heart,
-    tileClass:
-      'bg-[color:var(--color-accent-alt-soft)] text-[color:var(--color-accent-alt)]',
-  },
-  {
-    key: 'personal',
-    label: 'ลากิจ',
-    hint: 'ได้รับค่าจ้าง',
-    icon: Coffee,
-    tileClass: 'bg-[color:var(--color-sage-soft)] text-ink',
-  },
-  {
-    key: 'maternity',
-    label: 'ลาคลอด',
-    hint: '98 วัน/ครั้ง · ได้รับค่าจ้างตามกฎหมาย',
-    icon: Baby,
-    tileClass: 'bg-accent-soft text-accent',
-  },
-  {
-    key: 'ordination',
-    label: 'ลาอุปสมบท',
-    hint: 'ตามสิทธิ์บริษัท',
-    icon: Flower2,
-    tileClass:
-      'bg-[color:var(--color-accent-alt-soft)] text-[color:var(--color-accent-alt)]',
-  },
-  {
-    key: 'military',
-    label: 'ลารับราชการทหาร',
-    hint: 'ตามหมายเรียก',
-    icon: Shield,
-    tileClass: 'bg-[color:var(--color-sage-soft)] text-ink',
-  },
-  {
-    key: 'parental',
-    label: 'ลาเลี้ยงดูบุตร',
-    hint: 'ตามสิทธิ์บริษัท',
-    icon: Users,
-    tileClass: 'bg-warning-soft text-[color:var(--color-warning)]',
-  },
-  {
-    key: 'unpaid',
-    label: 'ลาไม่รับค่าจ้าง',
-    hint: 'ไม่ได้รับค่าจ้าง',
-    icon: Ban,
-    tileClass: 'bg-[color:var(--color-butter-soft)] text-ink',
-  },
-];
-
-const HISTORY_TONE: Record<LeaveStatus, string> = {
+const HISTORY_TONE: Record<'approved' | 'rejected' | 'pending', string> = {
   approved: 'bg-[color:var(--color-success-soft)] text-[color:var(--color-success)]',
   rejected: 'bg-warning-soft text-[color:var(--color-warning)]',
   pending: 'bg-accent-soft text-[color:var(--color-accent-ink)]',
 } as const;
 
-const HISTORY_LABEL: Record<LeaveStatus, string> = {
+const HISTORY_LABEL: Record<'approved' | 'rejected' | 'pending', string> = {
   approved: 'อนุมัติแล้ว',
   rejected: 'ไม่อนุมัติ',
   pending: 'รออนุมัติ',
@@ -187,31 +131,13 @@ function useToast() {
 
 export default function HumiTimeoffPage() {
   const searchParams = useSearchParams();
-  const roles = useAuthStore((s) => s.roles);
-  // Manager approval tab is reviewer-only (remove-not-hide). Employees never
-  // see it; the canonical approval inbox stays /quick-approve.
-  const canReview = hasAnyRole(roles, ['manager', 'hrbp', 'spd', 'hr_admin', 'hr_manager']);
-  const requestedTab = (searchParams.get('tab') as TabKey | null) ?? 'request';
-  // Deep-link to ?tab=approve as a non-reviewer falls back to the request tab.
-  const initialTab: TabKey = requestedTab === 'approve' && !canReview ? 'request' : requestedTab;
+  // ?tab=approve is no longer a valid surface here (approval moved to
+  // /quick-approve). Any deep-link to it falls back to the request tab.
+  const requestedTab = searchParams.get('tab');
+  const initialTab: TabKey = requestedTab === 'history' ? 'history' : 'request';
   const [tab, setTab] = useState<TabKey>(initialTab);
   const { toast, show: showToast } = useToast();
-
-  // Local decision state for the manager approval tab. HUMI_LEAVE_PENDING is a
-  // static display fixture (lp-1/lp-2) with no backing store, so the lightest
-  // clean wiring for this isolated mockup tab is a per-row decision that flips
-  // the row to a terminal chip + toast (no leave-approvals seed required here).
-  const [pendingDecisions, setPendingDecisions] = useState<Record<string, 'approved' | 'rejected'>>({});
   const [policyOpen, setPolicyOpen] = useState(false);
-
-  const decide = (id: string, name: string, decision: 'approved' | 'rejected') => {
-    setPendingDecisions((prev) => ({ ...prev, [id]: decision }));
-    showToast(
-      decision === 'approved'
-        ? `อนุมัติคำขอลาของ ${name} แล้ว`
-        : `ปฏิเสธคำขอลาของ ${name} แล้ว`,
-    );
-  };
 
   return (
     <>
@@ -241,7 +167,7 @@ export default function HumiTimeoffPage() {
               'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
             )}
           >
-            ยื่นคำขอ · อนุมัติ · ติดตาม
+            ยื่นคำขอ · ติดตามสถานะ
           </h1>
         </div>
         <div className="humi-spacer" />
@@ -306,16 +232,8 @@ export default function HumiTimeoffPage() {
               คำขอใหม่
             </TabButton>
             <TabButton active={tab === 'history'} onClick={() => setTab('history')}>
-              ประวัติของฉัน
+              สถานะคำขอของฉัน
             </TabButton>
-            {canReview && (
-              <TabButton active={tab === 'approve'} onClick={() => setTab('approve')}>
-                รออนุมัติ{' '}
-                <span className="font-normal text-ink-muted">
-                  ({HUMI_LEAVE_PENDING.length})
-                </span>
-              </TabButton>
-            )}
           </div>
 
           {tab === 'request' && (
@@ -326,61 +244,6 @@ export default function HumiTimeoffPage() {
           )}
 
           {tab === 'history' && <HistoryTab />}
-
-          {tab === 'approve' && canReview && (
-            <ul role="list" className="divide-y divide-hairline pt-2">
-              {HUMI_LEAVE_PENDING.map((p) => {
-                const decision = pendingDecisions[p.id];
-                return (
-                  <li
-                    key={p.id}
-                    className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center"
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-3">
-                      <Avatar name={p.name} tone={p.tone} size="sm" />
-                      <div className="min-w-0">
-                        <p className="text-body font-semibold text-ink">{p.name}</p>
-                        <p className="text-small text-ink-muted">
-                          {p.reason} · {p.when}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      {decision ? (
-                        <span
-                          className={cn(
-                            'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
-                            HISTORY_TONE[decision],
-                          )}
-                        >
-                          {HISTORY_LABEL[decision]}
-                        </span>
-                      ) : (
-                        <>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            leadingIcon={<X size={14} />}
-                            onClick={() => decide(p.id, p.name, 'rejected')}
-                          >
-                            ปฏิเสธ
-                          </Button>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            leadingIcon={<Check size={14} />}
-                            onClick={() => decide(p.id, p.name, 'approved')}
-                          >
-                            อนุมัติ
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
         </Card>
 
         {/* Right column */}
@@ -479,53 +342,136 @@ export default function HumiTimeoffPage() {
 }
 
 // ────────────────────────────────────────────────────────────
-// Request tab — form with validation
+// Inclusive calendar-day count (incl. weekends + holidays) — used when a leave
+// type's dayCountMode is 'CalendarDay' (e.g. maternity). WorkingDay mode reuses
+// the shared leave-math `countLeaveDays` (weekend + holiday excluding).
+// ────────────────────────────────────────────────────────────
+function calendarDayCount(start: string, end: string): number {
+  const s = new Date(start);
+  const e = new Date(end);
+  if (e < s) return 0;
+  return Math.floor((e.getTime() - s.getTime()) / 86400000) + 1;
+}
+
+// ────────────────────────────────────────────────────────────
+// Request tab — registry-driven form + full validation + quota reserve
 // ────────────────────────────────────────────────────────────
 
 function RequestTab({
   onSubmitted,
-  onSavedDraft,
 }: {
   onSubmitted: (msg: string) => void;
   onSavedDraft: (msg: string) => void;
 }) {
-  const submit = useTimeoffStore((s) => s.submit);
   const params = useParams();
   const locale = (params?.locale as string) ?? 'th';
-  const [kind, setKind] = useState<LeaveKind>('vacation');
-  // Range is stored as ISO (YYYY-MM-DD) from the calendar; reformatted to a
-  // BE/TH label only at submit time (the History tab renders fromDate verbatim).
+  const isTh = locale !== 'en';
+  const addRequest = useLeaveApprovals((s) => s.addRequest);
+  const existingRequests = useLeaveApprovals((s) => s.requests);
+  const submitHistory = useTimeoffStore((s) => s.submit);
+
+  const userId = useAuthStore((s) => s.userId) ?? DEMO_EMPLOYEE.id;
+  const userName = useAuthStore((s) => s.username) ?? DEMO_EMPLOYEE.name;
+  const employeeId = userId;
+  const attrs = getEmployeeTimeAttrs(employeeId);
+
+  // The selectable leave types: filter store-only ones unless the employee is on
+  // a Store calendar (special_leave is offered to Store staff only).
+  const selectableTypes = useMemo(
+    () => LEAVE_TYPES.filter((t) => !t.storeOnly || attrs.calendarType === 'Store'),
+    [attrs.calendarType],
+  );
+
+  const [code, setCode] = useState<string>(selectableTypes[0]?.code ?? 'sick_leave');
+  const def = getLeaveType(code);
   const [fromISO, setFromISO] = useState('');
   const [toISO, setToISO] = useState('');
   const [halfDay, setHalfDay] = useState(false);
+  const [halfSlot, setHalfSlot] = useState<'morning' | 'afternoon'>('morning');
   const [reason, setReason] = useState('');
+  // Mock attachments — the names the employee "attached". The doc-rule check
+  // matches required-doc names against this list.
+  const [attachments, setAttachments] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const kindLabel =
-    LEAVE_TYPES.find((t) => t.key === kind)?.label ?? 'ลางาน';
-
-  const selectedBalance = HUMI_LEAVE_BALANCES.find((b) => b.kind === kind);
+  const isHalfUnit = def?.minUnit === 'half-day';
   const isSingleDay = !!fromISO && (!toISO || toISO === fromISO);
+  const useHalf = isHalfUnit && isSingleDay && halfDay;
 
-  // Live total-days via the single leave-day semantic (weekend + holiday aware).
-  const totalDays = fromISO
-    ? countLeaveDays(fromISO, toISO || fromISO, {
-        holidays: HUMI_TH_HOLIDAYS,
-        halfDay: isSingleDay && halfDay ? 'morning' : 'none',
-      })
-    : 0;
-
-  const balanceRemaining = selectedBalance?.remaining ?? '0';
-  const after = totalDays > 0 ? remainingAfter(balanceRemaining, totalDays) : null;
-  const overQuota = totalDays > 0 && isOverQuota(balanceRemaining, totalDays);
-
-  function validate() {
-    const errs: Record<string, string> = {};
-    if (!fromISO) errs.fromDate = 'กรุณาเลือกวันที่เริ่มลา';
-    if (reason.trim().length > 0 && reason.trim().length < 5) {
-      errs.reason = 'เหตุผลต้องมีอย่างน้อย 5 ตัวอักษร';
+  // Day count honors the type's dayCountMode (CalendarDay incl. holidays vs
+  // WorkingDay excl.). Half-day collapses a single working day to 0.5.
+  const totalDays = useMemo(() => {
+    if (!fromISO) return 0;
+    const end = toISO || fromISO;
+    if (def?.dayCountMode === 'CalendarDay') {
+      return calendarDayCount(fromISO, end);
     }
-    if (!reason.trim()) errs.reason = 'กรุณาระบุเหตุผล';
+    return countLeaveDays(fromISO, end, {
+      holidays: HUMI_TH_HOLIDAYS,
+      halfDay: useHalf ? halfSlot : 'none',
+    });
+  }, [fromISO, toISO, def?.dayCountMode, useHalf, halfSlot]);
+
+  // Quota: only quotaTracked types draw a balance bucket.
+  const balanceKind = def?.quotaTracked ? LEAVE_CODE_TO_BALANCE_KIND[code] : undefined;
+  const remaining = useRemainingFor(employeeId, balanceKind ?? '__none__');
+  const overQuota = !!balanceKind && totalDays > 0 && remaining < totalDays;
+
+  // Doc rule: the named documents this request must attach.
+  const requiredDocs = useMemo(
+    () => (code ? requiredDocsFor(code, totalDays) : []),
+    [code, totalDays],
+  );
+  const missingDocs = requiredDocs.filter((d) => !attachments.includes(d));
+
+  // Entitlement: the selected type must be in the persona's selectable set.
+  const hasEntitlement = selectableTypes.some((t) => t.code === code);
+
+  // Period: the start date must fall in the current payroll period (21→20).
+  const outsidePeriod = !!fromISO && !isWithinCurrentPeriod(fromISO);
+
+  // Overlap: scan the employee's own pending/approved leave for a date clash.
+  const overlaps = useMemo(() => {
+    if (!fromISO) return false;
+    const start = fromISO;
+    const end = toISO || fromISO;
+    return existingRequests.some((r) => {
+      if (r.employeeId !== employeeId) return false;
+      if (r.status === 'rejected') return false;
+      if (!r.startDate || !r.endDate) return false;
+      // inclusive interval overlap
+      return r.startDate <= end && r.endDate >= start;
+    });
+  }, [existingRequests, employeeId, fromISO, toISO]);
+
+  const period = currentPeriod();
+
+  function validate(): Record<string, string> {
+    const errs: Record<string, string> = {};
+    if (!fromISO) errs.fromDate = isTh ? 'กรุณาเลือกวันที่เริ่มลา' : 'Select a start date';
+    if (!reason.trim()) errs.reason = isTh ? 'กรุณาระบุเหตุผล' : 'Reason is required';
+    else if (reason.trim().length < 5)
+      errs.reason = isTh ? 'เหตุผลต้องมีอย่างน้อย 5 ตัวอักษร' : 'At least 5 characters';
+    if (!hasEntitlement)
+      errs.entitlement = isTh
+        ? 'คุณไม่มีสิทธิ์ลาประเภทนี้'
+        : 'You are not entitled to this leave type';
+    if (overQuota)
+      errs.quota = isTh
+        ? `เกินสิทธิ — คงเหลือ ${remaining} วัน แต่ขอลา ${totalDays} วัน`
+        : `Over quota — ${remaining} day(s) left but requesting ${totalDays}`;
+    if (overlaps)
+      errs.overlap = isTh
+        ? 'ช่วงวันนี้ทับซ้อนกับคำขอลาที่รออนุมัติหรืออนุมัติแล้ว'
+        : 'This range overlaps a pending/approved leave';
+    if (outsidePeriod)
+      errs.period = isTh
+        ? `วันที่อยู่นอกงวดปัจจุบัน (${period.start} – ${period.end})`
+        : `Date is outside the current period (${period.start} – ${period.end})`;
+    if (missingDocs.length > 0)
+      errs.docs = isTh
+        ? `ต้องแนบเอกสาร: ${missingDocs.join(', ')}`
+        : `Attach required document(s): ${missingDocs.join(', ')}`;
     return errs;
   }
 
@@ -534,51 +480,119 @@ function RequestTab({
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
-    // Reformat ISO → BE/TH label BEFORE it reaches the History tab (verbatim render).
     const endISO = toISO || fromISO;
     const fromLabel = formatDate(fromISO, 'medium', 'th');
     const toLabel = formatDate(endISO, 'medium', 'th');
+    const levels = levelsForLeaveType(code);
+    const unit: '30min' | 'half-day' | '1-day' = useHalf ? 'half-day' : def?.minUnit ?? '1-day';
 
-    submit({ kind, kindLabel, fromDate: fromLabel, toDate: toLabel, reason: reason.trim() });
+    // Build the canonical queue snapshot so the request surfaces in the unified
+    // /quick-approve inbox with the correct (sliced) approval chain.
+    const chain = appliedChainFor('leave', code);
+    const queueSnapshot: PendingRequest = {
+      id: '', // filled below from the generated id
+      type: 'leave',
+      requester: {
+        id: employeeId,
+        name: userName,
+        position: isTh ? (def?.nameTh ?? code) : (def?.nameEn ?? code),
+        department: attrs.calendarType === 'Store' ? 'Store' : 'Head Office',
+      },
+      description: `${isTh ? (def?.nameTh ?? code) : (def?.nameEn ?? code)} — ${fromLabel}${
+        endISO !== fromISO ? ` – ${toLabel}` : ''
+      } · ${totalDays} ${isTh ? 'วัน' : 'day(s)'}`,
+      submittedAt: new Date().toISOString(),
+      urgency: 'normal',
+      waitingDays: 0,
+      attachments: attachments.length > 0 ? attachments : undefined,
+      details: { leaveType: code, startDate: fromISO, endDate: endISO, reason: reason.trim() },
+      approvalTimeline: chain.map((step, i) => ({
+        step: i + 1,
+        approver: isTh ? step.labelTh : step.labelEn,
+        status: 'pending' as const,
+      })),
+    };
+
+    const id = addRequest({
+      employeeId,
+      employeeName: userName,
+      leaveType: code,
+      leaveCode: code,
+      startDate: fromISO,
+      endDate: endISO,
+      reason: reason.trim(),
+      unit,
+      days: totalDays,
+      halfDay: useHalf,
+      docs: attachments,
+      queueSnapshot: { ...queueSnapshot, id: '' },
+    });
+    // Backfill the queueSnapshot id now that we have the generated id.
+    useLeaveApprovals.setState((s) => ({
+      requests: s.requests.map((r) =>
+        r.id === id && r.queueSnapshot ? { ...r, queueSnapshot: { ...r.queueSnapshot, id } } : r,
+      ),
+    }));
+
+    // Mirror into the legacy history list so the History tab shows it too.
+    submitHistory({
+      kind: 'vacation',
+      kindLabel: isTh ? (def?.nameTh ?? code) : (def?.nameEn ?? code),
+      fromDate: fromLabel,
+      toDate: toLabel,
+      reason: reason.trim(),
+    });
+
     setFromISO('');
     setToISO('');
     setHalfDay(false);
     setReason('');
+    setAttachments([]);
     setErrors({});
-    onSubmitted('ส่งคำขอลางานเรียบร้อยแล้ว · สถานะ: รออนุมัติ');
+    onSubmitted(
+      levels === 2
+        ? isTh
+          ? 'ส่งคำขอลาแล้ว · จองสิทธิ์ไว้ · รอหัวหน้างาน → ฝ่ายบุคคล'
+          : 'Leave submitted · quota reserved · awaiting Manager → HR'
+        : isTh
+          ? 'ส่งคำขอลาแล้ว · จองสิทธิ์ไว้ · รอหัวหน้างานอนุมัติ'
+          : 'Leave submitted · quota reserved · awaiting manager',
+    );
   }
 
-  function handleSaveDraft() {
-    // Mockup: keep the current form values in place and confirm the draft was
-    // saved (no draft store in this phase — toast feedback only).
-    onSavedDraft('บันทึกร่างคำขอลาแล้ว · ยังไม่ส่งให้ผู้อนุมัติ');
-  }
+  const blocking =
+    !hasEntitlement || overQuota || overlaps || outsidePeriod || missingDocs.length > 0;
 
   return (
     <div className="pt-6">
-      <CardTitle>ยื่นคำขอลางาน</CardTitle>
+      <CardTitle>{isTh ? 'ยื่นคำขอลางาน' : 'Request leave'}</CardTitle>
       <p className="mt-1 text-small text-ink-muted">
-        คำขอที่น้อยกว่า 3 วัน ระบบจะส่งไปยังผู้จัดการของคุณโดยอัตโนมัติ
+        {isTh
+          ? 'เลือกประเภทการลา ช่วงวันที่ และแนบเอกสารตามที่ระบบกำหนด'
+          : 'Pick a leave type, the date range, and attach any required documents.'}
       </p>
 
-      {/* Leave type selector */}
+      {/* Leave type selector — registry-driven (23 types) */}
       <div
         role="radiogroup"
         aria-label="ประเภทการลา"
-        className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3"
+        className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2"
       >
-        {LEAVE_TYPES.map((opt) => {
-          const selected = kind === opt.key;
-          const Icon = opt.icon;
+        {selectableTypes.map((opt) => {
+          const selected = code === opt.code;
           return (
             <button
-              key={opt.key}
+              key={opt.code}
               type="button"
               role="radio"
               aria-checked={selected}
-              onClick={() => setKind(opt.key)}
+              onClick={() => {
+                setCode(opt.code);
+                setAttachments([]);
+                setHalfDay(false);
+              }}
               className={cn(
-                'flex flex-col items-start gap-2 rounded-[var(--radius-md)] border p-4 text-left transition-colors',
+                'flex items-start gap-3 rounded-[var(--radius-md)] border p-3 text-left transition-colors',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
                 selected
                   ? 'border-ink bg-canvas-soft'
@@ -587,17 +601,32 @@ function RequestTab({
             >
               <span
                 aria-hidden
-                className={cn(
-                  'inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)]',
-                  opt.tileClass
-                )}
+                className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-accent-soft text-accent"
               >
-                <Icon size={16} />
+                <Sun size={15} />
               </span>
-              <span className="text-body font-semibold text-ink">
-                {opt.label}
+              <span className="min-w-0">
+                <span className="block text-body font-semibold text-ink truncate">
+                  {isTh ? opt.nameTh : opt.nameEn}
+                </span>
+                <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                  <span
+                    className={cn(
+                      'inline-block rounded-full px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold',
+                      opt.paid
+                        ? 'bg-[color:var(--color-success-soft)] text-[color:var(--color-success)]'
+                        : 'bg-[color:var(--color-butter-soft)] text-ink-muted',
+                    )}
+                  >
+                    {opt.paid ? (isTh ? 'รับค่าจ้าง' : 'Paid') : isTh ? 'ไม่รับค่าจ้าง' : 'Unpaid'}
+                  </span>
+                  {opt.quotaTracked && (
+                    <span className="text-[length:var(--text-eyebrow)] text-ink-muted">
+                      {isTh ? 'มีโควต้า' : 'Quota'}
+                    </span>
+                  )}
+                </span>
               </span>
-              <span className="text-small text-ink-muted">{opt.hint}</span>
             </button>
           );
         })}
@@ -605,7 +634,9 @@ function RequestTab({
 
       {/* Date range — selectable month calendar (range + weekend/holiday markers) */}
       <div className="mt-5">
-        <p className="mb-2 text-small font-medium text-ink-soft">เลือกช่วงวันที่ลา *</p>
+        <p className="mb-2 text-small font-medium text-ink-soft">
+          {isTh ? 'เลือกช่วงวันที่ลา *' : 'Select date range *'}
+        </p>
         <LeaveRangeCalendar
           from={fromISO}
           to={toISO}
@@ -616,43 +647,108 @@ function RequestTab({
             if (halfDay && from && to && from !== to) setHalfDay(false);
           }}
         />
-        {errors.fromDate && (
-          <p role="alert" className="mt-1.5 flex items-center gap-1 text-[length:var(--text-eyebrow)] text-[color:var(--color-warning)]">
-            <AlertCircle size={12} aria-hidden />
-            {errors.fromDate}
-          </p>
-        )}
+        {errors.fromDate && <InlineError msg={errors.fromDate} />}
 
-        {/* Half-day toggle (single working day only) */}
+        {/* Duration — explicit full-day / half-day choice on every single-day leave.
+            Half-day is enabled only for types whose minUnit allows it; 1-day-min
+            types show the choice with half-day disabled + a hint. */}
         {isSingleDay && fromISO && (
-          <div className="mt-3">
-            <Toggle
-              checked={halfDay}
-              onChange={setHalfDay}
-              label="ลาครึ่งวัน"
-              description="นับเป็น 0.5 วัน (เฉพาะการลาวันเดียว)"
-            />
+          <div className="mt-3 flex flex-col gap-2">
+            <p className="text-small font-medium text-ink-soft">
+              {isTh ? 'ระยะเวลา *' : 'Duration *'}
+            </p>
+            <div role="radiogroup" aria-label={isTh ? 'ระยะเวลาการลา' : 'Leave duration'} className="flex gap-2">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={!halfDay}
+                onClick={() => setHalfDay(false)}
+                className={cn(
+                  'rounded-[var(--radius-sm)] border px-4 py-1.5 text-small font-medium transition-colors',
+                  !halfDay
+                    ? 'border-accent bg-accent-soft text-accent'
+                    : 'border-hairline bg-surface text-ink-muted hover:border-ink-faint',
+                )}
+              >
+                {isTh ? 'เต็มวัน' : 'Full day'}
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={halfDay}
+                disabled={!isHalfUnit}
+                onClick={() => isHalfUnit && setHalfDay(true)}
+                title={!isHalfUnit ? (isTh ? 'ประเภทนี้ลาขั้นต่ำ 1 วัน' : 'This type has a 1-day minimum') : undefined}
+                className={cn(
+                  'rounded-[var(--radius-sm)] border px-4 py-1.5 text-small font-medium transition-colors',
+                  halfDay
+                    ? 'border-accent bg-accent-soft text-accent'
+                    : 'border-hairline bg-surface text-ink-muted hover:border-ink-faint',
+                  !isHalfUnit && 'cursor-not-allowed opacity-50',
+                )}
+              >
+                {isTh ? 'ครึ่งวัน' : 'Half day'}
+              </button>
+            </div>
+            {!isHalfUnit && (
+              <p className="text-small text-ink-muted">
+                {isTh ? 'ประเภทการลานี้ลาขั้นต่ำ 1 วัน (นับเป็นเต็มวัน)' : 'This leave type has a 1-day minimum (counts as full day)'}
+              </p>
+            )}
+            {halfDay && isHalfUnit && (
+              <div role="radiogroup" aria-label={isTh ? 'ช่วงครึ่งวัน' : 'Half-day slot'} className="flex gap-2">
+                {(['morning', 'afternoon'] as const).map((slot) => (
+                  <button
+                    key={slot}
+                    type="button"
+                    role="radio"
+                    aria-checked={halfSlot === slot}
+                    onClick={() => setHalfSlot(slot)}
+                    className={cn(
+                      'rounded-[var(--radius-sm)] border px-3 py-1.5 text-small font-medium transition-colors',
+                      halfSlot === slot
+                        ? 'border-accent bg-accent-soft text-accent'
+                        : 'border-hairline bg-surface text-ink-muted hover:border-ink-faint',
+                    )}
+                  >
+                    {slot === 'morning'
+                      ? isTh ? 'ครึ่งเช้า' : 'Morning'
+                      : isTh ? 'ครึ่งบ่าย' : 'Afternoon'}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Live day-count + remaining-after + over-quota chip */}
+        {/* Live day-count + remaining + over-quota chip */}
         {totalDays > 0 && (
           <div className="mt-3 flex flex-wrap items-center gap-3 rounded-[var(--radius-md)] bg-canvas-soft px-4 py-3">
             <div>
-              <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">รวมวันลา</p>
-              <p className="text-body font-semibold text-ink tabular-nums">{totalDays} วัน</p>
-            </div>
-            <div className="h-8 w-px bg-hairline" aria-hidden />
-            <div>
-              <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">คงเหลือหลังลา</p>
+              <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">
+                {isTh ? 'รวมวันลา' : 'Total days'}
+              </p>
               <p className="text-body font-semibold text-ink tabular-nums">
-                {after === null ? 'ไม่จำกัด' : `${after} วัน`}
+                {totalDays} {isTh ? 'วัน' : 'd'}
               </p>
             </div>
+            {balanceKind && (
+              <>
+                <div className="h-8 w-px bg-hairline" aria-hidden />
+                <div>
+                  <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">
+                    {isTh ? 'คงเหลือหลังลา' : 'Remaining after'}
+                  </p>
+                  <p className="text-body font-semibold text-ink tabular-nums">
+                    {remaining - totalDays} {isTh ? 'วัน' : 'd'}
+                  </p>
+                </div>
+              </>
+            )}
             {overQuota && (
               <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-danger-soft)] px-3 py-1 text-small font-semibold text-[color:var(--color-danger)]">
                 <AlertCircle size={14} aria-hidden />
-                เกินสิทธิ
+                {isTh ? 'เกินสิทธิ' : 'Over quota'}
               </span>
             )}
           </div>
@@ -661,7 +757,7 @@ function RequestTab({
 
       {/* Reason */}
       <Field
-        label="เหตุผล *"
+        label={isTh ? 'เหตุผล *' : 'Reason *'}
         htmlFor="leave-reason"
         className="mt-3"
         error={errors.reason}
@@ -671,16 +767,57 @@ function RequestTab({
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
-          placeholder="อธิบายเหตุผลการลา (อย่างน้อย 5 ตัวอักษร)"
+          placeholder={isTh ? 'อธิบายเหตุผลการลา (อย่างน้อย 5 ตัวอักษร)' : 'Describe the reason (min 5 chars)'}
           aria-invalid={!!errors.reason}
           aria-describedby={errors.reason ? 'err-reason' : undefined}
           className={cn(inputClass, 'min-h-[80px] resize-y', errors.reason && 'border-[color:var(--color-warning)]')}
         />
       </Field>
 
-      {/* Attachment placeholder */}
+      {/* Required-document checklist (Doc Rule) */}
+      {requiredDocs.length > 0 && (
+        <div className="mt-3 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-3">
+          <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">
+            {isTh ? 'เอกสารที่ต้องแนบ' : 'Required documents'}
+          </p>
+          <ul className="mt-2 flex flex-col gap-1.5">
+            {requiredDocs.map((doc) => {
+              const present = attachments.includes(doc);
+              return (
+                <li key={doc} className="flex items-center justify-between gap-2 text-small">
+                  <span className="flex items-center gap-1.5 text-ink">
+                    {present ? (
+                      <Check size={14} className="text-[color:var(--color-success)]" aria-hidden />
+                    ) : (
+                      <AlertCircle size={14} className="text-[color:var(--color-danger)]" aria-hidden />
+                    )}
+                    {doc}
+                  </span>
+                  {!present && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setAttachments((prev) => [...prev, doc])}
+                    >
+                      {isTh ? 'แนบ' : 'Attach'}
+                    </Button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      {/* Optional attachment (non-required types allow ≥1) */}
       <button
         type="button"
+        onClick={() =>
+          setAttachments((prev) => [
+            ...prev,
+            `${isTh ? 'เอกสารแนบ' : 'Attachment'} ${prev.length + 1}`,
+          ])
+        }
         className={cn(
           'humi-dropzone mt-3 flex min-h-[44px] items-center justify-center gap-2 text-small text-ink-muted',
           'w-full transition-colors',
@@ -688,39 +825,100 @@ function RequestTab({
         )}
       >
         <Paperclip size={14} aria-hidden />
-        <span>แนบเอกสารประกอบ (ถ้ามี)</span>
+        <span>{isTh ? 'แนบเอกสารประกอบ (ถ้ามี)' : 'Attach a supporting document (optional)'}</span>
       </button>
+      {attachments.length > 0 && (
+        <ul className="mt-2 flex flex-wrap gap-2">
+          {attachments.map((a, i) => (
+            <li
+              key={`${a}-${i}`}
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-small text-accent"
+            >
+              <Paperclip size={12} aria-hidden />
+              {a}
+              <button
+                type="button"
+                aria-label={isTh ? 'ลบไฟล์แนบ' : 'Remove attachment'}
+                onClick={() => setAttachments((prev) => prev.filter((_, idx) => idx !== i))}
+                className="hover:text-ink"
+              >
+                <X size={12} aria-hidden />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <p className="mt-1 text-small text-ink-muted" data-testid="timeoff-attachment-boundary">
         {DOCUMENT_UPLOAD_HELPER_TH}
       </p>
 
-      {/* Pre-submit approval chain preview (reuses ApprovalChain, all-inactive) */}
+      {/* Blocking validation errors (pumpkin / danger — never red) */}
+      {(errors.entitlement || errors.quota || errors.overlap || errors.period || errors.docs) && (
+        <div className="mt-4 flex flex-col gap-1.5 rounded-[var(--radius-md)] border border-[color:var(--color-danger)] bg-[color:var(--color-danger-soft)] p-3">
+          {errors.entitlement && <InlineError msg={errors.entitlement} />}
+          {errors.quota && <InlineError msg={errors.quota} />}
+          {errors.overlap && <InlineError msg={errors.overlap} />}
+          {errors.period && <InlineError msg={errors.period} />}
+          {errors.docs && <InlineError msg={errors.docs} />}
+        </div>
+      )}
+
+      {/* Pre-submit approval chain preview */}
       <div className="mt-5 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-4">
         <p className="text-[length:var(--text-eyebrow)] uppercase tracking-wide text-ink-muted">
-          เส้นทางอนุมัติ
+          {isTh ? 'เส้นทางอนุมัติ' : 'Approval route'}
         </p>
         <div className="mt-2">
-          <ApprovalChain chain={TIMEOFF_CHAIN} locale={locale} activeStage={undefined} size="sm" />
+          <ApprovalChain
+            chain={(routingStagesFor('leave').slice(0, levelsForLeaveType(code))) as ApproverStage[]}
+            locale={locale}
+            activeStage={undefined}
+            size="sm"
+          />
         </div>
       </div>
 
       {/* Actions */}
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button variant="primary" className="h-11" onClick={handleSubmit}>
-          ส่งคำขอ
+        <Button variant="primary" className="h-11" onClick={handleSubmit} disabled={blocking}>
+          {isTh ? 'ส่งคำขอ' : 'Submit'}
         </Button>
-        <Button variant="ghost" onClick={handleSaveDraft}>บันทึกร่าง</Button>
         <p className="ml-auto text-small text-ink-muted">
-          ผู้อนุมัติ: กฤตนัย อินทรเดช (หัวหน้าสายงาน)
+          {isTh ? 'อนุมัติที่หน้า คิวอนุมัติ' : 'Approved in the Approvals queue'}
         </p>
       </div>
     </div>
   );
 }
 
+function InlineError({ msg }: { msg: string }) {
+  return (
+    <p
+      role="alert"
+      className="flex items-center gap-1 text-small font-medium text-[color:var(--color-danger)]"
+    >
+      <AlertCircle size={13} aria-hidden />
+      {msg}
+    </p>
+  );
+}
+
 // ────────────────────────────────────────────────────────────
-// History tab — reads from Zustand store
+// History / status tab — live status from leave-approvals, plus the legacy
+// seeded history. Shows pending → (awaiting HR) → approved | rejected.
 // ────────────────────────────────────────────────────────────
+
+const APPROVAL_STATUS_TONE: Record<ApprovalLeaveStatus, string> = HISTORY_TONE;
+
+function liveStatusLabel(r: LeaveRequest, isTh: boolean): { label: string; tone: string } {
+  if (r.status === 'approved')
+    return { label: isTh ? 'อนุมัติแล้ว' : 'Approved', tone: HISTORY_TONE.approved };
+  if (r.status === 'rejected')
+    return { label: isTh ? 'ไม่อนุมัติ' : 'Rejected', tone: HISTORY_TONE.rejected };
+  if (r.awaitingNext)
+    return { label: isTh ? 'รอฝ่ายบุคคล' : 'Awaiting HR', tone: HISTORY_TONE.pending };
+  return { label: isTh ? 'รออนุมัติ' : 'Pending', tone: HISTORY_TONE.pending };
+}
 
 function HistoryRow({ h, locale }: { h: TimeoffHistoryItem; locale: string }) {
   const [expanded, setExpanded] = useState(false);
@@ -755,7 +953,7 @@ function HistoryRow({ h, locale }: { h: TimeoffHistoryItem; locale: string }) {
           <span
             className={cn(
               'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
-              HISTORY_TONE[h.status]
+              APPROVAL_STATUS_TONE[h.status]
             )}
           >
             {HISTORY_LABEL[h.status]}
@@ -809,25 +1007,80 @@ function HistoryRow({ h, locale }: { h: TimeoffHistoryItem; locale: string }) {
 }
 
 function HistoryTab() {
-  const history = useTimeoffStore((s) => s.history);
   const params = useParams();
-  // locale is a path segment (/[locale]/timeoff), not a query param.
   const locale = (params?.locale as string) ?? 'th';
+  const isTh = locale !== 'en';
+  const history = useTimeoffStore((s) => s.history);
+  const userId = useAuthStore((s) => s.userId) ?? DEMO_EMPLOYEE.id;
+  // Live leave requests submitted by this employee (own status tracking).
+  const liveRequests = useLeaveApprovals((s) =>
+    s.requests.filter(
+      (r) => r.employeeId === userId && r.queueSnapshot?.type === 'leave' && !!r.leaveCode,
+    ),
+  );
 
-  if (history.length === 0) {
+  if (history.length === 0 && liveRequests.length === 0) {
     return (
       <div className="py-12 text-center text-small text-ink-muted">
-        ยังไม่มีประวัติการลา
+        {isTh ? 'ยังไม่มีคำขอลา' : 'No leave requests yet'}
       </div>
     );
   }
 
   return (
-    <ul role="list" className="divide-y divide-hairline pt-2">
-      {history.map((h: TimeoffHistoryItem) => (
-        <HistoryRow key={h.id} h={h} locale={locale} />
-      ))}
-    </ul>
+    <div className="pt-2">
+      {/* Live (this-session) requests with reserved/awaiting status */}
+      {liveRequests.length > 0 && (
+        <ul role="list" className="divide-y divide-hairline">
+          {liveRequests.map((r) => {
+            const def = getLeaveType(r.leaveCode ?? '');
+            const { label, tone } = liveStatusLabel(r, isTh);
+            return (
+              <li key={r.id} className="flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <Avatar name={(isTh ? def?.nameTh : def?.nameEn) ?? r.leaveType} tone="teal" size="sm" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-body font-semibold text-ink">
+                      {formatDate(r.startDate, 'medium', locale)}
+                      {r.endDate !== r.startDate ? ` – ${formatDate(r.endDate, 'medium', locale)}` : ''}
+                    </p>
+                    <p className="text-small text-ink-muted">
+                      {(isTh ? def?.nameTh : def?.nameEn) ?? r.leaveType} · {r.days ?? 0} {isTh ? 'วัน' : 'd'}
+                      {' · '}
+                      {r.reason}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-start gap-1 sm:items-end shrink-0">
+                  <span
+                    className={cn(
+                      'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
+                      tone,
+                    )}
+                  >
+                    {label}
+                  </span>
+                  {r.status === 'pending' && (r.reservedDays ?? 0) > 0 && (
+                    <span className="text-[length:var(--text-eyebrow)] text-ink-muted">
+                      {isTh ? `จองสิทธิ์ ${r.reservedDays} วัน` : `Reserved ${r.reservedDays}d`}
+                    </span>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {/* Legacy seeded history */}
+      {history.length > 0 && (
+        <ul role="list" className="divide-y divide-hairline">
+          {history.map((h: TimeoffHistoryItem) => (
+            <HistoryRow key={h.id} h={h} locale={locale} />
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

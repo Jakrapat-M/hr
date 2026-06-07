@@ -43,6 +43,17 @@ function reseed() {
 beforeEach(reseed);
 
 function firstOfType(queue: QueueApproval[], type: string): QueueApproval {
+  // For 'leave', prefer a canonical (1-level, code-less) seed row so a single
+  // approve finalizes it — the Group A demo rows include a 2-level maternity row
+  // that advances to HR (awaitingNext) instead of approving outright.
+  if (type === 'leave') {
+    const codeless = queue.find((q) => {
+      if (q.row.type !== 'leave') return false;
+      const rec = useLeaveApprovals.getState().requests.find((r) => r.id === q.row.id);
+      return !rec?.leaveCode;
+    });
+    if (codeless) return codeless;
+  }
   const found = queue.find((q) => q.row.type === type);
   if (!found) throw new Error(`no seeded row of type ${type}`);
   return found;

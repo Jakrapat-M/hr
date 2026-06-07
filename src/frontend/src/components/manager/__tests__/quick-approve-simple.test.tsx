@@ -25,11 +25,14 @@ import {
   resetEnsureDemoSeedForTests,
   PAY_RATE_DEMO_COUNT,
   TAX_PLANNING_DEMO_COUNT,
+  LEAVE_DEMO_COUNT,
 } from '@/lib/demo-seed';
 
 // P2: the unified inbox now also seeds pay-rate + tax-planning demo rows, so the
-// honest total = the 20 canonical rows + those two demo row sets.
-const TOTAL_SEED_COUNT = APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT;
+// honest total = the 20 canonical rows + those two demo row sets. Group A adds a
+// couple of demo ESS leave rows (LEAVE_DEMO_COUNT) so the leave tab is non-zero.
+const TOTAL_SEED_COUNT =
+  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT;
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
 
@@ -166,13 +169,15 @@ describe('QuickApproveSimple — AC7.4 inline actions', () => {
     renderComponent();
     const viewLinks = screen.getAllByRole('link', { name: /ดูรายละเอียด/ });
     expect(viewLinks.length).toBeGreaterThanOrEqual(1);
-    // Most rows open the unified /quick-approve/[id] detail; pay-rate + tax-planning
-    // rows open their own /workflows/<type>/[id] page (P2). Every view link must
-    // resolve to one of those detail routes.
+    // Most rows open the unified /quick-approve/[id] detail; pay-rate, tax-planning,
+    // time-correction + leave rows open their own /workflows/<type>/[id] page. Every
+    // view link must resolve to one of those detail routes.
     viewLinks.forEach((link) => {
       expect(link).toHaveAttribute(
         'href',
-        expect.stringMatching(/\/(quick-approve|workflows\/(pay-rate|tax-planning))\//),
+        expect.stringMatching(
+          /\/(quick-approve|workflows\/(pay-rate|tax-planning|time-correction|leave))\//,
+        ),
       );
     });
     // At least one canonical row still opens the unified /quick-approve detail.

@@ -24,7 +24,16 @@ import {
   resetEnsureDemoSeedForTests,
   PAY_RATE_DEMO_COUNT,
   TAX_PLANNING_DEMO_COUNT,
+  LEAVE_DEMO_COUNT,
 } from '../demo-seed';
+
+// Ids of the canonical (1-level, code-less) leave seed rows — used to pick a
+// single-step leave row in the generic approve tests so they finalize on the
+// first approval (the Group A demo rows include a 2-level maternity row that
+// advances to HR instead of approving outright).
+const CANONICAL_LEAVE_IDS = new Set(
+  APPROVAL_SEED_ROWS.filter((r) => r.type === 'leave').map((r) => r.id),
+);
 import { useLeaveApprovals } from '@/stores/leave-approvals';
 import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
@@ -33,8 +42,10 @@ import { usePayRateApprovals } from '@/stores/pay-rate-approvals';
 import { useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 
 // Total rows the unified inbox seeds: the 20 registry-owned canonical rows PLUS
-// the P2 pay-rate + tax-planning demo rows injected directly by ensureDemoSeed.
-const TOTAL_SEED_COUNT = APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT;
+// the P2 pay-rate + tax-planning demo rows AND the Group A demo ESS leave rows,
+// all injected directly by ensureDemoSeed.
+const TOTAL_SEED_COUNT =
+  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT;
 
 function clearAll() {
   useLeaveApprovals.getState().clear();
@@ -101,7 +112,7 @@ describe('seeded queue — AC-1b.6 + AC-1b.7', () => {
 describe('persist round-trip — AC-1b.4', () => {
   it('approve a leave row → simulate rehydrate → full seeded set returns', () => {
     const before = getPendingApprovals();
-    const leaveRow = before.find((q) => q.row.type === 'leave');
+    const leaveRow = before.find((q) => q.row.type === 'leave' && CANONICAL_LEAVE_IDS.has(q.row.id));
     expect(leaveRow).toBeDefined();
 
     // Approve via the store (mirrors the eventual PR-1c dispatch).
