@@ -1,74 +1,53 @@
 /**
- * timeoff-approve.test.tsx — PR-3 (clickable-HRMS) focused tests.
- * AC-3.1: the previously-dead manager Approve/Reject buttons, "Save Draft", and
- * "Read full policy" controls now produce a visible state change / toast / modal.
+ * timeoff-approve.test.tsx — Group A reconcile (spec A6): /timeoff is submit +
+ * status-tracking ONLY. The inline manager Approve/Reject surface (and the
+ * no-op "บันทึกร่าง" draft affordance) were removed — approval now lives in
+ * /quick-approve + /workflows/leave/[id]. The full-policy modal still works.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import HumiTimeoffPage from '../page';
 
-// /timeoff reads ?tab=… via next/navigation useSearchParams. Default to the
-// manager approval tab so the Approve/Reject controls render immediately.
-let mockTab = 'approve';
+let mockTab: string | null = null;
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(mockTab ? `tab=${mockTab}` : ''),
-  // RequestTab + HistoryTab read the locale path segment via useParams.
   useParams: () => ({ locale: 'th' }),
 }));
 
-// The approve tab is reviewer-gated (canReview, /timeoff page.tsx ~152). These
-// dead-button tests target the manager approval surface, so render as a manager.
 vi.mock('@/stores/auth-store', () => ({
-  useAuthStore: (selector: (s: { roles: string[] }) => unknown) =>
-    selector({ roles: ['manager'] }),
+  useAuthStore: (
+    selector: (s: { roles: string[]; userId: string | null; username: string | null }) => unknown,
+  ) => selector({ roles: ['manager'], userId: 'EMP001', username: 'สมชาย ใจดี' }),
 }));
 
 beforeEach(() => {
-  mockTab = 'approve';
+  mockTab = null;
 });
 
-describe('Timeoff manager approval — AC-3.1 dead-button wiring', () => {
-  it('flips a pending row to an approved chip and shows a toast on Approve', () => {
+describe('Timeoff — approval moved out of /timeoff (spec A6)', () => {
+  it('renders NO inline Approve/Reject buttons for a manager', () => {
     render(<HumiTimeoffPage />);
-
-    // The seeded HUMI_LEAVE_PENDING row for ปิยะนุช must render with an Approve button.
-    const approveButtons = screen.getAllByRole('button', { name: 'อนุมัติ' });
-    expect(approveButtons.length).toBeGreaterThanOrEqual(1);
-
-    fireEvent.click(approveButtons[0]);
-
-    // Terminal chip replaces the action buttons for that row.
-    expect(screen.getByText('อนุมัติแล้ว')).toBeInTheDocument();
-    // Confirmation toast appears.
-    expect(screen.getByText(/อนุมัติคำขอลาของ/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'อนุมัติ' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'ปฏิเสธ' })).toBeNull();
   });
 
-  it('flips a pending row to a rejected chip on Reject', () => {
+  it('has no inline approve tab', () => {
     render(<HumiTimeoffPage />);
-
-    const rejectButtons = screen.getAllByRole('button', { name: 'ปฏิเสธ' });
-    fireEvent.click(rejectButtons[0]);
-
-    expect(screen.getByText('ไม่อนุมัติ')).toBeInTheDocument();
-    expect(screen.getByText(/ปฏิเสธคำขอลาของ/)).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: /รออนุมัติ/ })).toBeNull();
   });
 
   it('opens the full leave-policy modal from "อ่านนโยบายฉบับเต็ม"', () => {
     render(<HumiTimeoffPage />);
-
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'อ่านนโยบายฉบับเต็ม' }));
-
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText(/ยกยอดไปใช้ในปีถัดไป/)).toBeInTheDocument();
   });
 
-  it('shows a draft-saved toast from "บันทึกร่าง" on the request tab', () => {
+  it('shows the submit button on the request tab', () => {
     mockTab = 'request';
     render(<HumiTimeoffPage />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'บันทึกร่าง' }));
-    expect(screen.getByText(/บันทึกร่างคำขอลาแล้ว/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'ส่งคำขอ' })).toBeInTheDocument();
   });
 });

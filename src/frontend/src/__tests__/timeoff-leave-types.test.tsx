@@ -1,13 +1,12 @@
 /**
- * timeoff-leave-types.test.tsx — leave request form offers the full Thai
- * statutory leave-type set (8 types), not just the original 3.
+ * timeoff-leave-types.test.tsx — Group A: the ESS leave request form is driven
+ * by the 23-type leave registry (LEAVE_TYPES), not a fixed 8-type fixture.
  * Framework: Vitest + jsdom + React Testing Library
  *
  * Verifies:
- *   - the type picker (radiogroup) renders exactly 8 options
- *   - the 5 added statutory types are present by Thai label
- *   - the original 3 are still present
- *   - HUMI_LEAVE_BALANCES carries one entry per kind (8 total)
+ *   - the type picker (radiogroup) renders one radio per selectable registry type
+ *   - several registry Thai labels are present
+ *   - the registry carries all 23 canonical leave types
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -21,7 +20,8 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('@/stores/auth-store', () => ({
-  useAuthStore: (selector: (s: { roles: string[] }) => unknown) => selector({ roles: mockRoles }),
+  useAuthStore: (selector: (s: { roles: string[]; userId: string | null; username: string | null }) => unknown) =>
+    selector({ roles: mockRoles, userId: 'EMP001', username: 'สมชาย ใจดี' }),
 }))
 
 vi.mock('@/stores/humi-timeoff-slice', () => ({
@@ -34,44 +34,41 @@ vi.mock('@/components/quick-approve/ApprovalChain', () => ({
 }))
 
 import HumiTimeoffPage from '@/app/[locale]/timeoff/page'
-import { HUMI_LEAVE_BALANCES } from '@/lib/humi-mock-data'
+import { LEAVE_TYPES } from '@/lib/time/leave-types'
 
 beforeEach(() => {
   mockRoles = ['employee']
 })
 afterEach(() => cleanup())
 
-const EXPECTED_LABELS = [
-  'ลาพักร้อน',
+// EMP001 defaults to a Store calendar, so every registry type (incl. the one
+// storeOnly type) is selectable → the picker shows all 23.
+const EXPECTED_COUNT = LEAVE_TYPES.length
+
+const SAMPLE_LABELS = [
   'ลาป่วย',
+  'ลาพักผ่อนประจำปี',
   'ลากิจ',
-  'ลาคลอด',
+  'ลาคลอดบุตร',
   'ลาอุปสมบท',
-  'ลารับราชการทหาร',
-  'ลาเลี้ยงดูบุตร',
-  'ลาไม่รับค่าจ้าง',
 ]
 
-describe('/timeoff — leave types (Thai statutory set)', () => {
-  it('the type picker offers exactly 8 options', () => {
-    render(<HumiTimeoffPage />)
-    const group = screen.getByRole('radiogroup', { name: 'ประเภทการลา' })
-    expect(within(group).getAllByRole('radio')).toHaveLength(8)
+describe('/timeoff — leave types (23-registry driven)', () => {
+  it('the registry carries all 23 canonical leave types', () => {
+    expect(LEAVE_TYPES).toHaveLength(23)
   })
 
-  it('renders all 8 leave-type Thai labels', () => {
+  it(`the type picker offers one radio per selectable type (${EXPECTED_COUNT})`, () => {
     render(<HumiTimeoffPage />)
     const group = screen.getByRole('radiogroup', { name: 'ประเภทการลา' })
-    for (const label of EXPECTED_LABELS) {
+    expect(within(group).getAllByRole('radio')).toHaveLength(EXPECTED_COUNT)
+  })
+
+  it('renders sample registry Thai labels', () => {
+    render(<HumiTimeoffPage />)
+    const group = screen.getByRole('radiogroup', { name: 'ประเภทการลา' })
+    for (const label of SAMPLE_LABELS) {
       expect(within(group).getByText(label)).toBeInTheDocument()
-    }
-  })
-
-  it('HUMI_LEAVE_BALANCES carries one balance per kind (8 total)', () => {
-    expect(HUMI_LEAVE_BALANCES).toHaveLength(8)
-    const kinds = HUMI_LEAVE_BALANCES.map((b) => b.kind)
-    for (const kind of ['maternity', 'ordination', 'military', 'parental', 'unpaid'] as const) {
-      expect(kinds).toContain(kind)
     }
   })
 })

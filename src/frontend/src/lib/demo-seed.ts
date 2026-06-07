@@ -24,6 +24,11 @@ import {
 import { calculateThaiPitEstimate } from '@/lib/tax-planning';
 import { APPROVAL_REGISTRY } from '@/lib/approval-registry';
 import { APPROVAL_SEED_BY_TYPE } from '@/lib/approval-seed-fixtures';
+import { useLeaveBalances } from '@/stores/leave-balances';
+import { useLeaveApprovals } from '@/stores/leave-approvals';
+import type { PendingRequest } from '@/lib/quick-approve-api';
+import { appliedChainFor } from '@/lib/time/approval-rules';
+import { getLeaveType } from '@/lib/time/leave-types';
 
 const MOCK_TERMINATION_REQUESTS: TerminationRequest[] = [
   {
@@ -282,12 +287,95 @@ function buildTaxPlanningDemoDraft(): TaxPlanningDraft {
 
 export const TAX_PLANNING_DEMO_COUNT = 1;
 
+// ── Group A: leave-balance buckets + pending ESS leave rows ────────────────────
+// Seed the 7 quotaTracked buckets for the demo employee (EMP001) so the ESS
+// leave form has real quota to reserve/deduct against. Values are illustrative.
+// Distinct display name (NOT the canonical 'สมชาย ใจดี' seed-row requester) so
+// the seeded demo leave rows don't collide with the canonical queue rows in
+// name-based test lookups.
+const DEMO_LEAVE_EMPLOYEE = { id: 'EMP001', name: 'พิมพ์ชนก ศรีวัฒน์' };
+
+const DEMO_LEAVE_BALANCE_SEEDS: Array<{ kind: string; initial: number }> = [
+  { kind: 'sick_leave', initial: 30 },
+  { kind: 'annual_leave', initial: 10 },
+  { kind: 'personnel_leave', initial: 3 },
+  { kind: 'maternity_leave', initial: 98 },
+  { kind: 'maternity_leave_unpaid', initial: 90 },
+  { kind: 'maternity_risk_case', initial: 90 },
+  { kind: 'maternity_spouse', initial: 15 },
+];
+
+/** Build a pending ESS leave row carrying its canonical queue snapshot. */
+function buildDemoLeaveRow(args: {
+  id: string;
+  code: string;
+  startDate: string;
+  endDate: string;
+  days: number;
+  reason: string;
+  submittedAt: string;
+}): PendingRequest {
+  const def = getLeaveType(args.code);
+  const chain = appliedChainFor('leave', args.code);
+  return {
+    id: args.id,
+    type: 'leave',
+    requester: {
+      id: DEMO_LEAVE_EMPLOYEE.id,
+      name: DEMO_LEAVE_EMPLOYEE.name,
+      position: def?.nameTh ?? args.code,
+      department: 'Store',
+    },
+    description: `${def?.nameTh ?? args.code} — ${args.startDate} – ${args.endDate} · ${args.days} วัน`,
+    submittedAt: args.submittedAt,
+    urgency: 'normal',
+    waitingDays: 0,
+    details: { leaveType: args.code, startDate: args.startDate, endDate: args.endDate, reason: args.reason },
+    approvalTimeline: chain.map((step, i) => ({ step: i + 1, approver: step.labelTh, status: 'pending' as const })),
+  };
+}
+
+// One 1-level (annual) and one 2-level (maternity) pending row so /quick-approve
+// shows a non-zero leave count AND the 2-level advance is demoable.
+const DEMO_PENDING_LEAVE: Array<{
+  id: string;
+  code: string;
+  startDate: string;
+  endDate: string;
+  days: number;
+  reason: string;
+  submittedAt: string;
+}> = [
+  {
+    id: 'LV-DEMO-ANNUAL-0001',
+    code: 'annual_leave',
+    startDate: '2026-06-08',
+    endDate: '2026-06-09',
+    days: 2,
+    reason: 'พาครอบครัวไปต่างจังหวัด',
+    submittedAt: '2026-06-06T08:00:00+07:00',
+  },
+  {
+    id: 'LV-DEMO-MAT-0002',
+    code: 'maternity_leave',
+    startDate: '2026-06-10',
+    endDate: '2026-06-19',
+    days: 10,
+    reason: 'ลาคลอดบุตร',
+    submittedAt: '2026-06-06T09:00:00+07:00',
+  },
+];
+
+/** Number of demo ESS leave rows seeded into the unified queue (Group A). */
+export const LEAVE_DEMO_COUNT = DEMO_PENDING_LEAVE.length;
+
 let seeded = false;
 
 /** Reset the once-per-session guard. Test-only — lets a suite re-run the single
  *  seed authority after clearing the stores between cases. */
 export function resetEnsureDemoSeedForTests(): void {
   seeded = false;
+  useLeaveBalances.getState().clear();
 }
 
 /** Seed all workflow stores once per browser session if stores are empty.
@@ -304,6 +392,40 @@ export function ensureDemoSeed(): void {
     ...APPROVAL_SEED_BY_TYPE.leave,
     ...APPROVAL_SEED_BY_TYPE.overtime,
   ]);
+  // Group A: seed the demo employee's quota buckets BEFORE adding leave rows so
+  // the reserve() on each addRequest draws against a real balance.
+  useLeaveBalances
+    .getState()
+    .seedBalances(DEMO_LEAVE_BALANCE_SEEDS.map((s) => ({ employeeId: DEMO_LEAVE_EMPLOYEE.id, ...s })));
+
+  // Add the demo pending ESS leave rows (reserves quota, carries a queueSnapshot
+  // so they surface in /quick-approve). Only seed when no ESS leave row exists.
+  const leaveStore = useLeaveApprovals.getState();
+  const hasDemoEss = leaveStore.requests.some((r) => !!r.leaveCode);
+  if (!hasDemoEss) {
+    for (const row of DEMO_PENDING_LEAVE) {
+      const snapshot = buildDemoLeaveRow(row);
+      // Pass the STABLE id (row.id, e.g. `LV-DEMO-MAT-0002`) as the store record's
+      // id so it survives the rehydrate-and-reseed cycle with the SAME id every
+      // load. The record id, the queueSnapshot id, and the inbox drill-in link all
+      // align on this stable id, so the detail route resolves it across a full
+      // navigation. addRequest is idempotent on a stable id (no double-reserve).
+      useLeaveApprovals.getState().addRequest({
+        id: row.id,
+        employeeId: DEMO_LEAVE_EMPLOYEE.id,
+        employeeName: DEMO_LEAVE_EMPLOYEE.name,
+        leaveType: row.code,
+        leaveCode: row.code,
+        startDate: row.startDate,
+        endDate: row.endDate,
+        reason: row.reason,
+        days: row.days,
+        unit: '1-day',
+        queueSnapshot: snapshot,
+      });
+    }
+  }
+
   APPROVAL_REGISTRY.change_request.seed(APPROVAL_SEED_BY_TYPE.change_request);
   APPROVAL_REGISTRY.claim.seed(APPROVAL_SEED_BY_TYPE.claim);
   APPROVAL_REGISTRY.transfer.seed(APPROVAL_SEED_BY_TYPE.transfer);

@@ -518,7 +518,7 @@ function collapseTaxPlanStatus(raw: string): QueueStatus {
 }
 
 export function selectPendingApprovals(input: {
-  leave: { id: string; status: string; queueSnapshot?: PendingRequest }[];
+  leave: { id: string; status: string; queueSnapshot?: PendingRequest; awaitingNext?: boolean }[];
   workflow: { id: string; status: string; queueSnapshot?: PendingRequest }[];
   claims: { id: string; status: string; queueSnapshot?: PendingRequest }[];
   transfers: { id: string; terminalStatus?: QueueStatus; snapshot: PendingRequest }[];
@@ -529,8 +529,16 @@ export function selectPendingApprovals(input: {
   const out: QueueApproval[] = [];
 
   // leave + overtime both live in the leave store; queueSnapshot.type distinguishes.
+  // Group A: a 2-level leave row carries `awaitingNext` once the manager approves;
+  // it stays collapsed-`pending` but is now awaiting the HR step (currentStepIndex
+  // reads awaitingNext to advance the chain — same idiom as the claim flow).
   for (const r of input.leave) {
-    if (r.queueSnapshot) out.push({ row: r.queueSnapshot, status: collapseQueueStatus(r.status) });
+    if (r.queueSnapshot)
+      out.push({
+        row: r.queueSnapshot,
+        status: collapseQueueStatus(r.status),
+        awaitingNext: r.awaitingNext,
+      });
   }
   // change_request lives in the workflow store; only queueSnapshot rows are queue rows.
   for (const r of input.workflow) {

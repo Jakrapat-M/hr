@@ -1,11 +1,12 @@
 /**
- * p2-timeoff-approve-tab-rbac.test.tsx — manager approval tab gating on /timeoff
+ * p2-timeoff-approve-tab-rbac.test.tsx — /timeoff no longer hosts an inline
+ * approve surface (Group A reconcile, spec A6). Approval moved entirely to the
+ * unified /quick-approve umbrella + /workflows/leave/[id] detail.
  * Framework: Vitest + jsdom + React Testing Library
  *
- * P2 task 2: the "รออนุมัติ" (approve) tab is a manager-only surface
- * (remove-not-hide). Employees never see it; the canonical approval inbox stays
- * /quick-approve. A deep-link to ?tab=approve as a non-reviewer falls back to
- * the request tab.
+ * This file used to assert a manager-only "รออนุมัติ" tab. That surface was
+ * removed: /timeoff is now submit + status-tracking ONLY for everyone. These
+ * tests lock in the removal so the inline approve tab cannot silently return.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -20,7 +21,9 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('@/stores/auth-store', () => ({
-  useAuthStore: (selector: (s: { roles: string[] }) => unknown) => selector({ roles: mockRoles }),
+  useAuthStore: (
+    selector: (s: { roles: string[]; userId: string | null; username: string | null }) => unknown,
+  ) => selector({ roles: mockRoles, userId: 'EMP001', username: 'สมชาย ใจดี' }),
 }))
 
 vi.mock('@/stores/humi-timeoff-slice', () => ({
@@ -41,21 +44,21 @@ beforeEach(() => {
 })
 afterEach(() => cleanup())
 
-describe('P2 — /timeoff approve tab RBAC', () => {
-  it('employee does NOT see the approve tab', () => {
+describe('/timeoff — no inline approve surface (approval lives in /quick-approve)', () => {
+  it('employee does NOT see an approve tab', () => {
     mockRoles = ['employee']
     render(<HumiTimeoffPage />)
     expect(screen.queryByRole('tab', { name: /รออนุมัติ/ })).toBeNull()
     expect(screen.getByRole('tab', { name: /คำขอใหม่/ })).toBeInTheDocument()
   })
 
-  it('manager DOES see the approve tab', () => {
+  it('manager also does NOT see an inline approve tab (moved to /quick-approve)', () => {
     mockRoles = ['manager']
     render(<HumiTimeoffPage />)
-    expect(screen.getByRole('tab', { name: /รออนุมัติ/ })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /รออนุมัติ/ })).toBeNull()
   })
 
-  it('employee deep-linking to ?tab=approve falls back to the request tab', () => {
+  it('a deep-link to ?tab=approve falls back to the request tab', () => {
     mockRoles = ['employee']
     mockTab = 'approve'
     render(<HumiTimeoffPage />)
