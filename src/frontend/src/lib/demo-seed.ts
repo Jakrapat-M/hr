@@ -26,6 +26,7 @@ import { APPROVAL_REGISTRY } from '@/lib/approval-registry';
 import { APPROVAL_SEED_BY_TYPE } from '@/lib/approval-seed-fixtures';
 import { useLeaveBalances } from '@/stores/leave-balances';
 import { useLeaveApprovals } from '@/stores/leave-approvals';
+import { useOvertimeRequests, type OTRequest } from '@/stores/overtime-requests';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { appliedChainFor } from '@/lib/time/approval-rules';
 import { getLeaveType } from '@/lib/time/leave-types';
@@ -369,6 +370,53 @@ const DEMO_PENDING_LEAVE: Array<{
 /** Number of demo ESS leave rows seeded into the unified queue (Group A). */
 export const LEAVE_DEMO_COUNT = DEMO_PENDING_LEAVE.length;
 
+// ── Group B: pending ESS OT rows ───────────────────────────────────────────────
+// Seed 2 pending OT rows into the dedicated overtime-requests store with STABLE
+// ids so the detail route resolves them across a full reload. One is a
+// cross-midnight example (23:00 → 02:00 = 3h) to exercise the wrap math.
+const DEMO_OT_EMPLOYEE = { id: 'EMP001', name: 'พิมพ์ชนก ศรีวัฒน์', department: 'Store' };
+
+const DEMO_PENDING_OT: OTRequest[] = [
+  {
+    id: 'OT-DEMO-0001',
+    employeeId: DEMO_OT_EMPLOYEE.id,
+    employeeName: DEMO_OT_EMPLOYEE.name,
+    department: DEMO_OT_EMPLOYEE.department,
+    otType: 'OT',
+    startAt: '2026-06-01T18:00:00',
+    endAt: '2026-06-01T21:00:00',
+    hours: 3,
+    reason: 'ปิดยอดขายสิ้นเดือน',
+    docs: [],
+    status: 'pending',
+    submittedAt: '2026-06-06T08:00:00+07:00',
+    audit: [
+      { actorId: DEMO_OT_EMPLOYEE.id, actorName: DEMO_OT_EMPLOYEE.name, action: 'submit', at: '2026-06-06T08:00:00+07:00' },
+    ],
+  },
+  {
+    // Cross-midnight: 1 Jun 23:00 → 2 Jun 02:00 = 3h.
+    id: 'OT-DEMO-0002',
+    employeeId: DEMO_OT_EMPLOYEE.id,
+    employeeName: DEMO_OT_EMPLOYEE.name,
+    department: DEMO_OT_EMPLOYEE.department,
+    otType: 'OT_BREAK',
+    startAt: '2026-06-01T23:00:00',
+    endAt: '2026-06-02T02:00:00',
+    hours: 3,
+    reason: 'ตรวจนับสต็อกข้ามคืน',
+    docs: [],
+    status: 'pending',
+    submittedAt: '2026-06-06T09:00:00+07:00',
+    audit: [
+      { actorId: DEMO_OT_EMPLOYEE.id, actorName: DEMO_OT_EMPLOYEE.name, action: 'submit', at: '2026-06-06T09:00:00+07:00' },
+    ],
+  },
+];
+
+/** Number of demo ESS OT rows seeded into the unified queue (Group B). */
+export const OT_DEMO_COUNT = DEMO_PENDING_OT.length;
+
 let seeded = false;
 
 /** Reset the once-per-session guard. Test-only — lets a suite re-run the single
@@ -376,6 +424,7 @@ let seeded = false;
 export function resetEnsureDemoSeedForTests(): void {
   seeded = false;
   useLeaveBalances.getState().clear();
+  useOvertimeRequests.getState().clear();
 }
 
 /** Seed all workflow stores once per browser session if stores are empty.
@@ -386,12 +435,14 @@ export function ensureDemoSeed(): void {
   seeded = true;
 
   // ── Registry-owned approval stores (the unified queue's canonical 20 rows) ──
-  // leave + overtime share the leave-approvals store; seed them TOGETHER through
-  // the leave adapter so the store's single empty-guard doesn't skip the 2nd set.
-  APPROVAL_REGISTRY.leave.seed([
-    ...APPROVAL_SEED_BY_TYPE.leave,
-    ...APPROVAL_SEED_BY_TYPE.overtime,
-  ]);
+  // Group B: OT now has its OWN store, so the leave adapter seeds ONLY leave rows
+  // (no more leave+overtime spread). The canonical OT rows are seeded into the
+  // overtime-requests store via its own adapter below.
+  APPROVAL_REGISTRY.leave.seed(APPROVAL_SEED_BY_TYPE.leave);
+  APPROVAL_REGISTRY.overtime.seed(APPROVAL_SEED_BY_TYPE.overtime);
+  // Add the 2 demo ESS OT rows (incl. one cross-midnight) with stable ids so the
+  // /workflows/ot/[id] detail route resolves them across a full reload.
+  useOvertimeRequests.getState().seedFromQueue(DEMO_PENDING_OT);
   // Group A: seed the demo employee's quota buckets BEFORE adding leave rows so
   // the reserve() on each addRequest draws against a real balance.
   useLeaveBalances

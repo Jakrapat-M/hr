@@ -26,13 +26,16 @@ import {
   PAY_RATE_DEMO_COUNT,
   TAX_PLANNING_DEMO_COUNT,
   LEAVE_DEMO_COUNT,
+  OT_DEMO_COUNT,
 } from '@/lib/demo-seed';
+import { useOvertimeRequests } from '@/stores/overtime-requests';
 
 // P2: the unified inbox now also seeds pay-rate + tax-planning demo rows, so the
 // honest total = the 20 canonical rows + those two demo row sets. Group A adds a
-// couple of demo ESS leave rows (LEAVE_DEMO_COUNT) so the leave tab is non-zero.
+// couple of demo ESS leave rows (LEAVE_DEMO_COUNT); Group B adds demo ESS OT rows
+// (OT_DEMO_COUNT) so the OT tab is non-zero.
 const TOTAL_SEED_COUNT =
-  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT;
+  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT + OT_DEMO_COUNT;
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
 
@@ -61,6 +64,7 @@ beforeEach(() => {
   useTransferApprovals.getState().clear();
   usePayRateApprovals.getState().clear();
   useBenefitTaxPlanningStore.getState().clear();
+  useOvertimeRequests.getState().clear();
   resetEnsureDemoSeedForTests();
   ensureDemoSeed();
   // Default acting persona = senior approver (acts on every row).
@@ -170,13 +174,13 @@ describe('QuickApproveSimple — AC7.4 inline actions', () => {
     const viewLinks = screen.getAllByRole('link', { name: /ดูรายละเอียด/ });
     expect(viewLinks.length).toBeGreaterThanOrEqual(1);
     // Most rows open the unified /quick-approve/[id] detail; pay-rate, tax-planning,
-    // time-correction + leave rows open their own /workflows/<type>/[id] page. Every
-    // view link must resolve to one of those detail routes.
+    // time-correction, leave + ot rows open their own /workflows/<type>/[id] page.
+    // Every view link must resolve to one of those detail routes.
     viewLinks.forEach((link) => {
       expect(link).toHaveAttribute(
         'href',
         expect.stringMatching(
-          /\/(quick-approve|workflows\/(pay-rate|tax-planning|time-correction|leave))\//,
+          /\/(quick-approve|workflows\/(pay-rate|tax-planning|time-correction|leave|ot))\//,
         ),
       );
     });
