@@ -102,6 +102,14 @@ export default function AdminBenefitsPage() {
               {isTh ? 'แก้ไขแผน' : 'Edit plans'} →
             </Button>
           </Link>
+          {/* Eligibility rules → editable rules page. Restores the menu path lost
+              when admin moved from AdminSidebar (had a "กฎสวัสดิการ" leaf) to the
+              unified humi shell. SF: business/eligibility rules follow plan setup. */}
+          <Link href={`/${locale}/admin/benefits/rules`}>
+            <Button variant="secondary">
+              {isTh ? 'กฎสิทธิ์' : 'Eligibility rules'} →
+            </Button>
+          </Link>
           {/* STA-62 — Import → deep-link to existing /import child route */}
           <Link href={`/${locale}/admin/benefits/import`}>
             <Button variant="secondary">
@@ -133,6 +141,16 @@ export default function AdminBenefitsPage() {
       </section>
 
       <DataSection title="Benefit master data" headers={['Benefit code','Name','Category','Type','Payroll income code','Effective date','End date','Status']} rows={masterData} />
+      {/* This table is read-only; the editable eligibility/business rules live at
+          /admin/benefits/rules. Surface a CTA so the page is reachable from the hub. */}
+      <div className="flex items-center justify-end">
+        <Link
+          href={`/${locale}/admin/benefits/rules`}
+          className="text-small font-medium text-accent hover:underline"
+        >
+          {isTh ? 'จัดการกฎสิทธิ์ →' : 'Manage eligibility rules →'}
+        </Link>
+      </div>
       <DataSection title="Eligibility rules" headers={['Benefit group','Benefit code','Business unit/company','Employee group/subgroup','Job level','Personal grade','Min service month','Effective date','Status']} rows={eligibility} />
       <DataSection title="Benefit Special Privilege and EBO reporting" description="EBO is admin/reporting-only in this pass and is not exposed to employees." headers={['Record code','Section','Description','Visibility','Status']} rows={eboRows} />
       <DataSection title="Amount rules" headers={['Benefit group','Amount type','Amount per claim','Frequency','Maximum amount','Effective date','Status']} rows={amountRules} />
