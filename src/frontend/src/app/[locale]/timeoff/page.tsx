@@ -16,7 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/date';
 import { countLeaveDays } from '@/lib/leave-math';
-import { DOCUMENT_UPLOAD_HELPER_TH } from '@/lib/document-boundary';
+import { DOCUMENT_UPLOAD_HELPER_TH, DOCUMENT_UPLOAD_HELPER_EN } from '@/lib/document-boundary';
 import {
   HUMI_LEAVE_BALANCES,
   HUMI_LEAVE_COVERAGE,
@@ -113,11 +113,52 @@ const HISTORY_TONE: Record<'approved' | 'rejected' | 'pending', string> = {
   pending: 'bg-accent-soft text-[color:var(--color-accent-ink)]',
 } as const;
 
-const HISTORY_LABEL: Record<'approved' | 'rejected' | 'pending', string> = {
+const HISTORY_LABEL_TH: Record<'approved' | 'rejected' | 'pending', string> = {
   approved: 'อนุมัติแล้ว',
   rejected: 'ไม่อนุมัติ',
   pending: 'รออนุมัติ',
 } as const;
+
+const HISTORY_LABEL_EN: Record<'approved' | 'rejected' | 'pending', string> = {
+  approved: 'Approved',
+  rejected: 'Rejected',
+  pending: 'Pending',
+} as const;
+
+// English counterparts for the HUMI_LEAVE_BALANCES summary cards (keyed by the
+// balance `kind`). The mock data is Thai-only + shared, so we localize at the
+// render site instead of mutating the shared seed.
+const BALANCE_LABEL_EN: Record<string, string> = {
+  vacation: 'Annual Leave',
+  personal: 'Personal Leave',
+  sick: 'Sick Leave',
+  maternity: 'Maternity Leave',
+  ordination: 'Ordination Leave',
+  military: 'Military Service Leave',
+  parental: 'Parental Leave',
+  unpaid: 'Unpaid Leave',
+};
+
+const BALANCE_UNIT_EN: Record<string, string> = {
+  'วันคงเหลือ': 'days left',
+  'ตามจำเป็น': 'as needed',
+  'ไม่รับค่าจ้าง': 'unpaid',
+};
+
+const BALANCE_REMAINING_EN: Record<string, string> = {
+  'ไม่จำกัด': 'Unlimited',
+  'ตามหมายเรียก': 'Per summons',
+};
+
+const BALANCE_NOTE_EN: Record<string, string> = {
+  'จาก 15 วันต่อปี': 'of 15 days per year',
+  'จาก 4 วันต่อปี': 'of 4 days per year',
+  'ใช้ไปแล้ว 2 วันในปีนี้': '2 days used this year',
+  'จาก 98 วันต่อการคลอด': 'of 98 days per birth',
+  'ลาตามหมายเรียกของทางราชการ': 'Per government call-up',
+  'จาก 30 วันต่อปี': 'of 30 days per year',
+  'หักจากเงินเดือนตามจำนวนวัน': 'Deducted from pay per day',
+};
 
 // Simple in-memory toast (no external library)
 function useToast() {
@@ -130,6 +171,9 @@ function useToast() {
 }
 
 export default function HumiTimeoffPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) ?? 'th';
+  const isTh = locale !== 'en';
   const searchParams = useSearchParams();
   // ?tab=approve is no longer a valid surface here (approval moved to
   // /quick-approve). Any deep-link to it falls back to the request tab.
@@ -160,14 +204,14 @@ export default function HumiTimeoffPage() {
       {/* Page header */}
       <header className="humi-page-head mb-8">
         <div className="flex flex-col gap-1">
-          <CardEyebrow>ลางาน</CardEyebrow>
+          <CardEyebrow>{isTh ? 'ลางาน' : 'Time Off'}</CardEyebrow>
           <h1
             className={cn(
               'font-display font-semibold tracking-tight text-ink',
               'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
             )}
           >
-            ยื่นคำขอ · ติดตามสถานะ
+            {isTh ? 'ยื่นคำขอ · ติดตามสถานะ' : 'Request · Track status'}
           </h1>
         </div>
         <div className="humi-spacer" />
@@ -176,47 +220,53 @@ export default function HumiTimeoffPage() {
           leadingIcon={<Plus size={16} />}
           onClick={() => setTab('request')}
         >
-          สร้างคำขอใหม่
+          {isTh ? 'สร้างคำขอใหม่' : 'New request'}
         </Button>
       </header>
 
       {/* Balance KPIs */}
       <section
-        aria-label="ยอดวันลาคงเหลือ"
+        aria-label={isTh ? 'ยอดวันลาคงเหลือ' : 'Leave balances'}
         className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3"
       >
-        {HUMI_LEAVE_BALANCES.map((b) => (
-          <Card key={b.kind} variant="raised" size="md">
-            <CardEyebrow>{b.label}</CardEyebrow>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span
-                className={cn(
-                  'font-display font-semibold text-ink tabular-nums whitespace-nowrap',
-                  'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
-                )}
-              >
-                {b.remaining}
-              </span>
-              <span className="text-small text-ink-muted">{b.unitLabel}</span>
-            </div>
-            {b.percentUsed > 0 && (
-              <div
-                role="progressbar"
-                aria-valuenow={b.percentUsed}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={b.label}
-                className="humi-progress mt-3"
-              >
-                <div
-                  className={cn('h-full rounded-full', b.barClass)}
-                  style={{ width: `${b.percentUsed}%` }}
-                />
+        {HUMI_LEAVE_BALANCES.map((b) => {
+          const label = isTh ? b.label : (BALANCE_LABEL_EN[b.kind] ?? b.label);
+          const remaining = isTh ? b.remaining : (BALANCE_REMAINING_EN[b.remaining] ?? b.remaining);
+          const unitLabel = isTh ? b.unitLabel : (BALANCE_UNIT_EN[b.unitLabel] ?? b.unitLabel);
+          const note = isTh ? b.note : (BALANCE_NOTE_EN[b.note] ?? b.note);
+          return (
+            <Card key={b.kind} variant="raised" size="md">
+              <CardEyebrow>{label}</CardEyebrow>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span
+                  className={cn(
+                    'font-display font-semibold text-ink tabular-nums whitespace-nowrap',
+                    'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
+                  )}
+                >
+                  {remaining}
+                </span>
+                <span className="text-small text-ink-muted">{unitLabel}</span>
               </div>
-            )}
-            <p className="mt-2 text-small text-ink-muted">{b.note}</p>
-          </Card>
-        ))}
+              {b.percentUsed > 0 && (
+                <div
+                  role="progressbar"
+                  aria-valuenow={b.percentUsed}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={label}
+                  className="humi-progress mt-3"
+                >
+                  <div
+                    className={cn('h-full rounded-full', b.barClass)}
+                    style={{ width: `${b.percentUsed}%` }}
+                  />
+                </div>
+              )}
+              <p className="mt-2 text-small text-ink-muted">{note}</p>
+            </Card>
+          );
+        })}
       </section>
 
       {/* Main grid: form (1.2fr) + right column (1fr) */}
@@ -225,14 +275,14 @@ export default function HumiTimeoffPage() {
         <Card variant="raised" size="lg">
           <div
             role="tablist"
-            aria-label="มุมมองคำขอลางาน"
+            aria-label={isTh ? 'มุมมองคำขอลางาน' : 'Leave request views'}
             className="flex flex-wrap gap-1 border-b border-hairline"
           >
             <TabButton active={tab === 'request'} onClick={() => setTab('request')}>
-              คำขอใหม่
+              {isTh ? 'คำขอใหม่' : 'New request'}
             </TabButton>
             <TabButton active={tab === 'history'} onClick={() => setTab('history')}>
-              สถานะคำขอของฉัน
+              {isTh ? 'สถานะคำขอของฉัน' : 'My request status'}
             </TabButton>
           </div>
 
@@ -250,8 +300,8 @@ export default function HumiTimeoffPage() {
         <aside className="flex flex-col gap-6">
           {/* Team coverage */}
           <Card variant="raised" size="lg">
-            <CardEyebrow>ใครลาเดือนนี้</CardEyebrow>
-            <CardTitle className="mt-1">การครอบคลุมของทีม</CardTitle>
+            <CardEyebrow>{isTh ? 'ใครลาเดือนนี้' : 'Who is off this month'}</CardEyebrow>
+            <CardTitle className="mt-1">{isTh ? 'การครอบคลุมของทีม' : 'Team coverage'}</CardTitle>
 
             <ul role="list" className="mt-4 flex flex-col gap-3">
               {HUMI_LEAVE_COVERAGE.map((c) => (
@@ -292,7 +342,7 @@ export default function HumiTimeoffPage() {
               aria-hidden
               className="absolute -right-10 -top-10 h-36 w-28 rounded-full bg-accent opacity-40 blur-2xl"
             />
-            <CardEyebrow className="relative text-accent">นโยบาย</CardEyebrow>
+            <CardEyebrow className="relative text-accent">{isTh ? 'นโยบาย' : 'Policy'}</CardEyebrow>
             <h3
               className={cn(
                 'relative mt-1 font-display font-semibold tracking-tight',
@@ -300,15 +350,16 @@ export default function HumiTimeoffPage() {
                 'text-canvas'
               )}
             >
-              การยกยอดวันลา
+              {isTh ? 'การยกยอดวันลา' : 'Leave carryover'}
             </h3>
             <p className="relative mt-2 text-small text-canvas/70 leading-relaxed">
-              วันลาพักร้อนที่ไม่ได้ใช้ สูงสุด 5 วัน สามารถยกยอดไปปีถัดไปได้
-              ส่วนที่เกินจะจ่ายเป็นเงินในเช็คเงินเดือนวันที่ 15 ธันวาคม
+              {isTh
+                ? 'วันลาพักร้อนที่ไม่ได้ใช้ สูงสุด 5 วัน สามารถยกยอดไปปีถัดไปได้ ส่วนที่เกินจะจ่ายเป็นเงินในเช็คเงินเดือนวันที่ 15 ธันวาคม'
+                : 'Up to 5 unused annual-leave days can be carried over to next year. The remainder is paid out in the December 15 payslip.'}
             </p>
             <div className="relative mt-4">
               <Button variant="primary" onClick={() => setPolicyOpen(true)}>
-                อ่านนโยบายฉบับเต็ม
+                {isTh ? 'อ่านนโยบายฉบับเต็ม' : 'Read the full policy'}
               </Button>
             </div>
           </Card>
@@ -319,21 +370,42 @@ export default function HumiTimeoffPage() {
       <Modal
         open={policyOpen}
         onClose={() => setPolicyOpen(false)}
-        title="นโยบายการยกยอดวันลา · ฉบับเต็ม"
+        title={isTh ? 'นโยบายการยกยอดวันลา · ฉบับเต็ม' : 'Leave carryover policy · Full text'}
       >
         <div className="space-y-4 text-body text-ink-soft leading-relaxed">
-          <p>
-            วันลาพักร้อนที่ไม่ได้ใช้ภายในปีปฏิทิน สามารถยกยอดไปใช้ในปีถัดไปได้
-            สูงสุด <strong className="text-ink">5 วัน</strong> โดยจะต้องใช้ให้หมดภายในไตรมาสแรกของปีถัดไป
-          </p>
+          {isTh ? (
+            <p>
+              วันลาพักร้อนที่ไม่ได้ใช้ภายในปีปฏิทิน สามารถยกยอดไปใช้ในปีถัดไปได้
+              สูงสุด <strong className="text-ink">5 วัน</strong> โดยจะต้องใช้ให้หมดภายในไตรมาสแรกของปีถัดไป
+            </p>
+          ) : (
+            <p>
+              Unused annual leave within the calendar year can be carried over to the
+              next year, up to <strong className="text-ink">5 days</strong>, and must be
+              used within the first quarter of the following year.
+            </p>
+          )}
           <ul className="list-disc space-y-2 pl-5">
-            <li>วันลาส่วนที่เกิน 5 วันจะถูกจ่ายเป็นเงินในเช็คเงินเดือนวันที่ 15 ธันวาคม</li>
-            <li>ลาป่วยและลากิจไม่สามารถยกยอดได้ และจะถูกรีเซ็ตต้นปี</li>
-            <li>การยกยอดจะคำนวณอัตโนมัติเมื่อปิดรอบปลายปี ไม่ต้องยื่นคำขอ</li>
-            <li>กรณีลาออกระหว่างปี วันลาคงเหลือจะถูกจ่ายตามสัดส่วนในงวดสุดท้าย</li>
+            {isTh ? (
+              <>
+                <li>วันลาส่วนที่เกิน 5 วันจะถูกจ่ายเป็นเงินในเช็คเงินเดือนวันที่ 15 ธันวาคม</li>
+                <li>ลาป่วยและลากิจไม่สามารถยกยอดได้ และจะถูกรีเซ็ตต้นปี</li>
+                <li>การยกยอดจะคำนวณอัตโนมัติเมื่อปิดรอบปลายปี ไม่ต้องยื่นคำขอ</li>
+                <li>กรณีลาออกระหว่างปี วันลาคงเหลือจะถูกจ่ายตามสัดส่วนในงวดสุดท้าย</li>
+              </>
+            ) : (
+              <>
+                <li>Days beyond the 5-day cap are paid out in the December 15 payslip.</li>
+                <li>Sick and personal leave cannot be carried over and reset at year start.</li>
+                <li>Carryover is calculated automatically at year-end close — no request needed.</li>
+                <li>On mid-year resignation, the remaining balance is paid out pro rata in the final period.</li>
+              </>
+            )}
           </ul>
           <p className="text-small text-ink-muted">
-            อ้างอิงระเบียบบริษัทว่าด้วยการลา · ฉบับปรับปรุง 2569
+            {isTh
+              ? 'อ้างอิงระเบียบบริษัทว่าด้วยการลา · ฉบับปรับปรุง 2569'
+              : 'Per the company leave policy · 2026 revision'}
           </p>
         </div>
       </Modal>
@@ -575,7 +647,7 @@ function RequestTab({
       {/* Leave type selector — registry-driven (23 types) */}
       <div
         role="radiogroup"
-        aria-label="ประเภทการลา"
+        aria-label={isTh ? 'ประเภทการลา' : 'Leave type'}
         className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2"
       >
         {selectableTypes.map((opt) => {
@@ -641,6 +713,7 @@ function RequestTab({
           from={fromISO}
           to={toISO}
           holidays={HUMI_TH_HOLIDAYS}
+          locale={locale}
           onChange={({ from, to }) => {
             setFromISO(from);
             setToISO(to);
@@ -849,7 +922,7 @@ function RequestTab({
         </ul>
       )}
       <p className="mt-1 text-small text-ink-muted" data-testid="timeoff-attachment-boundary">
-        {DOCUMENT_UPLOAD_HELPER_TH}
+        {isTh ? DOCUMENT_UPLOAD_HELPER_TH : DOCUMENT_UPLOAD_HELPER_EN}
       </p>
 
       {/* Blocking validation errors (pumpkin / danger — never red) */}
@@ -956,7 +1029,7 @@ function HistoryRow({ h, locale }: { h: TimeoffHistoryItem; locale: string }) {
               APPROVAL_STATUS_TONE[h.status]
             )}
           >
-            {HISTORY_LABEL[h.status]}
+            {(locale === 'th' ? HISTORY_LABEL_TH : HISTORY_LABEL_EN)[h.status]}
           </span>
           {h.status === 'pending' && isoSubmittedAt && (
             <span className={`text-xs font-mono ${days > 3 ? 'text-amber-600 font-semibold' : 'text-ink-muted'}`}>
@@ -1123,14 +1196,12 @@ function TabButton({
 function Field({
   label,
   htmlFor,
-  optional,
   className,
   error,
   children,
 }: {
   label: string;
   htmlFor: string;
-  optional?: boolean;
   className?: string;
   error?: string;
   children: React.ReactNode;
@@ -1142,9 +1213,6 @@ function Field({
         className="text-small font-medium text-ink-soft"
       >
         {label}
-        {optional && (
-          <span className="ml-1 font-normal text-ink-faint">(ไม่บังคับ)</span>
-        )}
       </label>
       {children}
       {error && (
