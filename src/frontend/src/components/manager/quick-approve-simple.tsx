@@ -17,6 +17,7 @@ import { DataTable, type DataTableColumn } from '@/components/humi';
 import { APPROVAL_REGISTRY, useSelectPendingApprovals, type QueueApproval } from '@/lib/approval-registry';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { useAuthStore } from '@/stores/auth-store';
+import { useQuickApproveAssignments, type Assignee } from '@/stores/quick-approve-assignments';
 import { canActOn, countActionable } from '@/lib/claim-permissions';
 import { nextApproverLabel } from '@/lib/approval-routing';
 
@@ -104,6 +105,24 @@ export function QuickApproveSimple() {
     () => Object.fromEntries(queue.filter((q) => q.awaitingNext).map((q) => [q.row.id, true])),
     [queue],
   );
+
+  // STA-88 — per-row "assign to me" state. The current persona is the assignee
+  // candidate; rows fall back to their seeded `assignedApprover` until overridden.
+  const userId = useAuthStore((s) => s.userId);
+  const username = useAuthStore((s) => s.username);
+  const me: Assignee = { id: userId ?? 'me', name: username ?? MANAGER_NAME };
+  const assignmentOverrides = useQuickApproveAssignments((s) => s.assignments);
+  const assignToMe = useQuickApproveAssignments((s) => s.assignToMe);
+  const unassign = useQuickApproveAssignments((s) => s.unassign);
+
+  function assigneeOf(row: PendingRequest): Assignee | null {
+    if (Object.prototype.hasOwnProperty.call(assignmentOverrides, row.id)) {
+      return assignmentOverrides[row.id];
+    }
+    return row.assignedApprover
+      ? { id: row.assignedApprover.id, name: row.assignedApprover.name }
+      : null;
+  }
 
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
 
@@ -243,6 +262,44 @@ export function QuickApproveSimple() {
         );
       },
       className: 'w-28',
+    },
+    {
+      id: 'assignTo',
+      header: t('columns.assignTo'),
+      cell: (row) => {
+        const mine = assigneeOf(row)?.id === me.id;
+        return (
+          <Button
+            variant={mine ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => (mine ? unassign(row.id) : assignToMe(row.id, me))}
+          >
+            {mine ? t('actions.assigned') : t('actions.assignToMe')}
+          </Button>
+        );
+      },
+      className: 'w-32',
+    },
+    {
+      id: 'assignedPeople',
+      header: t('columns.assignedPeople'),
+      cell: (row) => {
+        const assignee = assigneeOf(row);
+        if (!assignee) return <span style={{ color: 'var(--color-ink-muted)' }}>—</span>;
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span
+              className="humi-avatar humi-avatar--teal"
+              style={{ width: 24, height: 24, fontSize: 10, flexShrink: 0 }}
+              aria-hidden
+            >
+              {assignee.name.trim().charAt(0)}
+            </span>
+            <span style={{ fontSize: 13, color: 'var(--color-ink)' }}>{assignee.name}</span>
+          </div>
+        );
+      },
+      className: 'w-44',
     },
     {
       id: 'actions',

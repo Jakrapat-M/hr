@@ -3105,13 +3105,17 @@
         "type": "ประเภท",
         "filed": "วันที่ส่ง",
         "detail": "รายละเอียด",
-        "status": "สถานะ"
+        "status": "สถานะ",
+        "assignTo": "มอบหมาย",
+        "assignedPeople": "ผู้รับผิดชอบ"
       },
       "actions": {
         "approve": "อนุมัติ",
         "reject": "ปฏิเสธ",
         "view": "ดูรายละเอียด",
-        "viewOnly": "ดูอย่างเดียว"
+        "viewOnly": "ดูอย่างเดียว",
+        "assignToMe": "รับเรื่องนี้",
+        "assigned": "รับแล้ว"
       },
       "status": {
         "pending": "รออนุมัติ",

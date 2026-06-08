@@ -3144,13 +3144,17 @@
         "type": "Type",
         "filed": "Filed",
         "detail": "Detail",
-        "status": "Status"
+        "status": "Status",
+        "assignTo": "Assign to",
+        "assignedPeople": "Assigned people"
       },
       "actions": {
         "approve": "Approve",
         "reject": "Reject",
         "view": "View",
-        "viewOnly": "View only"
+        "viewOnly": "View only",
+        "assignToMe": "Assign to me",
+        "assigned": "Assigned"
       },
       "status": {
         "pending": "Pending",
