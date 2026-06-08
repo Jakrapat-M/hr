@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { Check, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight, Sun, X } from 'lucide-react';
@@ -200,6 +201,15 @@ export default function HumiTimeoffPage() {
           {toast.msg}
         </div>
       )}
+
+      {/* Breadcrumb — back to the Time hub (parent), matching /time/corrections */}
+      <nav className="mb-4 flex items-center gap-1 text-xs text-ink-muted" aria-label="breadcrumb">
+        <Link href={`/${locale}/time`} className="hover:text-ink transition">
+          {isTh ? 'เวลางาน' : 'Time'}
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        <span className="text-ink font-medium">{isTh ? 'การลา' : 'Time Off'}</span>
+      </nav>
 
       {/* Page header */}
       <header className="humi-page-head mb-8">
