@@ -4830,7 +4830,14 @@
     "empty": "ไม่พบแผนที่ตรงกับตัวกรองที่เลือก",
     "disclaimerEyebrow": "หมายเหตุ",
     "disclaimerTitle": "ข้อมูลจำลอง (Mockup)",
-    "disclaimerBody": "การแก้ไขแผนในหน้านี้เป็นแบบจำลองเท่านั้น ยังไม่มีการเชื่อมต่อกับระบบหลังบ้านจริง"
+    "disclaimerBody": "การแก้ไขแผนในหน้านี้เป็นแบบจำลองเท่านั้น ยังไม่มีการเชื่อมต่อกับระบบหลังบ้านจริง",
+    "filterStatus": "สถานะ:",
+    "filterStatusActive": "ใช้งาน",
+    "filterStatusInactive": "ไม่ใช้งาน",
+    "filterStartDate": "วันที่เริ่ม:",
+    "filterEffectiveDate": "วันที่มีผล:",
+    "filterMonthAll": "เดือน",
+    "filterYearAll": "ปี"
   },
   "benefitHub": {
     "reimbursement": {
