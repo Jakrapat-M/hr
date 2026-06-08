@@ -81,7 +81,7 @@ export function RejectReturnDrawer({
 
   const title = isReject
     ? (isTh ? 'ปฏิเสธคำขอ' : 'Reject Request')
-    : (isTh ? 'ส่งคืนคำขอ' : 'Return Request');
+    : (isTh ? 'ส่งกลับคำขอ' : 'Send-back Request');
 
   const canSubmit = selectedReason.trim().length > 0;
 
@@ -166,7 +166,7 @@ export function RejectReturnDrawer({
               ? (isTh ? 'กำลังดำเนินการ...' : 'Processing...')
               : isReject
               ? (isTh ? 'ยืนยันปฏิเสธ' : 'Confirm Reject')
-              : (isTh ? 'ยืนยันส่งคืน' : 'Confirm Return')}
+              : (isTh ? 'ยืนยันการส่งกลับ' : 'Confirm Send Back')}
           </Button>
         </div>
       </div>
