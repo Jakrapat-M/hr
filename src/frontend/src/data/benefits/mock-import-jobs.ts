@@ -1,7 +1,7 @@
 'use client';
 
 export type ImportJobStatus = 'queued' | 'running' | 'completed' | 'failed';
-export type ImportJobType = 'enrolment' | 'claim';
+export type ImportJobType = 'enrolment' | 'claim' | 'adjust';
 
 export interface ImportJob {
   id: string;
