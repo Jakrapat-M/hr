@@ -222,8 +222,9 @@ export default function EmployeeDetailPage() {
   const isTh = locale === 'th'
   const expandLabel = isTh ? 'ขยาย' : 'Expand'
   const collapseLabel = isTh ? 'ย่อ' : 'Collapse'
-  const [employmentCollapsed, setEmploymentCollapsed] = useState(false)
-  const [privilegeCollapsed, setPrivilegeCollapsed] = useState(false)
+  // BA: every collapsible section starts COLLAPSED — the admin opens only what they need.
+  const [employmentCollapsed, setEmploymentCollapsed] = useState(true)
+  const [privilegeCollapsed, setPrivilegeCollapsed] = useState(true)
   const [benefitsCollapsed, setBenefitsCollapsed] = useState(true)
 
   // Timeline store — S3 owns this
