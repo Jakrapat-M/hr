@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { getCorrectionReason } from '@/lib/time/correction-reasons';
 
 // time-corrections — P3 Zustand+persist store for employee timesheet/attendance
 // correction requests, surfaced as a NEW row type in the unified /quick-approve
@@ -10,15 +11,17 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 // approver chain — the bridge in approval-registry sets the first timeline step to
 // `หัวหน้างาน` so canActOn() lets a team manager act.
 //
+// Group C reshape: the punch the correction targets is now `correctionType`
+// (in / out / both) and the WHY is a `reasonCode` drawn from the 15-row
+// CORRECTION_REASONS registry (each row carries a payroll payCode). The store
+// derives + stores `payCode` from the reasonCode so projections never re-look-up.
+//
 // Phase: UI mockup. No backend. setTimeout-free synchronous mock dispatch.
 
 export type TimeCorrectionStep = 'pending_manager' | 'approved' | 'rejected';
 
-export type TimeCorrectionKind =
-  | 'missing-checkin'
-  | 'missing-checkout'
-  | 'wrong-time'
-  | 'forgot-clock';
+/** Which punch the correction targets: in (missing-in) / out (missing-out) / both. */
+export type CorrectionType = 'in' | 'out' | 'both';
 
 export type TimeCorrectionAuditEntry = {
   actorName: string;
@@ -34,12 +37,20 @@ export type TimeCorrectionRequest = {
   department: string;
   /** Working day the correction applies to (ISO date YYYY-MM-DD). */
   date: string;
-  kind: TimeCorrectionKind;
+  /** Which clock punch is being corrected. */
+  correctionType: CorrectionType;
+  /** payCode of the chosen CORRECTION_REASONS row (the "why"). */
+  reasonCode: string;
+  /** Derived from reasonCode — the payroll pay-code the correction posts under. */
+  payCode: string;
   /** System-recorded time (blank for missing punches). */
   originalTime?: string;
   /** Time the employee says is correct (HH:mm). */
   correctedTime: string;
+  /** Free-text note from the employee. */
   reason: string;
+  /** Optional attachment filenames (mock — names only). */
+  docs?: string[];
   status: TimeCorrectionStep;
   submittedAt: string; // ISO timestamp
   audit: TimeCorrectionAuditEntry[];
@@ -51,17 +62,17 @@ export const TIME_CORRECTION_STEP_LABEL: Record<TimeCorrectionStep, { th: string
   rejected: { th: 'ถูกปฏิเสธ', en: 'Rejected' },
 };
 
-export const TIME_CORRECTION_KIND_LABEL: Record<TimeCorrectionKind, { th: string; en: string }> = {
-  'missing-checkin': { th: 'ลืมบันทึกเข้างาน', en: 'Missing check-in' },
-  'missing-checkout': { th: 'ลืมบันทึกออกงาน', en: 'Missing check-out' },
-  'wrong-time': { th: 'เวลาผิดพลาด', en: 'Wrong time' },
-  'forgot-clock': { th: 'ลืมลงเวลา', en: 'Forgot to clock' },
+/** Bilingual labels for the in/out/both punch selector + detail display. */
+export const CORRECTION_TYPE_LABEL: Record<CorrectionType, { th: string; en: string }> = {
+  in: { th: 'เวลาเข้า (ลืมกดเข้า)', en: 'Time in (missing in)' },
+  out: { th: 'เวลาออก (ลืมกดออก)', en: 'Time out (missing out)' },
+  both: { th: 'เข้า-ออก', en: 'In & out' },
 };
 
 interface TimeCorrectionsState {
   requests: TimeCorrectionRequest[];
   addRequest: (
-    r: Omit<TimeCorrectionRequest, 'id' | 'submittedAt' | 'status' | 'audit'>,
+    r: Omit<TimeCorrectionRequest, 'id' | 'submittedAt' | 'status' | 'audit' | 'payCode'>,
   ) => string;
   approve: (id: string, by: { name: string }, comment?: string) => void;
   reject: (id: string, by: { name: string }, reason: string) => void;
@@ -81,8 +92,12 @@ export const useTimeCorrections = create<TimeCorrectionsState>()(
       addRequest: (payload) => {
         const id = generateTimeCorrectionId();
         const now = new Date().toISOString();
+        // Derive the payroll pay-code from the chosen reason (falls back to the
+        // raw reasonCode when the registry has no matching row).
+        const payCode = getCorrectionReason(payload.reasonCode)?.payCode ?? payload.reasonCode;
         const req: TimeCorrectionRequest = {
           ...payload,
+          payCode,
           id,
           submittedAt: now,
           status: 'pending_manager',
