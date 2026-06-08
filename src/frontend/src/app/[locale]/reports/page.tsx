@@ -1,5 +1,5 @@
 // Workforce Reports — persona-scoped aggregate rollups (P2).
-// Open route (menu show: manager/hrbp/hradmin/hris/spd/sysadmin). We DO NOT deny
+// Open route (menu show: manager/hrbp/hradmin/hris/spd). We DO NOT deny
 // here — instead the employee set the report aggregates over is narrowed to the
 // persona's scope (manager → direct reports · hrbp → BU · spd/admin → all), so
 // every persona sees correct counts for what it is entitled to see.

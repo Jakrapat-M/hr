@@ -26,11 +26,14 @@ const ROLE_TIER: Record<Role, PersonaTier> = {
   employee: 'D',
 };
 
-/** Blueprint persona ids. */
-export type PersonaId = 'employee' | 'manager' | 'hrbp' | 'spd' | 'hradmin' | 'hris' | 'sysadmin';
+/** Blueprint persona ids. (The former `sysadmin` persona was a phantom — it
+ *  resolved to the same `hr_manager` role as `hris`, so the two were
+ *  indistinguishable gates. Collapsed into `hris`; the top-tier admin role is
+ *  `hr_manager`, which `hris` maps to.) */
+export type PersonaId = 'employee' | 'manager' | 'hrbp' | 'spd' | 'hradmin' | 'hris';
 
-/** Blueprint persona id → app Role. sysadmin maps to the top role so it sees
- *  every group; hris → hr_manager (master-data tier), hradmin → hr_admin. */
+/** Blueprint persona id → app Role. hris → hr_manager (top admin / master-data
+ *  tier — sees every group); hradmin → hr_admin. */
 export const PERSONA_ROLE: Record<PersonaId, Role> = {
   employee: 'employee',
   manager: 'manager',
@@ -38,7 +41,6 @@ export const PERSONA_ROLE: Record<PersonaId, Role> = {
   spd: 'spd',
   hradmin: 'hr_admin',
   hris: 'hr_manager',
-  sysadmin: 'hr_manager',
 };
 
 /** The set of tiers a role bundle unlocks, deduped + in canonical order. */

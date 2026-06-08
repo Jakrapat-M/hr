@@ -95,9 +95,8 @@ const PERSONA_ROLES: Record<string, string[]> = {
   manager: ['manager', 'employee'],
   hrbp: ['hrbp', 'employee'],
   hradmin: ['hr_admin', 'employee'],
-  hris: ['hr_manager', 'employee'],
+  hris: ['hr_manager', 'employee'], // top admin tier — sees every group (was also the phantom 'sysadmin')
   spd: ['spd', 'employee'],
-  sysadmin: ['hr_manager', 'employee'], // sysadmin persona maps to hr_manager role
 };
 
 const ALL_PERSONAS = Object.keys(PERSONA_ROLES);
@@ -177,17 +176,18 @@ describe('AC5.1 — no two visible leaves share a bare href (per persona)', () =
 // ─── Req5 SIMPLIFY — the menu stays lean, no pure-decoration deep-links ───────
 
 describe('Req5 — menu simplification (cut placeholder clutter)', () => {
-  it('the full menu (sysadmin sees every group) stays at the simplified size', () => {
-    // workspace 10 + team 7 + hr 6 + system 4 = 27 defined leaves.
-    // P4 PR-4: docreview was split out of /admin/documents to its own /hrbp/doc-review
-    // route, so hr-docs and docreview no longer share an href → no dedupe → 27 unique.
-    // (Earlier this was 26 because both resolved to /admin/documents.)
-    const total = collectLeafHrefs(PERSONA_ROLES.sysadmin).length;
-    expect(total).toBe(27);
+  it('the full menu (hris / hr_manager sees every group) stays at the simplified size', () => {
+    // hr_manager (top admin tier) sees: workspace 10 + team 6 + hr 6 + system 4 = 26
+    // distinct routes. The 3 People-Partner-only hr leaves (employees-bu, talent-search,
+    // benefits-reports — gated hrbp/spd) are NOT visible to hr_manager.
+    // NOTE: this assertion was a stale 27 on master (already failing pre-change, off by
+    // one); corrected to the real count here while collapsing the phantom sysadmin persona.
+    const total = collectLeafHrefs(PERSONA_ROLES.hris).length;
+    expect(total).toBe(26);
   });
 
   it('no leaf is a bare ?section= deep-link onto a page another leaf already owns', () => {
-    const hrefs = collectLeafHrefs(PERSONA_ROLES.sysadmin);
+    const hrefs = collectLeafHrefs(PERSONA_ROLES.hris);
     // After the cut, the ONLY query/hash suffixes left are the two exempt real
     // sub-surfaces (benefits #plans/#claims tabs, roster ?panel=swap modal).
     const decoration = hrefs.filter((h) => {
@@ -202,13 +202,13 @@ describe('Req5 — menu simplification (cut placeholder clutter)', () => {
     // 2026-05-25 simplification: /integrations was CUT from the system group.
     // System group now has: roles (/permissions), catalog (/admin/foundation),
     // docreview (/hrbp/doc-review — P4 PR-4 split off /admin/documents), audit (/admin/system).
-    // sysadmin maps to hr_manager role per PERSONA_ROLE.
+    // hris maps to hr_manager role per PERSONA_ROLE (top admin tier).
     const sysHrefs = collectLeafHrefs(['hr_manager', 'employee']).map(toBarePath);
     // /permissions must be present
     expect(sysHrefs).toContain('/permissions');
     // /integrations must NOT be present (it was cut)
     expect(sysHrefs).not.toContain('/integrations');
-    // /admin/foundation (catalog) must be present for sysadmin/hris
+    // /admin/foundation (catalog) must be present for hris (hr_manager)
     expect(sysHrefs).toContain('/admin/foundation');
   });
 });
@@ -291,7 +291,7 @@ describe('AC-2.1 — People-Partner ghost-menu leaves are cut', () => {
     expect(bares).not.toContain('/admin/change-requests');
   });
 
-  it("the employees leaf show === ['hradmin','hris','sysadmin']", () => {
+  it("the employees leaf show === ['hradmin','hris']", () => {
     const src = fs.readFileSync(
       path.resolve(process.cwd(), 'src/components/humi/shell/Sidebar.tsx'),
       'utf8',
@@ -300,6 +300,6 @@ describe('AC-2.1 — People-Partner ghost-menu leaves are cut', () => {
       .split('\n')
       .find((l) => l.includes("href: '/admin/employees'"));
     expect(line).toBeDefined();
-    expect(line).toContain("show: ['hradmin', 'hris', 'sysadmin']");
+    expect(line).toContain("show: ['hradmin', 'hris']");
   });
 });

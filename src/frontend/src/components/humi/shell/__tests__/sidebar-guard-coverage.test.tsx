@@ -16,7 +16,7 @@
  * /overtime, so there is no manager-only guard to assert.
  *
  * Persona→Role map mirrors Sidebar PERSONA_ROLE: hradmin→hr_admin, hris→hr_manager,
- * sysadmin→hr_manager, others identity.
+ * others identity.
  *
  * ────────────────────────────────────────────────────────────────────────────
  * P3-9 — gating coverage matrix (regression gate).
