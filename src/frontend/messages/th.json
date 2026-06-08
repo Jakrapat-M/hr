@@ -5012,7 +5012,7 @@
   },
   "reject_return_drawer": {
     "titleReject": "ปฏิเสธคำขอ",
-    "titleReturn": "ส่งคืนคำขอ",
+    "titleReturn": "ส่งกลับคำขอ",
     "reasonLabel": "เหตุผล",
     "reasonPlaceholder": "— เลือกเหตุผล —",
     "commentLabel": "ความคิดเห็นเพิ่มเติม",
@@ -5020,7 +5020,7 @@
     "commentPlaceholder": "ระบุรายละเอียดเพิ่มเติม...",
     "cancel": "ยกเลิก",
     "confirmReject": "ยืนยันปฏิเสธ",
-    "confirmReturn": "ยืนยันส่งคืน",
+    "confirmReturn": "ยืนยันการส่งกลับ",
     "processing": "กำลังดำเนินการ..."
   },
   "empty_state": {
