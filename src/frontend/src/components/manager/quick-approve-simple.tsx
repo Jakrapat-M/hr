@@ -58,6 +58,7 @@ function detailHref(locale: string, row: PendingRequest): string {
   if (row.type === 'tax_planning') return `/${locale}/workflows/tax-planning/${row.id}`;
   if (row.type === 'time_correction') return `/${locale}/workflows/time-correction/${row.id}`;
   if (row.type === 'leave') return `/${locale}/workflows/leave/${row.id}`;
+  if (row.type === 'overtime') return `/${locale}/workflows/ot/${row.id}`;
   return `/${locale}/quick-approve/${row.id}`;
 }
 

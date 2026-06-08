@@ -31,6 +31,12 @@ import {
   type TimeCorrectionRequest,
   TIME_CORRECTION_KIND_LABEL,
 } from '@/stores/time-corrections';
+import {
+  useOvertimeRequests,
+  queueRowToOTRequest,
+  type OTRequest,
+} from '@/stores/overtime-requests';
+import { OT_TYPES, type OtTypeCode } from '@/lib/time/ot-types';
 
 // ── Actor (caller-facing) ─────────────────────────────────────────────────────
 // Call sites pass one neutral actor shape; each adapter maps it to the store's
@@ -238,40 +244,35 @@ export function timeCorrectionToPendingRequest(r: TimeCorrectionRequest): Pendin
   };
 }
 
-// Group 0 seam — OT mapper signature, mirroring timeCorrectionToPendingRequest.
-// The dedicated overtime store (overtime-requests.ts) does NOT exist yet; Group B
-// creates it. To keep the build green WITHOUT importing a missing module, this
-// accepts a minimal structural shape and returns a TODO-shaped PendingRequest.
-// Group B will retype `req` to the real OvertimeRequest and wire selectPendingApprovals.
-export type OvertimeRequestLike = {
-  id: string;
-  employeeId?: string;
-  employeeName?: string;
-  department?: string;
-  otType?: string;
-  date?: string;
-  submittedAt?: string;
-};
+// Group B — OT → overtime-requests store. Employee self-service OT request.
+// Manager (first-line) is the routed approver, so the timeline's first step is
+// `หัวหน้างาน` → canActOn() lets a team manager act and a non-approver sees it
+// VIEW-ONLY. Drill-in is special-cased to /workflows/ot/<id>.
+function otTypeLabelTh(code: OtTypeCode): string {
+  return OT_TYPES.find((t) => t.code === code)?.nameTh ?? code;
+}
 
-export function otToPendingRequest(req: OvertimeRequestLike): PendingRequest {
+export function otToPendingRequest(req: OTRequest): PendingRequest {
   const submittedAt = req.submittedAt ?? new Date().toISOString();
   const elapsedMs = Date.now() - new Date(submittedAt).getTime();
   const slaHours = elapsedMs / (1000 * 60 * 60);
   const urgency: Urgency = slaHours > 48 ? 'urgent' : slaHours > 24 ? 'normal' : 'low';
   const waitingDays = Math.max(0, Math.floor(elapsedMs / 86400000));
+  const day = (req.startAt ?? '').slice(0, 10);
   return {
     id: req.id,
     type: 'overtime',
     requester: {
-      id: req.employeeId ?? '',
-      name: req.employeeName ?? '',
-      position: req.otType ?? 'OT',
-      department: req.department ?? '',
+      id: req.employeeId,
+      name: req.employeeName,
+      position: otTypeLabelTh(req.otType),
+      department: req.department,
     },
-    description: `OT — ${req.employeeName ?? ''}${req.date ? ` · ${req.date}` : ''}`,
+    description: `OT — ${req.employeeName}${day ? ` · ${day}` : ''} · ${req.hours} ชม.`,
     submittedAt,
     urgency,
     waitingDays,
+    attachments: req.docs && req.docs.length > 0 ? req.docs : undefined,
     details: {},
     approvalTimeline: [{ step: 1, approver: 'หัวหน้างาน', status: 'pending' }],
   };
@@ -315,22 +316,17 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     labels: { th: 'ลา', en: 'Leave' },
   },
 
-  // overtime → leave-approvals (single-step). OT has no dedicated store; reuse
-  // leave's manager approve and mark OT in the reason so it stays distinguishable.
+  // overtime → overtime-requests (single-step manager). Group B: OT now has its
+  // OWN store (no more leave-store reuse + 'OT' reason hack). approve/reject by
+  // {name}; seed converts the canonical queue rows into native OTRequests.
   overtime: {
-    toQueueItem: (record) =>
-      genericToQueueItem('overtime', record as { id: string; submittedAt?: string }),
+    toQueueItem: (record) => otToPendingRequest(record as OTRequest),
     approve: (id, actor) =>
-      useLeaveApprovals.getState().approve(id, { id: actor.id ?? '', name: actor.name }, 'OT'),
+      useOvertimeRequests.getState().approve(id, { id: actor.id, name: actor.name }),
     reject: (id, actor, reason) =>
-      useLeaveApprovals
-        .getState()
-        .reject(id, { id: actor.id ?? '', name: actor.name }, `OT: ${reason}`),
-    seed: () => {
-      // No-op: overtime shares the leave-approvals store, which has a single
-      // init-overwrite-empties guard. ensureDemoSeed() seeds leave+overtime rows
-      // TOGETHER via the `leave` adapter to avoid the guard skipping the 2nd call.
-    },
+      useOvertimeRequests.getState().reject(id, { id: actor.id, name: actor.name }, reason),
+    seed: (fixtures = []) =>
+      useOvertimeRequests.getState().seedFromQueue(fixtures.map(queueRowToOTRequest)),
     labels: { th: 'โอที', en: 'Overtime' },
   },
 
@@ -525,10 +521,12 @@ export function selectPendingApprovals(input: {
   payRates?: PayRateRequest[];
   taxPlans?: TaxPlanningDraft[];
   timeCorrections?: TimeCorrectionRequest[];
+  overtime?: OTRequest[];
 }): QueueApproval[] {
   const out: QueueApproval[] = [];
 
-  // leave + overtime both live in the leave store; queueSnapshot.type distinguishes.
+  // leave rows live in the leave store. Group B: OT no longer rides this store —
+  // it has its own `input.overtime` loop below.
   // Group A: a 2-level leave row carries `awaitingNext` once the manager approves;
   // it stays collapsed-`pending` but is now awaiting the HR step (currentStepIndex
   // reads awaitingNext to advance the chain — same idiom as the claim flow).
@@ -587,6 +585,15 @@ export function selectPendingApprovals(input: {
     });
   }
 
+  // overtime rows derive natively from the overtime-requests store (Group B).
+  // Status maps cleanly: pending → pending, approved/rejected passthrough.
+  for (const r of input.overtime ?? []) {
+    out.push({
+      row: APPROVAL_REGISTRY.overtime.toQueueItem(r),
+      status: collapseQueueStatus(r.status),
+    });
+  }
+
   // Stable order by submittedAt desc, then id, so the inbox renders deterministically.
   out.sort((a, b) => {
     const t = new Date(b.row.submittedAt).getTime() - new Date(a.row.submittedAt).getTime();
@@ -604,7 +611,8 @@ export function useSelectPendingApprovals(): QueueApproval[] {
   const payRates = usePayRateApprovals((s) => s.requests);
   const taxPlans = useBenefitTaxPlanningStore((s) => s.drafts);
   const timeCorrections = useTimeCorrections((s) => s.requests);
-  return selectPendingApprovals({ leave, workflow, claims, transfers, payRates, taxPlans, timeCorrections });
+  const overtime = useOvertimeRequests((s) => s.requests);
+  return selectPendingApprovals({ leave, workflow, claims, transfers, payRates, taxPlans, timeCorrections, overtime });
 }
 
 /** Non-reactive read (getState) — for one-shot lookups (e.g. detail route). */
@@ -617,6 +625,7 @@ export function getPendingApprovals(): QueueApproval[] {
     payRates: usePayRateApprovals.getState().requests,
     taxPlans: useBenefitTaxPlanningStore.getState().drafts,
     timeCorrections: useTimeCorrections.getState().requests,
+    overtime: useOvertimeRequests.getState().requests,
   });
 }
 

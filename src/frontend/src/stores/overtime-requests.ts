@@ -1,0 +1,200 @@
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import type { PendingRequest } from '@/lib/quick-approve-api';
+import type { OtTypeCode } from '@/lib/time/ot-types';
+
+// overtime-requests — Group B Zustand+persist store for employee OT (overtime)
+// requests, surfaced as the 'overtime' row type in the unified /quick-approve
+// queue (detail at /workflows/ot/[id]).
+//
+// Mirrors the time-corrections store shape (plain persist, NO merge-wipe, audit
+// trail, approve/reject by actor, persisted to localStorage). Manager
+// (first-line) approver chain — the registry bridge sets the first timeline step
+// to `หัวหน้างาน` so canActOn() lets a team manager act.
+//
+// Group 0 → Group B reconcile: OT used to ride the leave-approvals store with an
+// 'OT' reason hack. It now has its OWN store. The taxonomy is the 2-code OT type
+// set from lib/time/ot-types (OT | OT_BREAK) — NOT the old weekday/weekend union.
+//
+// Phase: UI mockup. No backend. Synchronous mock dispatch.
+
+export type OTStatus = 'pending' | 'approved' | 'rejected';
+
+export type OTAuditEntry = {
+  actorId: string;
+  actorName: string;
+  action: 'submit' | 'approve' | 'reject';
+  comment?: string;
+  at: string; // ISO timestamp
+};
+
+export type OTRequest = {
+  id: string; // OT-YYYYMMDDHHMMSS-<rand> (or a stable demo id)
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  otType: OtTypeCode;
+  startAt: string; // ISO datetime
+  endAt: string; // ISO datetime
+  hours: number; // computed OT hours (cross-midnight aware)
+  reason: string;
+  docs: string[];
+  status: OTStatus;
+  submittedAt: string; // ISO timestamp
+  audit: OTAuditEntry[];
+};
+
+export const OT_STATUS_LABEL: Record<OTStatus, { th: string; en: string }> = {
+  pending: { th: 'รอหัวหน้าอนุมัติ', en: 'Awaiting manager' },
+  approved: { th: 'อนุมัติแล้ว', en: 'Approved' },
+  rejected: { th: 'ถูกปฏิเสธ', en: 'Rejected' },
+};
+
+interface OvertimeRequestsState {
+  requests: OTRequest[];
+  addRequest: (
+    r: Omit<OTRequest, 'id' | 'submittedAt' | 'status' | 'audit'> & {
+      /** Optional STABLE id (demo seeds pass a deterministic id; idempotent). */
+      id?: string;
+    },
+  ) => string;
+  approve: (id: string, by: { id?: string; name: string }, comment?: string) => void;
+  reject: (id: string, by: { id?: string; name: string }, reason: string) => void;
+  /** Seed deterministic demo rows, preserving row.id (idempotent per id). */
+  seedFromQueue: (rows: OTRequest[]) => void;
+  clear: () => void;
+}
+
+function generateOTId(): string {
+  const ts = new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
+  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `OT-${ts}-${rand}`;
+}
+
+export const useOvertimeRequests = create<OvertimeRequestsState>()(
+  persist(
+    (set, get) => ({
+      requests: [],
+      addRequest: (payload) => {
+        const id = payload.id ?? generateOTId();
+        // Idempotent on a stable id: a re-seed after rehydrate must not double-add.
+        if (payload.id && get().requests.some((r) => r.id === id)) {
+          return id;
+        }
+        const now = new Date().toISOString();
+        const req: OTRequest = {
+          ...payload,
+          id,
+          submittedAt: now,
+          status: 'pending',
+          audit: [
+            {
+              actorId: payload.employeeId,
+              actorName: payload.employeeName,
+              action: 'submit',
+              at: now,
+            },
+          ],
+        };
+        set((state) => ({ requests: [req, ...state.requests] }));
+        return id;
+      },
+      approve: (id, by, comment) =>
+        set((state) => ({
+          requests: state.requests.map((r) =>
+            r.id !== id || r.status !== 'pending'
+              ? r
+              : {
+                  ...r,
+                  status: 'approved' as OTStatus,
+                  audit: [
+                    ...r.audit,
+                    {
+                      actorId: by.id ?? '',
+                      actorName: by.name,
+                      action: 'approve' as const,
+                      comment,
+                      at: new Date().toISOString(),
+                    },
+                  ],
+                },
+          ),
+        })),
+      reject: (id, by, reason) =>
+        set((state) => ({
+          requests: state.requests.map((r) =>
+            r.id !== id || r.status !== 'pending'
+              ? r
+              : {
+                  ...r,
+                  status: 'rejected' as OTStatus,
+                  audit: [
+                    ...r.audit,
+                    {
+                      actorId: by.id ?? '',
+                      actorName: by.name,
+                      action: 'reject' as const,
+                      comment: reason,
+                      at: new Date().toISOString(),
+                    },
+                  ],
+                },
+          ),
+        })),
+      seedFromQueue: (rows) =>
+        set((state) => {
+          // Preserve each row.id deterministically; skip any id already present.
+          const existing = new Set(state.requests.map((r) => r.id));
+          const fresh = rows.filter((r) => !existing.has(r.id));
+          return fresh.length === 0 ? state : { requests: [...fresh, ...state.requests] };
+        }),
+      clear: () => set({ requests: [] }),
+    }),
+    {
+      name: 'humi-overtime-requests',
+      storage: createJSONStorage(() => localStorage),
+    },
+  ),
+);
+
+/**
+ * Build a native OTRequest from a canonical queue row (PendingRequest). Used by
+ * the registry/demo-seed so the 4 canonical OT seed rows populate THIS store
+ * (they used to ride the leave-approvals store). The OvertimeDetails snapshot
+ * (date/hours/reason) is read off `row.details`; startAt/endAt are reconstructed
+ * from the date + an 18:00 default window of `hours` length.
+ */
+export function queueRowToOTRequest(row: PendingRequest): OTRequest {
+  const details = (row.details ?? {}) as Record<string, unknown>;
+  const date = typeof details.date === 'string' ? details.date : row.submittedAt.slice(0, 10);
+  const hours = typeof details.hours === 'number' ? details.hours : 0;
+  const reason =
+    typeof details.reason === 'string' && details.reason ? details.reason : row.description;
+  // Default OT window: 18:00 → +hours (snapshot rows have no explicit times).
+  const startAt = `${date}T18:00:00`;
+  const endHour = 18 + Math.floor(hours);
+  const endMin = Math.round((hours - Math.floor(hours)) * 60);
+  const endAt = `${date}T${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}:00`;
+  return {
+    id: row.id,
+    employeeId: row.requester.id,
+    employeeName: row.requester.name,
+    department: row.requester.department,
+    otType: 'OT',
+    startAt,
+    endAt,
+    hours,
+    reason,
+    docs: row.attachments ?? [],
+    status: 'pending',
+    submittedAt: row.submittedAt,
+    audit: [
+      {
+        actorId: row.requester.id,
+        actorName: row.requester.name,
+        action: 'submit',
+        at: row.submittedAt,
+      },
+    ],
+  };
+}
