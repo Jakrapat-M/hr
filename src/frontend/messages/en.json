@@ -4289,6 +4289,13 @@
       "flag": "Special Privilege",
       "panelHeading": "Individual special privilege",
       "panelEmpty": "No special privilege assigned"
+    },
+    "employees": {
+      "employmentInfo": {
+        "specialBenefitGroup": "Special benefit group",
+        "specialBenefitGroupYes": "Yes",
+        "specialBenefitGroupNo": "No"
+      }
     }
   },
   "hireForm": {

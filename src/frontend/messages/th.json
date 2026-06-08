@@ -4168,6 +4168,13 @@
       "flag": "สิทธิพิเศษ",
       "panelHeading": "สิทธิพิเศษเฉพาะบุคคล",
       "panelEmpty": "ยังไม่มีสิทธิพิเศษ"
+    },
+    "employees": {
+      "employmentInfo": {
+        "specialBenefitGroup": "กลุ่มสิทธิพิเศษ",
+        "specialBenefitGroupYes": "ใช่",
+        "specialBenefitGroupNo": "ไม่ใช่"
+      }
     }
   },
   "hireForm": {

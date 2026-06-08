@@ -517,6 +517,22 @@ export default function EmployeeDetailPage() {
             </div>
           )}
 
+          {/* STA-93: Special benefit group — beside Pay Grade (display-only Yes/No) */}
+          <div>
+            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+              Special benefit group / กลุ่มสิทธิพิเศษ
+            </div>
+            <select
+              className="humi-select"
+              value={employee.special_benefit_group ? 'yes' : 'no'}
+              disabled
+              aria-label="Special benefit group / กลุ่มสิทธิพิเศษ"
+            >
+              <option value="yes">Yes / ใช่</option>
+              <option value="no">No / ไม่ใช่</option>
+            </select>
+          </div>
+
           {/* Retail chips — audit A6/#11: conditional on non-null */}
           {employee.store_branch_code && (
             <div>

@@ -83,6 +83,10 @@ export interface MockEmployee {
   /** EmpJob.position — SF position code (e.g. "9999C002") */
   position_code?: string
 
+  // ── STA-93: Special benefit group membership (Yes/No) ──────────────────────
+  /** STA-93 — special benefit group membership flag (true=Yes / false=No) */
+  special_benefit_group?: boolean
+
   // ── BRD #87: SF EmpJob.emplStatus code ────────────────────────────────────
   // Source: sf-qas-EmpJob-2026-04-26.json → .d.results[0].emplStatus
   //   "5581" = Active, "5597" = Terminated
@@ -355,6 +359,9 @@ function generateEmployees(count: number): MockEmployee[] {
     const regular_temporary: 'R' | 'T' = employee_class === 'PARTIME' ? 'T' : 'R'
     const position_code = `POS-${company}-${String(num).padStart(4, '0')}`
 
+    // STA-93: ~20% flagged into a special benefit group (deterministic via rnd)
+    const special_benefit_group = rnd() < 0.2
+
     // BRD #90: Job Grade effective-date history (seqNumber + startDate)
     // Source: sf-qas-EmpJob-2026-04-26.json → .d.results[0].seqNumber, startDate
     const job_grade_history = (() => {
@@ -418,6 +425,7 @@ function generateEmployees(count: number): MockEmployee[] {
       pay_grade,
       regular_temporary,
       position_code,
+      special_benefit_group,
       job_grade_history,
       bu_history,
     })
