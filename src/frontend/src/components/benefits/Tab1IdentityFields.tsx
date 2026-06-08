@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { FormField, FormInput } from '@/components/humi';
 import {
   deriveRecordTypeFromBenefitTypeGroup,
   type PlanCategory,
   type WorkflowTemplate,
 } from '@/data/benefits/plan-registry';
+import { COMPANY_OPTIONS, ADD_NEW_COMPANY, isKnownCompany } from '@/data/benefits/company-registry';
 
 export type CountryCode = 'TH' | 'VN';
 export type PlanStatus = 'active' | 'inactive';
@@ -115,6 +117,13 @@ export function Tab1IdentityFields({
   const derivedRecordType = deriveRecordTypeFromBenefitTypeGroup(values.benefitTypeGroup);
 
   const chip = RECORD_TYPE_CHIP[derivedRecordType];
+
+  // STA-86: Company dropdown — "+ Add new company" reveals a free-text input.
+  // Start in add-new mode when the stored company is a custom (non-listed) name
+  // so an existing one-off value renders pre-filled rather than being lost.
+  const [companyAddNew, setCompanyAddNew] = useState(
+    values.company !== '' && !isKnownCompany(values.company),
+  );
 
   return (
     <div className="space-y-5">
@@ -452,20 +461,58 @@ export function Tab1IdentityFields({
           {isTh ? 'นิติบุคคล (Legal Entity)' : 'Legal Entity'}
         </h3>
 
-        {/* 17. Company */}
+        {/* 17. Company — STA-86: dropdown (CDS/CMG/RIS) + "Add new company" */}
         <FormField
           id="tab1-company"
           label={isTh ? 'บริษัท (Company)' : 'Company'}
         >
           {(cp) => (
-            <FormInput
+            <select
               {...cp}
-              value={values.company}
-              onChange={(e) => onChange('company', e.target.value)}
-              placeholder={isTh ? 'เช่น Central Group' : 'e.g. Central Group'}
-            />
+              value={companyAddNew ? ADD_NEW_COMPANY : (isKnownCompany(values.company) ? values.company : '')}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === ADD_NEW_COMPANY) {
+                  // Switch to free-text entry; clear so the input starts empty.
+                  setCompanyAddNew(true);
+                  onChange('company', '');
+                } else {
+                  setCompanyAddNew(false);
+                  onChange('company', v);
+                }
+              }}
+              className={selectClass}
+            >
+              <option value="" disabled>
+                {isTh ? '— เลือกบริษัท —' : '— Select company —'}
+              </option>
+              {COMPANY_OPTIONS.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+              <option value={ADD_NEW_COMPANY}>
+                {isTh ? '+ เพิ่มบริษัทใหม่' : '+ Add new company'}
+              </option>
+            </select>
           )}
         </FormField>
+
+        {companyAddNew && (
+          <div className="mt-3">
+            <FormField
+              id="tab1-company-new"
+              label={isTh ? 'ชื่อบริษัทใหม่' : 'New company name'}
+            >
+              {(cp) => (
+                <FormInput
+                  {...cp}
+                  value={values.company}
+                  onChange={(e) => onChange('company', e.target.value)}
+                  placeholder={isTh ? 'เช่น Central Group' : 'e.g. Central Group'}
+                />
+              )}
+            </FormField>
+          </div>
+        )}
       </div>
     </div>
   );
