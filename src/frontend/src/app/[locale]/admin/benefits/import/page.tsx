@@ -34,7 +34,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type CsvType = 'enrolment' | 'claim';
+type CsvType = 'enrolment' | 'claim' | 'adjust';
 
 interface EnrolmentRow {
   employee_id: string;
@@ -60,12 +60,42 @@ interface ClaimRow {
   note: string;
 }
 
+// STA-26 (bulk counterpart of STA-90 Special Privilege): adjust an employee's
+// benefit entitlement (วงเงิน) in bulk. current_amount_thb is a static demo
+// reference (NOT cross-referenced to the plan registry — registry default ≠
+// per-employee actual entitlement; resolved when backend wiring lands).
+interface AdjustRow {
+  employee_id: string;
+  employee_name_th: string;
+  employee_name_en: string;
+  plan_code: string;
+  plan_name_th: string;
+  current_amount_thb: string; // existing วงเงิน (read-only reference)
+  new_amount_thb: string;     // the override
+  effective_date: string;
+  reason: string;
+  department?: string;
+  note?: string;
+}
+
 interface ValidationItem {
   row: number;
   severity: 'ok' | 'warning' | 'error';
   messageTh: string;
   messageEn: string;
 }
+
+// Type labels — single source for the radio, step-4 summary, and monitor cell.
+const TYPE_LABEL: Record<CsvType, { th: string; en: string }> = {
+  enrolment: { th: 'ลงทะเบียนสวัสดิการ', en: 'Benefit Enrolment' },
+  claim: { th: 'เคลมสวัสดิการ', en: 'Employee Claim' },
+  adjust: { th: 'ปรับสิทธิ (วงเงิน override)', en: 'Adjust Entitlement' },
+};
+const TYPE_LABEL_SHORT: Record<CsvType, { th: string; en: string }> = {
+  enrolment: { th: 'ลงทะเบียน', en: 'Enrolment' },
+  claim: { th: 'เคลม', en: 'Claim' },
+  adjust: { th: 'ปรับสิทธิ', en: 'Adjust' },
+};
 
 // ─── Mock seed data ───────────────────────────────────────────────────────────
 
@@ -117,6 +147,35 @@ const MOCK_VALIDATION_CLAIM: ValidationItem[] = [
   { row: 6, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
   { row: 7, severity: 'warning', messageTh: 'จำนวนเกินวงเงิน 100,000 บาท', messageEn: 'Amount exceeds plan limit 100,000 THB' },
   { row: 8, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
+  { row: 9, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
+  { row: 10, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
+];
+
+// Adjust-entitlement seed — employee_ids overlap ENROLMENT_ROWS (EMP-0101..0110)
+// so a cross-checking reviewer sees consistent people. Mix of increases and
+// decreases; rows 4 & 8 are the warning scenarios (see MOCK_VALIDATION_ADJUST).
+const ADJUST_ROWS: AdjustRow[] = [
+  { employee_id: 'EMP-0101', employee_name_th: 'สมชาย ใจดี', employee_name_en: 'Somchai Jaidee', plan_code: 'MED-A', plan_name_th: 'ประกันสุขภาพ A', current_amount_thb: '15,000', new_amount_thb: '20,000', effective_date: '2026-06-01', reason: 'ปรับเพิ่มตามตำแหน่งใหม่', department: 'Operations' },
+  { employee_id: 'EMP-0102', employee_name_th: 'นิดา พรมมา', employee_name_en: 'Nida Pramma', plan_code: 'MED-B', plan_name_th: 'ประกันสุขภาพ B', current_amount_thb: '20,000', new_amount_thb: '25,000', effective_date: '2026-06-01', reason: 'เลื่อนระดับพนักงาน', department: 'Finance' },
+  { employee_id: 'EMP-0103', employee_name_th: 'วิชัย ทองดี', employee_name_en: 'Wichai Thongdee', plan_code: 'DENT-STD', plan_name_th: 'ทันตกรรมมาตรฐาน', current_amount_thb: '5,000', new_amount_thb: '8,000', effective_date: '2026-06-01', reason: 'ปรับตามนโยบายสวัสดิการใหม่', department: 'IT' },
+  { employee_id: 'EMP-0104', employee_name_th: 'ปิยะ แสงศรี', employee_name_en: 'Piya Saengsri', plan_code: 'LIFE-GRP', plan_name_th: 'ประกันชีวิตกลุ่ม', current_amount_thb: '300,000', new_amount_thb: '250,000', effective_date: '2026-06-01', reason: 'ปรับลดหลังเปลี่ยนแผน', department: 'HR' },
+  { employee_id: 'EMP-0105', employee_name_th: 'ลักษณา วงค์ศรี', employee_name_en: 'Luksana Wongsri', plan_code: 'MED-A', plan_name_th: 'ประกันสุขภาพ A', current_amount_thb: '15,000', new_amount_thb: '18,000', effective_date: '2026-06-01', reason: 'อนุมัติพิเศษ', department: 'Marketing' },
+  { employee_id: 'EMP-0106', employee_name_th: 'อนุวัฒน์ มีสุข', employee_name_en: 'Anuwat Meesuk', plan_code: 'VISION-STD', plan_name_th: 'สายตาปกติ', current_amount_thb: '3,000', new_amount_thb: '4,000', effective_date: '2026-06-01', reason: 'ปรับเพิ่มประจำปี', department: 'Sales' },
+  { employee_id: 'EMP-0107', employee_name_th: 'ชลิดา ทรัพย์มาก', employee_name_en: 'Chalida Sapmark', plan_code: 'MED-B', plan_name_th: 'ประกันสุขภาพ B', current_amount_thb: '20,000', new_amount_thb: '22,000', effective_date: '2026-06-01', reason: 'ปรับตามอายุงาน', department: 'Accounting' },
+  { employee_id: 'EMP-0108', employee_name_th: 'ธนา ศรีสวัสดิ์', employee_name_en: 'Thana Srisawat', plan_code: 'MED-A', plan_name_th: 'ประกันสุขภาพ A', current_amount_thb: '0', new_amount_thb: '15,000', effective_date: '2026-06-01', reason: 'เพิ่มสิทธิครั้งแรก', department: 'Legal' },
+  { employee_id: 'EMP-0109', employee_name_th: 'กนกวรรณ สุขใจ', employee_name_en: 'Kanokwan Sukjai', plan_code: 'DENT-PLUS', plan_name_th: 'ทันตกรรมพลัส', current_amount_thb: '8,000', new_amount_thb: '10,000', effective_date: '2026-07-01', reason: 'ปรับเพิ่มตามผลงาน', department: 'Operations' },
+  { employee_id: 'EMP-0110', employee_name_th: 'ศุภชัย พงษ์ไทย', employee_name_en: 'Suphachai Phongthai', plan_code: 'FLEX-BEN', plan_name_th: 'Flexible Benefit', current_amount_thb: '25,000', new_amount_thb: '30,000', effective_date: '2026-06-01', reason: 'อนุมัติพิเศษระดับผู้บริหาร', department: 'Executive' },
+];
+
+const MOCK_VALIDATION_ADJUST: ValidationItem[] = [
+  { row: 1, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
+  { row: 2, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
+  { row: 3, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
+  { row: 4, severity: 'warning', messageTh: 'วงเงินใหม่ต่ำกว่ายอดที่เคลมไปแล้วปีนี้', messageEn: 'New amount lower than YTD claimed' },
+  { row: 5, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
+  { row: 6, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
+  { row: 7, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
+  { row: 8, severity: 'warning', messageTh: 'ไม่พบสิทธิเดิมให้ปรับ', messageEn: 'No current entitlement to override' },
   { row: 9, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
   { row: 10, severity: 'ok', messageTh: 'ถูกต้อง', messageEn: 'Valid' },
 ];
@@ -208,7 +267,10 @@ export default function BenefitImportPage() {
   const [jobs, setJobs] = useState<ImportJob[]>(MOCK_IMPORT_JOBS);
   const [logModalJob, setLogModalJob] = useState<ImportJob | null>(null);
 
-  const validationItems = csvType === 'enrolment' ? MOCK_VALIDATION_ENROLMENT : MOCK_VALIDATION_CLAIM;
+  const validationItems =
+    csvType === 'enrolment' ? MOCK_VALIDATION_ENROLMENT
+    : csvType === 'claim' ? MOCK_VALIDATION_CLAIM
+    : MOCK_VALIDATION_ADJUST;
   const validOk = validationItems.filter((v) => v.severity === 'ok').length;
   const validWarning = validationItems.filter((v) => v.severity === 'warning').length;
   const validError = validationItems.filter((v) => v.severity === 'error').length;
@@ -297,7 +359,7 @@ export default function BenefitImportPage() {
           {isTh ? 'ประเภทข้อมูล' : 'CSV Type'}
         </p>
         <div className="flex flex-wrap gap-4">
-          {(['enrolment', 'claim'] as CsvType[]).map((t) => (
+          {(['enrolment', 'claim', 'adjust'] as CsvType[]).map((t) => (
             <label key={t} className="flex cursor-pointer items-center gap-2 text-small text-ink select-none">
               <input
                 type="radio"
@@ -308,9 +370,7 @@ export default function BenefitImportPage() {
                 className="h-4 w-4 accent-accent"
               />
               <span className="font-medium">
-                {t === 'enrolment'
-                  ? isTh ? 'ลงทะเบียนสวัสดิการ' : 'Benefit Enrolment'
-                  : isTh ? 'เคลมสวัสดิการ' : 'Employee Claim'}
+                {isTh ? TYPE_LABEL[t].th : TYPE_LABEL[t].en}
               </span>
             </label>
           ))}
@@ -390,8 +450,10 @@ export default function BenefitImportPage() {
         </p>
         {csvType === 'enrolment' ? (
           <p className="font-mono text-xs">employee_id, plan_code, effective_date, amount_thb, department, note</p>
-        ) : (
+        ) : csvType === 'claim' ? (
           <p className="font-mono text-xs">employee_id, claim_type, receipt_date, receipt_no, amount_thb, hospital, note</p>
+        ) : (
+          <p className="font-mono text-xs">employee_id, plan_code, current_amount_thb, new_amount_thb, effective_date, reason</p>
         )}
         <p className="mt-2">
           {isTh
@@ -443,6 +505,46 @@ export default function BenefitImportPage() {
           </p>
           <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-hairline">
             <DataTable caption={isTh ? 'ตัวอย่างข้อมูล' : 'Preview'} captionVisuallyHidden columns={cols} rows={ENROLMENT_ROWS} rowKey={(r) => r.employee_id} dense />
+          </div>
+          <div className="flex justify-between">
+            <Button variant="ghost" onClick={() => setStep(1)}>{isTh ? '← ย้อนกลับ' : '← Back'}</Button>
+            <Button onClick={() => setStep(3)}>{isTh ? 'ถัดไป: ยืนยัน →' : 'Next: Validate →'}</Button>
+          </div>
+        </div>
+      );
+    }
+
+    if (csvType === 'adjust') {
+      const cols: DataTableColumn<AdjustRow>[] = [
+        { id: 'employee_id', header: isTh ? 'รหัสพนักงาน' : 'Employee ID', cell: (r) => <span className="font-mono text-small">{r.employee_id}</span> },
+        {
+          id: 'name', header: isTh ? 'ชื่อพนักงาน' : 'Employee Name', cell: (r) => (
+            <div>
+              <p className="text-small font-medium text-ink">{r.employee_name_th}</p>
+              <p className="text-xs text-ink-muted">{r.employee_name_en}</p>
+            </div>
+          ),
+        },
+        {
+          id: 'plan_code', header: isTh ? 'แผน' : 'Plan', cell: (r) => (
+            <div>
+              <p className="text-small text-ink">{r.plan_code}</p>
+              <p className="text-xs text-ink-muted">{r.plan_name_th}</p>
+            </div>
+          ),
+        },
+        { id: 'current_amount_thb', header: isTh ? 'ปัจจุบัน (บาท)' : 'Current (THB)', align: 'right' as const, cell: (r) => <span className="text-small text-ink-muted">{r.current_amount_thb}</span> },
+        { id: 'new_amount_thb', header: isTh ? 'ใหม่ (บาท)' : 'New (THB)', align: 'right' as const, cell: (r) => <span className="font-semibold text-ink">{r.new_amount_thb}</span> },
+        { id: 'effective_date', header: isTh ? 'วันที่มีผล' : 'Effective', cell: (r) => <span className="text-small text-ink-muted">{r.effective_date}</span> },
+        { id: 'reason', header: isTh ? 'เหตุผล' : 'Reason', cell: (r) => <span className="text-small text-ink-muted">{r.reason}</span> },
+      ];
+      return (
+        <div className="space-y-4">
+          <p className="text-small text-ink-muted">
+            {isTh ? `แสดง 10 แถวแรกจากไฟล์: ${selectedFile?.name}` : `Showing first 10 rows from: ${selectedFile?.name}`}
+          </p>
+          <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-hairline">
+            <DataTable caption={isTh ? 'ตัวอย่างข้อมูล' : 'Preview'} captionVisuallyHidden columns={cols} rows={ADJUST_ROWS} rowKey={(r) => r.employee_id} dense />
           </div>
           <div className="flex justify-between">
             <Button variant="ghost" onClick={() => setStep(1)}>{isTh ? '← ย้อนกลับ' : '← Back'}</Button>
@@ -575,9 +677,7 @@ export default function BenefitImportPage() {
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-small">
           <dt className="text-ink-muted">{isTh ? 'ประเภทข้อมูล' : 'Type'}</dt>
           <dd className="font-medium text-ink">
-            {csvType === 'enrolment'
-              ? isTh ? 'ลงทะเบียนสวัสดิการ' : 'Benefit Enrolment'
-              : isTh ? 'เคลมสวัสดิการ' : 'Employee Claim'}
+            {isTh ? TYPE_LABEL[csvType].th : TYPE_LABEL[csvType].en}
           </dd>
           <dt className="text-ink-muted">{isTh ? 'ไฟล์' : 'File'}</dt>
           <dd className="font-medium text-ink truncate">{selectedFile?.name}</dd>
@@ -591,6 +691,19 @@ export default function BenefitImportPage() {
           <dd className="font-medium text-ink">{useLocaleFormat ? (isTh ? 'เปิด' : 'On') : (isTh ? 'ปิด' : 'Off')}</dd>
         </dl>
       </div>
+
+      {/* Governance note — an entitlement override is a controlled action.
+          Label-only signal (no approval engine this phase). */}
+      {csvType === 'adjust' && (
+        <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-warning/30 bg-warning-soft p-3 text-small text-warning-ink">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden />
+          <p>
+            {isTh
+              ? 'รายการปรับสิทธิ (วงเงิน) ต้องผ่านการอนุมัติก่อนมีผลจริง — ระบบจะบันทึกเหตุผลและผู้ดำเนินการไว้เป็นหลักฐาน'
+              : 'Entitlement (วงเงิน) adjustments require approval before taking effect — the reason and operator are recorded for audit.'}
+          </p>
+        </div>
+      )}
 
       {/* Progress bar */}
       {(isRunning || runDone) && (
@@ -676,9 +789,7 @@ export default function BenefitImportPage() {
       header: isTh ? 'ประเภท' : 'Type',
       cell: (r) => (
         <span className="text-small text-ink-muted">
-          {r.type === 'enrolment'
-            ? isTh ? 'ลงทะเบียน' : 'Enrolment'
-            : isTh ? 'เคลม' : 'Claim'}
+          {isTh ? TYPE_LABEL_SHORT[r.type].th : TYPE_LABEL_SHORT[r.type].en}
         </span>
       ),
     },
@@ -718,8 +829,8 @@ export default function BenefitImportPage() {
         </h1>
         <p className="mt-2 text-small text-ink-muted">
           {isTh
-            ? 'อัปโหลด CSV เพื่อบันทึกการลงทะเบียนหรือเคลมเป็นกลุ่ม'
-            : 'Upload CSV to bulk-create enrollments or claims'}
+            ? 'อัปโหลด CSV เพื่อบันทึกการลงทะเบียน เคลม หรือปรับสิทธิ (วงเงิน) เป็นกลุ่ม'
+            : 'Upload CSV to bulk-create enrollments, claims, or entitlement adjustments'}
         </p>
       </header>
 
