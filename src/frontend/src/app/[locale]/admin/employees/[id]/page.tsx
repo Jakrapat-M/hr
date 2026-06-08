@@ -13,7 +13,7 @@
 //
 // C8: action card count is driven by ACTION_CARDS — no hardcoded count
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useShallow } from 'zustand/react/shallow'
@@ -37,6 +37,7 @@ import {
   Star,
   BadgePlus,
   Trash2,
+  Gift,
 } from 'lucide-react'
 import { useTimelines } from '@/lib/admin/store/useTimelines'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
@@ -51,6 +52,7 @@ import CompensationHistory from '@/components/profile/CompensationHistory'
 import { formatCurrency, formatDate } from '@/lib/date'
 import { getPlan } from '@/data/benefits/plan-registry'
 import { EmptyState } from '@/components/humi'
+import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
 import {
   useSpecialPrivilegeStore,
   selectPrivilegesForEmployee,
@@ -180,6 +182,21 @@ interface ActionCard {
 // per-route guard banners (P3). Single source of truth for status gating.
 import { actionAvailability } from '@/lib/admin/actionAvailability'
 
+// Current-benefit roll-up (illustrative seed — the admin employee store has no
+// per-employee enrollment schema; mockup phase shows standard Central Group
+// benefits so the section demos with realistic rows). Read-only, no backend.
+const CURRENT_BENEFITS: ReadonlyArray<{
+  planTh: string; planEn: string
+  coverageTh: string; coverageEn: string
+  effectiveDate: string
+  statusTh: string; statusEn: string
+}> = [
+  { planTh: 'ประกันสุขภาพกลุ่ม', planEn: 'Group Health Insurance', coverageTh: 'พนักงาน + คู่สมรส', coverageEn: 'Employee + Spouse', effectiveDate: '2024-01-01', statusTh: 'มีผล', statusEn: 'Active' },
+  { planTh: 'ประกันชีวิตกลุ่ม', planEn: 'Group Life Insurance', coverageTh: '24 เท่าของเงินเดือน', coverageEn: '24× monthly salary', effectiveDate: '2024-01-01', statusTh: 'มีผล', statusEn: 'Active' },
+  { planTh: 'กองทุนสำรองเลี้ยงชีพ', planEn: 'Provident Fund', coverageTh: 'สมทบ 5%', coverageEn: '5% contribution', effectiveDate: '2022-06-01', statusTh: 'มีผล', statusEn: 'Active' },
+  { planTh: 'ตรวจสุขภาพประจำปี', planEn: 'Annual Health Checkup', coverageTh: '1 ครั้ง/ปี', coverageEn: '1× per year', effectiveDate: '2024-01-01', statusTh: 'มีผล', statusEn: 'Active' },
+]
+
 export default function EmployeeDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -200,6 +217,15 @@ export default function EmployeeDetailPage() {
     useShallow(selectPrivilegesForEmployee(empId)),
   )
   const removePrivilege = useSpecialPrivilegeStore((s) => s.removePrivilege)
+
+  // Collapsible section state (BA: page collapsible + Current Benefits default-closed).
+  const isTh = locale === 'th'
+  const expandLabel = isTh ? 'ขยาย' : 'Expand'
+  const collapseLabel = isTh ? 'ย่อ' : 'Collapse'
+  // BA: every collapsible section starts COLLAPSED — the admin opens only what they need.
+  const [employmentCollapsed, setEmploymentCollapsed] = useState(true)
+  const [privilegeCollapsed, setPrivilegeCollapsed] = useState(true)
+  const [benefitsCollapsed, setBenefitsCollapsed] = useState(true)
 
   // Timeline store — S3 owns this
   const { seed } = useTimelines()
@@ -451,8 +477,17 @@ export default function EmployeeDetailPage() {
       </div>
 
       {/* ── Section A2: ข้อมูลการจ้างงาน (Employment-level — A3 split) ──── */}
-      <div className="humi-card" style={{ overflow: 'hidden' }}>
-        <div className="humi-eyebrow" style={{ marginBottom: 12 }}>ข้อมูลการจ้างงาน</div>
+      <CollapsibleSectionCard
+        id="emp-employment"
+        icon={Briefcase}
+        eyebrow={isTh ? 'การจ้างงาน' : 'Employment'}
+        title={isTh ? 'ข้อมูลการจ้างงาน' : 'Employment information'}
+        sub=""
+        collapsed={employmentCollapsed}
+        onToggle={() => setEmploymentCollapsed((v) => !v)}
+        expandLabel={expandLabel}
+        collapseLabel={collapseLabel}
+      >
 
         {/* Info grid: hire date, tenure, company, position, org unit */}
         <div
@@ -774,7 +809,7 @@ export default function EmployeeDetailPage() {
             </>
           )
         })()}
-      </div>
+      </CollapsibleSectionCard>
 
       {/* ── Workflow status snapshot (Chains 1 + 4) ─────────── */}
       {(latestTermination ?? latestPromotion) && (
@@ -834,11 +869,17 @@ export default function EmployeeDetailPage() {
       )}
 
       {/* ── STA-90: Special Privilege list (BE-03) ─────────────── */}
-      <div className="humi-card" style={{ padding: 16 }}>
-        <div className="humi-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <div className="humi-eyebrow">{tSpecial('list.heading')}</div>
-          <span className="humi-tag humi-tag--accent">{tSpecial('flag')}</span>
-        </div>
+      <CollapsibleSectionCard
+        id="emp-special-privilege"
+        icon={BadgePlus}
+        eyebrow={tSpecial('flag')}
+        title={tSpecial('list.heading')}
+        sub=""
+        collapsed={privilegeCollapsed}
+        onToggle={() => setPrivilegeCollapsed((v) => !v)}
+        expandLabel={expandLabel}
+        collapseLabel={collapseLabel}
+      >
         {specialPrivileges.length === 0 ? (
           <EmptyState
             icon={BadgePlus}
@@ -899,7 +940,55 @@ export default function EmployeeDetailPage() {
             })}
           </div>
         )}
-      </div>
+      </CollapsibleSectionCard>
+
+      {/* ── Current Benefits (default-collapsed; illustrative roll-up) ──────── */}
+      <CollapsibleSectionCard
+        id="emp-current-benefits"
+        icon={Gift}
+        eyebrow={isTh ? 'สวัสดิการ' : 'Benefits'}
+        title={isTh ? 'สวัสดิการปัจจุบัน' : 'Current Benefits'}
+        sub=""
+        collapsed={benefitsCollapsed}
+        onToggle={() => setBenefitsCollapsed((v) => !v)}
+        expandLabel={expandLabel}
+        collapseLabel={collapseLabel}
+      >
+        {CURRENT_BENEFITS.length === 0 ? (
+          <EmptyState
+            icon={Gift}
+            titleTh="ยังไม่มีสวัสดิการ"
+            titleEn="No current benefits"
+            descTh="ข้อมูลสวัสดิการจะแสดงที่นี่"
+            descEn="Enrolled benefits will appear here"
+          />
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="w-full text-small" style={{ borderCollapse: 'collapse' }}>
+              <thead>
+                <tr className="text-ink-muted" style={{ textAlign: 'left' }}>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'แผน' : 'Plan'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'ความคุ้มครอง' : 'Coverage'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'วันเริ่มมีผล' : 'Effective date'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'สถานะ' : 'Status'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {CURRENT_BENEFITS.map((b) => (
+                  <tr key={b.planEn} style={{ borderTop: '1px solid var(--color-hairline)' }}>
+                    <td className="text-ink font-medium" style={{ padding: '8px 12px' }}>{isTh ? b.planTh : b.planEn}</td>
+                    <td className="text-ink-muted" style={{ padding: '8px 12px' }}>{isTh ? b.coverageTh : b.coverageEn}</td>
+                    <td className="text-ink-muted" style={{ padding: '8px 12px' }}>{formatDate(b.effectiveDate, 'medium', locale)}</td>
+                    <td style={{ padding: '8px 12px' }}>
+                      <span className="humi-tag humi-tag--accent">{isTh ? b.statusTh : b.statusEn}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CollapsibleSectionCard>
 
       {/* ── BRD #207: HRBP-conditional PerPersonal snapshot ──────────────────
           Visible to: hrbp, spd, hr_admin, hr_manager only.
