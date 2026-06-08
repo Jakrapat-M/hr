@@ -27,6 +27,7 @@ import { APPROVAL_SEED_BY_TYPE } from '@/lib/approval-seed-fixtures';
 import { useLeaveBalances } from '@/stores/leave-balances';
 import { useLeaveApprovals } from '@/stores/leave-approvals';
 import { useOvertimeRequests, type OTRequest } from '@/stores/overtime-requests';
+import { useTimeCorrections, type TimeCorrectionRequest } from '@/stores/time-corrections';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { appliedChainFor } from '@/lib/time/approval-rules';
 import { getLeaveType } from '@/lib/time/leave-types';
@@ -417,6 +418,57 @@ const DEMO_PENDING_OT: OTRequest[] = [
 /** Number of demo ESS OT rows seeded into the unified queue (Group B). */
 export const OT_DEMO_COUNT = DEMO_PENDING_OT.length;
 
+// ── Group D: pending ESS Time-Correction rows ──────────────────────────────────
+// time-corrections is plain-persist (no rehydrate-wipe), so STABLE ids survive a
+// full reload and the /workflows/time-correction/[id] detail resolves them. Two
+// rows so the unified /quick-approve inbox shows a non-zero time_correction count
+// alongside leave + OT.
+const DEMO_TC_EMPLOYEE = { id: 'EMP001', name: 'พิมพ์ชนก ศรีวัฒน์', department: 'Store' };
+
+const DEMO_PENDING_TC: TimeCorrectionRequest[] = [
+  {
+    id: 'TCR-DEMO-0001',
+    employeeId: DEMO_TC_EMPLOYEE.id,
+    employeeName: DEMO_TC_EMPLOYEE.name,
+    department: DEMO_TC_EMPLOYEE.department,
+    date: '2026-06-03',
+    correctionType: 'in',
+    reasonCode: 'MACHINE_BROKE',
+    payCode: 'MACHINE_BROKE',
+    originalTime: '',
+    correctedTime: '08:00',
+    reason: 'เครื่องสแกนเสียตอนเช้า แตะบัตรไม่ติด',
+    docs: [],
+    status: 'pending_manager',
+    submittedAt: '2026-06-06T08:30:00+07:00',
+    audit: [
+      { actorId: DEMO_TC_EMPLOYEE.id, actorName: DEMO_TC_EMPLOYEE.name, action: 'submit', at: '2026-06-06T08:30:00+07:00' },
+    ],
+  },
+  {
+    id: 'TCR-DEMO-0002',
+    employeeId: DEMO_TC_EMPLOYEE.id,
+    employeeName: DEMO_TC_EMPLOYEE.name,
+    department: DEMO_TC_EMPLOYEE.department,
+    date: '2026-06-04',
+    correctionType: 'both',
+    reasonCode: 'FORGET_ID_TYPE',
+    payCode: 'FORGET_ID_TYPE',
+    originalTime: '08:05',
+    correctedTime: '17:30',
+    reason: 'ลืมกดประเภท in/out ขอแก้เป็นเวลาจริง',
+    docs: [],
+    status: 'pending_manager',
+    submittedAt: '2026-06-06T09:15:00+07:00',
+    audit: [
+      { actorId: DEMO_TC_EMPLOYEE.id, actorName: DEMO_TC_EMPLOYEE.name, action: 'submit', at: '2026-06-06T09:15:00+07:00' },
+    ],
+  },
+];
+
+/** Number of demo ESS Time-Correction rows seeded into the unified queue (Group D). */
+export const TC_DEMO_COUNT = DEMO_PENDING_TC.length;
+
 let seeded = false;
 
 /** Reset the once-per-session guard. Test-only — lets a suite re-run the single
@@ -425,6 +477,7 @@ export function resetEnsureDemoSeedForTests(): void {
   seeded = false;
   useLeaveBalances.getState().clear();
   useOvertimeRequests.getState().clear();
+  useTimeCorrections.getState().clear();
 }
 
 /** Seed all workflow stores once per browser session if stores are empty.
@@ -443,6 +496,12 @@ export function ensureDemoSeed(): void {
   // Add the 2 demo ESS OT rows (incl. one cross-midnight) with stable ids so the
   // /workflows/ot/[id] detail route resolves them across a full reload.
   useOvertimeRequests.getState().seedFromQueue(DEMO_PENDING_OT);
+  // Group D: seed the demo Time-Correction rows (init-overwrite-empties) so the
+  // unified queue shows a non-zero time_correction count. Plain-persist store, so
+  // a user-submitted correction (length > 0) is preserved on reload, not clobbered.
+  if (useTimeCorrections.getState().requests.length === 0) {
+    useTimeCorrections.setState({ requests: DEMO_PENDING_TC });
+  }
   // Group A: seed the demo employee's quota buckets BEFORE adding leave rows so
   // the reserve() on each addRequest draws against a real balance.
   useLeaveBalances
