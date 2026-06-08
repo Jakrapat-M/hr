@@ -442,7 +442,7 @@ const DEMO_PENDING_TC: TimeCorrectionRequest[] = [
     status: 'pending_manager',
     submittedAt: '2026-06-06T08:30:00+07:00',
     audit: [
-      { actorId: DEMO_TC_EMPLOYEE.id, actorName: DEMO_TC_EMPLOYEE.name, action: 'submit', at: '2026-06-06T08:30:00+07:00' },
+      { actorName: DEMO_TC_EMPLOYEE.name, action: 'submit', at: '2026-06-06T08:30:00+07:00' },
     ],
   },
   {
@@ -461,7 +461,7 @@ const DEMO_PENDING_TC: TimeCorrectionRequest[] = [
     status: 'pending_manager',
     submittedAt: '2026-06-06T09:15:00+07:00',
     audit: [
-      { actorId: DEMO_TC_EMPLOYEE.id, actorName: DEMO_TC_EMPLOYEE.name, action: 'submit', at: '2026-06-06T09:15:00+07:00' },
+      { actorName: DEMO_TC_EMPLOYEE.name, action: 'submit', at: '2026-06-06T09:15:00+07:00' },
     ],
   },
 ];

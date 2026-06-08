@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/date';
 
 const TH_WEEKDAYS = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+const EN_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function isoOf(year: number, month: number, day: number): string {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -31,6 +32,9 @@ export interface LeaveRangeCalendarProps {
   holidays?: readonly string[];
   /** Initial visible month (ISO); defaults to today. */
   defaultMonth?: string;
+  /** Active locale — drives the month label era + weekday/legend language.
+   *  'th' (default) → Buddhist-era Thai month; 'en' → Gregorian English. */
+  locale?: string;
 }
 
 export function LeaveRangeCalendar({
@@ -39,7 +43,10 @@ export function LeaveRangeCalendar({
   onChange,
   holidays = [],
   defaultMonth,
+  locale = 'th',
 }: LeaveRangeCalendarProps) {
+  const isTh = locale !== 'en';
+  const weekdays = isTh ? TH_WEEKDAYS : EN_WEEKDAYS;
   const initial = defaultMonth ? new Date(defaultMonth) : new Date();
   const [view, setView] = useState({ year: initial.getFullYear(), month: initial.getMonth() });
 
@@ -54,13 +61,14 @@ export function LeaveRangeCalendar({
     for (let d = 1; d <= daysInMonth; d++) {
       grid.push({ day: d, iso: isoOf(view.year, view.month, d) });
     }
-    // "1 มิถุนายน 2569" → drop the leading day → "มิถุนายน 2569" (BE via lib/date.ts).
-    const full = formatDate(isoOf(view.year, view.month, 1), 'long', 'th');
+    // "1 มิถุนายน 2569" → drop the leading day → "มิถุนายน 2569" (BE via lib/date.ts);
+    // on /en: "1 June 2026" → "June 2026" (Gregorian).
+    const full = formatDate(isoOf(view.year, view.month, 1), 'long', locale);
     return {
       cells: grid,
       monthLabel: full.split(' ').slice(1).join(' '),
     };
-  }, [view]);
+  }, [view, locale]);
 
   function handlePick(iso: string) {
     // First click (or both already set) starts a fresh range.
@@ -85,7 +93,7 @@ export function LeaveRangeCalendar({
       <div className="flex items-center justify-between">
         <button
           type="button"
-          aria-label="เดือนก่อนหน้า"
+          aria-label={isTh ? 'เดือนก่อนหน้า' : 'Previous month'}
           onClick={() =>
             setView((v) =>
               v.month === 0 ? { year: v.year - 1, month: 11 } : { ...v, month: v.month - 1 },
@@ -98,7 +106,7 @@ export function LeaveRangeCalendar({
         <p className="text-body font-semibold text-ink">{monthLabel}</p>
         <button
           type="button"
-          aria-label="เดือนถัดไป"
+          aria-label={isTh ? 'เดือนถัดไป' : 'Next month'}
           onClick={() =>
             setView((v) =>
               v.month === 11 ? { year: v.year + 1, month: 0 } : { ...v, month: v.month + 1 },
@@ -112,7 +120,7 @@ export function LeaveRangeCalendar({
 
       {/* Weekday header */}
       <div className="mt-3 grid grid-cols-7 gap-1">
-        {TH_WEEKDAYS.map((w, i) => (
+        {weekdays.map((w, i) => (
           <div
             key={w}
             className={cn(
@@ -142,7 +150,7 @@ export function LeaveRangeCalendar({
               type="button"
               onClick={() => handlePick(cell.iso)}
               aria-pressed={selected}
-              aria-label={`${cell.day}${isHoliday ? ' · วันหยุด' : ''}`}
+              aria-label={`${cell.day}${isHoliday ? (isTh ? ' · วันหยุด' : ' · holiday') : ''}`}
               className={cn(
                 'relative flex h-10 items-center justify-center rounded-[var(--radius-sm)] text-body transition-colors',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface',
@@ -174,13 +182,15 @@ export function LeaveRangeCalendar({
       <div className="mt-3 flex flex-wrap items-center gap-4 text-[length:var(--text-eyebrow)] text-ink-muted">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-[3px] bg-accent" aria-hidden />
-          ช่วงที่เลือก
+          {isTh ? 'ช่วงที่เลือก' : 'Selected range'}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-danger)]" aria-hidden />
-          วันหยุดนักขัตฤกษ์
+          {isTh ? 'วันหยุดนักขัตฤกษ์' : 'Public holiday'}
         </span>
-        <span className="inline-flex items-center gap-1.5 text-ink-faint">เสาร์–อาทิตย์</span>
+        <span className="inline-flex items-center gap-1.5 text-ink-faint">
+          {isTh ? 'เสาร์–อาทิตย์' : 'Weekend'}
+        </span>
       </div>
     </div>
   );
