@@ -4925,7 +4925,14 @@
     "empty": "No plans match the selected filters.",
     "disclaimerEyebrow": "Note",
     "disclaimerTitle": "Mock data",
-    "disclaimerBody": "Plan edits on this page are mockup only. No backend connection is wired."
+    "disclaimerBody": "Plan edits on this page are mockup only. No backend connection is wired.",
+    "filterStatus": "Status:",
+    "filterStatusActive": "Active",
+    "filterStatusInactive": "Inactive",
+    "filterStartDate": "Start date:",
+    "filterEffectiveDate": "Effective date:",
+    "filterMonthAll": "Month",
+    "filterYearAll": "Year"
   },
   "admin_benefits_rules": {
     "eyebrow": "Benefits · Rules",

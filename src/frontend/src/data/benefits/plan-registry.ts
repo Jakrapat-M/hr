@@ -281,6 +281,7 @@ export const BENEFIT_PLAN_REGISTRY: BenefitPlan[] = [
   {
     schemaVersion: 'v2',
     id: 'BE-MED-002',
+    status: 'inactive', // STA-87 demo — inactive plan for status filter
     ttt: 'BE_06',
     nameTh: 'ค่ารักษาพยาบาล (ผู้ป่วยใน) — ใบส่งตัว',
     nameEn: 'Medical Reimbursement (IPD with referral)',
@@ -309,7 +310,7 @@ export const BENEFIT_PLAN_REGISTRY: BenefitPlan[] = [
       enrollmentRequired: false,
       dependentSpecificRule: false,
       noOfDependentsToConsider: null,
-      effectiveStartDate: '2024-01-01',
+      effectiveStartDate: '2023-03-01', // STA-87 demo — varied date
       effectiveEndDate: null,
     },
     claimRules: {
@@ -383,6 +384,7 @@ export const BENEFIT_PLAN_REGISTRY: BenefitPlan[] = [
   {
     schemaVersion: 'v2',
     id: 'BE-MED-004',
+    status: 'inactive', // STA-87 demo — inactive plan for status filter
     ttt: 'BE_07',
     nameTh: 'ค่ารักษาพยาบาลคู่สมรสและบุตร',
     nameEn: 'Medical Reimbursement — Dependent',
@@ -411,7 +413,7 @@ export const BENEFIT_PLAN_REGISTRY: BenefitPlan[] = [
       enrollmentRequired: false,
       dependentSpecificRule: true,
       noOfDependentsToConsider: 4,
-      effectiveStartDate: '2024-01-01',
+      effectiveStartDate: '2025-07-01', // STA-87 demo — varied date
       effectiveEndDate: null,
     },
     claimRules: {
@@ -464,7 +466,7 @@ export const BENEFIT_PLAN_REGISTRY: BenefitPlan[] = [
       enrollmentRequired: false,
       dependentSpecificRule: false,
       noOfDependentsToConsider: null,
-      effectiveStartDate: '2024-01-01',
+      effectiveStartDate: '2023-11-01', // STA-87 demo — varied date
       effectiveEndDate: null,
     },
     claimRules: {
@@ -489,6 +491,7 @@ export const BENEFIT_PLAN_REGISTRY: BenefitPlan[] = [
   {
     schemaVersion: 'v2',
     id: 'BE-PHY-001',
+    status: 'inactive', // STA-87 demo — inactive plan for status filter
     ttt: 'BE_16',
     nameTh: 'ตรวจสุขภาพประจำปี — แพ็กเกจ A',
     nameEn: 'Annual Physical Checkup — Package A',
@@ -517,7 +520,7 @@ export const BENEFIT_PLAN_REGISTRY: BenefitPlan[] = [
       enrollmentRequired: true,
       dependentSpecificRule: false,
       noOfDependentsToConsider: null,
-      effectiveStartDate: '2024-01-01',
+      effectiveStartDate: '2025-02-01', // STA-87 demo — varied date
       effectiveEndDate: null,
     },
     claimRules: {

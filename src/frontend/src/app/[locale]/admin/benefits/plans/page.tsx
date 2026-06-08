@@ -81,9 +81,23 @@ const TEMPLATE_LABELS: Record<string, string> = {
 
 const ALL_CATEGORIES = ['all', ...Object.keys(CATEGORY_LABELS_EN)] as const;
 const ALL_RECORD_TYPES = ['all', 'records', 'info', 'claimable'] as const;
+const ALL_STATUSES = ['all', 'active', 'inactive'] as const;
 
 type FilterCategory = typeof ALL_CATEGORIES[number];
 type FilterRecordType = typeof ALL_RECORD_TYPES[number];
+type FilterStatus = typeof ALL_STATUSES[number];
+
+// STA-87 — Start date / Effective date both read the plan's single real date
+// field, `eligibility.effectiveStartDate` (v2 plans only; v1 has none → null,
+// so it is excluded when a date filter is active). The catalogue exposes a
+// distinct "Start date" and "Effective date" filter per the ticket, but in the
+// mockup both bind this same field — confirm a separate effective-date field
+// with BA before backend wiring.
+function planEffectiveDate(p: BenefitPlan): string | null {
+  return 'eligibility' in p ? p.eligibility.effectiveStartDate : null;
+}
+
+const MONTHS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'] as const;
 
 const selectClass =
   'h-10 rounded-[var(--radius-md)] border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
@@ -392,6 +406,12 @@ export default function BenefitPlansPage() {
 
   const [filterCategory, setFilterCategory] = useState<FilterCategory>('all');
   const [filterRecordType, setFilterRecordType] = useState<FilterRecordType>('all');
+  // STA-87 — active-status + start/effective date (month + year) filters.
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+  const [startMonth, setStartMonth] = useState<string>('all');
+  const [startYear, setStartYear] = useState<string>('all');
+  const [effectiveMonth, setEffectiveMonth] = useState<string>('all');
+  const [effectiveYear, setEffectiveYear] = useState<string>('all');
   const [editingPlan, setEditingPlan] = useState<BenefitPlan | null>(null);
   const [creatingPlan, setCreatingPlan] = useState(false);
 
@@ -409,13 +429,36 @@ export default function BenefitPlansPage() {
 
   const existingIds = useMemo(() => new Set(plans.map((p) => p.id)), [plans]);
 
+  // Years present in the registry's effective dates — drives the year dropdowns.
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    for (const p of plans) {
+      const d = planEffectiveDate(p);
+      if (d) years.add(d.slice(0, 4));
+    }
+    return Array.from(years).sort();
+  }, [plans]);
+
+  const matchDate = (iso: string | null, month: string, year: string) => {
+    if (month === 'all' && year === 'all') return true;
+    if (!iso) return false; // no date → excluded once a date filter is active
+    const [y, m] = iso.split('-');
+    if (year !== 'all' && y !== year) return false;
+    if (month !== 'all' && m !== month) return false;
+    return true;
+  };
+
   const filteredPlans = useMemo(() => {
     return plans.filter((p) => {
       if (filterCategory !== 'all' && p.category !== filterCategory) return false;
       if (filterRecordType !== 'all' && p.recordType !== filterRecordType) return false;
+      if (filterStatus !== 'all' && (p.status ?? 'active') !== filterStatus) return false;
+      const eff = planEffectiveDate(p);
+      if (!matchDate(eff, startMonth, startYear)) return false;
+      if (!matchDate(eff, effectiveMonth, effectiveYear)) return false;
       return true;
     });
-  }, [plans, filterCategory, filterRecordType]);
+  }, [plans, filterCategory, filterRecordType, filterStatus, startMonth, startYear, effectiveMonth, effectiveYear]);
 
   const columns = useMemo(() => [
     {
@@ -577,11 +620,94 @@ export default function BenefitPlansPage() {
           </select>
         </div>
 
-        {(filterCategory !== 'all' || filterRecordType !== 'all') && (
+        {/* STA-87 — Active status */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="filter-status" className="text-small font-medium text-ink-muted whitespace-nowrap">
+            {t('filterStatus')}
+          </label>
+          <select
+            id="filter-status"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
+            className={selectClass}
+          >
+            <option value="all">{t('filterAll')}</option>
+            <option value="active">{t('filterStatusActive')}</option>
+            <option value="inactive">{t('filterStatusInactive')}</option>
+          </select>
+        </div>
+
+        {/* STA-87 — Start date (month + year) */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="filter-start-month" className="text-small font-medium text-ink-muted whitespace-nowrap">
+            {t('filterStartDate')}
+          </label>
+          <select
+            id="filter-start-month"
+            aria-label={t('filterStartDate')}
+            value={startMonth}
+            onChange={(e) => setStartMonth(e.target.value)}
+            className={selectClass}
+          >
+            <option value="all">{t('filterMonthAll')}</option>
+            {MONTHS.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+          <select
+            id="filter-start-year"
+            aria-label={t('filterStartDate')}
+            value={startYear}
+            onChange={(e) => setStartYear(e.target.value)}
+            className={selectClass}
+          >
+            <option value="all">{t('filterYearAll')}</option>
+            {availableYears.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* STA-87 — Effective date (month + year) */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="filter-effective-month" className="text-small font-medium text-ink-muted whitespace-nowrap">
+            {t('filterEffectiveDate')}
+          </label>
+          <select
+            id="filter-effective-month"
+            aria-label={t('filterEffectiveDate')}
+            value={effectiveMonth}
+            onChange={(e) => setEffectiveMonth(e.target.value)}
+            className={selectClass}
+          >
+            <option value="all">{t('filterMonthAll')}</option>
+            {MONTHS.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+          <select
+            id="filter-effective-year"
+            aria-label={t('filterEffectiveDate')}
+            value={effectiveYear}
+            onChange={(e) => setEffectiveYear(e.target.value)}
+            className={selectClass}
+          >
+            <option value="all">{t('filterYearAll')}</option>
+            {availableYears.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+
+        {(filterCategory !== 'all' || filterRecordType !== 'all' || filterStatus !== 'all'
+          || startMonth !== 'all' || startYear !== 'all' || effectiveMonth !== 'all' || effectiveYear !== 'all') && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => { setFilterCategory('all'); setFilterRecordType('all'); }}
+            onClick={() => {
+              setFilterCategory('all'); setFilterRecordType('all'); setFilterStatus('all');
+              setStartMonth('all'); setStartYear('all'); setEffectiveMonth('all'); setEffectiveYear('all');
+            }}
           >
             {t('clearFilters')}
           </Button>
