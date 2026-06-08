@@ -15,6 +15,10 @@ interface CollapsibleSectionCardProps {
   onToggle: () => void
   children: React.ReactNode
   isValid?: boolean
+  /** Toggle button label when collapsed. Defaults to Thai 'ขยาย' (back-compat). */
+  expandLabel?: string
+  /** Toggle button label when expanded. Defaults to Thai 'ย่อ' (back-compat). */
+  collapseLabel?: string
 }
 
 export function CollapsibleSectionCard({
@@ -27,6 +31,8 @@ export function CollapsibleSectionCard({
   onToggle,
   children,
   isValid,
+  expandLabel = 'ขยาย',
+  collapseLabel = 'ย่อ',
 }: CollapsibleSectionCardProps) {
   const contentId = `${id}-content`
 
@@ -50,7 +56,7 @@ export function CollapsibleSectionCard({
           aria-controls={contentId}
           onClick={onToggle}
         >
-          {collapsed ? 'ขยาย' : 'ย่อ'}
+          {collapsed ? expandLabel : collapseLabel}
           <ChevronDown
             size={16}
             aria-hidden

@@ -63,6 +63,41 @@ describe('CollapsibleSectionCard', () => {
     expect(screen.getByLabelText('child input')).toHaveValue('still mounted')
   })
 
+  it('honours locale-aware expand/collapse labels and is collapsed-on-mount when collapsed', () => {
+    // collapsed → expand label shown, aria-expanded=false, content hidden (AC2 mechanism)
+    const { rerender } = render(
+      <CollapsibleSectionCard
+        id="benefits" icon={User2} eyebrow="E" title="Current Benefits" sub="S"
+        collapsed onToggle={() => {}} expandLabel="Expand" collapseLabel="Collapse"
+      >
+        <StatefulChild />
+      </CollapsibleSectionCard>,
+    )
+    const toggle = screen.getByRole('button', { name: 'Expand' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(document.getElementById('benefits-content')).toHaveAttribute('hidden')
+
+    // expanded → collapse label shown, aria-expanded=true
+    rerender(
+      <CollapsibleSectionCard
+        id="benefits" icon={User2} eyebrow="E" title="Current Benefits" sub="S"
+        collapsed={false} onToggle={() => {}} expandLabel="Expand" collapseLabel="Collapse"
+      >
+        <StatefulChild />
+      </CollapsibleSectionCard>,
+    )
+    expect(screen.getByRole('button', { name: 'Collapse' })).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('defaults to Thai labels when expand/collapse labels are omitted (back-compat)', () => {
+    render(
+      <CollapsibleSectionCard id="bc" icon={User2} eyebrow="E" title="T" sub="S" collapsed onToggle={() => {}}>
+        <StatefulChild />
+      </CollapsibleSectionCard>,
+    )
+    expect(screen.getByRole('button', { name: 'ขยาย' })).toBeInTheDocument()
+  })
+
   it('does not introduce forbidden red utility classes or hardcoded hex colors', () => {
     const source = fs.readFileSync(path.resolve(__dirname, 'CollapsibleSectionCard.tsx'), 'utf8')
 
