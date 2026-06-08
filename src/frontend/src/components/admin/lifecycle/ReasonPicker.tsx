@@ -3,7 +3,7 @@
 // ReasonPicker.tsx — Dropdown สำหรับเลือก Event Reason ตาม flow
 // filter ด้วย event code prop:
 //   '5584' = REHIRE, '5587' = PRCHG (Promotion), '5589' = POSCHG (Acting),
-//   '5597' = TERMINATE, '5604' = TRANSFER
+//   '5597' = TERMINATE, '5604' = TRANSFER, '5607' = DEMOTION (STA-92)
 // ใช้ข้อมูลจาก FOEventReason.json (Appendix 2, Rule C8: verbatim — ห้าม invent)
 // SF source: sf-qas-workflow-2026-04-25.json — jq '.foEventReason[] | select(.event == "5587")'
 
@@ -20,6 +20,11 @@ const REASON_LABELS: Record<string, string> = {
   PRCHG_ADJPOS:  'ปรับตำแหน่ง (Adjust Position)',
   PRCHG_SALADJ:  'ปรับเงินเดือน (Salary Adjust)',
   PRCHG_SALCUT:  'ลดเงินเดือน (Salary Cuts)',
+  // DEMOTION (event=5607) — SF foEventReason externalCode (internalCode 245)
+  // NOTE: event 5607 also contains PRM_PRM (Promotion, internalCode 246),
+  // intentionally NOT seeded here — Promotion already surfaces via 5587
+  // PRCHG_PROMO; STA-92 scopes only the Demotion reason. (See open question.)
+  PRM_DEMO:      'ลดตำแหน่ง (Demotion)',
   // POSITION CHANGE / ACTING (event=5589) — SF foEventReason externalCode
   // source: jq '.foEventReason[] | select(.event=="5589")' sf-qas-workflow-2026-04-25.json
   POSCHG_POSCHG: 'เปลี่ยนตำแหน่ง / รักษาการ (Position Change)',
@@ -59,6 +64,9 @@ const EVENT_REASONS: Record<string, string[]> = {
   '5587': ['PRCHG_PROMO', 'PRCHG_MERINC', 'PRCHG_ADJPOS', 'PRCHG_SALADJ', 'PRCHG_SALCUT'],
   // event 5589 = Position Change / Acting — SF source: sf-qas-workflow-2026-04-25.json
   '5589': ['POSCHG_POSCHG'],
+  // event 5607 = Demotion (STA-92) — SF source: FOEventReason.json (PRM_DEMO, code 245).
+  // PRM_PRM (Promotion, 246) also lives on 5607 but is intentionally omitted here.
+  '5607': ['PRM_DEMO'],
   '5604': ['TRN_ROTATION', 'TRN_TRNACCOMP', 'TRN_TRNWIC'],
   '5597': [
     'TERM_RETIRE', 'TERM_DISMISS', 'TERM_DM', 'TERM_ENDASSIGN', 'TERM_EOC',
@@ -72,7 +80,7 @@ const EVENT_REASONS: Record<string, string[]> = {
 const ESS_VOLUNTARY_CODES = ['RESIGN_PERSONAL', 'RESIGN_STUDY', 'RESIGN_FAMILY', 'RESIGN_OTHER'] as const;
 
 interface ReasonPickerProps {
-  event: '5584' | '5587' | '5589' | '5597' | '5604'
+  event: '5584' | '5587' | '5589' | '5597' | '5604' | '5607'
   value: string | null
   onChange: (code: string) => void
   required?: boolean
