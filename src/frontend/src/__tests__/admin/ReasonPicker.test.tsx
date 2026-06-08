@@ -26,6 +26,16 @@ describe('ReasonPicker — event code filter', () => {
     expect(screen.getByText(/TRN_TRNWIC/)).toBeInTheDocument()
   })
 
+  it('event="5607" (DEMOTION, STA-92) ต้องแสดง 1 option: PRM_DEMO (PRM_PRM ไม่ถูก seed)', () => {
+    render(<ReasonPicker event="5607" value={null} onChange={() => {}} />)
+    const select = screen.getByRole('combobox')
+    const options = select.querySelectorAll('option')
+    expect(options.length).toBe(2) // 1 reason + placeholder
+    expect(screen.getByText(/PRM_DEMO/)).toBeInTheDocument()
+    // C8 / open question — Promotion (PRM_PRM) must NOT appear under 5607
+    expect(screen.queryByText(/PRM_PRM/)).not.toBeInTheDocument()
+  })
+
   it('event="5597" (TERMINATE) ต้องแสดง 17 options (verbatim ตาม Appendix 2 — C8)', () => {
     render(<ReasonPicker event="5597" value={null} onChange={() => {}} />)
     const select = screen.getByRole('combobox')
