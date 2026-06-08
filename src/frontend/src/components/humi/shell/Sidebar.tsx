@@ -546,7 +546,7 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
 //
 // ESS workflow family (3) — reached from "ใบลา" + Documents sidebar entries
 // SIDEBAR_LEGACY: /ess/workflows reachable from the workspace Leaves + Documents entries (requests funnel)
-// SIDEBAR_LEGACY: /overtime reachable from /timeoff OT request flow (sub-feature of timeoff)
+// SIDEBAR_LEGACY: /overtime — employee self-service OT request, reached from the /time hub Overtime tile (no own leaf; ungated like /timeoff)
 // SIDEBAR_LEGACY: /workflows alt-path superseded by the workspace Leaves + Documents entries
 //
 // People / performance alternates (5) — reached from team-performance + profile

@@ -8,8 +8,12 @@
  *
  * Routes covered (the ones PR-1 fixes):
  *   /quick-approve  → canAccessModule(roles,'quick-approve')   (quick-approve/layout.tsx)
- *   /overtime       → hasAnyRole(roles,['manager','hr_admin','hr_manager'])  (overtime/page.tsx)
  *   /admin/**       → hasRole(roles,'hr_admin')                 (admin/layout.tsx)
+ *
+ * NOTE: /overtime is NOT here. It is employee self-service (ESS OT submit,
+ * overtime/page.tsx) reached from the /time hub Overtime tile — ungated, like
+ * /timeoff and /time/corrections. Approval happens at /workflows/ot/[id], not on
+ * /overtime, so there is no manager-only guard to assert.
  *
  * Persona→Role map mirrors Sidebar PERSONA_ROLE: hradmin→hr_admin, hris→hr_manager,
  * sysadmin→hr_manager, others identity.
@@ -38,7 +42,6 @@ import { PERSONA_ROLE, type PersonaId } from '@/lib/persona-tiers';
 /** The guard predicate for each P1-guarded route (post-PR1). */
 const GUARD: Record<string, (roles: Role[]) => boolean> = {
   '/quick-approve': (roles) => canAccessModule(roles, 'quick-approve'),
-  '/overtime': (roles) => hasAnyRole(roles, ['manager', 'hr_admin', 'hr_manager']),
   '/admin': (roles) => hasRole(roles, 'hr_admin'),
 };
 
@@ -49,14 +52,6 @@ describe('AC-1.2 — P1 guard ⊇ menu show personas', () => {
     const show = approvals?.show ?? [];
     const denied = show.filter((p) => !GUARD['/quick-approve']([PERSONA_ROLE[p]]));
     expect(denied).toEqual([]);
-  });
-
-  it('/overtime guard admits the OT-approver personas (manager + HR), denies employee', () => {
-    // Overtime has no Sidebar leaf, but the guard must admit manager/HR approvers.
-    expect(GUARD['/overtime'](['manager'])).toBe(true);
-    expect(GUARD['/overtime'](['hr_admin'])).toBe(true);
-    expect(GUARD['/overtime'](['hr_manager'])).toBe(true);
-    expect(GUARD['/overtime'](['employee'])).toBe(false);
   });
 
   it('/admin guard admits hr_admin and (via hierarchy) hr_manager, denies employee/manager', () => {
@@ -258,7 +253,6 @@ export const KNOWN_ORPHAN_GUARDED: readonly string[] = [
   '/quick-approve/bulk', // bulk-approve sub-route of the approvals inbox
   '/workflows/pay-rate/[id]', // workflow detail page (reached from the inbox row)
   '/workflows/tax-planning/[id]', // workflow detail page (reached from the inbox row)
-  '/overtime', // OT request flow — sub-feature of /timeoff, no own leaf
   '/payroll/import', // payroll data import — reached from the Payroll module
   '/time/import', // attendance import — reached from Time & Attendance
   '/hrbp/dashboard', // legacy People-Partner landing (superseded by group entries)

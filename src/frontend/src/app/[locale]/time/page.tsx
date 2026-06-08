@@ -44,27 +44,33 @@ const TILES = [
     descTh: 'ขอแก้ไขเวลาเข้า-ออกงานที่บันทึกผิดพลาด',
     href: 'time/corrections',
   },
+];
+
+// Manager/HR-only tiles (remove-not-hide). Both the approval inbox and the
+// timesheet-review surface require reviewer rights; their routes guard
+// server-side (/quick-approve → canAccessModule, /time/review → reviewer roles),
+// so rendering these tiles to an employee would dead-end them in AccessDenied.
+// They live here — gated by `canReview` — never in the self-service TILES list.
+const MANAGER_TILES = [
   {
     key: 'approvals',
     icon: CheckSquare,
-    titleEn: 'Manager Approvals',
+    titleEn: 'Team Approvals',
     titleTh: 'อนุมัติทีม',
     descEn: 'Review pending requests from your team',
     descTh: 'ตรวจสอบคำขอที่รอดำเนินการจากทีม',
     href: 'quick-approve',
   },
-];
-
-// Manager/HR-only tiles (remove-not-hide: hidden entirely for roles without access).
-const REVIEW_TILE = {
-  key: 'timesheet-review',
-  icon: ClipboardList,
-  titleEn: 'Timesheet Review',
-  titleTh: 'ตรวจสอบใบบันทึกเวลา',
-  descEn: 'Read-only view of timesheets submitted by your team',
-  descTh: 'มุมมองแบบอ่านอย่างเดียวของใบบันทึกเวลาที่ทีมส่ง',
-  href: 'time/review',
-} as const;
+  {
+    key: 'timesheet-review',
+    icon: ClipboardList,
+    titleEn: 'Timesheet Review',
+    titleTh: 'ตรวจสอบใบบันทึกเวลา',
+    descEn: 'Read-only view of timesheets submitted by your team',
+    descTh: 'มุมมองแบบอ่านอย่างเดียวของใบบันทึกเวลาที่ทีมส่ง',
+    href: 'time/review',
+  },
+] as const;
 
 export default function TimeLandingPage() {
   const params = useParams();
@@ -105,15 +111,18 @@ export default function TimeLandingPage() {
         </div>
       </section>
 
-      {/* Review surface — manager/HR only (remove-not-hide). The /time/review
-          route itself renders AccessDenied in place for non-reviewers. */}
+      {/* Manager/HR surface — approvals + review (remove-not-hide). The routes
+          themselves also guard server-side; we simply never render a dead-end
+          tile for non-reviewers. */}
       {canReview && (
         <section aria-labelledby="time-review-heading" className="space-y-3">
           <h2 id="time-review-heading" className="text-xs font-semibold uppercase tracking-widest text-ink-muted">
-            {isTh ? 'สำหรับผู้จัดการ · ตรวจสอบ' : 'For Managers · Review'}
+            {isTh ? 'สำหรับผู้จัดการ' : 'For Managers'}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <TimeTile tile={REVIEW_TILE} locale={locale} isTh={isTh} />
+            {MANAGER_TILES.map((tile) => (
+              <TimeTile key={tile.key} tile={tile} locale={locale} isTh={isTh} />
+            ))}
           </div>
         </section>
       )}
