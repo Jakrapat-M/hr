@@ -51,3 +51,15 @@ export function isWithinCurrentPeriod(dateISO: string, refDate?: Date): boolean 
   const { start, end } = currentPeriod(refDate);
   return dateISO >= start && dateISO <= end;
 }
+
+/**
+ * MOCK ONLY — timesheet lock gate for time corrections (Group C / C3). A working
+ * day belongs to a LOCKED period once payroll has closed it: anything strictly
+ * before the start of the current payroll period is treated as locked (the prior
+ * period has been processed and can no longer be corrected via ESS).
+ */
+export function isTimesheetLocked(dateISO: string, refDate?: Date): boolean {
+  if (!dateISO) return false;
+  const { start } = currentPeriod(refDate);
+  return dateISO < start;
+}

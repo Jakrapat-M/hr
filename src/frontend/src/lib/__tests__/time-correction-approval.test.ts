@@ -30,7 +30,8 @@ function submitOne() {
     employeeName: 'Natcha Panyasiri',
     department: 'My Team',
     date: '2026-05-20',
-    kind: 'wrong-time',
+    correctionType: 'in',
+    reasonCode: 'UNABLE_TO_SCAN',
     originalTime: '09:22',
     correctedTime: '09:05',
     reason: 'Badge scanned at 09:05',
@@ -101,5 +102,14 @@ describe('time-correction → unified quick-approve row', () => {
   it('adapter approve/reject never throw for unknown ids', () => {
     expect(() => APPROVAL_REGISTRY.time_correction.approve('MISSING', { name: 'A' })).not.toThrow();
     expect(() => APPROVAL_REGISTRY.time_correction.reject('MISSING', { name: 'A' }, 'r')).not.toThrow();
+  });
+
+  it('round-trips correctionType + reasonCode and derives the pay-code', () => {
+    const id = submitOne();
+    const stored = useTimeCorrections.getState().requests.find((r) => r.id === id)!;
+    expect(stored.correctionType).toBe('in');
+    expect(stored.reasonCode).toBe('UNABLE_TO_SCAN');
+    // payCode is derived from the reason registry (UNABLE_TO_SCAN → UNABLE_TO_SCAN).
+    expect(stored.payCode).toBe('UNABLE_TO_SCAN');
   });
 });

@@ -29,8 +29,9 @@ import {
 import {
   useTimeCorrections,
   type TimeCorrectionRequest,
-  TIME_CORRECTION_KIND_LABEL,
+  CORRECTION_TYPE_LABEL,
 } from '@/stores/time-corrections';
+import { getCorrectionReason } from '@/lib/time/correction-reasons';
 import {
   useOvertimeRequests,
   queueRowToOTRequest,
@@ -225,17 +226,18 @@ export function timeCorrectionToPendingRequest(r: TimeCorrectionRequest): Pendin
   const slaHours = elapsedMs / (1000 * 60 * 60);
   const urgency: Urgency = slaHours > 48 ? 'urgent' : slaHours > 24 ? 'normal' : 'low';
   const waitingDays = Math.max(0, Math.floor(elapsedMs / 86400000));
-  const kindLabel = TIME_CORRECTION_KIND_LABEL[r.kind]?.th ?? r.kind;
+  const typeLabel = CORRECTION_TYPE_LABEL[r.correctionType]?.th ?? r.correctionType;
+  const reasonLabel = getCorrectionReason(r.reasonCode)?.reasonTh ?? r.reasonCode;
   return {
     id: r.id,
     type: 'time_correction',
     requester: {
       id: r.employeeId,
       name: r.employeeName,
-      position: kindLabel,
+      position: reasonLabel,
       department: r.department,
     },
-    description: `แก้ไขเวลา (${kindLabel}) — ${r.date} · ${r.correctedTime}`,
+    description: `แก้ไขเวลา (${typeLabel}) — ${r.date} · ${r.correctedTime}`,
     submittedAt: r.submittedAt,
     urgency,
     waitingDays,

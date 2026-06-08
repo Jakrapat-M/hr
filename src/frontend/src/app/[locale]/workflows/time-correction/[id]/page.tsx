@@ -14,13 +14,14 @@ import { use, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Clock3 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock3, Paperclip } from 'lucide-react';
 import { Button, Modal, FormField } from '@/components/humi';
 import {
   useTimeCorrections,
   TIME_CORRECTION_STEP_LABEL,
-  TIME_CORRECTION_KIND_LABEL,
+  CORRECTION_TYPE_LABEL,
 } from '@/stores/time-corrections';
+import { getCorrectionReason } from '@/lib/time/correction-reasons';
 import { APPROVAL_REGISTRY } from '@/lib/approval-registry';
 import { formatDate } from '@/lib/date';
 import { useAuthStore } from '@/stores/auth-store';
@@ -66,7 +67,12 @@ export default function TimeCorrectionDetailPage({ params }: PageProps) {
     if (!request || !mode) return;
     if (mode === 'approve') {
       APPROVAL_REGISTRY.time_correction.approve(request.id, { name: MANAGER_NAME });
-      showToast(isTh ? 'อนุมัติการแก้ไขเวลาแล้ว' : 'Time correction approved');
+      // Mock post-approve indication (C5/C6) — no real payroll wiring this phase.
+      showToast(
+        isTh
+          ? 'อนุมัติแล้ว · อัปเดตใบลงเวลา · คำนวณสาย/OT ใหม่'
+          : 'Approved · timesheet updated · Late/OT recompute',
+      );
     } else {
       APPROVAL_REGISTRY.time_correction.reject(
         request.id,
@@ -94,7 +100,9 @@ export default function TimeCorrectionDetailPage({ params }: PageProps) {
 
   const isPending = request.status === 'pending_manager';
   const stepLabel = TIME_CORRECTION_STEP_LABEL[request.status];
-  const kindLabel = TIME_CORRECTION_KIND_LABEL[request.kind];
+  const typeLabel = CORRECTION_TYPE_LABEL[request.correctionType];
+  const reasonDef = getCorrectionReason(request.reasonCode);
+  const reasonLabel = (isTh ? reasonDef?.reasonTh : reasonDef?.reasonEn) ?? request.reasonCode;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
@@ -133,22 +141,56 @@ export default function TimeCorrectionDetailPage({ params }: PageProps) {
         <div className="divide-y divide-hairline">
           <FieldRow label={isTh ? 'รหัสพนักงาน' : 'Employee ID'} value={request.employeeId} />
           <FieldRow label={isTh ? 'แผนก' : 'Department'} value={request.department} />
-          <FieldRow label={isTh ? 'ประเภท' : 'Type'} value={isTh ? kindLabel.th : kindLabel.en} />
+          <FieldRow label={isTh ? 'ประเภท' : 'Type'} value={isTh ? typeLabel.th : typeLabel.en} />
           <FieldRow
             label={isTh ? 'วันที่' : 'Date'}
             value={formatDate(request.date, 'medium', locale)}
           />
-          <FieldRow label={isTh ? 'เวลาเดิม' : 'Original time'} value={request.originalTime ?? '—'} />
+          {/* Before → After (C2) — original time mapped to the corrected time. */}
           <FieldRow
-            label={isTh ? 'เวลาที่ถูกต้อง' : 'Corrected time'}
-            value={<span className="font-semibold">{request.correctedTime}</span>}
+            label={isTh ? 'ก่อน → หลัง' : 'Before → After'}
+            value={
+              <span className="inline-flex items-center gap-2">
+                <span className="text-ink-muted">{request.originalTime ?? '—'}</span>
+                <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden />
+                <span className="font-semibold text-accent">{request.correctedTime}</span>
+              </span>
+            }
           />
-          <FieldRow label={isTh ? 'เหตุผล' : 'Reason'} value={request.reason} />
+          <FieldRow label={isTh ? 'เหตุผล' : 'Reason'} value={reasonLabel} />
+          <FieldRow label={isTh ? 'รหัสค่าจ้าง' : 'Pay code'} value={request.payCode} />
+          {request.reason && (
+            <FieldRow label={isTh ? 'รายละเอียดเพิ่มเติม' : 'Note'} value={request.reason} />
+          )}
           <FieldRow
             label={isTh ? 'วันที่ส่ง' : 'Submitted'}
             value={formatDate(request.submittedAt, 'medium', locale)}
           />
         </div>
+
+        {/* Attachments (view/download) */}
+        {request.docs && request.docs.length > 0 && (
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+              {isTh ? 'เอกสารแนบ' : 'Attachments'}
+            </p>
+            <ul className="flex flex-col gap-1.5">
+              {request.docs.map((doc, i) => (
+                <li key={`${doc}-${i}`}>
+                  <a
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline"
+                  >
+                    <Paperclip size={13} aria-hidden />
+                    {doc}
+                    <span className="text-ink-muted">· {isTh ? 'ดู/ดาวน์โหลด' : 'View / download'}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Audit timeline */}
