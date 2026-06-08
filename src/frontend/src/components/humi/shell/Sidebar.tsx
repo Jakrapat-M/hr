@@ -87,7 +87,7 @@ type ModuleGroup = {
   leaves: Leaf[];
 };
 
-const ALL6: PersonaId[] = ['employee', 'manager', 'hradmin', 'hris', 'spd', 'sysadmin'];
+const ALL6: PersonaId[] = ['employee', 'manager', 'hradmin', 'hris', 'spd'];
 
 // ── Blueprint MODULES IA, ported verbatim (labels + badges + show gates).
 //    `href` is the Next.js route each leaf navigates to. Leaves whose blueprint
@@ -119,12 +119,12 @@ export const MODULES: ModuleGroup[] = [
     labelTh: 'การจัดการทีม',
     icon: Network,
     leaves: [
-      { id: 'approvals', label: 'Team Inbox · Approvals', labelTh: 'กล่องงาน · อนุมัติ', href: '/quick-approve', badge: '12', show: ['manager', 'hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] }, // merged inbox+approvals; HRBP added 2026-05-28 (People Partner approval surface)
-      { id: 'my-team', label: 'My Team', labelTh: 'ทีมของฉัน', href: '/manager/team', show: ['manager', 'hradmin', 'sysadmin'] }, // P2: Manager direct-reports read-only directory — restores the /admin/employees?scope=team affordance PR-3 cut from manager-dashboard
-      { id: 'roster', label: 'Roster & Shifts', labelTh: 'ตารางกะ', href: '/roster', show: ['manager', 'hradmin', 'sysadmin'] }, // repointed → real /roster page
-      { id: 'perf', label: 'Team Performance', labelTh: 'ผลงานทีม', href: '/performance-form', show: ['manager', 'hrbp', 'hradmin', 'sysadmin'] },
-      { id: 'probation', label: 'Probation Reviews', labelTh: 'ทดลองงาน', href: '/manager-dashboard/probations', show: ['manager', 'hrbp', 'hradmin', 'sysadmin'] },
-      { id: 'reports', label: 'Reports', labelTh: 'รายงาน', href: '/reports', show: ['manager', 'hrbp', 'hradmin', 'hris', 'spd', 'sysadmin'] },
+      { id: 'approvals', label: 'Team Inbox · Approvals', labelTh: 'กล่องงาน · อนุมัติ', href: '/quick-approve', badge: '12', show: ['manager', 'hrbp', 'hradmin', 'hris', 'spd'] }, // merged inbox+approvals; HRBP added 2026-05-28 (People Partner approval surface)
+      { id: 'my-team', label: 'My Team', labelTh: 'ทีมของฉัน', href: '/manager/team', show: ['manager', 'hradmin', 'hris'] }, // P2: Manager direct-reports read-only directory — restores the /admin/employees?scope=team affordance PR-3 cut from manager-dashboard
+      { id: 'roster', label: 'Roster & Shifts', labelTh: 'ตารางกะ', href: '/roster', show: ['manager', 'hradmin', 'hris'] }, // repointed → real /roster page
+      { id: 'perf', label: 'Team Performance', labelTh: 'ผลงานทีม', href: '/performance-form', show: ['manager', 'hrbp', 'hradmin', 'hris'] },
+      { id: 'probation', label: 'Probation Reviews', labelTh: 'ทดลองงาน', href: '/manager-dashboard/probations', show: ['manager', 'hrbp', 'hradmin', 'hris'] },
+      { id: 'reports', label: 'Reports', labelTh: 'รายงาน', href: '/reports', show: ['manager', 'hrbp', 'hradmin', 'hris', 'spd'] },
       // CUT: swap (Shift Swap) — it is a modal inside /roster (?panel=swap), not a menu item.
     ],
   },
@@ -134,15 +134,15 @@ export const MODULES: ModuleGroup[] = [
     labelTh: 'งานบุคคล',
     icon: IdCard,
     leaves: [
-      { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris', 'sysadmin'] }, // P1 Item 2: dropped hrbp+spd — admin/layout admits neither; People-Partner BU view is P2
+      { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris'] }, // P1 Item 2: dropped hrbp+spd — admin/layout admits neither; People-Partner BU view is P2
       { id: 'employees-bu', label: 'Employees · My BU', labelTh: 'ทะเบียนพนักงาน · หน่วยงานของฉัน', href: '/hrbp/employees', show: ['hrbp', 'spd'] }, // P2 Item 1: BU-scoped read-only registry for People Partners — replaces the dead /admin/employees leaf PR-3 cut from hrbp/spd
       { id: 'talent-search', label: 'Talent Search', labelTh: 'ค้นหาคนเก่ง', href: '/hrbp/talent-search', show: ['hrbp'] }, // P4 Item 3: surface existing-but-orphan /hrbp/talent-search (was reachable only via hrbp/dashboard shortcut). Route Capability-gated talentSearch. SPD excluded — capabilities.ts SPD bundle has no talentSearch (SF baseline §3: 'No Background/Talent'); page is Capability-gated so showing it to SPD = NotAuthorized dead-end (remove-not-hide).
       { id: 'benefits-reports', label: 'Benefits · Reports', labelTh: 'สวัสดิการ · รายงาน', href: '/hrbp/benefits/reports', show: ['hrbp', 'spd'] }, // P4 Item 3: surface existing-but-orphan /hrbp/benefits reports (no /hrbp/benefits index page → point at the real reports subroute). People-Partner only; menu removal is the gate (open route, no contradicting guard).
-      { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'sysadmin'] }, // merges lifecycle/onboarding
-      { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'sysadmin'] },
-      { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'hris', 'sysadmin'] }, // merges welfare+claims; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
-      { id: 'hr-docs', label: 'HR Documents', labelTh: 'เอกสารบุคคล', href: '/admin/documents', show: ['hradmin', 'sysadmin'] }, // merges confirm; P2 Item 3: dropped hrbp — admin/layout gates hr_admin+ → hrbp dead-ended in AccessDenied
-      { id: 'changes', label: 'Change Requests', labelTh: 'คำขอเปลี่ยนแปลง', href: '/admin/change-requests', show: ['hradmin', 'hris', 'sysadmin'] }, // merges transfer+regular; P1 Item 2: dropped hrbp (change-requests approver roles exclude hrbp → barrier)
+      { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'hris'] }, // merges lifecycle/onboarding
+      { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'hris'] },
+      { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'hris'] }, // merges welfare+claims; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
+      { id: 'hr-docs', label: 'HR Documents', labelTh: 'เอกสารบุคคล', href: '/admin/documents', show: ['hradmin', 'hris'] }, // merges confirm; P2 Item 3: dropped hrbp — admin/layout gates hr_admin+ → hrbp dead-ended in AccessDenied
+      { id: 'changes', label: 'Change Requests', labelTh: 'คำขอเปลี่ยนแปลง', href: '/admin/change-requests', show: ['hradmin', 'hris'] }, // merges transfer+regular; P1 Item 2: dropped hrbp (change-requests approver roles exclude hrbp → barrier)
       // REMOVED 2026-05-27 (user: "ลาออกไม่ควรอยู่ใน บุคคล"): /resignation is an
       // employee SELF-SERVICE submission ("ยื่นคำขอลาออก … SPD รับทราบและดำเนินการต่อ"),
       // not an HR-admin console — it belongs to the "ฉัน" journey (entered from the
@@ -156,13 +156,13 @@ export const MODULES: ModuleGroup[] = [
     labelTh: 'ตั้งค่าระบบ',
     icon: Settings,
     leaves: [
-      { id: 'roles', label: 'Roles & Permissions', labelTh: 'สิทธิ์ตามบทบาท', href: '/permissions', show: ['sysadmin'] },
-      { id: 'catalog', label: 'Master Catalog', labelTh: 'ฐานข้อมูลกลาง', href: '/admin/foundation', show: ['hris', 'sysadmin'] }, // merges assets
+      { id: 'roles', label: 'Roles & Permissions', labelTh: 'สิทธิ์ตามบทบาท', href: '/permissions', show: ['hris'] }, // hr_manager (top admin) — matches the /permissions route guard (was phantom 'sysadmin', collapsed into hris)
+      { id: 'catalog', label: 'Master Catalog', labelTh: 'ฐานข้อมูลกลาง', href: '/admin/foundation', show: ['hris'] }, // merges assets
       // P2 follow-up (PR-4) DONE: doc-review URL split out of /admin/documents. SPD now has its
       // own reachable review queue at /hrbp/doc-review (outside admin/layout's hr_admin+ gate, so
       // the route's own guard admits spd + hr_admin + hr_manager). hr-docs keeps /admin/documents.
-      { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/hrbp/doc-review', show: ['spd', 'sysadmin'] },
-      { id: 'audit', label: 'Audit & System', labelTh: 'บันทึก · ระบบ', href: '/admin/system', show: ['hradmin', 'hris', 'sysadmin'] }, // merges impers; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
+      { id: 'docreview', label: 'Document Review', labelTh: 'คิวตรวจเอกสาร', href: '/hrbp/doc-review', show: ['spd', 'hris'] },
+      { id: 'audit', label: 'Audit & System', labelTh: 'บันทึก · ระบบ', href: '/admin/system', show: ['hradmin', 'hris'] }, // merges impers; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
       // CUT ENTIRELY: Integrations, Policy Builder, Approval Workflows, Branding, Notifications-as-integration.
       // Notifications has a real page (/admin/system/notifications) but is left reachable via /admin/system.
     ],

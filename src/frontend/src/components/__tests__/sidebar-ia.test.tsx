@@ -28,7 +28,7 @@
  *      employee   → workspace only.
  *      manager    → unlocks team (roster/probation/perf + inbox·approvals/reports).
  *      hr_admin   → unlocks team + hr + system (the `audit` leaf lists hradmin).
- *      hr_manager → unlocks all four groups (sysadmin persona maps to hr_manager).
+ *      hr_manager → unlocks all four groups (hris persona maps to hr_manager).
  *  - Menu simplify (40→25): every pure-decoration ?section=/#tab placeholder leaf was
  *    cut. The system group is now Roles & Permissions + Master Catalog + Document
  *    Review + Audit & System; hr_admin unlocks it via the `audit` leaf.

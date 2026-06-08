@@ -26,7 +26,7 @@ function leaf(id: string) {
 const HRBP: Role[] = ['hrbp'];
 const SPD: Role[] = ['spd'];
 const HR_ADMIN: Role[] = ['hr_admin']; // hradmin persona
-const HR_MANAGER: Role[] = ['hr_manager']; // hris / sysadmin personas
+const HR_MANAGER: Role[] = ['hr_manager']; // hris persona (top admin tier)
 
 describe('P2 Item 3 — admin leaves cut from personas their route guard blocks', () => {
   test('benefits-admin no longer shown to hrbp/spd (admin/layout gates hr_admin+)', () => {
@@ -53,7 +53,7 @@ describe('P2 Item 3 — admin leaves cut from personas their route guard blocks'
     // The deferred URL split is done — docreview now points at /hrbp/doc-review,
     // a route whose own guard admits spd, so SPD sees the leaf again.
     expect(leafVisible(leaf('docreview'), SPD)).toBe(true);
-    // sysadmin (hr_manager) keeps it
+    // hris (hr_manager) keeps it
     expect(leafVisible(leaf('docreview'), HR_MANAGER)).toBe(true);
   });
 

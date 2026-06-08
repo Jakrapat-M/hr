@@ -45,7 +45,7 @@ export default function RosterPage() {
 
   // ── Persona scope (P2) — narrow the visible roster to the persona's slice ──
   // manager → direct reports · hrbp → BU · spd/hr_admin/hr_manager → all rows.
-  // Open route (menu show: manager/hradmin/sysadmin) — scope data, never deny.
+  // Open route (menu show: manager/hradmin/hris) — scope data, never deny.
   const roles = useAuthStore((s) => s.roles);
   const email = useAuthStore((s) => s.email);
   const currentEmpId = email ? EMP_BY_LOGIN[email] ?? null : null;

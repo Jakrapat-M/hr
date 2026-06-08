@@ -52,8 +52,7 @@ describe('personaTiers / tierChips', () => {
 });
 
 describe('PERSONA_ROLE (AC-6.1: centralized persona id → app Role map)', () => {
-  it('aliases sysadmin and hris onto hr_manager', () => {
-    expect(PERSONA_ROLE.sysadmin).toBe('hr_manager');
+  it('maps hris onto hr_manager (top admin tier; the former phantom sysadmin was collapsed into this)', () => {
     expect(PERSONA_ROLE.hris).toBe('hr_manager');
   });
 
