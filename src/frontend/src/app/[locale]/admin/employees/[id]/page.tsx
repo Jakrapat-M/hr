@@ -38,6 +38,7 @@ import {
   BadgePlus,
   Trash2,
   Gift,
+  ArrowLeftRight,
 } from 'lucide-react'
 import { useTimelines } from '@/lib/admin/store/useTimelines'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
@@ -50,13 +51,18 @@ import type { LifecycleEvent } from '@/lib/calculations'
 import { mapEmplStatusCode } from '@/lib/employee/empStatus'
 import CompensationHistory from '@/components/profile/CompensationHistory'
 import { formatCurrency, formatDate } from '@/lib/date'
-import { getPlan } from '@/data/benefits/plan-registry'
-import { EmptyState } from '@/components/humi'
+import { getPlan, isV2Plan } from '@/data/benefits/plan-registry'
+import { EmptyState, DataTable, type DataTableColumn } from '@/components/humi'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
 import {
   useSpecialPrivilegeStore,
   selectPrivilegesForEmployee,
 } from '@/stores/special-privilege-store'
+import {
+  useBudgetReallocationStore,
+  selectReallocationsForEmployee,
+  type ReallocationRecord,
+} from '@/stores/budget-reallocation-store'
 
 // ── Avatar color by status ───────────────────────────────────
 function avatarClass(status: string): string {
@@ -218,6 +224,81 @@ export default function EmployeeDetailPage() {
   )
   const removePrivilege = useSpecialPrivilegeStore((s) => s.removePrivilege)
 
+  // STA-95: next-year budget reallocation log + live medical-pool totals.
+  // Current base derives from the plan registry (single source of truth); the
+  // store owns only the next-year base + the reallocation deltas.
+  const tReallocate = useTranslations('admin.reallocateBudget')
+  const reallocations = useBudgetReallocationStore(
+    useShallow(selectReallocationsForEmployee(empId)),
+  )
+  const nextYearBases = useBudgetReallocationStore(useShallow((s) => s.nextYearBases))
+  const { reallocRows, currentPool, nextPool, hasReallocData } = useMemo(() => {
+    const regBase = (pid: string) => {
+      const plan = getPlan(pid)
+      return plan && isV2Plan(plan) ? plan.coverage.entitlementAmount ?? 0 : 0
+    }
+    const nextBaseOf = (pid: string) =>
+      nextYearBases.find((b) => b.employeeId === empId && b.planId === pid)?.nextYearBase ?? 0
+    // Per-row running totals (records arrive oldest-first from the selector).
+    const cum: Record<string, number> = {}
+    const rows = reallocations.map((rec) => {
+      cum[rec.planId] = (cum[rec.planId] ?? 0) + rec.amount
+      return {
+        rec,
+        currentTotal: regBase(rec.planId) + cum[rec.planId],
+        nextTotal: nextBaseOf(rec.planId) - cum[rec.planId],
+      }
+    })
+    // Aggregate "medical budget" pools across every plan with a seeded base/record.
+    const plans = new Set<string>(
+      nextYearBases.filter((b) => b.employeeId === empId).map((b) => b.planId),
+    )
+    reallocations.forEach((r) => plans.add(r.planId))
+    let current = 0
+    let next = 0
+    plans.forEach((p) => {
+      const moved = reallocations.filter((r) => r.planId === p).reduce((s, r) => s + r.amount, 0)
+      current += regBase(p) + moved
+      next += nextBaseOf(p) - moved
+    })
+    return { reallocRows: rows, currentPool: current, nextPool: next, hasReallocData: plans.size > 0 || rows.length > 0 }
+  }, [reallocations, nextYearBases, empId])
+
+  type ReallocRow = { rec: ReallocationRecord; currentTotal: number; nextTotal: number }
+  const reallocColumns: DataTableColumn<ReallocRow>[] = [
+    {
+      id: 'date', header: tReallocate('log.colDate'),
+      cell: (r) => <span className="text-small text-ink-muted">{formatDate(r.rec.createdAt, 'medium', locale)}</span>,
+      className: 'w-32',
+    },
+    {
+      id: 'plan', header: tReallocate('log.colPlan'),
+      cell: (r) => {
+        const plan = getPlan(r.rec.planId)
+        return <span className="text-small text-ink">{plan ? (locale === 'th' ? plan.nameTh : plan.nameEn) : r.rec.planId}</span>
+      },
+    },
+    {
+      id: 'amount', header: tReallocate('log.colAmount'), align: 'right' as const,
+      cell: (r) => <span className="text-small font-semibold text-accent tabular-nums">+{formatCurrency(r.rec.amount)}</span>,
+      className: 'w-28',
+    },
+    {
+      id: 'current', header: tReallocate('log.colCurrentTotal'), align: 'right' as const,
+      cell: (r) => <span className="text-small text-ink tabular-nums">{formatCurrency(r.currentTotal)}</span>,
+      className: 'w-32',
+    },
+    {
+      id: 'next', header: tReallocate('log.colNextTotal'), align: 'right' as const,
+      cell: (r) => <span className={`text-small tabular-nums ${r.nextTotal < 0 ? 'text-danger' : 'text-ink'}`}>{formatCurrency(r.nextTotal)}</span>,
+      className: 'w-32',
+    },
+    {
+      id: 'reason', header: tReallocate('log.colReason'),
+      cell: (r) => <span className="text-small text-ink-muted">{r.rec.reason}</span>,
+    },
+  ]
+
   // Collapsible section state (BA: page collapsible + Current Benefits default-closed).
   const isTh = locale === 'th'
   const expandLabel = isTh ? 'ขยาย' : 'Expand'
@@ -225,6 +306,7 @@ export default function EmployeeDetailPage() {
   // BA: every collapsible section starts COLLAPSED — the admin opens only what they need.
   const [employmentCollapsed, setEmploymentCollapsed] = useState(true)
   const [privilegeCollapsed, setPrivilegeCollapsed] = useState(true)
+  const [reallocCollapsed, setReallocCollapsed] = useState(true)
   const [benefitsCollapsed, setBenefitsCollapsed] = useState(true)
 
   // Timeline store — S3 owns this
@@ -389,6 +471,15 @@ export default function EmployeeDetailPage() {
       label: tSpecial('cardLabel'),
       desc: tSpecial('cardDesc'),
       href: `/${locale}/admin/employees/${empId}/special-privilege`,
+      locked: !avail.change_type.ok,
+      lockReason: avail.change_type.reason,
+    },
+    {
+      // STA-95: Reallocate Next Year Budget — same change_type isActive gate.
+      icon: ArrowLeftRight,
+      label: tReallocate('cardLabel'),
+      desc: tReallocate('cardDesc'),
+      href: `/${locale}/admin/employees/${empId}/reallocate-budget`,
       locked: !avail.change_type.ok,
       lockReason: avail.change_type.reason,
     },
@@ -974,6 +1065,52 @@ export default function EmployeeDetailPage() {
                 </div>
               )
             })}
+          </div>
+        )}
+      </CollapsibleSectionCard>
+
+      {/* ── STA-95: Reallocate Next Year Budget — change log + medical pools ── */}
+      <CollapsibleSectionCard
+        id="emp-budget-reallocation"
+        icon={ArrowLeftRight}
+        eyebrow={tReallocate('flag')}
+        title={tReallocate('log.title')}
+        sub=""
+        collapsed={reallocCollapsed}
+        onToggle={() => setReallocCollapsed((v) => !v)}
+        expandLabel={expandLabel}
+        collapseLabel={collapseLabel}
+      >
+        {!hasReallocData ? (
+          <EmptyState
+            icon={ArrowLeftRight}
+            titleTh={tReallocate('log.empty')}
+            titleEn={tReallocate('log.empty')}
+            descTh={tReallocate('subtitle')}
+            descEn={tReallocate('subtitle')}
+          />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {/* Live medical pool tiles */}
+            <div className="humi-row" style={{ gap: 12, flexWrap: 'wrap' }}>
+              <div className="humi-card humi-card--cream" style={{ flex: '1 1 200px', minWidth: 180 }}>
+                <div className="humi-eyebrow">{tReallocate('totals.currentPool')}</div>
+                <div className="font-display text-2xl font-semibold text-ink tabular-nums">{formatCurrency(currentPool)}</div>
+              </div>
+              <div className="humi-card humi-card--cream" style={{ flex: '1 1 200px', minWidth: 180 }}>
+                <div className="humi-eyebrow">{tReallocate('totals.nextPool')}</div>
+                <div className={`font-display text-2xl font-semibold tabular-nums ${nextPool < 0 ? 'text-danger' : 'text-ink'}`}>{formatCurrency(nextPool)}</div>
+              </div>
+            </div>
+            {/* Change log — newest first; resulting totals are the running prefix-sum */}
+            <DataTable<ReallocRow>
+              caption={tReallocate('log.title')}
+              captionVisuallyHidden
+              columns={reallocColumns}
+              rows={[...reallocRows].reverse()}
+              rowKey={(r) => r.rec.id}
+              dense
+            />
           </div>
         )}
       </CollapsibleSectionCard>
