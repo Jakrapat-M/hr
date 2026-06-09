@@ -24,6 +24,7 @@ import { currentPeriod } from '@/lib/time/period';
 import { getAttendanceForPeriod, ecPlanHoursFor } from '@/lib/time/attendance-seed';
 import { getShiftCode } from '@/lib/time/shift-codes';
 import { templateForEmployee } from '@/lib/time/schedule-template';
+import { validateDwsDay, DWS_LEVEL_CLASS, dwsLabel } from '@/lib/time/dws-validation';
 import { lateMinutesFor, formatLate, periodLateSummary, type AttendanceDay } from '@/lib/time/attendance-math';
 import {
   useTimesheetSubmissions,
@@ -200,11 +201,13 @@ export default function TimesheetPage() {
                   <th className="py-3 px-3 font-semibold">{isTh ? 'เข้า' : 'In'}</th>
                   <th className="py-3 px-3 font-semibold">{isTh ? 'ออก' : 'Out'}</th>
                   <th className="py-3 px-3 font-semibold">{isTh ? 'พัก' : 'Break'}</th>
+                  <th className="py-3 px-3 font-semibold">{isTh ? 'ตรวจ DWS' : 'DWS check'}</th>
                 </tr>
               </thead>
               <tbody>
-                {days.map((d) => {
+                {days.map((d, i) => {
                   const sc = getShiftCode(d.shiftCode);
+                  const dws = validateDwsDay(d, i > 0 ? days[i - 1] : null);
                   return (
                     <tr key={d.date} className="border-b border-hairline last:border-0">
                       <td className="py-2 px-3 text-ink">{fmtDate(d.date, isTh)}</td>
@@ -214,6 +217,11 @@ export default function TimesheetPage() {
                       <td className="py-2 px-3 tabular-nums text-ink">{d.scheduledIn ?? '—'}</td>
                       <td className="py-2 px-3 tabular-nums text-ink">{d.scheduledOut ?? '—'}</td>
                       <td className="py-2 px-3 tabular-nums text-ink-muted">{d.breakStart ? `${d.breakStart}–${d.breakEnd}` : '—'}</td>
+                      <td className="py-2 px-3">
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${DWS_LEVEL_CLASS[dws.level]}`} title={isTh ? dws.reasonTh : dws.reasonEn}>
+                          {dwsLabel(dws.level, isTh)}
+                        </span>
+                      </td>
                     </tr>
                   );
                 })}
