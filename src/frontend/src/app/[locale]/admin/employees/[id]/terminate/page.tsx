@@ -27,8 +27,15 @@ import { createClusterWizard } from '@/lib/admin/wizard-template/createClusterWi
 import { EffectiveDateGate } from '@/components/admin/EffectiveDateGate'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
-import { useAuthStore } from '@/stores/auth-store'
 import { useTerminationApprovals, TERMINATION_REASON_LABEL } from '@/stores/termination-approvals'
+import {
+  TERMINATION_LOGIC,
+  TERMINATION_LOGIC_CODES,
+  TRANSFER_OUT_COMPANIES,
+  TRANSFER_OUT_REASON_CODE,
+  NO_SELECTION,
+  computeTerminationDate,
+} from '@/lib/admin/termination-logic'
 import type { MockEmployee } from '@/mocks/employees'
 import type { TerminateEvent } from '@hrms/shared/types/timeline'
 
@@ -57,7 +64,7 @@ function ApprovalChainStepper() {
       }}
     >
       <div className="humi-eyebrow" style={{ marginBottom: 8, color: 'var(--color-accent)' }}>
-        ลำดับการอนุมัติ — Sprint 2 backend wiring
+        ลำดับการอนุมัติ
       </div>
       <div
         className="humi-row"
@@ -94,13 +101,24 @@ function ApprovalChainStepper() {
 // BRD #113 role-based visibility deferred Phase 2.5+ RBAC.
 
 interface TerminationData {
+  /** Resigned Date — required, must be in the future (> today). */
+  resignedDate: string | null
+  /** Termination date — auto = Resigned Date + 1 day, read-only. */
+  terminationDate: string | null
   reasonCode: string
-  reasonNote: string
-  lastDay: string | null
-  payrollEffectiveDate: string | null
-  /** Yes/No per BRD OK_to_Rehire field — null = unset (invalid) */
+  /** Voluntary/Involuntary — derived from reason, read-only display. */
+  voluntary: boolean | null
+  /** Reason for termination — sub-LOV; auto-set to default on reason change. */
+  reasonForTermination: string
+  /** Transfer out to — 'NONE' default; company code only when reason = Transfer Out. */
+  transferOutTo: string
+  /** OK to Rehire — default from registry; editable; NOT required. */
   okToRehire: boolean | null
-  /** Mockup files — real upload deferred to Phase 2.5+ */
+  /** Personal Email — required, email format. */
+  personalEmail: string
+  /** Additional Information (Termination) — free text, not required. */
+  additionalInfo: string
+  /** Mockup files — real upload deferred. */
   attachmentFiles: AttachedFile[]
 }
 
@@ -110,14 +128,20 @@ interface TerminateForm {
 
 const INITIAL_FORM: TerminateForm = {
   termination: {
+    resignedDate: null,
+    terminationDate: null,
     reasonCode: '',
-    reasonNote: '',
-    lastDay: null,
-    payrollEffectiveDate: null,
+    voluntary: null,
+    reasonForTermination: '',
+    transferOutTo: NO_SELECTION,
     okToRehire: null,
+    personalEmail: '',
+    additionalInfo: '',
     attachmentFiles: [],
   },
 }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -257,13 +281,6 @@ export default function TerminatePage() {
   const employee = useEmployees((s) => s.getById(empId)) ?? null
   const updateEmployee = useEmployees((s) => s.updateEmployee)
 
-  // ── BRD #114: SPD-only gate on okToRehire ──────────────────────────────────
-  // SF RBAC: okToRehire writable by SPD (12/47) only, not HR Admin (45/47).
-  // Source: sf-extract/qas-fields-2026-04-26/sf-qas-EmpEmployment-2026-04-26.json
-  //   → .d.results[0].okToRehire (boolean field on EmpEmployment)
-  const userRoles = useAuthStore((s) => s.roles)
-  const isSPD = userRoles.includes('spd') || userRoles.includes('hr_manager')
-
   // ── Resignation cross-reference: show banner if approved ESS resignation exists ──
   const resignationRequests = useTerminationApprovals((s) => s.requests)
   const approvedResignation = resignationRequests.find(
@@ -287,10 +304,11 @@ export default function TerminatePage() {
       ],
       validators: {
         1: (d) =>
+          !!d.termination.resignedDate &&
           !!d.termination.reasonCode &&
-          !!d.termination.lastDay &&
-          !!d.termination.payrollEffectiveDate &&
-          d.termination.okToRehire !== null,
+          !!d.termination.reasonForTermination &&
+          !!d.termination.transferOutTo &&
+          !!d.termination.personalEmail,
       },
       employeeId: empId,
       preloadedEmployee: {},
@@ -304,38 +322,34 @@ export default function TerminatePage() {
 
   const termination = formData.termination
   const today = todayISO()
+  // Resigned Date must be in the future → earliest selectable is tomorrow.
+  const resignedMin = computeTerminationDate(today)
 
-  // ── Validation ─────────────────────────────────────────────────────────────
-  /**
-   * BA validation pending — BRD #111 approval chain Employee→Manager→HRBP→SPD
-   * deferred to Phase 2.5 backend.
-   *
-   * Client-side guards:
-   *   - reasonCode: required
-   *   - lastDay: required, >= today (and >= hireDate as fallback)
-   *   - payrollEffectiveDate: required, >= lastDay
-   *   - okToRehire: required (true/false, not null)
-   */
-  const hireDate = employee?.hire_date ?? today
-  const lastDayMin = hireDate > today ? hireDate : today
+  // ── Validation (BA "Termination" sheet) ─────────────────────────────────────
+  //   - resignedDate: required, must be in the future (> today)
+  //   - terminationDate: auto = resignedDate + 1 day (always valid once resignedDate set)
+  //   - reasonCode: required
+  //   - reasonForTermination: required
+  //   - transferOutTo: required; if reason = Transfer Out, must pick a real company
+  //   - personalEmail: required + valid email format
+  //   - okToRehire: NOT required
+  const resignedDateValid =
+    !!termination.resignedDate && termination.resignedDate > today
 
-  const lastDayValid =
-    !!termination.lastDay && termination.lastDay >= lastDayMin
+  const isTransferOut = termination.reasonCode === TRANSFER_OUT_REASON_CODE
+  const transferOutValid = isTransferOut
+    ? termination.transferOutTo !== NO_SELECTION && !!termination.transferOutTo
+    : !!termination.transferOutTo
 
-  const payrollValid =
-    !!termination.payrollEffectiveDate &&
-    !!termination.lastDay &&
-    termination.payrollEffectiveDate >= termination.lastDay
-
-  // BRD #114: non-SPD users cannot set okToRehire — field gets set during approval chain.
-  // Only require okToRehire when user has SPD role and can actually set it.
-  const okToRehireValid = !isSPD || termination.okToRehire !== null
+  const personalEmailValid =
+    !!termination.personalEmail && EMAIL_RE.test(termination.personalEmail)
 
   const isValid =
+    resignedDateValid &&
     !!termination.reasonCode &&
-    lastDayValid &&
-    payrollValid &&
-    okToRehireValid
+    !!termination.reasonForTermination &&
+    transferOutValid &&
+    personalEmailValid
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -355,34 +369,74 @@ export default function TerminatePage() {
     [setStepData],
   )
 
-  // Auto-fill payrollEffectiveDate = lastDay when lastDay changes (editable)
-  const handleLastDayChange = useCallback(
+  // Resigned Date change → auto-compute Termination date (= resigned + 1 day, read-only)
+  const handleResignedDateChange = useCallback(
     (value: string) => {
       patch({
-        lastDay: value || null,
-        // Only auto-fill if payroll date not yet set or was equal to previous lastDay
-        payrollEffectiveDate: value || null,
+        resignedDate: value || null,
+        terminationDate: value ? computeTerminationDate(value) : null,
       })
     },
     [patch],
   )
 
+  // Reason change → auto-populate derived fields (all editable except voluntary display)
+  const handleReasonChange = useCallback(
+    (code: string) => {
+      const entry = TERMINATION_LOGIC[code]
+      if (!entry) {
+        patch({ reasonCode: code })
+        return
+      }
+      patch({
+        reasonCode: code,
+        voluntary: entry.voluntary,
+        reasonForTermination: entry.reasonForTermination.default,
+        transferOutTo: entry.transferOutDefault,
+        okToRehire: entry.okToRehireDefault,
+      })
+    },
+    [patch],
+  )
+
+  const activeEntry = termination.reasonCode
+    ? TERMINATION_LOGIC[termination.reasonCode]
+    : undefined
+  const isTransferOutReason = termination.reasonCode === TRANSFER_OUT_REASON_CODE
+
   // ── Submit logic ───────────────────────────────────────────────────────────
   const doSubmit = useCallback(() => {
     if (!employee || !isValid) return
+
+    // Extra BA-spec fields (reasonForTermination, voluntary, transferOutTo, personalEmail)
+    // are not on the shared TerminateEvent type — fold them into the timeline note text.
+    const extraNote = [
+      termination.additionalInfo,
+      termination.reasonForTermination
+        ? `เหตุผล: ${termination.reasonForTermination}`
+        : '',
+      termination.voluntary === null
+        ? ''
+        : `ประเภท: ${termination.voluntary ? 'Voluntary' : 'Involuntary'}`,
+      isTransferOutReason && termination.transferOutTo !== NO_SELECTION
+        ? `โอนย้ายไป: ${termination.transferOutTo}`
+        : '',
+      termination.personalEmail ? `อีเมลส่วนตัว: ${termination.personalEmail}` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ')
 
     const event: TerminateEvent = {
       id: `evt-term-${Date.now()}`,
       employeeId: empId,
       kind: 'terminate',
-      effectiveDate: termination.lastDay!,
+      effectiveDate: termination.resignedDate!,
       recordedAt: new Date().toISOString(),
       actorUserId: 'admin-current',
       reasonCode: termination.reasonCode,
-      lastDay: termination.lastDay!,
-      // BRD #114: non-SPD submitters leave okToRehire null — defaults to false until SPD sets it in chain
+      lastDay: termination.resignedDate!,
       okToRehire: termination.okToRehire === true,
-      notes: termination.reasonNote || undefined,
+      notes: extraNote || undefined,
     }
 
     append(empId, event)
@@ -397,7 +451,7 @@ export default function TerminatePage() {
     router.push(
       `/${locale}/admin/employees/${empId}?banner=${encodeURIComponent('บันทึกการสิ้นสุดสภาพพนักงานแล้ว — ส่งข้อมูลไป Payroll')}`,
     )
-  }, [employee, isValid, termination, empId, append, updateEmployee, reset, router, locale])
+  }, [employee, isValid, termination, isTransferOutReason, empId, append, updateEmployee, reset, router, locale])
 
   const handleSubmit = useCallback(() => {
     if (!isValid) return
@@ -521,12 +575,13 @@ export default function TerminatePage() {
         {/* BRD #22, #111 — 4-step approval chain stepper (informational) */}
         <ApprovalChainStepper />
 
-        {/* Terminate form */}
+        {/* Terminate form — field 1 (Resigned Date) is the EffectiveDateGate */}
         <EffectiveDateGate
-          min={hireDate !== today ? hireDate : undefined}
-          initialEffectiveDate={termination.lastDay ?? undefined}
-          onEffectiveDateChange={(date) => handleLastDayChange(date)}
-          label="วันสุดท้ายที่ทำงาน"
+          min={resignedMin}
+          initialEffectiveDate={termination.resignedDate ?? undefined}
+          onEffectiveDateChange={(date) => handleResignedDateChange(date)}
+          label="วันที่ลาออก (Resigned Date)"
+          instructions="ระบุวันที่ลาออก — ต้องเป็นวันในอนาคต ระบบจะคำนวณวันสิ้นสุดสภาพให้อัตโนมัติ"
         >
           {() => (
         <div className="humi-card">
@@ -534,142 +589,213 @@ export default function TerminatePage() {
             บันทึกการสิ้นสุดการจ้างงาน
           </div>
 
-          {/* ── Reason code picklist — 17 canonical TERM_* codes via ReasonPicker ── */}
+          {/* ── 2. Termination date (read-only = Resigned + 1 day) ── */}
+          <div style={{ marginBottom: 20 }}>
+            <label
+              htmlFor="terminationDate"
+              className="text-body font-semibold text-ink"
+              style={{ display: 'block', marginBottom: 6 }}
+            >
+              วันที่สิ้นสุดสภาพ (Termination date)
+            </label>
+            <input
+              id="terminationDate"
+              type="date"
+              value={termination.terminationDate ?? ''}
+              readOnly
+              disabled
+              className="humi-input"
+              style={{ maxWidth: 240, opacity: 0.7 }}
+              aria-readonly="true"
+            />
+            <p className="text-small text-ink-muted mt-1">
+              คำนวณอัตโนมัติ = วันที่ลาออก + 1 วัน
+            </p>
+          </div>
+
+          <hr className="humi-divider" />
+
+          {/* ── 3. Termination Reason (LOV — restricted to the 13 spec codes) ── */}
           <div style={{ marginBottom: 20 }}>
             <ReasonPicker
               event="5597"
               id="reasonCode"
               value={termination.reasonCode}
-              onChange={(code) => patch({ reasonCode: code })}
+              onChange={(code) => handleReasonChange(code)}
+              restrictTo={TERMINATION_LOGIC_CODES}
               required
             />
           </div>
 
-          {/* ── Reason note textarea ── */}
+          {/* ── 4. Voluntary / Involuntary (read-only, derived) ── */}
           <div style={{ marginBottom: 20 }}>
             <label
-              htmlFor="reasonNote"
               className="text-body font-semibold text-ink"
               style={{ display: 'block', marginBottom: 6 }}
             >
-              รายละเอียดเพิ่มเติม{' '}
-              <span className="text-small text-ink-muted">(ไม่จำเป็น)</span>
+              ประเภทการพ้นสภาพ (Voluntary / Involuntary)
             </label>
-            <textarea
-              id="reasonNote"
-              value={termination.reasonNote}
-              onChange={(e) => patch({ reasonNote: e.target.value })}
-              rows={3}
-              placeholder="อธิบายเหตุผลเพิ่มเติม..."
+            <div
               className="humi-input"
-              style={{ width: '100%', resize: 'vertical' }}
-              aria-label="รายละเอียดเพิ่มเติมเกี่ยวกับสาเหตุ"
-            />
+              style={{ maxWidth: 240, opacity: 0.7, display: 'flex', alignItems: 'center' }}
+              aria-readonly="true"
+            >
+              {termination.voluntary === null
+                ? '—'
+                : termination.voluntary
+                  ? 'Voluntary'
+                  : 'Involuntary'}
+            </div>
+            <p className="text-small text-ink-muted mt-1">กำหนดอัตโนมัติตามเหตุผลที่เลือก</p>
           </div>
 
-          <hr className="humi-divider" />
-
-          {/* ── Payroll effective date ── */}
+          {/* ── 5. Reason for termination (sub-LOV) ── */}
           <div style={{ marginBottom: 20 }}>
             <label
-              htmlFor="payrollEffectiveDate"
+              htmlFor="reasonForTermination"
               className="text-body font-semibold text-ink"
               style={{ display: 'block', marginBottom: 6 }}
             >
-              วันที่มีผล Payroll <span style={{ color: 'var(--color-danger)' }}>*</span>
+              เหตุผลย่อย (Reason for termination){' '}
+              <span style={{ color: 'var(--color-danger)' }}>*</span>
             </label>
-            <input
-              id="payrollEffectiveDate"
-              type="date"
-              value={termination.payrollEffectiveDate ?? ''}
-              min={termination.lastDay ?? lastDayMin}
-              onChange={(e) => patch({ payrollEffectiveDate: e.target.value || null })}
+            <select
+              id="reasonForTermination"
+              value={termination.reasonForTermination}
+              onChange={(e) => patch({ reasonForTermination: e.target.value })}
+              disabled={!activeEntry}
               className="humi-input"
-              style={{ maxWidth: 240 }}
+              style={{ width: '100%' }}
               aria-required="true"
-              aria-describedby="payroll-hint"
-            />
-            <p id="payroll-hint" className="text-small text-ink-muted mt-1">
-              ปกติเท่ากับวันสุดท้ายที่ทำงาน — แก้ไขได้หากจำเป็น
-            </p>
-            {termination.lastDay && termination.payrollEffectiveDate &&
-              termination.payrollEffectiveDate < termination.lastDay && (
-              <p className="text-small mt-1" style={{ color: 'var(--color-danger)' }} role="alert">
-                วันที่มีผล Payroll ต้องไม่ก่อนวันสุดท้ายที่ทำงาน
+            >
+              {!activeEntry && <option value="">— เลือกเหตุผลหลักก่อน —</option>}
+              {activeEntry?.reasonForTermination.options.map((o) => (
+                <option key={o.code} value={o.code}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* ── 6. Transfer out to (LOV — company list only for Transfer Out) ── */}
+          <div style={{ marginBottom: 20 }}>
+            <label
+              htmlFor="transferOutTo"
+              className="text-body font-semibold text-ink"
+              style={{ display: 'block', marginBottom: 6 }}
+            >
+              โอนย้ายออกไปยัง (Transfer out to){' '}
+              <span style={{ color: 'var(--color-danger)' }}>*</span>
+            </label>
+            <select
+              id="transferOutTo"
+              value={termination.transferOutTo}
+              onChange={(e) => patch({ transferOutTo: e.target.value })}
+              disabled={!isTransferOutReason}
+              className="humi-input"
+              style={{ maxWidth: 240, opacity: isTransferOutReason ? 1 : 0.7 }}
+              aria-required="true"
+            >
+              <option value={NO_SELECTION}>No Selection</option>
+              {isTransferOutReason &&
+                TRANSFER_OUT_COMPANIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.label}
+                  </option>
+                ))}
+            </select>
+            {!isTransferOutReason && (
+              <p className="text-small text-ink-muted mt-1">
+                เลือกบริษัทปลายทางได้เฉพาะเหตุผล &ldquo;โอนย้ายออกนอกกลุ่ม&rdquo;
               </p>
             )}
           </div>
 
           <hr className="humi-divider" />
 
-          {/* ── OK to rehire (radio) — BRD #114 SPD-only gate ──
-              SF field: EmpEmployment.okToRehire (boolean)
-              Source: sf-qas-EmpEmployment-2026-04-26.json → .d.results[0].okToRehire
-              RBAC: writable by SPD (12/47) only; HR Admin (45/47) read-only. */}
+          {/* ── 7. OK to Rehire (LOV Yes/No — editable, NOT required) ── */}
           <div style={{ marginBottom: 20 }}>
-            <fieldset disabled={!isSPD}>
-              <legend className="text-body font-semibold text-ink" style={{ marginBottom: 8 }}>
-                อนุญาตให้จ้างซ้ำในอนาคต?{' '}
-                <span style={{ color: 'var(--color-danger)' }}>*</span>
-              </legend>
-              {!isSPD && (
-                <p
-                  className="text-small"
-                  style={{ color: 'var(--color-ink-muted)', marginBottom: 8 }}
-                  role="note"
-                  aria-live="polite"
-                >
-                  เฉพาะ SPD เท่านั้นที่สามารถแก้ไขช่องนี้
-                </p>
-              )}
-              <div
-                role="radiogroup"
-                aria-label="อนุญาตให้จ้างซ้ำในอนาคต"
-                aria-disabled={!isSPD}
-                style={{ display: 'flex', gap: 12 }}
-              >
-                {([
-                  { value: true,  label: 'ใช่' },
-                  { value: false, label: 'ไม่ใช่' },
-                ] as const).map(({ value, label }) => (
-                  <label
-                    key={String(value)}
-                    className="humi-row"
-                    style={{
-                      gap: 8,
-                      cursor: isSPD ? 'pointer' : 'not-allowed',
-                      padding: '10px 16px',
-                      borderRadius: 10,
-                      opacity: isSPD ? 1 : 0.55,
-                      border: `1.5px solid ${termination.okToRehire === value
-                        ? 'var(--color-accent)'
-                        : 'var(--color-hairline-soft)'}`,
-                      background: termination.okToRehire === value
-                        ? 'var(--color-accent-soft)'
-                        : 'transparent',
-                      transition: 'border-color 0.15s, background 0.15s',
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="okToRehire"
-                      value={String(value)}
-                      checked={termination.okToRehire === value}
-                      onChange={() => isSPD && patch({ okToRehire: value })}
-                      disabled={!isSPD}
-                      style={{ accentColor: 'var(--color-accent)' }}
-                      aria-label={label}
-                    />
-                    <span className="text-body text-ink">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            <label
+              htmlFor="okToRehire"
+              className="text-body font-semibold text-ink"
+              style={{ display: 'block', marginBottom: 6 }}
+            >
+              อนุญาตให้จ้างซ้ำในอนาคต (OK to Rehire){' '}
+              <span className="text-small text-ink-muted">(ไม่จำเป็น)</span>
+            </label>
+            <select
+              id="okToRehire"
+              value={termination.okToRehire === null ? '' : termination.okToRehire ? 'yes' : 'no'}
+              onChange={(e) =>
+                patch({
+                  okToRehire:
+                    e.target.value === '' ? null : e.target.value === 'yes',
+                })
+              }
+              className="humi-input"
+              style={{ maxWidth: 240 }}
+            >
+              <option value="">— ไม่ระบุ —</option>
+              <option value="yes">ใช่ (Yes)</option>
+              <option value="no">ไม่ใช่ (No)</option>
+            </select>
+          </div>
+
+          {/* ── 8. Additional Information (Termination) — free text ── */}
+          <div style={{ marginBottom: 20 }}>
+            <label
+              htmlFor="additionalInfo"
+              className="text-body font-semibold text-ink"
+              style={{ display: 'block', marginBottom: 6 }}
+            >
+              ข้อมูลเพิ่มเติม{' '}
+              <span className="text-small text-ink-muted">(ไม่จำเป็น)</span>
+            </label>
+            <textarea
+              id="additionalInfo"
+              value={termination.additionalInfo}
+              onChange={(e) => patch({ additionalInfo: e.target.value })}
+              rows={3}
+              placeholder="อธิบายข้อมูลเพิ่มเติม..."
+              className="humi-input"
+              style={{ width: '100%', resize: 'vertical' }}
+              aria-label="ข้อมูลเพิ่มเติม"
+            />
+          </div>
+
+          {/* ── 9. Personal Email (required, email format) ── */}
+          <div style={{ marginBottom: 20 }}>
+            <label
+              htmlFor="personalEmail"
+              className="text-body font-semibold text-ink"
+              style={{ display: 'block', marginBottom: 6 }}
+            >
+              อีเมลส่วนตัว (Personal Email){' '}
+              <span style={{ color: 'var(--color-danger)' }}>*</span>
+            </label>
+            <input
+              id="personalEmail"
+              type="email"
+              value={termination.personalEmail}
+              onChange={(e) => patch({ personalEmail: e.target.value })}
+              placeholder="name@example.com"
+              className="humi-input"
+              style={{ maxWidth: 320 }}
+              aria-required="true"
+              aria-invalid={
+                !!termination.personalEmail && !personalEmailValid ? true : undefined
+              }
+            />
+            {!!termination.personalEmail && !personalEmailValid && (
+              <p className="text-small mt-1" style={{ color: 'var(--color-danger)' }} role="alert">
+                รูปแบบอีเมลไม่ถูกต้อง
+              </p>
+            )}
           </div>
 
           <hr className="humi-divider" />
 
-          {/* ── Attachment (BA row — เอกสารประกอบการเลิกจ้าง) ── */}
+          {/* ── 10. Attachment ID (BA row — เอกสารประกอบการเลิกจ้าง) ── */}
           <div style={{ marginBottom: 24 }}>
             <AttachmentDropzone
               files={termination.attachmentFiles}
