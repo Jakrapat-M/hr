@@ -26,6 +26,7 @@ import { getShiftCode } from '@/lib/time/shift-codes';
 import { templateForEmployee } from '@/lib/time/schedule-template';
 import { validateDwsDay, DWS_LEVEL_CLASS, dwsLabel } from '@/lib/time/dws-validation';
 import { lateMinutesFor, formatLate, periodLateSummary, type AttendanceDay } from '@/lib/time/attendance-math';
+import { computeResultsForPeriod, resultsSummary, WAGE_TYPE_LABEL } from '@/lib/time/results-math';
 import {
   useTimesheetSubmissions,
   validateTimesheet,
@@ -38,7 +39,7 @@ type Day = typeof DAYS[number];
 const DAY_LABEL_EN: Record<Day, string> = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const DAY_LABEL_TH: Record<Day, string> = { mon: 'จ', tue: 'อ', wed: 'พ', thu: 'พฤ', fri: 'ศ', sat: 'ส', sun: 'อา' };
 
-type TabKey = 'entry' | 'schedule' | 'late' | 'weekly';
+type TabKey = 'entry' | 'schedule' | 'late' | 'results' | 'weekly';
 
 function fmtDate(iso: string, isTh: boolean): string {
   return new Date(iso + 'T00:00:00Z').toLocaleDateString(isTh ? 'th-TH' : 'en-US', {
@@ -63,6 +64,8 @@ export default function TimesheetPage() {
   const lateSummary = useMemo(() => periodLateSummary(days), [days]);
   const ecPlan = ecPlanHoursFor(empId);
   const tmpl = templateForEmployee(empId);
+  const results = useMemo(() => computeResultsForPeriod(empId), [empId]);
+  const resSummary = useMemo(() => resultsSummary(results), [results]);
 
   const [tab, setTab] = useState<TabKey>('entry');
 
@@ -96,6 +99,7 @@ export default function TimesheetPage() {
     { key: 'entry', labelTh: 'บันทึกเวลา', labelEn: 'Time Entry' },
     { key: 'schedule', labelTh: 'ตารางกะ', labelEn: 'Schedule' },
     { key: 'late', labelTh: 'มาสาย', labelEn: 'Late' },
+    { key: 'results', labelTh: 'ผลคำนวณ', labelEn: 'Results' },
     { key: 'weekly', labelTh: 'ชั่วโมงรายสัปดาห์', labelEn: 'Weekly hours' },
   ];
 
@@ -256,6 +260,46 @@ export default function TimesheetPage() {
                   {lateSummary.lateDays === 0 && (
                     <tr><td colSpan={4} className="py-6 text-center text-ink-muted">{isTh ? 'ไม่มีวันมาสายในรอบนี้' : 'No late days this period'}</td></tr>
                   )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* ── Tab: Results (computed pay output, wiki §5) ── */}
+      {tab === 'results' && isClocking && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <Card><p className="text-xs uppercase tracking-widest text-ink-muted">{isTh ? 'ชม.จริง' : 'Actual hrs'}</p><p className="mt-1 text-2xl font-bold text-ink tabular-nums">{resSummary.totalActual}</p></Card>
+            <Card><p className="text-xs uppercase tracking-widest text-ink-muted">{isTh ? 'ชม.ตามแผน' : 'Plan hrs'}</p><p className="mt-1 text-2xl font-bold text-ink tabular-nums">{resSummary.totalPlan}</p></Card>
+            <Card><p className="text-xs uppercase tracking-widest text-ink-muted">{isTh ? 'วันลา' : 'Leave days'}</p><p className="mt-1 text-2xl font-bold text-ink tabular-nums">{resSummary.leaveDays}</p></Card>
+            <Card><p className="text-xs uppercase tracking-widest text-ink-muted">{isTh ? 'วันหยุดนักขัตฤกษ์' : 'Holidays'}</p><p className="mt-1 text-2xl font-bold text-ink tabular-nums">{resSummary.holidayDays}</p></Card>
+          </div>
+          <Card>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-hairline text-left text-ink-muted">
+                    <th className="py-3 px-3 font-semibold">{isTh ? 'วันที่' : 'Work date'}</th>
+                    <th className="py-3 px-3 font-semibold">{isTh ? 'รหัสจ่าย' : 'Pay code'}</th>
+                    <th className="py-3 px-3 font-semibold">{isTh ? 'ประเภทค่าจ้าง' : 'Wage type'}</th>
+                    <th className="py-3 px-3 font-semibold text-right">{isTh ? 'ชม.แผน' : 'Plan hrs'}</th>
+                    <th className="py-3 px-3 font-semibold text-right">{isTh ? 'ชม.จริง' : 'Actual hrs'}</th>
+                    <th className="py-3 px-3 font-semibold text-right">{isTh ? 'วัน' : 'Days'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map((r) => (
+                    <tr key={`${r.date}-${r.wageType}`} className="border-b border-hairline last:border-0">
+                      <td className="py-2 px-3 text-ink whitespace-nowrap">{fmtDate(r.date, isTh)}</td>
+                      <td className="py-2 px-3 text-ink">{isTh ? r.payCodeTh : r.payCodeEn}</td>
+                      <td className="py-2 px-3"><span className="rounded-full bg-canvas-soft px-2 py-0.5 text-xs font-medium text-ink-muted">{isTh ? WAGE_TYPE_LABEL[r.wageType].th : WAGE_TYPE_LABEL[r.wageType].en}</span></td>
+                      <td className="py-2 px-3 text-right tabular-nums text-ink-muted">{r.planHours.toFixed(1)}</td>
+                      <td className="py-2 px-3 text-right tabular-nums text-ink">{r.actualHours.toFixed(1)}</td>
+                      <td className="py-2 px-3 text-right tabular-nums text-ink">{r.days}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
