@@ -473,7 +473,6 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
                 href={href}
                 className={cn('bp-panel-item', active && 'is-active')}
                 aria-current={active ? 'page' : undefined}
-                title={navLabel(l, !isTh)}
                 onClick={onNavigate}
               >
                 <span className="bp-child-label">{navLabel(l, isTh)}</span>
