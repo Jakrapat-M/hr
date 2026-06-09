@@ -6,16 +6,17 @@
 // Archetype B contextual lifecycle action — mirrors S4 Probation pattern.
 // Template source: probation/page.tsx (same wizard structure, no wizard dep here)
 //
-// BRD #93: Contract Renewal + Contract auto-terminate Day-30 rule
-//   - currentEndDate = stub as hire_date + 1 year (employment field not in MockEmployee schema)
+// BRD #93: Contract Renewal
+//   - currentEndDate resolved via resolveContractEndDate (stored contract_end_date,
+//     falling back to hire_date + 1 year)
 //   - newEndDate must be > currentEndDate (required)
 //   - renewalReason optional text
 //   - newAllowanceAmount optional (THB), note shown when amount > 0
-//   - Day-30 info banner: UI hint only — no auto-terminate job (BA validation pending — HR Expert May 1)
+//   - Day-30 banner: informational hint computed from daysUntilExpiry.
+//     The automatic day-30 termination job is OUT OF SCOPE this phase, so the
+//     banner only prompts the user to act — it does not promise any auto action.
 //
-// /** BA validation pending — HR Expert May 1 */
-//
-// C1: touches only this file.
+// C1: touches only this file (+ colocated helpers/test).
 // C8: ContractRenewalEvent shape from @hrms/shared — no invented fields.
 
 import { useEffect, useMemo, useState, useCallback } from 'react'
@@ -32,6 +33,11 @@ import { ApprovalChain } from '@/components/quick-approve/ApprovalChain'
 import type { MockEmployee } from '@/mocks/employees'
 import type { ContractRenewalEvent } from '@hrms/shared/types/timeline'
 import type { ApproverStage } from '@/data/benefits/plan-registry'
+import { addYears, resolveContractEndDate } from './contract-renewal.helpers'
+
+// Day-30 closeout: show the "near expiry" banner once the contract is within this
+// many days of ending. Driven off the resolved daysUntilExpiry.
+const DAY30_WARNING_THRESHOLD = 30
 
 // ─── Contract-renewal approval chain config (SF FOEventReason routing) ───────
 const CONTRACT_RENEWAL_CHAIN: ApproverStage[] = ['manager', 'hrbp', 'hr_admin']
@@ -42,7 +48,7 @@ const CONTRACT_RENEWAL_CURRENT_STAGE: ApproverStage = 'hrbp'
 
 interface ContractRenewalForm {
   renewal: {
-    currentEndDate: string            // read-only, derived from hire_date + 1 year
+    currentEndDate: string            // read-only, resolved via resolveContractEndDate
     newEndDate: string | null         // ISO, required — extended contract end
     renewalReason: string             // optional text
     newAllowanceAmount: string | null  // optional (THB)
@@ -51,12 +57,7 @@ interface ContractRenewalForm {
 }
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
-
-function addYears(isoDate: string, years: number): string {
-  const d = new Date(isoDate)
-  d.setFullYear(d.getFullYear() + years)
-  return d.toISOString().slice(0, 10)
-}
+// addYears is shared with the colocated helpers module (imported above).
 
 function diffDays(from: string, to: string): number {
   return Math.round(
@@ -146,11 +147,10 @@ export default function ContractRenewalPage() {
 
   const employee = useEmployees((s) => s.getById(empId)) ?? null
 
-  // currentEndDate: stub as hire_date + 1 year.
-  // NOTE: employment contract end-date is not in MockEmployee schema —
-  // real implementation will read from contract record. (C8 — stub only)
+  // currentEndDate: resolved from the stored contract_end_date source of truth,
+  // falling back to hire_date + 1 year for employees lacking the field.
   const currentEndDate = useMemo<string>(
-    () => (employee ? addYears(employee.hire_date, 1) : ''),
+    () => (employee ? resolveContractEndDate(employee) : ''),
     [employee],
   )
 
@@ -170,11 +170,12 @@ export default function ContractRenewalPage() {
   }, [employee, seed])
 
   // ── Derived: Day-30 warning ──────────────────────────────────────────────
-  // /** BA validation pending — HR Expert May 1 */
+  // Informational only. The automatic day-30 termination job is out of scope
+  // this phase — the banner prompts the user to act, it does not auto-terminate.
   const today = todayIso()
   const daysUntilExpiry = currentEndDate ? diffDays(today, currentEndDate) : null
   const showDay30Banner =
-    daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry <= 30
+    daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry <= DAY30_WARNING_THRESHOLD
 
   // ── Allowance handler ────────────────────────────────────────────────────
   const handleAllowanceChange = (value: string) => {
@@ -209,9 +210,8 @@ export default function ContractRenewalPage() {
     }
 
     append(empId, event)
-    // NOTE: useEmployees record is intentionally NOT updated here —
-    // contract end-date is not a field in MockEmployee schema.
-    // Real implementation will update contract record via API.
+    // NOTE: the employee's stored contract_end_date is intentionally NOT mutated
+    // here — persistence of the renewed term is deferred to backend wiring.
 
     setSubmitted(true)
     router.push(
@@ -307,8 +307,7 @@ export default function ContractRenewalPage() {
         />
       </div>
 
-      {/* Day-30 info banner (UI hint only — no auto logic) */}
-      {/* /** BA validation pending — HR Expert May 1 */ }
+      {/* Day-30 info banner (informational hint only — no automatic action) */}
       {showDay30Banner && daysUntilExpiry !== null && (
         <div
           role="status"
@@ -324,8 +323,8 @@ export default function ContractRenewalPage() {
           <span className="text-body font-semibold">ใกล้สิ้นสุดสัญญา</span>
           {' — '}
           <span className="text-body">
-            ระบบจะ auto-terminate ใน{' '}
-            <strong>{daysUntilExpiry}</strong> วัน หากไม่ต่อสัญญา
+            เหลืออีก <strong>{daysUntilExpiry}</strong> วัน
+            ควรต่อสัญญาหรือดำเนินการสิ้นสุดการจ้างงาน
           </span>
         </div>
       )}
@@ -365,7 +364,7 @@ export default function ContractRenewalPage() {
             {currentEndDate ? formatDateTh(currentEndDate) : '—'}
           </div>
           <p className="text-small text-ink-muted mt-1">
-            (stub: วันที่เริ่มงาน + 1 ปี — รอข้อมูล contract จริง)
+            วันสิ้นสุดสัญญาตามระบบ
           </p>
         </div>
 
