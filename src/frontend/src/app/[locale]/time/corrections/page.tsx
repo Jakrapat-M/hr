@@ -16,9 +16,12 @@
 // Open to all personas (self-service). Humi primitives + tokens only.
 // Danger = pumpkin (--color-danger). No hardcoded hex.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
+import { getAttendanceForPeriod } from '@/lib/time/attendance-seed';
+import { computeLateMinutes, formatLate } from '@/lib/time/attendance-math';
 import { ChevronRight, Clock3, Paperclip, X } from 'lucide-react';
 import { Card, Button, FormField, FormInput, Textarea, DemoValuesDisclaimer } from '@/components/humi';
 import {
@@ -48,7 +51,10 @@ export default function TimeCorrectionsPage() {
   const empId = resolveCurrentEmpId(email) ?? userId ?? 'EMP000';
   const attrs = getEmployeeTimeAttrs(empId);
 
-  const [date, setDate] = useState('');
+  const searchParams = useSearchParams();
+  const attendance = useMemo(() => getAttendanceForPeriod(empId), [empId]);
+
+  const [date, setDate] = useState(() => searchParams.get('date') ?? '');
   const [correctionType, setCorrectionType] = useState<CorrectionType>('in');
   const [reasonCode, setReasonCode] = useState<string>(CORRECTION_REASONS[0].payCode);
   const [originalTime, setOriginalTime] = useState('');
@@ -57,6 +63,16 @@ export default function TimeCorrectionsPage() {
   const [docs, setDocs] = useState<string[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [lastId, setLastId] = useState<string | null>(null);
+
+  // Schedule + actual punch for the chosen day → drives the scheduled-vs-actual
+  // comparison and the recomputed Late (wiki §7.5).
+  const dayInfo = useMemo(() => attendance.find((d) => d.date === date) ?? null, [attendance, date]);
+  useEffect(() => {
+    // Prefill the "original" punch from the recorded clock-in when a date is chosen.
+    if (dayInfo?.actualIn) setOriginalTime(dayInfo.actualIn);
+  }, [dayInfo]);
+  const originalLate = dayInfo ? computeLateMinutes(dayInfo.scheduledIn, dayInfo.actualIn) : null;
+  const correctedLate = dayInfo && correctedTime ? computeLateMinutes(dayInfo.scheduledIn, correctedTime) : null;
 
   // Only the employee's own corrections matter for the conflict check.
   const myRequests = useMemo(
@@ -220,6 +236,20 @@ export default function TimeCorrectionsPage() {
               </select>
             )}
           </FormField>
+
+          {/* Scheduled-vs-actual + recomputed Late for the chosen day (wiki §7.5) */}
+          {dayInfo && (
+            <div className="rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-3 py-2.5 text-sm">
+              <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+                <span className="text-ink-muted">{isTh ? 'กะวันนั้น' : 'Shift'}: <span className="font-medium text-ink">{dayInfo.dayOff ? (isTh ? 'วันหยุด' : 'Day off') : dayInfo.scheduledIn ? `${dayInfo.scheduledIn}–${dayInfo.scheduledOut}` : '—'}</span></span>
+                <span className="text-ink-muted">{isTh ? 'เข้าจริง' : 'Actual in'}: <span className="font-medium text-ink">{dayInfo.actualIn ?? '—'}</span></span>
+                <span className="text-ink-muted">{isTh ? 'สายเดิม' : 'Late'}: <span className="font-medium text-danger">{formatLate(originalLate, isTh)}</span></span>
+                {correctedLate !== null && (
+                  <span className="text-ink-muted">{isTh ? 'สายหลังแก้' : 'After fix'}: <span className="font-semibold text-accent">{formatLate(correctedLate, isTh)}</span></span>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
