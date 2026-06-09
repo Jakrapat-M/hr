@@ -27,7 +27,7 @@ import { templateForEmployee } from '@/lib/time/schedule-template';
 import { validateDwsDay, validateDwsPeriod, DWS_LEVEL_CLASS, dwsLabel } from '@/lib/time/dws-validation';
 import { lateMinutesFor, formatLate, periodLateSummary, type AttendanceDay } from '@/lib/time/attendance-math';
 import { computeResultsForPeriod, resultsSummary, WAGE_TYPE_LABEL } from '@/lib/time/results-math';
-import { TIME_OFF_LEDGER, endingBalance } from '@/lib/time/time-off-ledger';
+import { TIME_OFF_LEDGER, endingBalance, leaveBalanceCard } from '@/lib/time/time-off-ledger';
 import { heroSummary, getExceptionsForPeriod } from '@/lib/time/exceptions';
 import {
   useTimeCorrections,
@@ -442,8 +442,41 @@ export default function TimesheetPage() {
 
       {/* ── Tab: Time Off balance ledger (wiki §6) ── */}
       {tab === 'timeoff' && (
-        <Card>
-          <div className="overflow-x-auto">
+        <div className="space-y-4">
+          {/* At-a-glance leave-balance progress cards (remaining vs entitlement) */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {TIME_OFF_LEDGER.map((r) => {
+              const c = leaveBalanceCard(r);
+              const name = isTh ? r.nameTh : r.nameEn;
+              return (
+                <Card key={r.kind}>
+                  <p className="text-xs uppercase tracking-widest text-ink-muted">{name}</p>
+                  <div className="mt-1 flex items-baseline gap-1.5">
+                    <span className="text-2xl font-bold text-ink tabular-nums">{c.remaining}</span>
+                    <span className="text-sm text-ink-muted">/ {c.entitled} {isTh ? 'วัน' : 'days'}</span>
+                  </div>
+                  <div
+                    role="progressbar"
+                    aria-valuenow={c.percentUsed}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={name}
+                    className="mt-3 h-2 w-full overflow-hidden rounded-full bg-canvas-soft"
+                  >
+                    <div className="h-full rounded-full bg-accent" style={{ width: `${c.percentUsed}%` }} />
+                  </div>
+                  <p className="mt-2 text-xs text-ink-muted">
+                    {isTh ? `ใช้ไป ${c.used} วัน` : `${c.used} days used`}
+                  </p>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Balance detail ledger (Initial · Credits · Debits · Ending) */}
+          <Card>
+            <CardTitle className="text-base">{isTh ? 'รายละเอียดยอดวันลา' : 'Balance detail'}</CardTitle>
+            <div className="mt-3 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-hairline text-left text-ink-muted">
@@ -467,8 +500,9 @@ export default function TimesheetPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-small text-ink-muted">{isTh ? 'หน่วย: วัน · คงเหลือ = ยอดยกมา + เพิ่ม − ใช้ไป' : 'In days · Ending = Initial + Credits − Debits'}</p>
-        </Card>
+            <p className="mt-2 text-small text-ink-muted">{isTh ? 'หน่วย: วัน · คงเหลือ = ยอดยกมา + เพิ่ม − ใช้ไป' : 'In days · Ending = Initial + Credits − Debits'}</p>
+          </Card>
+        </div>
       )}
 
       {/* ── Tab: Messages (validation / approval notices, wiki §1) ── */}
