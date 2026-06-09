@@ -4167,7 +4167,12 @@
         "effectivePeriod": "ช่วงเวลาที่มีผล",
         "reason": "เหตุผล",
         "createdBy": "บันทึกโดย",
-        "delete": "ลบ"
+        "delete": "ลบ",
+        "status": {
+          "active": "กำลังใช้งาน",
+          "upcoming": "จะเริ่มใช้",
+          "expired": "หมดอายุ"
+        }
       },
       "flag": "สิทธิพิเศษ",
       "panelHeading": "สิทธิพิเศษเฉพาะบุคคล",

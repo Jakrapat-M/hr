@@ -889,52 +889,88 @@ export default function EmployeeDetailPage() {
             descEn={tSpecial('subtitle')}
           />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {specialPrivileges.map((rec) => {
               const plan = getPlan(rec.planId)
               const planName = plan
                 ? (locale === 'th' ? plan.nameTh : plan.nameEn)
                 : rec.planId
+              // Status from the effective window — drives the badge (NO-RED:
+              // expired is a muted neutral, not a danger colour).
+              const now = new Date()
+              const start = new Date(rec.effectiveStartDate)
+              const end = new Date(rec.effectiveEndDate)
+              const status = now < start ? 'upcoming' : now > end ? 'expired' : 'active'
+              const statusClass =
+                status === 'active'
+                  ? 'bg-success-soft text-success border-success/30'
+                  : status === 'upcoming'
+                    ? 'bg-accent-soft text-accent border-accent/30'
+                    : 'bg-canvas-soft text-ink-muted border-hairline'
               return (
                 <div
                   key={rec.id}
-                  className="humi-row"
-                  style={{
-                    gap: 12, padding: '10px 14px', borderRadius: 8,
-                    background: 'var(--color-canvas-soft)', flexWrap: 'wrap',
-                    alignItems: 'flex-start',
-                  }}
+                  className={`rounded-[var(--radius-md)] border border-hairline bg-surface p-4 shadow-[var(--shadow-card)] ${status === 'expired' ? 'opacity-80' : ''}`}
                 >
-                  <div style={{ flex: 1, minWidth: 200 }}>
-                    <div className="text-body font-medium text-ink">{planName}</div>
-                    <div className="text-small text-ink-muted" style={{ marginTop: 2 }}>
-                      {tSpecial('list.entitlementAmount')}: {formatCurrency(rec.benefitEntitlementAmount)}
-                      {' · '}
-                      {tSpecial('list.maxPerClaim')}: {formatCurrency(rec.maxPerClaim)}
-                      {' · '}
-                      {tSpecial('list.schedulePeriod')}: {tSpecial(`fields.schedulePeriodOptions.${rec.schedulePeriod}` as never)}
+                  {/* Header — plan identity + status + remove */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                        <BadgePlus size={18} aria-hidden />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-body font-semibold text-ink">{planName}</p>
+                        <p className="font-mono text-xs uppercase tracking-wide text-ink-muted">{rec.planId}</p>
+                      </div>
                     </div>
-                    <div className="text-small text-ink-muted" style={{ marginTop: 2 }}>
-                      {tSpecial('list.effectivePeriod')}: {formatDate(rec.effectiveStartDate, 'medium', locale)}
-                      {' — '}
-                      {formatDate(rec.effectiveEndDate, 'medium', locale)}
-                    </div>
-                    <div className="text-small text-ink-muted" style={{ marginTop: 2 }}>
-                      {tSpecial('list.reason')}: {rec.reason}
-                    </div>
-                    <div className="text-small text-ink-soft" style={{ marginTop: 2 }}>
-                      {tSpecial('list.createdBy')}: {rec.createdBy} · {formatDate(rec.createdAt, 'medium', locale)}
+                    <div className="flex flex-shrink-0 items-center gap-2">
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusClass}`}>
+                        {tSpecial(`list.status.${status}` as never)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removePrivilege(rec.id)}
+                        aria-label={tSpecial('list.delete')}
+                        className="humi-btn humi-btn--ghost"
+                        style={{ padding: '4px 8px' }}
+                      >
+                        <Trash2 size={14} aria-hidden />
+                      </button>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removePrivilege(rec.id)}
-                    aria-label={tSpecial('list.delete')}
-                    className="humi-btn humi-btn--ghost"
-                    style={{ padding: '4px 8px' }}
-                  >
-                    <Trash2 size={14} aria-hidden />
-                  </button>
+
+                  {/* Entitlement — the benefit the employee receives, made prominent */}
+                  <div className="mt-3 flex flex-wrap items-end gap-x-8 gap-y-2">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-ink-muted">{tSpecial('list.entitlementAmount')}</p>
+                      <p className="text-2xl font-bold tabular-nums text-ink">
+                        {formatCurrency(rec.benefitEntitlementAmount)}
+                        <span className="ml-1.5 text-small font-normal text-ink-muted">
+                          {tSpecial(`fields.schedulePeriodOptions.${rec.schedulePeriod}` as never)}
+                        </span>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-ink-muted">{tSpecial('list.maxPerClaim')}</p>
+                      <p className="text-body font-semibold tabular-nums text-ink">{formatCurrency(rec.maxPerClaim)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-ink-muted">{tSpecial('list.effectivePeriod')}</p>
+                      <p className="text-small text-ink">
+                        {formatDate(rec.effectiveStartDate, 'medium', locale)} — {formatDate(rec.effectiveEndDate, 'medium', locale)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Reason — secondary context in a subtle box */}
+                  <p className="mt-3 rounded-[var(--radius-sm)] bg-canvas-soft px-3 py-2 text-small text-ink-soft">
+                    {rec.reason}
+                  </p>
+
+                  {/* Audit footer — de-emphasized (this used to dominate the row) */}
+                  <p className="mt-2 text-xs text-ink-muted">
+                    {tSpecial('list.createdBy')}: {rec.createdBy} · {formatDate(rec.createdAt, 'medium', locale)}
+                  </p>
                 </div>
               )
             })}
