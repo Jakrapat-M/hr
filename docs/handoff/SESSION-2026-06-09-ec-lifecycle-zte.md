@@ -6,7 +6,7 @@ Phase: **UI mockup only** — clickable flows + realistic seed data, NO backend.
 
 ---
 
-## ✅ Shipped this session (5 PRs, all merged to master)
+## ✅ Shipped this session (7 PRs, all merged to master)
 
 | PR | Linear | What | Key files |
 |----|--------|------|-----------|
@@ -15,8 +15,12 @@ Phase: **UI mockup only** — clickable flows + realistic seed data, NO backend.
 | #260 | STA-57 | **Shared compensation master data + payroll handoff preview** (persona-gated amounts) | new `lib/admin/compensation-master.ts` (+test), `admin/employees/[id]/pay-rate-change/page.tsx` |
 | #262 | STA-94 | **Foundation IA guard** — regression test locking `/admin/foundation` under System, never under ME | new `components/humi/shell/__tests__/sidebar-foundation-ia.test.ts` |
 | #263 | STA-56 | **Contract-renewal reads real `contract_end_date`** (mock source of truth) + honest Day-30 copy | `mocks/employees.ts`, new `contract-renewal/contract-renewal.helpers.ts` (+test), `contract-renewal/page.tsx` |
+| #264 | — | **Completed an orphan WIP** — wired Time Policy + Benefit Catalog config leaves into System nav + i18n (TH/EN) + tests. **payroll-rules intentionally skipped** (payroll team's domain — page stays untracked/unwired) | `Sidebar.tsx`, `messages/{en,th}.json`, `sidebar-hris-config-leaves.test.ts`, `sidebar-dedupe.test.tsx`, new `admin/system/{time-policy,benefit-catalog}/page.tsx` |
+| #265 | — | **Sidebar quick wins** — removed leaf opposite-language `title` (hover-overlap bug) + de-truncated long labels (wrap not ellipsis) + fixed a guard-coverage baseline regression introduced by #264 | `Sidebar.tsx`, `globals.css`, `sidebar-guard-coverage.test.tsx` |
 
 Every PR: `npm run build` + `eslint` + Vitest + a Playwright smoke (verified rendered output) + a `code-reviewer` APPROVE, all green before self-merge.
+
+⚠️ **CI gap discovered:** PR checks run only Vercel `next build`, **NOT** the Vitest suite — so a stale hardcoded test baseline (sidebar-guard-coverage) merged red in #264 and was only caught when #265 ran tests locally. Run `npm test` locally before merging sidebar/MODULES changes.
 
 ---
 
@@ -52,10 +56,24 @@ Always investigate-first on audit/backlog tickets.
 
 ---
 
+## 🎨 Sidebar review — DEFERRED IA work (needs design sign-off)
+User flagged the sidebar "ดู complex มาก". Quick wins shipped in #265 (hover + truncation). An `oh-my-claudecode:architect` review identified the complexity drivers and a prioritized plan. **The following were NOT done — they change navigation IA and need the user's sign-off** (user said "พอก่อน" / stop for now):
+
+1. **Shrink System group 6→4** — nest Time Policy + Benefit Catalog as **sub-tabs under "ฐานข้อมูลกลาง" (Master Catalog `/admin/foundation`)** instead of standalone System leaves. ⚠️ This REVERTS the #264 wiring and **breaks `sidebar-hris-config-leaves.test.ts:38-48`** (which pins them as system-group leaves with `/admin/system/*` hrefs) — that test must be rewritten.
+2. **Collapse leaf-panel by default** — show only the icon rail; expand on click (collapse-persist already exists at `Sidebar.tsx:261-277`). Reduces the always-open 2-column nav.
+3. **Trim the bilingual horizontal tab bar** (รายงาน (Reporting) / การเชื่อมต่อ (Integration) / …) — it's a 3rd nav layer with doubled-up TH+EN text. Drop the EN suffix or the layer.
+
+Complexity drivers (architect-ranked): ① 3 stacked nav layers (icon rail + leaf panel + page tab bar) ② dual-language text everywhere ③ System group bloat + (now-fixed) label truncation.
+
 ## 🔭 Suggested next steps
-1. Get the **BA answer on STA-94** (which persona/view showed Foundation under ME) — only then decide if more than the guard is needed.
-2. Human: move the In-Review tickets to Done after BA sign-off.
-3. New EC mockup tickets only — payroll + backend-wiring stay parked until those teams/phases unblock.
-4. The lint glob in `package.json` grew with each PR (now includes the new lib + test files) — fine, just be aware it's an explicit allowlist.
+1. **Decide the sidebar IA items above** (1-3) — #1 is the highest-impact but reverts #264, so confirm before doing it.
+2. Get the **BA answer on STA-94** (which persona/view showed Foundation under ME) — only then decide if more than the guard is needed.
+3. Human: move the In-Review tickets to Done after BA sign-off.
+4. New EC mockup tickets only — payroll + backend-wiring stay parked until those teams/phases unblock.
+5. `npm test` locally before merging sidebar/MODULES changes (CI runs only `next build`, not Vitest — see the CI-gap note above).
 
 Memory written this session: `feedback_zte_mode`, `reference_lifecycle_effectivedategate_e2e`, `project_payroll_owned_by_team`, updated `feedback_no_dev_internal_copy_in_mockup_ui`.
+
+## ⚠️ Untracked / left-as-is (intentional)
+- `admin/system/payroll-rules/page.tsx` — scaffolded but **unwired & untracked**; payroll team's domain (do not commit/wire). Its `settings.hrisConfig.payrollRules*` i18n keys were NOT added.
+- Prior-session artifacts still untracked: `agents/time-module-*`, `docs/time-module/*`, `docs/handoff/SESSION-2026-06-09.md`, `plan.html`, `plan-assets/`, `sidebar-redesign-mockup.html`. None affect the build.
