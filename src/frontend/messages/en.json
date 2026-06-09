@@ -588,6 +588,19 @@
     "recentHistory": "Recent History"
   },
   "settings": {
+    "hrisConfig": {
+      "eyebrow": "HRIS Configuration",
+      "sourceOfTruth": "These values are the single source of truth for the whole organization. Updating them adjusts every related calculation across the system.",
+      "colParameter": "Parameter",
+      "colValue": "Value",
+      "colBenefit": "Benefit",
+      "colQuota": "Quota",
+      "timePolicyTitle": "Time Policy",
+      "timePolicyDesc": "Set leave allowances, the medical-certificate threshold, carry-over and clock-in rules for the organization.",
+      "benefitCatalogTitle": "Benefit Catalog",
+      "benefitCatalogDesc": "Define benefit types and the default annual quota for each.",
+      "benefitOverrideHint": "Quotas can be overridden per employee grade on the benefits administration page."
+    },
     "title": "Settings",
     "description": "Description",
     "general": "General",
