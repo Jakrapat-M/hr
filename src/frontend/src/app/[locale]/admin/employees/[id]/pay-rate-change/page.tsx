@@ -15,6 +15,18 @@ import { useTranslations } from 'next-intl'
 import { ArrowLeft, Wallet, Clock, Plus, Trash2 } from 'lucide-react'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
 import { formatCurrency } from '@/lib/date'
+import { useCapabilities } from '@/hooks/use-capabilities'
+import {
+  SALARY_ADJUST_REASONS,
+  PAY_GROUPS,
+  CURRENCIES,
+  PAY_COMPONENTS_PROMO_SET,
+  CURRENT_MONTHLY_SALARY,
+  payComponentsFor,
+  eventReasonLabel,
+  buildPayrollHandoff,
+  maskAmountForCapability,
+} from '@/lib/admin/compensation-master'
 import { usePayRateApprovals, PAY_RATE_STEP_LABEL, type PayRateAmountType, type PayRateRecurringPayment } from '@/stores/pay-rate-approvals'
 import { usePromotionApprovals } from '@/stores/promotion-approvals'
 import { useAuthStore } from '@/stores/auth-store'
@@ -44,49 +56,9 @@ function formatDateTh(isoDate: string): string {
   })
 }
 
-// ─── Picklists (TODO: backend wiring) ────────────────────────────────────────
-
-// STA-24: Reason for Salary Adjust — only when Event Reason === PRCHG_SALADJ.
-// TODO(STA-24): replace with backend picklist once available.
-const SALARY_ADJUST_REASONS = [
-  { code: 'ADJ_HIGHER_EDU',   label: 'Acquire Higher Education Degree' },
-  { code: 'ADJ_ALLOWANCE',    label: 'Adjust Allowance' },
-  { code: 'ADJ_OVER_CEILING', label: 'Adjust Over Ceiling' },
-  { code: 'ADJ_STRUCTURE',    label: 'Adjust Salary Structure' },
-  { code: 'ADJ_WORKING_DAYS', label: 'Adjust Working Days' },
-  { code: 'ADJ_MINIMUM',      label: 'Minimum Adjustment' },
-] as const
-
-// STA-24: Pay Group sample codes. TODO(STA-24): replace with backend picklist.
-const PAY_GROUPS = [
-  'B2S:01-31:EOM16D (EQ)',
-  'CENTRAL:01-15:EOM',
-  'CRC:16-31:EOM',
-  'ROBINSON:01-31:EOM',
-] as const
-
-// STA-24: Currency picklist. TODO(STA-24): confirm full ISO list with backend.
-const CURRENCIES = ['THB', 'USD', 'EUR', 'JPY', 'SGD'] as const
-
-// MOCK: current monthly base salary used for live salary preview (STA-83).
-// Matches ฿82,500 shown in humi-mock-data / CompensationSummary.
-// TODO(STA-83): replace with employee.base_salary once backend field lands.
-const CURRENT_MONTHLY_SALARY = 82_500
-
-// STA-24: Pay Component sets — full list for PRCHG_PROMO; subset for PRCHG_SALADJ.
-const PAY_COMPONENTS_PROMO_SET = [
-  'Basic',
-  'Position Allowance',
-  'Transport Allowance',
-  'Meal Allowance',
-] as const
-
-const PAY_COMPONENTS_SALADJ_SUBSET = [
-  'Basic',
-  'Position Allowance',
-] as const
-
-// All components union for recurring payments table (always full list)
+// Compensation picklists + seed values now live in the shared master module
+// (src/lib/admin/compensation-master.ts). All components union for the
+// recurring payments table is the full promo set.
 const PAY_COMPONENTS = PAY_COMPONENTS_PROMO_SET
 
 // ─── Employee snapshot (readonly) ────────────────────────────────────────────
@@ -214,11 +186,12 @@ export default function PayRateChangePage() {
     if (employee && !payrollId) setPayrollId(employee.employee_id)
   }, [employee, payrollId])
 
+  const caps = useCapabilities()
+  const compLevel = caps.entities.EmpCompensation
+
   const isSalaryAdjust = eventReason === 'PRCHG_SALADJ'
   // Pay Component LOV: SALADJ uses filtered subset; all other reasons use full set
-  const payComponentOptions: readonly string[] = isSalaryAdjust
-    ? PAY_COMPONENTS_SALADJ_SUBSET
-    : PAY_COMPONENTS_PROMO_SET
+  const payComponentOptions: readonly string[] = payComponentsFor(eventReason)
 
   // Validate amount based on type
   const amountNum = amount !== '' ? parseFloat(amount) : NaN
@@ -242,6 +215,27 @@ export default function PayRateChangePage() {
     const newSalary = CURRENT_MONTHLY_SALARY + delta
     return { delta, pct, newSalary }
   }, [amount, amountNum, amountType])
+
+  // Payload that this request would hand off to payroll (read-only preview).
+  const payrollHandoff = useMemo(
+    () =>
+      buildPayrollHandoff({
+        eventReason,
+        payGroup,
+        effectiveDate,
+        payComponent,
+        amount: isNaN(amountNum) ? 0 : amountNum,
+        currency,
+        frequency: 'Monthly',
+        recurringPayments: recurring.map((r) => ({
+          component: r.payComponent,
+          amount: r.amount,
+          currency: r.currency,
+          frequency: r.frequency,
+        })),
+      }),
+    [eventReason, payGroup, effectiveDate, payComponent, amountNum, currency, recurring],
+  )
 
   const isFormValid =
     !!effectiveDate &&
@@ -388,11 +382,11 @@ export default function PayRateChangePage() {
       <ApprovalChainBanner employeeId={empId} />
 
       <div className="humi-card humi-card--cream">
-        <div className="humi-eyebrow" style={{ marginBottom: 6 }}>STA-41 demo boundary</div>
+        <div className="humi-eyebrow" style={{ marginBottom: 6 }}>การส่งคำขอ</div>
         <p className="text-small text-ink-soft">
-          HR Admin submits promotion/pay-rate changes to Comp/SPD review with a required effective date.
-          Amounts and pay components are sensitive demo data; this screen does not post payroll,
-          write SuccessFactors, create audit evidence, or configure a workflow engine.
+          คำขอเลื่อนตำแหน่ง / ปรับเงินเดือนจะถูกส่งให้ฝ่ายค่าตอบแทน (Comp) และ SPD พิจารณา
+          โดยต้องระบุวันที่มีผล — ข้อมูลจำนวนเงินและองค์ประกอบค่าตอบแทนเป็นข้อมูลที่ละเอียดอ่อน
+          จะแสดงเฉพาะผู้มีสิทธิ์เท่านั้น
         </p>
       </div>
 
@@ -824,6 +818,61 @@ export default function PayRateChangePage() {
                 style={{ width: '100%', resize: 'vertical', maxWidth: 560 }}
                 aria-label="หมายเหตุ"
               />
+            </div>
+
+            {/* ── Payroll handoff preview (read-only) ── */}
+            <div
+              data-testid="payroll-handoff-preview"
+              style={{
+                marginBottom: 24,
+                padding: 16,
+                borderRadius: 'var(--radius-md, 8px)',
+                background: 'var(--color-canvas-soft)',
+                border: '1px solid var(--color-hairline)',
+              }}
+            >
+              <div className="humi-eyebrow" style={{ marginBottom: 10 }}>
+                ตัวอย่างข้อมูลส่งต่อ Payroll
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" style={{ marginBottom: 12 }}>
+                <div>
+                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>เหตุผลการดำเนินการ</div>
+                  <div className="text-body font-medium text-ink">
+                    {eventReasonLabel(payrollHandoff.eventReason) || '—'}
+                  </div>
+                </div>
+                <div>
+                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>Pay Group</div>
+                  <div className="text-body font-medium text-ink">{payrollHandoff.payGroup || '—'}</div>
+                </div>
+                <div>
+                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่มีผล</div>
+                  <div className="text-body font-medium text-ink">
+                    {payrollHandoff.effectiveDate ? formatDateTh(payrollHandoff.effectiveDate) : '—'}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {payrollHandoff.components.map((c, i) => (
+                  <div
+                    key={`${c.component}-${i}`}
+                    data-testid={`handoff-component-${i}`}
+                    className="humi-row text-small text-ink"
+                    style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}
+                  >
+                    <span className="font-medium">{c.component}</span>
+                    <span className="text-ink-muted">
+                      {maskAmountForCapability(formatCurrency(c.amount, c.currency), compLevel)}
+                      {' · '}{c.currency}{' · '}{c.frequency}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {compLevel !== 'full' && (
+                <p className="text-small text-ink-muted" style={{ marginTop: 10 }}>
+                  จำนวนเงินถูกซ่อนสำหรับสิทธิ์ของผู้ใช้ปัจจุบัน
+                </p>
+              )}
             </div>
 
             {/* ── Action buttons ── */}
