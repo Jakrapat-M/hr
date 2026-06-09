@@ -170,7 +170,7 @@ export default function AdminBenefitsPage() {
           />
           <IntegrationRow
             active={false}
-            label={isTh ? 'ePatient sync — วางแผนหลังเปิดใช้ Backend' : 'ePatient sync — planned post-backend'}
+            label={isTh ? 'ePatient sync — ยังไม่พร้อมใช้งาน' : 'ePatient sync — not available yet'}
           />
           <IntegrationRow
             active
@@ -189,8 +189,8 @@ export default function AdminBenefitsPage() {
           </Button>
           <p className="text-small text-ink-muted">
             {isTh
-              ? 'Finance/Bank export ทำผ่านหน้าจ่ายสวัสดิการ (STA-67) · ePatient sync และ CSV/Excel ตัวจริงเปิดใช้หลัง Backend'
-              : 'Finance/Bank export runs through the Payment page (STA-67) · ePatient sync and real CSV/Excel ship with backend.'}
+              ? 'การส่งออกการเงินและไฟล์ธนาคารทำผ่านหน้าการจ่ายสวัสดิการ'
+              : 'Finance and bank-file export run through the Payment page.'}
           </p>
         </div>
       </Card>
@@ -210,13 +210,13 @@ export default function AdminBenefitsPage() {
         <div className="mt-2 space-y-6">
           <DataSection title="Benefit master data" headers={['Benefit code', 'Name', 'Category', 'Type', 'Payroll income code', 'Effective date', 'End date', 'Status']} rows={masterData} />
           <DataSection title="Eligibility rules" headers={['Benefit group', 'Benefit code', 'Business unit/company', 'Employee group/subgroup', 'Job level', 'Personal grade', 'Min service month', 'Effective date', 'Status']} rows={eligibility} />
-          <DataSection title="Benefit Special Privilege and EBO reporting" description="EBO is admin/reporting-only in this pass and is not exposed to employees." headers={['Record code', 'Section', 'Description', 'Visibility', 'Status']} rows={eboRows} />
+          <DataSection title="Benefit Special Privilege and EBO reporting" description="EBO is admin/reporting-only and is not exposed to employees." headers={['Record code', 'Section', 'Description', 'Visibility', 'Status']} rows={eboRows} />
           <DataSection title="Amount rules" headers={['Benefit group', 'Amount type', 'Amount per claim', 'Frequency', 'Maximum amount', 'Effective date', 'Status']} rows={amountRules} />
           <DataSection title="Field configuration" headers={['Field name', 'Visibility', 'Mandatory', 'Read-only', 'Conditional rule']} rows={fieldConfig} />
           <DataSection title="Approval workflow and cutoff schedule" description="Workflow and cutoff schedule" headers={['Benefit plan', 'Approver lane', 'Cutoff range', 'Payment date', 'Status']} rows={workflowCutoff} />
           <DataSection
             title="Referral configuration preview"
-            description="Hospital network, referral workflow setup, letter template, and ePatient integration are read-only in this pass."
+            description="Hospital network, referral workflow setup, letter template, and ePatient integration are read-only."
             headers={['Hospital / workflow item', 'Branch / route', 'Province / behavior', 'Status']}
             rows={[
               ...REFERRAL_HOSPITALS.map((hospital) => [hospital.name, hospital.branch, hospital.province, `ePatient code ${hospital.ePatientCode}`]),
@@ -225,17 +225,6 @@ export default function AdminBenefitsPage() {
           />
         </div>
       </CollapsibleSectionCard>
-
-      {/* Post-backend roadmap (deferred surfaces, kept as a small footer note) */}
-      <Card variant="raised" size="md">
-        <CardEyebrow>{isTh ? 'แผนงานหลัง Backend' : 'Post-backend roadmap'}</CardEyebrow>
-        <CardTitle>{isTh ? 'รอเปิดใช้งานจริง' : 'Pending real integration'}</CardTitle>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-small text-ink-muted">
-          <li>{isTh ? 'ePatient sync — เชื่อมต่อ API จริงหลังเปิด Backend' : 'ePatient sync — real API after backend'}</li>
-          <li>{isTh ? 'การจัดการกลุ่มสิทธิ์/ผู้ใช้ (Data permission group) — หลัง RBAC จริง' : 'Data permission group editing — after real RBAC'}</li>
-          <li>{isTh ? 'ส่งออก CSV/Excel ตัวจริง — หลัง Backend integration' : 'Real CSV/Excel export — after backend integration'}</li>
-        </ul>
-      </Card>
 
       {/* Toast */}
       {toast && (
