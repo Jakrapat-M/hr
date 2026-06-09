@@ -83,6 +83,13 @@ export interface MockEmployee {
   /** EmpJob.position — SF position code (e.g. "9999C002") */
   position_code?: string
 
+  /**
+   * Contract / fixed-term end date (ISO YYYY-MM-DD). Stored source of truth for
+   * the contract-renewal action. Only meaningful for temporary/PARTIME employees
+   * (regular_temporary === 'T'); undefined for regular/permanent staff.
+   */
+  contract_end_date?: string
+
   // ── STA-93: Special benefit group membership (Yes/No) ──────────────────────
   /** STA-93 — special benefit group membership flag (true=Yes / false=No) */
   special_benefit_group?: boolean
@@ -235,6 +242,13 @@ function daysBetween(isoA: string, isoB: Date): number {
   return Math.floor((isoB.getTime() - new Date(isoA).getTime()) / 86_400_000)
 }
 
+// Add one calendar year to an ISO date (used to seed contract end dates).
+function addOneYear(isoDateStr: string): string {
+  const d = new Date(isoDateStr)
+  d.setFullYear(d.getFullYear() + 1)
+  return d.toISOString().slice(0, 10)
+}
+
 // ──────────────────────────────────────────────
 // Generator
 // ──────────────────────────────────────────────
@@ -359,6 +373,19 @@ function generateEmployees(count: number): MockEmployee[] {
     const regular_temporary: 'R' | 'T' = employee_class === 'PARTIME' ? 'T' : 'R'
     const position_code = `POS-${company}-${String(num).padStart(4, '0')}`
 
+    // STA-56: contract end date — stored source of truth for the contract-renewal action.
+    // Temporary/PARTIME staff get a real fixed-term end (hire_date + 1 year, plus a
+    // small deterministic 0/90/180-day variation); regular staff stay undefined.
+    const contract_end_date: string | undefined =
+      regular_temporary === 'T'
+        ? new Date(
+            new Date(addOneYear(hire_date)).getTime() +
+              rndInt(rnd, 0, 2) * 90 * 86400_000,
+          )
+            .toISOString()
+            .slice(0, 10)
+        : undefined
+
     // STA-93: ~20% flagged into a special benefit group (deterministic via rnd)
     const special_benefit_group = rnd() < 0.2
 
@@ -425,6 +452,7 @@ function generateEmployees(count: number): MockEmployee[] {
       pay_grade,
       regular_temporary,
       position_code,
+      contract_end_date,
       special_benefit_group,
       job_grade_history,
       bu_history,
