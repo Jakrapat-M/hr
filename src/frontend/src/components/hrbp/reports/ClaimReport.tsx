@@ -175,8 +175,8 @@ export function ClaimReport() {
           {isTh ? `แสดง ${filtered.length} รายการ` : `Showing ${filtered.length} records`}
           {' · '}
           {isTh
-            ? 'ขอบเขตแผนก: ข้อมูลจำลอง ยังไม่กรองตามแผนกจริง'
-            : 'Dept scope: mock data — filter not applied in mockup phase'}
+            ? 'ขอบเขตแผนก: ข้อมูลตัวอย่าง (การกรองเป็นตัวอย่าง)'
+            : 'Department scope: sample data (filtering is illustrative)'}
         </div>
       </Card>
     </div>

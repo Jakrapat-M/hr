@@ -41,8 +41,8 @@ export function HrbpScopeBanner({ persona, isTh, locale: _locale }: HrbpScopeBan
       <div className="flex-1 text-sm text-ink">
         <p className="font-medium">
           {isTh
-            ? 'หมายเหตุ: ในเฟส mockup HRBP/SPD เห็นรายการทั้งหมด — scope filter (partneredDepts) จะมาในเฟส backend'
-            : 'Note: In mockup phase, HRBP/SPD see all items — scope filter (partneredDepts) lands in backend phase'}
+            ? 'หมายเหตุ: ตัวอย่างนี้แสดงรายการทั้งหมด — การกรองตามแผนกเป็นข้อมูลตัวอย่าง'
+            : 'Note: this demo shows all items — department filtering is illustrative.'}
         </p>
         <p className="mt-1 text-xs text-ink-muted">
           <Link

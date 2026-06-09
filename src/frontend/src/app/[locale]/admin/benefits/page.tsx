@@ -111,7 +111,7 @@ export default function AdminBenefitsPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    flashToast(isTh ? 'ดาวน์โหลด CSV ตัวอย่าง (จำลอง) แล้ว' : 'Mock CSV preview downloaded');
+    flashToast(isTh ? 'ดาวน์โหลดไฟล์ตัวอย่างแล้ว' : 'Sample CSV downloaded');
   };
 
   return (
@@ -185,7 +185,7 @@ export default function AdminBenefitsPage() {
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Button variant="secondary" onClick={handleExportCsvPreview}>
-            {isTh ? 'Export CSV (จำลอง)' : 'Export CSV (mock)'}
+            {isTh ? 'Export CSV (จำลอง)' : 'Export CSV (sample)'}
           </Button>
           <p className="text-small text-ink-muted">
             {isTh

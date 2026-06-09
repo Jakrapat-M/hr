@@ -83,7 +83,7 @@ function ApprovalChainStepper() {
         ))}
       </div>
       <p className="text-small text-ink-muted" style={{ marginTop: 6 }}>
-        เมื่อบันทึกแล้ว คำขอจะส่งเข้าระบบอนุมัติ 4 ขั้น — การเชื่อมต่อ backend อยู่ระหว่างพัฒนา (Sprint 2)
+        เมื่อบันทึกแล้ว คำขอจะส่งเข้าระบบอนุมัติ 4 ขั้น
       </p>
     </div>
   )

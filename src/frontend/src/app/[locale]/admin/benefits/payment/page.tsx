@@ -146,8 +146,8 @@ function MockDisclaimer({ isTh }: { isTh: boolean }) {
   return (
     <div className="rounded-[var(--radius-md)] border border-warning/40 bg-warning-soft px-3 py-2 text-[length:var(--text-eyebrow)] uppercase tracking-[0.12em] text-warning">
       {isTh
-        ? 'Mock / Demo payload — ไม่ใช่การเชื่อมต่อ SAP / ธนาคารจริง'
-        : 'Mock / demo payload — not real SAP / bank integration'}
+        ? 'ข้อมูลตัวอย่างสำหรับการนำเสนอ'
+        : 'Sample data for demonstration'}
     </div>
   );
 }
@@ -228,7 +228,7 @@ export default function BenefitPaymentPage() {
         eligibleLineCount: totals.eligibleCount,
         eligibleAmountThb: totals.eligibleAmountThb,
       },
-      _disclaimer: 'mock/demo payload — not real SAP/bank integration',
+      _disclaimer: 'Sample data for demonstration',
     };
   }, [claims, selectedIds, stage, totals]);
 
@@ -278,7 +278,7 @@ export default function BenefitPaymentPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    flashToast(isTh ? 'ดาวน์โหลด Payload (จำลอง) แล้ว' : 'Mock payload downloaded');
+    flashToast(isTh ? 'ดาวน์โหลดไฟล์ตัวอย่างแล้ว' : 'Sample file downloaded');
   };
 
   const flashToast = (msg: string) => {

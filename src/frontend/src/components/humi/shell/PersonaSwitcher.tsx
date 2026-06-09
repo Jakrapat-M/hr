@@ -89,7 +89,7 @@ export function PersonaSwitcher() {
       onClose={close}
       title={isTh ? 'สวมบทบาทแทน' : 'Take Action on Behalf of'}
     >
-      <div className="humi-eyebrow mb-3">{isTh ? 'RBAC · 4 ระดับ' : 'RBAC · 4 tiers'}</div>
+      <div className="humi-eyebrow mb-3">{isTh ? 'สิทธิ์ตามบทบาท · 4 ระดับ' : 'Role access · 4 tiers'}</div>
 
       <label className="mb-3 block">
         <span className="sr-only">
@@ -182,8 +182,8 @@ export function PersonaSwitcher() {
 
       <p className="mt-4 border-t border-hairline pt-3 text-small text-ink-muted">
         {isTh
-          ? 'บังคับใช้ RBAC — เห็นเฉพาะสิทธิ์ของแต่ละบทบาท'
-          : 'RBAC enforced — you only see what each persona may access.'}
+          ? 'แสดงเฉพาะสิทธิ์ของแต่ละบทบาท'
+          : 'You only see what each role may access.'}
       </p>
     </Modal>
   );
