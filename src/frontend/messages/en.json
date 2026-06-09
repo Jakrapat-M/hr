@@ -4288,7 +4288,12 @@
         "effectivePeriod": "Effective period",
         "reason": "Reason",
         "createdBy": "Created by",
-        "delete": "Remove"
+        "delete": "Remove",
+        "status": {
+          "active": "Active",
+          "upcoming": "Upcoming",
+          "expired": "Expired"
+        }
       },
       "flag": "Special Privilege",
       "panelHeading": "Individual special privilege",
