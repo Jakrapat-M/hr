@@ -4305,6 +4305,48 @@
         "specialBenefitGroupYes": "Yes",
         "specialBenefitGroupNo": "No"
       }
+    },
+    "reallocateBudget": {
+      "cardLabel": "Reallocate Next Year Budget",
+      "cardDesc": "Move part of next year’s medical budget into this year",
+      "flag": "Budget Reallocation",
+      "pageTitle": "Benefits",
+      "title": "Reallocate Next Year Budget",
+      "subtitle": "Transfer part of this employee’s next-year medical budget into the current year.",
+      "fields": {
+        "plan": "Medical plan",
+        "amount": "Amount to move (THB)",
+        "effectiveStart": "Effective start date",
+        "effectiveEnd": "Effective end date",
+        "reason": "Reason"
+      },
+      "preview": {
+        "current": "This year",
+        "next": "Next year"
+      },
+      "totals": {
+        "currentPool": "This year — medical budget",
+        "nextPool": "Next year — medical budget"
+      },
+      "log": {
+        "title": "Reallocation log",
+        "empty": "No reallocation for this employee yet",
+        "colDate": "Date",
+        "colPlan": "Plan",
+        "colAmount": "Moved",
+        "colCurrentTotal": "This-year total",
+        "colNextTotal": "Next-year total",
+        "colReason": "Reason"
+      },
+      "validation": {
+        "reasonRequired": "Reason is required",
+        "amountPositive": "Amount must be greater than 0",
+        "exceedsNextYearWarn": "Exceeds next-year remaining — next-year budget will go negative"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "submit": "Reallocate budget"
+      }
     }
   },
   "hireForm": {

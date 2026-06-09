@@ -4184,6 +4184,48 @@
         "specialBenefitGroupYes": "ใช่",
         "specialBenefitGroupNo": "ไม่ใช่"
       }
+    },
+    "reallocateBudget": {
+      "cardLabel": "โอนงบปีหน้ามาใช้ปีนี้",
+      "cardDesc": "โอนงบค่ารักษาพยาบาลปีหน้าบางส่วนมาใช้ในปีนี้",
+      "flag": "การโอนงบประมาณ",
+      "pageTitle": "สวัสดิการ",
+      "title": "โอนงบปีหน้ามาใช้ปีนี้",
+      "subtitle": "โอนงบค่ารักษาพยาบาลปีหน้าของพนักงานบางส่วนมาใช้ในปีปัจจุบัน",
+      "fields": {
+        "plan": "แผนค่ารักษาพยาบาล",
+        "amount": "จำนวนที่โอน (บาท)",
+        "effectiveStart": "วันที่เริ่มมีผล",
+        "effectiveEnd": "วันที่สิ้นสุด",
+        "reason": "เหตุผล"
+      },
+      "preview": {
+        "current": "งบปีนี้",
+        "next": "งบปีหน้า"
+      },
+      "totals": {
+        "currentPool": "งบค่ารักษาพยาบาล ปีนี้",
+        "nextPool": "งบค่ารักษาพยาบาล ปีหน้า"
+      },
+      "log": {
+        "title": "ประวัติการโอนงบ",
+        "empty": "ยังไม่มีการโอนงบของพนักงานคนนี้",
+        "colDate": "วันที่",
+        "colPlan": "แผน",
+        "colAmount": "โอน",
+        "colCurrentTotal": "ยอดปีนี้",
+        "colNextTotal": "ยอดปีหน้า",
+        "colReason": "เหตุผล"
+      },
+      "validation": {
+        "reasonRequired": "กรุณาระบุเหตุผล",
+        "amountPositive": "จำนวนต้องมากกว่า 0",
+        "exceedsNextYearWarn": "เกินงบปีหน้าที่เหลือ — งบปีหน้าจะติดลบ"
+      },
+      "buttons": {
+        "cancel": "ยกเลิก",
+        "submit": "โอนงบ"
+      }
     }
   },
   "hireForm": {
