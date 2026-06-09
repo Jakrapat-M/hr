@@ -64,9 +64,10 @@ export function templateForEmployee(empId: string): ScheduleTemplate {
 }
 
 /** Per-day scheduled shift for the current payroll period (21→20) — single source. */
-export function getScheduleForPeriod(empId: string): DaySchedule[] {
+/** Per-day schedule for the current period from a GIVEN template (used by the
+ *  manager shift-schedule surface to preview a manager override). */
+export function scheduleFromTemplate(tmpl: ScheduleTemplate): DaySchedule[] {
   const { start, end } = currentPeriod();
-  const tmpl = templateForEmployee(empId);
   const startD = new Date(start + 'T00:00:00Z');
   const endD = new Date(end + 'T00:00:00Z');
 
@@ -88,4 +89,9 @@ export function getScheduleForPeriod(empId: string): DaySchedule[] {
     });
   }
   return out;
+}
+
+/** Per-day scheduled shift for an employee (resolves the template via Table 1 Rule). */
+export function getScheduleForPeriod(empId: string): DaySchedule[] {
+  return scheduleFromTemplate(templateForEmployee(empId));
 }
