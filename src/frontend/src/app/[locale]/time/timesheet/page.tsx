@@ -23,6 +23,7 @@ import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
 import { currentPeriod } from '@/lib/time/period';
 import { getAttendanceForPeriod, ecPlanHoursFor } from '@/lib/time/attendance-seed';
 import { getShiftCode } from '@/lib/time/shift-codes';
+import { templateForEmployee } from '@/lib/time/schedule-template';
 import { lateMinutesFor, formatLate, periodLateSummary, type AttendanceDay } from '@/lib/time/attendance-math';
 import {
   useTimesheetSubmissions,
@@ -60,6 +61,7 @@ export default function TimesheetPage() {
   const days = useMemo(() => getAttendanceForPeriod(empId), [empId]);
   const lateSummary = useMemo(() => periodLateSummary(days), [days]);
   const ecPlan = ecPlanHoursFor(empId);
+  const tmpl = templateForEmployee(empId);
 
   const [tab, setTab] = useState<TabKey>('entry');
 
@@ -182,6 +184,13 @@ export default function TimesheetPage() {
       {/* ── Tab: Schedule ── */}
       {tab === 'schedule' && isClocking && (
         <Card>
+          {/* Working Hour Template the schedule derives from (wiki §7.1) */}
+          <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[var(--radius-md)] bg-canvas-soft px-3 py-2 text-small">
+            <span className="text-ink-muted">{isTh ? 'รูปแบบเวลาทำงาน' : 'Working pattern'}:</span>
+            <span className="font-semibold text-ink">{isTh ? tmpl.nameTh : tmpl.nameEn}</span>
+            <span className="text-ink-faint">·</span>
+            <span className="text-ink-muted">{isTh ? 'มีผล' : 'Effective'} {fmtDate(tmpl.effectiveDate, isTh)}</span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
