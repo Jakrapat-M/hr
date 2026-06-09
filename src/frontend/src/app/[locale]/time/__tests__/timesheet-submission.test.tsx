@@ -54,6 +54,10 @@ describe('STA-65 timesheet submission', () => {
   it('(a) editing hours + adding a project then Save persists a submitted record', () => {
     renderTh(<TimesheetPage />);
 
+    // The weekly project-hours grid now lives under its own tab (the page leads
+    // with the WFS Time Entry / Schedule / Late tabs). Switch to it first.
+    fireEvent.click(screen.getByRole('tab', { name: 'ชั่วโมงรายสัปดาห์' }));
+
     // Edit an existing hour cell (first number input → Project Alpha / Mon).
     const numberInputs = screen.getAllByRole('spinbutton');
     fireEvent.change(numberInputs[0], { target: { value: '6' } });
