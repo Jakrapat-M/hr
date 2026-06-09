@@ -1,26 +1,34 @@
 'use client';
 
 // ════════════════════════════════════════════════════════════
-// LoginAsRibbon — subtle "Acting as …" bar shown ABOVE the Topbar.
+// LoginAsRibbon — persistent "Acting as …" bar shown ABOVE the Topbar while an
+// admin is proxying into another persona (originalUser !== null). Renders
+// nothing when not impersonating.
 //
-// SF-realignment (di-proxy-sf-2026-05-28):
-//   - The previous burnt-orange band (var(--imp-bg) #C2410C) is gone. The bar
-//     now uses Humi tokens only: canvas-soft background, hairline bottom border,
-//     text-ink copy. No red/orange/clay/crimson — NO-RED guardrail.
-//   - Copy reads "You are acting as {persona name}" / "คุณกำลังสวมบทบาทเป็น
-//     {persona name}". Original admin name is NOT displayed inline; it survives
-//     via the container `title`/`aria-label` for tooltip + screen-reader use.
-//   - The exit affordance is now a Humi <Button variant="secondary"> labeled
-//     "End Proxy" / "จบการสวมบทบาท" on the right of the bar (no underline link).
-//
-// Renders ONLY while impersonating (originalUser !== null). When not in a
-// proxy session it renders nothing. The Topbar avatar dropdown is the entry
-// point into impersonation; this bar is the persistent exit affordance.
+// Redesign (proxy-ribbon-2026-06-09):
+//   - Navy console band (bg-ink / text-canvas) instead of the old flat cream bar.
+//     A dark thin strip on a light app is unmissable → defeats banner blindness,
+//     while staying 100% on-brand (navy is a core Humi token). NO red/orange.
+//   - Identity FLOW: "Admin {adminName} → กำลังสวมบทบาทเป็น {username}" with an
+//     initial avatar, so the proxy relationship reads at a glance.
+//   - Tier chip (A/B/C/D) shows which persona tier the admin is now viewing as.
+//   - A pulsing teal dot signals a live, special session without alarm.
+//   - Clear cream "End Proxy" button with a LogOut icon on the right.
+//   - Tokens only (no hardcoded hex); bilingual TH/EN; NO-RED guardrail intact.
 // ════════════════════════════════════════════════════════════
 
 import { useRouter, useParams } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/humi/Button';
+import { personaTiers, type PersonaTier } from '@/lib/persona-tiers';
+
+const TIER_LABEL: Record<PersonaTier, { th: string; en: string }> = {
+  A: { th: 'ผู้ดูแลระบบ / HR', en: 'System / HR Admin' },
+  B: { th: 'People Partner', en: 'People Partner' },
+  C: { th: 'ผู้จัดการ', en: 'Manager' },
+  D: { th: 'พนักงาน', en: 'Employee' },
+};
 
 export function LoginAsRibbon() {
   const router = useRouter();
@@ -29,6 +37,7 @@ export function LoginAsRibbon() {
   const isTh = locale !== 'en';
 
   const username = useAuthStore((s) => s.username);
+  const roles = useAuthStore((s) => s.roles);
   const originalUser = useAuthStore((s) => s.originalUser);
   const exitPersona = useAuthStore((s) => s.exitPersona);
   const hasHydrated = useAuthStore((s) => s._hasHydrated);
@@ -44,30 +53,61 @@ export function LoginAsRibbon() {
   }
 
   const adminName = originalUser.username || (isTh ? 'บัญชีเดิม' : 'original account');
+  const tier = personaTiers(roles ?? [])[0]; // highest tier the impersonated persona operates at
   const a11yLabel = isTh
     ? `กำลังสวมบทบาทเป็น ${username} (จากบัญชีของ ${adminName})`
     : `Acting as ${username} (signed in as ${adminName})`;
-  const message = isTh
-    ? `คุณกำลังสวมบทบาทเป็น ${username}`
-    : `You are acting as ${username}`;
 
   return (
     <div
       role="status"
       aria-label={a11yLabel}
       title={a11yLabel}
-      className="flex items-center gap-3 bg-canvas-soft border-b border-hairline text-ink px-6 py-2"
+      className="flex items-center gap-3 bg-ink text-canvas px-6 py-2 shadow-[var(--shadow-card)]"
       style={{
-        // Span the full width of the .humi-app grid (sidebar + main) so the bar
-        // covers the whole session chrome.
+        // Span the full width of the .humi-app grid (sidebar + main).
         gridColumn: '1 / -1',
       }}
     >
-      <span className="min-w-0 flex-1 truncate text-small font-medium">
-        {message}
+      {/* Live pulse — teal, signals a special active session (not an alarm). */}
+      <span className="relative flex h-2.5 w-2.5 flex-shrink-0" aria-hidden>
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
       </span>
 
-      <Button variant="secondary" size="sm" onClick={handleExit} className="flex-shrink-0">
+      {/* Identity flow: real admin → impersonated persona. */}
+      <div className="flex min-w-0 flex-1 items-center gap-2 text-small">
+        <span className="hidden truncate text-canvas/60 sm:inline">
+          {isTh ? 'ผู้ดูแล' : 'Admin'} {adminName}
+        </span>
+        <span className="hidden text-canvas/40 sm:inline" aria-hidden>→</span>
+        <span className="flex min-w-0 items-center gap-2">
+          <span
+            className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-canvas"
+            aria-hidden
+          >
+            {username.trim().charAt(0)}
+          </span>
+          <span className="truncate font-semibold">
+            {isTh ? 'กำลังสวมบทบาทเป็น' : 'Acting as'} {username}
+          </span>
+        </span>
+        {tier && (
+          <span className="ml-1 hidden flex-shrink-0 items-center rounded-[var(--radius-sm)] border border-canvas/25 bg-canvas/10 px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-wide md:inline-flex">
+            {tier} · {isTh ? TIER_LABEL[tier].th : TIER_LABEL[tier].en}
+          </span>
+        )}
+      </div>
+
+      {/* Clear cream exit button — pops on the navy band. leadingIcon keeps the
+          icon a flex sibling of the label (passing it as a child stacks it). */}
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={handleExit}
+        leadingIcon={<LogOut className="h-3.5 w-3.5" aria-hidden />}
+        className="flex-shrink-0 whitespace-nowrap border-transparent bg-canvas text-ink hover:bg-canvas-soft"
+      >
         {isTh ? 'จบการสวมบทบาท' : 'End Proxy'}
       </Button>
     </div>
