@@ -1,11 +1,11 @@
 /**
- * login-ribbon.test.tsx — SF realignment (di-proxy-sf-2026-05-28).
+ * login-ribbon.test.tsx — proxy-ribbon redesign (proxy-ribbon-2026-06-09).
  *
- * The legacy burnt-orange band is gone — the bar is now a subtle Humi-token
- * strip (bg-canvas-soft / border-hairline / text-ink). New copy says
- * "You are acting as {persona name}" / "คุณกำลังสวมบทบาทเป็น {persona name}".
- * The exit affordance is now a Humi <Button variant="secondary"> labeled
- * "End Proxy" / "จบการสวมบทบาท".
+ * The bar is now a navy "console" band (bg-ink / text-canvas) — a dark thin
+ * strip on the light app, unmissable but on-brand (no red/orange). It shows the
+ * identity FLOW: "Admin {adminName} → กำลังสวมบทบาทเป็น {username}" with an
+ * initial avatar + a tier chip (A/B/C/D), and a cream <Button> exit labeled
+ * "End Proxy" / "จบการสวมบทบาท". NO-RED guardrail still enforced.
  */
 
 import fs from 'node:fs';
@@ -67,23 +67,23 @@ beforeEach(() => {
   authMock._hasHydrated = true;
 });
 
-describe('LoginAsRibbon — SF subtle bar', () => {
-  it('AC7: subtle bar uses canvas-soft + hairline tokens, NO burnt-orange', () => {
+describe('LoginAsRibbon — navy console bar', () => {
+  it('AC7: bar uses navy ink + canvas tokens, NO burnt-orange', () => {
     const { container } = render(<LoginAsRibbon />);
     const band = container.querySelector('[role="status"]') as HTMLElement;
     expect(band).not.toBeNull();
-    expect(band.className).toContain('bg-canvas-soft');
-    expect(band.className).toContain('border-hairline');
-    expect(band.className).toContain('text-ink');
+    expect(band.className).toContain('bg-ink');
+    expect(band.className).toContain('text-canvas');
     // Old burnt-orange inline-style tokens are gone.
     expect(band.style.background ?? '').not.toContain('--imp-bg');
     expect(band.style.color ?? '').not.toContain('--imp-fg');
-    // No red/orange utility leakage.
+    // No red/orange utility leakage (the navy band must never reintroduce warm-red urgency).
     expect(band.className).not.toMatch(/\bbg-orange/);
     expect(band.className).not.toMatch(/\bbg-amber/);
     expect(band.className).not.toMatch(/\bbg-warning/);
     expect(band.className).not.toMatch(/\bbg-red/);
     expect(band.className).not.toMatch(/\bbg-danger/);
+    expect(band.innerHTML).not.toMatch(/\bbg-danger\b/);
   });
 
   it('AC7: rendered HTML never contains the legacy burnt-orange hex', () => {
@@ -91,29 +91,34 @@ describe('LoginAsRibbon — SF subtle bar', () => {
     expect(container.innerHTML.toLowerCase()).not.toContain(LEGACY_BURNT_ORANGE);
   });
 
-  it('AC8 (th): bar copy says "คุณกำลังสวมบทบาทเป็น {name}"', () => {
+  it('AC8 (th): bar copy says "กำลังสวมบทบาทเป็น {name}"', () => {
     render(<LoginAsRibbon />);
     expect(
-      screen.getByText('คุณกำลังสวมบทบาทเป็น จงรักษ์ ทานากะ (HR Admin)'),
+      screen.getByText('กำลังสวมบทบาทเป็น จงรักษ์ ทานากะ (HR Admin)'),
     ).toBeInTheDocument();
   });
 
-  it('AC8 (en): bar copy says "You are acting as {name}"', () => {
+  it('AC8 (en): bar copy says "Acting as {name}"', () => {
     paramsMock.locale = 'en';
     render(<LoginAsRibbon />);
-    expect(
-      screen.getByText('You are acting as จงรักษ์ ทานากะ (HR Admin)'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Acting as จงรักษ์ ทานากะ (HR Admin)')).toBeInTheDocument();
   });
 
-  it('AC8: original admin name is NOT shown inline, but is available via aria/title', () => {
+  it('AC8: identity flow shows the real admin name inline AND in aria/title', () => {
     const { container } = render(<LoginAsRibbon />);
     const band = container.querySelector('[role="status"]') as HTMLElement;
+    // a11y: tooltip + screen-reader carry the full proxy relationship.
     expect(band.getAttribute('aria-label') ?? '').toContain('ผู้ดูแลระบบ HR');
     expect(band.getAttribute('title') ?? '').toContain('ผู้ดูแลระบบ HR');
-    // The visible message span should NOT contain the admin name.
-    const visibleSpan = band.querySelector('span.truncate') as HTMLElement;
-    expect(visibleSpan.textContent ?? '').not.toContain('ผู้ดูแลระบบ HR');
+    // The redesign INTENTIONALLY surfaces the admin name inline (identity flow).
+    expect(band.textContent ?? '').toContain('ผู้ดูแลระบบ HR');
+  });
+
+  it('AC8: tier chip reflects the impersonated persona tier (hr_admin → A)', () => {
+    const { container } = render(<LoginAsRibbon />);
+    const band = container.querySelector('[role="status"]') as HTMLElement;
+    // roles ['hr_admin','employee'] → top tier A (System / HR Admin).
+    expect(band.textContent ?? '').toContain('A · ');
   });
 
   it('AC9: exit affordance is a button (role="button") labeled "จบการสวมบทบาท"', () => {
