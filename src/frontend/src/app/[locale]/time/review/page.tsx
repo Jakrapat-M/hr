@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Download, Upload } from 'lucide-react';
+import { Download, Upload, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Card, CardTitle, Button, DataTable, type DataTableColumn } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole, hasRole } from '@/lib/rbac';
@@ -20,6 +20,7 @@ import {
   buildTeamTimeSummary,
   type TeamTimeRow,
 } from '@/lib/team-time-metrics';
+import { getExceptionsForPeriod } from '@/lib/time/exceptions';
 
 // STA-65 — READ-ONLY manager/HR reporting view of submitted timesheets.
 // This is status tracking, NOT an approval: no approve/reject controls here.
@@ -49,6 +50,17 @@ export default function TimesheetReviewPage() {
   }, [roles, currentEmpId]);
 
   const teamTime = useMemo(() => buildTeamTimeSummary(team), [team]);
+
+  // Exception-first inbox — surface team members with current-period anomalies
+  // up front, so a manager acts on problems instead of scanning the whole grid.
+  const teamExceptions = useMemo(
+    () =>
+      team
+        .map((e) => ({ emp: e, items: getExceptionsForPeriod(e.id) }))
+        .filter((x) => x.items.length > 0)
+        .sort((a, b) => b.items.length - a.items.length),
+    [team],
+  );
 
   const rows = useMemo(() => selectSubmittedTimesheets(submissions), [submissions]);
 
@@ -204,6 +216,75 @@ export default function TimesheetReviewPage() {
         <h1 className="text-2xl font-bold text-ink">{t('title')}</h1>
         <p className="text-sm text-ink-muted mt-1">{t('subtitle')}</p>
       </div>
+
+      {/* Exception-first inbox — act on problems before scanning the grid */}
+      <Card>
+        <div className="p-4" data-testid="needs-attention">
+          <div className="mb-3 flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
+            <CardTitle className="text-base font-semibold">
+              {locale === 'th' ? 'ต้องจัดการ' : 'Needs attention'}
+            </CardTitle>
+            {teamExceptions.length > 0 && (
+              <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-semibold text-[var(--color-danger-ink)]">
+                {teamExceptions.length}
+              </span>
+            )}
+          </div>
+
+          {teamExceptions.length === 0 ? (
+            <div className="flex items-center gap-2 py-6 text-sm text-ink-muted">
+              <CheckCircle2 className="h-4 w-4 text-accent" aria-hidden />
+              {locale === 'th'
+                ? 'ไม่มีรายการที่ต้องจัดการในรอบนี้'
+                : 'No exceptions to act on this period'}
+            </div>
+          ) : (
+            <ul className="divide-y divide-hairline">
+              {teamExceptions.slice(0, 8).map(({ emp, items }) => {
+                const name =
+                  locale === 'th'
+                    ? `${emp.firstNameTh} ${emp.lastNameTh}`
+                    : `${emp.firstNameEn ?? emp.firstNameTh} ${emp.lastNameEn ?? emp.lastNameTh}`;
+                return (
+                  <li
+                    key={emp.id}
+                    className="flex flex-wrap items-center justify-between gap-2 py-2.5"
+                  >
+                    <span className="font-medium text-ink">{name}</span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {items.slice(0, 4).map((ex, i) => (
+                        <span
+                          key={`${ex.date}-${ex.type}-${i}`}
+                          className={
+                            ex.severity === 'danger'
+                              ? 'rounded-full bg-danger-soft px-2 py-0.5 text-xs font-medium text-danger'
+                              : 'rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-[var(--color-danger-ink)]'
+                          }
+                        >
+                          {locale === 'th' ? ex.th : ex.en}
+                        </span>
+                      ))}
+                      {items.length > 4 && (
+                        <span className="text-xs text-ink-muted">
+                          +{items.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+              {teamExceptions.length > 8 && (
+                <li className="pt-2.5 text-sm text-ink-muted">
+                  {locale === 'th'
+                    ? `และอีก ${teamExceptions.length - 8} คนที่ต้องจัดการ`
+                    : `and ${teamExceptions.length - 8} more need attention`}
+                </li>
+              )}
+            </ul>
+          )}
+        </div>
+      </Card>
 
       {/* P3 — Team time dashboard (read-only) */}
       <Card>

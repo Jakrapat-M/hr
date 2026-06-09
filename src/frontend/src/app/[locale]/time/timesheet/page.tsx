@@ -28,6 +28,7 @@ import { validateDwsDay, validateDwsPeriod, DWS_LEVEL_CLASS, dwsLabel } from '@/
 import { lateMinutesFor, formatLate, periodLateSummary, type AttendanceDay } from '@/lib/time/attendance-math';
 import { computeResultsForPeriod, resultsSummary, WAGE_TYPE_LABEL } from '@/lib/time/results-math';
 import { TIME_OFF_LEDGER, endingBalance } from '@/lib/time/time-off-ledger';
+import { heroSummary, getExceptionsForPeriod } from '@/lib/time/exceptions';
 import {
   useTimesheetSubmissions,
   validateTimesheet,
@@ -63,6 +64,8 @@ export default function TimesheetPage() {
   const period = currentPeriod();
   const days = useMemo(() => getAttendanceForPeriod(empId), [empId]);
   const lateSummary = useMemo(() => periodLateSummary(days), [days]);
+  const hero = useMemo(() => heroSummary(empId), [empId]);
+  const exceptions = useMemo(() => getExceptionsForPeriod(empId), [empId]);
   const ecPlan = ecPlanHoursFor(empId);
   const tmpl = templateForEmployee(empId);
   const results = useMemo(() => computeResultsForPeriod(empId), [empId]);
@@ -145,6 +148,30 @@ export default function TimesheetPage() {
           </p>
         </div>
       </header>
+
+      {/* At-a-glance hero (exception-first; replaces scanning the old WFS grid) */}
+      {isClocking && (
+        <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <Card><p className="text-xs uppercase tracking-widest text-ink-muted">{isTh ? 'ชม.จริง / แผน' : 'Actual / plan'}</p><p className="mt-1 text-2xl font-bold text-ink tabular-nums">{hero.actualHrs}<span className="text-base font-normal text-ink-muted"> / {hero.planHrs}</span></p></Card>
+          <Card><p className="text-xs uppercase tracking-widest text-ink-muted">{isTh ? 'ตรงเวลา' : 'On-time'}</p><p className="mt-1 text-2xl font-bold text-ink tabular-nums">{hero.onTimeRate}<span className="text-base font-normal text-ink-muted">%</span></p></Card>
+          <Card><p className="text-xs uppercase tracking-widest text-ink-muted">{isTh ? 'วันมาสาย' : 'Late days'}</p><p className={`mt-1 text-2xl font-bold tabular-nums ${hero.lateDays > 0 ? 'text-danger' : 'text-ink'}`}>{hero.lateDays}</p></Card>
+          <Card><p className="text-xs uppercase tracking-widest text-ink-muted">{isTh ? 'ต้องจัดการ' : 'Exceptions'}</p><p className={`mt-1 text-2xl font-bold tabular-nums ${hero.exceptionCount > 0 ? 'text-warning' : 'text-ink'}`}>{hero.exceptionCount}</p></Card>
+        </section>
+      )}
+
+      {/* Exception banner — surface problems instead of hiding them in a grid */}
+      {isClocking && exceptions.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setTab('late')}
+          className="flex w-full items-center gap-2 rounded-[var(--radius-md)] border border-warning bg-warning-soft px-4 py-3 text-left text-sm text-warning"
+        >
+          <AlertTriangle size={16} aria-hidden className="shrink-0" />
+          <span className="font-medium">
+            {isTh ? `พบ ${exceptions.length} รายการที่ต้องจัดการในรอบนี้ — แตะเพื่อดู` : `${exceptions.length} item(s) need attention this period — tap to review`}
+          </span>
+        </button>
+      )}
 
       {/* Tab bar */}
       <div className="flex flex-wrap gap-1 border-b border-hairline" role="tablist">
