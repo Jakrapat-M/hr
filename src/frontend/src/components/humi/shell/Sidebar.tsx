@@ -158,6 +158,8 @@ export const MODULES: ModuleGroup[] = [
     leaves: [
       { id: 'roles', label: 'Roles & Permissions', labelTh: 'สิทธิ์ตามบทบาท', href: '/permissions', show: ['hris'] }, // hr_manager (top admin) — matches the /permissions route guard (was phantom 'sysadmin', collapsed into hris)
       { id: 'catalog', label: 'Master Catalog', labelTh: 'ฐานข้อมูลกลาง', href: '/admin/foundation', show: ['hris'] }, // merges assets
+      { id: 'time-policy', label: 'Time Policy', labelTh: 'นโยบายเวลาทำงาน', href: '/admin/system/time-policy', show: ['hris'] },
+      { id: 'benefit-catalog', label: 'Benefit Catalog', labelTh: 'แคตตาล็อกสวัสดิการ', href: '/admin/system/benefit-catalog', show: ['hris'] },
       // P2 follow-up (PR-4) DONE: doc-review URL split out of /admin/documents. SPD now has its
       // own reachable review queue at /hrbp/doc-review (outside admin/layout's hr_admin+ gate, so
       // the route's own guard admits spd + hr_admin + hr_manager). hr-docs keeps /admin/documents.
