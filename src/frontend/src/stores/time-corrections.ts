@@ -79,6 +79,22 @@ interface TimeCorrectionsState {
   clear: () => void;
 }
 
+/**
+ * Latest NON-rejected correction for an employee on a given day — display only
+ * (drives the inline row chip + the approved-overlay). This is deliberately
+ * SEPARATE from the form's submit-time conflict guard (corrections/page.tsx),
+ * which is left untouched. Pure over a passed-in list so it stays unit-testable.
+ */
+export function latestCorrectionForDate(
+  requests: TimeCorrectionRequest[],
+  empId: string,
+  date: string,
+): TimeCorrectionRequest | undefined {
+  return requests
+    .filter((r) => r.employeeId === empId && r.date === date && r.status !== 'rejected')
+    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))[0];
+}
+
 function generateTimeCorrectionId(): string {
   const ts = new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
