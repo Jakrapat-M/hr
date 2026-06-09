@@ -22,3 +22,23 @@ export const TIME_OFF_LEDGER: LeaveLedgerRow[] = [
 export function endingBalance(r: LeaveLedgerRow): number {
   return r.initial + r.credits - r.debits;
 }
+
+export type LeaveBalanceCard = {
+  /** Total available this period (initial + credits). */
+  entitled: number;
+  /** Days taken (debits). */
+  used: number;
+  /** Days left (ending balance). */
+  remaining: number;
+  /** Used as a 0..100 share of entitlement (0 when nothing is entitled). */
+  percentUsed: number;
+};
+
+/** At-a-glance metrics for a leave-balance progress card. Pure → unit-testable. */
+export function leaveBalanceCard(r: LeaveLedgerRow): LeaveBalanceCard {
+  const entitled = r.initial + r.credits;
+  const used = r.debits;
+  const remaining = endingBalance(r);
+  const percentUsed = entitled > 0 ? Math.round((used / entitled) * 100) : 0;
+  return { entitled, used, remaining, percentUsed };
+}
