@@ -24,9 +24,10 @@ import { currentPeriod } from '@/lib/time/period';
 import { getAttendanceForPeriod, ecPlanHoursFor } from '@/lib/time/attendance-seed';
 import { getShiftCode } from '@/lib/time/shift-codes';
 import { templateForEmployee } from '@/lib/time/schedule-template';
-import { validateDwsDay, DWS_LEVEL_CLASS, dwsLabel } from '@/lib/time/dws-validation';
+import { validateDwsDay, validateDwsPeriod, DWS_LEVEL_CLASS, dwsLabel } from '@/lib/time/dws-validation';
 import { lateMinutesFor, formatLate, periodLateSummary, type AttendanceDay } from '@/lib/time/attendance-math';
 import { computeResultsForPeriod, resultsSummary, WAGE_TYPE_LABEL } from '@/lib/time/results-math';
+import { TIME_OFF_LEDGER, endingBalance } from '@/lib/time/time-off-ledger';
 import {
   useTimesheetSubmissions,
   validateTimesheet,
@@ -39,7 +40,7 @@ type Day = typeof DAYS[number];
 const DAY_LABEL_EN: Record<Day, string> = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const DAY_LABEL_TH: Record<Day, string> = { mon: 'จ', tue: 'อ', wed: 'พ', thu: 'พฤ', fri: 'ศ', sat: 'ส', sun: 'อา' };
 
-type TabKey = 'entry' | 'schedule' | 'late' | 'results' | 'weekly';
+type TabKey = 'entry' | 'schedule' | 'late' | 'results' | 'punch' | 'timeoff' | 'messages' | 'weekly';
 
 function fmtDate(iso: string, isTh: boolean): string {
   return new Date(iso + 'T00:00:00Z').toLocaleDateString(isTh ? 'th-TH' : 'en-US', {
@@ -66,6 +67,16 @@ export default function TimesheetPage() {
   const tmpl = templateForEmployee(empId);
   const results = useMemo(() => computeResultsForPeriod(empId), [empId]);
   const resSummary = useMemo(() => resultsSummary(results), [results]);
+  const messages = useMemo(() => {
+    const dws = validateDwsPeriod(days);
+    const msgs: { level: 'ok' | 'warn'; th: string; en: string }[] = [
+      { level: 'ok', th: 'ข้อมูลรอบนี้พร้อมส่งให้ผู้จัดการตรวจสอบ', en: 'This period is ready for manager review.' },
+    ];
+    if (lateSummary.lateDays > 0) msgs.push({ level: 'warn', th: `พบวันมาสาย ${lateSummary.lateDays} วัน (รวม ${lateSummary.totalLateMin} นาที)`, en: `${lateSummary.lateDays} late day(s) — ${lateSummary.totalLateMin} min total.` });
+    if (dws.red > 0) msgs.push({ level: 'warn', th: `มี ${dws.red} วันที่ตารางกะไม่ถูกต้อง`, en: `${dws.red} day(s) with an invalid schedule.` });
+    if (dws.yellow > 0) msgs.push({ level: 'warn', th: `มี ${dws.yellow} วันที่ต้องรับรองกะต่อเนื่อง`, en: `${dws.yellow} day(s) need continuous-shift certification.` });
+    return msgs;
+  }, [days, lateSummary]);
 
   const [tab, setTab] = useState<TabKey>('entry');
 
@@ -99,7 +110,10 @@ export default function TimesheetPage() {
     { key: 'entry', labelTh: 'บันทึกเวลา', labelEn: 'Time Entry' },
     { key: 'schedule', labelTh: 'ตารางกะ', labelEn: 'Schedule' },
     { key: 'late', labelTh: 'มาสาย', labelEn: 'Late' },
+    { key: 'punch', labelTh: 'ปั๊มเวลา', labelEn: 'Punch Log' },
     { key: 'results', labelTh: 'ผลคำนวณ', labelEn: 'Results' },
+    { key: 'timeoff', labelTh: 'วันลาคงเหลือ', labelEn: 'Time Off' },
+    { key: 'messages', labelTh: 'ข้อความ', labelEn: 'Messages' },
     { key: 'weekly', labelTh: 'ชั่วโมงรายสัปดาห์', labelEn: 'Weekly hours' },
   ];
 
@@ -305,6 +319,85 @@ export default function TimesheetPage() {
             </div>
           </Card>
         </div>
+      )}
+
+      {/* ── Tab: Punch Log (raw clock punches, wiki §1) ── */}
+      {tab === 'punch' && isClocking && (
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-hairline text-left text-ink-muted">
+                  <th className="py-3 px-3 font-semibold">{isTh ? 'วันที่' : 'Date'}</th>
+                  <th className="py-3 px-3 font-semibold">{isTh ? 'ประเภท' : 'Type'}</th>
+                  <th className="py-3 px-3 font-semibold">{isTh ? 'เวลา' : 'Time'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {days.flatMap((d) => {
+                  if (d.dayOff || !d.actualIn) return [];
+                  return [
+                    <tr key={`${d.date}-in`} className="border-b border-hairline last:border-0">
+                      <td className="py-2 px-3 text-ink whitespace-nowrap">{fmtDate(d.date, isTh)}</td>
+                      <td className="py-2 px-3"><span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">{isTh ? 'เข้า' : 'IN'}</span></td>
+                      <td className="py-2 px-3 tabular-nums text-ink">{d.actualIn}</td>
+                    </tr>,
+                    <tr key={`${d.date}-out`} className="border-b border-hairline last:border-0">
+                      <td className="py-2 px-3 text-ink whitespace-nowrap">{fmtDate(d.date, isTh)}</td>
+                      <td className="py-2 px-3"><span className="rounded-full bg-canvas-soft px-2 py-0.5 text-xs font-medium text-ink-muted">{isTh ? 'ออก' : 'OUT'}</span></td>
+                      <td className="py-2 px-3 tabular-nums text-ink">{d.actualOut ?? '—'}</td>
+                    </tr>,
+                  ];
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* ── Tab: Time Off balance ledger (wiki §6) ── */}
+      {tab === 'timeoff' && (
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-hairline text-left text-ink-muted">
+                  <th className="py-3 px-3 font-semibold">{isTh ? 'ประเภทการลา' : 'Leave type'}</th>
+                  <th className="py-3 px-3 font-semibold text-right">{isTh ? 'ยอดยกมา' : 'Initial'}</th>
+                  <th className="py-3 px-3 font-semibold text-right">{isTh ? 'เพิ่ม' : 'Credits'}</th>
+                  <th className="py-3 px-3 font-semibold text-right">{isTh ? 'ใช้ไป' : 'Debits'}</th>
+                  <th className="py-3 px-3 font-semibold text-right">{isTh ? 'คงเหลือ' : 'Ending'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {TIME_OFF_LEDGER.map((r) => (
+                  <tr key={r.kind} className="border-b border-hairline last:border-0">
+                    <td className="py-2 px-3 text-ink">{isTh ? r.nameTh : r.nameEn}</td>
+                    <td className="py-2 px-3 text-right tabular-nums text-ink-muted">{r.initial}</td>
+                    <td className="py-2 px-3 text-right tabular-nums text-ink-muted">{r.credits}</td>
+                    <td className="py-2 px-3 text-right tabular-nums text-ink-muted">{r.debits}</td>
+                    <td className="py-2 px-3 text-right tabular-nums font-semibold text-ink">{endingBalance(r)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-small text-ink-muted">{isTh ? 'หน่วย: วัน · คงเหลือ = ยอดยกมา + เพิ่ม − ใช้ไป' : 'In days · Ending = Initial + Credits − Debits'}</p>
+        </Card>
+      )}
+
+      {/* ── Tab: Messages (validation / approval notices, wiki §1) ── */}
+      {tab === 'messages' && (
+        <Card>
+          <ul className="divide-y divide-hairline">
+            {messages.map((m, i) => (
+              <li key={i} className="flex items-start gap-2 py-3">
+                {m.level === 'warn' ? <AlertTriangle size={16} className="mt-0.5 shrink-0 text-warning" aria-hidden /> : <Check size={16} className="mt-0.5 shrink-0 text-accent" aria-hidden />}
+                <span className="text-body text-ink">{isTh ? m.th : m.en}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
 
       {/* ── Tab: Weekly hours (legacy project-hours grid — preserved) ── */}
