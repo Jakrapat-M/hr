@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Clock, CalendarOff, Timer, CheckSquare, ClipboardList, PencilLine } from 'lucide-react';
+import { Clock, CalendarOff, Timer, CheckSquare, ClipboardList, PencilLine, CalendarDays } from 'lucide-react';
 import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
@@ -69,6 +69,15 @@ const MANAGER_TILES = [
     descEn: 'Read-only view of timesheets submitted by your team',
     descTh: 'มุมมองแบบอ่านอย่างเดียวของใบบันทึกเวลาที่ทีมส่ง',
     href: 'time/review',
+  },
+  {
+    key: 'shift-schedule',
+    icon: CalendarDays,
+    titleEn: 'Team Shift Schedule',
+    titleTh: 'ตารางกะทีม',
+    descEn: 'Assign and validate team shifts from the working pattern',
+    descTh: 'กำหนดและตรวจสอบตารางกะของทีมจากรูปแบบเวลาทำงาน',
+    href: 'time/shift-schedule',
   },
 ] as const;
 
