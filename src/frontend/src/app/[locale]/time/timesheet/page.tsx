@@ -30,11 +30,31 @@ import { computeResultsForPeriod, resultsSummary, WAGE_TYPE_LABEL } from '@/lib/
 import { TIME_OFF_LEDGER, endingBalance } from '@/lib/time/time-off-ledger';
 import { heroSummary, getExceptionsForPeriod } from '@/lib/time/exceptions';
 import {
+  useTimeCorrections,
+  latestCorrectionForDate,
+  type CorrectionType,
+  type TimeCorrectionRequest,
+} from '@/stores/time-corrections';
+import {
+  approvedCorrectionDates,
+  adjustHeroForApproved,
+  openExceptions,
+} from '@/lib/time/correction-overlay';
+import { TimeCorrectionForm } from '@/components/time/TimeCorrectionForm';
+import { Modal } from '@/components/humi';
+import {
   useTimesheetSubmissions,
   validateTimesheet,
   sumTimesheetHours,
   type TimesheetSubmissionRow,
 } from '@/stores/timesheet-submissions';
+
+/** Best-guess punch type for a row's correction prefill (user can still change it). */
+function detectCorrectionType(d: AttendanceDay): CorrectionType {
+  if (!d.actualIn) return 'in';
+  if (!d.actualOut) return 'out';
+  return 'in';
+}
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 type Day = typeof DAYS[number];
@@ -64,8 +84,31 @@ export default function TimesheetPage() {
   const period = currentPeriod();
   const days = useMemo(() => getAttendanceForPeriod(empId), [empId]);
   const lateSummary = useMemo(() => periodLateSummary(days), [days]);
-  const hero = useMemo(() => heroSummary(empId), [empId]);
-  const exceptions = useMemo(() => getExceptionsForPeriod(empId), [empId]);
+  const heroRaw = useMemo(() => heroSummary(empId), [empId]);
+  const exceptionsRaw = useMemo(() => getExceptionsForPeriod(empId), [empId]);
+
+  // Overlay the PURE seed-derived hero/exceptions with live corrections: once a
+  // manager approves a correction for a day, that day resolves in the at-a-glance
+  // hero + exception list (exceptions.ts itself stays pure). Period-scoped to the
+  // current period's days so stale localStorage corrections can't leak in.
+  const correctionRequests = useTimeCorrections((s) => s.requests);
+  const periodDates = useMemo(() => new Set(days.map((d) => d.date)), [days]);
+  const approvedDates = useMemo(
+    () => approvedCorrectionDates(correctionRequests, empId, periodDates),
+    [correctionRequests, empId, periodDates],
+  );
+  const hero = useMemo(
+    () => adjustHeroForApproved(heroRaw, exceptionsRaw, approvedDates),
+    [heroRaw, exceptionsRaw, approvedDates],
+  );
+  const exceptions = useMemo(
+    () => openExceptions(exceptionsRaw, approvedDates),
+    [exceptionsRaw, approvedDates],
+  );
+
+  // Inline correction modal — the row a manager/employee is correcting.
+  const [correctionDay, setCorrectionDay] = useState<AttendanceDay | null>(null);
+  const corrForDate = (date: string) => latestCorrectionForDate(correctionRequests, empId, date);
   const ecPlan = ecPlanHoursFor(empId);
   const tmpl = templateForEmployee(empId);
   const results = useMemo(() => computeResultsForPeriod(empId), [empId]);
@@ -220,7 +263,15 @@ export default function TimesheetPage() {
                 </tr>
               </thead>
               <tbody>
-                {days.map((d) => <TimeEntryRow key={d.date} d={d} isTh={isTh} locale={locale} />)}
+                {days.map((d) => (
+                  <TimeEntryRow
+                    key={d.date}
+                    d={d}
+                    isTh={isTh}
+                    correction={corrForDate(d.date)}
+                    onCorrect={() => setCorrectionDay(d)}
+                  />
+                ))}
               </tbody>
             </table>
           </div>
@@ -288,18 +339,25 @@ export default function TimesheetPage() {
             <CardTitle className="text-base">{isTh ? 'รายวันที่มาสาย' : 'Late days detail'}</CardTitle>
             <div className="mt-3 overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="border-b border-hairline text-left text-ink-muted"><th className="py-2 px-3 font-semibold">{isTh ? 'วันที่' : 'Date'}</th><th className="py-2 px-3 font-semibold">{isTh ? 'กะเข้า' : 'Scheduled in'}</th><th className="py-2 px-3 font-semibold">{isTh ? 'เข้าจริง' : 'Actual in'}</th><th className="py-2 px-3 font-semibold">{isTh ? 'สาย' : 'Late'}</th></tr></thead>
+                <thead><tr className="border-b border-hairline text-left text-ink-muted"><th className="py-2 px-3 font-semibold">{isTh ? 'วันที่' : 'Date'}</th><th className="py-2 px-3 font-semibold">{isTh ? 'กะเข้า' : 'Scheduled in'}</th><th className="py-2 px-3 font-semibold">{isTh ? 'เข้าจริง' : 'Actual in'}</th><th className="py-2 px-3 font-semibold">{isTh ? 'สาย' : 'Late'}</th><th className="py-2 px-3 font-semibold sr-only">action</th></tr></thead>
                 <tbody>
-                  {days.filter((d) => (lateMinutesFor(d) ?? 0) > 0).map((d) => (
-                    <tr key={d.date} className="border-b border-hairline last:border-0">
-                      <td className="py-2 px-3 text-ink">{fmtDate(d.date, isTh)}</td>
-                      <td className="py-2 px-3 tabular-nums text-ink-muted">{d.scheduledIn}</td>
-                      <td className="py-2 px-3 tabular-nums text-ink">{d.actualIn}</td>
-                      <td className="py-2 px-3"><span className="rounded-full bg-danger-soft px-2 py-0.5 text-xs font-medium text-danger">{formatLate(lateMinutesFor(d), isTh)}</span></td>
-                    </tr>
-                  ))}
+                  {days.filter((d) => (lateMinutesFor(d) ?? 0) > 0).map((d) => {
+                    const corr = corrForDate(d.date);
+                    const resolved = corr?.status === 'approved';
+                    return (
+                      <tr key={d.date} className="border-b border-hairline last:border-0">
+                        <td className="py-2 px-3 text-ink">{fmtDate(d.date, isTh)}</td>
+                        <td className="py-2 px-3 tabular-nums text-ink-muted">{d.scheduledIn}</td>
+                        <td className="py-2 px-3 tabular-nums text-ink">{d.actualIn}</td>
+                        <td className="py-2 px-3"><span className={`rounded-full bg-danger-soft px-2 py-0.5 text-xs font-medium text-danger ${resolved ? 'line-through opacity-60' : ''}`}>{formatLate(lateMinutesFor(d), isTh)}</span></td>
+                        <td className="py-2 px-3 text-right">
+                          <CorrectionCell d={d} isTh={isTh} correction={corr} onCorrect={() => setCorrectionDay(d)} />
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {lateSummary.lateDays === 0 && (
-                    <tr><td colSpan={4} className="py-6 text-center text-ink-muted">{isTh ? 'ไม่มีวันมาสายในรอบนี้' : 'No late days this period'}</td></tr>
+                    <tr><td colSpan={5} className="py-6 text-center text-ink-muted">{isTh ? 'ไม่มีวันมาสายในรอบนี้' : 'No late days this period'}</td></tr>
                   )}
                 </tbody>
               </table>
@@ -480,13 +538,83 @@ export default function TimesheetPage() {
           </div>
         </div>
       )}
+
+      {/* Inline time-correction modal (SF-parity: edit on the row, no nav away) */}
+      <Modal
+        open={correctionDay !== null}
+        onClose={() => setCorrectionDay(null)}
+        title={isTh ? 'ขอแก้ไขเวลาเข้า-ออกงาน' : 'Request a time correction'}
+        widthClass="max-w-2xl"
+      >
+        {correctionDay && (
+          <TimeCorrectionForm
+            subjectEmpId={empId}
+            subjectName={username ?? undefined}
+            prefill={{ date: correctionDay.date, correctionType: detectCorrectionType(correctionDay) }}
+            onSubmitted={() => {
+              setCorrectionDay(null);
+              setToast(isTh ? 'ส่งคำขอแก้ไขเวลาแล้ว — รอหัวหน้าอนุมัติ' : 'Correction submitted — awaiting manager');
+              window.setTimeout(() => setToast(null), 3200);
+            }}
+            onCancel={() => setCorrectionDay(null)}
+          />
+        )}
+      </Modal>
     </div>
   );
 }
 
-function TimeEntryRow({ d, isTh, locale }: { d: AttendanceDay; isTh: boolean; locale: string }) {
+function CorrectionCell({
+  d,
+  isTh,
+  correction,
+  onCorrect,
+}: {
+  d: AttendanceDay;
+  isTh: boolean;
+  correction?: TimeCorrectionRequest;
+  onCorrect: () => void;
+}) {
+  if (d.dayOff) return null;
+  if (correction) {
+    const approved = correction.status === 'approved';
+    return (
+      <span
+        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${
+          approved ? 'bg-accent-soft text-accent' : 'bg-warning-soft text-[var(--color-danger-ink)]'
+        }`}
+      >
+        {approved
+          ? isTh ? 'แก้ไขแล้ว' : 'Corrected'
+          : isTh ? 'รออนุมัติ' : 'Pending'}
+      </span>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onCorrect}
+      className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline whitespace-nowrap"
+    >
+      <PencilLine size={12} aria-hidden />{isTh ? 'แก้ไข' : 'Correct'}
+    </button>
+  );
+}
+
+function TimeEntryRow({
+  d,
+  isTh,
+  correction,
+  onCorrect,
+}: {
+  d: AttendanceDay;
+  isTh: boolean;
+  correction?: TimeCorrectionRequest;
+  onCorrect: () => void;
+}) {
   const sc = getShiftCode(d.shiftCode);
   const late = lateMinutesFor(d);
+  const resolved = correction?.status === 'approved';
   return (
     <tr className="border-b border-hairline last:border-0 hover:bg-canvas-soft">
       <td className="py-2 px-3 text-ink whitespace-nowrap">{fmtDate(d.date, isTh)}</td>
@@ -499,17 +627,13 @@ function TimeEntryRow({ d, isTh, locale }: { d: AttendanceDay; isTh: boolean; lo
         {late === null ? (
           <span className="text-ink-faint">—</span>
         ) : late > 0 ? (
-          <span className="rounded-full bg-danger-soft px-2 py-0.5 text-xs font-medium text-danger whitespace-nowrap">{formatLate(late, isTh)}</span>
+          <span className={`rounded-full bg-danger-soft px-2 py-0.5 text-xs font-medium text-danger whitespace-nowrap ${resolved ? 'line-through opacity-60' : ''}`}>{formatLate(late, isTh)}</span>
         ) : (
           <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent whitespace-nowrap">{isTh ? 'ตรงเวลา' : 'On time'}</span>
         )}
       </td>
       <td className="py-2 px-3 text-right">
-        {!d.dayOff && (
-          <Link href={`/${locale}/time/corrections?date=${d.date}`} className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline whitespace-nowrap">
-            <PencilLine size={12} aria-hidden />{isTh ? 'แก้ไข' : 'Correct'}
-          </Link>
-        )}
+        <CorrectionCell d={d} isTh={isTh} correction={correction} onCorrect={onCorrect} />
       </td>
     </tr>
   );
