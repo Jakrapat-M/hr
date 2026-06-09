@@ -73,12 +73,12 @@ export default function HRBPBenefitsReportsPage() {
         {/* STA-68 — Persona / store-based mock scope demo */}
         <div className="mt-3 rounded-lg border border-accent/30 bg-accent-soft p-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-            {isTh ? 'STA-68 · ขอบเขตข้อมูล (จำลองจาก persona/store)' : 'STA-68 · persona-/store-based mock scope'}
+            {isTh ? 'ขอบเขตข้อมูลตามผู้ใช้งาน' : 'Data scope by user'}
           </p>
           <p className="mt-1 text-xs text-ink">
             {isTh
-              ? 'สลับ persona ด้านล่างเพื่อจำลองการกรองตามแผนกของ HRBP. HR Admin จะมองเห็นทุกแผนกเพื่อเปรียบเทียบ. (Mockup — ไม่ใช่การบังคับใช้ authz จริง.)'
-              : 'Switch persona below to simulate HRBP department-scoped filtering. HR Admin sees all departments for comparison. (Mock — not real authz enforcement.)'}
+              ? 'สลับผู้ใช้งานด้านล่างเพื่อดูการกรองตามแผนกของ HRBP · ผู้ดูแลระบบเห็นได้ทุกแผนกเพื่อเปรียบเทียบ'
+              : 'Switch the user below to see HRBP department-scoped filtering. HR Admin sees all departments for comparison.'}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {PERSONAS.map((p) => (

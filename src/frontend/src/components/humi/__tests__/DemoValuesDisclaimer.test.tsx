@@ -11,7 +11,7 @@ describe('DemoValuesDisclaimer', () => {
     render(<DemoValuesDisclaimer />);
 
     const note = screen.getByRole('note', { name: 'Demo values disclaimer' });
-    expect(note).toHaveTextContent('ข้อมูลตัวเลขในเดโมเป็นตัวอย่างเพื่อการนำเสนอ');
-    expect(note).toHaveTextContent('Demo values are illustrative until backend integration.');
+    expect(note).toHaveTextContent('ข้อมูลที่แสดงเป็นตัวอย่างสำหรับการนำเสนอ');
+    expect(note).toHaveTextContent('Sample data shown for demonstration.');
   });
 });

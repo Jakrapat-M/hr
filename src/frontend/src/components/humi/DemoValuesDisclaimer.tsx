@@ -19,8 +19,8 @@ export function DemoValuesDisclaimer({ compact = false, className, ...props }: D
     >
       <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
       <p>
-        <span className="font-semibold text-ink">ข้อมูลตัวเลขในเดโมเป็นตัวอย่างเพื่อการนำเสนอ</span>
-        {' '}จนกว่าจะเชื่อมต่อ backend · Demo values are illustrative until backend integration.
+        <span className="font-semibold text-ink">ข้อมูลที่แสดงเป็นตัวอย่างสำหรับการนำเสนอ</span>
+        {' '}· Sample data shown for demonstration.
       </p>
     </div>
   );

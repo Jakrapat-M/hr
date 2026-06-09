@@ -91,7 +91,7 @@ describe('PersonaSwitcher — SF realignment', () => {
     render(<PersonaSwitcher />);
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getAllByText('สวมบทบาทแทน').length).toBeGreaterThan(0);
-    expect(within(dialog).getByText('RBAC · 4 ระดับ')).toBeInTheDocument();
+    expect(within(dialog).getByText('สิทธิ์ตามบทบาท · 4 ระดับ')).toBeInTheDocument();
   });
 
   it('AC3 (en): modal header uses SF copy', () => {

@@ -46,12 +46,12 @@ export default function SpdBenefitsBranchViewRoute() {
         {/* STA-68 — Persona / store-based mock scope demo */}
         <div className="mt-3 rounded-lg border border-accent/30 bg-accent-soft p-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-            {isTh ? 'STA-68 · ขอบเขตข้อมูล (จำลองจาก persona/store)' : 'STA-68 · persona-/store-based mock scope'}
+            {isTh ? 'ขอบเขตข้อมูลตามผู้ใช้งาน' : 'Data scope by user'}
           </p>
           <p className="mt-1 text-xs text-ink">
             {isTh
-              ? 'หน้านี้กรองข้อมูลตาม assignedBranches ของ SPD persona ที่ active. แถวของสาขาอื่นจะถูกซ่อนจากตาราง (ไม่ได้แสดงแบบเทา). HR Admin จะมองเห็นทุกสาขา. (Mockup — ไม่ใช่การบังคับใช้ authz จริง.)'
-              : 'This page filters by the active SPD persona\'s assignedBranches. Out-of-scope rows are fully hidden (not dimmed). HR Admin sees all branches. (Mock — not real authz enforcement.)'}
+              ? 'หน้านี้แสดงเฉพาะสาขาที่ผู้ใช้งานดูแล สาขาอื่นจะถูกซ่อน · ผู้ดูแลระบบเห็นได้ทุกสาขา'
+              : 'This page shows only the branches the current user manages; other branches are hidden. HR Admin sees all branches.'}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <span className="rounded-full border border-accent bg-surface px-3 py-1 text-xs font-medium text-accent">

@@ -21,7 +21,7 @@ describe('admin benefit deferred service configuration', () => {
     expect(screen.queryByText('Tax Planning configuration preview')).not.toBeInTheDocument();
     expect(screen.queryByText('Tax review requests')).not.toBeInTheDocument();
     expect(screen.queryByText('Payroll sync disabled')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'ePatient sync — วางแผนหลังเปิดใช้ Backend' })).toBeDisabled();
+    expect(screen.getByText('ePatient sync — ยังไม่พร้อมใช้งาน')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /ส่งบัญชี \(Payment\)/ })).toHaveAttribute('href', '/th/admin/benefits/payment');
     expect(screen.getByRole('link', { name: /สร้างไฟล์ธนาคาร \(Payment\)/ })).toHaveAttribute('href', '/th/admin/benefits/payment');
     expect(screen.getByText('Benefit master data')).toBeInTheDocument();

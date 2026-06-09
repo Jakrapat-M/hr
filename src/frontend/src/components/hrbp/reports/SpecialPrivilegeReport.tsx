@@ -143,8 +143,8 @@ export function SpecialPrivilegeReport() {
           {isTh ? `${records.length} รายการ` : `${records.length} records`}
           {' · '}
           {isTh
-            ? 'ขอบเขตแผนก: ข้อมูลจำลอง ยังไม่กรองตามแผนกจริง'
-            : 'Dept scope: mock data — filter not applied in mockup phase'}
+            ? 'ขอบเขตแผนก: ข้อมูลตัวอย่าง (การกรองเป็นตัวอย่าง)'
+            : 'Department scope: sample data (filtering is illustrative)'}
         </div>
       </Card>
     </div>
