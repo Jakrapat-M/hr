@@ -75,12 +75,11 @@ describe('benefit workflow surfaces', () => {
 
     render(<AdminBenefitsPage />);
 
-    expect(screen.getByRole('heading', { name: /Benefits governance/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /จัดการสวัสดิการ|Benefits administration/ })).toBeInTheDocument();
     expect(screen.getAllByText('Benefit master data').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Eligibility rules').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Benefit Special Privilege and EBO reporting').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Approval workflow and cutoff schedule').length).toBeGreaterThan(0);
-    expect(screen.getByText('CSV export shape preview')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Export CSV (จำลอง)' })).toBeEnabled();
     expect(screen.getByRole('link', { name: /ส่งบัญชี \(Payment\)/ })).toHaveAttribute('href', '/th/admin/benefits/payment');
     expect(screen.getByRole('link', { name: /สร้างไฟล์ธนาคาร \(Payment\)/ })).toHaveAttribute('href', '/th/admin/benefits/payment');

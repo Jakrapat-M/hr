@@ -50,22 +50,24 @@ describe('benefit workflow/admin surfaces', () => {
     expect(useBenefitClaimsStore.getState().claims[0].status).toBe('send_back');
   });
 
-  it('admin benefits route renders read-only configuration, reporting, payment, and deferred BE user management', async () => {
+  it('admin benefits hub renders the workspace launcher, integrations, and collapsed reference data', async () => {
     useBenefitClaimsStore.getState().submitClaim(input);
     const { default: AdminBenefitsPage } = await import('@/app/[locale]/admin/benefits/page');
 
     render(<AdminBenefitsPage />);
 
+    // Workspace launcher cards (replaced the old scattered action buttons)
+    expect(screen.getByText('กฎสิทธิ์')).toBeInTheDocument();
+    expect(screen.getByText('การเชื่อมต่อและซิงก์')).toBeInTheDocument();
+    // HR-friendly demo notice (no dev/backend jargon)
+    expect(screen.getByRole('note', { name: 'Demo values disclaimer' })).toHaveTextContent('Sample data shown for demonstration.');
+    // Read-only reference tables still present (collapsed by default, in DOM)
     expect(screen.getByText('Benefit master data')).toBeInTheDocument();
-    expect(screen.getByRole('note', { name: 'Demo values disclaimer' })).toHaveTextContent('Demo values are illustrative until backend integration.');
     expect(screen.getByText('Eligibility rules')).toBeInTheDocument();
     expect(screen.getByText('Benefit Special Privilege and EBO reporting')).toBeInTheDocument();
     expect(screen.getByText('Amount rules')).toBeInTheDocument();
     expect(screen.getByText('Field configuration')).toBeInTheDocument();
     expect(screen.getByText('Workflow and cutoff schedule')).toBeInTheDocument();
-    expect(screen.getByText('Benefit claim report fields')).toBeInTheDocument();
-    expect(screen.getByText(/Read-only payment period status/)).toBeInTheDocument();
-    expect(screen.getByText('Data permission group editing')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Export CSV (จำลอง)' })).toBeEnabled();
   });
 });
