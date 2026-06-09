@@ -2,12 +2,21 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Clock, CalendarOff, Timer, CheckSquare, ClipboardList, PencilLine, CalendarDays } from 'lucide-react';
+import { Clock, CalendarOff, Timer, CheckSquare, ClipboardList, PencilLine, CalendarDays, LogIn } from 'lucide-react';
 import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
 
 const TILES = [
+  {
+    key: 'clock',
+    icon: LogIn,
+    titleEn: 'Clock In / Out',
+    titleTh: 'ลงเวลาเข้า-ออก',
+    descEn: 'Punch in and out for today',
+    descTh: 'ลงเวลาเข้า-ออกงานสำหรับวันนี้',
+    href: 'time/clock',
+  },
   {
     key: 'timesheet',
     icon: Clock,
