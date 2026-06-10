@@ -3,50 +3,19 @@
 import { useState, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  ChevronRight,
-  ChevronDown,
-  Download,
-  ArrowRight,
-} from 'lucide-react';
+import Link from 'next/link';
+import { CheckCircle, ChevronRight, Download, ArrowRight } from 'lucide-react';
 import { Card, Button, Avatar } from '@/components/humi';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useProbationCases, STATUS_LABEL, type ProbationStatus } from '@/hooks/use-probation';
+import { useProbationCases } from '@/hooks/use-probation';
 import { formatDate } from '@/lib/date';
 
 type TierKey = 'all' | 'urgent' | 'warn' | 'normal';
 
-const STATUS_BADGE: Record<ProbationStatus, 'warning' | 'info' | 'success' | 'error' | 'neutral'> = {
-  pending_manager: 'warning',
-  pending_hr: 'info',
-  approved: 'success',
-  rejected: 'error',
-  extended: 'warning',
-  escalated_ceo: 'error',
-};
-
-const STATUS_ICON: Record<ProbationStatus, React.ReactNode> = {
-  pending_manager: <Clock className="h-4 w-4 text-warning" />,
-  pending_hr: <AlertTriangle className="h-4 w-4 text-info" />,
-  approved: <CheckCircle className="h-4 w-4 text-success" />,
-  rejected: <XCircle className="h-4 w-4 text-danger" />,
-  extended: <Clock className="h-4 w-4 text-warning" />,
-  escalated_ceo: <AlertTriangle className="h-4 w-4 text-danger" />,
-};
-
 // Avatar tones to cycle through (Humi token-backed, NO raw hex).
 const AVATAR_TONES = ['teal', 'sage', 'butter', 'ink'] as const;
 
-// Probation approval chain: Manager → HR Director (2 stages)
-const CHAIN_STAGES = [
-  { key: 'manager', labelTh: 'หัวหน้างาน', labelEn: 'Manager' },
-  { key: 'hr', labelTh: 'HR Director', labelEn: 'HR Director' },
-];
+// Shared CSS grid template — header + body rows stay column-aligned (ref prod-probation.jsx).
+const ROW_GRID = '40px 2.2fr 1.4fr 1fr 1.4fr 150px';
 
 /** Days remaining until probation end date. Negative = overdue. */
 function daysToProbationEnd(probationEndDate: string): number {
@@ -60,60 +29,19 @@ function tierOf(daysRemaining: number): Exclude<TierKey, 'all'> {
   return 'normal';
 }
 
-function ProbationApprovalChain({
-  status,
-  locale,
-}: {
-  status: ProbationStatus;
-  locale: string;
-}) {
-  const activeIdx =
-    status === 'pending_manager' ? 0
-    : status === 'pending_hr' || status === 'escalated_ceo' ? 1
-    : -1;
-
-  const doneUpTo =
-    status === 'approved' ? 1
-    : status === 'pending_hr' || status === 'escalated_ceo' ? 0
-    : -1;
-
-  const isRejected = status === 'rejected';
-  const isExtended = status === 'extended';
-
-  return (
-    <div
-      className="flex items-center gap-1.5 flex-wrap"
-      aria-label={locale === 'th' ? 'ขั้นตอนอนุมัติ' : 'Approval chain'}
-    >
-      {CHAIN_STAGES.map((stage, idx) => {
-        const label = locale === 'th' ? stage.labelTh : stage.labelEn;
-        const isDone = idx <= doneUpTo;
-        const isActive = idx === activeIdx;
-        const isFailed = (isRejected || isExtended) && idx === 0;
-
-        return (
-          <div key={stage.key} className="flex items-center gap-1.5">
-            <span
-              className={`inline-flex items-center rounded-[var(--radius-sm)] px-2 py-0.5 text-xs font-medium ${
-                isFailed
-                  ? 'bg-danger-soft text-danger-ink border border-danger'
-                  : isActive
-                  ? 'bg-warning-soft text-warning-ink border border-warning'
-                  : isDone
-                  ? 'bg-success-soft text-success-ink border border-success'
-                  : 'bg-surface-raised text-ink-muted'
-              }`}
-            >
-              {label}
-            </span>
-            {idx < CHAIN_STAGES.length - 1 && (
-              <span aria-hidden className="text-ink-muted text-xs">→</span>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
+/** Calendar tenure since hire date, rendered as "{m} เดือน {d} วัน". */
+function tenureText(hireDate: string, locale: string): string {
+  const start = new Date(hireDate);
+  const now = new Date();
+  let months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+  let days = now.getDate() - start.getDate();
+  if (days < 0) {
+    months -= 1;
+    days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+  }
+  if (months < 0) months = 0;
+  if (days < 0) days = 0;
+  return locale === 'th' ? `${months} เดือน ${days} วัน` : `${months}mo ${days}d`;
 }
 
 type ProbationCaseT = ReturnType<typeof useProbationCases>['cases'][number];
@@ -133,7 +61,6 @@ function ProbationRow({
   selected: boolean;
   onToggle: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const daysRemaining = daysToProbationEnd(c.probationEndDate);
   const overdue = daysRemaining < 0;
   const tier = tierOf(daysRemaining);
@@ -142,144 +69,84 @@ function ProbationRow({
 
   const dueColor = isUrgent ? 'text-danger-ink' : isWarn ? 'text-warning-ink' : 'text-ink-soft';
 
-  const dotColor = (action: string) => {
-    if (action.includes('อนุมัติ') || action.includes('approved') || action.includes('ผ่าน')) return 'bg-success';
-    if (action.includes('ปฏิเสธ') || action.includes('reject') || action.includes('ไม่ผ่าน')) return 'bg-danger';
-    return 'bg-accent-soft';
-  };
-
   return (
-    <Card
-      className={`overflow-hidden transition-shadow hover:shadow-1 ${isUrgent ? 'border-l-[3px] border-l-danger' : ''}`}
+    <div
+      className="grid items-center gap-2 border-b border-hairline-soft px-[18px] py-4 transition-colors hover:bg-surface-raised/30"
+      style={{ gridTemplateColumns: ROW_GRID }}
     >
-      <div className="flex items-stretch">
-        {/* Bulk-select checkbox */}
-        <label className="flex items-center pl-4 pr-1 shrink-0 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={onToggle}
-            aria-label={`${locale === 'th' ? 'เลือก' : 'Select'} ${c.fullNameTh}`}
-            className="h-4 w-4 accent-[var(--color-accent)] cursor-pointer"
-          />
-        </label>
+      {/* Bulk-select checkbox */}
+      <label className="flex cursor-pointer items-center">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggle}
+          aria-label={`${locale === 'th' ? 'เลือก' : 'Select'} ${c.fullNameTh}`}
+          className="h-4 w-4 cursor-pointer accent-[var(--color-accent)]"
+        />
+      </label>
 
-        {/* Main clickable link area */}
-        <a
-          href={`/${locale}/workflows/probation/${c.id}`}
-          className="block flex-1 min-w-0 py-4 pr-4 hover:bg-surface-raised/30 transition-colors"
-        >
-          <div className="flex items-center gap-4">
-            {/* Avatar */}
-            <Avatar
-              size="md"
-              tone={AVATAR_TONES[toneIdx % AVATAR_TONES.length]}
-              name={c.fullNameEn}
-              src={c.photo}
-            />
-
-            {/* Employee */}
-            <div className="min-w-0 flex-[2.2]">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-base font-semibold text-ink">{c.fullNameTh}</span>
-                {STATUS_ICON[c.status]}
-                <Badge variant={STATUS_BADGE[c.status]}>{STATUS_LABEL[c.status]}</Badge>
-              </div>
-              <p className="text-sm text-ink-muted mt-0.5">
-                {c.employeeId} · {c.fullNameEn}
-              </p>
-            </div>
-
-            {/* Position · Branch */}
-            <div className="min-w-0 flex-[1.4] hidden md:block">
-              <div className="text-sm text-ink-soft truncate">
-                {c.position} · {c.location ?? c.department}
-              </div>
-              <div className="text-xs text-ink-muted mt-0.5">
-                {t('probation.inbox.started')} {formatDate(c.hireDate, 'medium', locale)}
-              </div>
-            </div>
-
-            {/* Due in */}
-            <div className="shrink-0 w-28 hidden sm:block">
-              <div className={`text-sm font-semibold ${dueColor}`}>
-                {overdue
-                  ? t('probation.inbox.daysOverdue', { days: Math.abs(daysRemaining) })
-                  : t('probation.inbox.daysLeft', { days: daysRemaining })}
-              </div>
-              <div className="mt-0.5">
-                <ProbationApprovalChain status={c.status} locale={locale} />
-              </div>
-            </div>
-
-            {/* Note / status */}
-            <div className="min-w-0 flex-[1.4] hidden lg:block">
-              <p className="text-xs text-ink-muted leading-relaxed line-clamp-2">
-                {c.assessmentSummary ?? c.managerRemarks ?? '—'}
-              </p>
-            </div>
-
-            {/* Action */}
-            <div className="shrink-0 flex items-center gap-2">
-              {isUrgent && (
-                <span className="hidden xl:inline-flex items-center rounded-full bg-danger-soft text-danger-ink border border-danger px-2 py-0.5 text-xs font-medium">
-                  {t('probation.inbox.tagUrgent')}
-                </span>
-              )}
-              {isWarn && (
-                <span className="hidden xl:inline-flex items-center rounded-full bg-warning-soft text-warning-ink px-2 py-0.5 text-xs font-medium">
-                  {t('probation.inbox.tagWarn')}
-                </span>
-              )}
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-accent">
-                {t('probation.inbox.openCase')}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </span>
-              <ChevronRight className="h-4 w-4 text-ink-muted hidden sm:block" />
-            </div>
+      {/* Employee */}
+      <div className="flex min-w-0 items-center gap-3">
+        <Avatar
+          size="md"
+          tone={AVATAR_TONES[toneIdx % AVATAR_TONES.length]}
+          name={c.fullNameEn}
+          src={c.photo}
+        />
+        <div className="min-w-0">
+          <div className="truncate text-sm font-semibold tracking-tight text-ink">{c.fullNameTh}</div>
+          <div className="mt-0.5 truncate text-xs text-ink-muted">
+            {c.employeeId} · {c.fullNameEn}
           </div>
-        </a>
-      </div>
-
-      {/* Audit history expand */}
-      <div className="px-4 pb-2 pl-11">
-        <button
-          className="flex items-center gap-1 text-xs text-ink-muted hover:text-ink transition-colors"
-          onClick={() => setExpanded((v) => !v)}
-          aria-expanded={expanded}
-        >
-          {expanded
-            ? <ChevronDown className="h-3 w-3" aria-hidden />
-            : <ChevronRight className="h-3 w-3" aria-hidden />}
-          {locale === 'th' ? 'ประวัติการดำเนินการ' : 'Audit history'}
-          <span className="ml-1 text-ink-faint">({c.timeline.length})</span>
-        </button>
-      </div>
-
-      {expanded && (
-        <div className="px-4 pb-4 pt-1 border-t border-hairline bg-surface-raised/20">
-          <ol className="space-y-2 mt-2">
-            {c.timeline.map((entry, idx) => (
-              <li key={idx} className="flex gap-3 text-xs">
-                <span className={`w-1.5 h-1.5 rounded-full ${dotColor(entry.action)} mt-1.5 shrink-0`} />
-                <div>
-                  <span className="font-medium text-ink">{entry.actor}</span>
-                  {entry.actorRole !== 'System' && (
-                    <span className="text-ink-faint ml-1">({entry.actorRole})</span>
-                  )}
-                  {' '}
-                  <span className="text-ink-muted">{entry.action}</span>
-                  <span className="ml-2 text-ink-faint">{formatDate(entry.date, 'medium', locale)}</span>
-                  {entry.comment && (
-                    <p className="text-ink-muted mt-0.5 italic">&ldquo;{entry.comment}&rdquo;</p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ol>
         </div>
-      )}
-    </Card>
+      </div>
+
+      {/* Position · Branch */}
+      <div className="min-w-0">
+        <div className="truncate text-sm text-ink-soft">
+          {c.position} · {c.location ?? c.department}
+        </div>
+        <div className="mt-0.5 text-xs text-ink-muted">
+          {t('probation.inbox.started')} {formatDate(c.hireDate, 'medium', locale)}
+        </div>
+      </div>
+
+      {/* Due in + tenure */}
+      <div>
+        <div className={`text-sm font-semibold ${dueColor}`}>
+          {overdue
+            ? t('probation.inbox.daysOverdue', { days: Math.abs(daysRemaining) })
+            : t('probation.inbox.daysLeft', { days: daysRemaining })}
+        </div>
+        <div className="mt-0.5 text-xs text-ink-muted">{tenureText(c.hireDate, locale)}</div>
+      </div>
+
+      {/* Latest note */}
+      <div className="min-w-0 text-xs leading-relaxed text-ink-muted line-clamp-2">
+        {c.assessmentSummary ?? c.managerRemarks ?? '—'}
+      </div>
+
+      {/* Tag + open-case action */}
+      <div className="flex items-center justify-end gap-1.5">
+        {isUrgent && (
+          <span className="hidden items-center rounded-full border border-danger bg-danger-soft px-2 py-0.5 text-xs font-medium text-danger-ink xl:inline-flex">
+            {t('probation.inbox.tagUrgent')}
+          </span>
+        )}
+        {isWarn && (
+          <span className="hidden items-center rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning-ink xl:inline-flex">
+            {t('probation.inbox.tagWarn')}
+          </span>
+        )}
+        <Link
+          href={`/${locale}/workflows/probation/${c.id}`}
+          className="inline-flex items-center gap-1 rounded-[var(--radius-md)] border border-hairline px-3 py-1.5 text-xs font-medium text-ink transition hover:border-ink-faint hover:bg-surface-raised"
+        >
+          {t('probation.inbox.openCase')}
+          <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -325,6 +192,15 @@ export default function ProbationListPage() {
 
   return (
     <div className="max-w-6xl mx-auto pb-8">
+      {/* Breadcrumb */}
+      <nav className="mb-2 flex items-center gap-2 text-sm text-ink-muted" aria-label="breadcrumb">
+        <span>{t('probation.inbox.breadcrumbHub')}</span>
+        <ChevronRight className="h-3 w-3" aria-hidden />
+        <span>{t('probation.inbox.breadcrumbSection')}</span>
+        <ChevronRight className="h-3 w-3" aria-hidden />
+        <span className="text-ink">{t('probation.inbox.breadcrumbCurrent')}</span>
+      </nav>
+
       {/* Title block */}
       <div className="mb-5 flex items-start gap-4">
         <div className="min-w-0">
@@ -403,29 +279,37 @@ export default function ProbationListPage() {
         </div>
       )}
 
-      {/* Cases list */}
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="p-4">
-              <div className="flex items-center gap-4">
-                <Skeleton className="h-12 w-12 rounded-[var(--radius-md)]" />
+      {/* Cases table (single card, column-aligned — ref ProbationInbox) */}
+      <Card className="p-0 overflow-hidden">
+        {/* Column header */}
+        <div
+          className="grid items-center gap-2 border-b border-hairline bg-canvas-soft px-[18px] py-3 text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted"
+          style={{ gridTemplateColumns: ROW_GRID }}
+        >
+          <span aria-hidden />
+          <div>{t('probation.inbox.colEmployee')}</div>
+          <div>{t('probation.inbox.colPosition')}</div>
+          <div>{t('probation.inbox.colDue')}</div>
+          <div>{t('probation.inbox.colNote')}</div>
+          <div />
+        </div>
+
+        {loading ? (
+          <div className="space-y-3 p-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div className="h-9 w-9 animate-pulse rounded-full bg-canvas-soft" />
                 <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-48" />
-                  <Skeleton className="h-3 w-32" />
-                  <Skeleton className="h-3 w-56" />
+                  <div className="h-4 w-48 animate-pulse rounded bg-canvas-soft" />
+                  <div className="h-3 w-32 animate-pulse rounded bg-canvas-soft" />
                 </div>
               </div>
-            </Card>
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-ink-muted">{t('probation.noItemsInCategory')}</p>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((c, idx) => (
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center text-ink-muted">{t('probation.noItemsInCategory')}</div>
+        ) : (
+          filtered.map((c, idx) => (
             <ProbationRow
               key={c.id}
               c={c}
@@ -435,9 +319,9 @@ export default function ProbationListPage() {
               selected={!!selected[c.id]}
               onToggle={() => setSelected((s) => ({ ...s, [c.id]: !s[c.id] }))}
             />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </Card>
     </div>
   );
 }

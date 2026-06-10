@@ -3529,6 +3529,9 @@
     "submitDisabledHint": "Please complete all required fields before submitting",
     "inbox": {
       "eyebrow": "EC · Probation Workflow",
+      "breadcrumbHub": "Admin Hub",
+      "breadcrumbSection": "Assessments",
+      "breadcrumbCurrent": "Probation · Pending",
       "title": "Probation Review · Supervisor View",
       "subtitle": "{team} team members under your care · {urgent} item(s) to action within 14 days",
       "export": "Export",

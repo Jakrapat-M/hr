@@ -3485,6 +3485,9 @@
     "submitDisabledHint": "กรุณากรอกข้อมูลที่จำเป็นให้ครบก่อนส่ง",
     "inbox": {
       "eyebrow": "EC · ระบบทดลองงาน",
+      "breadcrumbHub": "ศูนย์รวม Admin",
+      "breadcrumbSection": "การประเมิน",
+      "breadcrumbCurrent": "ทดลองงาน · รออนุมัติ",
       "title": "ประเมินทดลองงาน · มุมมองหัวหน้างาน",
       "subtitle": "{team} ทีมงานในความดูแล · {urgent} รายการต้องดำเนินการภายใน 14 วัน",
       "export": "ส่งออก",
