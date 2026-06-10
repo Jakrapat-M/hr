@@ -209,7 +209,6 @@ describe('P3-9 — gating coverage matrix: menu show ⊆ route guard for every l
       [
         'approvals', // → /quick-approve
         'audit', // → /admin/system (under the /admin guard)
-        'benefit-catalog', // → /admin/system/benefit-catalog (under the /admin guard)
         'benefits-admin', // → /admin/benefits
         'catalog', // → /admin/foundation (tighter inner gate wins)
         'changes', // → /admin/change-requests
@@ -221,7 +220,6 @@ describe('P3-9 — gating coverage matrix: menu show ⊆ route guard for every l
         'my-team', // → /manager/team
         'roles', // → /permissions
         'talent-search', // → /hrbp/talent-search
-        'time-policy', // → /admin/system/time-policy (under the /admin guard)
       ].sort(),
     );
   });

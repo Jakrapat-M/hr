@@ -1,49 +1,54 @@
 /**
- * Humi Journey EC/BE work-item #1 — HRIS System-Settings config leaves.
+ * Humi Journey EC/BE work-item #1 — HRIS System-Settings config surfaces.
  *
- * The journey adds two dedicated HRIS configuration screens (Time Policy,
- * Benefit Catalog) under the System Settings group. They are gated to the `hris`
- * persona. This test pins MENU == GUARD: the `hris` persona sees both, and a
- * plain `employee` sees neither (remove-not-hide).
+ * IA simplification (2026-06-10): the two HRIS configuration screens (Time
+ * Policy, Benefit Catalog) were REMOVED as standalone System-group menu leaves
+ * and nested under "ฐานข้อมูลกลาง" (Master Catalog, /admin/foundation) — reachable
+ * as tiles on the Foundation landing. This shrinks the System group 6→4, one of
+ * the stacked nav layers the user flagged as too complex.
+ *
+ * This test pins that decision:
+ *   1. neither config screen is a Sidebar leaf anymore (no menu duplication),
+ *   2. the System group keeps exactly its 4 simplified leaves,
+ *   3. both config routes remain reachable from the Foundation landing page
+ *      (no dead end — MENU removal must not orphan the screen).
  */
+
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 import { describe, expect, test } from 'vitest';
 
-import { MODULES, leafVisible } from '@/components/humi/shell/Sidebar';
-import type { Role } from '@/lib/rbac';
+import { MODULES } from '@/components/humi/shell/Sidebar';
 
-const ALL_LEAVES = MODULES.flatMap((m) => m.leaves);
+const ALL_LEAF_IDS = MODULES.flatMap((m) => m.leaves).map((l) => l.id);
+const CONFIG_IDS = ['time-policy', 'benefit-catalog'] as const;
+const CONFIG_ROUTES = ['/admin/system/time-policy', '/admin/system/benefit-catalog'] as const;
 
-function leaf(id: string) {
-  const found = ALL_LEAVES.find((l) => l.id === id);
-  if (!found) throw new Error(`leaf '${id}' not found in MODULES`);
-  return found;
-}
-
-// app Role per persona (PERSONA_ROLE in lib/persona-tiers.ts): hris → hr_manager.
-const HRIS: Role[] = ['hr_manager'];
-const EMPLOYEE: Role[] = ['employee'];
-
-const CONFIG_LEAVES = ['time-policy', 'benefit-catalog'] as const;
-
-describe('HRIS config leaves — visible to hris, hidden from employee', () => {
-  test.each(CONFIG_LEAVES)('%s is visible to hris and hidden from employee', (id) => {
-    expect(leafVisible(leaf(id), HRIS)).toBe(true);
-    expect(leafVisible(leaf(id), EMPLOYEE)).toBe(false);
+describe('HRIS config surfaces — nested under Master Catalog, not System leaves', () => {
+  test.each(CONFIG_IDS)('“%s” is no longer a Sidebar leaf', (id) => {
+    expect(ALL_LEAF_IDS).not.toContain(id);
   });
 
-  test('each config leaf is gated to hris only and lives in the system group', () => {
+  test('the System group is the simplified 4: roles, catalog, docreview, audit', () => {
     const systemGroup = MODULES.find((m) => m.id === 'system');
     expect(systemGroup).toBeDefined();
-    for (const id of CONFIG_LEAVES) {
-      const l = leaf(id);
-      expect(l.show).toEqual(['hris']);
-      expect(systemGroup!.leaves.some((x) => x.id === id)).toBe(true);
-    }
+    expect(systemGroup!.leaves.map((l) => l.id)).toEqual([
+      'roles',
+      'catalog',
+      'docreview',
+      'audit',
+    ]);
   });
 
-  test('config leaves point at their dedicated admin/system routes', () => {
-    expect(leaf('time-policy').href).toBe('/admin/system/time-policy');
-    expect(leaf('benefit-catalog').href).toBe('/admin/system/benefit-catalog');
+  test('both config routes stay reachable from the Foundation landing (no dead end)', () => {
+    const foundationPage = readFileSync(
+      join(process.cwd(), 'src/app/[locale]/admin/foundation/page.tsx'),
+      'utf8',
+    );
+    for (const route of CONFIG_ROUTES) {
+      // hrefs on the page carry a locale prefix (/th...); assert the bare route is linked.
+      expect(foundationPage).toContain(route);
+    }
   });
 });

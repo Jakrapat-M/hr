@@ -4,19 +4,31 @@
 // 3 tiles: Org Chart Tree, Positions, Divisions
 
 import Link from 'next/link';
-import { Network, Briefcase, Building2, ArrowRight } from 'lucide-react';
+import { Network, Briefcase, Building2, Clock, HeartPulse, ArrowRight } from 'lucide-react';
 import { useFoundationSummary } from '@/hooks/use-foundation';
 import { AccessDenied } from '@/components/shared/access-denied';
 import { useAuthStore } from '@/stores/auth-store';
 
-const TILES = [
+type Tile = {
+  href: string;
+  icon: typeof Network;
+  eyebrow: string;
+  title: string;
+  desc: string;
+  // Either a live summary stat, or a static tag (config surfaces have no count).
+  statKey?: 'orgUnitCount' | 'positionCount' | 'divisionCount';
+  statLabel?: string;
+  tag?: string;
+};
+
+const TILES: Tile[] = [
   {
     href: '/th/admin/organization',
     icon: Network,
     eyebrow: 'Organization Structure',
     title: 'ผังองค์กร',
     desc: 'ดูและจัดการโครงสร้างแผนกแบบ tree — ขยาย/ยุบตามระดับ',
-    statKey: 'orgUnitCount' as const,
+    statKey: 'orgUnitCount',
     statLabel: 'หน่วยงาน',
   },
   {
@@ -25,7 +37,7 @@ const TILES = [
     eyebrow: 'Position Master',
     title: 'ตำแหน่งงาน',
     desc: 'รายการตำแหน่งทั้งหมด • จำนวนพนักงานตามแผน vs จริง • สถานะ',
-    statKey: 'positionCount' as const,
+    statKey: 'positionCount',
     statLabel: 'ตำแหน่ง',
   },
   {
@@ -34,8 +46,27 @@ const TILES = [
     eyebrow: 'Division Setup',
     title: 'หน่วยธุรกิจ',
     desc: 'กลุ่มบริษัทและหน่วยธุรกิจระดับสูงสุด • เพิ่ม / แก้ไข',
-    statKey: 'divisionCount' as const,
+    statKey: 'divisionCount',
     statLabel: 'หน่วยธุรกิจ',
+  },
+  // Config reference data — nested here (2026-06-10 IA simplification) instead of
+  // standalone System-group menu leaves. Single source of truth for leave/time
+  // rules and the benefit catalog.
+  {
+    href: '/th/admin/system/time-policy',
+    icon: Clock,
+    eyebrow: 'Time & Leave Policy',
+    title: 'นโยบายเวลาทำงาน',
+    desc: 'วันลา • เกณฑ์ใบรับรองแพทย์ • วันสะสม • เวลาเข้างานมาตรฐาน',
+    tag: 'ข้อมูลตั้งค่า',
+  },
+  {
+    href: '/th/admin/system/benefit-catalog',
+    icon: HeartPulse,
+    eyebrow: 'Benefit Catalog',
+    title: 'แคตตาล็อกสวัสดิการ',
+    desc: 'ประเภทสวัสดิการ + โควตาต่อปี • HR Admin ปรับ override ตามระดับ',
+    tag: 'ข้อมูลตั้งค่า',
   },
 ];
 
@@ -120,7 +151,7 @@ export default function FoundationLandingPage() {
                   <p className="mt-1 text-small text-ink-soft">{tile.desc}</p>
                   <div className="humi-row" style={{ marginTop: 10, gap: 8 }}>
                     <span className="humi-tag">
-                      {summary[tile.statKey]} {tile.statLabel}
+                      {tile.statKey ? `${summary[tile.statKey]} ${tile.statLabel}` : tile.tag}
                     </span>
                     <span className="humi-spacer" />
                     <ArrowRight size={14} className="text-ink-muted group-hover:text-accent" aria-hidden />
