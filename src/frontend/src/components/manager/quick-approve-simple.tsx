@@ -14,7 +14,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Card } from '@/components/humi';
 import { Button } from '@/components/humi';
 import { DataTable, type DataTableColumn } from '@/components/humi';
-import { APPROVAL_REGISTRY, useSelectPendingApprovals, type QueueApproval } from '@/lib/approval-registry';
+import { APPROVAL_REGISTRY, isTerminationId, useSelectPendingApprovals, type QueueApproval } from '@/lib/approval-registry';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { useAuthStore } from '@/stores/auth-store';
 import { useQuickApproveAssignments, type Assignee } from '@/stores/quick-approve-assignments';
@@ -55,11 +55,17 @@ function typeLabel(type: PendingRequest['type']): string {
 // Detail drill-in route. pay_rate / tax_planning live under /workflows/<type>/[id]
 // (their own detail pages); everything else opens the unified /quick-approve/[id].
 function detailHref(locale: string, row: PendingRequest): string {
+  // Resignations ride the change_request vehicle (locked RequestType) but drill
+  // into their own offboarding-approval surface; detect by the TR-* id.
+  if (row.type === 'change_request' && isTerminationId(row.id)) {
+    return `/${locale}/workflows/resignation/${row.id}`;
+  }
   if (row.type === 'pay_rate') return `/${locale}/workflows/pay-rate/${row.id}`;
   if (row.type === 'tax_planning') return `/${locale}/workflows/tax-planning/${row.id}`;
   if (row.type === 'time_correction') return `/${locale}/workflows/time-correction/${row.id}`;
   if (row.type === 'leave') return `/${locale}/workflows/leave/${row.id}`;
   if (row.type === 'overtime') return `/${locale}/workflows/ot/${row.id}`;
+  if (row.type === 'probation') return `/${locale}/workflows/probation/${row.id}`;
   return `/${locale}/quick-approve/${row.id}`;
 }
 
@@ -198,7 +204,7 @@ export function QuickApproveSimple() {
       header: t('columns.type'),
       cell: (row) => (
         <span className="humi-tag" style={{ fontSize: 12 }}>
-          {typeLabel(row.type)}
+          {row.type === 'change_request' && isTerminationId(row.id) ? 'ลาออก' : typeLabel(row.type)}
         </span>
       ),
       className: 'w-32',

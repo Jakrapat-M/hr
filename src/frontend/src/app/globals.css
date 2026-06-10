@@ -231,6 +231,13 @@ html { font-size: 18px; }
      localStorage). Falls back to 256px before the client effect runs / when the
      drag feature is unavailable. */
   .humi-app { grid-template-columns: var(--humi-sidebar-w, 256px) 1fr !important; }
+  /* Ease the rail<->panel fold so collapsing/expanding glides instead of
+     snapping. The drag-resize handle writes --humi-sidebar-w ~60×/s, so the
+     transition is suppressed mid-drag (html.sidebar-resizing, toggled in
+     Sidebar.tsx) to keep the column tracking the cursor 1:1; reduced-motion
+     users opt out below. */
+  .humi-app { transition: grid-template-columns 0.24s cubic-bezier(0.4, 0, 0.2, 1); }
+  html.sidebar-resizing .humi-app { transition: none !important; }
   .humi-sidebar { display: flex !important; }
   /* Fully-hidden state (legacy sidebarOpen=false; the topbar toggle that drove
      this was removed 2026-05-27, but the rule is kept harmless for any
@@ -897,6 +904,20 @@ html { font-size: 18px; }
 /* Collapsed: hide the leaf column. The grid reclaims the freed width via the
    :has() rule in the lg+ media block above (shell collapses to the 74px rail). */
 .bp-shellnav.bp-collapsed .bp-panel { display: none; }
+
+/* Expanding the rail re-renders the leaf panel from display:none — fade + slide
+   it in so it doesn't pop. The collapse direction stays a clean snap (the grid
+   width animation above carries that motion). Honors reduced-motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .bp-shellnav:not(.bp-collapsed) .bp-panel { animation: bp-panel-in 0.22s ease both; }
+}
+@keyframes bp-panel-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .humi-app { transition: none !important; }
+}
 
 /* Ported from styles.css:251 (.main) */
 .humi-main {

@@ -134,6 +134,13 @@ const MOCK_TERMINATION_REQUESTS: TerminationRequest[] = [
   },
 ];
 
+// Non-terminal resignations (pending_manager / pending_spd) surface in the unified
+// queue via the change_request vehicle; approved/rejected drop out. This count is
+// part of TOTAL_SEED_COUNT (mirrors the other *_DEMO_COUNT seed-count exports).
+export const TERMINATION_DEMO_COUNT = MOCK_TERMINATION_REQUESTS.filter(
+  (r) => r.status !== 'approved' && r.status !== 'rejected',
+).length;
+
 const MOCK_PROMOTION_REQUESTS: PromotionRequest[] = [
   {
     id: 'PM-20260424-0930-D4HK',

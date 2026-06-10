@@ -266,11 +266,11 @@ describe('Blueprint sidebar — role-gated views', () => {
     expect(screen.queryByText('อนุมัติ')).not.toBeInTheDocument();
     expect(screen.getByText('รายงาน').closest('a')).toHaveAttribute('href', '/th/reports');
     expect(screen.getByText('ผลงานทีม').closest('a')).toHaveAttribute('href', '/th/performance-form');
-    // roster repointed to the real /roster page; probation → manager-dashboard
+    // roster repointed to the real /roster page; probation → agreed /workflows/probation journey
     expect(screen.getByText('ตารางกะ').closest('a')).toHaveAttribute('href', '/th/roster');
     expect(screen.getByText('ทดลองงาน').closest('a')).toHaveAttribute(
       'href',
-      '/th/manager-dashboard/probations',
+      '/th/workflows/probation',
     );
     // swap (สลับกะ) was CUT — it is a modal inside /roster, not a menu leaf
     expect(screen.queryByText('สลับกะ')).not.toBeInTheDocument();

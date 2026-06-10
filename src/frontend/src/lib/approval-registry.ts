@@ -38,6 +38,10 @@ import {
   type OTRequest,
 } from '@/stores/overtime-requests';
 import { OT_TYPES, type OtTypeCode } from '@/lib/time/ot-types';
+import {
+  useTerminationApprovals,
+  type TerminationRequest,
+} from '@/stores/termination-approvals';
 
 // ── Actor (caller-facing) ─────────────────────────────────────────────────────
 // Call sites pass one neutral actor shape; each adapter maps it to the store's
@@ -280,6 +284,44 @@ export function otToPendingRequest(req: OTRequest): PendingRequest {
   };
 }
 
+// Resignation (offboarding chain BRD #172) → termination-approvals store. An
+// employee-submitted resignation sits at `pending_manager`; the manager is the
+// routed first-line approver. The locked `RequestType` union has no `resignation`
+// member (time-module handoff forbids adding one), so resignations ride the
+// existing `change_request` vehicle. The row keeps its TR-* id; detailHref +
+// the change_request adapter both detect a TR-* id to route to the dedicated
+// resignation surface. Drill-in is special-cased to /workflows/resignation/<id>.
+export function terminationToPendingRequest(r: TerminationRequest): PendingRequest {
+  const elapsedMs = Date.now() - new Date(r.submittedAt).getTime();
+  const slaHours = elapsedMs / (1000 * 60 * 60);
+  const urgency: Urgency = slaHours > 48 ? 'urgent' : slaHours > 24 ? 'normal' : 'low';
+  const waitingDays = Math.max(0, Math.floor(elapsedMs / 86400000));
+  return {
+    id: r.id,
+    type: 'change_request',
+    requester: {
+      id: r.employeeId,
+      name: r.employeeName,
+      position: 'คำขอลาออก',
+      department: '',
+    },
+    description: `คำขอลาออก · ${r.employeeName}`,
+    submittedAt: r.submittedAt,
+    urgency,
+    waitingDays,
+    details: {},
+    approvalTimeline: [
+      { step: 1, approver: 'หัวหน้างาน', status: 'pending' },
+      { step: 2, approver: 'SPD', status: 'pending' },
+    ],
+  };
+}
+
+/** True when an id belongs to a resignation (termination-approvals) record. */
+export function isTerminationId(id: string): boolean {
+  return useTerminationApprovals.getState().requests.some((r) => r.id === id);
+}
+
 // ── Shared queue-item shape for store records lacking a bespoke bridge ─────────
 // leave / overtime / change_request stores expose simpler records; map them to a
 // minimal PendingRequest so they interleave in the queue. (Full field mapping is
@@ -362,14 +404,31 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
   change_request: {
     toQueueItem: (record) =>
       genericToQueueItem('change_request', record as { id: string; submittedAt?: string }),
-    approve: (id, actor) =>
+    // Resignations (BRD #172) ride this vehicle: a TR-* id dispatches to the
+    // termination store's manager step (pending_manager → pending_spd) instead of
+    // the workflow store. Everything else stays the personal-info SPD chain.
+    approve: (id, actor) => {
+      if (isTerminationId(id)) {
+        useTerminationApprovals
+          .getState()
+          .approveByManager(id, { role: 'manager', name: actor.name });
+        return;
+      }
       useWorkflowApprovals
         .getState()
-        .approve(id, { role: (actor.role as never) ?? ('spd' as never), name: actor.name }),
-    reject: (id, actor, reason) =>
+        .approve(id, { role: (actor.role as never) ?? ('spd' as never), name: actor.name });
+    },
+    reject: (id, actor, reason) => {
+      if (isTerminationId(id)) {
+        useTerminationApprovals
+          .getState()
+          .reject(id, { role: (actor.role as never) ?? ('manager' as never), name: actor.name }, reason);
+        return;
+      }
       useWorkflowApprovals
         .getState()
-        .reject(id, { role: (actor.role as never) ?? ('spd' as never), name: actor.name }, reason),
+        .reject(id, { role: (actor.role as never) ?? ('spd' as never), name: actor.name }, reason);
+    },
     seed: (fixtures = []) => useWorkflowApprovals.getState().seedFromQueue(fixtures),
     labels: { th: 'เปลี่ยนข้อมูล', en: 'Change' },
   },
@@ -524,6 +583,7 @@ export function selectPendingApprovals(input: {
   taxPlans?: TaxPlanningDraft[];
   timeCorrections?: TimeCorrectionRequest[];
   overtime?: OTRequest[];
+  terminations?: TerminationRequest[];
 }): QueueApproval[] {
   const out: QueueApproval[] = [];
 
@@ -596,6 +656,20 @@ export function selectPendingApprovals(input: {
     });
   }
 
+  // resignation rows derive from the termination-approvals store (BRD #172),
+  // surfaced via the change_request vehicle. Only NON-TERMINAL rows are queue-
+  // eligible (mirrors tax-planning): pending_manager → pending (manager step
+  // actionable); pending_spd → pending + awaitingNext (manager step done, now
+  // awaiting SPD). approved/rejected are terminal and drop out of the queue.
+  for (const r of input.terminations ?? []) {
+    if (r.status === 'approved' || r.status === 'rejected') continue;
+    out.push({
+      row: terminationToPendingRequest(r),
+      status: 'pending',
+      awaitingNext: r.status === 'pending_spd',
+    });
+  }
+
   // Stable order by submittedAt desc, then id, so the inbox renders deterministically.
   out.sort((a, b) => {
     const t = new Date(b.row.submittedAt).getTime() - new Date(a.row.submittedAt).getTime();
@@ -614,7 +688,8 @@ export function useSelectPendingApprovals(): QueueApproval[] {
   const taxPlans = useBenefitTaxPlanningStore((s) => s.drafts);
   const timeCorrections = useTimeCorrections((s) => s.requests);
   const overtime = useOvertimeRequests((s) => s.requests);
-  return selectPendingApprovals({ leave, workflow, claims, transfers, payRates, taxPlans, timeCorrections, overtime });
+  const terminations = useTerminationApprovals((s) => s.requests);
+  return selectPendingApprovals({ leave, workflow, claims, transfers, payRates, taxPlans, timeCorrections, overtime, terminations });
 }
 
 /** Non-reactive read (getState) — for one-shot lookups (e.g. detail route). */
@@ -628,6 +703,7 @@ export function getPendingApprovals(): QueueApproval[] {
     taxPlans: useBenefitTaxPlanningStore.getState().drafts,
     timeCorrections: useTimeCorrections.getState().requests,
     overtime: useOvertimeRequests.getState().requests,
+    terminations: useTerminationApprovals.getState().requests,
   });
 }
 

@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -12,45 +8,86 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  Send,
+  Clock,
   Shield,
   User,
   Wallet,
+  X,
 } from 'lucide-react';
-import { useProbationCase, type ProbationOutcome, type ProbationFailReason, type ProbationDecisionInput } from '@/hooks/use-probation';
+import {
+  useProbationCase,
+  type ProbationOutcome,
+  type ProbationFailReason,
+  type ProbationDecisionInput,
+} from '@/hooks/use-probation';
 import { formatDate } from '@/lib/date';
 import { Modal } from '@/components/humi';
 
-// STA-23 PO v2 — Manager Approve page
-// Spec: Linear STA-23 PO comment 2026-05-15 08:32 UTC, Mockup 2 + Mockup 3
+// Probation Manager Approve — ref design layout (prod-probation.jsx · ProbationApprove)
+// reconciled to the BA-approved field set: 3 outcome cards + conditional BA fields.
+// Intentionally NO attachment / star rating / qualitative trio (trimmed per June BA feedback).
 
 // ---------------------------------------------------------------------------
-// Types + LOVs
+// Outcome cards (ref: pass / extend / no_pass)
 // ---------------------------------------------------------------------------
 
-// Fail-reason LOV — concrete in-mockup option set (sensible static reasons).
-const FAIL_REASON_OPTIONS: { value: ProbationFailReason; labelEn: string; labelTh: string }[] = [
-  { value: 'performance', labelEn: 'Performance below standard', labelTh: 'ผลงานต่ำกว่ามาตรฐาน' },
-  { value: 'attitude', labelEn: 'Attitude / Behavior issue', labelTh: 'ทัศนคติ / พฤติกรรม' },
-  { value: 'policy', labelEn: 'Policy violation', labelTh: 'ฝ่าฝืนระเบียบบริษัท' },
-  { value: 'skill_mismatch', labelEn: 'Skill mismatch', labelTh: 'ทักษะไม่ตรงกับตำแหน่ง' },
-  { value: 'other', labelEn: 'Other', labelTh: 'อื่นๆ' },
+type OutcomeCard = 'pass' | 'extend' | 'no_pass';
+
+const OUTCOME_CARDS: {
+  value: OutcomeCard;
+  labelTh: string;
+  labelEn: string;
+  subTh: string;
+  subEn: string;
+  icon: typeof Check;
+  tone: 'accent' | 'warning' | 'danger';
+}[] = [
+  {
+    value: 'pass',
+    labelTh: 'ผ่านทดลองงาน',
+    labelEn: 'Pass probation',
+    subTh: 'พนักงานจะถูกบรรจุเป็น Permanent',
+    subEn: 'Employee becomes permanent',
+    icon: Check,
+    tone: 'accent',
+  },
+  {
+    value: 'extend',
+    labelTh: 'ขยายเวลา',
+    labelEn: 'Extend',
+    subTh: 'ทดลองต่ออีก 30–60 วัน',
+    subEn: 'Extend 30–60 more days',
+    icon: Clock,
+    tone: 'warning',
+  },
+  {
+    value: 'no_pass',
+    labelTh: 'ไม่ผ่าน',
+    labelEn: 'Did not pass',
+    subTh: 'พนักงานจะสิ้นสภาพหลังบันทึก',
+    subEn: 'Employment ends after recording',
+    icon: X,
+    tone: 'danger',
+  },
 ];
 
-const OUTCOME_OPTIONS: { value: ProbationOutcome; labelEn: string; labelTh: string }[] = [
-  { value: 'pass_normal', labelEn: 'Pass probation (Normal case)', labelTh: 'ผ่านทดลองงาน (ปกติ)' },
-  { value: 'fail_normal', labelEn: 'Fail probation (Normal case)', labelTh: 'ไม่ผ่านทดลองงาน (ปกติ)' },
-  { value: 'pass_before_due', labelEn: 'Pass probation before Due (Special case)', labelTh: 'ผ่านทดลองงานก่อนกำหนด (กรณีพิเศษ)' },
-  { value: 'fail_before_due', labelEn: 'Fail probation before Due (Special case)', labelTh: 'ไม่ผ่านทดลองงานก่อนกำหนด (กรณีพิเศษ)' },
-  { value: 'extend', labelEn: 'Extend probation (Special case)', labelTh: 'ขยายเวลาทดลองงาน (กรณีพิเศษ)' },
+// Map ref outcome card → store ProbationOutcome (keeps existing store wiring intact).
+const OUTCOME_TO_STORE: Record<OutcomeCard, ProbationOutcome> = {
+  pass: 'pass_normal',
+  extend: 'extend',
+  no_pass: 'fail_normal',
+};
+
+// BA fail-reason LOV (company-use) — shown only when outcome = ไม่ผ่าน.
+const FAIL_REASON_OPTIONS: { value: ProbationFailReason; labelTh: string; labelEn: string }[] = [
+  { value: 'performance', labelTh: 'ผลงานต่ำกว่ามาตรฐาน', labelEn: 'Performance below standard' },
+  { value: 'attitude', labelTh: 'ทัศนคติ / พฤติกรรม', labelEn: 'Attitude / Behavior issue' },
+  { value: 'policy', labelTh: 'ฝ่าฝืนระเบียบบริษัท', labelEn: 'Policy violation' },
+  { value: 'skill_mismatch', labelTh: 'ทักษะไม่ตรงกับตำแหน่ง', labelEn: 'Skill mismatch' },
+  { value: 'other', labelTh: 'อื่นๆ', labelEn: 'Other' },
 ];
 
-// Outcomes that require effectiveDate
-const OUTCOMES_WITH_EFFECTIVE_DATE: ProbationOutcome[] = [
-  'pass_before_due',
-  'fail_before_due',
-  'extend',
-];
+const EXTEND_DURATIONS = ['30 วัน', '45 วัน', '60 วัน'];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -58,35 +95,59 @@ const OUTCOMES_WITH_EFFECTIVE_DATE: ProbationOutcome[] = [
 
 function eyebrow(text: string) {
   return (
-    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted">
-      {text}
-    </div>
+    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted">{text}</div>
   );
 }
 
+const FIELD_LABEL_CLASS = 'mb-1.5 block text-xs font-semibold text-ink-soft';
+const FIELD_INPUT_CLASS =
+  'w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent-soft';
+const FIELD_TEXTAREA_CLASS = `${FIELD_INPUT_CLASS} resize-y min-h-[64px]`;
+const FIELD_INPUT_ERROR_CLASS =
+  'w-full rounded-[var(--radius-md)] border border-danger bg-surface px-3 py-2.5 text-sm text-ink outline-none transition focus:border-danger focus:ring-2 focus:ring-danger-soft';
+
 function FieldLabel({ children, required }: { children: ReactNode; required?: boolean }) {
   return (
-    <label className="mb-1.5 block text-xs font-semibold text-ink-soft">
+    <label className={FIELD_LABEL_CLASS}>
       {children} {required && <span className="text-accent">*</span>}
     </label>
   );
 }
 
-function FieldHint({ children }: { children: ReactNode }) {
-  return <p className="mt-1 text-xs text-ink-muted">{children}</p>;
+function daysUntil(iso: string): number {
+  const ms = new Date(iso).getTime() - Date.now();
+  return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
 
-function FieldError({ children }: { children: ReactNode }) {
-  return <p className="mt-1 text-xs text-danger">{children}</p>;
+function initials(name: string): string {
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-const FIELD_INPUT_CLASS =
-  'w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent-soft';
+/** Calendar tenure since hire date — "{m} เดือน {d} วัน". */
+function tenureText(hireDate: string, locale: string): string {
+  const start = new Date(hireDate);
+  const now = new Date();
+  let months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+  let days = now.getDate() - start.getDate();
+  if (days < 0) {
+    months -= 1;
+    days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+  }
+  if (months < 0) months = 0;
+  if (days < 0) days = 0;
+  return locale === 'th' ? `${months} เดือน ${days} วัน` : `${months}mo ${days}d`;
+}
 
-const FIELD_TEXTAREA_CLASS = `${FIELD_INPUT_CLASS} resize-y min-h-[64px]`;
-
-const FIELD_INPUT_ERROR_CLASS =
-  'w-full rounded-[var(--radius-md)] border border-danger bg-surface px-3 py-2.5 text-sm text-ink outline-none transition focus:border-danger focus:ring-2 focus:ring-danger-soft';
+/** Day-120 default for extend: one day after probationEndDate. */
+function defaultExtendDate(probationEndDate?: string): string {
+  if (!probationEndDate) return '';
+  const d = new Date(probationEndDate);
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
 
 // ---------------------------------------------------------------------------
 // Approval chain
@@ -138,30 +199,6 @@ function ApprovalChainStep({ step, isLast }: { step: ApprovalStep; isLast: boole
 }
 
 // ---------------------------------------------------------------------------
-// Utils
-// ---------------------------------------------------------------------------
-
-function daysUntil(iso: string): number {
-  const ms = new Date(iso).getTime() - Date.now();
-  return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
-}
-
-function initials(name: string): string {
-  const parts = name.split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[1][0]).toUpperCase();
-}
-
-/** Returns Day-120 default for extend: one day after probationEndDate */
-function defaultExtendDate(probationEndDate?: string): string {
-  if (!probationEndDate) return '';
-  const d = new Date(probationEndDate);
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
-}
-
-// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -170,71 +207,61 @@ export default function ProbationDetailPage() {
   const id = params.id as string;
   const pathname = usePathname();
   const locale = pathname.startsWith('/th') ? 'th' : 'en';
+  const isTh = locale === 'th';
   const { probationCase: c, loading, submitDecision } = useProbationCase(id);
 
-  // Form state — PO v2 fields
-  const [outcome, setOutcome] = useState<ProbationOutcome | ''>('');
-  const [effectiveDate, setEffectiveDate] = useState('');
+  // Outcome + conditional BA fields
+  const [outcome, setOutcome] = useState<OutcomeCard>('pass');
+  const [passEffectiveDate, setPassEffectiveDate] = useState('');
+  const [extendDate, setExtendDate] = useState('');
+  const [extendDuration, setExtendDuration] = useState(EXTEND_DURATIONS[1]);
   const [failReason, setFailReason] = useState<ProbationFailReason | ''>('');
   const [comment, setComment] = useState('');
+
   const [policyOpen, setPolicyOpen] = useState(false);
 
-  // Derive conditional visibility
-  const showEffectiveDate = outcome !== '' && OUTCOMES_WITH_EFFECTIVE_DATE.includes(outcome as ProbationOutcome);
-  const showFailReason = outcome === 'fail_normal';
-
-  // Effective date validation
-  const effectiveDateError = useMemo<string | null>(() => {
-    if (!showEffectiveDate || !effectiveDate || !c?.probationEndDate) return null;
-    const eff = new Date(effectiveDate).getTime();
-    const end = new Date(c.probationEndDate).getTime();
-    if (outcome === 'pass_before_due' || outcome === 'fail_before_due') {
-      if (eff >= end) return locale === 'th'
-        ? 'วันที่มีผลต้องอยู่ก่อนวันสิ้นสุดทดลองงานปกติ'
-        : 'Effective date must be BEFORE the normal pass date';
+  const handleOutcomeChange = (val: OutcomeCard) => {
+    setOutcome(val);
+    if (val === 'extend' && c?.probationEndDate && !extendDate) {
+      setExtendDate(defaultExtendDate(c.probationEndDate));
     }
-    if (outcome === 'extend') {
-      if (eff <= end) return locale === 'th'
-        ? 'วันที่มีผลต้องอยู่หลังวันสิ้นสุดทดลองงานปกติ'
-        : 'Effective date must be AFTER the normal pass date';
+    if (val !== 'no_pass') setFailReason('');
+  };
+
+  // Extend date must fall AFTER the normal probation end date (BA rule).
+  const extendDateError = useMemo<string | null>(() => {
+    if (outcome !== 'extend' || !extendDate || !c?.probationEndDate) return null;
+    if (new Date(extendDate).getTime() <= new Date(c.probationEndDate).getTime()) {
+      return isTh
+        ? 'วันที่ขยายต้องอยู่หลังวันสิ้นสุดทดลองงานปกติ'
+        : 'Extend date must be AFTER the normal pass date';
     }
     return null;
-  }, [showEffectiveDate, effectiveDate, outcome, c?.probationEndDate, locale]);
+  }, [outcome, extendDate, c?.probationEndDate, isTh]);
 
-  // Submit disabled logic
   const submitDisabled = useMemo(() => {
-    if (!outcome) return true;
-    if (showEffectiveDate && (!effectiveDate || !!effectiveDateError)) return true;
-    if (showFailReason && !failReason) return true;
+    if (outcome === 'extend' && (!extendDate || !!extendDateError)) return true;
+    if (outcome === 'no_pass' && !failReason) return true;
     return false;
-  }, [outcome, showEffectiveDate, effectiveDate, effectiveDateError, showFailReason, failReason]);
+  }, [outcome, extendDate, extendDateError, failReason]);
 
-  // Days remaining + SLA banner
   const days = useMemo(() => {
     if (!c) return 0;
     return daysUntil(c.slaDeadline ?? c.probationEndDate);
   }, [c]);
-
   const showBanner = days <= 14;
 
-  const handleOutcomeChange = (val: ProbationOutcome) => {
-    setOutcome(val);
-    // When switching to extend, seed effectiveDate default
-    if (val === 'extend' && c?.probationEndDate) {
-      setEffectiveDate(defaultExtendDate(c.probationEndDate));
-    } else if (val !== outcome) {
-      // Reset effectiveDate on outcome change (except extend keeps its default)
-      if (val !== 'extend') setEffectiveDate('');
-    }
-    if (val !== 'fail_normal') setFailReason('');
-  };
-
   const handleSubmit = () => {
-    if (!outcome || submitDisabled) return;
+    if (!c || submitDisabled) return;
     const input: ProbationDecisionInput = {
-      outcome: outcome as ProbationOutcome,
-      effectiveDate: showEffectiveDate ? effectiveDate : undefined,
-      failReason: showFailReason ? (failReason as ProbationFailReason) : undefined,
+      outcome: OUTCOME_TO_STORE[outcome],
+      effectiveDate:
+        outcome === 'pass'
+          ? passEffectiveDate || undefined
+          : outcome === 'extend'
+            ? extendDate || undefined
+            : undefined,
+      failReason: outcome === 'no_pass' ? (failReason as ProbationFailReason) : undefined,
       comment,
     };
     submitDecision(input);
@@ -258,29 +285,12 @@ export default function ProbationDetailPage() {
     );
   }
 
-  const effectiveCutoff = c.probationEndDate
-    ? formatDate(c.probationEndDate, 'long', locale)
-    : '';
+  const effectiveCutoff = c.probationEndDate ? formatDate(c.probationEndDate, 'long', locale) : '';
 
   const approvalSteps: ApprovalStep[] = [
-    {
-      label: `หัวหน้างาน · ${c.manager.name}`,
-      sub: 'ผู้บังคับบัญชาโดยตรง',
-      status: 'current',
-      icon: User,
-    },
-    {
-      label: `HR Admin · ${c.currentApprover.name ?? 'TBD'}`,
-      sub: 'ตรวจสอบเอกสารและบันทึก EC',
-      status: 'pending',
-      icon: Shield,
-    },
-    {
-      label: 'Payroll',
-      sub: 'ส่งเข้าระบบจ่ายเงิน',
-      status: 'pending',
-      icon: Wallet,
-    },
+    { label: `หัวหน้างาน · ${c.manager.name}`, sub: 'ผู้บังคับบัญชาโดยตรง', status: 'current', icon: User },
+    { label: `HR Admin · ${c.currentApprover.name ?? 'TBD'}`, sub: 'ตรวจสอบเอกสารและบันทึก EC', status: 'pending', icon: Shield },
+    { label: 'Payroll', sub: 'ส่งเข้าระบบจ่ายเงิน', status: 'pending', icon: Wallet },
   ];
 
   const historyEvents = (c.timeline ?? []).slice(0, 3).map((entry) => {
@@ -288,24 +298,10 @@ export default function ProbationDetailPage() {
     const isWarn = /SLA|escalate|ไม่ตอบ|14 วัน/i.test(entry.action);
     return {
       title: entry.action,
-      timestamp: `${formatDate(entry.date, 'medium', locale)} · ${
-        isSystem ? 'ระบบ Auto' : entry.actor
-      }`,
+      timestamp: `${formatDate(entry.date, 'medium', locale)} · ${isSystem ? 'ระบบ Auto' : entry.actor}`,
       dotClass: isWarn ? 'bg-warning' : isSystem ? 'bg-ink-faint' : 'bg-accent',
     };
   });
-
-  // Effective date help text
-  const effectiveDateHelp = (() => {
-    if (outcome === 'extend') {
-      return locale === 'th'
-        ? 'กรณีขยายเวลา: ระบุวันที่หลังจากวันสิ้นสุดทดลองงานปกติ (ค่าเริ่มต้น = วันที่ 120)'
-        : 'Extend probation: please specify a date AFTER the normal pass date (default Day 120)';
-    }
-    return locale === 'th'
-      ? 'กรณีพิเศษ: ระบุวันที่ก่อนวันสิ้นสุดทดลองงานปกติ'
-      : 'Special case: please specify a date BEFORE the normal pass date';
-  })();
 
   return (
     <div className="pb-8">
@@ -331,7 +327,7 @@ export default function ProbationDetailPage() {
         </div>
       </div>
 
-      {/* Days-remaining banner (≤14 days) */}
+      {/* Days-remaining banner (≤14 days) — NO-RED: pumpkin danger token */}
       {showBanner && (
         <div
           role="status"
@@ -341,8 +337,7 @@ export default function ProbationDetailPage() {
           <div>
             <div className="text-sm font-semibold">ใกล้ครบกำหนด — เหลือ {days} วัน</div>
             <div className="mt-0.5 text-xs">
-              กรุณาบันทึกการประเมินก่อนวันที่ {effectiveCutoff} · หลังจากนั้นระบบจะ auto-pass
-              อัตโนมัติ
+              กรุณาบันทึกการประเมินก่อนวันที่ {effectiveCutoff} · หลังจากนั้นระบบจะ auto-pass อัตโนมัติ
             </div>
           </div>
         </div>
@@ -378,10 +373,8 @@ export default function ProbationDetailPage() {
                 </div>
               </div>
               <div>
-                {eyebrow('ครบทดลองงาน')}
-                <div className="mt-1 text-sm font-semibold text-ink">
-                  {formatDate(c.probationEndDate, 'medium', locale)}
-                </div>
+                {eyebrow('อายุงาน')}
+                <div className="mt-1 text-sm font-semibold text-ink">{tenureText(c.hireDate, locale)}</div>
               </div>
               <div>
                 {eyebrow('หัวหน้าโดยตรง')}
@@ -390,105 +383,148 @@ export default function ProbationDetailPage() {
             </div>
           </div>
 
-          {/* Decision form — PO v2 */}
+          {/* Outcome decision */}
           <div className="humi-card">
-            {eyebrow('ผลการตัดสินใจ')}
-            <h3 className="mt-1 mb-4 font-display text-lg font-semibold tracking-tight text-ink">
-              บันทึกผลทดลองงาน
+            <div className="mb-2">{eyebrow('การตัดสินใจ')}</div>
+            <h3 className="mb-3.5 font-display text-lg font-semibold tracking-tight text-ink">
+              ผลการประเมิน <span className="text-accent">*</span>
             </h3>
 
-            <div className="flex flex-col gap-4">
-              {/* Field 1: Final Probation Result */}
-              <div>
-                <FieldLabel required>
-                  {locale === 'th' ? 'ผลการทดลองงาน' : 'Final Probation Result'}
-                </FieldLabel>
-                <select
-                  value={outcome}
-                  onChange={(e) => handleOutcomeChange(e.target.value as ProbationOutcome)}
-                  aria-label={locale === 'th' ? 'ผลการทดลองงาน' : 'Final Probation Result'}
-                  className={FIELD_INPUT_CLASS}
-                >
-                  <option value="">
-                    {locale === 'th' ? 'เลือกผลการประเมิน...' : 'Select an outcome...'}
-                  </option>
-                  {OUTCOME_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {locale === 'th' ? o.labelTh : o.labelEn}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div role="radiogroup" className="grid grid-cols-3 gap-2.5">
+              {OUTCOME_CARDS.map((o) => {
+                const Glyph = o.icon;
+                const sel = outcome === o.value;
+                const borderTone =
+                  o.tone === 'accent' ? 'border-accent' : o.tone === 'warning' ? 'border-warning' : 'border-danger';
+                const iconBg =
+                  o.tone === 'accent' ? 'bg-accent' : o.tone === 'warning' ? 'bg-warning' : 'bg-danger';
+                const iconText =
+                  o.tone === 'accent' ? 'text-accent' : o.tone === 'warning' ? 'text-warning-ink' : 'text-danger-ink';
+                return (
+                  <button
+                    type="button"
+                    key={o.value}
+                    onClick={() => handleOutcomeChange(o.value)}
+                    aria-pressed={sel}
+                    className={`flex flex-col gap-2 rounded-[var(--radius-lg)] border-[1.5px] p-4 text-left transition ${
+                      sel ? `${borderTone} bg-canvas-soft` : 'border-hairline bg-surface hover:border-ink-faint'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] ${
+                          sel ? `${iconBg} text-white` : `bg-canvas-soft ${iconText}`
+                        }`}
+                      >
+                        <Glyph className="h-4 w-4" />
+                      </span>
+                      <span
+                        className={`h-4 w-4 rounded-full border-[1.5px] ${
+                          sel ? `${borderTone} ${iconBg}` : 'border-hairline'
+                        }`}
+                        aria-hidden
+                      />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold tracking-tight text-ink">
+                        {isTh ? o.labelTh : o.labelEn}
+                      </div>
+                      <div className="mt-1 text-xs leading-snug text-ink-muted">
+                        {isTh ? o.subTh : o.subEn}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
 
-              {/* Field 2: Effective Date (conditional — hidden for pass_normal + fail_normal) */}
-              {showEffectiveDate && (
+            {/* Conditional — pass: optional effective (placement) date */}
+            {outcome === 'pass' && (
+              <div className="mt-4">
+                <FieldLabel>{isTh ? 'วันที่บรรจุ (effective)' : 'Effective date'}</FieldLabel>
+                <input
+                  type="date"
+                  value={passEffectiveDate}
+                  onChange={(e) => setPassEffectiveDate(e.target.value)}
+                  aria-label={isTh ? 'วันที่บรรจุ' : 'Effective date'}
+                  className={FIELD_INPUT_CLASS}
+                />
+              </div>
+            )}
+
+            {/* Conditional — extend: until-date + duration (BA) */}
+            {outcome === 'extend' && (
+              <div className="mt-4 grid grid-cols-2 gap-3.5 rounded-[var(--radius-md)] border border-warning bg-warning-soft p-3.5">
                 <div>
-                  <FieldLabel required>
-                    {locale === 'th' ? 'วันที่มีผล' : 'Effective Date'}
-                  </FieldLabel>
+                  <FieldLabel required>{isTh ? 'ขยายถึงวันที่' : 'Extend until'}</FieldLabel>
                   <input
                     type="date"
-                    value={effectiveDate}
-                    onChange={(e) => setEffectiveDate(e.target.value)}
-                    aria-label={locale === 'th' ? 'วันที่มีผล' : 'Effective Date'}
-                    placeholder={locale === 'th' ? 'เช่น 31/12/2026' : 'e.g. 31/12/2026'}
-                    className={effectiveDateError ? FIELD_INPUT_ERROR_CLASS : FIELD_INPUT_CLASS}
+                    value={extendDate}
+                    onChange={(e) => setExtendDate(e.target.value)}
+                    aria-label={isTh ? 'ขยายถึงวันที่' : 'Extend until'}
+                    className={extendDateError ? FIELD_INPUT_ERROR_CLASS : FIELD_INPUT_CLASS}
                   />
-                  {effectiveDateError ? (
-                    <FieldError>{effectiveDateError}</FieldError>
+                  {extendDateError ? (
+                    <p className="mt-1 text-xs text-danger">{extendDateError}</p>
                   ) : (
-                    <FieldHint>{effectiveDateHelp}</FieldHint>
+                    <p className="mt-1 text-xs text-ink-muted">
+                      {isTh ? 'ต้องไม่เกินวันเริ่มงาน + 119 วัน' : 'Must not exceed hire date + 119 days'}
+                    </p>
                   )}
                 </div>
-              )}
-
-              {/* Field 3: Reason for Fail Probation (only when outcome = fail_normal) */}
-              {showFailReason && (
                 <div>
-                  <FieldLabel required>
-                    {locale === 'th'
-                      ? 'เหตุผลการไม่ผ่านทดลองงาน (ใช้ภายในบริษัท)'
-                      : "Reason for Fail Probation (company use only)"}
-                  </FieldLabel>
+                  <FieldLabel required>{isTh ? 'ระยะเวลา' : 'Duration'}</FieldLabel>
                   <select
-                    value={failReason}
-                    onChange={(e) => setFailReason(e.target.value as ProbationFailReason)}
-                    aria-label={
-                      locale === 'th'
-                        ? 'เหตุผลการไม่ผ่านทดลองงาน'
-                        : 'Reason for Fail Probation'
-                    }
+                    value={extendDuration}
+                    onChange={(e) => setExtendDuration(e.target.value)}
+                    aria-label={isTh ? 'ระยะเวลา' : 'Duration'}
                     className={FIELD_INPUT_CLASS}
                   >
-                    <option value="">
-                      {locale === 'th' ? 'เลือกเหตุผล...' : 'Select a reason...'}
-                    </option>
-                    {FAIL_REASON_OPTIONS.map((r) => (
-                      <option key={r.value} value={r.value}>
-                        {locale === 'th' ? r.labelTh : r.labelEn}
+                    {EXTEND_DURATIONS.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
                       </option>
                     ))}
                   </select>
                 </div>
-              )}
-
-              {/* Field 4: Section Comments */}
-              <div>
-                <FieldLabel>
-                  {locale === 'th' ? "ความคิดเห็นของผู้จัดการ" : "Manager's Comments"}
-                </FieldLabel>
-                <textarea
-                  rows={3}
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder={locale === 'th' ? 'ระบุความเห็นเพิ่มเติม...' : 'Enter additional comments...'}
-                  aria-label={locale === 'th' ? "ความคิดเห็นของผู้จัดการ" : "Manager's Comments"}
-                  className={FIELD_TEXTAREA_CLASS}
-                />
               </div>
+            )}
+
+            {/* Conditional — no_pass: BA fail-reason LOV */}
+            {outcome === 'no_pass' && (
+              <div className="mt-4">
+                <FieldLabel required>
+                  {isTh ? 'เหตุผลการไม่ผ่านทดลองงาน (ใช้ภายในบริษัท)' : 'Reason for Fail Probation (company use only)'}
+                </FieldLabel>
+                <select
+                  value={failReason}
+                  onChange={(e) => setFailReason(e.target.value as ProbationFailReason)}
+                  aria-label={isTh ? 'เหตุผลการไม่ผ่านทดลองงาน' : 'Reason for Fail Probation'}
+                  className={FIELD_INPUT_CLASS}
+                >
+                  <option value="">{isTh ? 'เลือกเหตุผล...' : 'Select a reason...'}</option>
+                  {FAIL_REASON_OPTIONS.map((r) => (
+                    <option key={r.value} value={r.value}>
+                      {isTh ? r.labelTh : r.labelEn}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Manager comment (BA) */}
+            <div className="mt-4">
+              <FieldLabel>{isTh ? 'ความคิดเห็นของผู้จัดการ' : "Manager's Comments"}</FieldLabel>
+              <textarea
+                rows={3}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder={isTh ? 'ระบุความเห็นเพิ่มเติม...' : 'Enter additional comments...'}
+                aria-label={isTh ? 'ความคิดเห็นของผู้จัดการ' : "Manager's Comments"}
+                className={FIELD_TEXTAREA_CLASS}
+              />
             </div>
           </div>
-
         </div>
 
         {/* RIGHT — sidebar */}
@@ -498,11 +534,7 @@ export default function ProbationDetailPage() {
             <div className="mb-3">{eyebrow('ขั้นตอนอนุมัติ')}</div>
             <div className="flex flex-col">
               {approvalSteps.map((step, i) => (
-                <ApprovalChainStep
-                  key={step.label}
-                  step={step}
-                  isLast={i === approvalSteps.length - 1}
-                />
+                <ApprovalChainStep key={step.label} step={step} isLast={i === approvalSteps.length - 1} />
               ))}
             </div>
           </div>
@@ -535,7 +567,7 @@ export default function ProbationDetailPage() {
             <h4 className="mt-2 font-display text-base font-semibold text-canvas-soft">
               นโยบายทดลองงาน · ฉบับ 2569
             </h4>
-            <ul className="mt-2.5 flex list-none flex-col gap-1.5 p-0 text-xs text-[rgba(231,227,216,0.85)]">
+            <ul className="mt-2.5 flex list-none flex-col gap-1.5 p-0 text-xs text-canvas-soft/80">
               <li>• ระยะทดลอง 119 วัน (4 เดือน)</li>
               <li>• ขยายเวลาได้สูงสุด 60 วัน</li>
               <li>• ไม่ผ่าน → แจ้งล่วงหน้า 1 รอบจ่ายเงินเดือน</li>
@@ -546,82 +578,89 @@ export default function ProbationDetailPage() {
               onClick={() => setPolicyOpen(true)}
               className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-accent"
             >
-              {locale === 'th' ? 'ดูฉบับเต็ม' : 'View full policy'} <ArrowRight className="h-3 w-3" />
+              {isTh ? 'ดูฉบับเต็ม' : 'View full policy'} <ArrowRight className="h-3 w-3" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Sticky footer */}
-      <div
-        className="sticky bottom-0 -mx-8 mt-5 flex items-center gap-3 border-t border-hairline bg-surface px-8 py-3.5"
-        style={{ boxShadow: '0 -6px 20px rgba(14,27,44,0.05)' }}
-      >
+      <div className="sticky bottom-0 -mx-8 mt-5 flex items-center gap-3 border-t border-hairline bg-surface px-8 py-3.5 shadow-[var(--shadow-md)]">
         <div className="text-xs text-ink-muted">
           {submitDisabled
-            ? locale === 'th'
+            ? isTh
               ? 'กรุณากรอกข้อมูลที่จำเป็นให้ครบก่อนส่ง'
               : 'Please complete all required fields before submitting'
-            : locale === 'th'
-              ? 'พร้อมส่งผลการทดลองงาน'
-              : 'Ready to submit probation result'}
+            : isTh
+              ? 'บันทึกร่างอัตโนมัติ · พร้อมส่งผลการทดลองงาน'
+              : 'Auto-saved draft · ready to submit'}
         </div>
         <div className="flex-1" />
         <Link href={`/${locale}/workflows/probation`} className="humi-button humi-button--ghost">
           ยกเลิก
         </Link>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={submitDisabled}
-          aria-label={
-            locale === 'th'
-              ? 'ส่งผลทดลองงานไปยัง HRBP'
-              : 'Submit Probation Result to HRBP'
-          }
-          className="humi-button humi-button--primary disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Send className="h-3.5 w-3.5" />
-          {locale === 'th' ? 'ส่งผลทดลองงานไปยัง HRBP' : 'Submit Probation Result to HRBP'}
+        <button type="button" className="humi-button humi-button--ghost">
+          {isTh ? 'บันทึกร่าง' : 'Save draft'}
         </button>
+        {outcome === 'no_pass' ? (
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={submitDisabled}
+            className="humi-button inline-flex items-center gap-1.5 bg-danger text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <X className="h-3.5 w-3.5" />
+            {isTh ? 'ยืนยัน ไม่ผ่านทดลองงาน' : 'Confirm — did not pass'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={submitDisabled}
+            className="humi-button humi-button--primary inline-flex items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Check className="h-3.5 w-3.5" />
+            {isTh ? 'อนุมัติและส่งให้ HR Admin' : 'Approve & send to HR Admin'}
+          </button>
+        )}
       </div>
 
       {/* Probation policy modal — full reference text */}
       <Modal
         open={policyOpen}
         onClose={() => setPolicyOpen(false)}
-        title={locale === 'th' ? 'นโยบายทดลองงาน · ฉบับ 2569' : 'Probation Policy · 2026 Edition'}
+        title={isTh ? 'นโยบายทดลองงาน · ฉบับ 2569' : 'Probation Policy · 2026 Edition'}
       >
         <div className="space-y-4 text-sm text-ink-soft leading-relaxed">
           <ul className="list-disc space-y-2 pl-5">
             <li>
-              {locale === 'th'
+              {isTh
                 ? 'ระยะทดลองงานมาตรฐาน 119 วัน (ประมาณ 4 เดือน) นับจากวันเริ่มงาน'
                 : 'Standard probation period is 119 days (about 4 months) from the hire date.'}
             </li>
             <li>
-              {locale === 'th'
+              {isTh
                 ? 'สามารถขยายเวลาทดลองงานได้สูงสุด 60 วัน โดยต้องระบุเหตุผลและวันที่มีผล'
                 : 'Probation may be extended up to 60 days, with a stated reason and effective date.'}
             </li>
             <li>
-              {locale === 'th'
+              {isTh
                 ? 'กรณีไม่ผ่าน ต้องแจ้งล่วงหน้าอย่างน้อย 1 รอบการจ่ายเงินเดือน'
                 : 'A fail outcome requires at least one payroll cycle of advance notice.'}
             </li>
             <li>
-              {locale === 'th'
+              {isTh
                 ? 'กรณีผ่าน พนักงานจะได้รับ Allowance ตามเงื่อนไขในสัญญาจ้าง'
                 : 'On pass, the employee receives the allowance per the employment contract.'}
             </li>
             <li>
-              {locale === 'th'
+              {isTh
                 ? 'หากผู้จัดการไม่บันทึกผลภายในกำหนด ระบบจะ auto-pass อัตโนมัติ'
                 : 'If the manager does not record an outcome by the deadline, the system auto-passes.'}
             </li>
           </ul>
           <p className="text-xs text-ink-muted">
-            {locale === 'th'
+            {isTh
               ? 'อ้างอิงระเบียบบริษัทว่าด้วยการทดลองงาน · ฉบับปรับปรุง 2569'
               : 'Reference: Company probation policy · 2026 revision'}
           </p>
