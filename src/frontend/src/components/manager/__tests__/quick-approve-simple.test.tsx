@@ -28,6 +28,7 @@ import {
   LEAVE_DEMO_COUNT,
   OT_DEMO_COUNT,
   TC_DEMO_COUNT,
+  TERMINATION_DEMO_COUNT,
 } from '@/lib/demo-seed';
 import { useOvertimeRequests } from '@/stores/overtime-requests';
 
@@ -36,7 +37,7 @@ import { useOvertimeRequests } from '@/stores/overtime-requests';
 // couple of demo ESS leave rows (LEAVE_DEMO_COUNT); Group B adds demo ESS OT rows
 // (OT_DEMO_COUNT) so the OT tab is non-zero.
 const TOTAL_SEED_COUNT =
-  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT + OT_DEMO_COUNT + TC_DEMO_COUNT;
+  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT + OT_DEMO_COUNT + TC_DEMO_COUNT + TERMINATION_DEMO_COUNT;
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
 
@@ -175,13 +176,13 @@ describe('QuickApproveSimple — AC7.4 inline actions', () => {
     const viewLinks = screen.getAllByRole('link', { name: /ดูรายละเอียด/ });
     expect(viewLinks.length).toBeGreaterThanOrEqual(1);
     // Most rows open the unified /quick-approve/[id] detail; pay-rate, tax-planning,
-    // time-correction, leave + ot rows open their own /workflows/<type>/[id] page.
-    // Every view link must resolve to one of those detail routes.
+    // time-correction, leave, ot, probation + resignation rows open their own
+    // /workflows/<type>/[id] page. Every view link must resolve to one of those.
     viewLinks.forEach((link) => {
       expect(link).toHaveAttribute(
         'href',
         expect.stringMatching(
-          /\/(quick-approve|workflows\/(pay-rate|tax-planning|time-correction|leave|ot))\//,
+          /\/(quick-approve|workflows\/(pay-rate|tax-planning|time-correction|leave|ot|probation|resignation))\//,
         ),
       );
     });
