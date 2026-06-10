@@ -123,7 +123,7 @@ export const MODULES: ModuleGroup[] = [
       { id: 'my-team', label: 'My Team', labelTh: 'ทีมของฉัน', href: '/manager/team', show: ['manager', 'hradmin', 'hris'] }, // P2: Manager direct-reports read-only directory — restores the /admin/employees?scope=team affordance PR-3 cut from manager-dashboard
       { id: 'roster', label: 'Roster & Shifts', labelTh: 'ตารางกะ', href: '/roster', show: ['manager', 'hradmin', 'hris'] }, // repointed → real /roster page
       { id: 'perf', label: 'Team Performance', labelTh: 'ผลงานทีม', href: '/performance-form', show: ['manager', 'hrbp', 'hradmin', 'hris'] },
-      { id: 'probation', label: 'Probation Reviews', labelTh: 'ทดลองงาน', href: '/manager-dashboard/probations', show: ['manager', 'hrbp', 'hradmin', 'hris'] },
+      { id: 'probation', label: 'Probation Reviews', labelTh: 'ทดลองงาน', href: '/workflows/probation', show: ['manager', 'hrbp', 'hradmin', 'hris'] }, // agreed journey (STA-33 route inventory: /workflows/probation → /workflows/probation/[id]); was /manager-dashboard/probations (divergent inline-modal surface)
       { id: 'reports', label: 'Reports', labelTh: 'รายงาน', href: '/reports', show: ['manager', 'hrbp', 'hradmin', 'hris', 'spd'] },
       // CUT: swap (Shift Swap) — it is a modal inside /roster (?panel=swap), not a menu item.
     ],
@@ -258,12 +258,17 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
   // mismatch. Collapse only applies to the desktop static sidebar — the mobile
   // drawer (className carries `--drawer`) always shows the full panel.
   const isDrawer = (className ?? '').includes('humi-sidebar--drawer');
-  const [collapsed, setCollapsed] = useState(false);
+  // Default collapsed to the icon rail (IA simplification 2026-06-10) — the
+  // always-open 2-column nav was the top complexity driver. Expand on a rail
+  // click (see the rail-item onClick below) or the explicit toggle. Initial
+  // state stays a literal `true` so SSR markup === first client render; the
+  // effect only flips to expanded when the user has explicitly opted in ('0').
+  const [collapsed, setCollapsed] = useState(true);
   useEffect(() => {
     try {
-      if (localStorage.getItem('bp-panel-collapsed') === '1') setCollapsed(true);
+      if (localStorage.getItem('bp-panel-collapsed') === '0') setCollapsed(false);
     } catch {
-      /* localStorage unavailable (SSR / privacy mode) — keep default expanded. */
+      /* localStorage unavailable (SSR / privacy mode) — keep default collapsed. */
     }
   }, []);
   const setCollapsedPersist = (next: boolean) => {
