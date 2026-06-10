@@ -341,6 +341,9 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
     e.currentTarget.setPointerCapture(e.pointerId);
     document.body.style.userSelect = 'none';
     document.body.style.cursor = 'col-resize';
+    // Suppress the grid-column ease while dragging so the width tracks the
+    // cursor 1:1 (the CSS transition would otherwise rubber-band behind it).
+    document.documentElement.classList.add('sidebar-resizing');
   };
   const onResizeMove = (e: React.PointerEvent<HTMLButtonElement>) => {
     const d = dragRef.current;
@@ -360,6 +363,7 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
     }
     document.body.style.userSelect = '';
     document.body.style.cursor = '';
+    document.documentElement.classList.remove('sidebar-resizing');
     persistWidth(widthRef.current);
   };
   const onResizeKey = (e: React.KeyboardEvent<HTMLButtonElement>) => {
