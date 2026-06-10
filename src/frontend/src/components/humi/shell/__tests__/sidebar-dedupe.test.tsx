@@ -177,14 +177,14 @@ describe('AC5.1 — no two visible leaves share a bare href (per persona)', () =
 
 describe('Req5 — menu simplification (cut placeholder clutter)', () => {
   it('the full menu (hris / hr_manager sees every group) stays at the simplified size', () => {
-    // hr_manager (top admin tier) sees: workspace 10 + team 6 + hr 6 + system 6 = 28
-    // distinct routes (system 6 = +2 new HRIS config leaves: time-policy, benefit-catalog).
+    // hr_manager (top admin tier) sees: workspace 10 + team 6 + hr 6 + system 4 = 26
+    // distinct routes. System dropped 6→4 on 2026-06-10: Time Policy + Benefit
+    // Catalog were un-leafed and nested under Master Catalog (/admin/foundation)
+    // tiles — IA simplification, not a feature cut (both screens still reachable).
     // The 3 People-Partner-only hr leaves (employees-bu, talent-search,
     // benefits-reports — gated hrbp/spd) are NOT visible to hr_manager.
-    // NOTE: this assertion was a stale 27 on master (already failing pre-change, off by
-    // one); corrected to the real count here while collapsing the phantom sysadmin persona.
     const total = collectLeafHrefs(PERSONA_ROLES.hris).length;
-    expect(total).toBe(28);
+    expect(total).toBe(26);
   });
 
   it('no leaf is a bare ?section= deep-link onto a page another leaf already owns', () => {

@@ -157,9 +157,13 @@ export const MODULES: ModuleGroup[] = [
     icon: Settings,
     leaves: [
       { id: 'roles', label: 'Roles & Permissions', labelTh: 'สิทธิ์ตามบทบาท', href: '/permissions', show: ['hris'] }, // hr_manager (top admin) — matches the /permissions route guard (was phantom 'sysadmin', collapsed into hris)
-      { id: 'catalog', label: 'Master Catalog', labelTh: 'ฐานข้อมูลกลาง', href: '/admin/foundation', show: ['hris'] }, // merges assets
-      { id: 'time-policy', label: 'Time Policy', labelTh: 'นโยบายเวลาทำงาน', href: '/admin/system/time-policy', show: ['hris'] },
-      { id: 'benefit-catalog', label: 'Benefit Catalog', labelTh: 'แคตตาล็อกสวัสดิการ', href: '/admin/system/benefit-catalog', show: ['hris'] },
+      { id: 'catalog', label: 'Master Catalog', labelTh: 'ฐานข้อมูลกลาง', href: '/admin/foundation', show: ['hris'] }, // merges assets; also the hub for Time Policy + Benefit Catalog config (nested as tiles on /admin/foundation, 2026-06-10 IA simplification — they used to be standalone System leaves)
+      // IA simplification 2026-06-10: Time Policy (/admin/system/time-policy) and
+      // Benefit Catalog (/admin/system/benefit-catalog) were REMOVED as standalone
+      // System leaves and nested under Master Catalog (reachable as tiles on the
+      // /admin/foundation landing). Shrinks the System group 6→4 — one of three
+      // stacked nav layers the user flagged as "ดู complex มาก". The pages keep
+      // their /admin/system/* routes + editFoundation guard.
       // P2 follow-up (PR-4) DONE: doc-review URL split out of /admin/documents. SPD now has its
       // own reachable review queue at /hrbp/doc-review (outside admin/layout's hr_admin+ gate, so
       // the route's own guard admits spd + hr_admin + hr_manager). hr-docs keeps /admin/documents.
