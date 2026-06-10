@@ -43,10 +43,10 @@ import ProbationDetailPage from '../page';
 // Helpers
 // ------------------------------------------------------------------
 
-// probationEndDate for PB-001 = '2026-04-09'
-const PROBATION_END = '2026-04-09';
-const DATE_BEFORE_END = '2026-03-01'; // <= end → invalid for extend
-const DATE_AFTER_END = '2026-05-01'; // >  end → valid for extend
+// probationEndDate for PB-001 = '2026-06-18'
+const PROBATION_END = '2026-06-18';
+const DATE_BEFORE_END = '2026-06-01'; // <= end → invalid for extend
+const DATE_AFTER_END = '2026-07-01'; // >  end → valid for extend
 
 async function renderLoaded(id = 'PB-001', path = `/th/workflows/probation/${id}`) {
   routeId = id;
