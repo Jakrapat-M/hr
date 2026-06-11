@@ -23,6 +23,9 @@ import {
 } from '@/data/benefits/plan-registry';
 import { PlanConfiguratorShell, type PlanConfiguratorTab } from '@/components/benefits/PlanConfiguratorShell';
 import { Tab1IdentityFields, type Tab1IdentityValues } from '@/components/benefits/Tab1IdentityFields';
+import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar';
+import { useAuthStore } from '@/stores/auth-store';
+import { useBenefitHistoryStore } from '@/stores/benefit-history-store';
 import { applyIdentityToPlan, buildPlanFromCreate } from './plan-builders';
 
 // ── Plan catalog — CRUD-style mockup ─────────────────────────────────────────
@@ -228,15 +231,24 @@ function EditPlanModal({
       open
       onClose={onClose}
       title={isTh ? `แก้ไขแผน: ${plan.id}` : `Edit plan: ${plan.id}`}
-      widthClass="max-w-3xl"
+      widthClass="max-w-5xl"
     >
       <div className="space-y-4">
-        <PlanConfiguratorShell
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          isTh={isTh}
-        />
+        {/* History panel beside the plan's current info (STA-102) */}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <PlanConfiguratorShell
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            isTh={isTh}
+          />
+          <BenefitHistorySidebar
+            targetType="plan"
+            targetId={plan.id}
+            isTh={isTh}
+            className="lg:self-start"
+          />
+        </div>
 
         {/* Eligibility rule link (v2 plans only) */}
         {isV2Plan(plan) && plan.eligibility.eligibilityRuleId && (
@@ -442,8 +454,19 @@ export default function BenefitPlansPage() {
   // this list so changes appear without a backend (out of scope this phase).
   const [plans, setPlans] = useState<BenefitPlan[]>(() => [...BENEFIT_PLAN_REGISTRY]);
 
+  const actorName = useAuthStore((s) => s.username) ?? 'HR Admin';
+  const addHistoryEntry = useBenefitHistoryStore((s) => s.addEntry);
+
   const handleCreatePlan = (created: BenefitPlan) => {
     setPlans((prev) => [created, ...prev]);
+    // STA-102 — log plan creation (draft + active both log as `create`).
+    addHistoryEntry({
+      targetType: 'plan',
+      targetId: created.id,
+      targetName: created.nameTh || created.nameEn || created.id,
+      action: 'create',
+      actorName,
+    });
   };
 
   const handleUpdatePlan = (updated: BenefitPlan) => {
