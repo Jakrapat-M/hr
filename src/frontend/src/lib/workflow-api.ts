@@ -185,6 +185,8 @@ export interface EligibilityRule {
   effective_to: string | null;
   // SF-aligned fields
   rule_name?: string | null;
+  // STA-99: Excel "Rule type (Standard/Special)" — most BA rows are "Special".
+  rule_type?: 'standard' | 'special' | null;
   status?: string | null;
   policy_profile: string | null;
   business_unit?: string | null;
@@ -221,6 +223,8 @@ export interface EligibilityRuleInput {
   created_by: string;
   // SF-aligned fields
   rule_name?: string | null;
+  // STA-99: Excel "Rule type (Standard/Special)".
+  rule_type?: 'standard' | 'special' | null;
   status?: string | null;
   effective_from?: string | null;
   effective_to?: string | null;
@@ -394,6 +398,7 @@ export async function addEligibilityRule(
       effective_to: rule.effective_to ?? null,
       rule_id: (rule as unknown as Record<string, unknown>).rule_id as string ?? null,
       rule_name: rule.rule_name ?? null,
+      rule_type: rule.rule_type ?? 'special',
       plan_id: (rule as unknown as Record<string, unknown>).plan_id as string ?? null,
       status: rule.status ?? 'active',
       policy_profile: rule.policy_profile ?? null,

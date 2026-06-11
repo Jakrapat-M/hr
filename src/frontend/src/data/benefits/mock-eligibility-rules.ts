@@ -21,6 +21,8 @@ export type MockEligibilityRule = {
   policy_profile: string | null;
   rule_id: string | null;
   rule_name: string | null;
+  // STA-99: Excel "Rule type (Standard/Special)" — BA rows are mostly "Special".
+  rule_type: 'standard' | 'special' | null;
   plan_id: string | null;
   status: 'draft' | 'active' | 'inactive' | null;
   business_unit: string | null;
@@ -48,7 +50,7 @@ const COMMON: Pick<MockEligibilityRule,
   'created_by' | 'effective_from' | 'effective_to' | 'plan_effective' |
   'no_of_years_from_hiring' | 'hiring_date_from' | 'hiring_date_to' |
   'company' | 'company_code' | 'job_code' | 'additional_condition' |
-  'rule_id' | 'rule_name' | 'plan_id' | 'status' | 'business_unit' |
+  'rule_id' | 'rule_name' | 'rule_type' | 'plan_id' | 'status' | 'business_unit' |
   'employee_subgroup' | 'dvt_project' | 'effective_type' | 'waiting_period_days' |
   'claim_period'
 > = {
@@ -59,6 +61,7 @@ const COMMON: Pick<MockEligibilityRule,
   effective_type: 'hire_date',
   rule_id: null,
   rule_name: null,
+  rule_type: 'special', // Excel "2. Benefit Eligibility rule" rows are predominantly "Special"
   plan_id: 'TH_MAD_001',
   status: 'active',
   business_unit: null,
@@ -83,6 +86,7 @@ export const MOCK_ELIGIBILITY_RULES: MockEligibilityRule[] = [
     benefit_key: 'medical-reimbursement',
     scope_type: 'entitlement',
     scope_value: 'Permanent staff · PG1-PG6',
+    rule_type: 'standard',
     allow: true,
     policy_profile: 'CPN',
     employee_group: 'A',
@@ -136,6 +140,7 @@ export const MOCK_ELIGIBILITY_RULES: MockEligibilityRule[] = [
     benefit_key: 'training',
     scope_type: 'entitlement',
     scope_value: 'Permanent staff · annual cap',
+    rule_type: 'standard',
     allow: true,
     policy_profile: 'CPN',
     employee_group: 'A',
