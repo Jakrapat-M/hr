@@ -379,7 +379,10 @@ function RulesTableView({
     { id: 'benefit_plan_id', header: t('colBenefitPlanId'),
       cell: (r) => <span className={mono}>{benefitPlanId(r)}</span>,
       sortAccessor: (r) => benefitPlanId(r) },
-    // STA-99: business_group pending BA — is it distinct from business_unit? Column omitted for now.
+    // STA-99 (BA-confirmed): Business Group is a distinct column from Business Unit.
+    { id: 'business_group', header: t('colBusinessGroup'),
+      cell: (r) => <span className="text-small text-ink whitespace-nowrap">{r.business_group ?? '-'}</span>,
+      sortAccessor: (r) => r.business_group ?? '' },
     { id: 'business_unit', header: t('colBusinessUnit'),
       cell: (r) => <span className="text-small text-ink whitespace-nowrap">{r.business_unit ?? '-'}</span>,
       sortAccessor: (r) => r.business_unit ?? '' },
@@ -530,34 +533,38 @@ function RulesTableView({
         </Modal>
       )}
 
-      {/* STA-102 — labelled, visible change-history panel for the selected row, below the table */}
+      {/* STA-102 — change-history in a Modal (matches the add/edit rule modals) */}
       {historyTarget && (
-        <div className="rounded-md border border-hairline border-l-4 border-l-accent/30 bg-canvas-soft px-4 py-3">
-          <p className="mb-2 text-small font-semibold text-ink">
-            {historyTarget.rule_name ?? BENEFIT_PLAN_LABELS[historyTarget.benefit_key as BenefitKey]?.th ?? historyTarget.benefit_key}
-          </p>
-          <BenefitHistorySidebar
-            targetType="rule"
-            targetId={historyTarget.benefit_key}
-            isTh
-            className="bg-surface"
-          />
-          {/* Entitlement-amount audit (DB effective-dated history) */}
-          {historyLoading ? (
-            <p className="mt-3 text-small text-ink-muted">{t('historyLoading')}</p>
-          ) : historyData.length > 0 && (
-            <div className="mt-3 space-y-1 text-small">
-              <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.08em] text-ink-faint">{t('historyAmountTitle')}</p>
-              {historyData.map((h) => (
-                <div key={h.id} className="flex items-center gap-4">
-                  <span className="text-ink-muted tabular-nums">{new Date(h.effective_from).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                  <span className="font-semibold text-ink tabular-nums">฿{(h.entitlement_amount ?? 0).toLocaleString('th-TH')}</span>
-                  {h.effective_to && <span className="text-xs text-ink-faint">(ยกเลิก)</span>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <Modal
+          open
+          onClose={() => onHistory(historyTarget)}
+          title={historyTarget.rule_name ?? BENEFIT_PLAN_LABELS[historyTarget.benefit_key as BenefitKey]?.th ?? historyTarget.benefit_key}
+          widthClass="max-w-2xl"
+        >
+          <div className="space-y-3">
+            <BenefitHistorySidebar
+              targetType="rule"
+              targetId={historyTarget.benefit_key}
+              isTh
+              className="bg-surface"
+            />
+            {/* Entitlement-amount audit (DB effective-dated history) */}
+            {historyLoading ? (
+              <p className="text-small text-ink-muted">{t('historyLoading')}</p>
+            ) : historyData.length > 0 && (
+              <div className="space-y-1 text-small">
+                <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.08em] text-ink-faint">{t('historyAmountTitle')}</p>
+                {historyData.map((h) => (
+                  <div key={h.id} className="flex items-center gap-4">
+                    <span className="text-ink-muted tabular-nums">{new Date(h.effective_from).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                    <span className="font-semibold text-ink tabular-nums">฿{(h.entitlement_amount ?? 0).toLocaleString('th-TH')}</span>
+                    {h.effective_to && <span className="text-xs text-ink-faint">(ยกเลิก)</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal>
       )}
     </div>
   );
@@ -587,6 +594,7 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal }: RuleFor
   const [effectiveEnd,   setEffectiveEnd]   = useState(initialRule?.effective_to?.slice(0, 10) ?? '');
   const [policyProfile,  setPolicyProfile]  = useState(initialRule?.policy_profile ?? 'CPN');
   const [businessUnit,   setBusinessUnit]   = useState(('business_unit' in (initialRule ?? {}) ? String((initialRule as EligibilityRule & { business_unit?: string }).business_unit ?? '') : ''));
+  const [businessGroup,  setBusinessGroup]  = useState(('business_group' in (initialRule ?? {}) ? String((initialRule as EligibilityRule & { business_group?: string }).business_group ?? '') : ''));
   const [company,        setCompany]        = useState(initialRule?.company ?? '');
   const [companyCode,    setCompanyCode]    = useState(('company_code' in (initialRule ?? {}) ? String((initialRule as EligibilityRule & { company_code?: string }).company_code ?? '') : ''));
   const [jobCode,        setJobCode]        = useState(initialRule?.job_code ?? '');
@@ -626,6 +634,7 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal }: RuleFor
         effective_to:           effectiveEnd || null,
         policy_profile:         policyProfile,
         business_unit:          businessUnit || null,
+        business_group:         businessGroup || null,
         company:                company || null,
         company_code:           companyCode || null,
         job_code:               jobCode || null,
@@ -704,6 +713,10 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal }: RuleFor
       <section className="space-y-3 border-t border-hairline-soft pt-4">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">Employee Info.</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col gap-1">
+            <label className={labelCls}>Business Group</label>
+            <input type="text" value={businessGroup} onChange={(e) => setBusinessGroup(e.target.value)} disabled={saving} placeholder="เช่น Retail" className={inputCls} />
+          </div>
           <div className="flex flex-col gap-1">
             <label className={labelCls}>Business Unit</label>
             <input type="text" value={businessUnit} onChange={(e) => setBusinessUnit(e.target.value)} disabled={saving} placeholder="เช่น BU-HR" className={inputCls} />
