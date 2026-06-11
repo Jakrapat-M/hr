@@ -245,7 +245,10 @@ export default function EmployeeDetailPage() {
       cum[rec.planId] = (cum[rec.planId] ?? 0) + rec.amount
       return {
         rec,
-        currentTotal: regBase(rec.planId) + cum[rec.planId],
+        // STA-95 (BA rule 2026-06-11): this-year stays at the annual entitlement;
+        // only next year is reduced by the borrowed amount, so the gap between the
+        // two years equals the transferred sum.
+        currentTotal: regBase(rec.planId),
         nextTotal: nextBaseOf(rec.planId) - cum[rec.planId],
       }
     })
@@ -258,7 +261,7 @@ export default function EmployeeDetailPage() {
     let next = 0
     plans.forEach((p) => {
       const moved = reallocations.filter((r) => r.planId === p).reduce((s, r) => s + r.amount, 0)
-      current += regBase(p) + moved
+      current += regBase(p) // annual entitlement — unchanged by transfers
       next += nextBaseOf(p) - moved
     })
     return { reallocRows: rows, currentPool: current, nextPool: next, hasReallocData: plans.size > 0 || rows.length > 0 }

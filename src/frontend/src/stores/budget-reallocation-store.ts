@@ -11,11 +11,12 @@
  *     .coverage.entitlementAmount) — NOT stored here, so it can never drift from
  *     the plan registry or contradict a Special-Privilege override.
  *   - This store owns ONLY the NEXT-year base (registry has no next-year concept)
- *     + the reallocation deltas. Running totals are derived at the call site:
- *       currentYearTotal = registryEntitlement + Σ amount
- *       nextYearTotal    = nextYearBase        − Σ amount
- *     so currentYearTotal + nextYearTotal === registryEntitlement + nextYearBase
- *     (conservation) for ANY set of records.
+ *     + the reallocation deltas. Running totals are derived at the call site
+ *     (BA-confirmed display rule 2026-06-11):
+ *       currentYearTotal = registryEntitlement              (annual cap; unchanged)
+ *       nextYearTotal    = nextYearBase − Σ amount          (reduced by borrowing)
+ *     so (currentYearTotal − nextYearTotal) === Σ amount — the gap between the two
+ *     years equals the total transferred (a ฿10,000 move shows 40,000 / 30,000).
  *
  * NOTE: BE-04 "borrow-forward" (src/stores/benefit-exception-store.ts) already
  * models a current↔future medical transfer with an approval flow. That is the
