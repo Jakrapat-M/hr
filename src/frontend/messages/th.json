@@ -4933,6 +4933,7 @@
     "filterStatus": "สถานะ:",
     "filterStatusActive": "ใช้งาน",
     "filterStatusInactive": "ไม่ใช้งาน",
+    "filterStatusDraft": "ฉบับร่าง",
     "filterStartDate": "วันที่เริ่ม:",
     "filterEffectiveDate": "วันที่มีผล:",
     "filterMonthAll": "เดือน",

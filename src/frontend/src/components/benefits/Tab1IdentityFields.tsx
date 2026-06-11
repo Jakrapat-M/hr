@@ -10,7 +10,7 @@ import {
 import { COMPANY_OPTIONS, ADD_NEW_COMPANY, isKnownCompany } from '@/data/benefits/company-registry';
 
 export type CountryCode = 'TH' | 'VN';
-export type PlanStatus = 'active' | 'inactive';
+export type PlanStatus = 'active' | 'inactive' | 'draft';
 export type BenefitTypeGroup = 'reimbursement-employee-hr' | 'reimbursement-hr' | 'info' | 'record';
 // STA-70 follow-up (spec expanded with Enrolment / Claim condition / Legal entity sections)
 export type EnrolmentMode = 'auto' | 'manual';
@@ -168,6 +168,7 @@ export function Tab1IdentityFields({
               >
                 <option value="active">{isTh ? 'ใช้งาน (Active)' : 'Active'}</option>
                 <option value="inactive">{isTh ? 'ไม่ใช้งาน (Inactive)' : 'Inactive'}</option>
+                <option value="draft">{isTh ? 'ฉบับร่าง (Draft)' : 'Draft'}</option>
               </select>
             )}
           </FormField>

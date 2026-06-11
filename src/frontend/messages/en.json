@@ -5028,6 +5028,7 @@
     "filterStatus": "Status:",
     "filterStatusActive": "Active",
     "filterStatusInactive": "Inactive",
+    "filterStatusDraft": "Draft",
     "filterStartDate": "Start date:",
     "filterEffectiveDate": "Effective date:",
     "filterMonthAll": "Month",

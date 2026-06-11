@@ -144,7 +144,7 @@ export interface BenefitPlanV1 {
   /**
    * STA-70 — Active/Inactive flag. Optional; existing seeds default to 'active' at use sites.
    */
-  status?: 'active' | 'inactive';
+  status?: 'active' | 'inactive' | 'draft';
   /**
    * STA-70 — Top-level benefit-type grouping for configurator. Distinct from the
    * nested `coverage.benefitType` string. Optional; use-site default derives from `recordType`.
@@ -197,7 +197,7 @@ export interface BenefitPlanV2 {
   /** STA-70 — Country scope. Optional; existing seeds default to 'TH' at use sites. */
   country?: 'TH' | 'VN';
   /** STA-70 — Active/Inactive flag. Optional; existing seeds default to 'active' at use sites. */
-  status?: 'active' | 'inactive';
+  status?: 'active' | 'inactive' | 'draft';
   /** STA-70 — Top-level benefit-type grouping. Optional; use-site default derives from `recordType`. */
   benefitTypeGroup?: BenefitTypeGroup;
   /** STA-70 follow-up — Enrolment mode. */
