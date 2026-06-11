@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Trash2, Plus, ShieldCheck, ChevronDown, ChevronRight, Pencil, Clock, LayoutGrid, Table as TableIcon, Upload, Download } from 'lucide-react';
+import { Trash2, Plus, Pencil, Clock, Upload, Download } from 'lucide-react';
 
 import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal, Capability } from '@/components/humi';
 import { rulesToCsv, downloadCsv, parseRulesCsv } from './rules-csv';
@@ -50,8 +50,6 @@ const PLAN_EFFECTIVE_OPTIONS = [
 
 const CLAIM_PERIOD_OPTIONS = ['Year', 'Month', 'Quarter', 'One-time', 'Lifetime'] as const;
 
-const PREVIEW_ROWS = 5;
-
 // STA-99 — table view: filter <select> styling mirrors the plans-catalog pattern.
 const tableSelectClass =
   'h-9 rounded-[var(--radius-md)] border border-hairline bg-surface px-3 text-small text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
@@ -83,7 +81,6 @@ export function EntitlementRulesManager() {
     ?? BENEFIT_PLAN_LABELS[rule.benefit_key as BenefitKey]?.th
     ?? rule.benefit_key;
 
-  const [viewMode,       setViewMode]       = useState<'cards' | 'table'>('cards');
   const [rules,          setRules]          = useState<EligibilityRule[]>([]);
   const [loading,        setLoading]        = useState(true);
   const [showAddForm,    setShowAddForm]    = useState(false);
@@ -93,8 +90,6 @@ export function EntitlementRulesManager() {
   const [historyData,    setHistoryData]    = useState<EligibilityRule[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [deleting,       setDeleting]       = useState(false);
-  const [collapsed,      setCollapsed]      = useState<Set<string>>(new Set());
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const fetchAll = useCallback(async () => {
@@ -195,18 +190,6 @@ export function EntitlementRulesManager() {
     reader.readAsText(file);
   };
 
-  const toggleCollapse = (key: string) =>
-    setCollapsed((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
-
-  const toggleExpand = (key: string) =>
-    setExpandedGroups((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
-
-  const grouped = ALL_BENEFIT_KEYS.map((key) => ({
-    key,
-    plan: BENEFIT_PLAN_LABELS[key],
-    rules: rules.filter((r) => r.benefit_key === key),
-  }));
-
   return (
     <Card variant="raised" size="lg">
       {/* Header */}
@@ -219,25 +202,6 @@ export function EntitlementRulesManager() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {/* STA-99 — Card ⇄ Table view toggle (segmented control). Cards stay default. */}
-          <div role="group" aria-label={`${t('viewCards')} / ${t('viewTable')}`} className="inline-flex rounded-md border border-hairline bg-surface p-0.5">
-            <button
-              type="button"
-              onClick={() => setViewMode('cards')}
-              aria-pressed={viewMode === 'cards'}
-              className={`inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 py-1 text-small font-medium transition-colors ${viewMode === 'cards' ? 'bg-accent text-white' : 'text-ink-muted hover:text-ink'}`}
-            >
-              <LayoutGrid size={13} aria-hidden /> {t('viewCards')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('table')}
-              aria-pressed={viewMode === 'table'}
-              className={`inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 py-1 text-small font-medium transition-colors ${viewMode === 'table' ? 'bg-accent text-white' : 'text-ink-muted hover:text-ink'}`}
-            >
-              <TableIcon size={13} aria-hidden /> {t('viewTable')}
-            </button>
-          </div>
           {/* STA-100 — Import / Export CSV toolbar, mirroring the benefit plan catalog */}
           <Capability action="editFoundation" fallback={
             <Button variant="ghost" size="sm" leadingIcon={<Upload size={14} aria-hidden />} disabled>
@@ -292,108 +256,20 @@ export function EntitlementRulesManager() {
 
       {loading ? (
         <p className="mt-4 text-small text-ink-muted">กำลังโหลด...</p>
-      ) : viewMode === 'table' ? (
-        <RulesTableView rules={rules} />
       ) : (
-        <div className="mt-4 space-y-3">
-          {grouped.map(({ key, plan, rules: groupRules }) => {
-            const isCollapsed = collapsed.has(key);
-            return (
-              <div key={key} className="rounded-md border border-hairline overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => toggleCollapse(key)}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3 bg-canvas-soft hover:bg-canvas transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    {isCollapsed ? <ChevronRight size={14} className="shrink-0 text-ink-muted" /> : <ChevronDown size={14} className="shrink-0 text-ink-muted" />}
-                    <div className="min-w-0">
-                      <span className="font-semibold text-ink text-body">{plan.th}</span>
-                      <span className="ml-2 text-small text-ink-muted">({plan.code})</span>
-                    </div>
-                  </div>
-                  <span className="shrink-0 inline-flex items-center rounded-full bg-surface border border-hairline px-2.5 py-0.5 text-xs font-semibold text-ink-muted">
-                    {groupRules.length} กฎ
-                  </span>
-                </button>
-
-                {!isCollapsed && (() => {
-                  if (groupRules.length === 0) return (
-                    <div className="flex items-center gap-2 px-4 py-4 text-small text-ink-muted">
-                      <ShieldCheck size={16} className="text-ink-faint" aria-hidden />
-                      ยังไม่มีกฎสำหรับ benefit นี้
-                    </div>
-                  );
-                  const isExpanded = expandedGroups.has(key);
-                  const visible = isExpanded ? groupRules : groupRules.slice(0, PREVIEW_ROWS);
-                  const hidden  = groupRules.length - PREVIEW_ROWS;
-                  return (
-                    <div className="divide-y divide-hairline">
-                      {visible.map((rule) => (
-                        editTarget?.id === rule.id ? (
-                          <div key={rule.id} className="px-4 py-3 bg-accent/5 border-l-4 border-accent">
-                            <RuleForm
-                              initialRule={rule}
-                              createdBy={userId ?? username ?? 'admin'}
-                              onSave={async (input) => { await handleUpdate(input); }}
-                              onCancel={() => setEditTarget(null)}
-                            />
-                          </div>
-                        ) : (
-                          <div key={rule.id}>
-                            <RuleRow
-                              rule={rule}
-                              historyOpen={historyTarget?.id === rule.id}
-                              historyLabel={t('historyToggle')}
-                              onEdit={() => setEditTarget(rule)}
-                              onDelete={() => setDeleteTarget(rule)}
-                              onHistory={() => handleHistory(rule)}
-                            />
-                            {historyTarget?.id === rule.id && (
-                              <div className="px-4 py-3 bg-canvas-soft border-l-4 border-accent/30">
-                                {/* STA-102 — labelled change-history panel beside the rule's current info */}
-                                <BenefitHistorySidebar
-                                  targetType="rule"
-                                  targetId={rule.benefit_key}
-                                  isTh
-                                  className="bg-surface"
-                                />
-                                {/* Entitlement-amount audit (DB effective-dated history) */}
-                                {historyLoading ? (
-                                  <p className="mt-3 text-small text-ink-muted">{t('historyLoading')}</p>
-                                ) : historyData.length > 0 && (
-                                  <div className="mt-3 space-y-1 text-small">
-                                    <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.08em] text-ink-faint">{t('historyAmountTitle')}</p>
-                                    {historyData.map((h) => (
-                                      <div key={h.id} className="flex items-center gap-4">
-                                        <span className="text-ink-muted tabular-nums">{new Date(h.effective_from).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                        <span className="font-semibold text-ink tabular-nums">฿{(h.entitlement_amount ?? 0).toLocaleString('th-TH')}</span>
-                                        {h.effective_to && <span className="text-xs text-ink-faint">(ยกเลิก)</span>}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )
-                      ))}
-                      {groupRules.length > PREVIEW_ROWS && (
-                        <button
-                          type="button"
-                          onClick={() => toggleExpand(key)}
-                          className="flex w-full items-center justify-center gap-1.5 px-4 py-2.5 text-small font-medium text-accent hover:bg-canvas-soft transition-colors"
-                        >
-                          {isExpanded ? <>ยุบ <ChevronDown size={13} /></> : <>ดูทั้งหมด (+{hidden} กฎ) <ChevronRight size={13} /></>}
-                        </button>
-                      )}
-                    </div>
-                  );
-                })()}
-              </div>
-            );
-          })}
-        </div>
+        <RulesTableView
+          rules={rules}
+          createdBy={userId ?? username ?? 'admin'}
+          historyTarget={historyTarget}
+          historyData={historyData}
+          historyLoading={historyLoading}
+          editTarget={editTarget}
+          onEdit={(rule) => setEditTarget(rule)}
+          onDelete={(rule) => setDeleteTarget(rule)}
+          onHistory={handleHistory}
+          onSaveEdit={async (input) => { await handleUpdate(input); }}
+          onCancelEdit={() => setEditTarget(null)}
+        />
       )}
 
       {/* Delete modal */}
@@ -423,9 +299,36 @@ export function EntitlementRulesManager() {
 
 // ── RulesTableView (STA-99) ───────────────────────────────────────────────────
 // Filterable table mirroring the BA Excel "2. Benefit Eligibility rule" columns.
-// Toggled alongside the grouped-card view; cards remain the default.
+// Sole view for the Manage Rules page; per-row history / edit / delete actions
+// (ported from the former grouped-card RuleRow) live in the rightmost column.
 
-function RulesTableView({ rules }: { rules: EligibilityRule[] }) {
+interface RulesTableViewProps {
+  rules: EligibilityRule[];
+  createdBy: string;
+  historyTarget: EligibilityRule | null;
+  historyData: EligibilityRule[];
+  historyLoading: boolean;
+  editTarget: EligibilityRule | null;
+  onEdit: (rule: EligibilityRule) => void;
+  onDelete: (rule: EligibilityRule) => void;
+  onHistory: (rule: EligibilityRule) => void;
+  onSaveEdit: (input: Partial<EligibilityRuleInput>) => Promise<void>;
+  onCancelEdit: () => void;
+}
+
+function RulesTableView({
+  rules,
+  createdBy,
+  historyTarget,
+  historyData,
+  historyLoading,
+  editTarget,
+  onEdit,
+  onDelete,
+  onHistory,
+  onSaveEdit,
+  onCancelEdit,
+}: RulesTableViewProps) {
   const t = useTranslations('admin_benefits_entitlement_rules');
 
   const [fBenefit,   setFBenefit]   = useState<string>('all');
@@ -516,6 +419,25 @@ function RulesTableView({ rules }: { rules: EligibilityRule[] }) {
     { id: 'entitlement_amount', header: t('colEntitlementAmount'), align: 'right' as const,
       cell: (r) => <span className="font-semibold text-ink tabular-nums whitespace-nowrap">฿{(r.entitlement_amount ?? 0).toLocaleString('th-TH')}</span>,
       sortAccessor: (r) => r.entitlement_amount ?? 0, className: 'whitespace-nowrap' },
+    // STA-102 — per-row actions ported from the former card RuleRow: history / edit / delete.
+    { id: 'actions', header: t('colActions'), align: 'right' as const, className: 'whitespace-nowrap',
+      cell: (r) => (
+        <div className="flex items-center justify-end gap-1">
+          <button type="button" aria-pressed={historyTarget?.id === r.id} aria-label={t('historyToggle')} title={t('historyToggle')}
+            onClick={() => onHistory(r)}
+            className={`inline-flex items-center justify-center rounded-[var(--radius-sm)] border p-1.5 transition-colors ${historyTarget?.id === r.id ? 'border-accent/40 bg-accent-soft text-accent' : 'border-hairline text-ink-muted hover:bg-canvas-soft hover:text-ink'}`}>
+            <Clock size={14} aria-hidden />
+          </button>
+          <button type="button" aria-label="แก้ไข" title="แก้ไข" onClick={() => onEdit(r)}
+            className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted hover:bg-accent/10 hover:text-accent transition-colors">
+            <Pencil size={14} aria-hidden />
+          </button>
+          <button type="button" aria-label="ลบ" title="ลบ" onClick={() => onDelete(r)}
+            className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted hover:bg-danger/10 hover:text-danger transition-colors">
+            <Trash2 size={14} aria-hidden />
+          </button>
+        </div>
+      ) },
   ];
 
   const hasFilter = fBenefit !== 'all' || fRuleType !== 'all' || fEmpGroup !== 'all'
@@ -591,59 +513,48 @@ function RulesTableView({ rules }: { rules: EligibilityRule[] }) {
         dense
         emptyState={<p className="text-small text-ink-muted">{t('empty')}</p>}
       />
-    </div>
-  );
-}
 
-// ── RuleRow ──────────────────────────────────────────────────────────────────
+      {/* Edit panel — inline RuleForm for the selected row, below the table */}
+      {editTarget && (
+        <div className="rounded-md border-l-4 border-accent bg-accent/5 p-1">
+          <RuleForm
+            key={editTarget.id}
+            initialRule={editTarget}
+            createdBy={createdBy}
+            onSave={async (input) => { await onSaveEdit(input); }}
+            onCancel={onCancelEdit}
+          />
+        </div>
+      )}
 
-function RuleRow({ rule, historyOpen, historyLabel, onEdit, onDelete, onHistory }: { rule: EligibilityRule; historyOpen: boolean; historyLabel: string; onEdit: () => void; onDelete: () => void; onHistory: () => void }) {
-  return (
-    <div className="hover:bg-canvas-soft/50 transition-colors group">
-      <div className="flex items-center gap-4 px-4 py-3">
-        <span className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${egColor(rule.employee_group ?? '')}`}>
-          {rule.employee_group ?? '-'}
-        </span>
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1">
-          <span className="text-small text-ink-muted">Policy: <span className="font-semibold text-ink">{rule.policy_profile ?? '-'}</span></span>
-          {rule.pg_from != null && (
-            <span className="text-small text-ink-muted">PG: <span className="font-semibold text-ink tabular-nums">{rule.pg_from}–{rule.pg_to}</span></span>
-          )}
-          <span className="text-small text-ink-muted">{rule.plan_effective === 'hire_date' ? 'เริ่มงาน' : 'วันกำหนด'}</span>
-          {rule.company && (
-            <span className="text-small text-ink-muted">Company: <span className="font-semibold text-ink">{rule.company}</span></span>
-          )}
-          {rule.job_code && (
-            <span className="text-small text-ink-muted">Job: <span className="font-semibold text-ink">{rule.job_code}</span></span>
-          )}
-          {'rule_name' in rule && typeof rule.rule_name === 'string' && rule.rule_name && (
-            <span className="text-small text-ink-muted">Rule: <span className="font-semibold text-ink">{rule.rule_name}</span></span>
+      {/* STA-102 — labelled, visible change-history panel for the selected row, below the table */}
+      {historyTarget && (
+        <div className="rounded-md border border-hairline border-l-4 border-l-accent/30 bg-canvas-soft px-4 py-3">
+          <p className="mb-2 text-small font-semibold text-ink">
+            {historyTarget.rule_name ?? BENEFIT_PLAN_LABELS[historyTarget.benefit_key as BenefitKey]?.th ?? historyTarget.benefit_key}
+          </p>
+          <BenefitHistorySidebar
+            targetType="rule"
+            targetId={historyTarget.benefit_key}
+            isTh
+            className="bg-surface"
+          />
+          {/* Entitlement-amount audit (DB effective-dated history) */}
+          {historyLoading ? (
+            <p className="mt-3 text-small text-ink-muted">{t('historyLoading')}</p>
+          ) : historyData.length > 0 && (
+            <div className="mt-3 space-y-1 text-small">
+              <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.08em] text-ink-faint">{t('historyAmountTitle')}</p>
+              {historyData.map((h) => (
+                <div key={h.id} className="flex items-center gap-4">
+                  <span className="text-ink-muted tabular-nums">{new Date(h.effective_from).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  <span className="font-semibold text-ink tabular-nums">฿{(h.entitlement_amount ?? 0).toLocaleString('th-TH')}</span>
+                  {h.effective_to && <span className="text-xs text-ink-faint">(ยกเลิก)</span>}
+                </div>
+              ))}
+            </div>
           )}
         </div>
-        <div className="shrink-0 text-right">
-          <div className="font-display text-lg font-bold text-ink tabular-nums">฿{(rule.entitlement_amount ?? 0).toLocaleString('th-TH')}</div>
-          {rule.max_per_claim != null && (
-            <div className="text-xs text-ink-muted tabular-nums">ต่อครั้ง ฿{rule.max_per_claim.toLocaleString('th-TH')}</div>
-          )}
-        </div>
-        <div className="shrink-0 flex items-center gap-1">
-          {/* STA-102 — discoverable (always-visible) history toggle, clearly labelled */}
-          <button type="button" aria-pressed={historyOpen} onClick={onHistory}
-            className={`inline-flex items-center gap-1 rounded-[var(--radius-sm)] border px-2 py-1 text-xs font-medium transition-colors ${historyOpen ? 'border-accent/40 bg-accent-soft text-accent' : 'border-hairline text-ink-muted hover:bg-canvas-soft hover:text-ink'}`}>
-            <Clock size={13} aria-hidden /> {historyLabel}
-          </button>
-          <button type="button" aria-label="แก้ไข" onClick={onEdit}
-            className="inline-flex items-center justify-center rounded p-1 text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-accent/10 hover:text-accent transition-all">
-            <Pencil size={13} aria-hidden />
-          </button>
-          <button type="button" aria-label="ลบ" onClick={onDelete}
-            className="inline-flex items-center justify-center rounded p-1 text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-danger/10 hover:text-danger transition-all">
-            <Trash2 size={13} aria-hidden />
-          </button>
-        </div>
-      </div>
-      {rule.additional_condition && (
-        <p className="mt-0.5 text-xs text-ink-muted pl-9 pb-2">{rule.additional_condition}</p>
       )}
     </div>
   );

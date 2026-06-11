@@ -5062,8 +5062,7 @@
     "viewRule": "ดูกฎ"
   },
   "admin_benefits_entitlement_rules": {
-    "viewCards": "การ์ด",
-    "viewTable": "ตาราง",
+    "colActions": "การจัดการ",
     "historyToggle": "ประวัติ",
     "historyLoading": "กำลังโหลดประวัติ…",
     "historyAmountTitle": "ประวัติวงเงินสิทธิ์",

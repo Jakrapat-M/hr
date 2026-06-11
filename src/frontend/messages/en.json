@@ -5139,8 +5139,7 @@
     "viewRule": "View rule"
   },
   "admin_benefits_entitlement_rules": {
-    "viewCards": "Cards",
-    "viewTable": "Table",
+    "colActions": "Actions",
     "historyToggle": "History",
     "historyLoading": "Loading history…",
     "historyAmountTitle": "Entitlement amount history",
