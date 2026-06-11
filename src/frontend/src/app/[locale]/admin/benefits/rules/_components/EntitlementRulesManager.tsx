@@ -238,21 +238,23 @@ export function EntitlementRulesManager() {
             variant="secondary"
             size="sm"
             leadingIcon={<Plus size={14} aria-hidden />}
-            onClick={() => setShowAddForm((v) => !v)}
+            onClick={() => setShowAddForm(true)}
             disabled={loading}
           >
-            {showAddForm ? 'ยกเลิก' : 'เพิ่มกฎ'}
+            เพิ่มกฎ
           </Button>
         </div>
       </div>
 
-      {showAddForm && (
+      {/* Add modal — RuleForm in a Humi Modal (matches the benefit plan module) */}
+      <Modal open={showAddForm} onClose={() => setShowAddForm(false)} title="เพิ่มกฎสิทธิ์ใหม่" widthClass="max-w-3xl">
         <RuleForm
+          inModal
           createdBy={userId ?? username ?? 'admin'}
           onSave={async (input, benefitKey) => { await handleAdd(input as EligibilityRuleInput, benefitKey!); setShowAddForm(false); }}
           onCancel={() => setShowAddForm(false)}
         />
-      )}
+      </Modal>
 
       {loading ? (
         <p className="mt-4 text-small text-ink-muted">กำลังโหลด...</p>
@@ -514,17 +516,18 @@ function RulesTableView({
         emptyState={<p className="text-small text-ink-muted">{t('empty')}</p>}
       />
 
-      {/* Edit panel — inline RuleForm for the selected row, below the table */}
+      {/* Edit modal — RuleForm for the selected row (matches the benefit plan module) */}
       {editTarget && (
-        <div className="rounded-md border-l-4 border-accent bg-accent/5 p-1">
+        <Modal open onClose={onCancelEdit} title="แก้ไขกฎสิทธิ์" widthClass="max-w-3xl">
           <RuleForm
+            inModal
             key={editTarget.id}
             initialRule={editTarget}
             createdBy={createdBy}
             onSave={async (input) => { await onSaveEdit(input); }}
             onCancel={onCancelEdit}
           />
-        </div>
+        </Modal>
       )}
 
       {/* STA-102 — labelled, visible change-history panel for the selected row, below the table */}
@@ -567,9 +570,11 @@ interface RuleFormProps {
   createdBy: string;
   onSave: (input: Partial<EligibilityRuleInput>, benefitKey?: string) => Promise<void>;
   onCancel: () => void;
+  /** When rendered inside a Modal, drop the inline card chrome + internal title. */
+  inModal?: boolean;
 }
 
-function RuleForm({ initialRule, createdBy, onSave, onCancel }: RuleFormProps) {
+function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal }: RuleFormProps) {
   const { toast } = useToast();
   const isEdit = !!initialRule;
 
@@ -650,8 +655,8 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel }: RuleFormProps) {
   const labelCls = 'text-small font-medium text-ink';
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4 rounded-md border border-accent/30 bg-accent/5 p-4 space-y-4" aria-label={isEdit ? 'แก้ไขกฎวงเงินสิทธิ์' : 'เพิ่มกฎวงเงินสิทธิ์'}>
-      <p className="text-small font-semibold text-ink">{isEdit ? 'แก้ไขกฎวงเงินสิทธิ์' : 'เพิ่มกฎวงเงินสิทธิ์ใหม่'}</p>
+    <form onSubmit={handleSubmit} className={inModal ? 'space-y-4' : 'mt-4 rounded-md border border-accent/30 bg-accent/5 p-4 space-y-4'} aria-label={isEdit ? 'แก้ไขกฎวงเงินสิทธิ์' : 'เพิ่มกฎวงเงินสิทธิ์'}>
+      {!inModal && <p className="text-small font-semibold text-ink">{isEdit ? 'แก้ไขกฎวงเงินสิทธิ์' : 'เพิ่มกฎวงเงินสิทธิ์ใหม่'}</p>}
       <section className="space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">Rule ID and Validity</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
