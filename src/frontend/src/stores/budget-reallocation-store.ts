@@ -83,9 +83,9 @@ export const selectNextYearBase =
 // prior reallocation so the change-log is non-empty on first open. Registry-
 // backed planIds; EMP-000X namespace matches useEmployees.
 const seedBases: NextYearBudgetBase[] = [
-  { employeeId: 'EMP-0002', planId: 'BE-MED-001', nextYearBase: 30000 },
+  { employeeId: 'EMP-0002', planId: 'BE-MED-001', nextYearBase: 40000 },
   { employeeId: 'EMP-0002', planId: 'BE-MED-003', nextYearBase: 200000 },
-  { employeeId: 'EMP-0003', planId: 'BE-MED-001', nextYearBase: 30000 },
+  { employeeId: 'EMP-0003', planId: 'BE-MED-001', nextYearBase: 40000 },
 ];
 
 const seedRecords: ReallocationRecord[] = [
@@ -99,6 +99,19 @@ const seedRecords: ReallocationRecord[] = [
     reason: 'ขอใช้สิทธิ์ค่ารักษาพยาบาลปีหน้าล่วงหน้า (ค่ารักษาต่อเนื่อง)',
     createdBy: 'นงลักษณ์ ทรัพย์เจริญ (HR)',
     createdAt: '2026-05-20T03:00:00.000Z',
+  },
+  {
+    // STA-95 demo — accident this year requires borrowing next-year budget.
+    // base 40,000 + moved 10,000 → this year 50,000 / next year 30,000.
+    id: 'RB-0002',
+    employeeId: 'EMP-0003',
+    planId: 'BE-MED-001',
+    amount: 10000,
+    effectiveStartDate: '2026-06-01T00:00:00.000Z',
+    effectiveEndDate: '2026-12-31T00:00:00.000Z',
+    reason: 'อุบัติเหตุ — ขอใช้วงเงินค่ารักษาพยาบาลปีหน้าล่วงหน้า',
+    createdBy: 'นงลักษณ์ ทรัพย์เจริญ (HR)',
+    createdAt: '2026-06-05T03:00:00.000Z',
   },
 ];
 
