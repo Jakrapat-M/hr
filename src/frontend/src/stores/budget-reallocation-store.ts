@@ -11,11 +11,12 @@
  *     .coverage.entitlementAmount) — NOT stored here, so it can never drift from
  *     the plan registry or contradict a Special-Privilege override.
  *   - This store owns ONLY the NEXT-year base (registry has no next-year concept)
- *     + the reallocation deltas. Running totals are derived at the call site:
- *       currentYearTotal = registryEntitlement + Σ amount
- *       nextYearTotal    = nextYearBase        − Σ amount
- *     so currentYearTotal + nextYearTotal === registryEntitlement + nextYearBase
- *     (conservation) for ANY set of records.
+ *     + the reallocation deltas. Running totals are derived at the call site
+ *     (BA-confirmed display rule 2026-06-11):
+ *       currentYearTotal = registryEntitlement              (annual cap; unchanged)
+ *       nextYearTotal    = nextYearBase − Σ amount          (reduced by borrowing)
+ *     so (currentYearTotal − nextYearTotal) === Σ amount — the gap between the two
+ *     years equals the total transferred (a ฿10,000 move shows 40,000 / 30,000).
  *
  * NOTE: BE-04 "borrow-forward" (src/stores/benefit-exception-store.ts) already
  * models a current↔future medical transfer with an approval flow. That is the
@@ -83,9 +84,9 @@ export const selectNextYearBase =
 // prior reallocation so the change-log is non-empty on first open. Registry-
 // backed planIds; EMP-000X namespace matches useEmployees.
 const seedBases: NextYearBudgetBase[] = [
-  { employeeId: 'EMP-0002', planId: 'BE-MED-001', nextYearBase: 30000 },
+  { employeeId: 'EMP-0002', planId: 'BE-MED-001', nextYearBase: 40000 },
   { employeeId: 'EMP-0002', planId: 'BE-MED-003', nextYearBase: 200000 },
-  { employeeId: 'EMP-0003', planId: 'BE-MED-001', nextYearBase: 30000 },
+  { employeeId: 'EMP-0003', planId: 'BE-MED-001', nextYearBase: 40000 },
 ];
 
 const seedRecords: ReallocationRecord[] = [
@@ -99,6 +100,19 @@ const seedRecords: ReallocationRecord[] = [
     reason: 'ขอใช้สิทธิ์ค่ารักษาพยาบาลปีหน้าล่วงหน้า (ค่ารักษาต่อเนื่อง)',
     createdBy: 'นงลักษณ์ ทรัพย์เจริญ (HR)',
     createdAt: '2026-05-20T03:00:00.000Z',
+  },
+  {
+    // STA-95 demo — accident this year requires borrowing next-year budget.
+    // base 40,000 + moved 10,000 → this year 50,000 / next year 30,000.
+    id: 'RB-0002',
+    employeeId: 'EMP-0003',
+    planId: 'BE-MED-001',
+    amount: 10000,
+    effectiveStartDate: '2026-06-01T00:00:00.000Z',
+    effectiveEndDate: '2026-12-31T00:00:00.000Z',
+    reason: 'อุบัติเหตุ — ขอใช้วงเงินค่ารักษาพยาบาลปีหน้าล่วงหน้า',
+    createdBy: 'นงลักษณ์ ทรัพย์เจริญ (HR)',
+    createdAt: '2026-06-05T03:00:00.000Z',
   },
 ];
 

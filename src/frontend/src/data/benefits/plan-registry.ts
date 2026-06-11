@@ -246,7 +246,7 @@ export const BENEFIT_PLAN_REGISTRY: BenefitPlan[] = [
     eligibilityEn: 'All permanent employees',
     dvtVariant: true, // STA-27 PR-A — branch-aligned OPD variant exists at DVT branches
     coverage: {
-      entitlementAmount: 30000,
+      entitlementAmount: 40000,
       currency: 'THB',
       claimsLimitPerFrequencyPeriod: null,
       frequency: 'Annual',
