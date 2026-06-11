@@ -148,7 +148,18 @@ export default function HumiRequestsPage() {
     const benefitRows = selectBenefitRequestSummaries(benefitClaims);
     const referralRows = selectBenefitReferralRequestSummaries(benefitReferrals);
     const taxRows = selectTaxPlanningRequestSummaries(taxPlanningDrafts);
-    return [...referralRows, ...taxRows, ...benefitRows, ...queue, ...store, ...base];
+    // Deduplicate by id — queue-seeded benefit claims carry the same id as the
+    // domain-selector rows (workflowRequestId = row.id), so merging without
+    // dedup causes React duplicate-key warnings. First occurrence wins (domain
+    // selectors come first so their richer shape takes priority).
+    const seen = new Set<string>();
+    return [...referralRows, ...taxRows, ...benefitRows, ...queue, ...store, ...base].filter(
+      (r) => {
+        if (seen.has(r.id)) return false;
+        seen.add(r.id);
+        return true;
+      },
+    );
   }, [benefitClaims, benefitReferrals, taxPlanningDrafts, submissions, queueRows]);
 
   const filtered = useMemo(() => {

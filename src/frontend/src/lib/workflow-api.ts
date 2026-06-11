@@ -4,7 +4,14 @@ import { buildAuthHeaders } from './_request';
 // Pattern follows lib/api.ts but points at a separate base URL — workflow
 // runs on its own port (3001 by default).
 
-const BASE_URL = process.env.NEXT_PUBLIC_WORKFLOW_API_URL ?? 'http://localhost:3001';
+const BASE_URL = process.env.NEXT_PUBLIC_WORKFLOW_API_URL ?? '';
+
+/**
+ * True when no workflow gateway is configured (UI-mockup phase — no backend).
+ * Skipping the fetch entirely prevents the browser from logging
+ * ERR_CONNECTION_REFUSED for a localhost:3001 that never runs.
+ */
+const NO_BACKEND = !BASE_URL;
 
 export type WorkflowBenefitType =
   | 'medical-reimbursement'
@@ -290,6 +297,25 @@ export async function listEligibilityRules(benefitKey: string): Promise<Eligibil
     const mod = await import('@/data/benefits/mock-eligibility-rules');
     return mod.mockEligibilityRulesByKey(benefitKey) as unknown as EligibilityRule[];
   };
+
+  // No backend configured — skip the fetch entirely to avoid ERR_CONNECTION_REFUSED.
+  if (NO_BACKEND) {
+    const base = await mockFallback();
+    const local = _readLocal(benefitKey);
+    if (local.length === 0) return base;
+    const baseIds = new Set(base.map((r) => r.id));
+    const merged = [...base];
+    for (const lr of local) {
+      if (baseIds.has(lr.id)) {
+        const idx = merged.findIndex((r) => r.id === lr.id);
+        merged[idx] = lr;
+      } else {
+        merged.push(lr);
+      }
+    }
+    return merged;
+  }
+
   try {
     const headers = await buildAuthHeaders();
     const controller = new AbortController();

@@ -19,24 +19,29 @@ import { formatDate } from '@/lib/date';
 import { countLeaveDays } from '@/lib/leave-math';
 import { DOCUMENT_UPLOAD_HELPER_TH, DOCUMENT_UPLOAD_HELPER_EN } from '@/lib/document-boundary';
 import {
-  HUMI_LEAVE_BALANCES,
   HUMI_LEAVE_COVERAGE,
   HUMI_TH_HOLIDAYS,
+  type LeaveKind,
 } from '@/lib/humi-mock-data';
 import { useTimeoffStore, type TimeoffHistoryItem } from '@/stores/humi-timeoff-slice';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
 import type { ApproverStage } from '@/data/benefits/plan-registry';
-import { LEAVE_TYPES, getLeaveType, LEAVE_CODE_TO_BALANCE_KIND } from '@/lib/time/leave-types';
+import {
+  LEAVE_TYPES,
+  getLeaveType,
+  quotaTrackedTypes,
+  LEAVE_CODE_TO_BALANCE_KIND,
+} from '@/lib/time/leave-types';
 import { requiredDocsFor } from '@/lib/time/doc-rules';
 import { levelsForLeaveType, appliedChainFor } from '@/lib/time/approval-rules';
-import { isWithinCurrentPeriod, currentPeriod } from '@/lib/time/period';
+import { isBookableLeaveDate, LEAVE_BOOKING_HORIZON_DAYS } from '@/lib/time/period';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
 import {
   useLeaveApprovals,
   type LeaveRequest,
   type LeaveStatus as ApprovalLeaveStatus,
 } from '@/stores/leave-approvals';
-import { useRemainingFor } from '@/stores/leave-balances';
+import { useRemainingFor, useLeaveBalances } from '@/stores/leave-balances';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { routingStagesFor } from '@/lib/approval-routing';
 
@@ -45,6 +50,21 @@ const TIMEOFF_CHAIN: ApproverStage[] = ['manager', 'hr_admin'];
 
 // Demo employee identity for the ESS request portal (Tier D persona).
 const DEMO_EMPLOYEE = { id: 'EMP001', name: 'สมชาย ใจดี' };
+
+// Project a registry leave `code` (23 types) onto the legacy history `LeaveKind`
+// union (8 buckets), so the History tab shows the right icon/category per type
+// instead of always 'vacation'. Substring matching keeps paid/unpaid variants on
+// the same bucket; anything unmatched falls back to 'unpaid' (the neutral bucket).
+export function leaveCodeToHistoryKind(code: string): LeaveKind {
+  if (code.startsWith('annual')) return 'vacation';
+  if (code.startsWith('sick')) return 'sick';
+  if (code.startsWith('personnel')) return 'personal';
+  if (code === 'priesthood_leave' || code === 'priesthood_leave_unpaid') return 'ordination';
+  if (code === 'military_train_leave') return 'military';
+  if (code === 'maternity_risk_case') return 'parental';
+  if (code.startsWith('maternity')) return 'maternity';
+  return 'unpaid';
+}
 
 // Extended history item with audit + submittedAt as ISO for days-waiting
 type HistoryItemExtended = TimeoffHistoryItem & {
@@ -126,40 +146,87 @@ const HISTORY_LABEL_EN: Record<'approved' | 'rejected' | 'pending', string> = {
   pending: 'Pending',
 } as const;
 
-// English counterparts for the HUMI_LEAVE_BALANCES summary cards (keyed by the
-// balance `kind`). The mock data is Thai-only + shared, so we localize at the
-// render site instead of mutating the shared seed.
-const BALANCE_LABEL_EN: Record<string, string> = {
-  vacation: 'Annual Leave',
-  personal: 'Personal Leave',
-  sick: 'Sick Leave',
-  maternity: 'Maternity Leave',
-  ordination: 'Ordination Leave',
-  military: 'Military Service Leave',
-  parental: 'Parental Leave',
-  unpaid: 'Unpaid Leave',
-};
+// Bar colors cycled across the quota cards (token-only — teal / indigo / sage).
+const QUOTA_BAR_CLASSES = [
+  'bg-accent',
+  'bg-[color:var(--color-accent-alt)]',
+  'bg-[color:var(--color-sage)]',
+] as const;
 
-const BALANCE_UNIT_EN: Record<string, string> = {
-  'วันคงเหลือ': 'days left',
-  'ตามจำเป็น': 'as needed',
-  'ไม่รับค่าจ้าง': 'unpaid',
-};
+// Resolve the active ESS employee id the same way the submit gate does, so the
+// quota cards read the identical leave-balances bucket the form reserves against.
+function useEssEmployeeId(): string {
+  return useAuthStore((s) => s.userId) ?? DEMO_EMPLOYEE.id;
+}
 
-const BALANCE_REMAINING_EN: Record<string, string> = {
-  'ไม่จำกัด': 'Unlimited',
-  'ตามหมายเรียก': 'Per summons',
-};
+// Quota summary cards — registry-driven (quotaTracked types) + reactive to the
+// leave-balances store. Same numbers + same display names as the submit gate.
+function QuotaCards({ isTh }: { isTh: boolean }) {
+  const employeeId = useEssEmployeeId();
+  const balances = useLeaveBalances((s) => s.balances);
+  const quotaTypes = useMemo(() => quotaTrackedTypes(), []);
 
-const BALANCE_NOTE_EN: Record<string, string> = {
-  'จาก 15 วันต่อปี': 'of 15 days per year',
-  'จาก 4 วันต่อปี': 'of 4 days per year',
-  'ใช้ไปแล้ว 2 วันในปีนี้': '2 days used this year',
-  'จาก 98 วันต่อการคลอด': 'of 98 days per birth',
-  'ลาตามหมายเรียกของทางราชการ': 'Per government call-up',
-  'จาก 30 วันต่อปี': 'of 30 days per year',
-  'หักจากเงินเดือนตามจำนวนวัน': 'Deducted from pay per day',
-};
+  return (
+    <section
+      aria-label={isTh ? 'ยอดวันลาคงเหลือ' : 'Leave balances'}
+      className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3"
+    >
+      {quotaTypes.map((t, i) => {
+        const kind = LEAVE_CODE_TO_BALANCE_KIND[t.code] ?? t.code;
+        const bucket = balances[`${employeeId}:${kind}`];
+        const initial = bucket ? bucket.initial + bucket.credits : 0;
+        const remaining = bucket
+          ? bucket.initial + bucket.credits - bucket.debits - bucket.reserved
+          : 0;
+        const percentUsed =
+          initial > 0 ? Math.min(100, Math.round(((initial - remaining) / initial) * 100)) : 0;
+        const label = isTh ? t.nameTh : t.nameEn;
+        const note =
+          initial > 0
+            ? isTh
+              ? `จาก ${initial} วันต่อปี`
+              : `of ${initial} days per year`
+            : isTh
+              ? 'ยังไม่กำหนดโควต้า'
+              : 'No quota allocated yet';
+        return (
+          <Card key={t.code} variant="raised" size="md">
+            <CardEyebrow>{label}</CardEyebrow>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span
+                className={cn(
+                  'font-display font-semibold text-ink tabular-nums whitespace-nowrap',
+                  'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
+                )}
+              >
+                {remaining}
+              </span>
+              <span className="text-small text-ink-muted">
+                {isTh ? 'วันคงเหลือ' : 'days left'}
+              </span>
+            </div>
+            {percentUsed > 0 && (
+              <div
+                role="progressbar"
+                aria-valuenow={percentUsed}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={label}
+                className="humi-progress mt-3"
+              >
+                <div
+                  className={cn('h-full rounded-full', QUOTA_BAR_CLASSES[i % QUOTA_BAR_CLASSES.length])}
+                  style={{ width: `${percentUsed}%` }}
+                />
+              </div>
+            )}
+            <p className="mt-2 text-small text-ink-muted">{note}</p>
+          </Card>
+        );
+      })}
+    </section>
+  );
+}
 
 // Simple in-memory toast (no external library)
 function useToast() {
@@ -234,50 +301,9 @@ export default function HumiTimeoffPage() {
         </Button>
       </header>
 
-      {/* Balance KPIs */}
-      <section
-        aria-label={isTh ? 'ยอดวันลาคงเหลือ' : 'Leave balances'}
-        className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3"
-      >
-        {HUMI_LEAVE_BALANCES.map((b) => {
-          const label = isTh ? b.label : (BALANCE_LABEL_EN[b.kind] ?? b.label);
-          const remaining = isTh ? b.remaining : (BALANCE_REMAINING_EN[b.remaining] ?? b.remaining);
-          const unitLabel = isTh ? b.unitLabel : (BALANCE_UNIT_EN[b.unitLabel] ?? b.unitLabel);
-          const note = isTh ? b.note : (BALANCE_NOTE_EN[b.note] ?? b.note);
-          return (
-            <Card key={b.kind} variant="raised" size="md">
-              <CardEyebrow>{label}</CardEyebrow>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span
-                  className={cn(
-                    'font-display font-semibold text-ink tabular-nums whitespace-nowrap',
-                    'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
-                  )}
-                >
-                  {remaining}
-                </span>
-                <span className="text-small text-ink-muted">{unitLabel}</span>
-              </div>
-              {b.percentUsed > 0 && (
-                <div
-                  role="progressbar"
-                  aria-valuenow={b.percentUsed}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={label}
-                  className="humi-progress mt-3"
-                >
-                  <div
-                    className={cn('h-full rounded-full', b.barClass)}
-                    style={{ width: `${b.percentUsed}%` }}
-                  />
-                </div>
-              )}
-              <p className="mt-2 text-small text-ink-muted">{note}</p>
-            </Card>
-          );
-        })}
-      </section>
+      {/* Balance KPIs — read the SAME leave-balances store the submit gate uses,
+          so the cards never contradict the form's remaining-quota check. */}
+      <QuotaCards isTh={isTh} />
 
       {/* Main grid: form (1.2fr) + right column (1fr) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_1fr]">
@@ -509,24 +535,61 @@ function RequestTab({
   // Entitlement: the selected type must be in the persona's selectable set.
   const hasEntitlement = selectableTypes.some((t) => t.code === code);
 
-  // Period: the start date must fall in the current payroll period (21→20).
-  const outsidePeriod = !!fromISO && !isWithinCurrentPeriod(fromISO);
+  // Bookable window: leave supports SF-style advance booking (today..+90d), so it
+  // is NOT gated by the payroll period (21→20) — that lock is for time corrections.
+  // Both ends of the selected range must fall inside the bookable window.
+  const outsideBookable =
+    (!!fromISO && !isBookableLeaveDate(fromISO)) ||
+    (!!toISO && !isBookableLeaveDate(toISO));
 
-  // Overlap: scan the employee's own pending/approved leave for a date clash.
+  // The employee's own non-rejected leave intervals — reused for BOTH the submit
+  // gate (range clash) and the calendar's per-day overlap markers.
+  const ownIntervals = useMemo(
+    () =>
+      existingRequests
+        .filter(
+          (r) =>
+            r.employeeId === employeeId &&
+            r.status !== 'rejected' &&
+            !!r.startDate &&
+            !!r.endDate,
+        )
+        .map((r) => ({ start: r.startDate as string, end: r.endDate as string })),
+    [existingRequests, employeeId],
+  );
+
+  // Overlap (gate): does the selected range clash with any existing interval?
   const overlaps = useMemo(() => {
     if (!fromISO) return false;
     const start = fromISO;
     const end = toISO || fromISO;
-    return existingRequests.some((r) => {
-      if (r.employeeId !== employeeId) return false;
-      if (r.status === 'rejected') return false;
-      if (!r.startDate || !r.endDate) return false;
-      // inclusive interval overlap
-      return r.startDate <= end && r.endDate >= start;
-    });
-  }, [existingRequests, employeeId, fromISO, toISO]);
+    // inclusive interval overlap
+    return ownIntervals.some((iv) => iv.start <= end && iv.end >= start);
+  }, [ownIntervals, fromISO, toISO]);
 
-  const period = currentPeriod();
+  // Overlap (calendar): the exact ISO days covered by existing requests, so the
+  // calendar can mark them. Expanded across each interval (inclusive).
+  const overlapDates = useMemo(() => {
+    const days: string[] = [];
+    for (const iv of ownIntervals) {
+      const cursor = new Date(`${iv.start}T00:00:00Z`);
+      const last = new Date(`${iv.end}T00:00:00Z`);
+      // Guard against pathological ranges (cap at one year of expansion).
+      let guard = 0;
+      while (cursor <= last && guard < 366) {
+        days.push(cursor.toISOString().slice(0, 10));
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+        guard += 1;
+      }
+    }
+    return days;
+  }, [ownIntervals]);
+
+  // Calendar pre-disables any day outside the bookable leave window.
+  const isCalendarDateDisabled = useMemo(
+    () => (iso: string) => !isBookableLeaveDate(iso),
+    [],
+  );
 
   function validate(): Record<string, string> {
     const errs: Record<string, string> = {};
@@ -546,10 +609,10 @@ function RequestTab({
       errs.overlap = isTh
         ? 'ช่วงวันนี้ทับซ้อนกับคำขอลาที่รออนุมัติหรืออนุมัติแล้ว'
         : 'This range overlaps a pending/approved leave';
-    if (outsidePeriod)
+    if (outsideBookable)
       errs.period = isTh
-        ? `วันที่อยู่นอกงวดปัจจุบัน (${period.start} – ${period.end})`
-        : `Date is outside the current period (${period.start} – ${period.end})`;
+        ? `จองล่วงหน้าได้ไม่เกิน ${LEAVE_BOOKING_HORIZON_DAYS} วัน และต้องไม่ใช่วันที่ผ่านมาแล้ว`
+        : `Bookable only from today up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead (no past dates)`;
     if (missingDocs.length > 0)
       errs.docs = isTh
         ? `ต้องแนบเอกสาร: ${missingDocs.join(', ')}`
@@ -618,7 +681,7 @@ function RequestTab({
 
     // Mirror into the legacy history list so the History tab shows it too.
     submitHistory({
-      kind: 'vacation',
+      kind: leaveCodeToHistoryKind(code),
       kindLabel: isTh ? (def?.nameTh ?? code) : (def?.nameEn ?? code),
       fromDate: fromLabel,
       toDate: toLabel,
@@ -643,7 +706,49 @@ function RequestTab({
   }
 
   const blocking =
-    !hasEntitlement || overQuota || overlaps || outsidePeriod || missingDocs.length > 0;
+    !hasEntitlement || overQuota || overlaps || outsideBookable || missingDocs.length > 0;
+
+  // Live block reasons — derived from the SAME predicates that compute `blocking`,
+  // so every state where Submit is disabled visibly says WHY + what to do. These
+  // surface immediately (not only after a submit attempt), since the button is
+  // already `disabled={blocking}`, which would otherwise make validate()'s
+  // messages unreachable.
+  const liveBlocks: Array<{ key: string; msg: string }> = [];
+  if (!hasEntitlement)
+    liveBlocks.push({
+      key: 'entitlement',
+      msg: isTh
+        ? 'คุณไม่มีสิทธิ์ลาประเภทนี้ — เลือกประเภทการลาอื่น'
+        : 'You are not entitled to this leave type — pick another type',
+    });
+  if (overQuota)
+    liveBlocks.push({
+      key: 'quota',
+      msg: isTh
+        ? `เกินสิทธิ — คงเหลือ ${remaining} วัน แต่ขอลา ${totalDays} วัน ลองลดจำนวนวันหรือเลือกวันอื่น`
+        : `Over quota — ${remaining} day(s) left but requesting ${totalDays}. Reduce the days or pick another range`,
+    });
+  if (overlaps)
+    liveBlocks.push({
+      key: 'overlap',
+      msg: isTh
+        ? 'ช่วงวันนี้ทับซ้อนกับคำขอลาที่รออนุมัติหรืออนุมัติแล้ว — เลือกช่วงวันที่ว่าง'
+        : 'This range overlaps a pending/approved leave — choose an open range',
+    });
+  if (outsideBookable)
+    liveBlocks.push({
+      key: 'period',
+      msg: isTh
+        ? `จองล่วงหน้าได้ไม่เกิน ${LEAVE_BOOKING_HORIZON_DAYS} วัน และต้องไม่ใช่วันที่ผ่านมาแล้ว — เลือกวันในช่วงที่จองได้`
+        : `Bookable only from today up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead (no past dates) — pick a date in range`,
+    });
+  if (missingDocs.length > 0)
+    liveBlocks.push({
+      key: 'docs',
+      msg: isTh
+        ? `ต้องแนบเอกสาร: ${missingDocs.join(', ')} — กดปุ่ม “แนบ” ในรายการเอกสารด้านบน`
+        : `Attach required document(s): ${missingDocs.join(', ')} — use the "Attach" buttons above`,
+    });
 
   return (
     <div className="pt-6">
@@ -724,6 +829,8 @@ function RequestTab({
           to={toISO}
           holidays={HUMI_TH_HOLIDAYS}
           locale={locale}
+          isDateDisabled={isCalendarDateDisabled}
+          overlapDates={overlapDates}
           onChange={({ from, to }) => {
             setFromISO(from);
             setToISO(to);
@@ -935,14 +1042,21 @@ function RequestTab({
         {isTh ? DOCUMENT_UPLOAD_HELPER_TH : DOCUMENT_UPLOAD_HELPER_EN}
       </p>
 
-      {/* Blocking validation errors (pumpkin / danger — never red) */}
-      {(errors.entitlement || errors.quota || errors.overlap || errors.period || errors.docs) && (
-        <div className="mt-4 flex flex-col gap-1.5 rounded-[var(--radius-md)] border border-[color:var(--color-danger)] bg-[color:var(--color-danger-soft)] p-3">
-          {errors.entitlement && <InlineError msg={errors.entitlement} />}
-          {errors.quota && <InlineError msg={errors.quota} />}
-          {errors.overlap && <InlineError msg={errors.overlap} />}
-          {errors.period && <InlineError msg={errors.period} />}
-          {errors.docs && <InlineError msg={errors.docs} />}
+      {/* Live block reasons (pumpkin / danger — never red). Shown as soon as a
+          blocking condition holds, so the disabled Submit always says WHY +
+          how to fix it. */}
+      {liveBlocks.length > 0 && (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="mt-4 flex flex-col gap-1.5 rounded-[var(--radius-md)] border border-[color:var(--color-danger)] bg-[color:var(--color-danger-soft)] p-3"
+        >
+          <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-wide text-[color:var(--color-danger)]">
+            {isTh ? 'ยังส่งคำขอไม่ได้' : 'Cannot submit yet'}
+          </p>
+          {liveBlocks.map((b) => (
+            <InlineError key={b.key} msg={b.msg} />
+          ))}
         </div>
       )}
 

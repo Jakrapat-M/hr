@@ -41,10 +41,11 @@ function NotAuthorized({ locale }: { locale: string }) {
 
 export default async function TalentSearchPage({ params }: Props) {
   const { locale } = await params;
-  await getTranslations({ locale, namespace: 'talent_search' });
+  const t = await getTranslations({ locale, namespace: 'talent_search' });
 
   return (
     <main className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 lg:px-8">
+      <h1 className="sr-only">{t('pageTitle')}</h1>
       <Capability action="talentSearch" fallback={<NotAuthorized locale={locale} />}>
         <TalentSearchPanel />
       </Capability>

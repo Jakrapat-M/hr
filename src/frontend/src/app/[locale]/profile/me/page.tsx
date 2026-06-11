@@ -868,6 +868,9 @@ export default function HumiProfileMePage({
         )}
       </div>
 
+      {/* Page h1 — visually hidden; the hero h2 carries the visible name */}
+      <h1 className="sr-only">{locale === 'en' ? 'My Profile' : 'โปรไฟล์ของฉัน'}</h1>
+
       {/* Header card */}
       <div
         className="humi-card mb-5 flex flex-wrap items-center gap-5"

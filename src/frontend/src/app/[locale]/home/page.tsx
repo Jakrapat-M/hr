@@ -107,6 +107,7 @@ function getTimeGreeting(): string {
   if (h < 12) return 'สวัสดีตอนเช้า';
   if (h < 18) return 'สวัสดีตอนบ่าย';
   return 'สวัสดีตอนเย็น';
+
 }
 
 export default function HumiHomePage() {

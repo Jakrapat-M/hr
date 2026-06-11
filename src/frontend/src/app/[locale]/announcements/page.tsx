@@ -69,6 +69,7 @@ export default function HumiAnnouncementsPage() {
 
   return (
     <div className="pb-8">
+      <h1 className="sr-only">{t('pageTitle')}</h1>
       {/* Top action bar */}
       <div className="mb-5 flex items-center justify-between gap-3">
         <div className="text-small text-ink-muted">{t('subtitle')}</div>
