@@ -309,17 +309,17 @@ export default function BenefitPaymentPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <CardEyebrow>
-            {isTh ? 'สวัสดิการ · การจ่าย (Mockup)' : 'Benefits Admin · Payment (Mockup)'}
+            {isTh ? 'สวัสดิการ · การจ่าย' : 'Benefits Admin · Payment'}
           </CardEyebrow>
           <h1 className="font-display text-3xl font-semibold text-ink">
             {isTh
-              ? 'แดชบอร์ดการจ่ายสวัสดิการ — Lifecycle Demo (STA-67)'
-              : 'Benefit Payment Dashboard — Lifecycle Demo (STA-67)'}
+              ? 'แดชบอร์ดการจ่ายสวัสดิการ'
+              : 'Benefit Payment Dashboard'}
           </h1>
           <p className="mt-2 text-small text-ink-muted">
             {isTh
-              ? `รอบ ${PERIOD_ID} · UI Mockup · ตามขอบเขต STA-61`
-              : `Period ${PERIOD_ID} · UI mockup · scoped per STA-61`}
+              ? `รอบ ${PERIOD_ID}`
+              : `Period ${PERIOD_ID}`}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -534,11 +534,11 @@ export default function BenefitPaymentPage() {
 
       {/* F) Footer note */}
       <Card variant="raised" size="md">
-        <CardEyebrow>STA-67 · parent STA-61 · BE-27 · SAP ZBER001/003/004 (mock)</CardEyebrow>
+        <CardEyebrow>SAP ZBER001/003/004</CardEyebrow>
         <p className="mt-2 text-small text-ink-muted">
           {isTh
-            ? 'งานจริง: ทำผ่าน SAP ZBER001/003 — UI นี้เป็น Mockup เพื่อแสดงขั้นตอนและ Payload ตัวอย่าง (ไม่ส่งจริง)'
-            : 'Real execution: via SAP ZBER001/003 — this UI is a mockup demonstrating the lifecycle and sample payload only (no real posting).'}
+            ? 'ไฟล์ส่งจ่ายผ่าน SAP ZBER001/003 — แสดงขั้นตอนและตัวอย่าง Payload (ยังไม่ส่งจริง)'
+            : 'Payment export via SAP ZBER001/003 — shows the steps and a sample payload (not yet submitted).'}
         </p>
       </Card>
 
