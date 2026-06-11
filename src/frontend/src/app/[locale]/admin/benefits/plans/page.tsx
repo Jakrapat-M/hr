@@ -81,7 +81,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
 
 const ALL_CATEGORIES = ['all', ...Object.keys(CATEGORY_LABELS_EN)] as const;
 const ALL_RECORD_TYPES = ['all', 'records', 'info', 'claimable'] as const;
-const ALL_STATUSES = ['all', 'active', 'inactive'] as const;
+const ALL_STATUSES = ['all', 'active', 'inactive', 'draft'] as const;
 
 type FilterCategory = typeof ALL_CATEGORIES[number];
 type FilterRecordType = typeof ALL_RECORD_TYPES[number];
@@ -329,6 +329,8 @@ function CreatePlanModal({
   };
 
   const isValid = tab1Values.planKey.trim() && tab1Values.nameTh.trim() && tab1Values.nameEn.trim();
+  // STA-98 R1 — a draft only needs a planKey (row key + dup check); name/category may stay empty.
+  const draftValid = Boolean(tab1Values.planKey.trim());
 
   const handleSave = () => {
     if (!isValid) return;
@@ -341,6 +343,22 @@ function CreatePlanModal({
     setSaving(true);
     // In-session mutation only — no backend POST in this mockup phase.
     onSubmit(buildPlanFromCreate(tab1Values));
+    setSaving(false);
+    setSaved(true);
+    setTimeout(onClose, 1200);
+  };
+
+  // STA-98 R1 — save the in-progress plan as a draft without the full required-field gate.
+  const handleSaveDraft = () => {
+    if (!draftValid) return;
+    setError(null);
+    const key = tab1Values.planKey.trim();
+    if (existingIds.has(key)) {
+      setError(isTh ? `รหัสแผน "${key}" มีอยู่แล้ว` : `Plan ID "${key}" already exists`);
+      return;
+    }
+    setSaving(true);
+    onSubmit({ ...buildPlanFromCreate(tab1Values), status: 'draft' });
     setSaving(false);
     setSaved(true);
     setTimeout(onClose, 1200);
@@ -386,6 +404,11 @@ function CreatePlanModal({
 
         <div className="flex justify-end gap-2 pt-2 border-t border-hairline">
           <Button variant="ghost" onClick={onClose}>{isTh ? 'ยกเลิก' : 'Cancel'}</Button>
+          <Capability action="edit">
+            <Button variant="secondary" onClick={handleSaveDraft} disabled={saving || !draftValid}>
+              {isTh ? 'บันทึกฉบับร่าง' : 'Save as Draft'}
+            </Button>
+          </Capability>
           <Capability action="edit" fallback={
             <Button variant="primary" disabled>{isTh ? 'สร้างแผน' : 'Create Plan'}</Button>
           }>
@@ -485,7 +508,14 @@ export default function BenefitPlansPage() {
       id: 'name',
       header: t('colName'),
       cell: (p: BenefitPlan) => (
-        <span className="text-ink">{isTh ? p.nameTh : p.nameEn}</span>
+        <span className="inline-flex items-center gap-2 text-ink">
+          {isTh ? p.nameTh : p.nameEn}
+          {p.status === 'draft' && (
+            <span className="rounded-full bg-canvas-soft px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.06em] text-ink-muted">
+              {t('filterStatusDraft')}
+            </span>
+          )}
+        </span>
       ),
       sortAccessor: (p: BenefitPlan) => (isTh ? p.nameTh : p.nameEn),
     },
@@ -634,6 +664,7 @@ export default function BenefitPlansPage() {
             <option value="all">{t('filterAll')}</option>
             <option value="active">{t('filterStatusActive')}</option>
             <option value="inactive">{t('filterStatusInactive')}</option>
+            <option value="draft">{t('filterStatusDraft')}</option>
           </select>
         </div>
 
