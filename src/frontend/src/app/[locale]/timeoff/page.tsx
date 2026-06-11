@@ -1095,11 +1095,15 @@ function HistoryTab() {
   const isTh = locale !== 'en';
   const history = useTimeoffStore((s) => s.history);
   const userId = useAuthStore((s) => s.userId) ?? DEMO_EMPLOYEE.id;
-  // Live leave requests submitted by this employee (own status tracking).
-  const liveRequests = useLeaveApprovals((s) =>
-    s.requests.filter(
-      (r) => r.employeeId === userId && r.queueSnapshot?.type === 'leave' && !!r.leaveCode,
-    ),
+  // Select raw array — filtering inside the selector returns a new reference every snapshot,
+  // triggering the "getSnapshot should be cached" infinite-loop crash. Filter via useMemo instead.
+  const allRequests = useLeaveApprovals((s) => s.requests);
+  const liveRequests = useMemo(
+    () =>
+      allRequests.filter(
+        (r) => r.employeeId === userId && r.queueSnapshot?.type === 'leave' && !!r.leaveCode,
+      ),
+    [allRequests, userId],
   );
 
   if (history.length === 0 && liveRequests.length === 0) {

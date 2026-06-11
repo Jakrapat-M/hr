@@ -29,10 +29,15 @@ describe('benefit claim store', () => {
 
     expect(claim.id).toMatch(/^BEN-CLM-/);
     expect(claim.workflowRequestId).toMatch(/^REQ-BEN-/);
-    expect(claim.status).toBe('pending_spd');
+    // submitClaim must create pending_manager_approval (not skip to pending_spd)
+    expect(claim.status).toBe('pending_manager_approval');
     expect(claim.claimDate).toBe('2026-04-28');
     expect(claim.remark).toBe('OPD follow-up');
     expect(claim.audit).toHaveLength(1);
+    // queueSnapshot must be present so the claim surfaces in /quick-approve
+    expect(claim.queueSnapshot).toBeDefined();
+    expect(claim.queueSnapshot?.type).toBe('claim');
+    expect(claim.queueSnapshot?.requester.id).toBe('EMP001');
 
     const [row] = selectBenefitRequestSummaries(useBenefitClaimsStore.getState().claims);
     expect(row.id).toBe(claim.workflowRequestId);

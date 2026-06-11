@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useLocale } from 'next-intl';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput, Textarea } from '@/components/humi';
 import { FileUploadField } from '@/components/humi/FileUploadField';
-import { Capability } from '@/components/humi';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -244,15 +243,9 @@ export function SimpleClaimForm({
       )}
 
       <div className="mt-4 flex justify-end">
-        <Capability action="edit" fallback={
-          <Button variant="primary" disabled>
-            {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
-          </Button>
-        }>
-          <Button variant="primary" onClick={submit}>
-            {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
-          </Button>
-        </Capability>
+        <Button variant="primary" onClick={submit}>
+          {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
+        </Button>
       </div>
     </Card>
   );

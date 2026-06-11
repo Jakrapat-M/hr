@@ -13,7 +13,7 @@
 
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // ── next-intl mock ──────────────────────────────────────────────────────────
@@ -502,6 +502,14 @@ describe('Inbox table', () => {
     setPersona(['manager'], { userId: 'MGR001', username: 'พิชญ์ ม. (หัวหน้าทีม)' });
     const user = userEvent.setup();
     render(<QuickApprovePage />);
+
+    // useProbationCases fires a real setTimeout(..., 300) inside a useEffect.
+    // Under full-suite load that timer resolves AFTER beforeCount is captured but
+    // BEFORE the post-click assertion, injecting exactly 2 pending probation rows
+    // (PB-001 pending_manager + PB-002 pending_hr) and making the count flaky.
+    // Wait for the last async row (PB-002) to be in the DOM before reading
+    // beforeCount — this proves the probation load has fully settled.
+    await waitFor(() => screen.getByTestId('assign-to-me-PB-002'));
 
     const alreadyAssigned = screen.getByTestId('assign-to-me-WF-2026-001');
     expect(alreadyAssigned).toBeDisabled();

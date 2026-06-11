@@ -214,25 +214,38 @@ export function validateBenefitAttachmentRules(input: Pick<BenefitClaimInput, 'b
 }
 
 export function selectBenefitRequestSummaries(claims: BenefitClaimRequest[]) {
-  return claims.map((claim) => ({
-    id: claim.workflowRequestId,
-    type: `เบิกสวัสดิการ · ${BENEFIT_TYPE_LABEL[claim.benefitType]}`,
-    sub: `${claim.benefitCode} · ใบเสร็จ ${claim.receiptNo} · ฿${claim.totalClaimAmount.toLocaleString('th-TH')}`,
-    submitted: thaiDate(claim.submittedAt),
-    status: statusToRequestStatus(claim.status),
-    approvalChain: [
-      {
-        role: 'SPD Benefits',
-        name: 'ทีม SPD',
-        initials: 'SP',
-        tone: 'teal' as const,
-        status: stepStatus(claim.status),
-        when: BENEFIT_STATUS_LABEL[claim.status],
-        note: claim.correctionReason,
-      },
-    ] satisfies HumiApprovalStep[],
-    claim,
-  }));
+  return claims.map((claim) => {
+    // Build a coherent two-step chain narrating manager → SPD.
+    // Step 1 (Manager): pending while awaiting manager; completed once past that stage.
+    const managerDone = claim.status !== 'pending_manager_approval';
+    const managerStep: HumiApprovalStep = {
+      role: 'หัวหน้างาน',
+      name: 'หัวหน้างาน',
+      initials: 'MG',
+      tone: 'sage' as const,
+      status: managerDone ? 'approved' : 'pending',
+      when: managerDone ? 'หัวหน้าอนุมัติแล้ว' : 'รออนุมัติจากหัวหน้า',
+    };
+    // Step 2 (SPD): only active once the manager has approved.
+    const spdStep: HumiApprovalStep = {
+      role: 'SPD Benefits',
+      name: 'ทีม SPD',
+      initials: 'SP',
+      tone: 'teal' as const,
+      status: managerDone ? stepStatus(claim.status) : 'pending',
+      when: managerDone ? BENEFIT_STATUS_LABEL[claim.status] : 'รอ SPD อนุมัติ',
+      note: claim.correctionReason,
+    };
+    return {
+      id: claim.workflowRequestId,
+      type: `เบิกสวัสดิการ · ${BENEFIT_TYPE_LABEL[claim.benefitType]}`,
+      sub: `${claim.benefitCode} · ใบเสร็จ ${claim.receiptNo} · ฿${claim.totalClaimAmount.toLocaleString('th-TH')}`,
+      submitted: thaiDate(claim.submittedAt),
+      status: statusToRequestStatus(claim.status),
+      approvalChain: [managerStep, spdStep] satisfies HumiApprovalStep[],
+      claim,
+    };
+  });
 }
 
 function normalizeAttachments(attachments: BenefitAttachment[] = []): BenefitAttachment[] {
@@ -601,7 +614,7 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
           totalClaimAmount,
           claimAmount: totalClaimAmount,
           remark: input.remark ?? input.remarks ?? '',
-          status: 'pending_spd',
+          status: 'pending_manager_approval',
           submittedAt: at,
           updatedAt: at,
           hospitalType: input.hospitalType ?? input.opdIpd,
@@ -615,6 +628,34 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
           audit: [{ at, actorRole: 'employee', actorName: input.employeeName ?? 'จงรักษ์ ทานากะ', action: 'submit', note: 'ส่งคำขอเบิกสวัสดิการ' }],
           version: 1,
           previousVersions: [],
+          queueSnapshot: {
+            id: nextId('REQ-BEN', 4, count),
+            type: 'claim',
+            requester: {
+              id: input.employeeId ?? 'EMP001',
+              name: input.employeeName ?? 'จงรักษ์ ทานากะ',
+              position: input.personalGrade ?? 'PG4',
+              department: input.businessUnit ?? 'People Operations',
+              employeeId: input.employeeId ?? 'EMP001',
+              businessUnit: input.businessUnit ?? 'People Operations',
+              company: input.company ?? 'Central Group',
+            },
+            description: `เบิก${input.benefitName ?? BENEFIT_TYPE_LABEL[benefitType]} ฿${totalClaimAmount?.toLocaleString('th-TH') ?? '0'}`,
+            submittedAt: at,
+            urgency: 'normal',
+            waitingDays: 0,
+            details: {
+              category: input.benefitName ?? BENEFIT_TYPE_LABEL[benefitType],
+              amount: totalClaimAmount ?? 0,
+              receiptNo: input.receiptNo,
+              receiptDate: input.receiptDate,
+              claimDate: input.claimDate ?? input.receiptDate,
+            },
+            approvalTimeline: [
+              { step: 1, approver: 'หัวหน้างาน', status: 'pending' as const },
+              { step: 2, approver: 'SPD', status: 'pending' as const },
+            ],
+          },
         };
         set((s) => ({ claims: [claim, ...s.claims] }));
         return claim;

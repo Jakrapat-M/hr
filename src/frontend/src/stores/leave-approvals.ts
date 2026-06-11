@@ -293,18 +293,13 @@ export const useLeaveApprovals = create<LeaveApprovalsState>()(
     }),
     {
       name: 'humi-leave-approvals',
-      version: 1, // PR-1b: bumped alongside the rehydrate-to-seed persist contract.
+      version: 1,
       storage: createJSONStorage(() => localStorage),
-      // PR-1b persist contract (DECISION: rehydrate-to-seed + init-overwrite-empties).
-      // `merge` runs on EVERY rehydrate and drops the persisted `requests`, so the
-      // store rehydrates empty; the single seed authority (ensureDemoSeed at AppShell
-      // mount) then refills from the canonical queue rows. Net effect: "approve a row
-      // → hard refresh" returns to the full seeded 20-row set (honors spec 'refresh
-      // may reset to seed'). Other (non-seeded) fields persist normally.
-      merge: (persistedState, currentState) => {
-        const persisted = (persistedState ?? {}) as Partial<LeaveApprovalsState>;
-        return { ...currentState, ...persisted, requests: [] };
-      },
+      // Persist live rows normally so user-submitted requests survive hard
+      // navigation / F5. ensureDemoSeed (AppShell mount) calls addRequest with
+      // stable ids which is idempotent — seed rows are backfilled only when
+      // missing, never doubled. seedFromQueue (init-overwrite-empties guard) also
+      // remains safe: it only seeds when requests.length === 0.
     },
   ),
 );
