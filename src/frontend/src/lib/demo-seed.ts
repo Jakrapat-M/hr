@@ -304,6 +304,14 @@ export const TAX_PLANNING_DEMO_COUNT = 1;
 // name-based test lookups.
 const DEMO_LEAVE_EMPLOYEE = { id: 'EMP-0301', name: 'พิมพ์ชนก ศรีวัฒน์' };
 
+// The canonical ESS employee persona (สมชาย ใจดี) that actually drives the live
+// /timeoff submit form (PersonaSwitcher → Tier D). The form reads quota from
+// `${authUserId}:${kind}` — i.e. `EMP001:annual_leave` — so this persona MUST get
+// its own seeded buckets. Without it the quota cards read 0 and every annual-leave
+// submit is falsely blocked as "over quota". (EMP-0301 above is only the requester
+// for the pre-seeded demo *rows*, a different identity by design.)
+const DEMO_ESS_EMPLOYEE = { id: 'EMP001', name: 'สมชาย ใจดี' };
+
 const DEMO_LEAVE_BALANCE_SEEDS: Array<{ kind: string; initial: number }> = [
   { kind: 'sick_leave', initial: 30 },
   { kind: 'annual_leave', initial: 10 },
@@ -510,10 +518,17 @@ export function ensureDemoSeed(): void {
     useTimeCorrections.setState({ requests: DEMO_PENDING_TC });
   }
   // Group A: seed the demo employee's quota buckets BEFORE adding leave rows so
-  // the reserve() on each addRequest draws against a real balance.
+  // the reserve() on each addRequest draws against a real balance. Seed BOTH the
+  // demo-row requester (EMP-0301, used by the pre-seeded pending rows below) AND
+  // the canonical ESS persona (EMP001 / สมชาย ใจดี) who submits via the live
+  // /timeoff form — otherwise EMP001's quota reads 0 and annual-leave submit is
+  // falsely blocked as over-quota.
   useLeaveBalances
     .getState()
-    .seedBalances(DEMO_LEAVE_BALANCE_SEEDS.map((s) => ({ employeeId: DEMO_LEAVE_EMPLOYEE.id, ...s })));
+    .seedBalances([
+      ...DEMO_LEAVE_BALANCE_SEEDS.map((s) => ({ employeeId: DEMO_LEAVE_EMPLOYEE.id, ...s })),
+      ...DEMO_LEAVE_BALANCE_SEEDS.map((s) => ({ employeeId: DEMO_ESS_EMPLOYEE.id, ...s })),
+    ]);
 
   // Add the demo pending ESS leave rows (reserves quota, carries a queueSnapshot
   // so they surface in /quick-approve). Only seed when no ESS leave row exists.
