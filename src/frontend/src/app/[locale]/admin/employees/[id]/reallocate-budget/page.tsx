@@ -243,15 +243,25 @@ export default function ReallocateBudgetPage() {
           <div>
             <div className="humi-eyebrow">{t('preview.current')}</div>
             <div className="text-body font-semibold text-ink tabular-nums">
-              {formatCurrency(currentBefore)} <span className="text-ink-muted">→</span>{' '}
-              <span className="text-accent">{formatCurrency(currentAfter)}</span>
+              {formatCurrency(currentBefore)}
+              {amountNum > 0 && (
+                <>
+                  {' '}<span className="text-ink-muted">→</span>{' '}
+                  <span className="text-accent">{formatCurrency(currentAfter)}</span>
+                </>
+              )}
             </div>
           </div>
           <div>
             <div className="humi-eyebrow">{t('preview.next')}</div>
             <div className="text-body font-semibold text-ink tabular-nums">
-              {formatCurrency(nextBefore)} <span className="text-ink-muted">→</span>{' '}
-              <span className={nextAfter < 0 ? 'text-danger' : 'text-ink'}>{formatCurrency(nextAfter)}</span>
+              {formatCurrency(nextBefore)}
+              {amountNum > 0 && (
+                <>
+                  {' '}<span className="text-ink-muted">→</span>{' '}
+                  <span className={nextAfter < 0 ? 'text-danger' : 'text-ink'}>{formatCurrency(nextAfter)}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
