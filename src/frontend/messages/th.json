@@ -4273,6 +4273,75 @@
         "cancel": "ยกเลิก",
         "addAttachment": "เพิ่มไฟล์แนบ",
         "submit": "โอนงบ"
+      },
+      "benefitException": {
+        "subtitle": "สร้างข้อยกเว้นสวัสดิการสำหรับพนักงานคนนี้ — การปรับการเบิก สิทธิ หรือยอดสะสม",
+        "headerSection": "ข้อยกเว้น",
+        "detailsSection": "รายละเอียดข้อยกเว้นสวัสดิการ",
+        "fields": {
+          "workerId": "รหัสพนักงาน",
+          "exceptionFor": "ประเภทข้อยกเว้น",
+          "legalEntity": "นิติบุคคล",
+          "creationDate": "วันที่สร้างข้อยกเว้น",
+          "emailNotification": "เปิดการแจ้งเตือนทางอีเมล",
+          "attachments": "ไฟล์แนบ"
+        },
+        "exceptionForOptions": {
+          "claim": "การเบิก",
+          "entitlement": "สิทธิ",
+          "accumulation": "ยอดสะสม"
+        },
+        "yesNo": {
+          "yes": "ใช่",
+          "no": "ไม่"
+        },
+        "legalEntity": {
+          "add": "เพิ่มนิติบุคคล",
+          "placeholder": "เลือกนิติบุคคล",
+          "remove": "ลบ",
+          "empty": "ยังไม่ได้เพิ่มนิติบุคคล"
+        },
+        "legalEntityOptions": {
+          "ris": "บริษัท อาร์ไอเอส จำกัด",
+          "central": "กลุ่มเซ็นทรัล",
+          "dvt": "สาขา DVT",
+          "robinson": "ห้างสรรพสินค้าโรบินสัน"
+        },
+        "columns": {
+          "benefit": "สวัสดิการ",
+          "relevantPeriod": "รอบสวัสดิการที่เกี่ยวข้อง",
+          "selectedPeriod": "รอบที่เลือก",
+          "adjustmentAmount": "จำนวนที่ปรับ",
+          "details": "รายละเอียด",
+          "actions": "การจัดการ"
+        },
+        "benefitPlaceholder": "เลือกสวัสดิการ",
+        "relevantPeriodOptions": {
+          "none": "ไม่เลือก",
+          "p2026": "รอบสวัสดิการ 2569",
+          "p2025": "รอบสวัสดิการ 2568"
+        },
+        "selectedPeriodOptions": {
+          "claim2026": "การเบิก - ปีปฏิทิน 2569 (TH_CLAIM_CALENDAR_2026)",
+          "entitlement2026": "สิทธิ - ปีปฏิทิน 2569 (TH_ENT_CALENDAR_2026)",
+          "accum2026": "ยอดสะสม - ปีปฏิทิน 2569 (TH_ACCUM_CALENDAR_2026)"
+        },
+        "selectedPeriodPlaceholder": "เลือกรอบ",
+        "detailsLabel": "รายละเอียด",
+        "moveUp": "เลื่อนขึ้น",
+        "moveDown": "เลื่อนลง",
+        "deleteRow": "ลบแถว",
+        "addRow": "คลิกหรือโฟกัสเพื่อแก้ไข",
+        "validation": {
+          "benefitRequired": "เลือกสวัสดิการให้ครบทุกแถว",
+          "selectedPeriodRequired": "เลือกรอบให้ครบทุกแถว",
+          "noRows": "เพิ่มแถวข้อยกเว้นสวัสดิการอย่างน้อยหนึ่งแถว"
+        },
+        "buttons": {
+          "save": "บันทึก",
+          "cancel": "ยกเลิก"
+        },
+        "successBanner": "บันทึกข้อยกเว้นสวัสดิการแล้ว ({count} แถว)"
       }
     }
   },
