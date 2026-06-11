@@ -5173,7 +5173,12 @@
     "filterAll": "All",
     "clearFilters": "Clear filters",
     "showing": "Showing {shown} of {total}",
-    "empty": "No rules match the selected filters."
+    "empty": "No rules match the selected filters.",
+    "importCsv": "Import CSV",
+    "exportCsv": "Export CSV",
+    "importSuccess": "Imported {count} rules",
+    "importEmpty": "No valid rows found in the file",
+    "importError": "Could not read the CSV file"
   },
   "adminBenefitRecords": {
     "title": "Benefit Records",

@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Trash2, Plus, ShieldCheck, ChevronDown, ChevronRight, Pencil, Clock, LayoutGrid, Table as TableIcon } from 'lucide-react';
+import { Trash2, Plus, ShieldCheck, ChevronDown, ChevronRight, Pencil, Clock, LayoutGrid, Table as TableIcon, Upload, Download } from 'lucide-react';
 
-import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal, Capability } from '@/components/humi';
+import { rulesToCsv, downloadCsv, parseRulesCsv } from './rules-csv';
 import type { DataTableColumn } from '@/components/humi/DataTable';
 import { useToast } from '@/components/ui/toast';
 import { useAuthStore } from '@/stores/auth-store';
@@ -94,6 +95,7 @@ export function EntitlementRulesManager() {
   const [deleting,       setDeleting]       = useState(false);
   const [collapsed,      setCollapsed]      = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -168,6 +170,31 @@ export function EntitlementRulesManager() {
     }
   };
 
+  // STA-100 — export current rules to a client-side CSV download.
+  const handleExportCsv = () => {
+    downloadCsv('benefit-rules.csv', rulesToCsv(rules));
+  };
+
+  // STA-100 — mock import: parse the chosen CSV and append rows to in-session state.
+  const handleImportCsv = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-importing the same file
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = parseRulesCsv(String(reader.result ?? ''), userId ?? username ?? 'admin');
+        if (parsed.length === 0) { toast('warning', t('importEmpty')); return; }
+        setRules((prev) => [...prev, ...parsed]);
+        toast('success', t('importSuccess', { count: parsed.length }));
+      } catch {
+        toast('error', t('importError'));
+      }
+    };
+    reader.onerror = () => toast('error', t('importError'));
+    reader.readAsText(file);
+  };
+
   const toggleCollapse = (key: string) =>
     setCollapsed((prev) => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
 
@@ -211,6 +238,38 @@ export function EntitlementRulesManager() {
               <TableIcon size={13} aria-hidden /> {t('viewTable')}
             </button>
           </div>
+          {/* STA-100 — Import / Export CSV toolbar, mirroring the benefit plan catalog */}
+          <Capability action="editFoundation" fallback={
+            <Button variant="ghost" size="sm" leadingIcon={<Upload size={14} aria-hidden />} disabled>
+              {t('importCsv')}
+            </Button>
+          }>
+            <Button
+              variant="ghost"
+              size="sm"
+              leadingIcon={<Upload size={14} aria-hidden />}
+              onClick={() => importInputRef.current?.click()}
+              disabled={loading}
+            >
+              {t('importCsv')}
+            </Button>
+          </Capability>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".csv"
+            className="hidden"
+            onChange={handleImportCsv}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            leadingIcon={<Download size={14} aria-hidden />}
+            onClick={handleExportCsv}
+            disabled={loading || rules.length === 0}
+          >
+            {t('exportCsv')}
+          </Button>
           <Button
             variant="secondary"
             size="sm"

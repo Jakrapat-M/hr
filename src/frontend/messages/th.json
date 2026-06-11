@@ -5096,7 +5096,12 @@
     "filterAll": "ทั้งหมด",
     "clearFilters": "ล้างตัวกรอง",
     "showing": "แสดง {shown} จาก {total}",
-    "empty": "ไม่มีกฎที่ตรงกับตัวกรอง"
+    "empty": "ไม่มีกฎที่ตรงกับตัวกรอง",
+    "importCsv": "นำเข้า CSV",
+    "exportCsv": "ส่งออก CSV",
+    "importSuccess": "นำเข้า {count} กฎเรียบร้อย",
+    "importEmpty": "ไม่พบข้อมูลที่ถูกต้องในไฟล์",
+    "importError": "ไม่สามารถอ่านไฟล์ CSV ได้"
   },
   "adminBenefitRecords": {
     "title": "บันทึกสวัสดิการพิเศษ",
