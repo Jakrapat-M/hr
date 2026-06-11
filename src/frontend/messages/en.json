@@ -4999,6 +4999,16 @@
     "legendEyebrow": "Plan scope",
     "legendTitle": "Lifecycle plan descriptions"
   },
+  "benefitHistory": {
+    "eyebrow": "Change log",
+    "title": "History",
+    "empty": "No history yet",
+    "who": "By",
+    "when": "When",
+    "action_create": "Create",
+    "action_insert": "Insert",
+    "action_delete": "Delete"
+  },
   "admin_benefits_plans": {
     "eyebrow": "Benefits · Plan catalog",
     "title": "Benefit Plan Catalog",
@@ -5062,6 +5072,9 @@
   "admin_benefits_entitlement_rules": {
     "viewCards": "Cards",
     "viewTable": "Table",
+    "historyToggle": "History",
+    "historyLoading": "Loading history…",
+    "historyAmountTitle": "Entitlement amount history",
     "tableCaption": "Eligibility rules",
     "colRuleId": "Rule ID",
     "colRuleName": "Rule name",

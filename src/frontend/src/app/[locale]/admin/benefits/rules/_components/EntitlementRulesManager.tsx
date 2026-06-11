@@ -8,6 +8,8 @@ import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal } from '@/compon
 import type { DataTableColumn } from '@/components/humi/DataTable';
 import { useToast } from '@/components/ui/toast';
 import { useAuthStore } from '@/stores/auth-store';
+import { useBenefitHistoryStore } from '@/stores/benefit-history-store';
+import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar';
 import {
   listAllEligibilityRules,
   addEligibilityRule,
@@ -71,6 +73,14 @@ export function EntitlementRulesManager() {
   const t        = useTranslations('admin_benefits_entitlement_rules');
   const userId   = useAuthStore((s) => s.userId);
   const username = useAuthStore((s) => s.username);
+  const actorName = useAuthStore((s) => s.username) ?? username ?? 'admin';
+  const addHistoryEntry = useBenefitHistoryStore((s) => s.addEntry);
+
+  // Resolve a human-friendly label for a rule's history entry.
+  const ruleTargetName = (rule: EligibilityRule) =>
+    (('rule_name' in rule && typeof rule.rule_name === 'string' && rule.rule_name) ? rule.rule_name : null)
+    ?? BENEFIT_PLAN_LABELS[rule.benefit_key as BenefitKey]?.th
+    ?? rule.benefit_key;
 
   const [viewMode,       setViewMode]       = useState<'cards' | 'table'>('cards');
   const [rules,          setRules]          = useState<EligibilityRule[]>([]);
@@ -102,6 +112,14 @@ export function EntitlementRulesManager() {
   const handleAdd = async (input: EligibilityRuleInput, benefitKey: string) => {
     const newRule = await addEligibilityRule(benefitKey, input);
     setRules((prev) => [...prev, newRule]);
+    // STA-102 — log rule creation (history keyed by benefit_key).
+    addHistoryEntry({
+      targetType: 'rule',
+      targetId: newRule.benefit_key,
+      targetName: ruleTargetName(newRule),
+      action: 'create',
+      actorName,
+    });
     toast('success', 'เพิ่มกฎสิทธิ์เรียบร้อย');
   };
 
@@ -119,6 +137,14 @@ export function EntitlementRulesManager() {
     try {
       await deleteEligibilityRule(deleteTarget.benefit_key, deleteTarget.id);
       setRules((prev) => prev.filter((r) => r.id !== deleteTarget.id));
+      // STA-102 — log rule deletion.
+      addHistoryEntry({
+        targetType: 'rule',
+        targetId: deleteTarget.benefit_key,
+        targetName: ruleTargetName(deleteTarget),
+        action: 'delete',
+        actorName,
+      });
       toast('success', 'ลบกฎสิทธิ์เรียบร้อย');
       setDeleteTarget(null);
     } catch (err) {
@@ -258,18 +284,27 @@ export function EntitlementRulesManager() {
                           <div key={rule.id}>
                             <RuleRow
                               rule={rule}
+                              historyOpen={historyTarget?.id === rule.id}
+                              historyLabel={t('historyToggle')}
                               onEdit={() => setEditTarget(rule)}
                               onDelete={() => setDeleteTarget(rule)}
                               onHistory={() => handleHistory(rule)}
                             />
                             {historyTarget?.id === rule.id && (
-                              <div className="px-4 py-3 bg-canvas-soft border-l-4 border-accent/30 text-small">
+                              <div className="px-4 py-3 bg-canvas-soft border-l-4 border-accent/30">
+                                {/* STA-102 — labelled change-history panel beside the rule's current info */}
+                                <BenefitHistorySidebar
+                                  targetType="rule"
+                                  targetId={rule.benefit_key}
+                                  isTh
+                                  className="bg-surface"
+                                />
+                                {/* Entitlement-amount audit (DB effective-dated history) */}
                                 {historyLoading ? (
-                                  <span className="text-ink-muted">กำลังโหลดประวัติ...</span>
-                                ) : historyData.length === 0 ? (
-                                  <span className="text-ink-muted">ไม่มีประวัติ</span>
-                                ) : (
-                                  <div className="space-y-1">
+                                  <p className="mt-3 text-small text-ink-muted">{t('historyLoading')}</p>
+                                ) : historyData.length > 0 && (
+                                  <div className="mt-3 space-y-1 text-small">
+                                    <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.08em] text-ink-faint">{t('historyAmountTitle')}</p>
                                     {historyData.map((h) => (
                                       <div key={h.id} className="flex items-center gap-4">
                                         <span className="text-ink-muted tabular-nums">{new Date(h.effective_from).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
@@ -503,7 +538,7 @@ function RulesTableView({ rules }: { rules: EligibilityRule[] }) {
 
 // ── RuleRow ──────────────────────────────────────────────────────────────────
 
-function RuleRow({ rule, onEdit, onDelete, onHistory }: { rule: EligibilityRule; onEdit: () => void; onDelete: () => void; onHistory: () => void }) {
+function RuleRow({ rule, historyOpen, historyLabel, onEdit, onDelete, onHistory }: { rule: EligibilityRule; historyOpen: boolean; historyLabel: string; onEdit: () => void; onDelete: () => void; onHistory: () => void }) {
   return (
     <div className="hover:bg-canvas-soft/50 transition-colors group">
       <div className="flex items-center gap-4 px-4 py-3">
@@ -532,17 +567,18 @@ function RuleRow({ rule, onEdit, onDelete, onHistory }: { rule: EligibilityRule;
             <div className="text-xs text-ink-muted tabular-nums">ต่อครั้ง ฿{rule.max_per_claim.toLocaleString('th-TH')}</div>
           )}
         </div>
-        <div className="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-          <button type="button" aria-label="ดูประวัติ" onClick={onHistory}
-            className="inline-flex items-center justify-center rounded p-1 text-ink-muted hover:bg-canvas-soft hover:text-ink transition-colors">
-            <Clock size={13} aria-hidden />
+        <div className="shrink-0 flex items-center gap-1">
+          {/* STA-102 — discoverable (always-visible) history toggle, clearly labelled */}
+          <button type="button" aria-pressed={historyOpen} onClick={onHistory}
+            className={`inline-flex items-center gap-1 rounded-[var(--radius-sm)] border px-2 py-1 text-xs font-medium transition-colors ${historyOpen ? 'border-accent/40 bg-accent-soft text-accent' : 'border-hairline text-ink-muted hover:bg-canvas-soft hover:text-ink'}`}>
+            <Clock size={13} aria-hidden /> {historyLabel}
           </button>
           <button type="button" aria-label="แก้ไข" onClick={onEdit}
-            className="inline-flex items-center justify-center rounded p-1 text-ink-muted hover:bg-accent/10 hover:text-accent transition-colors">
+            className="inline-flex items-center justify-center rounded p-1 text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-accent/10 hover:text-accent transition-all">
             <Pencil size={13} aria-hidden />
           </button>
           <button type="button" aria-label="ลบ" onClick={onDelete}
-            className="inline-flex items-center justify-center rounded p-1 text-ink-muted hover:bg-danger/10 hover:text-danger transition-colors">
+            className="inline-flex items-center justify-center rounded p-1 text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-danger/10 hover:text-danger transition-all">
             <Trash2 size={13} aria-hidden />
           </button>
         </div>

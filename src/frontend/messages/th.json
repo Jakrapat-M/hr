@@ -4904,6 +4904,16 @@
     "legendEyebrow": "ขอบเขตแผน",
     "legendTitle": "คำอธิบายวงจรสวัสดิการ"
   },
+  "benefitHistory": {
+    "eyebrow": "บันทึกการเปลี่ยนแปลง",
+    "title": "ประวัติ",
+    "empty": "ยังไม่มีประวัติ",
+    "who": "โดย",
+    "when": "เมื่อ",
+    "action_create": "สร้าง",
+    "action_insert": "เพิ่ม",
+    "action_delete": "ลบ"
+  },
   "admin_benefits_plans": {
     "eyebrow": "สวัสดิการ · แคตตาล็อกแผน",
     "title": "แคตตาล็อกแผนสวัสดิการ",
@@ -4985,6 +4995,9 @@
   "admin_benefits_entitlement_rules": {
     "viewCards": "การ์ด",
     "viewTable": "ตาราง",
+    "historyToggle": "ประวัติ",
+    "historyLoading": "กำลังโหลดประวัติ…",
+    "historyAmountTitle": "ประวัติวงเงินสิทธิ์",
     "tableCaption": "กฎเงื่อนไขสิทธิ์",
     "colRuleId": "รหัสกฎ",
     "colRuleName": "ชื่อกฎ",
