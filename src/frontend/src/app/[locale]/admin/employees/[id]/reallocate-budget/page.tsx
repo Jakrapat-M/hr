@@ -12,7 +12,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { ArrowLeft, ArrowLeftRight } from 'lucide-react'
+import { ArrowLeft, ArrowLeftRight, Paperclip } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
 import { formatCurrency } from '@/lib/date'
@@ -20,6 +20,7 @@ import { useAuthStore } from '@/stores/auth-store'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
 import { Textarea } from '@/components/humi'
+import { FileUploadField } from '@/components/humi/FileUploadField'
 import {
   BENEFIT_PLAN_REGISTRY,
   getPlan,
@@ -70,6 +71,7 @@ export default function ReallocateBudgetPage() {
   const [reason, setReason] = useState<string>('')
   const [submitted, setSubmitted] = useState(false)
   const [reasonError, setReasonError] = useState(false)
+  const [showUpload, setShowUpload] = useState(false)
 
   const nextYearBase = useBudgetReallocationStore(selectNextYearBase(empId, planId))
 
@@ -293,6 +295,23 @@ export default function ReallocateBudgetPage() {
             <p role="alert" className="text-small text-danger" style={{ marginTop: 4 }}>
               {t('validation.amountPositive')}
             </p>
+          )}
+        </div>
+
+        {/* Attachments (STA-101 R3) — button-gated upload reveal */}
+        <div style={{ marginBottom: 24 }}>
+          {!showUpload ? (
+            <button
+              type="button"
+              onClick={() => setShowUpload(true)}
+              className="humi-btn humi-btn--ghost"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <Paperclip size={16} aria-hidden />
+              {t('buttons.addAttachment')}
+            </button>
+          ) : (
+            <FileUploadField label={t('fields.attachments')} maxFiles={5} />
           )}
         </div>
 
