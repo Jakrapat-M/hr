@@ -28,6 +28,14 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useBenefitHistoryStore } from '@/stores/benefit-history-store';
 import { applyIdentityToPlan, buildPlanFromCreate } from './plan-builders';
 
+/** STA-98 FU-2 — next non-colliding versioned id for a superseding plan (PLAN-X → PLAN-X-v2). */
+function nextVersionId(baseId: string, existing: Set<string>): string {
+  const root = baseId.replace(/-v\d+$/, '');
+  let n = 2;
+  while (existing.has(`${root}-v${n}`)) n += 1;
+  return `${root}-v${n}`;
+}
+
 // ── Plan catalog — CRUD-style mockup ─────────────────────────────────────────
 // Reads all 28 plans from BENEFIT_PLAN_REGISTRY.
 // Columns: id, ttt, name, category, recordType chip, template.
@@ -183,12 +191,14 @@ function EditPlanModal({
   plan,
   onClose,
   onSubmit,
+  onInsert,
   isTh,
   locale,
 }: {
   plan: BenefitPlan;
   onClose: () => void;
   onSubmit: (updated: BenefitPlan) => void;
+  onInsert: (original: BenefitPlan, edited: BenefitPlan) => void;
   isTh: boolean;
   locale: string;
 }) {
@@ -221,6 +231,15 @@ function EditPlanModal({
     setSaving(true);
     // In-session mutation only — no backend POST/PUT in this mockup phase.
     onSubmit(applyIdentityToPlan(plan, tab1Values));
+    setSaving(false);
+    setSaved(true);
+    setTimeout(onClose, 1200);
+  };
+
+  // STA-98 FU-2 — Insert = supersede the current plan with these values.
+  const handleInsert = () => {
+    setSaving(true);
+    onInsert(plan, applyIdentityToPlan(plan, tab1Values));
     setSaving(false);
     setSaved(true);
     setTimeout(onClose, 1200);
@@ -281,6 +300,11 @@ function EditPlanModal({
 
         <div className="flex justify-end gap-2 pt-2 border-t border-hairline">
           <Button variant="ghost" onClick={onClose}>{isTh ? 'ยกเลิก' : 'Cancel'}</Button>
+          <Capability action="edit">
+            <Button variant="secondary" onClick={handleInsert} disabled={saving}>
+              {saving ? (isTh ? 'กำลังแทรก…' : 'Inserting…') : (isTh ? 'แทรก (แทนที่)' : 'Insert')}
+            </Button>
+          </Capability>
           <Capability action="edit" fallback={
             <Button variant="primary" disabled>{isTh ? 'บันทึก' : 'Save'}</Button>
           }>
@@ -475,6 +499,18 @@ export default function BenefitPlansPage() {
 
   const existingIds = useMemo(() => new Set(plans.map((p) => p.id)), [plans]);
 
+  // STA-98 FU-2 — Insert = supersede: inactivate the edited plan and prepend a
+  // NEW active plan (versioned id) built from the just-typed values. Show both.
+  const handleSupersedePlan = (original: BenefitPlan, edited: BenefitPlan) => {
+    const newId = nextVersionId(original.id, existingIds);
+    const replacement: BenefitPlan = { ...edited, id: newId, status: 'active' };
+    setPlans((prev) => [
+      replacement,
+      ...prev.map((p) => (p.id === original.id ? { ...p, status: 'inactive' as const } : p)),
+    ]);
+    setFilterStatus('all');
+  };
+
   // Years present in the registry's effective dates — drives the year dropdowns.
   const availableYears = useMemo(() => {
     const years = new Set<string>();
@@ -536,6 +572,11 @@ export default function BenefitPlansPage() {
           {p.status === 'draft' && (
             <span className="rounded-full bg-canvas-soft px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.06em] text-ink-muted">
               {t('filterStatusDraft')}
+            </span>
+          )}
+          {p.status === 'inactive' && (
+            <span className="rounded-full bg-canvas-soft px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.06em] text-ink-muted">
+              {t('filterStatusInactive')}
             </span>
           )}
         </span>
@@ -798,6 +839,7 @@ export default function BenefitPlansPage() {
           plan={editingPlan}
           onClose={() => setEditingPlan(null)}
           onSubmit={handleUpdatePlan}
+          onInsert={handleSupersedePlan}
           isTh={isTh}
           locale={locale}
         />
