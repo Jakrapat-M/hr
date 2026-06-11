@@ -64,7 +64,7 @@ export default function LeaveDetailPage({ params }: PageProps) {
   const request = useMemo(() => allRequests.find((r) => r.id === id), [allRequests, id]);
   const roles = useAuthStore((s) => s.roles) as Role[];
 
-  // Decision context (audit P2-2) — what the manager needs without leaving the page.
+  // Decision context — what the manager needs without leaving the page.
   // (1) Team absence overlap: other employees with a non-rejected request whose
   //     range intersects THIS request's range (inclusive interval overlap).
   const teamOverlap = useMemo(() => {
@@ -246,7 +246,7 @@ export default function LeaveDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      {/* Decision context (audit P2-2) — overlap / quota / frequency at a glance */}
+      {/* Decision context — overlap / quota / frequency at a glance */}
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {/* Remaining quota for this leave type */}
         <div className="rounded-[var(--radius-md)] border border-hairline bg-surface shadow-[var(--shadow-card)] p-4">
