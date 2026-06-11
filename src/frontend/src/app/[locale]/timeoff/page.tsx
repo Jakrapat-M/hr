@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
@@ -38,6 +38,7 @@ import { isBookableLeaveDate, LEAVE_BOOKING_HORIZON_DAYS } from '@/lib/time/peri
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
 import {
   useLeaveApprovals,
+  leaveStageLabel,
   type LeaveRequest,
   type LeaveStatus as ApprovalLeaveStatus,
 } from '@/stores/leave-approvals';
@@ -250,6 +251,9 @@ export default function HumiTimeoffPage() {
   const [tab, setTab] = useState<TabKey>(initialTab);
   const { toast, show: showToast } = useToast();
   const [policyOpen, setPolicyOpen] = useState(false);
+  // Post-submit feedback: the id of the just-created request, so the status tab
+  // can briefly ring-highlight its new row. Cleared once it fades / on next tab.
+  const [highlightId, setHighlightId] = useState<string | null>(null);
 
   return (
     <>
@@ -324,12 +328,23 @@ export default function HumiTimeoffPage() {
 
           {tab === 'request' && (
             <RequestTab
-              onSubmitted={(msg) => { showToast(msg); setTab('history'); }}
+              onSubmitted={(msg, newId) => {
+                // Close the loop: surface the toast, jump to the status tab, and
+                // flag the new row so it ring-highlights on first render.
+                showToast(msg);
+                setHighlightId(newId);
+                setTab('history');
+              }}
               onSavedDraft={(msg) => showToast(msg)}
             />
           )}
 
-          {tab === 'history' && <HistoryTab />}
+          {tab === 'history' && (
+            <HistoryTab
+              highlightId={highlightId}
+              onHighlightClear={() => setHighlightId(null)}
+            />
+          )}
         </Card>
 
         {/* Right column */}
@@ -468,7 +483,7 @@ function calendarDayCount(start: string, end: string): number {
 function RequestTab({
   onSubmitted,
 }: {
-  onSubmitted: (msg: string) => void;
+  onSubmitted: (msg: string, newId: string) => void;
   onSavedDraft: (msg: string) => void;
 }) {
   const params = useParams();
@@ -702,6 +717,7 @@ function RequestTab({
         : isTh
           ? 'ส่งคำขอลาแล้ว · จองสิทธิ์ไว้ · รอหัวหน้างานอนุมัติ'
           : 'Leave submitted · quota reserved · awaiting manager',
+      id,
     );
   }
 
@@ -1108,13 +1124,14 @@ function InlineError({ msg }: { msg: string }) {
 const APPROVAL_STATUS_TONE: Record<ApprovalLeaveStatus, string> = HISTORY_TONE;
 
 function liveStatusLabel(r: LeaveRequest, isTh: boolean): { label: string; tone: string } {
-  if (r.status === 'approved')
-    return { label: isTh ? 'อนุมัติแล้ว' : 'Approved', tone: HISTORY_TONE.approved };
-  if (r.status === 'rejected')
-    return { label: isTh ? 'ไม่อนุมัติ' : 'Rejected', tone: HISTORY_TONE.rejected };
-  if (r.awaitingNext)
-    return { label: isTh ? 'รอฝ่ายบุคคล' : 'Awaiting HR', tone: HISTORY_TONE.pending };
-  return { label: isTh ? 'รออนุมัติ' : 'Pending', tone: HISTORY_TONE.pending };
+  const tone =
+    r.status === 'approved'
+      ? HISTORY_TONE.approved
+      : r.status === 'rejected'
+        ? HISTORY_TONE.rejected
+        : HISTORY_TONE.pending;
+  // Single source of truth — narrates the manager → HR stage on 2-level chains.
+  return { label: leaveStageLabel(r.status, r.awaitingNext, isTh), tone };
 }
 
 function HistoryRow({ h, locale }: { h: TimeoffHistoryItem; locale: string }) {
@@ -1203,12 +1220,31 @@ function HistoryRow({ h, locale }: { h: TimeoffHistoryItem; locale: string }) {
   );
 }
 
-function HistoryTab() {
+function HistoryTab({
+  highlightId,
+  onHighlightClear,
+}: {
+  highlightId?: string | null;
+  onHighlightClear?: () => void;
+} = {}) {
   const params = useParams();
   const locale = (params?.locale as string) ?? 'th';
   const isTh = locale !== 'en';
   const history = useTimeoffStore((s) => s.history);
   const userId = useAuthStore((s) => s.userId) ?? DEMO_EMPLOYEE.id;
+
+  // Post-submit highlight: ring the new row, then fade it after ~2.4s. Clearing
+  // the parent's flag prevents the ring from re-applying on later re-renders.
+  const [ringActive, setRingActive] = useState(false);
+  useEffect(() => {
+    if (!highlightId) return;
+    setRingActive(true);
+    const t = setTimeout(() => {
+      setRingActive(false);
+      onHighlightClear?.();
+    }, 2400);
+    return () => clearTimeout(t);
+  }, [highlightId, onHighlightClear]);
   // Select raw array — filtering inside the selector returns a new reference every snapshot,
   // triggering the "getSnapshot should be cached" infinite-loop crash. Filter via useMemo instead.
   const allRequests = useLeaveApprovals((s) => s.requests);
@@ -1236,8 +1272,17 @@ function HistoryTab() {
           {liveRequests.map((r) => {
             const def = getLeaveType(r.leaveCode ?? '');
             const { label, tone } = liveStatusLabel(r, isTh);
+            const isHighlighted = ringActive && r.id === highlightId;
             return (
-              <li key={r.id} className="flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:gap-3">
+              <li
+                key={r.id}
+                data-testid={isHighlighted ? 'timeoff-new-row-highlight' : undefined}
+                className={cn(
+                  'flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:gap-3',
+                  isHighlighted &&
+                    'rounded-[var(--radius-md)] px-3 ring-2 ring-accent-soft bg-accent-soft/30 transition-all duration-500',
+                )}
+              >
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <Avatar name={(isTh ? def?.nameTh : def?.nameEn) ?? r.leaveType} tone="teal" size="sm" />
                   <div className="min-w-0 flex-1">
