@@ -190,6 +190,7 @@ export interface EligibilityRule {
   status?: string | null;
   policy_profile: string | null;
   business_unit?: string | null;
+  business_group?: string | null;
   company: string | null;
   company_code?: string | null;
   job_code: string | null;
@@ -230,6 +231,7 @@ export interface EligibilityRuleInput {
   effective_to?: string | null;
   policy_profile?: string | null;
   business_unit?: string | null;
+  business_group?: string | null;
   company?: string | null;
   company_code?: string | null;
   job_code?: string | null;
@@ -403,6 +405,7 @@ export async function addEligibilityRule(
       status: rule.status ?? 'active',
       policy_profile: rule.policy_profile ?? null,
       business_unit: rule.business_unit ?? null,
+      business_group: rule.business_group ?? null,
       company: rule.company ?? null,
       company_code: rule.company_code ?? null,
       job_code: rule.job_code ?? null,

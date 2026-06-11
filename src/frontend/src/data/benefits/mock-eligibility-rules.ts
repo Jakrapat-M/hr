@@ -26,6 +26,7 @@ export type MockEligibilityRule = {
   plan_id: string | null;
   status: 'draft' | 'active' | 'inactive' | null;
   business_unit: string | null;
+  business_group: string | null;
   company_code: string | null;
   employee_group: string | null;
   employee_subgroup: string | null;
@@ -50,7 +51,7 @@ const COMMON: Pick<MockEligibilityRule,
   'created_by' | 'effective_from' | 'effective_to' | 'plan_effective' |
   'no_of_years_from_hiring' | 'hiring_date_from' | 'hiring_date_to' |
   'company' | 'company_code' | 'job_code' | 'additional_condition' |
-  'rule_id' | 'rule_name' | 'rule_type' | 'plan_id' | 'status' | 'business_unit' |
+  'rule_id' | 'rule_name' | 'rule_type' | 'plan_id' | 'status' | 'business_unit' | 'business_group' |
   'employee_subgroup' | 'dvt_project' | 'effective_type' | 'waiting_period_days' |
   'claim_period'
 > = {
@@ -65,6 +66,7 @@ const COMMON: Pick<MockEligibilityRule,
   plan_id: 'TH_MAD_001',
   status: 'active',
   business_unit: null,
+  business_group: null,
   company_code: 'CG',
   no_of_years_from_hiring: null,
   hiring_date_from: null,
@@ -83,6 +85,7 @@ export const MOCK_ELIGIBILITY_RULES: MockEligibilityRule[] = [
   {
     ...COMMON,
     id: 'rule-med-001',
+    business_group: 'Retail',
     benefit_key: 'medical-reimbursement',
     scope_type: 'entitlement',
     scope_value: 'Permanent staff · PG1-PG6',
@@ -137,6 +140,7 @@ export const MOCK_ELIGIBILITY_RULES: MockEligibilityRule[] = [
   {
     ...COMMON,
     id: 'rule-trn-001',
+    business_group: 'Corporate',
     benefit_key: 'training',
     scope_type: 'entitlement',
     scope_value: 'Permanent staff · annual cap',
@@ -193,6 +197,7 @@ export const MOCK_ELIGIBILITY_RULES: MockEligibilityRule[] = [
   {
     ...COMMON,
     id: 'rule-fuel-001',
+    business_group: 'Logistics',
     benefit_key: 'fuel-allowance',
     scope_type: 'entitlement',
     scope_value: 'Field staff · mileage-based',
