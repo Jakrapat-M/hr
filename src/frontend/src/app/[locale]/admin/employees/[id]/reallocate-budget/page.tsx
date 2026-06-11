@@ -1,40 +1,41 @@
-// VALIDATION_EXEMPT: STA-95 — reallocate next-year medical budget into the current year.
+// VALIDATION_EXEMPT: STA-101 R2 — Benefits Exception form (SuccessFactors parity).
 'use client'
 
-// reallocate-budget/page.tsx — โอนงบสวัสดิการปีหน้ามาใช้ปีนี้ (STA-95)
+// reallocate-budget/page.tsx — Benefits Exception (STA-101 request 2)
 //
-// Moves part of an employee's NEXT-year medical budget into the CURRENT year.
-// Mirrors the Special-Privilege form/scaffold. Mockup phase — no backend; the
-// current-year base is derived from the plan registry (single source of truth),
-// the store owns only the next-year base + the reallocation deltas.
+// Rebuilt to match the SuccessFactors "Benefits Exception" form (option ข — a
+// whole new form). KEEPS the page shell from PR #268 (back nav, employee
+// snapshot, "Allocate Entitlement amount / จัดสรรจำนวนสิทธิ" title, attachment
+// button) and REPLACES the single-plan reallocation body with the Benefits
+// Exception header fields + an editable detail grid. Mockup phase — in-session
+// state only, no backend.
 
 import { useCallback, useMemo, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { ArrowLeft, ArrowLeftRight, Paperclip } from 'lucide-react'
-import { useShallow } from 'zustand/react/shallow'
+import {
+  ArrowLeft,
+  ArrowLeftRight,
+  Paperclip,
+  Plus,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  CheckCircle2,
+} from 'lucide-react'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
-import { formatCurrency } from '@/lib/date'
+import { formatDate } from '@/lib/date'
 import { useAuthStore } from '@/stores/auth-store'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
-import { Textarea } from '@/components/humi'
 import { FileUploadField } from '@/components/humi/FileUploadField'
+import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry'
 import {
-  BENEFIT_PLAN_REGISTRY,
-  getPlan,
-  isV2Plan,
-} from '@/data/benefits/plan-registry'
-import {
-  useBudgetReallocationStore,
-  selectReallocationsForEmployee,
-  selectNextYearBase,
-} from '@/stores/budget-reallocation-store'
-
-// Medical plans only — the budget being reallocated is the medical benefit.
-const MEDICAL_PLANS = BENEFIT_PLAN_REGISTRY.filter((p) => p.id.startsWith('BE-MED-'))
-const DEFAULT_PLAN_ID = MEDICAL_PLANS[0]?.id ?? ''
+  useBenefitExceptionFormStore,
+  type ExceptionFor,
+  type BenefitExceptionRow,
+} from '@/stores/benefit-exception-form-store'
 
 const SELECT_CLASS = [
   'w-full rounded-md border px-3 py-2 text-body bg-surface text-ink',
@@ -42,77 +43,106 @@ const SELECT_CLASS = [
   'border-hairline focus:border-accent',
 ].join(' ')
 
-/** Current-year base for a medical plan = its registry entitlement (v2 only). */
-function planRegistryBase(planId: string): number {
-  const plan = getPlan(planId)
-  return plan && isV2Plan(plan) ? plan.coverage.entitlementAmount ?? 0 : 0
-}
+const EXCEPTION_FOR_KEYS: ExceptionFor[] = ['claim', 'entitlement', 'accumulation']
+const LEGAL_ENTITY_KEYS = ['ris', 'central', 'dvt', 'robinson'] as const
+const RELEVANT_PERIOD_KEYS = ['none', 'p2026', 'p2025'] as const
+const SELECTED_PERIOD_KEYS = ['claim2026', 'entitlement2026', 'accum2026'] as const
+
+let rowSeq = 0
+const newRow = (): BenefitExceptionRow => ({
+  id: `bex-row-${++rowSeq}`,
+  benefitPlanId: '',
+  relevantPeriod: 'none',
+  selectedPeriod: '',
+  adjustmentAmount: 0,
+  details: '',
+})
 
 export default function ReallocateBudgetPage() {
   const params = useParams()
-  const router = useRouter()
   const empId = params.id as string
   const locale = params.locale as string
 
   const employee = useEmployees((s) => s.getById(empId)) ?? null
   const t = useTranslations('admin.reallocateBudget')
+  const tx = useTranslations('admin.reallocateBudget.benefitException')
 
-  const addReallocation = useBudgetReallocationStore((s) => s.addReallocation)
+  const addException = useBenefitExceptionFormStore((s) => s.addException)
   const actorName = useAuthStore((s) => s.username) ?? 'HR Admin'
-  const records = useBudgetReallocationStore(
-    useShallow(selectReallocationsForEmployee(empId)),
-  )
 
-  // Form state
-  const [planId, setPlanId] = useState<string>(DEFAULT_PLAN_ID)
-  const [amount, setAmount] = useState<string>('')
-  const [effectiveStart, setEffectiveStart] = useState<string>('')
-  const [effectiveEnd, setEffectiveEnd] = useState<string>('')
-  const [reason, setReason] = useState<string>('')
+  // ── Header state ──────────────────────────────────────────────────────────
+  const [exceptionFor, setExceptionFor] = useState<ExceptionFor>('claim')
+  const [legalEntities, setLegalEntities] = useState<string[]>([])
+  const [pendingEntity, setPendingEntity] = useState<string>('ris')
+  const [emailNotification, setEmailNotification] = useState<boolean>(false)
+
+  // ── Detail rows ───────────────────────────────────────────────────────────
+  const [rows, setRows] = useState<BenefitExceptionRow[]>(() => [newRow()])
+
   const [submitted, setSubmitted] = useState(false)
-  const [reasonError, setReasonError] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [showUpload, setShowUpload] = useState(false)
 
-  const nextYearBase = useBudgetReallocationStore(selectNextYearBase(empId, planId))
+  const creationDate = useMemo(() => formatDate(new Date(), 'long', locale), [locale])
 
-  // Already-reallocated for this employee + plan (excludes the in-progress amount).
-  const priorMoved = useMemo(
-    () => records.filter((r) => r.planId === planId).reduce((s, r) => s + r.amount, 0),
-    [records, planId],
+  const updateRow = useCallback(
+    (id: string, patch: Partial<BenefitExceptionRow>) => {
+      setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)))
+      setError(null)
+    },
+    [],
   )
+  const deleteRow = useCallback((id: string) => {
+    setRows((rs) => rs.filter((r) => r.id !== id))
+  }, [])
+  const moveRow = useCallback((id: string, dir: -1 | 1) => {
+    setRows((rs) => {
+      const i = rs.findIndex((r) => r.id === id)
+      const j = i + dir
+      if (i < 0 || j < 0 || j >= rs.length) return rs
+      const next = [...rs]
+      ;[next[i], next[j]] = [next[j], next[i]]
+      return next
+    })
+  }, [])
+  const addRow = useCallback(() => setRows((rs) => [...rs, newRow()]), [])
 
-  const registryBase = planRegistryBase(planId)
-  const amountNum = amount !== '' ? Number(amount) : 0
-  const currentBefore = registryBase + priorMoved
-  const nextBefore = nextYearBase - priorMoved
-  const currentAfter = currentBefore + amountNum
-  const nextAfter = nextBefore - amountNum
-
-  const amountInvalid = amountNum <= 0 // hard block — a zero/negative move is meaningless
-  const exceedsNext = amountNum > nextBefore // soft warn — next-year pool would go negative
-  const canSubmit = !submitted && !amountInvalid
+  const addEntity = useCallback(() => {
+    setLegalEntities((es) => (es.includes(pendingEntity) ? es : [...es, pendingEntity]))
+  }, [pendingEntity])
+  const removeEntity = useCallback((key: string) => {
+    setLegalEntities((es) => es.filter((e) => e !== key))
+  }, [])
 
   const doSubmit = useCallback(() => {
-    if (!employee || submitted) return
-    if (amountNum <= 0) return
-    if (!reason.trim()) {
-      setReasonError(true)
+    if (!employee) return
+    if (rows.length === 0) {
+      setError(tx('validation.noRows'))
       return
     }
-    addReallocation({
+    if (rows.some((r) => !r.benefitPlanId)) {
+      setError(tx('validation.benefitRequired'))
+      return
+    }
+    if (rows.some((r) => !r.selectedPeriod)) {
+      setError(tx('validation.selectedPeriodRequired'))
+      return
+    }
+    addException({
       employeeId: empId,
-      planId,
-      amount: amountNum,
-      effectiveStartDate: effectiveStart ? new Date(effectiveStart).toISOString() : '',
-      effectiveEndDate: effectiveEnd ? new Date(effectiveEnd).toISOString() : '',
-      reason: reason.trim(),
+      workerId: employee.employee_id,
+      exceptionFor,
+      legalEntities,
+      creationDate: new Date().toISOString(),
+      emailNotification,
+      rows,
       createdBy: actorName,
     })
+    setError(null)
     setSubmitted(true)
-    router.push(`/${locale}/admin/employees/${empId}`)
   }, [
-    employee, submitted, amountNum, reason, addReallocation, empId, planId,
-    effectiveStart, effectiveEnd, actorName, router, locale,
+    employee, rows, exceptionFor, legalEntities, emailNotification,
+    addException, empId, actorName, tx,
   ])
 
   if (!employee) {
@@ -165,7 +195,7 @@ export default function ReallocateBudgetPage() {
         </Link>
       </div>
 
-      {/* Page title */}
+      {/* Page title (kept from #268) */}
       <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
         <div
           style={{
@@ -183,132 +213,320 @@ export default function ReallocateBudgetPage() {
         </div>
       </div>
 
-      {/* Employee snapshot */}
+      {/* Employee snapshot (kept from #268) */}
       <div className="humi-card humi-card--cream">
         <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
         <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
         <div className="text-small text-ink-muted">{nameEn}</div>
-        <p className="text-small text-ink-soft" style={{ marginTop: 8 }}>{t('subtitle')}</p>
+        <p className="text-small text-ink-soft" style={{ marginTop: 8 }}>{tx('subtitle')}</p>
       </div>
+
+      {/* Success banner */}
+      {submitted && (
+        <div
+          role="status"
+          className="humi-row"
+          style={{
+            gap: 10, alignItems: 'center', padding: '12px 16px', borderRadius: 10,
+            background: 'var(--color-accent-soft)', color: 'var(--color-accent)',
+          }}
+        >
+          <CheckCircle2 size={18} aria-hidden />
+          <span className="text-body font-semibold">
+            {tx('successBanner', { count: rows.length })}
+          </span>
+        </div>
+      )}
 
       {/* Form */}
       <div className="humi-card ring-1 ring-accent-soft">
-        {/* Medical plan */}
-        <div style={{ marginBottom: 20 }}>
-          <label htmlFor="rb-plan" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
-            {t('fields.plan')}
-          </label>
-          <select
-            id="rb-plan"
-            value={planId}
-            onChange={(e) => setPlanId(e.target.value)}
-            className={SELECT_CLASS}
-            style={{ maxWidth: 420 }}
-          >
-            {MEDICAL_PLANS.map((p) => (
-              <option key={p.id} value={p.id}>{locale === 'th' ? p.nameTh : p.nameEn}</option>
-            ))}
-          </select>
+        {/* ── Header fields ── */}
+        <div className="humi-eyebrow" style={{ marginBottom: 12 }}>{tx('headerSection')}</div>
+
+        <div className="humi-row" style={{ gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+          {/* Worker ID (read-only) */}
+          <div style={{ flex: '1 1 220px' }}>
+            <label htmlFor="bex-worker" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
+              {tx('fields.workerId')} <span className="text-danger" aria-hidden>*</span>
+            </label>
+            <input
+              id="bex-worker"
+              type="text"
+              value={employee.employee_id}
+              readOnly
+              className="humi-input"
+              style={{ maxWidth: 240, background: 'var(--color-canvas-soft)' }}
+            />
+          </div>
+
+          {/* Exception For */}
+          <div style={{ flex: '1 1 220px' }}>
+            <label htmlFor="bex-for" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
+              {tx('fields.exceptionFor')} <span className="text-danger" aria-hidden>*</span>
+            </label>
+            <select
+              id="bex-for"
+              value={exceptionFor}
+              onChange={(e) => setExceptionFor(e.target.value as ExceptionFor)}
+              className={SELECT_CLASS}
+              style={{ maxWidth: 280 }}
+            >
+              {EXCEPTION_FOR_KEYS.map((k) => (
+                <option key={k} value={k}>{tx(`exceptionForOptions.${k}`)}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Creation date (read-only, Thai BE) */}
+          <div style={{ flex: '1 1 220px' }}>
+            <label htmlFor="bex-created" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
+              {tx('fields.creationDate')}
+            </label>
+            <input
+              id="bex-created"
+              type="text"
+              value={creationDate}
+              readOnly
+              className="humi-input"
+              style={{ maxWidth: 240, background: 'var(--color-canvas-soft)' }}
+            />
+          </div>
+
+          {/* Email notification */}
+          <div style={{ flex: '1 1 220px' }}>
+            <label htmlFor="bex-email" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
+              {tx('fields.emailNotification')}
+            </label>
+            <select
+              id="bex-email"
+              value={emailNotification ? 'yes' : 'no'}
+              onChange={(e) => setEmailNotification(e.target.value === 'yes')}
+              className={SELECT_CLASS}
+              style={{ maxWidth: 160 }}
+            >
+              <option value="no">{tx('yesNo.no')}</option>
+              <option value="yes">{tx('yesNo.yes')}</option>
+            </select>
+          </div>
         </div>
 
-        {/* Amount to move next → current */}
-        <div style={{ marginBottom: 20 }}>
-          <label htmlFor="rb-amount" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
-            {t('fields.amount')} <span className="text-danger" aria-hidden>*</span>
+        {/* Legal Entity — multi-add */}
+        <div style={{ marginBottom: 24 }}>
+          <label className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
+            {tx('fields.legalEntity')}
           </label>
-          <input
-            id="rb-amount"
-            type="number"
-            min={1}
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="humi-input"
-            style={{ maxWidth: 240 }}
-          />
-          {exceedsNext && (
-            <p role="status" className="text-small text-danger" style={{ marginTop: 4 }}>
-              {t('validation.exceedsNextYearWarn')}
+          <div className="humi-row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <select
+              value={pendingEntity}
+              onChange={(e) => setPendingEntity(e.target.value)}
+              className={SELECT_CLASS}
+              style={{ maxWidth: 280 }}
+              aria-label={tx('legalEntity.placeholder')}
+            >
+              {LEGAL_ENTITY_KEYS.map((k) => (
+                <option key={k} value={k}>{tx(`legalEntityOptions.${k}`)}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={addEntity}
+              className="humi-btn humi-btn--ghost"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <Plus size={16} aria-hidden />
+              {tx('legalEntity.add')}
+            </button>
+          </div>
+
+          {legalEntities.length === 0 ? (
+            <p className="text-small text-ink-soft" style={{ marginTop: 8 }}>
+              {tx('legalEntity.empty')}
             </p>
+          ) : (
+            <div className="humi-row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+              {legalEntities.map((k) => (
+                <span
+                  key={k}
+                  className="humi-row text-small text-ink"
+                  style={{
+                    gap: 6, alignItems: 'center', padding: '4px 10px', borderRadius: 999,
+                    background: 'var(--color-canvas-soft)', border: '1px solid var(--color-hairline)',
+                  }}
+                >
+                  {tx(`legalEntityOptions.${k}`)}
+                  <button
+                    type="button"
+                    onClick={() => removeEntity(k)}
+                    aria-label={tx('legalEntity.remove')}
+                    className="text-ink-muted hover:text-danger transition-colors"
+                    style={{ display: 'inline-flex', lineHeight: 0 }}
+                  >
+                    <Trash2 size={14} aria-hidden />
+                  </button>
+                </span>
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Live preview — current ↑ / next ↓ */}
-        <div
-          className="humi-row"
+        {/* ── Benefit Exception Details — editable grid ── */}
+        <div className="humi-eyebrow" style={{ marginBottom: 12 }}>{tx('detailsSection')}</div>
+
+        <div style={{ overflowX: 'auto', marginBottom: 12 }}>
+          <table className="w-full" style={{ borderCollapse: 'collapse', minWidth: 880 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--color-hairline)' }}>
+                {[
+                  'benefit', 'relevantPeriod', 'selectedPeriod', 'adjustmentAmount', 'details', 'actions',
+                ].map((c) => (
+                  <th
+                    key={c}
+                    className="humi-eyebrow"
+                    style={{ textAlign: 'left', padding: '8px 10px', whiteSpace: 'nowrap' }}
+                  >
+                    {tx(`columns.${c}`)}
+                    {(c === 'benefit' || c === 'selectedPeriod') && (
+                      <span className="text-danger" aria-hidden> *</span>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, idx) => {
+                const negative = row.adjustmentAmount < 0
+                return (
+                  <tr key={row.id} style={{ borderBottom: '1px solid var(--color-hairline)' }}>
+                    {/* Benefit */}
+                    <td style={{ padding: '8px 10px', minWidth: 220 }}>
+                      <select
+                        value={row.benefitPlanId}
+                        onChange={(e) => updateRow(row.id, { benefitPlanId: e.target.value })}
+                        className={SELECT_CLASS}
+                        aria-label={tx('columns.benefit')}
+                      >
+                        <option value="">{tx('benefitPlaceholder')}</option>
+                        {BENEFIT_PLAN_REGISTRY.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {locale === 'th' ? p.nameTh : p.nameEn}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+
+                    {/* Relevant period */}
+                    <td style={{ padding: '8px 10px', minWidth: 200 }}>
+                      <select
+                        value={row.relevantPeriod}
+                        onChange={(e) => updateRow(row.id, { relevantPeriod: e.target.value })}
+                        className={SELECT_CLASS}
+                        aria-label={tx('columns.relevantPeriod')}
+                      >
+                        {RELEVANT_PERIOD_KEYS.map((k) => (
+                          <option key={k} value={k}>{tx(`relevantPeriodOptions.${k}`)}</option>
+                        ))}
+                      </select>
+                    </td>
+
+                    {/* Selected period */}
+                    <td style={{ padding: '8px 10px', minWidth: 260 }}>
+                      <select
+                        value={row.selectedPeriod}
+                        onChange={(e) => updateRow(row.id, { selectedPeriod: e.target.value })}
+                        className={SELECT_CLASS}
+                        aria-label={tx('columns.selectedPeriod')}
+                      >
+                        <option value="">{tx('selectedPeriodPlaceholder')}</option>
+                        {SELECTED_PERIOD_KEYS.map((k) => (
+                          <option key={k} value={k}>{tx(`selectedPeriodOptions.${k}`)}</option>
+                        ))}
+                      </select>
+                    </td>
+
+                    {/* Adjustment amount — accepts negative; negatives render in pumpkin, never red */}
+                    <td style={{ padding: '8px 10px', minWidth: 140 }}>
+                      <input
+                        type="number"
+                        value={Number.isFinite(row.adjustmentAmount) ? row.adjustmentAmount : 0}
+                        onChange={(e) =>
+                          updateRow(row.id, { adjustmentAmount: Number(e.target.value) })
+                        }
+                        className="humi-input tabular-nums"
+                        style={negative ? { color: 'var(--color-danger)' } : undefined}
+                        aria-label={tx('columns.adjustmentAmount')}
+                      />
+                    </td>
+
+                    {/* Details */}
+                    <td style={{ padding: '8px 10px', minWidth: 90 }}>
+                      <span className="text-small text-accent" style={{ cursor: 'default' }}>
+                        {tx('detailsLabel')}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
+                      <div className="humi-row" style={{ gap: 6 }}>
+                        <button
+                          type="button"
+                          onClick={() => moveRow(row.id, -1)}
+                          disabled={idx === 0}
+                          aria-label={tx('moveUp')}
+                          className="text-ink-muted hover:text-accent transition-colors disabled:opacity-30"
+                          style={{ display: 'inline-flex', lineHeight: 0 }}
+                        >
+                          <ArrowUp size={16} aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveRow(row.id, 1)}
+                          disabled={idx === rows.length - 1}
+                          aria-label={tx('moveDown')}
+                          className="text-ink-muted hover:text-accent transition-colors disabled:opacity-30"
+                          style={{ display: 'inline-flex', lineHeight: 0 }}
+                        >
+                          <ArrowDown size={16} aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteRow(row.id)}
+                          aria-label={tx('deleteRow')}
+                          className="text-ink-muted hover:text-danger transition-colors"
+                          style={{ display: 'inline-flex', lineHeight: 0 }}
+                        >
+                          <Trash2 size={16} aria-hidden />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Add row affordance */}
+        <button
+          type="button"
+          onClick={addRow}
+          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{
-            gap: 24, marginBottom: 20, flexWrap: 'wrap', padding: '12px 16px',
-            borderRadius: 10, background: 'var(--color-canvas-soft)',
+            gap: 8, alignItems: 'center', width: '100%', justifyContent: 'flex-start',
+            padding: '10px 12px', borderRadius: 10, marginBottom: 20,
+            border: '1px dashed var(--color-hairline)',
           }}
         >
-          <div>
-            <div className="humi-eyebrow">{t('preview.current')}</div>
-            <div className="text-body font-semibold text-ink tabular-nums">
-              {formatCurrency(currentBefore)}
-              {amountNum > 0 && (
-                <>
-                  {' '}<span className="text-ink-muted">→</span>{' '}
-                  <span className="text-accent">{formatCurrency(currentAfter)}</span>
-                </>
-              )}
-            </div>
-          </div>
-          <div>
-            <div className="humi-eyebrow">{t('preview.next')}</div>
-            <div className="text-body font-semibold text-ink tabular-nums">
-              {formatCurrency(nextBefore)}
-              {amountNum > 0 && (
-                <>
-                  {' '}<span className="text-ink-muted">→</span>{' '}
-                  <span className={nextAfter < 0 ? 'text-danger' : 'text-ink'}>{formatCurrency(nextAfter)}</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+          <Plus size={16} aria-hidden />
+          {tx('addRow')}
+        </button>
 
-        {/* Effective dates */}
-        <div className="humi-row" style={{ gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 200px' }}>
-            <label htmlFor="rb-start" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
-              {t('fields.effectiveStart')}
-            </label>
-            <input id="rb-start" type="date" value={effectiveStart} onChange={(e) => setEffectiveStart(e.target.value)} className="humi-input" style={{ maxWidth: 240 }} />
-          </div>
-          <div style={{ flex: '1 1 200px' }}>
-            <label htmlFor="rb-end" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
-              {t('fields.effectiveEnd')}
-            </label>
-            <input id="rb-end" type="date" value={effectiveEnd} onChange={(e) => setEffectiveEnd(e.target.value)} className="humi-input" style={{ maxWidth: 240 }} />
-          </div>
-        </div>
+        {error && (
+          <p role="alert" className="text-small text-danger" style={{ marginBottom: 16 }}>
+            {error}
+          </p>
+        )}
 
-        {/* Reason (required) */}
-        <div style={{ marginBottom: 24 }}>
-          <label htmlFor="rb-reason" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
-            {t('fields.reason')} <span className="text-danger" aria-hidden>*</span>
-          </label>
-          <Textarea
-            id="rb-reason"
-            required
-            invalid={reasonError}
-            value={reason}
-            onChange={(e) => { setReason(e.target.value); setReasonError(false) }}
-            rows={3}
-            style={{ maxWidth: 560 }}
-          />
-          {reasonError && (
-            <p role="alert" className="text-small text-danger" style={{ marginTop: 4 }}>
-              {t('validation.reasonRequired')}
-            </p>
-          )}
-          {amountInvalid && amount !== '' && (
-            <p role="alert" className="text-small text-danger" style={{ marginTop: 4 }}>
-              {t('validation.amountPositive')}
-            </p>
-          )}
-        </div>
-
-        {/* Attachments (STA-101 R3) — button-gated upload reveal */}
+        {/* Attachments (kept from #268) — button-gated upload reveal */}
         <div style={{ marginBottom: 24 }}>
           {!showUpload ? (
             <button
@@ -321,23 +539,21 @@ export default function ReallocateBudgetPage() {
               {t('buttons.addAttachment')}
             </button>
           ) : (
-            <FileUploadField label={t('fields.attachments')} maxFiles={5} />
+            <FileUploadField label={tx('fields.attachments')} maxFiles={5} />
           )}
         </div>
 
         {/* Actions */}
         <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
           <Link href={`/${locale}/admin/employees/${empId}`} className="humi-btn humi-btn--ghost">
-            {t('buttons.cancel')}
+            {tx('buttons.cancel')}
           </Link>
           <button
             type="button"
             onClick={doSubmit}
-            disabled={!canSubmit}
             className="humi-btn humi-btn--primary"
-            aria-disabled={!canSubmit}
           >
-            {t('buttons.submit')}
+            {tx('buttons.save')}
           </button>
         </div>
       </div>

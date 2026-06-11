@@ -4394,6 +4394,75 @@
         "cancel": "Cancel",
         "addAttachment": "Add attachment",
         "submit": "Reallocate budget"
+      },
+      "benefitException": {
+        "subtitle": "Create a benefits exception for this employee — claim, entitlement, or accumulation adjustments.",
+        "headerSection": "Exception",
+        "detailsSection": "Benefit Exception Details",
+        "fields": {
+          "workerId": "Worker ID",
+          "exceptionFor": "Exception For",
+          "legalEntity": "Legal Entity",
+          "creationDate": "Exception Creation Date",
+          "emailNotification": "Enable Email Notification",
+          "attachments": "Attachments"
+        },
+        "exceptionForOptions": {
+          "claim": "Claim",
+          "entitlement": "Entitlement",
+          "accumulation": "Accumulation"
+        },
+        "yesNo": {
+          "yes": "Yes",
+          "no": "No"
+        },
+        "legalEntity": {
+          "add": "Add legal entity",
+          "placeholder": "Select legal entity",
+          "remove": "Remove",
+          "empty": "No legal entity added yet"
+        },
+        "legalEntityOptions": {
+          "ris": "RIS Co., Ltd.",
+          "central": "Central Group",
+          "dvt": "DVT Branches",
+          "robinson": "Robinson Department Store"
+        },
+        "columns": {
+          "benefit": "Benefit",
+          "relevantPeriod": "Relevant For Benefit Period",
+          "selectedPeriod": "Selected Period",
+          "adjustmentAmount": "Adjustment Amount",
+          "details": "Details",
+          "actions": "Actions"
+        },
+        "benefitPlaceholder": "Select benefit",
+        "relevantPeriodOptions": {
+          "none": "No Selection",
+          "p2026": "Benefit Period 2026",
+          "p2025": "Benefit Period 2025"
+        },
+        "selectedPeriodOptions": {
+          "claim2026": "Claim - Calendar Year 2026 (TH_CLAIM_CALENDAR_2026)",
+          "entitlement2026": "Entitlement - Calendar Year 2026 (TH_ENT_CALENDAR_2026)",
+          "accum2026": "Accumulation - Calendar Year 2026 (TH_ACCUM_CALENDAR_2026)"
+        },
+        "selectedPeriodPlaceholder": "Select period",
+        "detailsLabel": "Details",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "deleteRow": "Delete row",
+        "addRow": "Click or focus to edit",
+        "validation": {
+          "benefitRequired": "Select a benefit for every row",
+          "selectedPeriodRequired": "Select a period for every row",
+          "noRows": "Add at least one benefit exception row"
+        },
+        "buttons": {
+          "save": "Save",
+          "cancel": "Cancel"
+        },
+        "successBanner": "Benefits exception saved ({count} row(s))."
       }
     }
   },
