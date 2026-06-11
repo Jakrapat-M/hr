@@ -1,9 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Trash2, Plus, ShieldCheck, ChevronDown, ChevronRight, Pencil, Clock } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { Trash2, Plus, ShieldCheck, ChevronDown, ChevronRight, Pencil, Clock, LayoutGrid, Table as TableIcon } from 'lucide-react';
 
-import { Card, CardEyebrow, CardTitle, Button, Modal } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal } from '@/components/humi';
+import type { DataTableColumn } from '@/components/humi/DataTable';
 import { useToast } from '@/components/ui/toast';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -47,6 +49,14 @@ const CLAIM_PERIOD_OPTIONS = ['Year', 'Month', 'Quarter', 'One-time', 'Lifetime'
 
 const PREVIEW_ROWS = 5;
 
+// STA-99 — table view: filter <select> styling mirrors the plans-catalog pattern.
+const tableSelectClass =
+  'h-9 rounded-[var(--radius-md)] border border-hairline bg-surface px-3 text-small text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
+
+function effectiveTypeLabel(value: string | null | undefined) {
+  return PLAN_EFFECTIVE_OPTIONS.find((o) => o.value === value)?.label ?? (value || '-');
+}
+
 function egColor(value: string) {
   return EMPLOYEE_GROUPS.find((g) => g.value === value)?.color ?? 'bg-canvas-soft text-ink-soft border-hairline';
 }
@@ -58,9 +68,11 @@ function egLabel(value: string) {
 
 export function EntitlementRulesManager() {
   const { toast } = useToast();
+  const t        = useTranslations('admin_benefits_entitlement_rules');
   const userId   = useAuthStore((s) => s.userId);
   const username = useAuthStore((s) => s.username);
 
+  const [viewMode,       setViewMode]       = useState<'cards' | 'table'>('cards');
   const [rules,          setRules]          = useState<EligibilityRule[]>([]);
   const [loading,        setLoading]        = useState(true);
   const [showAddForm,    setShowAddForm]    = useState(false);
@@ -153,15 +165,36 @@ export function EntitlementRulesManager() {
             <p className="mt-0.5 text-small text-ink-muted">{rules.length} กฎทั้งหมด</p>
           )}
         </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          leadingIcon={<Plus size={14} aria-hidden />}
-          onClick={() => setShowAddForm((v) => !v)}
-          disabled={loading}
-        >
-          {showAddForm ? 'ยกเลิก' : 'เพิ่มกฎ'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* STA-99 — Card ⇄ Table view toggle (segmented control). Cards stay default. */}
+          <div role="group" aria-label={`${t('viewCards')} / ${t('viewTable')}`} className="inline-flex rounded-md border border-hairline bg-surface p-0.5">
+            <button
+              type="button"
+              onClick={() => setViewMode('cards')}
+              aria-pressed={viewMode === 'cards'}
+              className={`inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 py-1 text-small font-medium transition-colors ${viewMode === 'cards' ? 'bg-accent text-white' : 'text-ink-muted hover:text-ink'}`}
+            >
+              <LayoutGrid size={13} aria-hidden /> {t('viewCards')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              aria-pressed={viewMode === 'table'}
+              className={`inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 py-1 text-small font-medium transition-colors ${viewMode === 'table' ? 'bg-accent text-white' : 'text-ink-muted hover:text-ink'}`}
+            >
+              <TableIcon size={13} aria-hidden /> {t('viewTable')}
+            </button>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            leadingIcon={<Plus size={14} aria-hidden />}
+            onClick={() => setShowAddForm((v) => !v)}
+            disabled={loading}
+          >
+            {showAddForm ? 'ยกเลิก' : 'เพิ่มกฎ'}
+          </Button>
+        </div>
       </div>
 
       {showAddForm && (
@@ -174,6 +207,8 @@ export function EntitlementRulesManager() {
 
       {loading ? (
         <p className="mt-4 text-small text-ink-muted">กำลังโหลด...</p>
+      ) : viewMode === 'table' ? (
+        <RulesTableView rules={rules} />
       ) : (
         <div className="mt-4 space-y-3">
           {grouped.map(({ key, plan, rules: groupRules }) => {
@@ -292,6 +327,180 @@ export function EntitlementRulesManager() {
   );
 }
 
+// ── RulesTableView (STA-99) ───────────────────────────────────────────────────
+// Filterable table mirroring the BA Excel "2. Benefit Eligibility rule" columns.
+// Toggled alongside the grouped-card view; cards remain the default.
+
+function RulesTableView({ rules }: { rules: EligibilityRule[] }) {
+  const t = useTranslations('admin_benefits_entitlement_rules');
+
+  const [fBenefit,   setFBenefit]   = useState<string>('all');
+  const [fRuleType,  setFRuleType]  = useState<string>('all');
+  const [fEmpGroup,  setFEmpGroup]  = useState<string>('all');
+  const [fPolicy,    setFPolicy]    = useState<string>('all');
+  const [fPgFrom,    setFPgFrom]    = useState<string>('');
+  const [fPgTo,      setFPgTo]      = useState<string>('');
+  const [fEffective, setFEffective] = useState<string>('all');
+
+  const benefitPlanId = (r: EligibilityRule) =>
+    r.plan_id ?? BENEFIT_PLAN_LABELS[r.benefit_key as BenefitKey]?.code ?? r.benefit_key;
+
+  const filtered = useMemo(() => {
+    return rules.filter((r) => {
+      if (fBenefit !== 'all' && r.benefit_key !== fBenefit) return false;
+      if (fRuleType !== 'all' && (r.rule_type ?? 'special') !== fRuleType) return false;
+      if (fEmpGroup !== 'all' && (r.employee_group ?? '') !== fEmpGroup) return false;
+      if (fPolicy !== 'all' && (r.policy_profile ?? '') !== fPolicy) return false;
+      if (fEffective !== 'all' && (r.effective_type ?? r.plan_effective ?? '') !== fEffective) return false;
+      if (fPgFrom && (r.pg_from == null || r.pg_from < Number(fPgFrom))) return false;
+      if (fPgTo && (r.pg_to == null || r.pg_to > Number(fPgTo))) return false;
+      return true;
+    });
+  }, [rules, fBenefit, fRuleType, fEmpGroup, fPolicy, fPgFrom, fPgTo, fEffective]);
+
+  const mono = 'font-mono text-[length:var(--text-eyebrow)] text-ink-muted whitespace-nowrap';
+
+  const columns: DataTableColumn<EligibilityRule>[] = [
+    { id: 'rule_id', header: t('colRuleId'),
+      cell: (r) => <span className={`${mono} text-ink font-semibold`}>{r.rule_id ?? r.id}</span>,
+      sortAccessor: (r) => r.rule_id ?? r.id, className: 'whitespace-nowrap' },
+    { id: 'rule_name', header: t('colRuleName'),
+      cell: (r) => <span className="text-ink whitespace-nowrap">{r.rule_name ?? r.scope_value ?? '-'}</span>,
+      sortAccessor: (r) => r.rule_name ?? r.scope_value ?? '' },
+    { id: 'rule_type', header: t('colRuleType'),
+      cell: (r) => {
+        const isStd = (r.rule_type ?? 'special') === 'standard';
+        return (
+          <span className={`inline-flex items-center rounded-[var(--radius-sm)] border px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold ${isStd ? 'bg-accent-soft text-accent border-accent/30' : 'bg-canvas-soft text-ink-muted border-hairline'}`}>
+            {isStd ? t('ruleTypeStandard') : t('ruleTypeSpecial')}
+          </span>
+        );
+      },
+      sortAccessor: (r) => r.rule_type ?? 'special', className: 'whitespace-nowrap' },
+    { id: 'benefit_plan_id', header: t('colBenefitPlanId'),
+      cell: (r) => <span className={mono}>{benefitPlanId(r)}</span>,
+      sortAccessor: (r) => benefitPlanId(r) },
+    // STA-99: business_group pending BA — is it distinct from business_unit? Column omitted for now.
+    { id: 'business_unit', header: t('colBusinessUnit'),
+      cell: (r) => <span className="text-small text-ink whitespace-nowrap">{r.business_unit ?? '-'}</span>,
+      sortAccessor: (r) => r.business_unit ?? '' },
+    { id: 'company_code', header: t('colCompanyCode'),
+      cell: (r) => <span className="text-small text-ink whitespace-nowrap">{r.company_code ?? '-'}</span>,
+      sortAccessor: (r) => r.company_code ?? '' },
+    // STA-99: "Job Classification on Job" mapped to job_code — exact BA label pending confirmation.
+    { id: 'job', header: t('colJob'),
+      cell: (r) => <span className="text-small text-ink whitespace-nowrap">{r.job_code ?? '-'}</span>,
+      sortAccessor: (r) => r.job_code ?? '' },
+    { id: 'dvt_project', header: t('colDvtProject'),
+      cell: (r) => <span className="text-small text-ink whitespace-nowrap">{r.dvt_project ?? '-'}</span>,
+      sortAccessor: (r) => r.dvt_project ?? '' },
+    { id: 'employee_group', header: t('colEmployeeGroup'),
+      cell: (r) => (
+        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${egColor(r.employee_group ?? '')}`}>
+          {r.employee_group ?? '-'}
+        </span>
+      ),
+      sortAccessor: (r) => r.employee_group ?? '', className: 'whitespace-nowrap' },
+    { id: 'employee_subgroup', header: t('colEmployeeSubgroup'),
+      cell: (r) => <span className="text-small text-ink whitespace-nowrap">{r.employee_subgroup ?? '-'}</span>,
+      sortAccessor: (r) => r.employee_subgroup ?? '' },
+    { id: 'pg_from', header: t('colPgFrom'), align: 'right' as const,
+      cell: (r) => <span className="tabular-nums text-ink">{r.pg_from ?? '-'}</span>,
+      sortAccessor: (r) => r.pg_from ?? -1 },
+    { id: 'pg_to', header: t('colPgTo'), align: 'right' as const,
+      cell: (r) => <span className="tabular-nums text-ink">{r.pg_to ?? '-'}</span>,
+      sortAccessor: (r) => r.pg_to ?? -1 },
+    { id: 'hiring_date_from', header: t('colHiringDateFrom'),
+      cell: (r) => <span className={mono}>{r.hiring_date_from ?? '-'}</span>,
+      sortAccessor: (r) => r.hiring_date_from ?? '' },
+    { id: 'hiring_date_to', header: t('colHiringDateTo'),
+      cell: (r) => <span className={mono}>{r.hiring_date_to ?? '-'}</span>,
+      sortAccessor: (r) => r.hiring_date_to ?? '' },
+    { id: 'effective_type', header: t('colEffectiveType'),
+      cell: (r) => <span className="text-small text-ink whitespace-nowrap">{effectiveTypeLabel(r.effective_type ?? r.plan_effective)}</span>,
+      sortAccessor: (r) => r.effective_type ?? r.plan_effective ?? '', className: 'whitespace-nowrap' },
+    { id: 'entitlement_amount', header: t('colEntitlementAmount'), align: 'right' as const,
+      cell: (r) => <span className="font-semibold text-ink tabular-nums whitespace-nowrap">฿{(r.entitlement_amount ?? 0).toLocaleString('th-TH')}</span>,
+      sortAccessor: (r) => r.entitlement_amount ?? 0, className: 'whitespace-nowrap' },
+  ];
+
+  const hasFilter = fBenefit !== 'all' || fRuleType !== 'all' || fEmpGroup !== 'all'
+    || fPolicy !== 'all' || fEffective !== 'all' || fPgFrom !== '' || fPgTo !== '';
+
+  return (
+    <div className="mt-4 space-y-3">
+      {/* Filters — mirror the plans-catalog pattern */}
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+          {t('filterBenefitPlan')}
+          <select value={fBenefit} onChange={(e) => setFBenefit(e.target.value)} className={tableSelectClass}>
+            <option value="all">{t('filterAll')}</option>
+            {ALL_BENEFIT_KEYS.map((k) => <option key={k} value={k}>{BENEFIT_PLAN_LABELS[k].th} ({BENEFIT_PLAN_LABELS[k].code})</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+          {t('filterRuleType')}
+          <select value={fRuleType} onChange={(e) => setFRuleType(e.target.value)} className={tableSelectClass}>
+            <option value="all">{t('filterAll')}</option>
+            <option value="standard">{t('ruleTypeStandard')}</option>
+            <option value="special">{t('ruleTypeSpecial')}</option>
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+          {t('filterEmployeeGroup')}
+          <select value={fEmpGroup} onChange={(e) => setFEmpGroup(e.target.value)} className={tableSelectClass}>
+            <option value="all">{t('filterAll')}</option>
+            {EMPLOYEE_GROUPS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+          {t('filterPolicyProfile')}
+          <select value={fPolicy} onChange={(e) => setFPolicy(e.target.value)} className={tableSelectClass}>
+            <option value="all">{t('filterAll')}</option>
+            {POLICY_PROFILES.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+          {t('filterEffectiveType')}
+          <select value={fEffective} onChange={(e) => setFEffective(e.target.value)} className={tableSelectClass}>
+            <option value="all">{t('filterAll')}</option>
+            {PLAN_EFFECTIVE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+          {t('filterPgFrom')}
+          <input type="number" min={1} max={99} value={fPgFrom} onChange={(e) => setFPgFrom(e.target.value)} className={`${tableSelectClass} w-20`} />
+        </label>
+        <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+          {t('filterPgTo')}
+          <input type="number" min={1} max={99} value={fPgTo} onChange={(e) => setFPgTo(e.target.value)} className={`${tableSelectClass} w-20`} />
+        </label>
+        {hasFilter && (
+          <Button variant="ghost" size="sm" onClick={() => {
+            setFBenefit('all'); setFRuleType('all'); setFEmpGroup('all'); setFPolicy('all');
+            setFPgFrom(''); setFPgTo(''); setFEffective('all');
+          }}>
+            {t('clearFilters')}
+          </Button>
+        )}
+        <span className="ml-auto self-center text-small text-ink-muted tabular-nums">
+          {t('showing', { shown: filtered.length, total: rules.length })}
+        </span>
+      </div>
+
+      <DataTable
+        caption={t('tableCaption')}
+        captionVisuallyHidden
+        columns={columns}
+        rows={filtered}
+        rowKey={(r) => r.id}
+        dense
+        emptyState={<p className="text-small text-ink-muted">{t('empty')}</p>}
+      />
+    </div>
+  );
+}
+
 // ── RuleRow ──────────────────────────────────────────────────────────────────
 
 function RuleRow({ rule, onEdit, onDelete, onHistory }: { rule: EligibilityRule; onEdit: () => void; onDelete: () => void; onHistory: () => void }) {
@@ -361,6 +570,7 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel }: RuleFormProps) {
   const [benefitKey,     setBenefitKey]     = useState<BenefitKey>((initialRule?.benefit_key as BenefitKey) ?? 'medical-reimbursement');
   const [ruleId,         setRuleId]         = useState(initialRule?.id ?? '');
   const [ruleName,       setRuleName]       = useState(('rule_name' in (initialRule ?? {}) ? String((initialRule as EligibilityRule & { rule_name?: string }).rule_name ?? '') : ''));
+  const [ruleType,       setRuleType]       = useState<'standard' | 'special'>((initialRule?.rule_type as 'standard' | 'special') ?? 'special');
   const [status,         setStatus]         = useState(initialRule?.allow === false ? 'inactive' : 'active');
   const [effectiveStart, setEffectiveStart] = useState(initialRule?.effective_from?.slice(0, 10) ?? new Date().toISOString().slice(0, 10));
   const [effectiveEnd,   setEffectiveEnd]   = useState(initialRule?.effective_to?.slice(0, 10) ?? '');
@@ -399,6 +609,7 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel }: RuleFormProps) {
         allow: status === 'active',
         created_by: createdBy,
         rule_name:              ruleName || null,
+        rule_type:              ruleType,
         status,
         effective_from:         effectiveStart || new Date().toISOString().slice(0, 10),
         effective_to:           effectiveEnd || null,
@@ -445,6 +656,13 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel }: RuleFormProps) {
           <div className="flex flex-col gap-1">
             <label className={labelCls}>Rule Name</label>
             <input type="text" value={ruleName} onChange={(e) => setRuleName(e.target.value)} disabled={saving} placeholder="เช่น Medical entitlement A" className={inputCls} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className={labelCls}>Rule Type</label>
+            <select value={ruleType} onChange={(e) => setRuleType(e.target.value as 'standard' | 'special')} disabled={saving} className={inputCls}>
+              <option value="standard">Standard</option>
+              <option value="special">Special</option>
+            </select>
           </div>
           {!isEdit && (
             <div className="flex flex-col gap-1">
