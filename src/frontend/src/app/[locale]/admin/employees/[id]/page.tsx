@@ -52,7 +52,7 @@ import { mapEmplStatusCode } from '@/lib/employee/empStatus'
 import CompensationHistory from '@/components/profile/CompensationHistory'
 import { formatCurrency, formatDate } from '@/lib/date'
 import { getPlan, isV2Plan } from '@/data/benefits/plan-registry'
-import { EmptyState, DataTable, type DataTableColumn } from '@/components/humi'
+import { EmptyState, DataTable, Modal, Button, type DataTableColumn } from '@/components/humi'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
 import {
   useSpecialPrivilegeStore,
@@ -191,17 +191,247 @@ import { actionAvailability } from '@/lib/admin/actionAvailability'
 // Current-benefit roll-up (illustrative seed — the admin employee store has no
 // per-employee enrollment schema; mockup phase shows standard Central Group
 // benefits so the section demos with realistic rows). Read-only, no backend.
-const CURRENT_BENEFITS: ReadonlyArray<{
-  planTh: string; planEn: string
-  coverageTh: string; coverageEn: string
-  effectiveDate: string
-  statusTh: string; statusEn: string
-}> = [
-  { planTh: 'ประกันสุขภาพกลุ่ม', planEn: 'Group Health Insurance', coverageTh: 'พนักงาน + คู่สมรส', coverageEn: 'Employee + Spouse', effectiveDate: '2024-01-01', statusTh: 'มีผล', statusEn: 'Active' },
-  { planTh: 'ประกันชีวิตกลุ่ม', planEn: 'Group Life Insurance', coverageTh: '24 เท่าของเงินเดือน', coverageEn: '24× monthly salary', effectiveDate: '2024-01-01', statusTh: 'มีผล', statusEn: 'Active' },
-  { planTh: 'กองทุนสำรองเลี้ยงชีพ', planEn: 'Provident Fund', coverageTh: 'สมทบ 5%', coverageEn: '5% contribution', effectiveDate: '2022-06-01', statusTh: 'มีผล', statusEn: 'Active' },
-  { planTh: 'ตรวจสุขภาพประจำปี', planEn: 'Annual Health Checkup', coverageTh: '1 ครั้ง/ปี', coverageEn: '1× per year', effectiveDate: '2024-01-01', statusTh: 'มีผล', statusEn: 'Active' },
+// STA-103: row = summary columns (name / plan ID / amount used / entitle amount);
+// the per-benefit detail attributes (Individual plan + Benefit Plan + Eligibility
+// rule) hydrate the "more detail" modal. Values seeded from the BA excel sample.
+type CurrentBenefit = {
+  benefitName: string
+  benefitPlanId: string
+  amountUsed: number
+  entitleAmount: number
+  currency: string
+  // Individual plan
+  effectiveStartDate: string
+  effectiveEndDate: string
+  reimbursedAmount: number | null
+  // Benefit Plan — info
+  country: string
+  benefitCategory: string
+  // Benefit Plan — type / group
+  benefitType: string
+  benefitSubType: string
+  // Benefit Plan — enrollment
+  enrollment: string
+  // Benefit Plan — claim condition
+  claimPeriod: string
+  entitlementCalcMethod: string
+  eligibleClaimDate: string
+  specialClaimCondition: string
+  // Benefit Eligibility rule — id + validity
+  ruleId: string
+  ruleName: string
+  // Benefit Eligibility rule — effective of plan
+  effectiveType: string
+  waitingPeriod: string
+  // Benefit Eligibility rule — reimbursement limit
+  originalEntitlementBeforeProrate: number | null
+  originalEntitlementAfterProrate: number | null
+  adjustedEntitlementAmount: number | null
+  finalEntitlementAmount: number | null
+  maximumAmountPerClaim: number | null
+}
+
+const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
+  {
+    benefitName: 'Medical Reimbursement',
+    benefitPlanId: 'TH_MED_001',
+    amountUsed: 38000,
+    entitleAmount: 38000,
+    currency: 'THB',
+    effectiveStartDate: '2026-01-01',
+    effectiveEndDate: '2026-12-31',
+    reimbursedAmount: 38000,
+    country: 'TH',
+    benefitCategory: 'Medical',
+    benefitType: 'Reimbursement: Employee, HR',
+    benefitSubType: '',
+    enrollment: 'AUTO',
+    claimPeriod: 'YEAR',
+    entitlementCalcMethod: 'FULL',
+    eligibleClaimDate: '30',
+    specialClaimCondition: 'Y (ePatient, Tops care)',
+    ruleId: '258365',
+    ruleName: 'Medical Reimbursement',
+    effectiveType: 'HireDate',
+    waitingPeriod: '',
+    originalEntitlementBeforeProrate: 38000,
+    originalEntitlementAfterProrate: 38000,
+    adjustedEntitlementAmount: 0,
+    finalEntitlementAmount: 38000,
+    maximumAmountPerClaim: null,
+  },
+  {
+    benefitName: 'Dental Reimbursement',
+    benefitPlanId: 'TH_DEN_001',
+    amountUsed: 500,
+    entitleAmount: 2000,
+    currency: 'THB',
+    effectiveStartDate: '2026-01-01',
+    effectiveEndDate: '2026-12-31',
+    reimbursedAmount: 500,
+    country: 'TH',
+    benefitCategory: 'Medical',
+    benefitType: 'Reimbursement: Employee, HR',
+    benefitSubType: '',
+    enrollment: 'AUTO',
+    claimPeriod: 'YEAR',
+    entitlementCalcMethod: 'FULL',
+    eligibleClaimDate: '30',
+    specialClaimCondition: 'Y (ePatient, Tops care)',
+    ruleId: '258365',
+    ruleName: 'Medical Reimbursement',
+    effectiveType: 'HireDate',
+    waitingPeriod: '',
+    originalEntitlementBeforeProrate: 2000,
+    originalEntitlementAfterProrate: 2000,
+    adjustedEntitlementAmount: 0,
+    finalEntitlementAmount: 2000,
+    maximumAmountPerClaim: null,
+  },
+  {
+    benefitName: 'Gasoline Reimbursement',
+    benefitPlanId: 'TH_GAS_001',
+    amountUsed: 84000,
+    entitleAmount: 84000,
+    currency: 'THB',
+    effectiveStartDate: '2026-01-01',
+    effectiveEndDate: '2026-12-31',
+    reimbursedAmount: 84000,
+    country: 'TH',
+    benefitCategory: 'Gasoline',
+    benefitType: 'Reimbursement: Employee, HR',
+    benefitSubType: '',
+    enrollment: 'AUTO',
+    claimPeriod: 'YEAR',
+    entitlementCalcMethod: 'PRORATE',
+    eligibleClaimDate: '90',
+    specialClaimCondition: 'Y (Fleet card)',
+    ruleId: '258853',
+    ruleName: 'Gasoline Reimbursement',
+    effectiveType: 'HireDate',
+    waitingPeriod: '',
+    originalEntitlementBeforeProrate: 84000,
+    originalEntitlementAfterProrate: 84000,
+    adjustedEntitlementAmount: 0,
+    finalEntitlementAmount: 84000,
+    maximumAmountPerClaim: null,
+  },
 ]
+
+// STA-103: detail body for the "more detail" modal. Groups the benefit's
+// attributes into the BA-spec sections (Individual plan / Benefit Plan /
+// Benefit Eligibility rule). Read-only; blank values render as "-".
+function BenefitDetailBody({ benefit, isTh }: { benefit: CurrentBenefit; isTh: boolean }) {
+  const dash = (v: string | number | null | undefined): string => {
+    if (v === null || v === undefined || v === '') return '-'
+    return String(v)
+  }
+  const money = (v: number | null): string =>
+    v === null || v === undefined ? '-' : `${v.toLocaleString('en-US')} ${benefit.currency}`
+
+  const Field = ({ label, value }: { label: string; value: string }) => (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-[length:var(--text-eyebrow)] text-ink-muted">{label}</span>
+      <span className="text-small font-medium text-ink tabular-nums break-words">{value}</span>
+    </div>
+  )
+
+  const GroupHeading = ({ children }: { children: React.ReactNode }) => (
+    <h3 className="font-display text-small font-semibold text-ink">{children}</h3>
+  )
+  const SubHeading = ({ children }: { children: React.ReactNode }) => (
+    <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-muted">{children}</p>
+  )
+  const Grid = ({ children }: { children: React.ReactNode }) => (
+    <div className="grid gap-3 sm:grid-cols-2">{children}</div>
+  )
+
+  return (
+    <div className="space-y-6">
+      {/* ── Individual plan ── */}
+      <section className="space-y-3">
+        <GroupHeading>{isTh ? 'แผนรายบุคคล' : 'Individual plan'}</GroupHeading>
+        <Grid>
+          <Field label={isTh ? 'วันเริ่มมีผล' : 'effectiveStartDate'} value={dash(benefit.effectiveStartDate ? formatDate(benefit.effectiveStartDate, 'medium', isTh ? 'th' : 'en') : '')} />
+          <Field label={isTh ? 'วันสิ้นสุด' : 'effectiveEndDate'} value={dash(benefit.effectiveEndDate ? formatDate(benefit.effectiveEndDate, 'medium', isTh ? 'th' : 'en') : '')} />
+          <Field label={isTh ? 'ยอดที่เบิกแล้ว' : 'Reimbursed amount'} value={money(benefit.reimbursedAmount)} />
+        </Grid>
+      </section>
+
+      {/* ── Benefit Plan ── */}
+      <section className="space-y-4 border-t border-hairline pt-4">
+        <GroupHeading>{isTh ? 'แผนสวัสดิการ' : 'Benefit Plan'}</GroupHeading>
+
+        <div className="space-y-2">
+          <SubHeading>{isTh ? 'ข้อมูลสวัสดิการ' : 'Benefit info'}</SubHeading>
+          <Grid>
+            <Field label={isTh ? 'ประเทศ' : 'Country'} value={dash(benefit.country)} />
+            <Field label={isTh ? 'หมวดสวัสดิการ' : 'Benefit category'} value={dash(benefit.benefitCategory)} />
+            <Field label={isTh ? 'รหัสแผนสวัสดิการ' : 'Benefit plan ID'} value={dash(benefit.benefitPlanId)} />
+            <Field label={isTh ? 'ชื่อสวัสดิการ' : 'Benefit name'} value={dash(benefit.benefitName)} />
+          </Grid>
+        </div>
+
+        <div className="space-y-2">
+          <SubHeading>{isTh ? 'ประเภท / กลุ่มสวัสดิการ' : 'Benefit type / group'}</SubHeading>
+          <Grid>
+            <Field label={isTh ? 'ประเภทสวัสดิการ' : 'Benefit type'} value={dash(benefit.benefitType)} />
+            <Field label={isTh ? 'ประเภทย่อย' : 'Benefit sub type'} value={dash(benefit.benefitSubType)} />
+          </Grid>
+        </div>
+
+        <div className="space-y-2">
+          <SubHeading>{isTh ? 'การลงทะเบียน' : 'Enrollment'}</SubHeading>
+          <Grid>
+            <Field label={isTh ? 'การลงทะเบียน' : 'Enrollment'} value={dash(benefit.enrollment)} />
+          </Grid>
+        </div>
+
+        <div className="space-y-2">
+          <SubHeading>{isTh ? 'เงื่อนไขการเบิก' : 'Claim condition'}</SubHeading>
+          <Grid>
+            <Field label={isTh ? 'รอบการเบิก' : 'Claim period'} value={dash(benefit.claimPeriod)} />
+            <Field label={isTh ? 'วิธีคำนวณสิทธิ์' : 'Entitlement amount cal method'} value={dash(benefit.entitlementCalcMethod)} />
+            <Field label={isTh ? 'วันที่เบิกได้' : 'Eligible Claim date'} value={dash(benefit.eligibleClaimDate)} />
+            <Field label={isTh ? 'เงื่อนไขการเบิกพิเศษ' : 'Special claim condition'} value={dash(benefit.specialClaimCondition)} />
+          </Grid>
+        </div>
+      </section>
+
+      {/* ── Benefit Eligibility rule ── */}
+      <section className="space-y-4 border-t border-hairline pt-4">
+        <GroupHeading>{isTh ? 'กฎเงื่อนไขสิทธิ์สวัสดิการ' : 'Benefit Eligibility rule'}</GroupHeading>
+
+        <div className="space-y-2">
+          <SubHeading>{isTh ? 'รหัสกฎและความถูกต้อง' : 'Rule ID and validity'}</SubHeading>
+          <Grid>
+            <Field label={isTh ? 'รหัสกฎ' : 'Rule ID'} value={dash(benefit.ruleId)} />
+            <Field label={isTh ? 'ชื่อกฎ' : 'Rule name'} value={dash(benefit.ruleName)} />
+          </Grid>
+        </div>
+
+        <div className="space-y-2">
+          <SubHeading>{isTh ? 'การมีผลของแผน' : 'Effective of plan'}</SubHeading>
+          <Grid>
+            <Field label={isTh ? 'ประเภทการมีผล' : 'Effective type'} value={dash(benefit.effectiveType)} />
+            <Field label={isTh ? 'ระยะเวลารอคอย' : 'Waiting period'} value={dash(benefit.waitingPeriod)} />
+          </Grid>
+        </div>
+
+        <div className="space-y-2">
+          <SubHeading>{isTh ? 'วงเงินการเบิก' : 'Reimbursement limit'}</SubHeading>
+          <Grid>
+            <Field label={isTh ? 'สิทธิ์ตั้งต้น (ก่อนเฉลี่ย)' : 'Original Entitlement Amount (Before prorate)'} value={money(benefit.originalEntitlementBeforeProrate)} />
+            <Field label={isTh ? 'สิทธิ์ตั้งต้น (หลังเฉลี่ย)' : 'Original Entitlement Amount (After prorate)'} value={money(benefit.originalEntitlementAfterProrate)} />
+            <Field label={isTh ? 'สิทธิ์ที่ปรับแล้ว' : 'Adjusted Entitlement Amount'} value={money(benefit.adjustedEntitlementAmount)} />
+            <Field label={isTh ? 'สิทธิ์สุดท้าย' : 'Final entitlement amount'} value={money(benefit.finalEntitlementAmount)} />
+            <Field label={isTh ? 'วงเงินสูงสุดต่อการเบิก' : 'Maximum Amount per Claim'} value={money(benefit.maximumAmountPerClaim)} />
+          </Grid>
+        </div>
+      </section>
+    </div>
+  )
+}
 
 export default function EmployeeDetailPage() {
   const params = useParams()
@@ -311,6 +541,8 @@ export default function EmployeeDetailPage() {
   const [privilegeCollapsed, setPrivilegeCollapsed] = useState(true)
   const [reallocCollapsed, setReallocCollapsed] = useState(true)
   const [benefitsCollapsed, setBenefitsCollapsed] = useState(true)
+  // STA-103: which Current Benefit row's "more detail" modal is open (null = closed)
+  const [benefitDetail, setBenefitDetail] = useState<CurrentBenefit | null>(null)
 
   // Timeline store — S3 owns this
   const { seed } = useTimelines()
@@ -1143,20 +1375,24 @@ export default function EmployeeDetailPage() {
             <table className="w-full text-small" style={{ borderCollapse: 'collapse' }}>
               <thead>
                 <tr className="text-ink-muted" style={{ textAlign: 'left' }}>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'แผน' : 'Plan'}</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'ความคุ้มครอง' : 'Coverage'}</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'วันเริ่มมีผล' : 'Effective date'}</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'สถานะ' : 'Status'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'ชื่อสวัสดิการ' : 'Benefit name'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'รหัสแผนสวัสดิการ' : 'Benefit plan ID'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'ยอดที่ใช้ไป' : 'Amount used'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'สิทธิ์ทั้งหมด' : 'Entitle amount'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}><span className="sr-only">{isTh ? 'การกระทำ' : 'Actions'}</span></th>
                 </tr>
               </thead>
               <tbody>
                 {CURRENT_BENEFITS.map((b) => (
-                  <tr key={b.planEn} style={{ borderTop: '1px solid var(--color-hairline)' }}>
-                    <td className="text-ink font-medium" style={{ padding: '8px 12px' }}>{isTh ? b.planTh : b.planEn}</td>
-                    <td className="text-ink-muted" style={{ padding: '8px 12px' }}>{isTh ? b.coverageTh : b.coverageEn}</td>
-                    <td className="text-ink-muted" style={{ padding: '8px 12px' }}>{formatDate(b.effectiveDate, 'medium', locale)}</td>
-                    <td style={{ padding: '8px 12px' }}>
-                      <span className="humi-tag humi-tag--accent">{isTh ? b.statusTh : b.statusEn}</span>
+                  <tr key={b.benefitPlanId} style={{ borderTop: '1px solid var(--color-hairline)' }}>
+                    <td className="text-ink font-medium" style={{ padding: '8px 12px' }}>{b.benefitName}</td>
+                    <td className="text-ink-muted font-mono" style={{ padding: '8px 12px' }}>{b.benefitPlanId}</td>
+                    <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${b.amountUsed.toLocaleString('en-US')} ${b.currency}`}</td>
+                    <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${b.entitleAmount.toLocaleString('en-US')} ${b.currency}`}</td>
+                    <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                      <Button variant="ghost" size="sm" onClick={() => setBenefitDetail(b)}>
+                        {isTh ? 'ดูรายละเอียด' : 'More detail'}
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -1165,6 +1401,19 @@ export default function EmployeeDetailPage() {
           </div>
         )}
       </CollapsibleSectionCard>
+
+      {/* STA-103: per-benefit "more detail" modal — Individual plan + Benefit Plan
+          + Benefit Eligibility rule attribute groups. Read-only, no backend. */}
+      <Modal
+        open={benefitDetail !== null}
+        onClose={() => setBenefitDetail(null)}
+        title={benefitDetail ? `${benefitDetail.benefitName} · ${benefitDetail.benefitPlanId}` : ''}
+        widthClass="max-w-3xl"
+      >
+        {benefitDetail && (
+          <BenefitDetailBody benefit={benefitDetail} isTh={isTh} />
+        )}
+      </Modal>
 
       {/* ── BRD #207: HRBP-conditional PerPersonal snapshot ──────────────────
           Visible to: hrbp, spd, hr_admin, hr_manager only.
