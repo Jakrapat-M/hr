@@ -4353,18 +4353,19 @@
       }
     },
     "reallocateBudget": {
-      "cardLabel": "Reallocate Next Year Budget",
+      "cardLabel": "Allocate Entitlement amount",
       "cardDesc": "Move part of next year’s medical budget into this year",
       "flag": "Budget Reallocation",
       "pageTitle": "Benefits",
-      "title": "Reallocate Next Year Budget",
+      "title": "Allocate Entitlement amount",
       "subtitle": "Transfer part of this employee’s next-year medical budget into the current year.",
       "fields": {
         "plan": "Medical plan",
         "amount": "Amount to move (THB)",
         "effectiveStart": "Effective start date",
         "effectiveEnd": "Effective end date",
-        "reason": "Reason"
+        "reason": "Reason",
+        "attachments": "Attachments"
       },
       "preview": {
         "current": "This year",
@@ -4391,6 +4392,7 @@
       },
       "buttons": {
         "cancel": "Cancel",
+        "addAttachment": "Add attachment",
         "submit": "Reallocate budget"
       }
     }
