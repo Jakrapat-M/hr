@@ -51,7 +51,8 @@ import type { LifecycleEvent } from '@/lib/calculations'
 import { mapEmplStatusCode } from '@/lib/employee/empStatus'
 import CompensationHistory from '@/components/profile/CompensationHistory'
 import { formatCurrency, formatDate } from '@/lib/date'
-import { getPlan, isV2Plan } from '@/data/benefits/plan-registry'
+import { getPlan, getPlansByTemplate, isV2Plan, type BenefitPlan } from '@/data/benefits/plan-registry'
+import { SimpleClaimForm } from '@/components/benefits/templates'
 import { EmptyState, DataTable, Modal, Button, FormField, FormInput, type DataTableColumn } from '@/components/humi'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
 import {
@@ -316,7 +317,62 @@ const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
     finalEntitlementAmount: 84000,
     maximumAmountPerClaim: null,
   },
+  // STA-106: seed Gift-Ordination row (full STA-103 detail fields so
+  // "More detail" renders no undefined).
+  {
+    benefitName: 'Gift-Ordination',
+    benefitPlanId: 'TH_ORD_001',
+    amountUsed: 0,
+    entitleAmount: 2000,
+    currency: 'THB',
+    effectiveStartDate: '2026-01-01',
+    effectiveEndDate: '2026-12-31',
+    reimbursedAmount: 0,
+    country: 'TH',
+    benefitCategory: 'Gift',
+    benefitType: 'Reimbursement: Employee, HR',
+    benefitSubType: '',
+    enrollment: 'AUTO',
+    claimPeriod: 'YEAR',
+    entitlementCalcMethod: 'FULL',
+    eligibleClaimDate: '30',
+    specialClaimCondition: '',
+    ruleId: '258900',
+    ruleName: 'Gift-Ordination',
+    effectiveType: 'HireDate',
+    waitingPeriod: '',
+    originalEntitlementBeforeProrate: 2000,
+    originalEntitlementAfterProrate: 2000,
+    adjustedEntitlementAmount: 0,
+    finalEntitlementAmount: 2000,
+    maximumAmountPerClaim: null,
+  },
 ]
+
+// STA-106: "Start a claim" support on Current Benefits. Gift-Ordination is a
+// registry "records" plan (non-claimable); its claim button is gated off
+// pending BA confirmation. Flip true to enable once confirmed.
+const GIFT_ORD_CLAIMABLE = false
+// Current-Benefits rows use TH_* ids; the plan registry uses BE-* ids.
+const CURRENT_BENEFIT_TO_PLAN_ID: Record<string, string> = {
+  TH_MED_001: 'BE-MED-001',
+  TH_DEN_001: 'BE-DEN-001',
+  TH_GAS_001: 'BE-GAS-001',
+  TH_ORD_001: 'BE-GIF-002',
+}
+// Resolve a Current-Benefits row to a claimable BenefitPlan for the claim form.
+// Falls back to a safe simple-claim plan so we never spread undefined; overrides
+// name + annual limit so the registry's "[Records] …" prefix never leaks.
+function resolveClaimPlan(b: CurrentBenefit): BenefitPlan {
+  const base =
+    getPlan(CURRENT_BENEFIT_TO_PLAN_ID[b.benefitPlanId]) ?? getPlansByTemplate('simple-claim')[0]
+  return {
+    ...base,
+    nameTh: b.benefitName,
+    nameEn: b.benefitName,
+    annualLimitThb: b.entitleAmount,
+  }
+}
 
 // STA-104: enrollable (not-yet-enrolled) benefits shown in the
 // "Benefit enrollment" section below Current Benefits. Mockup seed only.
@@ -685,6 +741,8 @@ export default function EmployeeDetailPage() {
   // STA-104: "Benefit enrollment" section + per-row enroll modal (default-collapsed).
   const [enrollTarget, setEnrollTarget] = useState<EnrollableBenefit | null>(null)
   const [enrollmentCollapsed, setEnrollmentCollapsed] = useState(true)
+  // STA-106: per-row "Start a claim" modal (HR files a claim on behalf of employee).
+  const [claimTarget, setClaimTarget] = useState<CurrentBenefit | null>(null)
 
   // Timeline store — S3 owns this
   const { seed } = useTimelines()
@@ -1532,9 +1590,16 @@ export default function EmployeeDetailPage() {
                     <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${b.amountUsed.toLocaleString('en-US')} ${b.currency}`}</td>
                     <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${b.entitleAmount.toLocaleString('en-US')} ${b.currency}`}</td>
                     <td style={{ padding: '8px 12px', textAlign: 'right' }}>
-                      <Button variant="ghost" size="sm" onClick={() => setBenefitDetail(b)}>
-                        {isTh ? 'ดูรายละเอียด' : 'More detail'}
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setBenefitDetail(b)}>
+                          {isTh ? 'ดูรายละเอียด' : 'More detail'}
+                        </Button>
+                        {(b.benefitPlanId !== 'TH_ORD_001' || GIFT_ORD_CLAIMABLE) && (
+                          <Button variant="secondary" size="sm" onClick={() => setClaimTarget(b)}>
+                            {isTh ? 'เริ่มเบิก' : 'Start a claim'}
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1607,6 +1672,28 @@ export default function EmployeeDetailPage() {
             onSubmit={() => setEnrollTarget(null)}
             onCancel={() => setEnrollTarget(null)}
           />
+        )}
+      </Modal>
+
+      {/* STA-106: per-row "Start a claim" modal — reuses the employee SimpleClaimForm
+          verbatim so HR files a claim identically. Mockup only (no onSubmitted → no network). */}
+      <Modal
+        open={claimTarget !== null}
+        onClose={() => setClaimTarget(null)}
+        title={claimTarget ? `${isTh ? 'เริ่มเบิก' : 'Start a claim'} · ${claimTarget.benefitName}` : ''}
+        widthClass="max-w-3xl"
+      >
+        {claimTarget && (
+          <>
+            <p className="text-small text-ink-muted" style={{ marginBottom: 12 }}>
+              {isTh ? 'ตัวอย่างเดโม่ — ยังไม่บันทึกจริง' : 'Mockup — not persisted'}
+            </p>
+            <SimpleClaimForm
+              plan={resolveClaimPlan(claimTarget)}
+              selectedBenefitLabel={claimTarget.benefitName}
+              remainingAmount={Math.max(0, claimTarget.entitleAmount - claimTarget.amountUsed)}
+            />
+          </>
         )}
       </Modal>
 
