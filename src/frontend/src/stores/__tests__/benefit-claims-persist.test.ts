@@ -6,7 +6,7 @@ import {
 } from '@/stores/benefit-claims';
 import { APPROVAL_SEED_BY_TYPE } from '@/lib/approval-seed-fixtures';
 
-// benefit-claims — persist/rehydrate contract (R-1 fix).
+// benefit-claims — persist/rehydrate contract: live claims survive F5, seeds reset.
 //
 // The discriminator between seed rows and live rows is the id space:
 //   - Seeded queue claims: WF-2026-* (from MOCK_PENDING_REQUESTS via queueRowToBenefitClaim)

@@ -1,7 +1,7 @@
-// probe4.mjs — standalone Playwright probe for the R-1 persistence fix.
+// probe4.mjs — standalone Playwright probe for live-claim persistence.
 //
 // Proves: a LIVE benefit claim (BEN-CLM-*) submitted by an employee via the
-// reimbursement form SURVIVES a hard navigation (page.reload). R-1 changed the
+// reimbursement form SURVIVES a hard navigation (page.reload). The fix changed the
 // persist merge / migrate in src/stores/benefit-claims.ts to drop only seed
 // claims (isSeededQueueClaim → WF-2026-* ids) instead of every claim missing a
 // queueSnapshot — so live BEN-CLM-* claims now survive F5.

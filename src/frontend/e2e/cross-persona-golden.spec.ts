@@ -349,7 +349,7 @@ test.describe.serial('Cross-persona golden journey (US-16)', () => {
 
       // ── THE persistence regression-catch ────────────────────────────────────
       // The live claim's ฿1,234 row must STILL be in the queue table after the F5.
-      // This is the assertion that fails if R-1 (isSeededQueueClaim-based merge
+      // This is the assertion that fails if the persist fix (isSeededQueueClaim-based merge
       // drop in benefit-claims.ts) is reverted: the old `!c.queueSnapshot` filter
       // would discard live BEN-CLM-* claims on rehydrate, so the row disappears.
       const queueTableAfterReload = page.getByRole('table', { name: 'คิวอนุมัติ' });
