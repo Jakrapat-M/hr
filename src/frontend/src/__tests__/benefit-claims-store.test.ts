@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   BENEFIT_CLAIMS_PERSIST_VERSION,
   BENEFIT_STATUS_LABEL,
+  isSeededQueueClaim,
   migrateBenefitClaimsPersistedState,
   selectBenefitRequestSummaries,
   useBenefitClaimsStore,
@@ -38,6 +39,9 @@ describe('benefit claim store', () => {
     expect(claim.queueSnapshot).toBeDefined();
     expect(claim.queueSnapshot?.type).toBe('claim');
     expect(claim.queueSnapshot?.requester.id).toBe('EMP001');
+    // submitClaim must produce a BEN-CLM-* id, NOT a WF-2026-* seed id,
+    // so the persist layer does not drop it on rehydrate.
+    expect(isSeededQueueClaim(claim)).toBe(false);
 
     const [row] = selectBenefitRequestSummaries(useBenefitClaimsStore.getState().claims);
     expect(row.id).toBe(claim.workflowRequestId);

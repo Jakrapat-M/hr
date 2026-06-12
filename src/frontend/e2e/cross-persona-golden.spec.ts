@@ -257,7 +257,10 @@ test.describe.serial('Cross-persona golden journey (US-16)', () => {
 
       // Required fields: receipt no + receipt amount (claim date defaults to today).
       await page.getByLabel(/เลขที่ใบเสร็จ\/เอกสาร/).fill('RC-2026-GOLDEN');
-      await page.getByLabel(/จำนวนเงินตามใบเสร็จ/).fill('1200');
+      // 1234 (not 1200): 1200 collides with seed WF-2026-017's ฿1,200 amount, so a
+      // global /฿1,200/ match could not distinguish the live row from the seed. 1234
+      // appears nowhere in mock-requests.ts → the queue assertion is unambiguous.
+      await page.getByLabel(/จำนวนเงินตามใบเสร็จ/).fill('1234');
 
       // Attach a file — the medical claim requires ≥1 attachment. The hidden
       // <input type="file"> is the only file input on the page.
@@ -298,6 +301,13 @@ test.describe.serial('Cross-persona golden journey (US-16)', () => {
       await expect(page.getByText(EMPLOYEE_NAME).first()).toBeVisible({ timeout: 10_000 });
       await expect(page.getByText('เบิกค่าใช้จ่าย').first()).toBeVisible({ timeout: 10_000 });
 
+      // The live claim's row renders its queueSnapshot.description in the
+      // "รายละเอียด" column as `เบิกค่ารักษาพยาบาล ฿1,234`. Scope the amount match
+      // to the queue table (caption "คิวอนุมัติ") so it can never match a stray
+      // ฿-amount elsewhere on the page, and prove the live row is actually present.
+      const queueTable = page.getByRole('table', { name: 'คิวอนุมัติ' });
+      await expect(queueTable.getByText(/฿\s?1,234/).first()).toBeVisible({ timeout: 10_000 });
+
       // Approve the LEAVE request: scope the approve button to the row carrying
       // the employee's name so we don't approve the wrong row.
       const leaveRow = page
@@ -336,6 +346,30 @@ test.describe.serial('Cross-persona golden journey (US-16)', () => {
       await expect(page.getByRole('heading', { name: 'คิวอนุมัติ' })).toBeVisible({ timeout: 10_000 });
       // The claim row (and the rest of the queue) survives the reload.
       await expect(page.getByText('เบิกค่าใช้จ่าย').first()).toBeVisible({ timeout: 10_000 });
+
+      // ── THE persistence regression-catch ────────────────────────────────────
+      // The live claim's ฿1,234 row must STILL be in the queue table after the F5.
+      // This is the assertion that fails if R-1 (isSeededQueueClaim-based merge
+      // drop in benefit-claims.ts) is reverted: the old `!c.queueSnapshot` filter
+      // would discard live BEN-CLM-* claims on rehydrate, so the row disappears.
+      const queueTableAfterReload = page.getByRole('table', { name: 'คิวอนุมัติ' });
+      await expect(queueTableAfterReload.getByText(/฿\s?1,234/).first())
+        .toBeVisible({ timeout: 10_000 });
+
+      // Belt-and-suspenders: the live claim must still be pending_manager_approval
+      // in the persisted store AFTER the reload (not just visually rendered).
+      const claimPendingAfterReload = await page.evaluate(() => {
+        const raw = localStorage.getItem('humi-benefit-claims');
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        return (parsed?.state?.claims ?? []).some(
+          (c: { status?: string }) => c.status === 'pending_manager_approval',
+        );
+      });
+      expect(
+        claimPendingAfterReload,
+        'live claim should survive F5 as pending_manager_approval in the store',
+      ).toBe(true);
 
       // ── Step 6 — back to the employee; leave shows "อนุมัติแล้ว" ─────────────
       await assumePersona(page, EMPLOYEE_NAME);

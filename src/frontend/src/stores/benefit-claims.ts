@@ -432,6 +432,19 @@ export function queueRowToBenefitClaim(row: PendingRequest): BenefitClaimRequest
 
 export const BENEFIT_CLAIMS_PERSIST_VERSION = 3;
 
+/**
+ * Seeded queue claims use canonical WF-2026-* ids (from MOCK_PENDING_REQUESTS via
+ * queueRowToBenefitClaim). Live claims submitted by employees use BEN-CLM-* ids.
+ * Store fixtures (BEN-CLM-MGR1, BEN-CLM-0001, etc.) have no queueSnapshot and must
+ * persist. This discriminator is the authoritative gate for the two persist-drop sites
+ * below — do NOT use queueSnapshot presence as the criterion (live submitClaim also
+ * attaches a queueSnapshot, so presence alone cannot distinguish seed from live).
+ */
+const CANONICAL_CLAIM_SEED_ID = /^WF-2026-/;
+export function isSeededQueueClaim(c: { id: string }): boolean {
+  return CANONICAL_CLAIM_SEED_ID.test(c.id);
+}
+
 export function migrateBenefitClaimsPersistedState(
   persistedState: unknown,
 ): Partial<BenefitClaimsState> {
@@ -443,12 +456,12 @@ export function migrateBenefitClaimsPersistedState(
     const state = persistedState as Partial<BenefitClaimsState>;
     return {
       ...state,
-      // PR-1b rehydrate-to-seed: drop the queue-seeded claims (queueSnapshot
-      // present) so ensureDemoSeed re-adds them fresh → "approve a queue claim →
-      // refresh" returns to the seeded set. The store's own benefit fixtures
-      // (no queueSnapshot) persist normally for the benefits surfaces.
+      // PR-1b rehydrate-to-seed: drop WF-2026-* seed claims so ensureDemoSeed
+      // re-adds them fresh → "approve a queue claim → refresh" returns to the
+      // seeded set. Keyed on WF-2026-* id space (not queueSnapshot presence)
+      // so live BEN-CLM-* claims that also carry a queueSnapshot are kept.
       claims:
-        state.claims?.filter((c) => !c.queueSnapshot).map(normalizePersistedClaim) ?? [],
+        state.claims?.filter((c) => !isSeededQueueClaim(c)).map(normalizePersistedClaim) ?? [],
     };
   }
   return { claims: initialClaims };
@@ -609,6 +622,8 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
             resolve();
           }, 300);
         }),
+      // merge-drop + ensureDemoSeed re-add is keyed on the WF-2026-* id space,
+      // disjoint from live BEN-CLM-* claims; the id-guard below stays correct.
       seedQueueClaims: (rows) =>
         set((s) => {
           const existing = new Set(s.claims.map((c) => c.id));
@@ -623,13 +638,13 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
       name: 'humi-benefit-claims',
       version: BENEFIT_CLAIMS_PERSIST_VERSION,
       migrate: (persistedState) => migrateBenefitClaimsPersistedState(persistedState),
-      // PR-1b rehydrate-to-seed: on EVERY rehydrate drop the queue-seeded claims
-      // (queueSnapshot present) so ensureDemoSeed re-adds them fresh. The store's
-      // own benefit fixtures persist normally.
+      // PR-1b rehydrate-to-seed: on EVERY rehydrate drop WF-2026-* seed claims
+      // so ensureDemoSeed re-adds them fresh. Keyed on WF-2026-* id space (not
+      // queueSnapshot presence) so live BEN-CLM-* claims are kept on F5.
       merge: (persistedState, currentState) => {
         const persisted = (persistedState ?? {}) as Partial<BenefitClaimsState>;
         const persistedClaims = Array.isArray(persisted.claims)
-          ? persisted.claims.filter((c) => !c.queueSnapshot)
+          ? persisted.claims.filter((c) => !isSeededQueueClaim(c))
           : currentState.claims;
         return { ...currentState, ...persisted, claims: persistedClaims };
       },
