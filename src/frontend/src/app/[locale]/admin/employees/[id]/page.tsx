@@ -52,7 +52,7 @@ import { mapEmplStatusCode } from '@/lib/employee/empStatus'
 import CompensationHistory from '@/components/profile/CompensationHistory'
 import { formatCurrency, formatDate } from '@/lib/date'
 import { getPlan, isV2Plan } from '@/data/benefits/plan-registry'
-import { EmptyState, DataTable, Modal, Button, type DataTableColumn } from '@/components/humi'
+import { EmptyState, DataTable, Modal, Button, FormField, FormInput, type DataTableColumn } from '@/components/humi'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
 import {
   useSpecialPrivilegeStore,
@@ -318,6 +318,145 @@ const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
   },
 ]
 
+// STA-104: enrollable (not-yet-enrolled) benefits shown in the
+// "Benefit enrollment" section below Current Benefits. Mockup seed only.
+interface EnrollableBenefit {
+  benefitName: string
+  benefitPlanId: string
+  selectedBenefitLabel: string
+  enrolmentAmount: string
+  entitlementAmount: string
+  currency: string
+  currencyTh: string
+  enrolledInPeriod: string
+}
+const ENROLLABLE_BENEFITS: ReadonlyArray<EnrollableBenefit> = [
+  {
+    benefitName: 'Mobile allowance',
+    benefitPlanId: 'TH_MOB_006',
+    selectedBenefitLabel: 'Mobile allowance (TH_MOB_006)',
+    enrolmentAmount: '1,500 THB/Month',
+    entitlementAmount: '18,000',
+    currency: 'Thai Baht (THB)',
+    currencyTh: 'บาทไทย (THB)',
+    enrolledInPeriod: 'Claim - Calendar Year 2026 (TH_CLAIM_CALENDAR_2026)',
+  },
+  {
+    benefitName: 'Master degree scholarship',
+    benefitPlanId: 'TH_EDU_001',
+    selectedBenefitLabel: 'Master degree scholarship (TH_EDU_001)',
+    enrolmentAmount: '5,000 THB/Month',
+    entitlementAmount: '60,000',
+    currency: 'Thai Baht (THB)',
+    currencyTh: 'บาทไทย (THB)',
+    enrolledInPeriod: 'Claim - Calendar Year 2026 (TH_CLAIM_CALENDAR_2026)',
+  },
+]
+
+// STA-104: enrollment form body for the per-row "Enroll now" modal.
+// 8 fields, fixed order (Selected Benefit first). Fields 1/3/5/6 read-only,
+// 2/4/7 editable, 8 optional attachment (filename-only, no persistence).
+// Mockup only — submit shows an inline success message, no backend/no Zustand.
+function EnrollmentFormBody({
+  benefit,
+  isTh,
+  onSubmit,
+  onCancel,
+}: {
+  benefit: EnrollableBenefit
+  isTh: boolean
+  onSubmit: () => void
+  onCancel: () => void
+}) {
+  const today = '2026-06-12'
+  const [fileName, setFileName] = useState<string | null>(null)
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleSubmit = () => {
+    setSubmitted(true)
+    setTimeout(onSubmit, 1100)
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* 1 — Selected Benefit (read-only) */}
+      <FormField label={isTh ? 'สวัสดิการที่เลือก' : 'Selected Benefit'} required>
+        {(p) => <FormInput {...p} value={benefit.selectedBenefitLabel} readOnly disabled />}
+      </FormField>
+
+      {/* 2 — Effective date (editable) */}
+      <FormField label={isTh ? 'วันที่มีผล' : 'Effective date'} required>
+        {(p) => <FormInput {...p} type="date" defaultValue={today} />}
+      </FormField>
+
+      {/* 3 — Enrolment Amount (read-only, derived) */}
+      <FormField label={isTh ? 'จำนวนเงินที่ลงทะเบียน' : 'Enrolment Amount'} required>
+        {(p) => <FormInput {...p} value={benefit.enrolmentAmount} readOnly disabled />}
+      </FormField>
+
+      {/* 4 — Benefit Entitlement Amount (editable) */}
+      <FormField label={isTh ? 'สิทธิ์สวัสดิการ (วงเงิน)' : 'Benefit Entitlement Amount'} required>
+        {(p) => <FormInput {...p} defaultValue={benefit.entitlementAmount} inputMode="numeric" />}
+      </FormField>
+
+      {/* 5 — Currency (read-only, fixed THB) */}
+      <FormField label={isTh ? 'สกุลเงิน' : 'Currency'} required>
+        {(p) => <FormInput {...p} value={isTh ? benefit.currencyTh : benefit.currency} readOnly disabled />}
+      </FormField>
+
+      {/* 6 — Enrolled in Period (read-only) */}
+      <FormField label={isTh ? 'รอบที่ลงทะเบียน' : 'Enrolled in Period'} required>
+        {(p) => <FormInput {...p} value={benefit.enrolledInPeriod} readOnly disabled />}
+      </FormField>
+
+      {/* 7 — Request Date (editable, defaults today) */}
+      <FormField label={isTh ? 'วันที่ยื่นคำขอ' : 'Request Date'} required>
+        {(p) => <FormInput {...p} type="date" defaultValue={today} />}
+      </FormField>
+
+      {/* 8 — Attachment (optional; filename-only preview, no persistence) */}
+      <FormField
+        label={isTh ? 'เอกสารแนบ' : 'Attachment'}
+        help={
+          isTh
+            ? 'PDF, JPG, PNG, PPTX, XLSX — สูงสุด 10 MB (ไม่บังคับ)'
+            : 'PDF, JPG, PNG, PPTX, XLSX — up to 10 MB (optional)'
+        }
+      >
+        {(p) => (
+          <input
+            {...p}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.pptx,.xlsx"
+            onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+            className="block w-full text-small text-ink file:mr-3 file:rounded-md file:border file:border-hairline file:bg-canvas-soft file:px-3 file:py-1.5 file:text-small file:font-medium file:text-ink hover:file:border-accent hover:file:text-accent file:transition-colors file:cursor-pointer"
+          />
+        )}
+      </FormField>
+      {fileName && (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-canvas-soft px-2.5 py-1 text-small text-ink-muted">
+          {fileName}
+        </span>
+      )}
+
+      {submitted && (
+        <div role="status" className="rounded-[var(--radius-md)] bg-success-soft p-3 text-small font-medium text-ink">
+          {isTh ? 'ส่งคำขอลงทะเบียนแล้ว' : 'Enrollment submitted'}
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2 pt-2 border-t border-hairline">
+        <Button variant="secondary" onClick={onCancel} disabled={submitted}>
+          {isTh ? 'ยกเลิก' : 'Cancel'}
+        </Button>
+        <Button variant="primary" onClick={handleSubmit} disabled={submitted}>
+          {isTh ? 'ลงทะเบียน' : 'Enroll now'}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 // STA-103: detail body for the "more detail" modal. Groups the benefit's
 // attributes into the BA-spec sections (Individual plan / Benefit Plan /
 // Benefit Eligibility rule). Read-only; blank values render as "-".
@@ -543,6 +682,9 @@ export default function EmployeeDetailPage() {
   const [benefitsCollapsed, setBenefitsCollapsed] = useState(true)
   // STA-103: which Current Benefit row's "more detail" modal is open (null = closed)
   const [benefitDetail, setBenefitDetail] = useState<CurrentBenefit | null>(null)
+  // STA-104: "Benefit enrollment" section + per-row enroll modal (default-collapsed).
+  const [enrollTarget, setEnrollTarget] = useState<EnrollableBenefit | null>(null)
+  const [enrollmentCollapsed, setEnrollmentCollapsed] = useState(true)
 
   // Timeline store — S3 owns this
   const { seed } = useTimelines()
@@ -1402,6 +1544,42 @@ export default function EmployeeDetailPage() {
         )}
       </CollapsibleSectionCard>
 
+      {/* ── STA-104: Benefit enrollment (default-collapsed; below Current Benefits) ── */}
+      <CollapsibleSectionCard
+        id="emp-benefit-enrollment"
+        icon={Gift}
+        eyebrow={isTh ? 'สวัสดิการ' : 'Benefits'}
+        title={isTh ? 'ลงทะเบียนสวัสดิการ' : 'Benefit enrollment'}
+        sub=""
+        collapsed={enrollmentCollapsed}
+        onToggle={() => setEnrollmentCollapsed((v) => !v)}
+        expandLabel={expandLabel}
+        collapseLabel={collapseLabel}
+      >
+        <div style={{ overflowX: 'auto' }}>
+          <table className="w-full text-small" style={{ borderCollapse: 'collapse' }}>
+            <thead>
+              <tr className="text-ink-muted" style={{ textAlign: 'left' }}>
+                <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'ชื่อสวัสดิการ' : 'Benefit name'}</th>
+                <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}><span className="sr-only">{isTh ? 'การกระทำ' : 'Actions'}</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {ENROLLABLE_BENEFITS.map((b) => (
+                <tr key={b.benefitPlanId} style={{ borderTop: '1px solid var(--color-hairline)' }}>
+                  <td className="text-ink font-medium" style={{ padding: '8px 12px' }}>{b.benefitName}</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                    <Button variant="primary" size="sm" onClick={() => setEnrollTarget(b)}>
+                      {isTh ? 'ลงทะเบียน' : 'Enroll now'}
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CollapsibleSectionCard>
+
       {/* STA-103: per-benefit "more detail" modal — Individual plan + Benefit Plan
           + Benefit Eligibility rule attribute groups. Read-only, no backend. */}
       <Modal
@@ -1412,6 +1590,23 @@ export default function EmployeeDetailPage() {
       >
         {benefitDetail && (
           <BenefitDetailBody benefit={benefitDetail} isTh={isTh} />
+        )}
+      </Modal>
+
+      {/* STA-104: per-row "Enroll now" modal — 8-field enrollment form. Mockup only. */}
+      <Modal
+        open={enrollTarget !== null}
+        onClose={() => setEnrollTarget(null)}
+        title={isTh ? 'ลงทะเบียนสวัสดิการ' : 'Enroll in benefit'}
+        widthClass="max-w-2xl"
+      >
+        {enrollTarget && (
+          <EnrollmentFormBody
+            benefit={enrollTarget}
+            isTh={isTh}
+            onSubmit={() => setEnrollTarget(null)}
+            onCancel={() => setEnrollTarget(null)}
+          />
         )}
       </Modal>
 
