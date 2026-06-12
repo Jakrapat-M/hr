@@ -350,9 +350,10 @@ const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
 ]
 
 // STA-106: "Start a claim" support on Current Benefits. Gift-Ordination is a
-// registry "records" plan (non-claimable); its claim button is gated off
-// pending BA confirmation. Flip true to enable once confirmed.
-const GIFT_ORD_CLAIMABLE = false
+// registry "records" plan; BA confirmed (2026-06-12) it gets the same receipt
+// claim form as the other rows, so all rows are claimable. Constant retained
+// for one-line reversibility if the catalog later reclassifies Ordination.
+const GIFT_ORD_CLAIMABLE = true
 // Current-Benefits rows use TH_* ids; the plan registry uses BE-* ids.
 const CURRENT_BENEFIT_TO_PLAN_ID: Record<string, string> = {
   TH_MED_001: 'BE-MED-001',
