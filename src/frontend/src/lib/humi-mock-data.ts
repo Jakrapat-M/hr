@@ -1707,20 +1707,6 @@ export const HUMI_MY_REQUESTS: HumiMyRequest[] = [
       { role: 'ฝ่ายบุคคล', name: 'นภา ศรีวิโรจน์', initials: 'นศ', tone: 'ink', status: 'approved', when: '6 เม.ย. 10:00', note: 'ออกเอกสารเรียบร้อย · รับได้ที่ HR ชั้น 8' },
     ],
   },
-  {
-    id: 'REQ-2418', type: 'เบิกอุปกรณ์', sub: 'หูฟัง Jabra × 1 ชุด', submitted: '28 มี.ค. 2569', status: 'approved',
-    approvalChain: [
-      { role: 'หัวหน้างาน', name: 'ปรีชา วัฒนกุล', initials: 'ปว', tone: 'teal', status: 'approved', when: '28 มี.ค. 15:10' },
-      { role: 'ฝ่ายจัดซื้อ', name: 'วีระ สมบูรณ์ทรัพย์', initials: 'วส', tone: 'butter', status: 'approved', when: '30 มี.ค. 11:20', note: 'สั่งซื้อแล้ว · ETA 3 เม.ย.' },
-    ],
-  },
-  {
-    id: 'REQ-2401', type: 'ขอเปลี่ยนกะ', sub: 'สลับกะกับ ธนกร เลิศวงศ์ · 22 มี.ค.', submitted: '20 มี.ค. 2569', status: 'rejected',
-    approvalChain: [
-      { role: 'หัวหน้างาน', name: 'ปรีชา วัฒนกุล', initials: 'ปว', tone: 'teal', status: 'approved', when: '20 มี.ค. 13:30' },
-      { role: 'ผู้จัดการแผนก', name: 'สุภาวดี ธาราทอง', initials: 'สธ', tone: 'sage', status: 'rejected', when: '21 มี.ค. 09:45', note: 'ไม่อนุมัติ · คู่สลับมีกะซ้ำวันเดียวกัน' },
-    ],
-  },
 ];
 
 export interface HumiApprovalRow {

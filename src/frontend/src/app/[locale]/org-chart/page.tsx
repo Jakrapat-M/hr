@@ -24,6 +24,7 @@ import {
   Send,
   Users,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Avatar, Button, Card, CardEyebrow } from '@/components/humi';
 import { cn } from '@/lib/utils';
 import {
@@ -243,6 +244,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 // Main page
 // ══════════════════════════════════════════════════════════════
 export default function OrgChartPage() {
+  const t = useTranslations('orgChart');
   const { query, selectedId, setQuery, select } = useOrgChartStore();
 
   // Stable tree model.
@@ -381,9 +383,10 @@ export default function OrgChartPage() {
 
   return (
     <>
+      {/* Page h1 — visually hidden; shell Topbar shows the visible title */}
+      <h1 className="sr-only">{t('title')}</h1>
+
       {/* ── Page header ─────────────────────────────────────── */}
-      {/* Page title ("ผังองค์กร") is rendered by the shell Topbar — don't repeat
-          it here (was a duplicate H1). Keep the context eyebrow + export action. */}
       <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <CardEyebrow>สายบังคับบัญชา · โปรไฟล์พนักงาน</CardEyebrow>
         <Button variant="ghost" leadingIcon={<Download className="h-4 w-4" />}>

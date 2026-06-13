@@ -5,8 +5,17 @@
 // the reference "today" is computed inside each function and overridable via
 // `refDate` for tests.
 
-/** Fixed demo "today" used when no refDate is supplied (deterministic for SSR). */
-const DEMO_TODAY_ISO = '2026-06-07';
+/**
+ * The reference "today" (UTC midnight) when no explicit `refDate` is supplied.
+ * Uses the real current date so the bookable window tracks wall-clock time
+ * (previously pinned to a fixed demo date, which made the future-booking window
+ * shrink to nothing over time). Computed inside the function — never at module
+ * top level — to stay SSR-safe.
+ */
+function todayUTC(): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
 
 function toISODate(d: Date): string {
   const y = d.getUTCFullYear();
@@ -19,9 +28,11 @@ function refOf(refDate?: Date): Date {
   if (refDate) {
     return new Date(Date.UTC(refDate.getUTCFullYear(), refDate.getUTCMonth(), refDate.getUTCDate()));
   }
-  const [y, m, d] = DEMO_TODAY_ISO.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d));
+  return todayUTC();
 }
+
+/** How many days ahead leave may be booked (SF-style advance booking). */
+export const LEAVE_BOOKING_HORIZON_DAYS = 90;
 
 /**
  * The payroll period (21st → 20th) containing `refDate` (or the demo today).
@@ -62,4 +73,21 @@ export function isTimesheetLocked(dateISO: string, refDate?: Date): boolean {
   if (!dateISO) return false;
   const { start } = currentPeriod(refDate);
   return dateISO < start;
+}
+
+/**
+ * MOCK ONLY — leave-specific bookable window. Unlike time corrections (which the
+ * payroll period 21→20 locks), leave supports SF-style advance booking: a date is
+ * bookable from today through `LEAVE_BOOKING_HORIZON_DAYS` days ahead, inclusive.
+ * Past dates are not bookable. The payroll-period functions above are intentionally
+ * left untouched so the time-correction lock semantics do not change.
+ */
+export function isBookableLeaveDate(dateISO: string, refDate?: Date): boolean {
+  if (!dateISO) return false;
+  const today = refOf(refDate);
+  const horizon = new Date(today.getTime());
+  horizon.setUTCDate(horizon.getUTCDate() + LEAVE_BOOKING_HORIZON_DAYS);
+  const todayISO = toISODate(today);
+  const horizonISO = toISODate(horizon);
+  return dateISO >= todayISO && dateISO <= horizonISO;
 }

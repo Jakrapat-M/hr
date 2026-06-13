@@ -30,10 +30,17 @@ describe('benefit deferred service domain boundaries', () => {
     expect(row.type).toBe('เบิกสวัสดิการ · ค่ารักษาพยาบาล');
     expect(row.sub).toContain('ใบเสร็จ MED-REF-001');
     expect(row.sub).toContain('฿1,250');
+    // Fresh claim starts at pending_manager_approval: chain is manager (pending) → SPD (pending).
     expect(row.approvalChain).toEqual([
+      expect.objectContaining({
+        role: 'หัวหน้างาน',
+        when: 'รออนุมัติจากหัวหน้า',
+        status: 'pending',
+      }),
       expect.objectContaining({
         role: 'SPD Benefits',
         when: 'รอ SPD อนุมัติ',
+        status: 'pending',
       }),
     ]);
     expect(`${row.type} ${row.sub}`).not.toMatch(/ใบส่งตัว|ePatient|วางแผนภาษี|tax/i);

@@ -151,11 +151,11 @@ describe('AC-4 smoke — /profile/me', () => {
 describe('AC-4 smoke — /timeoff', () => {
   beforeEach(() => { vi.resetModules(); });
 
-  it('renders leave balance KPI cards (ลาพักร้อน)', async () => {
+  it('renders leave balance KPI cards (ลาพักผ่อนประจำปี)', async () => {
     const { default: Page } = await import('@/app/[locale]/timeoff/page');
     render(<Page />);
-    // "ลาพักร้อน" appears in KPI card label and in leave-type radio — getAllByText
-    const matches = screen.getAllByText('ลาพักร้อน');
+    // Registry label "ลาพักผ่อนประจำปี" appears in KPI card label and leave-type picker
+    const matches = screen.getAllByText('ลาพักผ่อนประจำปี');
     expect(matches.length).toBeGreaterThan(0);
   });
 
@@ -170,8 +170,8 @@ describe('AC-4 smoke — /timeoff', () => {
   it('renders leave history list', async () => {
     const { default: Page } = await import('@/app/[locale]/timeoff/page');
     render(<Page />);
-    // "ลาพักร้อน" appears in KPI card label and in leave-type radio — getAllByText
-    const matches = screen.getAllByText('ลาพักร้อน');
+    // Registry label "ลาพักผ่อนประจำปี" appears in KPI card label and leave-type picker
+    const matches = screen.getAllByText('ลาพักผ่อนประจำปี');
     expect(matches.length).toBeGreaterThan(0);
   });
 });
@@ -216,6 +216,48 @@ describe('AC-4 smoke — /requests', () => {
     render(<Page />);
     // Filter chips: ทั้งหมด / รออนุมัติ / อนุมัติแล้ว / ไม่อนุมัติ
     expect(screen.getByText('ทั้งหมด')).toBeTruthy();
+  });
+
+  it('allMine rows have unique ids — no duplicate-key source', async () => {
+    const { default: Page } = await import('@/app/[locale]/requests/page');
+    const { container } = render(<Page />);
+    // Each request row is a <li> inside role="list". Collect their aria-labels
+    // which encode the id (aria-label="ดูรายละเอียดการอนุมัติ <id>").
+    const buttons = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('button[aria-label^="ดูรายละเอียดการอนุมัติ"]'),
+    );
+    const ids = buttons.map((b) => b.getAttribute('aria-label') ?? '');
+    const unique = new Set(ids);
+    expect(unique.size).toBe(ids.length);
+  });
+});
+
+// displayRef unit tests (pure function — no React needed)
+describe('displayRef — typed id display', () => {
+  // Mirror the production implementation from quick-approve-simple.tsx
+  function displayRef(id: string): string {
+    if (id.length <= 16) return id;
+    return `${id.slice(0, 12)}…${id.slice(-3)}`;
+  }
+
+  it('short typed ids pass through unchanged', () => {
+    expect(displayRef('LV-0002')).toBe('LV-0002');
+    expect(displayRef('BEN-CLM-0001')).toBe('BEN-CLM-0001');
+    expect(displayRef('REQ-2481')).toBe('REQ-2481');
+  });
+
+  it('long timestamp ids are truncated without losing the prefix', () => {
+    const id = 'LV-20260611-123456-A1B2';
+    const result = displayRef(id);
+    expect(result).toContain('LV-2026061');
+    expect(result).toContain('…');
+    expect(result.length).toBeLessThan(id.length);
+  });
+
+  it('different ids with same numeric suffix stay distinct', () => {
+    // The old REQ-${digits} logic collapsed TC-0002 / LV-0002 / OT-0002 → REQ-0002
+    expect(displayRef('TC-0002')).not.toBe(displayRef('LV-0002'));
+    expect(displayRef('OT-0002')).not.toBe(displayRef('LV-0002'));
   });
 });
 

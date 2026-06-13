@@ -226,7 +226,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
     );
   }
 
-  const refNum = `REQ-${id.replace(/[^0-9]/g, '').slice(-4).padStart(4, '0')}`;
+  const refNum = id.length <= 16 ? id : `${id.slice(0, 12)}…${id.slice(-3)}`;
   const isPending = request.status === 'pending_manager';
   const statusLabel =
     request.status === 'pending_manager'

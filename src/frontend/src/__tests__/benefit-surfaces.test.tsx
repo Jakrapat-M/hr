@@ -38,7 +38,10 @@ describe('benefit workflow/admin surfaces', () => {
 
   it('SPD inbox renders pending benefit claims and supports send-back', async () => {
     const user = userEvent.setup();
-    useBenefitClaimsStore.getState().submitClaim(input);
+    const claim = useBenefitClaimsStore.getState().submitClaim(input);
+    // New contract: submitClaim starts at pending_manager_approval.
+    // Advance to pending_spd so the SPD inbox (filters pending_spd only) shows it.
+    await useBenefitClaimsStore.getState().managerApprove(claim.id, 'หัวหน้า ทดสอบ');
 
     render(<BenefitClaimsInbox />);
 

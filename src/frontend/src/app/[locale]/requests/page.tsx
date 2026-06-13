@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Plus,
   FileText,
   ArrowRight,
   Search,
-  Download,
   Calendar,
   Heart,
   Shield,
@@ -18,7 +18,6 @@ import {
   Users,
   AlertCircle,
   Check,
-  X,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -33,7 +32,6 @@ import { cn } from '@/lib/utils';
 import {
   HUMI_REQUEST_CATALOG,
   HUMI_MY_REQUESTS,
-  HUMI_APPROVAL_QUEUE,
   REQUEST_STATUS_META,
   ACCENT_ICON_CLASS,
   ACCENT_BAR_CLASS,
@@ -44,12 +42,13 @@ import {
 import {
   useRequestsStore,
   type RequestFilterKey,
-  type RequestSubmission,
 } from '@/stores/humi-requests-slice';
 import { selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { selectTaxPlanningRequestSummaries, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 import { useQueueRequestRows } from '@/lib/approval-registry';
+import { useAuthStore } from '@/stores/auth-store';
+import type { Role } from '@/lib/rbac';
 
 // ════════════════════════════════════════════════════════════
 // /requests — Forms/requests tracker
@@ -58,6 +57,9 @@ import { useQueueRequestRows } from '@/lib/approval-registry';
 // ════════════════════════════════════════════════════════════
 
 type TabKey = 'mine' | 'catalog' | 'approvals';
+
+// Roles that can approve requests — manager and above
+const APPROVAL_ROLES: Role[] = ['manager', 'hrbp', 'spd', 'hr_admin', 'hr_manager'];
 
 const ICONS: Record<RequestIconKey, LucideIcon> = {
   calendar: Calendar,
@@ -112,6 +114,11 @@ function useToast() {
 }
 
 export default function HumiRequestsPage() {
+  const pathname = usePathname();
+  const locale = pathname.startsWith('/th') ? 'th' : 'en';
+  const roles = useAuthStore((s) => s.roles);
+  const canApprove = roles.some((r) => APPROVAL_ROLES.includes(r));
+
   const [tab, setTab] = useState<TabKey>('mine');
   const { toast, show: showToast } = useToast();
 
@@ -148,7 +155,18 @@ export default function HumiRequestsPage() {
     const benefitRows = selectBenefitRequestSummaries(benefitClaims);
     const referralRows = selectBenefitReferralRequestSummaries(benefitReferrals);
     const taxRows = selectTaxPlanningRequestSummaries(taxPlanningDrafts);
-    return [...referralRows, ...taxRows, ...benefitRows, ...queue, ...store, ...base];
+    // Deduplicate by id — queue-seeded benefit claims carry the same id as the
+    // domain-selector rows (workflowRequestId = row.id), so merging without
+    // dedup causes React duplicate-key warnings. First occurrence wins (domain
+    // selectors come first so their richer shape takes priority).
+    const seen = new Set<string>();
+    return [...referralRows, ...taxRows, ...benefitRows, ...queue, ...store, ...base].filter(
+      (r) => {
+        if (seen.has(r.id)) return false;
+        seen.add(r.id);
+        return true;
+      },
+    );
   }, [benefitClaims, benefitReferrals, taxPlanningDrafts, submissions, queueRows]);
 
   const filtered = useMemo(() => {
@@ -192,7 +210,7 @@ export default function HumiRequestsPage() {
               'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
             )}
           >
-            ส่งคำขอ ติดตามสถานะ และอนุมัติคำร้อง
+            {locale === 'th' ? 'ส่งคำขอและติดตามสถานะ' : 'Submit Requests & Track Status'}
           </h1>
         </div>
         <Button
@@ -226,13 +244,14 @@ export default function HumiRequestsPage() {
         >
           แบบฟอร์มทั้งหมด
         </TabButton>
-        <TabButton
-          active={tab === 'approvals'}
-          onClick={() => setTab('approvals')}
-          count={HUMI_APPROVAL_QUEUE.length}
-        >
-          รออนุมัติ
-        </TabButton>
+        {canApprove && (
+          <TabButton
+            active={tab === 'approvals'}
+            onClick={() => setTab('approvals')}
+          >
+            {locale === 'th' ? 'รออนุมัติ' : 'Pending Approval'}
+          </TabButton>
+        )}
       </div>
 
       {tab === 'mine' && (
@@ -241,7 +260,7 @@ export default function HumiRequestsPage() {
       {tab === 'catalog' && (
         <CatalogTab onSubmitted={(msg) => { showToast(msg); setTab('mine'); }} />
       )}
-      {tab === 'approvals' && <ApprovalsTab />}
+      {tab === 'approvals' && canApprove && <ApprovalsTab locale={locale} />}
     </>
   );
 }
@@ -666,72 +685,33 @@ function CatalogTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
 // Tab: Approvals
 // ────────────────────────────────────────────────────────────
 
-function ApprovalsTab() {
+function ApprovalsTab({ locale }: { locale: string }) {
   return (
     <Card variant="raised" size="lg">
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <CardEyebrow>
-            ในฐานะ ผู้จัดการฝ่ายบุคคล · สำนักงานใหญ่
-          </CardEyebrow>
-          <CardTitle className="mt-1">คำร้องที่รออนุมัติ</CardTitle>
-        </div>
-        <Button variant="ghost" leadingIcon={<Download size={14} />}>
-          ส่งออก CSV
-        </Button>
+      <div className="mb-4">
+        <CardEyebrow>
+          {locale === 'th' ? 'คิวอนุมัติทั้งหมด' : 'Full Approval Queue'}
+        </CardEyebrow>
+        <CardTitle className="mt-1">
+          {locale === 'th' ? 'ดูและดำเนินการอนุมัติได้ที่กล่องงาน' : 'Review and action approvals in the Team Inbox'}
+        </CardTitle>
+        <p className="mt-2 text-small text-ink-muted">
+          {locale === 'th'
+            ? 'คำร้องทุกประเภทรวมอยู่ที่กล่องงาน สามารถอนุมัติ ปฏิเสธ หรือส่งคืนได้ครบในที่เดียว'
+            : 'All pending requests are consolidated in the Team Inbox where you can approve, reject, or send back in one place.'}
+        </p>
       </div>
-      <ul role="list" className="divide-y divide-hairline">
-        {HUMI_APPROVAL_QUEUE.map((r) => (
-          <li
-            key={r.id}
-            className="flex flex-col gap-3 py-3.5 sm:flex-row sm:items-center"
-          >
-            <div className="flex min-w-0 flex-1 items-center gap-3">
-              <Avatar name={r.who} tone={r.tone} size="sm" />
-              <div className="min-w-0">
-                <p className="flex flex-wrap items-center gap-2 text-body font-semibold text-ink">
-                  {r.who}
-                  <span className="font-normal text-ink-muted">· {r.type}</span>
-                  {r.urgent && (
-                    <span
-                      className={cn(
-                        'rounded-full px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
-                        'bg-warning-soft text-[color:var(--color-warning)]'
-                      )}
-                    >
-                      ด่วน
-                    </span>
-                  )}
-                </p>
-                <p className="text-small text-ink-muted">
-                  {r.role} · {r.sub} · {r.when}
-                </p>
-              </div>
-            </div>
-            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:shrink-0 sm:flex-nowrap">
-              <Button variant="ghost" size="sm" className="min-h-[44px] px-4">
-                รายละเอียด
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="min-h-[44px] px-4"
-                leadingIcon={<X size={14} />}
-              >
-                ปฏิเสธ
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                className="min-h-[44px] px-4"
-                leadingIcon={<Check size={14} />}
-              >
-                อนุมัติ
-              </Button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <Link
+        href={`/${locale}/quick-approve`}
+        className={cn(
+          'inline-flex min-h-[44px] items-center gap-2 rounded-full px-5 py-2.5',
+          'bg-ink text-canvas text-small font-semibold',
+          'hover:bg-ink/90 transition-colors'
+        )}
+      >
+        {locale === 'th' ? 'ไปที่กล่องงาน · อนุมัติ' : 'Go to Team Inbox · Approvals'}
+        <ArrowRight size={14} aria-hidden />
+      </Link>
     </Card>
   );
 }

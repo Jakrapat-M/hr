@@ -35,6 +35,14 @@ export interface LeaveRangeCalendarProps {
   /** Active locale — drives the month label era + weekday/legend language.
    *  'th' (default) → Buddhist-era Thai month; 'en' → Gregorian English. */
   locale?: string;
+  /** Predicate: return true for a day that cannot be booked (outside the
+   *  bookable window). Disabled cells are dimmed, non-clickable, and surface a
+   *  "Outside booking window" legend entry. */
+  isDateDisabled?: (iso: string) => boolean;
+  /** ISO days that overlap the employee's existing pending/approved leave. Each
+   *  is marked with a pumpkin ring + an "Existing request" legend entry (still
+   *  selectable so the overlap validation can explain the clash on submit). */
+  overlapDates?: readonly string[];
 }
 
 export function LeaveRangeCalendar({
@@ -44,6 +52,8 @@ export function LeaveRangeCalendar({
   holidays = [],
   defaultMonth,
   locale = 'th',
+  isDateDisabled,
+  overlapDates = [],
 }: LeaveRangeCalendarProps) {
   const isTh = locale !== 'en';
   const weekdays = isTh ? TH_WEEKDAYS : EN_WEEKDAYS;
@@ -51,6 +61,7 @@ export function LeaveRangeCalendar({
   const [view, setView] = useState({ year: initial.getFullYear(), month: initial.getMonth() });
 
   const holidaySet = useMemo(() => new Set(holidays), [holidays]);
+  const overlapSet = useMemo(() => new Set(overlapDates), [overlapDates]);
 
   const { cells, monthLabel } = useMemo(() => {
     const first = new Date(view.year, view.month, 1);
@@ -71,6 +82,8 @@ export function LeaveRangeCalendar({
   }, [view, locale]);
 
   function handlePick(iso: string) {
+    // Unbookable days are inert — the calendar pre-disables them upfront.
+    if (isDateDisabled?.(iso)) return;
     // First click (or both already set) starts a fresh range.
     if (!from || (from && to)) {
       onChange({ from: iso, to: '' });
@@ -141,7 +154,9 @@ export function LeaveRangeCalendar({
           const weekday = date.getDay();
           const isWeekend = weekday === 0 || weekday === 6;
           const isHoliday = holidaySet.has(cell.iso);
-          const selected = inRange(cell.iso);
+          const isOverlap = overlapSet.has(cell.iso);
+          const disabled = isDateDisabled?.(cell.iso) ?? false;
+          const selected = !disabled && inRange(cell.iso);
           const isEndpoint = cell.iso === from || cell.iso === (to || from);
 
           return (
@@ -149,18 +164,30 @@ export function LeaveRangeCalendar({
               key={cell.iso}
               type="button"
               onClick={() => handlePick(cell.iso)}
+              disabled={disabled}
+              aria-disabled={disabled}
               aria-pressed={selected}
-              aria-label={`${cell.day}${isHoliday ? (isTh ? ' · วันหยุด' : ' · holiday') : ''}`}
+              aria-label={[
+                String(cell.day),
+                isHoliday && (isTh ? '· วันหยุด' : '· holiday'),
+                isOverlap && (isTh ? '· มีคำขอเดิม' : '· existing request'),
+                disabled && (isTh ? '· นอกช่วงที่จองได้' : '· outside booking window'),
+              ]
+                .filter(Boolean)
+                .join(' ')}
               className={cn(
                 'relative flex h-10 items-center justify-center rounded-[var(--radius-sm)] text-body transition-colors',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface',
-                selected
-                  ? isEndpoint
-                    ? 'bg-accent text-white font-semibold'
-                    : 'bg-accent-soft text-accent'
-                  : isWeekend || isHoliday
-                    ? 'text-ink-faint hover:bg-canvas-soft'
-                    : 'text-ink hover:bg-canvas-soft',
+                disabled
+                  ? 'cursor-not-allowed text-ink-faint opacity-40 line-through'
+                  : selected
+                    ? isEndpoint
+                      ? 'bg-accent text-white font-semibold'
+                      : 'bg-accent-soft text-accent'
+                    : isWeekend || isHoliday
+                      ? 'text-ink-faint hover:bg-canvas-soft'
+                      : 'text-ink hover:bg-canvas-soft',
+                !disabled && isOverlap && !selected && 'ring-1 ring-[color:var(--color-danger)] ring-inset',
               )}
             >
               {cell.day}
@@ -191,6 +218,23 @@ export function LeaveRangeCalendar({
         <span className="inline-flex items-center gap-1.5 text-ink-faint">
           {isTh ? 'เสาร์–อาทิตย์' : 'Weekend'}
         </span>
+        {overlapSet.size > 0 && (
+          <span className="inline-flex items-center gap-1.5">
+            <span
+              className="h-2.5 w-2.5 rounded-[3px] ring-1 ring-[color:var(--color-danger)] ring-inset"
+              aria-hidden
+            />
+            {isTh ? 'มีคำขอเดิม' : 'Existing request'}
+          </span>
+        )}
+        {isDateDisabled && (
+          <span className="inline-flex items-center gap-1.5 text-ink-faint">
+            <span className="line-through opacity-60" aria-hidden>
+              00
+            </span>
+            {isTh ? 'นอกช่วงที่จองได้' : 'Outside booking window'}
+          </span>
+        )}
       </div>
     </div>
   );

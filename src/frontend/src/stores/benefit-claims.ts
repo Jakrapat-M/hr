@@ -214,25 +214,38 @@ export function validateBenefitAttachmentRules(input: Pick<BenefitClaimInput, 'b
 }
 
 export function selectBenefitRequestSummaries(claims: BenefitClaimRequest[]) {
-  return claims.map((claim) => ({
-    id: claim.workflowRequestId,
-    type: `เบิกสวัสดิการ · ${BENEFIT_TYPE_LABEL[claim.benefitType]}`,
-    sub: `${claim.benefitCode} · ใบเสร็จ ${claim.receiptNo} · ฿${claim.totalClaimAmount.toLocaleString('th-TH')}`,
-    submitted: thaiDate(claim.submittedAt),
-    status: statusToRequestStatus(claim.status),
-    approvalChain: [
-      {
-        role: 'SPD Benefits',
-        name: 'ทีม SPD',
-        initials: 'SP',
-        tone: 'teal' as const,
-        status: stepStatus(claim.status),
-        when: BENEFIT_STATUS_LABEL[claim.status],
-        note: claim.correctionReason,
-      },
-    ] satisfies HumiApprovalStep[],
-    claim,
-  }));
+  return claims.map((claim) => {
+    // Build a coherent two-step chain narrating manager → SPD.
+    // Step 1 (Manager): pending while awaiting manager; completed once past that stage.
+    const managerDone = claim.status !== 'pending_manager_approval';
+    const managerStep: HumiApprovalStep = {
+      role: 'หัวหน้างาน',
+      name: 'หัวหน้างาน',
+      initials: 'MG',
+      tone: 'sage' as const,
+      status: managerDone ? 'approved' : 'pending',
+      when: managerDone ? 'หัวหน้าอนุมัติแล้ว' : 'รออนุมัติจากหัวหน้า',
+    };
+    // Step 2 (SPD): only active once the manager has approved.
+    const spdStep: HumiApprovalStep = {
+      role: 'SPD Benefits',
+      name: 'ทีม SPD',
+      initials: 'SP',
+      tone: 'teal' as const,
+      status: managerDone ? stepStatus(claim.status) : 'pending',
+      when: managerDone ? BENEFIT_STATUS_LABEL[claim.status] : 'รอ SPD อนุมัติ',
+      note: claim.correctionReason,
+    };
+    return {
+      id: claim.workflowRequestId,
+      type: `เบิกสวัสดิการ · ${BENEFIT_TYPE_LABEL[claim.benefitType]}`,
+      sub: `${claim.benefitCode} · ใบเสร็จ ${claim.receiptNo} · ฿${claim.totalClaimAmount.toLocaleString('th-TH')}`,
+      submitted: thaiDate(claim.submittedAt),
+      status: statusToRequestStatus(claim.status),
+      approvalChain: [managerStep, spdStep] satisfies HumiApprovalStep[],
+      claim,
+    };
+  });
 }
 
 function normalizeAttachments(attachments: BenefitAttachment[] = []): BenefitAttachment[] {
@@ -374,135 +387,6 @@ const initialClaims: BenefitClaimRequest[] = [
     version: 1,
     previousVersions: [],
   },
-  {
-    id: 'BEN-CLM-0003',
-    workflowRequestId: 'REQ-BEN-0003',
-    employeeId: 'EMP003',
-    employeeName: 'ประเสริฐ มีสุข',
-    company: 'Central Retail',
-    businessUnit: 'Finance',
-    employeeGroup: 'Monthly',
-    personalGrade: 'PG5',
-    benefitType: 'gasoline',
-    benefitCode: 'BEN-FUEL',
-    benefitName: 'ค่าน้ำมัน',
-    remainingAmount: 8000,
-    currency: 'THB',
-    receiptNo: 'RCPT-2026-0210',
-    receiptDate: '2026-02-10',
-    claimDate: '2026-02-10',
-    receiptAmount: 2200,
-    totalClaimAmount: 2200,
-    remark: '',
-    status: 'approved',
-    submittedAt: '2026-02-10T09:30:00.000Z',
-    updatedAt: '2026-02-11T14:00:00.000Z',
-    gasolineClaimType: 'fuel',
-    attachments: [{ id: 'att-3', filename: 'fuel-receipt-0210.jpg', sizeMb: 0.5, mimeType: 'image/jpeg' }],
-    audit: [
-      { at: '2026-02-10T09:30:00.000Z', actorRole: 'employee', actorName: 'ประเสริฐ มีสุข', action: 'submit' },
-      { at: '2026-02-11T14:00:00.000Z', actorRole: 'spd', actorName: 'ทีม SPD', action: 'approve', note: 'อนุมัติแล้ว' },
-    ],
-    version: 1,
-    previousVersions: [],
-  },
-  {
-    id: 'BEN-CLM-0004',
-    workflowRequestId: 'REQ-BEN-0004',
-    employeeId: 'EMP004',
-    employeeName: 'วิมลรัตน์ แก้วใส',
-    company: 'Central Group',
-    businessUnit: 'IT',
-    employeeGroup: 'Monthly',
-    personalGrade: 'PG4',
-    benefitType: 'mobile',
-    benefitCode: 'BEN-MOBILE',
-    benefitName: 'ค่าโทรศัพท์',
-    remainingAmount: 6000,
-    currency: 'THB',
-    receiptNo: 'RCPT-2026-0115',
-    receiptDate: '2026-01-15',
-    claimDate: '2026-01-15',
-    receiptAmount: 599,
-    totalClaimAmount: 599,
-    remark: '',
-    status: 'approved',
-    submittedAt: '2026-01-15T11:00:00.000Z',
-    updatedAt: '2026-01-16T09:00:00.000Z',
-    attachments: [{ id: 'att-4', filename: 'phone-bill-jan.pdf', sizeMb: 0.3, mimeType: 'application/pdf' }],
-    audit: [
-      { at: '2026-01-15T11:00:00.000Z', actorRole: 'employee', actorName: 'วิมลรัตน์ แก้วใส', action: 'submit' },
-      { at: '2026-01-16T09:00:00.000Z', actorRole: 'spd', actorName: 'ทีม SPD', action: 'approve', note: 'อนุมัติแล้ว' },
-    ],
-    version: 1,
-    previousVersions: [],
-  },
-  {
-    id: 'BEN-CLM-0005',
-    workflowRequestId: 'REQ-BEN-0005',
-    employeeId: 'EMP005',
-    employeeName: 'กิตติพงษ์ รักดี',
-    company: 'Central Food',
-    businessUnit: 'Operations',
-    employeeGroup: 'Monthly',
-    personalGrade: 'PG3',
-    benefitType: 'physical_checkup',
-    benefitCode: 'BEN-CHECKUP',
-    benefitName: 'ตรวจสุขภาพ',
-    remainingAmount: 5000,
-    currency: 'THB',
-    receiptNo: 'RCPT-2026-0320',
-    receiptDate: '2026-03-20',
-    claimDate: '2026-03-20',
-    receiptAmount: 4800,
-    totalClaimAmount: 4800,
-    remark: '',
-    status: 'approved',
-    submittedAt: '2026-03-20T13:00:00.000Z',
-    updatedAt: '2026-03-21T10:00:00.000Z',
-    attachments: [{ id: 'att-5', filename: 'checkup-2026.pdf', sizeMb: 2.1, mimeType: 'application/pdf' }],
-    audit: [
-      { at: '2026-03-20T13:00:00.000Z', actorRole: 'employee', actorName: 'กิตติพงษ์ รักดี', action: 'submit' },
-      { at: '2026-03-21T10:00:00.000Z', actorRole: 'spd', actorName: 'ทีม SPD', action: 'approve', note: 'อนุมัติแล้ว' },
-    ],
-    version: 1,
-    previousVersions: [],
-  },
-  {
-    id: 'BEN-CLM-0006',
-    workflowRequestId: 'REQ-BEN-0006',
-    employeeId: 'EMP001',
-    employeeName: 'จงรักษ์ ทานากะ',
-    company: 'Central Group',
-    businessUnit: 'People Operations',
-    employeeGroup: 'Monthly',
-    personalGrade: 'PG4',
-    benefitType: 'dependent',
-    benefitCode: 'BEN-DEP-MED',
-    benefitName: 'ค่ารักษาผู้รับสิทธิ์ร่วม',
-    remainingAmount: 10000,
-    currency: 'THB',
-    receiptNo: 'RCPT-2026-0228',
-    receiptDate: '2026-02-28',
-    claimDate: '2026-02-28',
-    receiptAmount: 7800,
-    totalClaimAmount: 7800,
-    remark: '',
-    status: 'approved',
-    submittedAt: '2026-02-28T15:00:00.000Z',
-    updatedAt: '2026-03-01T09:00:00.000Z',
-    hospitalType: 'private',
-    hospitalName: 'รพ.เวชธานี',
-    dependentName: 'แม่ ทานากะ',
-    dependentRelationship: 'บิดา/มารดา',
-    attachments: [{ id: 'att-6', filename: 'dep-receipt-feb.pdf', sizeMb: 1.5, mimeType: 'application/pdf' }],
-    audit: [
-      { at: '2026-02-28T15:00:00.000Z', actorRole: 'employee', actorName: 'จงรักษ์ ทานากะ', action: 'submit' },
-      { at: '2026-03-01T09:00:00.000Z', actorRole: 'spd', actorName: 'ทีม SPD', action: 'approve', note: 'อนุมัติแล้ว' },
-    ],
-    version: 1,
-    previousVersions: [],
-  },
 ];
 
 /**
@@ -548,6 +432,19 @@ export function queueRowToBenefitClaim(row: PendingRequest): BenefitClaimRequest
 
 export const BENEFIT_CLAIMS_PERSIST_VERSION = 3;
 
+/**
+ * Seeded queue claims use canonical WF-2026-* ids (from MOCK_PENDING_REQUESTS via
+ * queueRowToBenefitClaim). Live claims submitted by employees use BEN-CLM-* ids.
+ * Store fixtures (BEN-CLM-MGR1, BEN-CLM-0001, etc.) have no queueSnapshot and must
+ * persist. This discriminator is the authoritative gate for the two persist-drop sites
+ * below — do NOT use queueSnapshot presence as the criterion (live submitClaim also
+ * attaches a queueSnapshot, so presence alone cannot distinguish seed from live).
+ */
+const CANONICAL_CLAIM_SEED_ID = /^WF-2026-/;
+export function isSeededQueueClaim(c: { id: string }): boolean {
+  return CANONICAL_CLAIM_SEED_ID.test(c.id);
+}
+
 export function migrateBenefitClaimsPersistedState(
   persistedState: unknown,
 ): Partial<BenefitClaimsState> {
@@ -559,12 +456,12 @@ export function migrateBenefitClaimsPersistedState(
     const state = persistedState as Partial<BenefitClaimsState>;
     return {
       ...state,
-      // PR-1b rehydrate-to-seed: drop the queue-seeded claims (queueSnapshot
-      // present) so ensureDemoSeed re-adds them fresh → "approve a queue claim →
-      // refresh" returns to the seeded set. The store's own benefit fixtures
-      // (no queueSnapshot) persist normally for the benefits surfaces.
+      // PR-1b rehydrate-to-seed: drop WF-2026-* seed claims so ensureDemoSeed
+      // re-adds them fresh → "approve a queue claim → refresh" returns to the
+      // seeded set. Keyed on WF-2026-* id space (not queueSnapshot presence)
+      // so live BEN-CLM-* claims that also carry a queueSnapshot are kept.
       claims:
-        state.claims?.filter((c) => !c.queueSnapshot).map(normalizePersistedClaim) ?? [],
+        state.claims?.filter((c) => !isSeededQueueClaim(c)).map(normalizePersistedClaim) ?? [],
     };
   }
   return { claims: initialClaims };
@@ -601,7 +498,7 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
           totalClaimAmount,
           claimAmount: totalClaimAmount,
           remark: input.remark ?? input.remarks ?? '',
-          status: 'pending_spd',
+          status: 'pending_manager_approval',
           submittedAt: at,
           updatedAt: at,
           hospitalType: input.hospitalType ?? input.opdIpd,
@@ -615,6 +512,34 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
           audit: [{ at, actorRole: 'employee', actorName: input.employeeName ?? 'จงรักษ์ ทานากะ', action: 'submit', note: 'ส่งคำขอเบิกสวัสดิการ' }],
           version: 1,
           previousVersions: [],
+          queueSnapshot: {
+            id: nextId('REQ-BEN', 4, count),
+            type: 'claim',
+            requester: {
+              id: input.employeeId ?? 'EMP001',
+              name: input.employeeName ?? 'จงรักษ์ ทานากะ',
+              position: input.personalGrade ?? 'PG4',
+              department: input.businessUnit ?? 'People Operations',
+              employeeId: input.employeeId ?? 'EMP001',
+              businessUnit: input.businessUnit ?? 'People Operations',
+              company: input.company ?? 'Central Group',
+            },
+            description: `เบิก${input.benefitName ?? BENEFIT_TYPE_LABEL[benefitType]} ฿${totalClaimAmount?.toLocaleString('th-TH') ?? '0'}`,
+            submittedAt: at,
+            urgency: 'normal',
+            waitingDays: 0,
+            details: {
+              category: input.benefitName ?? BENEFIT_TYPE_LABEL[benefitType],
+              amount: totalClaimAmount ?? 0,
+              receiptNo: input.receiptNo,
+              receiptDate: input.receiptDate,
+              claimDate: input.claimDate ?? input.receiptDate,
+            },
+            approvalTimeline: [
+              { step: 1, approver: 'หัวหน้างาน', status: 'pending' as const },
+              { step: 2, approver: 'SPD', status: 'pending' as const },
+            ],
+          },
         };
         set((s) => ({ claims: [claim, ...s.claims] }));
         return claim;
@@ -697,6 +622,8 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
             resolve();
           }, 300);
         }),
+      // merge-drop + ensureDemoSeed re-add is keyed on the WF-2026-* id space,
+      // disjoint from live BEN-CLM-* claims; the id-guard below stays correct.
       seedQueueClaims: (rows) =>
         set((s) => {
           const existing = new Set(s.claims.map((c) => c.id));
@@ -711,13 +638,13 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
       name: 'humi-benefit-claims',
       version: BENEFIT_CLAIMS_PERSIST_VERSION,
       migrate: (persistedState) => migrateBenefitClaimsPersistedState(persistedState),
-      // PR-1b rehydrate-to-seed: on EVERY rehydrate drop the queue-seeded claims
-      // (queueSnapshot present) so ensureDemoSeed re-adds them fresh. The store's
-      // own benefit fixtures persist normally.
+      // PR-1b rehydrate-to-seed: on EVERY rehydrate drop WF-2026-* seed claims
+      // so ensureDemoSeed re-adds them fresh. Keyed on WF-2026-* id space (not
+      // queueSnapshot presence) so live BEN-CLM-* claims are kept on F5.
       merge: (persistedState, currentState) => {
         const persisted = (persistedState ?? {}) as Partial<BenefitClaimsState>;
         const persistedClaims = Array.isArray(persisted.claims)
-          ? persisted.claims.filter((c) => !c.queueSnapshot)
+          ? persisted.claims.filter((c) => !isSeededQueueClaim(c))
           : currentState.claims;
         return { ...currentState, ...persisted, claims: persistedClaims };
       },

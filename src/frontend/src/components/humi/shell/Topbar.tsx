@@ -34,7 +34,7 @@ import { TodoBell } from '@/components/humi/TodoBell';
 export interface TopbarProps {
   /** h2 page title — typically derived from route */
   title: string;
-  /** eyebrow above title — default: "สวัสดีตอนเช้าค่ะ คุณจงรักษ์" */
+  /** eyebrow above title — default: "สวัสดีตอนเช้า คุณจงรักษ์" */
   subtitle?: string;
   /** optional extra action buttons rendered to the right of the bell */
   actions?: React.ReactNode;
@@ -50,7 +50,7 @@ function greetingFor(username: string | null, isTh: boolean): string {
   const h = new Date().getHours();
   if (isTh) {
     const tod = h < 12 ? 'สวัสดีตอนเช้า' : h < 18 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น';
-    return `${tod}ค่ะ คุณ${first}`;
+    return `${tod} คุณ${first}`;
   }
   const tod = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
   return `${tod}, ${first}`;

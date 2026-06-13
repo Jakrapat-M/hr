@@ -90,6 +90,7 @@ export default function ClockInOutPage() {
         <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
         <span className="text-ink font-medium">{isTh ? 'ลงเวลาเข้า-ออก' : 'Clock In / Out'}</span>
       </nav>
+      <h1 className="sr-only">{isTh ? 'ลงเวลาเข้า-ออกงาน' : 'Clock In / Out'}</h1>
 
       {!isClocking ? (
         <Card>

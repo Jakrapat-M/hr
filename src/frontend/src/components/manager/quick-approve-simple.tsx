@@ -69,10 +69,11 @@ function detailHref(locale: string, row: PendingRequest): string {
   return `/${locale}/quick-approve/${row.id}`;
 }
 
-// Seed a REQ-#### display ref from the WF id.
+// Show the typed id as-is; truncate long timestamp ids to keep columns compact.
+// e.g. "LV-20260611-123456-A1B2" → "LV-20260611-…B2"  "BEN-CLM-0001" → unchanged
 function displayRef(id: string): string {
-  const num = id.replace(/[^0-9]/g, '').padStart(4, '0');
-  return `REQ-${num}`;
+  if (id.length <= 16) return id;
+  return `${id.slice(0, 12)}…${id.slice(-3)}`;
 }
 
 // ── Component ────────────────────────────────────────────────

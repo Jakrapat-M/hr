@@ -95,6 +95,27 @@ export const LEAVE_STATUS_LABEL: Record<LeaveStatus, string> = {
   rejected: 'ถูกปฏิเสธ',
 };
 
+/**
+ * Bilingual status label for the EMPLOYEE-side surfaces (timeoff status tab,
+ * /requests, detail header). Distinguishes the two pending stages of a 2-level
+ * chain so the employee is not stuck on the single "รอหัวหน้าอนุมัติ" label
+ * after the manager has already approved:
+ *   • pending (no awaitingNext)  → waiting for the manager
+ *   • pending + awaitingNext     → manager approved · waiting for HR
+ * Single source of truth so every projection narrates the SAME stage text.
+ */
+export function leaveStageLabel(
+  status: LeaveStatus,
+  awaitingNext: boolean | undefined,
+  isTh: boolean,
+): string {
+  if (status === 'approved') return isTh ? 'อนุมัติแล้ว' : 'Approved';
+  if (status === 'rejected') return isTh ? 'ไม่อนุมัติ' : 'Rejected';
+  if (awaitingNext)
+    return isTh ? 'หัวหน้าอนุมัติแล้ว · รอฝ่ายบุคคล' : 'Manager approved · awaiting HR';
+  return isTh ? 'รอหัวหน้าอนุมัติ' : 'Awaiting manager';
+}
+
 interface LeaveApprovalsState {
   requests: LeaveRequest[];
   addRequest: (
@@ -293,18 +314,13 @@ export const useLeaveApprovals = create<LeaveApprovalsState>()(
     }),
     {
       name: 'humi-leave-approvals',
-      version: 1, // PR-1b: bumped alongside the rehydrate-to-seed persist contract.
+      version: 1,
       storage: createJSONStorage(() => localStorage),
-      // PR-1b persist contract (DECISION: rehydrate-to-seed + init-overwrite-empties).
-      // `merge` runs on EVERY rehydrate and drops the persisted `requests`, so the
-      // store rehydrates empty; the single seed authority (ensureDemoSeed at AppShell
-      // mount) then refills from the canonical queue rows. Net effect: "approve a row
-      // → hard refresh" returns to the full seeded 20-row set (honors spec 'refresh
-      // may reset to seed'). Other (non-seeded) fields persist normally.
-      merge: (persistedState, currentState) => {
-        const persisted = (persistedState ?? {}) as Partial<LeaveApprovalsState>;
-        return { ...currentState, ...persisted, requests: [] };
-      },
+      // Persist live rows normally so user-submitted requests survive hard
+      // navigation / F5. ensureDemoSeed (AppShell mount) calls addRequest with
+      // stable ids which is idempotent — seed rows are backfilled only when
+      // missing, never doubled. seedFromQueue (init-overwrite-empties guard) also
+      // remains safe: it only seeds when requests.length === 0.
     },
   ),
 );

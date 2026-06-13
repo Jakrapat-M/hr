@@ -12,16 +12,17 @@
 // any step releases the reserve. Action is gated to the CURRENT step's roles.
 // Phase: UI mockup. Humi tokens only. Danger = pumpkin (--color-danger).
 
-import { use, useState } from 'react';
+import { use, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, CalendarDays, Paperclip } from 'lucide-react';
-import { Button, Modal, FormField } from '@/components/humi';
-import { useLeaveApprovals, type LeaveRequest } from '@/stores/leave-approvals';
+import { ChevronLeft, ChevronRight, CalendarDays, Paperclip, Users, Wallet, History } from 'lucide-react';
+import { Avatar, Button, Modal, FormField } from '@/components/humi';
+import { useLeaveApprovals, leaveStageLabel, type LeaveRequest } from '@/stores/leave-approvals';
+import { useRemainingFor } from '@/stores/leave-balances';
 import { APPROVAL_REGISTRY, type QueueApproval } from '@/lib/approval-registry';
 import { appliedChainFor } from '@/lib/time/approval-rules';
-import { getLeaveType } from '@/lib/time/leave-types';
+import { getLeaveType, LEAVE_CODE_TO_BALANCE_KIND } from '@/lib/time/leave-types';
 import { currentStep, rolesActAtCurrentStep } from '@/lib/approval-routing';
 import { formatDate } from '@/lib/date';
 import { useAuthStore } from '@/stores/auth-store';
@@ -56,8 +57,49 @@ export default function LeaveDetailPage({ params }: PageProps) {
   const isTh = locale !== 'en';
   const router = useRouter();
 
-  const request = useLeaveApprovals((s) => s.requests.find((r) => r.id === id));
+  // Subscribe to the whole array (stable ref per snapshot) — deriving `request`
+  // and the decision-context aggregates via useMemo keeps hooks unconditional
+  // (must run before the not-found early-return).
+  const allRequests = useLeaveApprovals((s) => s.requests);
+  const request = useMemo(() => allRequests.find((r) => r.id === id), [allRequests, id]);
   const roles = useAuthStore((s) => s.roles) as Role[];
+
+  // Decision context — what the manager needs without leaving the page.
+  // (1) Team absence overlap: other employees with a non-rejected request whose
+  //     range intersects THIS request's range (inclusive interval overlap).
+  const teamOverlap = useMemo(() => {
+    if (!request?.startDate || !request?.endDate) return [];
+    const start = request.startDate;
+    const end = request.endDate;
+    return allRequests.filter(
+      (r) =>
+        r.employeeId !== request.employeeId &&
+        r.status !== 'rejected' &&
+        !!r.startDate &&
+        !!r.endDate &&
+        r.startDate <= end &&
+        r.endDate >= start,
+    );
+  }, [allRequests, request?.employeeId, request?.startDate, request?.endDate]);
+
+  // (3) How many times the requester has taken leave this year (this submitted-year,
+  //     non-rejected requests — counts the current one too).
+  const leaveCountThisYear = useMemo(() => {
+    if (!request) return 0;
+    const year = new Date(request.submittedAt).getFullYear();
+    return allRequests.filter(
+      (r) =>
+        r.employeeId === request.employeeId &&
+        r.status !== 'rejected' &&
+        new Date(r.submittedAt).getFullYear() === year,
+    ).length;
+  }, [allRequests, request]);
+
+  // (2) Requester's remaining quota for THIS leave type (quotaTracked only).
+  const balanceKind = request?.leaveCode
+    ? LEAVE_CODE_TO_BALANCE_KIND[request.leaveCode] ?? ''
+    : '';
+  const remainingQuota = useRemainingFor(request?.employeeId ?? '__none__', balanceKind || '__none__');
 
   const [mode, setMode] = useState<'approve' | 'reject' | null>(null);
   const [reason, setReason] = useState('');
@@ -89,14 +131,8 @@ export default function LeaveDetailPage({ params }: PageProps) {
   const canAct = rolesActAtCurrentStep(queueItem, roles);
 
   const isPending = request.status === 'pending';
-  const statusLabel =
-    request.status === 'approved'
-      ? isTh ? 'อนุมัติแล้ว' : 'Approved'
-      : request.status === 'rejected'
-        ? isTh ? 'ไม่อนุมัติ' : 'Rejected'
-        : request.awaitingNext
-          ? isTh ? 'รอฝ่ายบุคคล' : 'Awaiting HR'
-          : isTh ? 'รออนุมัติ' : 'Pending';
+  // Shared stage label — narrates manager → HR progress on 2-level chains.
+  const statusLabel = leaveStageLabel(request.status, request.awaitingNext, isTh);
 
   // The seeded timeline is the SAME chain length; current step index drives which
   // step is active. Build a presentational step list from the routing chain.
@@ -210,12 +246,96 @@ export default function LeaveDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      {/* Approval chain */}
+      {/* Decision context — overlap / quota / frequency at a glance */}
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {/* Remaining quota for this leave type */}
+        <div className="rounded-[var(--radius-md)] border border-hairline bg-surface shadow-[var(--shadow-card)] p-4">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            <Wallet size={13} aria-hidden />
+            {isTh ? 'สิทธิ์คงเหลือ' : 'Remaining quota'}
+          </div>
+          {balanceKind ? (
+            <>
+              <p className="mt-2 font-display text-2xl font-semibold tabular-nums text-ink">
+                {remainingQuota}
+                <span className="ml-1 text-sm font-normal text-ink-muted">
+                  {isTh ? 'วัน' : 'day(s)'}
+                </span>
+              </p>
+              <p className="mt-1 text-xs text-ink-muted">
+                {isTh ? 'หลังหักคำขอที่จองไว้' : 'after reserved requests'}
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 text-sm text-ink-muted">{isTh ? 'ไม่มีโควต้า' : 'No quota'}</p>
+          )}
+        </div>
+
+        {/* Leave taken this year */}
+        <div className="rounded-[var(--radius-md)] border border-hairline bg-surface shadow-[var(--shadow-card)] p-4">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            <History size={13} aria-hidden />
+            {isTh ? 'ลาในปีนี้' : 'Leave this year'}
+          </div>
+          <p className="mt-2 font-display text-2xl font-semibold tabular-nums text-ink">
+            {leaveCountThisYear}
+            <span className="ml-1 text-sm font-normal text-ink-muted">
+              {isTh ? 'ครั้ง' : 'time(s)'}
+            </span>
+          </p>
+          <p className="mt-1 text-xs text-ink-muted">
+            {isTh ? 'รวมคำขอนี้ด้วย' : 'including this request'}
+          </p>
+        </div>
+
+        {/* Team absence overlap */}
+        <div className="rounded-[var(--radius-md)] border border-hairline bg-surface shadow-[var(--shadow-card)] p-4 sm:col-span-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            <Users size={13} aria-hidden />
+            {isTh ? 'ทีมที่ลาช่วงเดียวกัน' : 'Team off in this range'}
+          </div>
+          {teamOverlap.length === 0 ? (
+            <p className="mt-2 text-sm text-ink-muted">
+              {isTh ? 'ไม่มีใครลาช่วงนี้' : 'No overlapping leave'}
+            </p>
+          ) : (
+            <ul className="mt-2 flex flex-col gap-2">
+              {teamOverlap.slice(0, 4).map((r) => (
+                <li key={r.id} className="flex items-center gap-2">
+                  <Avatar name={r.employeeName} tone="sage" size="sm" />
+                  <span className="min-w-0 flex-1 truncate text-sm text-ink">{r.employeeName}</span>
+                  <span className="shrink-0 text-xs text-ink-muted">
+                    {formatDate(r.startDate, 'short', locale)}
+                    {r.endDate !== r.startDate ? `–${formatDate(r.endDate, 'short', locale)}` : ''}
+                  </span>
+                </li>
+              ))}
+              {teamOverlap.length > 4 && (
+                <li className="text-xs text-ink-muted">
+                  {isTh ? `และอีก ${teamOverlap.length - 4} คน` : `+${teamOverlap.length - 4} more`}
+                </li>
+              )}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      {/* Approval chain — submitted → manager → HR stepper (audit-trail driven) */}
       <div className="mt-4 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-4">
         <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
           {isTh ? 'เส้นทางอนุมัติ' : 'Approval chain'}
         </p>
         <ol className="flex flex-col gap-2.5">
+          {/* Lead step: the submission itself is always complete. */}
+          <li className="flex items-start gap-2.5">
+            <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-[color:var(--color-success)]" />
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium text-ink">{isTh ? 'ยื่นคำขอ' : 'Submitted'}</div>
+              <div className="mt-0.5 text-xs text-ink-muted">
+                {formatDate(request.submittedAt, 'medium', locale)}
+              </div>
+            </div>
+          </li>
           {chain.map((s, i) => {
             const done = i < decidedSteps;
             const active = isPending && step && chain[i] === step;

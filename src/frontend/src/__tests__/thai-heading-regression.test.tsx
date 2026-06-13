@@ -57,6 +57,7 @@ vi.mock('next-intl', () => ({
       contactEyebrow: 'ข้อมูลการติดต่อ',
       // announcements
       title: 'ประกาศและข่าวสาร',
+      pageTitle: 'ประกาศและข่าวสาร',
       filterAll: 'ทั้งหมด',
       draftTitle: 'สรุปผลโครงการพัฒนาองค์กร Q2',
       // goals
