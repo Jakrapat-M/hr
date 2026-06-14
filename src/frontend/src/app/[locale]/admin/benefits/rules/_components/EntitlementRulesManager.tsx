@@ -395,12 +395,14 @@ function RulesTableView({
   const mono = 'font-mono text-[length:var(--text-eyebrow)] text-ink-muted whitespace-nowrap';
 
   const columns: DataTableColumn<EligibilityRule>[] = [
-    { id: 'rule_id', header: t('colRuleId'),
-      cell: (r) => <span className={`${mono} text-ink font-semibold`}>{r.rule_id ?? r.id}</span>,
-      sortAccessor: (r) => r.rule_id ?? r.id, className: 'whitespace-nowrap' },
-    { id: 'rule_name', header: t('colRuleName'),
+    // STA-109 — freeze Rule ID + Rule name to the left during horizontal scroll.
+    // Explicit widths keep rule_name's offset (= rule_id width) deterministic.
+    { id: 'rule_id', header: t('colRuleId'), stickyLeft: 0,
+      cell: (r) => <span title={r.rule_id ?? r.id} className={`${mono} text-ink font-semibold block overflow-hidden text-ellipsis`}>{r.rule_id ?? r.id}</span>,
+      sortAccessor: (r) => r.rule_id ?? r.id, className: 'w-[140px] min-w-[140px] max-w-[140px] overflow-hidden whitespace-nowrap' },
+    { id: 'rule_name', header: t('colRuleName'), stickyLeft: 140,
       cell: (r) => <span className="text-ink whitespace-nowrap">{r.rule_name ?? r.scope_value ?? '-'}</span>,
-      sortAccessor: (r) => r.rule_name ?? r.scope_value ?? '' },
+      sortAccessor: (r) => r.rule_name ?? r.scope_value ?? '', className: 'w-[200px] min-w-[200px] whitespace-nowrap' },
     { id: 'rule_type', header: t('colRuleType'),
       cell: (r) => {
         const isStd = (r.rule_type ?? 'special') === 'standard';
@@ -428,9 +430,6 @@ function RulesTableView({
     { id: 'job', header: t('colJob'),
       cell: (r) => <span className="text-small text-ink whitespace-nowrap">{r.job_code ?? '-'}</span>,
       sortAccessor: (r) => r.job_code ?? '' },
-    { id: 'dvt_project', header: t('colDvtProject'),
-      cell: (r) => <span className="text-small text-ink whitespace-nowrap">{r.dvt_project ?? '-'}</span>,
-      sortAccessor: (r) => r.dvt_project ?? '' },
     { id: 'employee_group', header: t('colEmployeeGroup'),
       cell: (r) => (
         <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${egColor(r.employee_group ?? '')}`}>
@@ -447,6 +446,10 @@ function RulesTableView({
     { id: 'pg_to', header: t('colPgTo'), align: 'right' as const,
       cell: (r) => <span className="tabular-nums text-ink">{r.pg_to ?? '-'}</span>,
       sortAccessor: (r) => r.pg_to ?? -1 },
+    // STA-109 — DVTProject moved to the right of PG to (rarely used).
+    { id: 'dvt_project', header: t('colDvtProject'),
+      cell: (r) => <span className="text-small text-ink whitespace-nowrap">{r.dvt_project ?? '-'}</span>,
+      sortAccessor: (r) => r.dvt_project ?? '' },
     { id: 'hiring_date_from', header: t('colHiringDateFrom'),
       cell: (r) => <span className={mono}>{r.hiring_date_from ?? '-'}</span>,
       sortAccessor: (r) => r.hiring_date_from ?? '' },
