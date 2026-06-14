@@ -30,6 +30,12 @@ export interface DataTableColumn<Row> {
   align?: 'left' | 'right' | 'center';
   /** Visually hide the header text (still in DOM for screen readers). */
   headerVisuallyHidden?: boolean;
+  /**
+   * Pin this column to the left at the given px offset while the table scrolls
+   * horizontally (STA-109). Omit for normal (non-frozen) columns. Give a frozen
+   * column an explicit width via `className` so later offsets stay deterministic.
+   */
+  stickyLeft?: number;
 }
 
 export interface DataTableProps<Row> {
@@ -144,8 +150,11 @@ export function DataTable<Row>({
                     'text-[length:var(--text-eyebrow)] leading-[var(--text-eyebrow--line-height)]',
                     'font-semibold uppercase tracking-[0.14em] text-ink-muted',
                     alignClass[col.align ?? 'left'],
+                    col.stickyLeft !== undefined &&
+                      'sticky z-20 bg-canvas-soft border-r border-hairline',
                     col.className
                   )}
+                  style={col.stickyLeft !== undefined ? { left: col.stickyLeft } : undefined}
                 >
                   {sortable ? (
                     <button
@@ -207,8 +216,11 @@ export function DataTable<Row>({
                       cellPad,
                       'text-ink align-middle',
                       alignClass[col.align ?? 'left'],
+                      col.stickyLeft !== undefined &&
+                        'sticky z-[1] bg-surface border-r border-hairline',
                       col.className
                     )}
+                    style={col.stickyLeft !== undefined ? { left: col.stickyLeft } : undefined}
                   >
                     {col.cell(row, idx)}
                   </td>
