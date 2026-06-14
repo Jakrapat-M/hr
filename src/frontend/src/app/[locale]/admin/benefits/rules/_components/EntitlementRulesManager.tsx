@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Trash2, Plus, Pencil, Clock, Upload, Download } from 'lucide-react';
+import { Trash2, Plus, Pencil, Clock, Upload, Download, ChevronDown } from 'lucide-react';
 
 import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal, Capability } from '@/components/humi';
 import { rulesToCsv, downloadCsv, parseRulesCsv } from './rules-csv';
@@ -341,6 +341,31 @@ function RulesTableView({
   const [fPgTo,      setFPgTo]      = useState<string>('');
   const [fEffective, setFEffective] = useState<string>('all');
 
+  // STA-110 — "more filter" section: collapsed advanced filters for the columns
+  // that have no control in the default row.
+  const [moreOpen,         setMoreOpen]         = useState(false);
+  const [fBusinessGroup,   setFBusinessGroup]   = useState<string>('all');
+  const [fBusinessUnit,    setFBusinessUnit]    = useState<string>('all');
+  const [fCompanyCode,     setFCompanyCode]     = useState<string>('all');
+  const [fJob,             setFJob]             = useState<string>('all');
+  const [fDvtProject,      setFDvtProject]      = useState<string>('all');
+  const [fEmpSubgroup,     setFEmpSubgroup]     = useState<string>('all');
+  const [fHireFrom,        setFHireFrom]        = useState<string>('');
+  const [fHireTo,          setFHireTo]          = useState<string>('');
+
+  // Distinct option lists derived from the in-session rules (no fabricated seed).
+  const distinct = useCallback(
+    (sel: (r: EligibilityRule) => string | null | undefined) =>
+      Array.from(new Set(rules.map(sel).filter(Boolean) as string[])).sort(),
+    [rules],
+  );
+  const businessGroups   = useMemo(() => distinct((r) => r.business_group),    [distinct]);
+  const businessUnits    = useMemo(() => distinct((r) => r.business_unit),     [distinct]);
+  const companyCodes     = useMemo(() => distinct((r) => r.company_code),      [distinct]);
+  const jobCodes         = useMemo(() => distinct((r) => r.job_code),          [distinct]);
+  const dvtProjects      = useMemo(() => distinct((r) => r.dvt_project),       [distinct]);
+  const employeeSubgroups = useMemo(() => distinct((r) => r.employee_subgroup), [distinct]);
+
   const benefitPlanId = (r: EligibilityRule) =>
     r.plan_id ?? BENEFIT_PLAN_LABELS[r.benefit_key as BenefitKey]?.code ?? r.benefit_key;
 
@@ -353,9 +378,19 @@ function RulesTableView({
       if (fEffective !== 'all' && (r.effective_type ?? r.plan_effective ?? '') !== fEffective) return false;
       if (fPgFrom && (r.pg_from == null || r.pg_from < Number(fPgFrom))) return false;
       if (fPgTo && (r.pg_to == null || r.pg_to > Number(fPgTo))) return false;
+      // STA-110 — "more filter" gates (no-ops when 'all'/empty)
+      if (fBusinessGroup !== 'all' && (r.business_group ?? '') !== fBusinessGroup) return false;
+      if (fBusinessUnit  !== 'all' && (r.business_unit  ?? '') !== fBusinessUnit ) return false;
+      if (fCompanyCode   !== 'all' && (r.company_code   ?? '') !== fCompanyCode  ) return false;
+      if (fJob           !== 'all' && (r.job_code       ?? '') !== fJob          ) return false;
+      if (fDvtProject    !== 'all' && (r.dvt_project    ?? '') !== fDvtProject   ) return false;
+      if (fEmpSubgroup   !== 'all' && (r.employee_subgroup ?? '') !== fEmpSubgroup) return false;
+      if (fHireFrom && (r.hiring_date_from ?? '') < fHireFrom) return false;
+      if (fHireTo   && (r.hiring_date_to   ?? '') > fHireTo)   return false;
       return true;
     });
-  }, [rules, fBenefit, fRuleType, fEmpGroup, fPolicy, fPgFrom, fPgTo, fEffective]);
+  }, [rules, fBenefit, fRuleType, fEmpGroup, fPolicy, fPgFrom, fPgTo, fEffective,
+      fBusinessGroup, fBusinessUnit, fCompanyCode, fJob, fDvtProject, fEmpSubgroup, fHireFrom, fHireTo]);
 
   const mono = 'font-mono text-[length:var(--text-eyebrow)] text-ink-muted whitespace-nowrap';
 
@@ -445,8 +480,15 @@ function RulesTableView({
       ) },
   ];
 
+  const moreActiveCount =
+    (fBusinessGroup !== 'all' ? 1 : 0) + (fBusinessUnit !== 'all' ? 1 : 0)
+    + (fCompanyCode !== 'all' ? 1 : 0) + (fJob !== 'all' ? 1 : 0)
+    + (fDvtProject !== 'all' ? 1 : 0) + (fEmpSubgroup !== 'all' ? 1 : 0)
+    + (fHireFrom !== '' ? 1 : 0) + (fHireTo !== '' ? 1 : 0);
+
   const hasFilter = fBenefit !== 'all' || fRuleType !== 'all' || fEmpGroup !== 'all'
-    || fPolicy !== 'all' || fEffective !== 'all' || fPgFrom !== '' || fPgTo !== '';
+    || fPolicy !== 'all' || fEffective !== 'all' || fPgFrom !== '' || fPgTo !== ''
+    || moreActiveCount > 0;
 
   return (
     <div className="mt-4 space-y-3">
@@ -496,10 +538,21 @@ function RulesTableView({
           {t('filterPgTo')}
           <input type="number" min={1} max={99} value={fPgTo} onChange={(e) => setFPgTo(e.target.value)} className={`${tableSelectClass} w-20`} />
         </label>
+        {/* STA-110 — "more filter" toggle, placed immediately right of PG to */}
+        <Button variant="ghost" size="sm" aria-expanded={moreOpen}
+          onClick={() => setMoreOpen((v) => !v)}
+          className="inline-flex items-center gap-1">
+          {moreOpen ? t('lessFilters') : t('moreFilters')}
+          {moreActiveCount > 0 && ` (${moreActiveCount})`}
+          <ChevronDown size={14} aria-hidden className={moreOpen ? 'rotate-180 transition-transform' : 'transition-transform'} />
+        </Button>
         {hasFilter && (
           <Button variant="ghost" size="sm" onClick={() => {
             setFBenefit('all'); setFRuleType('all'); setFEmpGroup('all'); setFPolicy('all');
             setFPgFrom(''); setFPgTo(''); setFEffective('all');
+            setFBusinessGroup('all'); setFBusinessUnit('all'); setFCompanyCode('all');
+            setFJob('all'); setFDvtProject('all'); setFEmpSubgroup('all');
+            setFHireFrom(''); setFHireTo('');
           }}>
             {t('clearFilters')}
           </Button>
@@ -508,6 +561,62 @@ function RulesTableView({
           {t('showing', { shown: filtered.length, total: rules.length })}
         </span>
       </div>
+
+      {/* STA-110 — "more filter" collapsible advanced row (columns without a default filter) */}
+      {moreOpen && (
+        <div className="flex flex-wrap items-center gap-3 border-t border-hairline pt-3">
+          <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+            {t('colBusinessGroup')}
+            <select value={fBusinessGroup} onChange={(e) => setFBusinessGroup(e.target.value)} className={tableSelectClass}>
+              <option value="all">{t('filterAll')}</option>
+              {businessGroups.map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+            {t('colBusinessUnit')}
+            <select value={fBusinessUnit} onChange={(e) => setFBusinessUnit(e.target.value)} className={tableSelectClass}>
+              <option value="all">{t('filterAll')}</option>
+              {businessUnits.map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+            {t('colCompanyCode')}
+            <select value={fCompanyCode} onChange={(e) => setFCompanyCode(e.target.value)} className={tableSelectClass}>
+              <option value="all">{t('filterAll')}</option>
+              {companyCodes.map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+            {t('colJob')}
+            <select value={fJob} onChange={(e) => setFJob(e.target.value)} className={tableSelectClass}>
+              <option value="all">{t('filterAll')}</option>
+              {jobCodes.map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+            {t('colDvtProject')}
+            <select value={fDvtProject} onChange={(e) => setFDvtProject(e.target.value)} className={tableSelectClass}>
+              <option value="all">{t('filterAll')}</option>
+              {dvtProjects.map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+            {t('colEmployeeSubgroup')}
+            <select value={fEmpSubgroup} onChange={(e) => setFEmpSubgroup(e.target.value)} className={tableSelectClass}>
+              <option value="all">{t('filterAll')}</option>
+              {employeeSubgroups.map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+            {t('filterHiringDateFrom')}
+            <input type="date" value={fHireFrom} onChange={(e) => setFHireFrom(e.target.value)} className={tableSelectClass} />
+          </label>
+          <label className="flex items-center gap-2 text-small font-medium text-ink-muted">
+            {t('filterHiringDateTo')}
+            <input type="date" value={fHireTo} onChange={(e) => setFHireTo(e.target.value)} className={tableSelectClass} />
+          </label>
+        </div>
+      )}
 
       <DataTable
         caption={t('tableCaption')}
