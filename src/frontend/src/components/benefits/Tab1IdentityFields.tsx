@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { FormField, FormInput } from '@/components/humi';
+import { X } from 'lucide-react';
+import { FormField, FormInput, Button } from '@/components/humi';
 import {
   deriveRecordTypeFromBenefitTypeGroup,
   type PlanCategory,
   type WorkflowTemplate,
 } from '@/data/benefits/plan-registry';
-import { COMPANY_OPTIONS, ADD_NEW_COMPANY, isKnownCompany } from '@/data/benefits/company-registry';
+import { COMPANY_LEGAL_ENTITIES, ADD_NEW_COMPANY, companyLabel, parseCompanies, joinCompanies } from '@/data/benefits/company-registry';
 
 export type CountryCode = 'TH' | 'VN';
 export type PlanStatus = 'active' | 'inactive' | 'draft';
@@ -118,12 +119,22 @@ export function Tab1IdentityFields({
 
   const chip = RECORD_TYPE_CHIP[derivedRecordType];
 
-  // STA-86: Company dropdown — "+ Add new company" reveals a free-text input.
-  // Start in add-new mode when the stored company is a custom (non-listed) name
-  // so an existing one-off value renders pre-filled rather than being lost.
-  const [companyAddNew, setCompanyAddNew] = useState(
-    values.company !== '' && !isKnownCompany(values.company),
-  );
+  // STA-108: Company is a multi-select of legal entities rendered as removable
+  // chips. Storage stays a comma-joined string (Tab1Values.company: string) so
+  // the plan type/builders are untouched (mockup phase). "+ Add new company"
+  // (STA-86) still lets an admin type a one-off custom entity as a chip.
+  const selectedCompanies = parseCompanies(values.company);
+  const [companyAddNew, setCompanyAddNew] = useState(false);
+  const [newCompanyName, setNewCompanyName] = useState('');
+  const setCompanies = (arr: string[]) => onChange('company', joinCompanies(arr));
+  const addCompany = (v: string) => {
+    // Strip commas — the comma is the storage delimiter, so a custom name with
+    // a comma would otherwise split into multiple chips on re-open.
+    const val = v.replace(/,/g, ' ').trim().replace(/\s+/g, ' ');
+    if (val && !selectedCompanies.includes(val)) setCompanies([...selectedCompanies, val]);
+  };
+  const removeCompany = (v: string) => setCompanies(selectedCompanies.filter((c) => c !== v));
+  const availableCompanies = COMPANY_LEGAL_ENTITIES.filter((c) => !selectedCompanies.includes(c.value));
 
   return (
     <div className="space-y-5">
@@ -462,7 +473,8 @@ export function Tab1IdentityFields({
           {isTh ? 'นิติบุคคล (Legal Entity)' : 'Legal Entity'}
         </h3>
 
-        {/* 17. Company — STA-86: dropdown (CDS/CMG/RIS) + "Add new company" */}
+        {/* 17. Company — STA-108: multi-select legal entities as removable chips
+            (+ STA-86 "Add new company" free-text). Stored comma-joined. */}
         <FormField
           id="tab1-company"
           label={isTh ? 'บริษัท (Company)' : 'Company'}
@@ -470,25 +482,22 @@ export function Tab1IdentityFields({
           {(cp) => (
             <select
               {...cp}
-              value={companyAddNew ? ADD_NEW_COMPANY : (isKnownCompany(values.company) ? values.company : '')}
+              value=""
               onChange={(e) => {
                 const v = e.target.value;
                 if (v === ADD_NEW_COMPANY) {
-                  // Switch to free-text entry; clear so the input starts empty.
                   setCompanyAddNew(true);
-                  onChange('company', '');
-                } else {
-                  setCompanyAddNew(false);
-                  onChange('company', v);
+                } else if (v) {
+                  addCompany(v);
                 }
               }}
               className={selectClass}
             >
-              <option value="" disabled>
+              <option value="">
                 {isTh ? '— เลือกบริษัท —' : '— Select company —'}
               </option>
-              {COMPANY_OPTIONS.map((c) => (
-                <option key={c} value={c}>{c}</option>
+              {availableCompanies.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
               ))}
               <option value={ADD_NEW_COMPANY}>
                 {isTh ? '+ เพิ่มบริษัทใหม่' : '+ Add new company'}
@@ -497,6 +506,29 @@ export function Tab1IdentityFields({
           )}
         </FormField>
 
+        {/* Selected company chips — each individually removable */}
+        {selectedCompanies.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {selectedCompanies.map((c) => (
+              <span
+                key={c}
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-accent/30 bg-accent-soft px-2.5 py-1 text-small font-medium text-accent"
+              >
+                {companyLabel(c)}
+                <button
+                  type="button"
+                  aria-label={isTh ? `ลบ ${companyLabel(c)}` : `remove ${companyLabel(c)}`}
+                  title={isTh ? 'ลบ' : 'Remove'}
+                  onClick={() => removeCompany(c)}
+                  className="inline-flex items-center justify-center rounded-full p-0.5 text-accent/70 transition-colors hover:bg-accent/15 hover:text-danger"
+                >
+                  <X size={13} aria-hidden />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
         {companyAddNew && (
           <div className="mt-3">
             <FormField
@@ -504,12 +536,34 @@ export function Tab1IdentityFields({
               label={isTh ? 'ชื่อบริษัทใหม่' : 'New company name'}
             >
               {(cp) => (
-                <FormInput
-                  {...cp}
-                  value={values.company}
-                  onChange={(e) => onChange('company', e.target.value)}
-                  placeholder={isTh ? 'เช่น Central Group' : 'e.g. Central Group'}
-                />
+                <div className="flex items-center gap-2">
+                  <FormInput
+                    {...cp}
+                    value={newCompanyName}
+                    onChange={(e) => setNewCompanyName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addCompany(newCompanyName);
+                        setNewCompanyName('');
+                        setCompanyAddNew(false);
+                      }
+                    }}
+                    placeholder={isTh ? 'เช่น Central Group' : 'e.g. Central Group'}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      addCompany(newCompanyName);
+                      setNewCompanyName('');
+                      setCompanyAddNew(false);
+                    }}
+                  >
+                    {isTh ? 'เพิ่ม' : 'Add'}
+                  </Button>
+                </div>
               )}
             </FormField>
           </div>
