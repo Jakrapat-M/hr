@@ -182,6 +182,14 @@ export default function StepIdentity({ onValidChange }: StepIdentityProps) {
 
   useEffect(() => { validate() }, [validate])
 
+  // STA-114: mirror the name fields into the store on every change (not only
+  // when the whole identity step validates) so Save Draft enables as soon as a
+  // name is typed and an in-progress hire can be captured as a draft mid-entry.
+  // setStepData merges, so this partial write never clobbers other fields.
+  useEffect(() => {
+    setStepData('identity', { firstNameEn, middleNameEn, lastNameEn })
+  }, [firstNameEn, middleNameEn, lastNameEn, setStepData])
+
   // Surface DVT Previous Employee ID on Step 1 so it is available before later sections render.
   useEffect(() => {
     setStepData('employeeInfo', { dvtPreviousId })

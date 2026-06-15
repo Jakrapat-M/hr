@@ -104,7 +104,9 @@ export function WizardShell({
               title={new Date(lastSavedAt).toLocaleString('th-TH')}
               aria-live="polite"
             >
-              บันทึกร่างอัตโนมัติ · {formatTime(lastSavedAt)}
+              {/* STA-114: de-branded — this is an ephemeral scratchpad, not "the draft".
+                  The real saved draft lives in the hire-drafts tray via Save Draft. */}
+              จำข้อมูลล่าสุด · {formatTime(lastSavedAt)}
             </span>
           )}
         </div>
