@@ -7,10 +7,13 @@
 // DEF-01: Add confirmation state after successful submit
 import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { Save } from 'lucide-react'
 import { Button } from '@/components/humi'
 import { WizardShell } from '@/components/admin/wizard/WizardShell'
 import { HireCheckpointSidebar } from '@/components/admin/wizard/HireCheckpointSidebar'
-import { useHireWizard } from '@/lib/admin/store/useHireWizard'
+import { useHireWizard, HIRE_WIZARD_VERSION } from '@/lib/admin/store/useHireWizard'
+import { useHireDraftsStore, normalizeDraftName, type HireDraft } from '@/stores/hire-drafts-store'
 import { useHireAudit } from '@/stores/hire-audit'
 import { useAuthStore } from '@/stores/auth-store'
 import { useRecruitment } from '@/hooks/use-recruitment'
@@ -36,6 +39,8 @@ export default function HirePage() {
     lastSavedAt,
     candidateContext,
     freezeCandidateContext,
+    ensureDraftId,
+    setDraftId,
     goNext,
     goBack,
     jumpTo,
@@ -43,6 +48,13 @@ export default function HirePage() {
     isStepValid,
     reset,
   } = useHireWizard()
+  // STA-114: subscribe to the first-name fields so the Save Draft disable gate
+  // re-evaluates reactively as the admin types.
+  const firstNameEn = useHireWizard((s) => s.formData.identity.firstNameEn)
+  const firstNameLocal = useHireWizard((s) => s.formData.biographical.firstNameLocal)
+  const saveDraftToTray = useHireDraftsStore((s) => s.saveDraft)
+  const t = useTranslations('saveDraft')
+  const [draftSaved, setDraftSaved] = useState(false)
   const { candidates, loading: recruitmentLoading } = useRecruitment()
   const allEmployees = useEmployees((s) => s.all)
 
@@ -133,6 +145,41 @@ export default function HirePage() {
     mirrorStepToUrl(useHireWizard.getState().currentStep)
   }
 
+  // STA-114: Save Draft is enabled once a first name exists (local or EN) — the
+  // same minimum handleSubmit derives candidateName from.
+  const canSaveDraft = (firstNameLocal || firstNameEn).trim() !== ''
+
+  const handleSaveDraft = () => {
+    if (!canSaveDraft) return
+    const state = useHireWizard.getState()
+    const formData = state.formData
+    // Mirror handleSubmit's local-first candidate name derivation.
+    const first = formData.biographical?.firstNameLocal?.trim() || formData.identity?.firstNameEn?.trim() || ''
+    const last = formData.biographical?.lastNameLocal?.trim() || formData.identity?.lastNameEn?.trim() || ''
+    const candidateName = `${first} ${last}`.trim()
+    const nameKey = normalizeDraftName(candidateName)
+
+    const id = ensureDraftId()
+    const draft: HireDraft = {
+      draftId: id,
+      candidateName,
+      nameKey,
+      savedAt: Date.now(),
+      step: state.currentStep,
+      snapshot: formData,
+      candidateContext: state.candidateContext,
+      schemaVersion: HIRE_WIZARD_VERSION,
+    }
+    saveDraftToTray(draft)
+    // D2: the tray may have adopted an existing same-name row's id — sync the
+    // wizard's draftId so the next save/submit targets the same row.
+    const persisted = useHireDraftsStore.getState().drafts.find((d) => d.nameKey === nameKey)
+    if (persisted && persisted.draftId !== id) setDraftId(persisted.draftId)
+
+    setDraftSaved(true)
+    window.setTimeout(() => setDraftSaved(false), 4000)
+  }
+
   const handleSubmit = () => {
     const state = useHireWizard.getState()
     const formData = state.formData
@@ -192,6 +239,10 @@ export default function HirePage() {
     // DEF-01: show confirmation instead of silently resetting
     setSubmittedEmployeeId(employeeId)
     setSubmittedName(candidateName)
+    // STA-114 (D6): auto-remove the originating tray draft BEFORE reset() nulls
+    // the top-level draftId. Keyed by draftId → removes the exact row even among many.
+    const submittedDraftId = state.draftId
+    if (submittedDraftId) useHireDraftsStore.getState().removeDraft(submittedDraftId)
     reset()
     router.replace(makeStepUrl(1), { scroll: false })
   }
@@ -259,6 +310,32 @@ export default function HirePage() {
           URL candidate differs from the frozen hire draft. The existing draft snapshot was not overwritten.
         </div>
       )}
+      {/* STA-114: explicit Save Draft — commits the form into the shared tray
+          surfaced on /admin/employees?tab=drafts. Stays on the current step. */}
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-3">
+        {draftSaved && (
+          <span
+            role="status"
+            aria-live="polite"
+            className="inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-accent/10 px-3 py-2 text-small font-medium text-accent animate-in fade-in slide-in-from-top-1"
+          >
+            ✓ {t('success')}
+          </span>
+        )}
+        <div className="flex flex-col items-end gap-1">
+          <Button
+            variant="secondary"
+            onClick={handleSaveDraft}
+            disabled={!canSaveDraft}
+            leadingIcon={<Save size={16} aria-hidden />}
+          >
+            {t('button')}
+          </Button>
+          {!canSaveDraft && (
+            <span className="text-xs text-ink-muted">{t('disabledHint')}</span>
+          )}
+        </div>
+      </div>
       <WizardShell
         currentStep={currentStep}
         maxUnlockedStep={maxUnlockedStep}

@@ -1,4 +1,29 @@
 {
+  "saveDraft": {
+    "button": "Save Draft",
+    "disabledHint": "Enter a first name to save a draft",
+    "success": "Draft saved to Draft Form"
+  },
+  "drafts": {
+    "tabEmployees": "Employees",
+    "tabDraftForm": "Draft Form",
+    "colName": "Candidate",
+    "colSavedAt": "Saved at",
+    "colStep": "Step",
+    "colActions": "Actions",
+    "resume": "Resume",
+    "delete": "Delete",
+    "empty": {
+      "title": "No saved drafts",
+      "body": "Drafts you save from the Hire form appear here so you can resume them later."
+    },
+    "deleteConfirm": {
+      "title": "Delete this draft?",
+      "body": "The draft for {name} will be permanently removed. This cannot be undone.",
+      "confirm": "Delete draft",
+      "cancel": "Cancel"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "save": "Save",

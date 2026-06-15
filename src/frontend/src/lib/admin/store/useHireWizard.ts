@@ -156,6 +156,17 @@ export interface HireCandidateContext {
 
 export type SectionCollapseState = Record<string, boolean>
 
+// STA-114: the subset of wizard state a tray draft round-trips. `hydrateFromDraft`
+// reads these to restore the form; hire-drafts-store.ts builds a HireDraft around it.
+export interface HireWizardDraftSnapshot {
+  draftId: string
+  formData: FormData
+  step: number
+  candidateContext: HireCandidateContext | null
+  /** store version at save time — drives the migrateHireState upgrade on resume */
+  schemaVersion: number
+}
+
 // รูปแบบข้อมูลของแต่ละ slice — trace กลับ BA-EC-SUMMARY.md ทุก field
 // Exported so sfMapper can type-narrow per portlet input (Phase 1+).
 export interface FormData {
@@ -616,6 +627,10 @@ interface HireWizardState {
   hrbpAssignee: string
   candidateContext: HireCandidateContext | null
   sectionCollapse: SectionCollapseState
+  // STA-114: opaque per-candidate draft identity (top-level — NOT inside
+  // candidateContext, which is null for manual/blank hires). Stable across a
+  // rename-in-session so the tray upsert never orphans a row.
+  draftId: string | null
 
   setStepData: <K extends keyof FormData>(step: K, patch: Partial<FormData[K]>) => void
   setEmployeeClassToggle: (v: EmployeeClassToggle) => void
@@ -623,6 +638,13 @@ interface HireWizardState {
   setHrbpAssignee: (id: string) => void
   freezeCandidateContext: (snapshot: HireCandidateContext) => void
   clearCandidateContext: () => void
+  // STA-114 draft identity + resume
+  /** Return the current draftId, generating a stable uuid if none exists yet. */
+  ensureDraftId: () => string
+  /** Force a specific draftId (used by the tray dedupe to adopt an existing row's id). */
+  setDraftId: (id: string) => void
+  /** Load a tray draft into the wizard in a single set() — runs migrateHireState for stale snapshots. */
+  hydrateFromDraft: (draft: HireWizardDraftSnapshot) => void
   setSectionCollapsed: (sectionId: string, collapsed: boolean) => void
   toggleSection: (sectionId: string) => void
   goNext: () => void
@@ -785,6 +807,187 @@ const initialStepValidity: StepValidity = {
   dependents: true,
 }
 
+// Current persist store version. Bumped to 11 for STA-114 (top-level draftId).
+export const HIRE_WIZARD_VERSION = 11
+
+// STA-114: pure migration transform extracted from persist.migrate so a
+// programmatic set() path (hydrateFromDraft) can upgrade a stale snapshot.
+// `persist.migrate` only runs on rehydrate — never on a manual set() — so the
+// Resume flow must run this explicitly before writing a stale draft into state.
+// Mutates + returns the same persisted object (matches Zustand migrate contract).
+export function migrateHireState(persisted: unknown, fromVersion: number): unknown {
+  const p = persisted as any
+  if (!p || typeof p !== 'object' || !p.formData) return p
+  if (!('candidateContext' in p)) p.candidateContext = null
+  // STA-114: backfill top-level draftId for snapshots persisted before v11.
+  if (fromVersion < 11 && !('draftId' in p)) p.draftId = null
+  if (!p.sectionCollapse || typeof p.sectionCollapse !== 'object' || Array.isArray(p.sectionCollapse)) {
+    p.sectionCollapse = {}
+  }
+  const fd = p.formData
+  if (!fd.identity || typeof fd.identity !== 'object') {
+    fd.identity = {}
+  }
+  if (!('attachmentName' in fd.identity)) {
+    fd.identity.attachmentName = null
+  }
+  // A2 contact — fill slice + inner arrays if missing
+  if (!fd.contact || typeof fd.contact !== 'object') {
+    fd.contact = {
+      phones: [{ type: 'mobile', value: '', isPrimary: true }],
+      emails: [{ type: 'personal', value: '', isPrimary: true }],
+      jobRelationships: [],
+      addressAttachmentName: null,
+    }
+  } else {
+    if (!Array.isArray(fd.contact.phones)) {
+      fd.contact.phones = [{ type: 'mobile', value: '', isPrimary: true }]
+    }
+    if (!Array.isArray(fd.contact.emails)) {
+      fd.contact.emails = [{ type: 'personal', value: '', isPrimary: true }]
+    }
+    if (!Array.isArray(fd.contact.jobRelationships)) {
+      fd.contact.jobRelationships = []
+    }
+    if (!('addressAttachmentName' in fd.contact)) {
+      fd.contact.addressAttachmentName = null
+    }
+  }
+  if (!fd.compensation || typeof fd.compensation !== 'object') {
+    fd.compensation = { baseSalary: null, costDistribution: [] }
+  } else if (!Array.isArray(fd.compensation.costDistribution)) {
+    fd.compensation.costDistribution = []
+  }
+  // v3: Phase 1.4 emergencyContacts[] — add if missing (covers v1 and v2 drafts)
+  if (!Array.isArray(fd.emergencyContacts)) {
+    fd.emergencyContacts = []
+  }
+  // v4: Phase 3 EmpJob new fields — add if missing (covers v1-v3 drafts)
+  if (!fd.job || typeof fd.job !== 'object') {
+    fd.job = {}
+  }
+  const jobDefaults: Record<string, null | '' | boolean> = {
+    department: null, division: null, divisionLabel: null,
+    costCenter: null, jobFunction: null, jobFunctionLabel: null,
+    corporateTitle: null, payScaleType: null, payScaleArea: null,
+    payScaleGroup: null, payScaleLevel: null, policyProfile: null,
+    ssoLocation: null, groupCompanyGroup: null, contractType: null,
+    zone: null, contractEndDate: null, probationEndDate: null,
+    emplStatus: null, event: null, employmentType: null,
+    attachmentName: null,
+    supervisorId: null, supervisorLabel: null,
+    overrideStandardWeeklyHours: false, dayOffType: '',
+    // STA-82 backfill
+    jobRole: null, jobType: null, personnelGrade: null,
+    bandMatching: null, band: null, transferOutTo: null,
+    transferInTo: null, transferFrom: null, specialBenefitGroup: null,
+    okToRehire: null, dvtProjectName: null, dvtType: null,
+    dvtCourse: null, dvtCourseOfTime: null, dvtAcademicYear: null,
+    dvtGraduationDate: null, dvtBondingEndDate: null,
+    dvtPartnerUniversity: null, dvtDegreeLevel: null, gpa: null, scholarship: null,
+    probationaryPeriodEndDate: null, extendedProbationDate: null,
+    pointOfSales: null, storeBrandFormat: null, brand: null, workLocation: null,
+  }
+  for (const [k, v] of Object.entries(jobDefaults)) {
+    if (!(k in fd.job)) fd.job[k] = v
+  }
+  // v5: Phase 4 employeeInfo.ssn — add if missing (covers v1-v4 drafts)
+  if (!fd.employeeInfo || typeof fd.employeeInfo !== 'object') {
+    fd.employeeInfo = {}
+  }
+  if (!('ssn' in fd.employeeInfo)) {
+    fd.employeeInfo.ssn = ''
+  }
+  // v6: Phase 5b-2/3/4 — backfill new slices for v5 drafts
+  if (!fd.globalInfo) {
+    fd.globalInfo = {
+      numberOfChildren: null, religion: null, disabilityStatus: '',
+      disabilityCertStartDate: null, disabilityCertEndDate: null,
+      typeOfDisability: '', certificateId: '',
+      spouseFatherIdNumber: '', spouseMotherIdNumber: '',
+      additionalInformation: '',
+      disabilityAttachmentName: null,
+    }
+  } else if (!('disabilityAttachmentName' in fd.globalInfo)) {
+    fd.globalInfo.disabilityAttachmentName = null
+  }
+  // STA-82: backfill countryRegion for old globalInfo drafts
+  if (fd.globalInfo && !('countryRegion' in fd.globalInfo)) {
+    fd.globalInfo.countryRegion = 'THA'
+  }
+  // STA-81: backfill replacedEmployeeId for old identity drafts
+  if (fd.identity && !('replacedEmployeeId' in fd.identity)) {
+    fd.identity.replacedEmployeeId = ''
+  }
+  if (!fd.workPermit) {
+    fd.workPermit = {
+      documentType: '', country: '', documentNumber: '',
+      issueDate: null, expiryDate: null,
+      arrivalDateVisa: null, ninetyDayReportVisa: null,
+      attachmentName: '',
+    }
+  }
+  if (!Array.isArray(fd.dependents)) {
+    fd.dependents = []
+  } else {
+    fd.dependents = fd.dependents.map((dep: Record<string, unknown>) => ({
+      ...dep,
+      attachmentName: 'attachmentName' in dep ? dep.attachmentName : null,
+      // STA-82: backfill new address fields for old dependent entries
+      copyAddressFromEmployee: 'copyAddressFromEmployee' in dep ? dep.copyAddressFromEmployee : false,
+      building: 'building' in dep ? dep.building : '',
+      floor: 'floor' in dep ? dep.floor : '',
+      street: 'street' in dep ? dep.street : '',
+    }))
+  }
+  // STA-82: backfill copyAddressFromEmployee for existing emergencyContacts entries
+  if (Array.isArray(fd.emergencyContacts)) {
+    fd.emergencyContacts = fd.emergencyContacts.map((ec: Record<string, unknown>) => ({
+      ...ec,
+      copyAddressFromEmployee: 'copyAddressFromEmployee' in ec ? ec.copyAddressFromEmployee : false,
+    }))
+  }
+  // v7: Phase 5 compensation bank/payment fields + recurringComponents
+  if (!fd.compensation || typeof fd.compensation !== 'object') {
+    fd.compensation = {}
+  }
+  if (!Array.isArray(fd.compensation.recurringComponents)) {
+    fd.compensation.recurringComponents = []
+  }
+  const compDefaults: Record<string, string> = {
+    bankCountry: '', paymentMethod: '', payType: '',
+    bank: '', accountNumber: '', bankCode: '',
+  }
+  for (const [k, v] of Object.entries(compDefaults)) {
+    if (!(k in fd.compensation)) fd.compensation[k] = v
+  }
+  if (!('paymentAttachmentName' in fd.compensation)) {
+    fd.compensation.paymentAttachmentName = null
+  }
+  if (!fd.review || typeof fd.review !== 'object') {
+    fd.review = {
+      salutationEnReview: null,
+      firstNameEnReview: '',
+      lastNameEnReview: '',
+      middleNameEnReview: '',
+      attachmentName: null,
+    }
+  } else {
+    const reviewDefaults = {
+      salutationEnReview: null,
+      firstNameEnReview: '',
+      lastNameEnReview: '',
+      middleNameEnReview: '',
+      attachmentName: null,
+    }
+    for (const [k, v] of Object.entries(reviewDefaults)) {
+      if (!(k in fd.review)) fd.review[k] = v
+    }
+  }
+  console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v${HIRE_WIZARD_VERSION}`)
+  return p
+}
+
 export const useHireWizard = create<HireWizardState>()(
   persist(
     (set, get) => ({
@@ -797,6 +1000,7 @@ export const useHireWizard = create<HireWizardState>()(
       hrbpAssignee: '',
       candidateContext: null,
       sectionCollapse: {},
+      draftId: null,
 
       setStepData: (step, patch) => {
         set((state) => ({
@@ -855,6 +1059,46 @@ export const useHireWizard = create<HireWizardState>()(
 
       clearCandidateContext: () => set({ candidateContext: null }),
 
+      // STA-114 draft identity
+      ensureDraftId: () => {
+        const existing = get().draftId
+        if (existing) return existing
+        const id =
+          typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : `draft-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+        set({ draftId: id })
+        return id
+      },
+
+      setDraftId: (id) => set({ draftId: id }),
+
+      hydrateFromDraft: (draft) => {
+        // A programmatic set() bypasses persist.migrate, so upgrade a stale
+        // snapshot explicitly before writing it into state (STA-114 / D5).
+        let formData = draft.formData
+        if (draft.schemaVersion < HIRE_WIZARD_VERSION) {
+          const upgraded = migrateHireState(
+            {
+              formData: draft.formData,
+              candidateContext: draft.candidateContext,
+              currentStep: draft.step,
+            },
+            draft.schemaVersion,
+          ) as { formData: FormData } | undefined
+          if (upgraded?.formData) formData = upgraded.formData
+        }
+        const step = (draft.step >= 1 && draft.step <= 3 ? draft.step : 1) as StepNumber
+        set({
+          formData,
+          currentStep: step,
+          maxUnlockedStep: step,
+          candidateContext: draft.candidateContext,
+          draftId: draft.draftId,
+          lastSavedAt: Date.now(),
+        })
+      },
+
       setSectionCollapsed: (sectionId, collapsed) => set((state) => ({
         sectionCollapse: { ...state.sectionCollapse, [sectionId]: collapsed },
       })),
@@ -910,6 +1154,7 @@ export const useHireWizard = create<HireWizardState>()(
         hrbpAssignee: '',
         candidateContext: null,
         sectionCollapse: {},
+        draftId: null,
       }),
     }),
     {
@@ -928,7 +1173,9 @@ export const useHireWizard = create<HireWizardState>()(
       // Version 9 adds frozen candidate context + persisted section collapse.
       // Version 10 backfills the review slice for drafts persisted by builds
       // that accidentally omitted it, preventing Personal Information crashes.
-      version: 10,
+      // Version 11 (STA-114) adds the top-level draftId so the wizard can be
+      // round-tripped through the hire-drafts tray.
+      version: HIRE_WIZARD_VERSION,
       partialize: (state) => ({
         currentStep: state.currentStep,
         maxUnlockedStep: state.maxUnlockedStep,
@@ -937,179 +1184,13 @@ export const useHireWizard = create<HireWizardState>()(
         employeeClassToggle: state.employeeClassToggle,
         candidateContext: state.candidateContext,
         sectionCollapse: state.sectionCollapse,
+        draftId: state.draftId,
         // stepValidity intentionally NOT persisted — recomputed on mount from step components
         // hrbpAssignee intentionally NOT persisted — must be re-selected each session
       }),
-      migrate: (persisted: unknown, fromVersion: number) => {
-        const p = persisted as any
-        if (!p || typeof p !== 'object' || !p.formData) return p
-        if (!('candidateContext' in p)) p.candidateContext = null
-        if (!p.sectionCollapse || typeof p.sectionCollapse !== 'object' || Array.isArray(p.sectionCollapse)) {
-          p.sectionCollapse = {}
-        }
-        const fd = p.formData
-        if (!fd.identity || typeof fd.identity !== 'object') {
-          fd.identity = {}
-        }
-        if (!('attachmentName' in fd.identity)) {
-          fd.identity.attachmentName = null
-        }
-        // A2 contact — fill slice + inner arrays if missing
-        if (!fd.contact || typeof fd.contact !== 'object') {
-          fd.contact = {
-            phones: [{ type: 'mobile', value: '', isPrimary: true }],
-            emails: [{ type: 'personal', value: '', isPrimary: true }],
-            jobRelationships: [],
-            addressAttachmentName: null,
-          }
-        } else {
-          if (!Array.isArray(fd.contact.phones)) {
-            fd.contact.phones = [{ type: 'mobile', value: '', isPrimary: true }]
-          }
-          if (!Array.isArray(fd.contact.emails)) {
-            fd.contact.emails = [{ type: 'personal', value: '', isPrimary: true }]
-          }
-          if (!Array.isArray(fd.contact.jobRelationships)) {
-            fd.contact.jobRelationships = []
-          }
-          if (!('addressAttachmentName' in fd.contact)) {
-            fd.contact.addressAttachmentName = null
-          }
-        }
-        if (!fd.compensation || typeof fd.compensation !== 'object') {
-          fd.compensation = { baseSalary: null, costDistribution: [] }
-        } else if (!Array.isArray(fd.compensation.costDistribution)) {
-          fd.compensation.costDistribution = []
-        }
-        // v3: Phase 1.4 emergencyContacts[] — add if missing (covers v1 and v2 drafts)
-        if (!Array.isArray(fd.emergencyContacts)) {
-          fd.emergencyContacts = []
-        }
-        // v4: Phase 3 EmpJob new fields — add if missing (covers v1-v3 drafts)
-        if (!fd.job || typeof fd.job !== 'object') {
-          fd.job = {}
-        }
-        const jobDefaults: Record<string, null | '' | boolean> = {
-          department: null, division: null, divisionLabel: null,
-          costCenter: null, jobFunction: null, jobFunctionLabel: null,
-          corporateTitle: null, payScaleType: null, payScaleArea: null,
-          payScaleGroup: null, payScaleLevel: null, policyProfile: null,
-          ssoLocation: null, groupCompanyGroup: null, contractType: null,
-          zone: null, contractEndDate: null, probationEndDate: null,
-          emplStatus: null, event: null, employmentType: null,
-          attachmentName: null,
-          supervisorId: null, supervisorLabel: null,
-          overrideStandardWeeklyHours: false, dayOffType: '',
-          // STA-82 backfill
-          jobRole: null, jobType: null, personnelGrade: null,
-          bandMatching: null, band: null, transferOutTo: null,
-          transferInTo: null, transferFrom: null, specialBenefitGroup: null,
-          okToRehire: null, dvtProjectName: null, dvtType: null,
-          dvtCourse: null, dvtCourseOfTime: null, dvtAcademicYear: null,
-          dvtGraduationDate: null, dvtBondingEndDate: null,
-          dvtPartnerUniversity: null, dvtDegreeLevel: null, gpa: null, scholarship: null,
-          probationaryPeriodEndDate: null, extendedProbationDate: null,
-          pointOfSales: null, storeBrandFormat: null, brand: null, workLocation: null,
-        }
-        for (const [k, v] of Object.entries(jobDefaults)) {
-          if (!(k in fd.job)) fd.job[k] = v
-        }
-        // v5: Phase 4 employeeInfo.ssn — add if missing (covers v1-v4 drafts)
-        if (!fd.employeeInfo || typeof fd.employeeInfo !== 'object') {
-          fd.employeeInfo = {}
-        }
-        if (!('ssn' in fd.employeeInfo)) {
-          fd.employeeInfo.ssn = ''
-        }
-        // v6: Phase 5b-2/3/4 — backfill new slices for v5 drafts
-        if (!fd.globalInfo) {
-          fd.globalInfo = {
-            numberOfChildren: null, religion: null, disabilityStatus: '',
-            disabilityCertStartDate: null, disabilityCertEndDate: null,
-            typeOfDisability: '', certificateId: '',
-            spouseFatherIdNumber: '', spouseMotherIdNumber: '',
-            additionalInformation: '',
-            disabilityAttachmentName: null,
-          }
-        } else if (!('disabilityAttachmentName' in fd.globalInfo)) {
-          fd.globalInfo.disabilityAttachmentName = null
-        }
-        // STA-82: backfill countryRegion for old globalInfo drafts
-        if (fd.globalInfo && !('countryRegion' in fd.globalInfo)) {
-          fd.globalInfo.countryRegion = 'THA'
-        }
-        // STA-81: backfill replacedEmployeeId for old identity drafts
-        if (fd.identity && !('replacedEmployeeId' in fd.identity)) {
-          fd.identity.replacedEmployeeId = ''
-        }
-        if (!fd.workPermit) {
-          fd.workPermit = {
-            documentType: '', country: '', documentNumber: '',
-            issueDate: null, expiryDate: null,
-            arrivalDateVisa: null, ninetyDayReportVisa: null,
-            attachmentName: '',
-          }
-        }
-        if (!Array.isArray(fd.dependents)) {
-          fd.dependents = []
-        } else {
-          fd.dependents = fd.dependents.map((dep: Record<string, unknown>) => ({
-            ...dep,
-            attachmentName: 'attachmentName' in dep ? dep.attachmentName : null,
-            // STA-82: backfill new address fields for old dependent entries
-            copyAddressFromEmployee: 'copyAddressFromEmployee' in dep ? dep.copyAddressFromEmployee : false,
-            building: 'building' in dep ? dep.building : '',
-            floor: 'floor' in dep ? dep.floor : '',
-            street: 'street' in dep ? dep.street : '',
-          }))
-        }
-        // STA-82: backfill copyAddressFromEmployee for existing emergencyContacts entries
-        if (Array.isArray(fd.emergencyContacts)) {
-          fd.emergencyContacts = fd.emergencyContacts.map((ec: Record<string, unknown>) => ({
-            ...ec,
-            copyAddressFromEmployee: 'copyAddressFromEmployee' in ec ? ec.copyAddressFromEmployee : false,
-          }))
-        }
-        // v7: Phase 5 compensation bank/payment fields + recurringComponents
-        if (!fd.compensation || typeof fd.compensation !== 'object') {
-          fd.compensation = {}
-        }
-        if (!Array.isArray(fd.compensation.recurringComponents)) {
-          fd.compensation.recurringComponents = []
-        }
-        const compDefaults: Record<string, string> = {
-          bankCountry: '', paymentMethod: '', payType: '',
-          bank: '', accountNumber: '', bankCode: '',
-        }
-        for (const [k, v] of Object.entries(compDefaults)) {
-          if (!(k in fd.compensation)) fd.compensation[k] = v
-        }
-        if (!('paymentAttachmentName' in fd.compensation)) {
-          fd.compensation.paymentAttachmentName = null
-        }
-        if (!fd.review || typeof fd.review !== 'object') {
-          fd.review = {
-            salutationEnReview: null,
-            firstNameEnReview: '',
-            lastNameEnReview: '',
-            middleNameEnReview: '',
-            attachmentName: null,
-          }
-        } else {
-          const reviewDefaults = {
-            salutationEnReview: null,
-            firstNameEnReview: '',
-            lastNameEnReview: '',
-            middleNameEnReview: '',
-            attachmentName: null,
-          }
-          for (const [k, v] of Object.entries(reviewDefaults)) {
-            if (!(k in fd.review)) fd.review[k] = v
-          }
-        }
-        console.warn(`[useHireWizard] migrated draft from v${fromVersion} → v10`)
-        return p
-      },
+      // Delegate to the pure migrateHireState helper (STA-114) so the same
+      // transform is reusable from hydrateFromDraft for stale tray snapshots.
+      migrate: (persisted: unknown, fromVersion: number) => migrateHireState(persisted, fromVersion),
     },
   ),
 )

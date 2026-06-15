@@ -6,7 +6,8 @@
 // Row click → /[locale]/admin/employees/[id] (S3 territory).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, Users2, Lock, Download, Upload } from 'lucide-react';
 import { useEmployees } from '@/lib/admin/store/useEmployees';
@@ -15,6 +16,10 @@ import { useAuthStore } from '@/stores/auth-store';
 import { pickScopeMode } from '@/lib/scope-filter';
 import { exportToCSV, type CsvColumn } from '@/lib/admin/utils/csvExport';
 import { maskValue } from '@/lib/date';
+import { DraftFormTray } from './DraftFormTray';
+
+// STA-114: tab keys for the Employees / Draft Form tab strip (URL ?tab=).
+type EmployeesTab = 'employees' | 'drafts';
 
 // ──────────────────────────────────────────────
 // Constants
@@ -221,7 +226,9 @@ const EmployeeRow = ({
 export default function EmployeesPage() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const locale = (params?.locale as string) ?? 'th'
+  const tDrafts = useTranslations('drafts')
 
   // RBAC gate (Track A1, autopilot 2026-04-26): all-employees list is admin-tier
   // only. MockEmployee pool has no managerId/businessUnitId, so direct-reports/BU
@@ -229,6 +236,26 @@ export default function EmployeesPage() {
   // are pointed to /profile/me for self-data.
   const currentRoles = useAuthStore((s) => s.roles)
   const scopeMode = pickScopeMode(currentRoles)
+
+  // STA-114: Draft Form tab is gated on the SAME predicate that gates the whole
+  // employees list — scopeMode === 'all' (spd / hr_admin / hr_manager, the Tier A
+  // hire-capable personas per pickScopeMode in lib/scope-filter.ts). Non-'all'
+  // roles never reach this UI (the barrier card returns below), so the tab is
+  // REMOVED (not disabled) for them and ?tab=drafts is inert by construction.
+  const tabParam = searchParams.get('tab')
+  const activeTab: EmployeesTab =
+    scopeMode === 'all' && tabParam === 'drafts' ? 'drafts' : 'employees'
+
+  const setTab = useCallback(
+    (tab: EmployeesTab) => {
+      const next = new URLSearchParams(searchParams.toString())
+      if (tab === 'drafts') next.set('tab', 'drafts')
+      else next.delete('tab')
+      const qs = next.toString()
+      router.replace(qs ? `?${qs}` : '?', { scroll: false })
+    },
+    [router, searchParams],
+  )
 
   const { setSearchQuery, searchQuery, getFiltered } = useEmployees()
   const allEmployees = useEmployees((s) => s.all)
@@ -505,12 +532,59 @@ export default function EmployeesPage() {
         </div>
       </div>
 
+      {/* ── Tab strip (STA-114): Employees · Draft Form ─── */}
+      <div
+        role="tablist"
+        aria-label={tDrafts('tabEmployees')}
+        style={{
+          display: 'flex',
+          gap: 4,
+          borderBottom: '1px solid var(--color-hairline)',
+          marginBottom: 12,
+          flexShrink: 0,
+        }}
+      >
+        {([
+          { key: 'employees' as const, label: tDrafts('tabEmployees') },
+          { key: 'drafts' as const, label: tDrafts('tabDraftForm') },
+        ]).map((tab) => {
+          const selected = activeTab === tab.key
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              onClick={() => setTab(tab.key)}
+              style={{
+                minHeight: 44,
+                padding: '10px 16px',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: selected
+                  ? '2px solid var(--color-accent)'
+                  : '2px solid transparent',
+                color: selected ? 'var(--color-accent)' : 'var(--color-ink-soft)',
+                fontSize: 14,
+                fontWeight: selected ? 700 : 600,
+                cursor: 'pointer',
+                transition: 'color 120ms, border-color 120ms',
+              }}
+            >
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+
       {/* ── Table container ─────────────────────────────── */}
+      {/* STA-114: kept MOUNTED across tab switches (CSS show/hide) so the
+          @tanstack/react-virtual scroll/measurement state survives. */}
       <div
         style={{
           flex: 1,
           minHeight: 0,
-          display: 'flex',
+          display: activeTab === 'employees' ? 'flex' : 'none',
           flexDirection: 'column',
           borderRadius: 'var(--radius-md)',
           border: '1px solid var(--color-hairline)',
@@ -631,6 +705,13 @@ export default function EmployeesPage() {
           )}
         </div>
       </div>
+
+      {/* ── Draft Form tray (STA-114) ───────────────────── */}
+      {activeTab === 'drafts' && (
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+          <DraftFormTray />
+        </div>
+      )}
 
       {/* Row hover + sticky-left cell bg — injected once */}
       <style>{`
