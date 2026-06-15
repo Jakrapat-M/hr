@@ -5077,7 +5077,9 @@
     "when": "When",
     "action_create": "Create",
     "action_insert": "Insert",
-    "action_delete": "Delete"
+    "action_delete": "Delete",
+    "effectiveOn": "effective on {date}",
+    "changeLine": "<label>{field}</label> from ‘<val>{from}</val>’ to ‘<val>{to}</val>’"
   },
   "admin_benefits_plans": {
     "eyebrow": "Benefits · Plan catalog",

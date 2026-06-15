@@ -4982,7 +4982,9 @@
     "when": "เมื่อ",
     "action_create": "สร้าง",
     "action_insert": "เพิ่ม",
-    "action_delete": "ลบ"
+    "action_delete": "ลบ",
+    "effectiveOn": "มีผล {date}",
+    "changeLine": "<label>{field}</label> จาก ‘<val>{from}</val>’ เป็น ‘<val>{to}</val>’"
   },
   "admin_benefits_plans": {
     "eyebrow": "สวัสดิการ · แคตตาล็อกแผน",

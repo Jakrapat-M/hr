@@ -24,7 +24,11 @@ export interface BenefitHistoryEntry {
   targetName: string;
   action: BenefitHistoryAction;
   actorName: string;
-  timestamp: string; // ISO
+  timestamp: string; // ISO — when the change was recorded
+  // STA-107 — BA wants the log keyed on WHEN the change takes effect (headline)
+  // plus a field-level before/after diff. Both optional → old entries still render.
+  effectiveDate?: string; // ISO date the change takes effect
+  changes?: { field: string; from: string; to: string }[]; // field-level diff
 }
 
 interface BenefitHistoryState {
@@ -68,6 +72,11 @@ const seedEntries: BenefitHistoryEntry[] = [
     action: 'insert',
     actorName: 'สมชาย ใจดี',
     timestamp: '2026-03-04T08:15:00.000Z',
+    // STA-107 — demonstrate the new effective-date headline + field diff on first open.
+    effectiveDate: '2026-04-01',
+    changes: [
+      { field: 'Legal Entity', from: 'B2S(B2S)', to: 'B2S(B2S),CDS(CDS)' },
+    ],
   },
   {
     id: 'BH-0003',
@@ -86,6 +95,12 @@ const seedEntries: BenefitHistoryEntry[] = [
     action: 'insert',
     actorName: 'HR Admin',
     timestamp: '2026-04-22T02:30:00.000Z',
+    // STA-107 — rule insert also carries an effective date + entitlement diff.
+    effectiveDate: '2026-05-01',
+    changes: [
+      { field: 'Entitlement Amount', from: '฿60,000', to: '฿70,000' },
+      { field: 'Employee Group', from: 'A', to: 'A, B' },
+    ],
   },
   {
     id: 'BH-0005',

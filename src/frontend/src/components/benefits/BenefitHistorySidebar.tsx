@@ -1,8 +1,10 @@
 'use client';
 
-// STA-102 — History panel shown beside a benefit plan's / rule's current info.
-// Each entry: when (date + time) · action chip · who (actor name). Newest at top,
-// grouped by date. NO-RED guardrail: delete uses the pumpkin --color-danger token.
+// STA-102 / STA-107 — History panel shown beside a benefit plan's / rule's current
+// info. Each entry (top→bottom): effective-date headline · action chip + change
+// date & time · field-level diff · who (actor name). Newest at top, grouped by
+// change date. NO-RED guardrail: delete uses the pumpkin --color-danger token.
+// Entries without effectiveDate/changes degrade gracefully (old-shape rendering).
 
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
@@ -108,36 +110,70 @@ export function BenefitHistorySidebar({
                 {g.label}
               </p>
               <ol className="relative space-y-3 border-l border-hairline pl-4">
-                {g.rows.map((entry) => (
-                  <li key={entry.id} className="relative">
-                    <span
-                      className={cn(
-                        'absolute -left-[1.3125rem] top-1 h-3 w-3 rounded-full border-2 border-surface',
-                        ACTION_DOT_STYLE[entry.action],
-                      )}
-                      aria-hidden
-                    />
-                    <div className="flex flex-col gap-1">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span
-                          className={cn(
-                            'inline-flex items-center rounded-[var(--radius-sm)] px-1.5 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.06em]',
-                            ACTION_CHIP_STYLE[entry.action],
-                          )}
-                        >
-                          {actionLabel(entry.action)}
-                        </span>
-                        <span className="text-xs text-ink-muted tabular-nums">
-                          {formatTime(entry.timestamp, isTh)}
+                {g.rows.map((entry) => {
+                  // STA-107 — combined "4 March 2026, 15:15" change datetime.
+                  const changeDateTime = `${formatDate(entry.timestamp, 'long', isTh ? 'th' : 'en')}, ${formatTime(entry.timestamp, isTh)}`;
+                  return (
+                    <li key={entry.id} className="relative">
+                      <span
+                        className={cn(
+                          'absolute -left-[1.3125rem] top-1 h-3 w-3 rounded-full border-2 border-surface',
+                          ACTION_DOT_STYLE[entry.action],
+                        )}
+                        aria-hidden
+                      />
+                      <div className="flex flex-col gap-1.5">
+                        {/* 1. Effective-date headline (BA: users care when the change takes effect). */}
+                        {entry.effectiveDate && (
+                          <p className="text-small font-semibold text-ink">
+                            {t('effectiveOn', {
+                              date: formatDate(entry.effectiveDate, 'long', isTh ? 'th' : 'en'),
+                            })}
+                          </p>
+                        )}
+                        {/* 2. Action chip + change date & time on one line. */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span
+                            className={cn(
+                              'inline-flex items-center rounded-[var(--radius-sm)] px-1.5 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.06em]',
+                              ACTION_CHIP_STYLE[entry.action],
+                            )}
+                          >
+                            {actionLabel(entry.action)}
+                          </span>
+                          <span className="text-xs text-ink-muted tabular-nums">
+                            {changeDateTime}
+                          </span>
+                        </div>
+                        {/* 3. Field-level diff (when present). NO-RED: muted label + ink values. */}
+                        {entry.changes && entry.changes.length > 0 && (
+                          <ul className="space-y-0.5">
+                            {entry.changes.map((c, i) => (
+                              <li key={`${c.field}-${i}`} className="text-small text-ink">
+                                {t.rich('changeLine', {
+                                  field: c.field,
+                                  from: c.from,
+                                  to: c.to,
+                                  label: (chunks) => (
+                                    <span className="font-semibold text-ink-muted">{chunks}</span>
+                                  ),
+                                  val: (chunks) => (
+                                    <span className="font-medium text-ink">{chunks}</span>
+                                  ),
+                                })}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {/* 4. Who. */}
+                        <span className="text-small text-ink">
+                          <span className="text-ink-muted">{t('who')}: </span>
+                          <span className="font-medium">{entry.actorName}</span>
                         </span>
                       </div>
-                      <span className="text-small text-ink">
-                        <span className="text-ink-muted">{t('who')}: </span>
-                        <span className="font-medium">{entry.actorName}</span>
-                      </span>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ol>
             </div>
           ))}
