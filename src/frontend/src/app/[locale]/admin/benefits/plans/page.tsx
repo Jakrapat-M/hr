@@ -509,6 +509,29 @@ export default function BenefitPlansPage() {
       ...prev.map((p) => (p.id === original.id ? { ...p, status: 'inactive' as const } : p)),
     ]);
     setFilterStatus('all');
+
+    // STA-107 — log the supersede with the plan's effective date + a field diff
+    // scoped to the identity fields BA cares about (Legal Entity / Company).
+    const changes: { field: string; from: string; to: string }[] = [];
+    const dash = '-';
+    if ((original.company ?? '') !== (edited.company ?? '')) {
+      changes.push({ field: 'Legal Entity', from: original.company || dash, to: edited.company || dash });
+    }
+    if (original.nameEn !== edited.nameEn) {
+      changes.push({ field: 'Name', from: original.nameEn || dash, to: edited.nameEn || dash });
+    }
+    if (original.category !== edited.category) {
+      changes.push({ field: 'Category', from: original.category, to: edited.category });
+    }
+    addHistoryEntry({
+      targetType: 'plan',
+      targetId: original.id,
+      targetName: edited.nameTh || edited.nameEn || newId,
+      action: 'insert',
+      actorName,
+      effectiveDate: planEffectiveDate(edited) ?? undefined,
+      ...(changes.length > 0 ? { changes } : {}),
+    });
   };
 
   // Years present in the registry's effective dates — drives the year dropdowns.

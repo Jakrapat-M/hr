@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Trash2, Plus, Pencil, Clock, Upload, Download, ChevronDown } from 'lucide-react';
 
 import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal, Capability } from '@/components/humi';
@@ -65,11 +65,41 @@ function egLabel(value: string) {
   return EMPLOYEE_GROUPS.find((g) => g.value === value)?.label ?? value;
 }
 
+// STA-107 — field-level diff for the change-history log. Compares the rule before
+// (initial) vs the submitted form values, scoped to the key entitlement fields BA
+// cares about. Only changed fields are returned (empty → omit the diff block).
+function buildRuleChanges(
+  before: EligibilityRule | undefined,
+  after: Partial<EligibilityRuleInput>,
+): { field: string; from: string; to: string }[] {
+  if (!before) return [];
+  const dash = '-';
+  const amt = (v: number | null | undefined) =>
+    v == null ? dash : `฿${v.toLocaleString('th-TH')}`;
+  const txt = (v: string | null | undefined) => (v == null || v === '' ? dash : String(v));
+  const out: { field: string; from: string; to: string }[] = [];
+  if (after.entitlement_amount !== undefined && before.entitlement_amount !== after.entitlement_amount) {
+    out.push({ field: 'Entitlement Amount', from: amt(before.entitlement_amount), to: amt(after.entitlement_amount) });
+  }
+  if (after.employee_group !== undefined && (before.employee_group ?? '') !== (after.employee_group ?? '')) {
+    out.push({ field: 'Employee Group', from: txt(before.employee_group), to: txt(after.employee_group) });
+  }
+  if (after.effective_from !== undefined && (before.effective_from?.slice(0, 10) ?? '') !== (after.effective_from?.slice(0, 10) ?? '')) {
+    out.push({ field: 'Effective From', from: txt(before.effective_from?.slice(0, 10)), to: txt(after.effective_from?.slice(0, 10)) });
+  }
+  if (after.policy_profile !== undefined && (before.policy_profile ?? '') !== (after.policy_profile ?? '')) {
+    out.push({ field: 'Policy Profile', from: txt(before.policy_profile), to: txt(after.policy_profile) });
+  }
+  return out;
+}
+
 // ── Main component ──────────────────────────────────────────────────────────
 
 export function EntitlementRulesManager() {
   const { toast } = useToast();
   const t        = useTranslations('admin_benefits_entitlement_rules');
+  const locale   = useLocale();
+  const isTh     = locale !== 'en';
   const userId   = useAuthStore((s) => s.userId);
   const username = useAuthStore((s) => s.username);
   const actorName = useAuthStore((s) => s.username) ?? username ?? 'admin';
@@ -86,7 +116,6 @@ export function EntitlementRulesManager() {
   const [showAddForm,    setShowAddForm]    = useState(false);
   const [deleteTarget,   setDeleteTarget]   = useState<EligibilityRule | null>(null);
   const [editTarget,     setEditTarget]     = useState<EligibilityRule | null>(null);
-  const [historyTarget,  setHistoryTarget]  = useState<EligibilityRule | null>(null);
   const [historyData,    setHistoryData]    = useState<EligibilityRule[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [deleting,       setDeleting]       = useState(false);
@@ -124,7 +153,56 @@ export function EntitlementRulesManager() {
     if (!editTarget) return;
     const updated = await updateEligibilityRule(editTarget.benefit_key, editTarget.id, input);
     setRules((prev) => prev.map((r) => r.id === updated.id ? updated : r));
+    // STA-107 — log the edit with effective date + field diff (before vs submitted).
+    const changes = buildRuleChanges(editTarget, input);
+    addHistoryEntry({
+      targetType: 'rule',
+      targetId: editTarget.benefit_key,
+      targetName: ruleTargetName(updated),
+      action: 'insert',
+      actorName,
+      effectiveDate: input.effective_from?.slice(0, 10) ?? editTarget.effective_from?.slice(0, 10) ?? undefined,
+      ...(changes.length > 0 ? { changes } : {}),
+    });
     toast('success', 'แก้ไขกฎสิทธิ์เรียบร้อย');
+    setEditTarget(null);
+  };
+
+  // STA-107 — Insert = supersede the current rule: inactivate it (effective_to set
+  // to the new rule's effective-from) and prepend a NEW active rule with the
+  // just-typed values. Mockup persistence only (workflow-api local fallback).
+  const handleInsert = async (input: Partial<EligibilityRuleInput>) => {
+    if (!editTarget) return;
+    const newEffectiveFrom = input.effective_from?.slice(0, 10) || new Date().toISOString().slice(0, 10);
+    // Inactivate the superseded rule.
+    await updateEligibilityRule(editTarget.benefit_key, editTarget.id, {
+      effective_to: newEffectiveFrom,
+      status: 'inactive',
+      allow: false,
+    });
+    // Create the replacement active rule.
+    const replacement = await addEligibilityRule(editTarget.benefit_key, {
+      ...input,
+      created_by: actorName,
+      status: 'active',
+      allow: true,
+      effective_from: newEffectiveFrom,
+      effective_to: null,
+    } as EligibilityRuleInput);
+    // Drop the old (table only shows rules without effective_to) + show the new.
+    setRules((prev) => [replacement, ...prev.filter((r) => r.id !== editTarget.id)]);
+    // STA-107 — log the supersede with effective date + field diff.
+    const changes = buildRuleChanges(editTarget, input);
+    addHistoryEntry({
+      targetType: 'rule',
+      targetId: editTarget.benefit_key,
+      targetName: ruleTargetName(replacement),
+      action: 'insert',
+      actorName,
+      effectiveDate: newEffectiveFrom,
+      ...(changes.length > 0 ? { changes } : {}),
+    });
+    toast('success', 'แทรกกฎสิทธิ์ใหม่เรียบร้อย');
     setEditTarget(null);
   };
 
@@ -151,15 +229,18 @@ export function EntitlementRulesManager() {
     }
   };
 
+  // STA-107 — the per-row "ประวัติ" (Clock) button now OPENS THE EDIT MODAL so the
+  // change-history sidebar shows beside the edit form (mirrors the benefit-plan
+  // modal). We also load the entitlement-amount audit so it can render in the
+  // sidebar column.
   const handleHistory = async (rule: EligibilityRule) => {
-    if (historyTarget?.id === rule.id) { setHistoryTarget(null); return; }
-    setHistoryTarget(rule);
+    setEditTarget(rule);
     setHistoryLoading(true);
     try {
       const data = await getEligibilityRuleHistory(rule.benefit_key, rule.id);
       setHistoryData(data);
     } catch {
-      toast('error', 'โหลดประวัติไม่สำเร็จ');
+      setHistoryData([]);
     } finally {
       setHistoryLoading(false);
     }
@@ -261,16 +342,17 @@ export function EntitlementRulesManager() {
       ) : (
         <RulesTableView
           rules={rules}
+          isTh={isTh}
           createdBy={userId ?? username ?? 'admin'}
-          historyTarget={historyTarget}
           historyData={historyData}
           historyLoading={historyLoading}
           editTarget={editTarget}
-          onEdit={(rule) => setEditTarget(rule)}
+          onEdit={handleHistory}
           onDelete={(rule) => setDeleteTarget(rule)}
           onHistory={handleHistory}
           onSaveEdit={async (input) => { await handleUpdate(input); }}
-          onCancelEdit={() => setEditTarget(null)}
+          onInsertEdit={async (input) => { await handleInsert(input); }}
+          onCancelEdit={() => { setEditTarget(null); setHistoryData([]); }}
         />
       )}
 
@@ -306,8 +388,8 @@ export function EntitlementRulesManager() {
 
 interface RulesTableViewProps {
   rules: EligibilityRule[];
+  isTh: boolean;
   createdBy: string;
-  historyTarget: EligibilityRule | null;
   historyData: EligibilityRule[];
   historyLoading: boolean;
   editTarget: EligibilityRule | null;
@@ -315,13 +397,14 @@ interface RulesTableViewProps {
   onDelete: (rule: EligibilityRule) => void;
   onHistory: (rule: EligibilityRule) => void;
   onSaveEdit: (input: Partial<EligibilityRuleInput>) => Promise<void>;
+  onInsertEdit: (input: Partial<EligibilityRuleInput>) => Promise<void>;
   onCancelEdit: () => void;
 }
 
 function RulesTableView({
   rules,
+  isTh,
   createdBy,
-  historyTarget,
   historyData,
   historyLoading,
   editTarget,
@@ -329,6 +412,7 @@ function RulesTableView({
   onDelete,
   onHistory,
   onSaveEdit,
+  onInsertEdit,
   onCancelEdit,
 }: RulesTableViewProps) {
   const t = useTranslations('admin_benefits_entitlement_rules');
@@ -466,9 +550,9 @@ function RulesTableView({
     { id: 'actions', header: t('colActions'), align: 'right' as const, className: 'whitespace-nowrap',
       cell: (r) => (
         <div className="flex items-center justify-end gap-1">
-          <button type="button" aria-pressed={historyTarget?.id === r.id} aria-label={t('historyToggle')} title={t('historyToggle')}
+          <button type="button" aria-pressed={editTarget?.id === r.id} aria-label={t('historyToggle')} title={t('historyToggle')}
             onClick={() => onHistory(r)}
-            className={`inline-flex items-center justify-center rounded-[var(--radius-sm)] border p-1.5 transition-colors ${historyTarget?.id === r.id ? 'border-accent/40 bg-accent-soft text-accent' : 'border-hairline text-ink-muted hover:bg-canvas-soft hover:text-ink'}`}>
+            className={`inline-flex items-center justify-center rounded-[var(--radius-sm)] border p-1.5 transition-colors ${editTarget?.id === r.id ? 'border-accent/40 bg-accent-soft text-accent' : 'border-hairline text-ink-muted hover:bg-canvas-soft hover:text-ink'}`}>
             <Clock size={14} aria-hidden />
           </button>
           <button type="button" aria-label="แก้ไข" title="แก้ไข" onClick={() => onEdit(r)}
@@ -631,50 +715,44 @@ function RulesTableView({
         emptyState={<p className="text-small text-ink-muted">{t('empty')}</p>}
       />
 
-      {/* Edit modal — RuleForm for the selected row (matches the benefit plan module) */}
+      {/* STA-107 — Edit modal mirrors the benefit-plan modal: RuleForm on the left,
+          change-history sidebar (+ entitlement-amount audit) on the right. Widened
+          to max-w-5xl; stacks vertically on narrow viewports. */}
       {editTarget && (
-        <Modal open onClose={onCancelEdit} title="แก้ไขกฎสิทธิ์" widthClass="max-w-3xl">
-          <RuleForm
-            inModal
-            key={editTarget.id}
-            initialRule={editTarget}
-            createdBy={createdBy}
-            onSave={async (input) => { await onSaveEdit(input); }}
-            onCancel={onCancelEdit}
-          />
-        </Modal>
-      )}
-
-      {/* STA-102 — change-history in a Modal (matches the add/edit rule modals) */}
-      {historyTarget && (
-        <Modal
-          open
-          onClose={() => onHistory(historyTarget)}
-          title={historyTarget.rule_name ?? BENEFIT_PLAN_LABELS[historyTarget.benefit_key as BenefitKey]?.th ?? historyTarget.benefit_key}
-          widthClass="max-w-2xl"
-        >
-          <div className="space-y-3">
-            <BenefitHistorySidebar
-              targetType="rule"
-              targetId={historyTarget.benefit_key}
-              isTh
-              className="bg-surface"
+        <Modal open onClose={onCancelEdit} title="แก้ไขกฎสิทธิ์" widthClass="max-w-5xl">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <RuleForm
+              inModal
+              key={editTarget.id}
+              initialRule={editTarget}
+              createdBy={createdBy}
+              onSave={async (input) => { await onSaveEdit(input); }}
+              onInsert={async (input) => { await onInsertEdit(input); }}
+              onCancel={onCancelEdit}
             />
-            {/* Entitlement-amount audit (DB effective-dated history) */}
-            {historyLoading ? (
-              <p className="text-small text-ink-muted">{t('historyLoading')}</p>
-            ) : historyData.length > 0 && (
-              <div className="space-y-1 text-small">
-                <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.08em] text-ink-faint">{t('historyAmountTitle')}</p>
-                {historyData.map((h) => (
-                  <div key={h.id} className="flex items-center gap-4">
-                    <span className="text-ink-muted tabular-nums">{new Date(h.effective_from).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                    <span className="font-semibold text-ink tabular-nums">฿{(h.entitlement_amount ?? 0).toLocaleString('th-TH')}</span>
-                    {h.effective_to && <span className="text-xs text-ink-faint">(ยกเลิก)</span>}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="space-y-3 lg:self-start">
+              <BenefitHistorySidebar
+                targetType="rule"
+                targetId={editTarget.benefit_key}
+                isTh={isTh}
+                className="bg-surface"
+              />
+              {/* Entitlement-amount audit (DB effective-dated history) */}
+              {historyLoading ? (
+                <p className="text-small text-ink-muted">{t('historyLoading')}</p>
+              ) : historyData.length > 0 && (
+                <div className="space-y-1 rounded-[var(--radius-md)] border border-hairline bg-surface p-4 text-small">
+                  <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.08em] text-ink-faint">{t('historyAmountTitle')}</p>
+                  {historyData.map((h) => (
+                    <div key={h.id} className="flex items-center gap-4">
+                      <span className="text-ink-muted tabular-nums">{new Date(h.effective_from).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                      <span className="font-semibold text-ink tabular-nums">฿{(h.entitlement_amount ?? 0).toLocaleString('th-TH')}</span>
+                      {h.effective_to && <span className="text-xs text-ink-faint">(ยกเลิก)</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </Modal>
       )}
@@ -688,12 +766,14 @@ interface RuleFormProps {
   initialRule?: EligibilityRule;
   createdBy: string;
   onSave: (input: Partial<EligibilityRuleInput>, benefitKey?: string) => Promise<void>;
+  /** STA-107 — supersede the current rule with these values (edit modal only). */
+  onInsert?: (input: Partial<EligibilityRuleInput>) => Promise<void>;
   onCancel: () => void;
   /** When rendered inside a Modal, drop the inline card chrome + internal title. */
   inModal?: boolean;
 }
 
-function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal }: RuleFormProps) {
+function RuleForm({ initialRule, createdBy, onSave, onInsert, onCancel, inModal }: RuleFormProps) {
   const { toast } = useToast();
   const isEdit = !!initialRule;
 
@@ -725,48 +805,69 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal }: RuleFor
   const [additionalCondition,  setAdditionalCondition]  = useState(initialRule?.additional_condition ?? '');
   const [saving,               setSaving]               = useState(false);
 
+  const validate = (): boolean => {
+    if (!entitlementAmt || Number(entitlementAmt) <= 0) { toast('warning', 'กรุณาระบุวงเงินเบิกต่อปี'); return false; }
+    if (employeeSubgroup === 'DVT' && !dvtProject.trim()) { toast('warning', 'กรุณาระบุ DVTProject เมื่อ Employee Subgroup เป็น DVT'); return false; }
+    if (pgFrom && pgTo && Number(pgFrom) > Number(pgTo)) { toast('warning', 'PG From ต้องน้อยกว่าหรือเท่ากับ PG To'); return false; }
+    return true;
+  };
+
+  const buildPayload = (): Partial<EligibilityRuleInput> => {
+    const pg_from = pgFrom ? parseInt(pgFrom, 10) : null;
+    const pg_to   = pgTo   ? parseInt(pgTo,   10) : null;
+    return {
+      scope_type: 'entitlement',
+      scope_value: `${policyProfile}:${employeeGroup}:${pg_from ?? 'any'}-${pg_to ?? 'any'}`,
+      allow: status === 'active',
+      created_by: createdBy,
+      rule_name:              ruleName || null,
+      rule_type:              ruleType,
+      status,
+      effective_from:         effectiveStart || new Date().toISOString().slice(0, 10),
+      effective_to:           effectiveEnd || null,
+      policy_profile:         policyProfile,
+      business_unit:          businessUnit || null,
+      business_group:         businessGroup || null,
+      company:                company || null,
+      company_code:           companyCode || null,
+      job_code:               jobCode || null,
+      employee_group:         employeeGroup,
+      employee_subgroup:      employeeSubgroup || null,
+      dvt_project:            employeeSubgroup === 'DVT' ? dvtProject || null : null,
+      pg_from,
+      pg_to,
+      plan_effective:         planEffective,
+      waiting_period:         waitingPeriod ? parseInt(waitingPeriod, 10) : null,
+      hiring_date_from:       hiringDateFrom || '1900-01-01',
+      hiring_date_to:         hiringDateTo   || '9999-12-31',
+      claim_period:           claimPeriod || null,
+      entitlement_amount:     parseInt(entitlementAmt, 10),
+      max_per_claim:          maxPerClaim ? parseInt(maxPerClaim, 10) : null,
+      additional_condition:   additionalCondition || null,
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!entitlementAmt || Number(entitlementAmt) <= 0) { toast('warning', 'กรุณาระบุวงเงินเบิกต่อปี'); return; }
-    if (employeeSubgroup === 'DVT' && !dvtProject.trim()) { toast('warning', 'กรุณาระบุ DVTProject เมื่อ Employee Subgroup เป็น DVT'); return; }
-    if (pgFrom && pgTo && Number(pgFrom) > Number(pgTo)) { toast('warning', 'PG From ต้องน้อยกว่าหรือเท่ากับ PG To'); return; }
+    if (!validate()) return;
     setSaving(true);
     try {
-      const pg_from = pgFrom ? parseInt(pgFrom, 10) : null;
-      const pg_to   = pgTo   ? parseInt(pgTo,   10) : null;
-      const payload: Partial<EligibilityRuleInput> = {
-        scope_type: 'entitlement',
-        scope_value: `${policyProfile}:${employeeGroup}:${pg_from ?? 'any'}-${pg_to ?? 'any'}`,
-        allow: status === 'active',
-        created_by: createdBy,
-        rule_name:              ruleName || null,
-        rule_type:              ruleType,
-        status,
-        effective_from:         effectiveStart || new Date().toISOString().slice(0, 10),
-        effective_to:           effectiveEnd || null,
-        policy_profile:         policyProfile,
-        business_unit:          businessUnit || null,
-        business_group:         businessGroup || null,
-        company:                company || null,
-        company_code:           companyCode || null,
-        job_code:               jobCode || null,
-        employee_group:         employeeGroup,
-        employee_subgroup:      employeeSubgroup || null,
-        dvt_project:            employeeSubgroup === 'DVT' ? dvtProject || null : null,
-        pg_from,
-        pg_to,
-        plan_effective:         planEffective,
-        waiting_period:         waitingPeriod ? parseInt(waitingPeriod, 10) : null,
-        hiring_date_from:       hiringDateFrom || '1900-01-01',
-        hiring_date_to:         hiringDateTo   || '9999-12-31',
-        claim_period:           claimPeriod || null,
-        entitlement_amount:     parseInt(entitlementAmt, 10),
-        max_per_claim:          maxPerClaim ? parseInt(maxPerClaim, 10) : null,
-        additional_condition:   additionalCondition || null,
-      };
-      await onSave(payload, isEdit ? undefined : benefitKey);
+      await onSave(buildPayload(), isEdit ? undefined : benefitKey);
     } catch (err) {
       toast('error', err instanceof Error ? err.message : 'บันทึกไม่สำเร็จ');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // STA-107 — Insert = supersede the current rule with the just-typed values.
+  const handleInsertClick = async () => {
+    if (!onInsert || !validate()) return;
+    setSaving(true);
+    try {
+      await onInsert(buildPayload());
+    } catch (err) {
+      toast('error', err instanceof Error ? err.message : 'แทรกไม่สำเร็จ');
     } finally {
       setSaving(false);
     }
@@ -932,6 +1033,12 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal }: RuleFor
       </section>
       <div className="flex justify-end gap-3 pt-2 border-t border-hairline-soft">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={saving}>ยกเลิก</Button>
+        {/* STA-107 — Insert (supersede) sits between Cancel and Save, edit modal only. */}
+        {onInsert && (
+          <Button type="button" variant="secondary" size="sm" onClick={handleInsertClick} disabled={saving}>
+            แทรก (แทนที่)
+          </Button>
+        )}
         <Button type="submit" variant="primary" size="sm" loading={saving}>{isEdit ? 'บันทึกการแก้ไข' : 'บันทึกกฎ'}</Button>
       </div>
     </form>
