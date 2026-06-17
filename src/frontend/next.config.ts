@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/',
-        destination: '/th/home',
+        destination: '/en/home',
         permanent: false,
       },
       // Leave family → /timeoff canonical
