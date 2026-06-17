@@ -596,8 +596,8 @@ function BenefitDetailBody({ benefit, isTh }: { benefit: CurrentBenefit; isTh: b
       <section className="space-y-3">
         <GroupHeading>{isTh ? 'แผนรายบุคคล' : 'Individual plan'}</GroupHeading>
         <Grid>
-          <Field label={isTh ? 'วันเริ่มมีผล' : 'effectiveStartDate'} value={dash(benefit.effectiveStartDate ? formatDate(benefit.effectiveStartDate, 'medium', isTh ? 'th' : 'en') : '')} />
-          <Field label={isTh ? 'วันสิ้นสุด' : 'effectiveEndDate'} value={dash(benefit.effectiveEndDate ? formatDate(benefit.effectiveEndDate, 'medium', isTh ? 'th' : 'en') : '')} />
+          <Field label={isTh ? 'วันเริ่มมีผล' : 'Effective start date'} value={dash(benefit.effectiveStartDate ? formatDate(benefit.effectiveStartDate, 'medium', isTh ? 'th' : 'en') : '')} />
+          <Field label={isTh ? 'วันสิ้นสุด' : 'Effective end date'} value={dash(benefit.effectiveEndDate ? formatDate(benefit.effectiveEndDate, 'medium', isTh ? 'th' : 'en') : '')} />
           <Field label={isTh ? 'ยอดที่เบิกแล้ว' : 'Reimbursed amount'} value={money(benefit.reimbursedAmount)} />
         </Grid>
       </section>
