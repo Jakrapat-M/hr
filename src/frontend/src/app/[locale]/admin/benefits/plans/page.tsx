@@ -22,7 +22,6 @@ import {
   type RecordType,
   isV2Plan,
 } from '@/data/benefits/plan-registry';
-import { PlanConfiguratorShell, type PlanConfiguratorTab } from '@/components/benefits/PlanConfiguratorShell';
 import { Tab1IdentityFields, type Tab1IdentityValues } from '@/components/benefits/Tab1IdentityFields';
 import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar';
 import { ActionTagChip, type ActionTagMode } from '@/components/benefits/ActionTagChip';
@@ -115,17 +114,6 @@ const MONTHS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'
 const selectClass =
   'h-10 rounded-[var(--radius-md)] border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
 
-// ── ComingNextCard — placeholder for tabs 2-9 ─────────────────────────────
-function ComingNextCard({ tabId, prNumber, isTh }: { tabId: string; prNumber: string; isTh: boolean }) {
-  return (
-    <div className="rounded-[var(--radius-md)] bg-canvas-soft p-6 text-center">
-      <p className="text-small text-ink-muted">
-        {isTh ? `แท็บ "${tabId}" — กำลังพัฒนาใน ${prNumber}` : `Tab "${tabId}" — coming in ${prNumber}`}
-      </p>
-    </div>
-  );
-}
-
 // ── Default Tab1 identity values for Edit ─────────────────────────────────
 function editPlanDefaultIdentity(plan: BenefitPlan, isTh: boolean): Tab1IdentityValues {
   // STA-70: derive default benefitTypeGroup from recordType when plan has no explicit value
@@ -157,38 +145,6 @@ function editPlanDefaultIdentity(plan: BenefitPlan, isTh: boolean): Tab1Identity
   };
 }
 
-// ── TABS definition shared by both modals ─────────────────────────────────
-function buildTabs(
-  tab1Panel: React.ReactNode,
-  isTh: boolean,
-): PlanConfiguratorTab[] {
-  const placeholders: Array<{ id: string; labelTh: string; labelEn: string; pr: string }> = [
-    { id: 'coverage',      labelTh: 'ความคุ้มครอง', labelEn: 'Coverage',      pr: 'PR-B' },
-    { id: 'eligibility',   labelTh: 'คุณสมบัติ',    labelEn: 'Eligibility',   pr: 'PR-C' },
-    { id: 'claim',         labelTh: 'เคลม',          labelEn: 'Claim',         pr: 'PR-D' },
-    { id: 'form',          labelTh: 'แบบฟอร์ม',      labelEn: 'Form',          pr: 'PR-E' },
-    { id: 'approval',      labelTh: 'อนุมัติ',       labelEn: 'Approval',      pr: 'PR-F' },
-    { id: 'payroll',       labelTh: 'เงินเดือน',     labelEn: 'Payroll',       pr: 'PR-G' },
-    { id: 'notifications', labelTh: 'แจ้งเตือน',     labelEn: 'Notifications', pr: 'PR-G' },
-    { id: 'audit',         labelTh: 'ประวัติ',        labelEn: 'Audit',         pr: 'PR-H' },
-  ];
-
-  return [
-    {
-      id: 'identity',
-      labelTh: 'ข้อมูลพื้นฐาน',
-      labelEn: 'Identity',
-      panel: tab1Panel,
-    },
-    ...placeholders.map((p) => ({
-      id: p.id,
-      labelTh: p.labelTh,
-      labelEn: p.labelEn,
-      panel: <ComingNextCard tabId={p.labelEn} prNumber={p.pr} isTh={isTh} />,
-    })),
-  ];
-}
-
 // STA-113 — Make Correction + Insert share ONE mode-aware popup. The action that
 // opened it (correction = update in place, insert = supersede) is shown as an
 // ActionTagChip at the top of the body, and Save branches on the mode. The footer
@@ -216,7 +172,6 @@ function PlanFormModal({
   const [tab1Values, setTab1Values] = useState<Tab1IdentityValues>(() =>
     editPlanDefaultIdentity(plan, isTh),
   );
-  const [activeTab, setActiveTab] = useState('identity');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -235,8 +190,6 @@ function PlanFormModal({
       isTh={isTh}
     />
   );
-
-  const tabs = buildTabs(tab1Panel, isTh);
 
   // STA-113 — Save branches on the popup mode: correction = update in place,
   // insert = supersede (the old footer Insert behaviour, now driven by the row).
@@ -268,13 +221,9 @@ function PlanFormModal({
         <ActionTagChip mode={mode} label={chipLabel} />
 
         {/* History panel beside the plan's current info (STA-102) */}
+        {/* STA-111 — tab strip removed; Identity form renders directly as the modal body. */}
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <PlanConfiguratorShell
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            isTh={isTh}
-          />
+          {tab1Panel}
           <BenefitHistorySidebar
             targetType="plan"
             targetId={plan.id}
@@ -363,7 +312,6 @@ function CreatePlanModal({
   };
 
   const [tab1Values, setTab1Values] = useState<Tab1IdentityValues>(defaultTab1);
-  const [activeTab, setActiveTab] = useState('identity');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -420,8 +368,6 @@ function CreatePlanModal({
     />
   );
 
-  const tabs = buildTabs(tab1Panel, isTh);
-
   return (
     <Modal
       open
@@ -432,12 +378,8 @@ function CreatePlanModal({
       <div className="space-y-4">
         <ActionTagChip mode="create" label={t('tagCreate')} />
 
-        <PlanConfiguratorShell
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          isTh={isTh}
-        />
+        {/* STA-112 — tab strip removed; Identity form renders directly as the modal body. */}
+        {tab1Panel}
 
         {saved && (
           <div role="status" className="rounded-[var(--radius-md)] bg-success-soft p-3 text-small font-medium text-ink">
