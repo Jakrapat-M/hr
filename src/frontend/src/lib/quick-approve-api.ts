@@ -19,6 +19,8 @@ export interface PendingRequest {
  company?: string;
  branch?: string;
  payGrade?: string;
+ hireDate?: string;
+ terminateDate?: string;
  };
  description: string;
  submittedAt: string;

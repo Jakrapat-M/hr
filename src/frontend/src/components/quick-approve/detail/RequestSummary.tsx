@@ -3,7 +3,6 @@
 import { useTranslations } from 'next-intl';
 import { Calendar, Clock, User } from 'lucide-react';
 import { Avatar, Capability } from '@/components/humi';
-import { UrgencyBadge } from '@/components/quick-approve/UrgencyBadge';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 
 interface RequestSummaryProps {
@@ -13,11 +12,12 @@ interface RequestSummaryProps {
 export function RequestSummary({ request }: RequestSummaryProps) {
   const t = useTranslations('quick_approve_detail');
   const employeeFacts: Array<[string, string | undefined]> = [
-    [t('employeeId'), request.requester.employeeId ?? request.requester.id],
     [t('businessUnit'), request.requester.businessUnit],
     [t('company'), request.requester.company],
     [t('branch'), request.requester.branch],
     [t('payGrade'), request.requester.payGrade],
+    [t('hireDate'), request.requester.hireDate],
+    [t('terminateDate'), request.requester.terminateDate ?? '-'],
   ];
   const visibleEmployeeFacts = employeeFacts.filter((item): item is [string, string] => Boolean(item[1]));
   const requesterMeta = [request.requester.position, request.requester.department]
@@ -48,8 +48,10 @@ export function RequestSummary({ request }: RequestSummaryProps) {
           {requesterMeta.length > 0 && (
             <p className="text-small text-ink-muted">{requesterMeta.join(' · ')}</p>
           )}
+          <p className="text-small text-ink-muted">
+            {t('employeeId')}: {request.requester.employeeId ?? request.requester.id}
+          </p>
         </div>
-        <UrgencyBadge urgency={request.urgency} />
       </div>
 
       {/* Meta row */}

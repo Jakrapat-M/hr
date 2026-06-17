@@ -133,7 +133,16 @@ describe('QuickApproveDetailPage', () => {
   it('renders request summary for a known ID', async () => {
     await renderPage('WF-001');
     expect(screen.getByText('สมชาย ใจดี')).toBeInTheDocument();
+    // The runtime approval-history pill row (ApprovalTimelineChain) still renders.
     expect(screen.getByTestId('approval-chain')).toBeInTheDocument();
+  });
+
+  it('does not render the Approval-route block (routing chain) any more', async () => {
+    await renderPage('WF-2026-004');
+    // STA-122 #1: the per-type approver-routing chain + its heading/next-approver
+    // line are removed. The ApprovalChain stage-pill row no longer mounts.
+    expect(screen.queryByTestId('routing-chain')).not.toBeInTheDocument();
+    expect(screen.queryByText('quick_approve_detail.routingChain')).not.toBeInTheDocument();
   });
 
   it('shows empty state for unknown ID', async () => {
@@ -144,11 +153,15 @@ describe('QuickApproveDetailPage', () => {
   it('renders STA-79 claim approval details without removed claim actions', async () => {
     await renderPage('WF-2026-004');
 
-    expect(screen.getByText('quick_approve_detail.employeeId')).toBeInTheDocument();
+    // STA-122 #2: Employee ID now renders inline under the name, not as a grid label.
+    expect(screen.getByText(/quick_approve_detail\.employeeId:\s*EMP-009/)).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.businessUnit')).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.company')).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.branch')).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.payGrade')).toBeInTheDocument();
+    // STA-122 #3: Hire date + Terminate date are appended to the grid after PG.
+    expect(screen.getByText('quick_approve_detail.hireDate')).toBeInTheDocument();
+    expect(screen.getByText('quick_approve_detail.terminateDate')).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.remainingAmount')).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.receiptDate')).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.receiptNo')).toBeInTheDocument();
