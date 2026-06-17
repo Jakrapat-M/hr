@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Trash2, Plus, Pencil, Clock, Upload, Download, ChevronDown } from 'lucide-react';
+import { Trash2, Plus, Pencil, Layers, Upload, Download, ChevronDown } from 'lucide-react';
 
 import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal, Capability } from '@/components/humi';
 import { rulesToCsv, downloadCsv, parseRulesCsv } from './rules-csv';
@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/toast';
 import { useAuthStore } from '@/stores/auth-store';
 import { useBenefitHistoryStore } from '@/stores/benefit-history-store';
 import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar';
+import { ActionTagChip, type ActionTagMode } from '@/components/benefits/ActionTagChip';
 import {
   listAllEligibilityRules,
   addEligibilityRule,
@@ -116,6 +117,9 @@ export function EntitlementRulesManager() {
   const [showAddForm,    setShowAddForm]    = useState(false);
   const [deleteTarget,   setDeleteTarget]   = useState<EligibilityRule | null>(null);
   const [editTarget,     setEditTarget]     = useState<EligibilityRule | null>(null);
+  // STA-113 — the edit modal serves both Make Correction (update) and Insert
+  // (supersede). The active row action sets this; Save branches on it.
+  const [editMode,       setEditMode]       = useState<Extract<ActionTagMode, 'correction' | 'insert'>>('correction');
   const [historyData,    setHistoryData]    = useState<EligibilityRule[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [deleting,       setDeleting]       = useState(false);
@@ -229,11 +233,15 @@ export function EntitlementRulesManager() {
     }
   };
 
-  // STA-107 — the per-row "ประวัติ" (Clock) button now OPENS THE EDIT MODAL so the
-  // change-history sidebar shows beside the edit form (mirrors the benefit-plan
-  // modal). We also load the entitlement-amount audit so it can render in the
-  // sidebar column.
-  const handleHistory = async (rule: EligibilityRule) => {
+  // STA-113 — open the shared edit modal in the given mode (correction = update in
+  // place, insert = supersede), pre-filled with the row's values. The change-history
+  // sidebar + entitlement-amount audit render beside the form (STA-107 history is
+  // reached here, replacing the removed Clock row icon).
+  const openEditForm = async (
+    rule: EligibilityRule,
+    mode: Extract<ActionTagMode, 'correction' | 'insert'>,
+  ) => {
+    setEditMode(mode);
     setEditTarget(rule);
     setHistoryLoading(true);
     try {
@@ -322,19 +330,22 @@ export function EntitlementRulesManager() {
             onClick={() => setShowAddForm(true)}
             disabled={loading}
           >
-            เพิ่มกฎ
+            {t('createRule')}
           </Button>
         </div>
       </div>
 
       {/* Add modal — RuleForm in a Humi Modal (matches the benefit plan module) */}
-      <Modal open={showAddForm} onClose={() => setShowAddForm(false)} title="เพิ่มกฎสิทธิ์ใหม่" widthClass="max-w-3xl">
-        <RuleForm
-          inModal
-          createdBy={userId ?? username ?? 'admin'}
-          onSave={async (input, benefitKey) => { await handleAdd(input as EligibilityRuleInput, benefitKey!); setShowAddForm(false); }}
-          onCancel={() => setShowAddForm(false)}
-        />
+      <Modal open={showAddForm} onClose={() => setShowAddForm(false)} title={t('createRule')} widthClass="max-w-3xl">
+        <div className="space-y-4">
+          <ActionTagChip mode="create" label={t('tagCreate')} />
+          <RuleForm
+            inModal
+            createdBy={userId ?? username ?? 'admin'}
+            onSave={async (input, benefitKey) => { await handleAdd(input as EligibilityRuleInput, benefitKey!); setShowAddForm(false); }}
+            onCancel={() => setShowAddForm(false)}
+          />
+        </div>
       </Modal>
 
       {loading ? (
@@ -347,9 +358,10 @@ export function EntitlementRulesManager() {
           historyData={historyData}
           historyLoading={historyLoading}
           editTarget={editTarget}
-          onEdit={handleHistory}
+          editMode={editMode}
+          onCorrection={(rule) => openEditForm(rule, 'correction')}
+          onInsertRow={(rule) => openEditForm(rule, 'insert')}
           onDelete={(rule) => setDeleteTarget(rule)}
-          onHistory={handleHistory}
           onSaveEdit={async (input) => { await handleUpdate(input); }}
           onInsertEdit={async (input) => { await handleInsert(input); }}
           onCancelEdit={() => { setEditTarget(null); setHistoryData([]); }}
@@ -357,22 +369,22 @@ export function EntitlementRulesManager() {
       )}
 
       {/* Delete modal */}
-      <Modal open={deleteTarget !== null} onClose={() => setDeleteTarget(null)} title="ยืนยันการลบกฎสิทธิ์">
+      <Modal open={deleteTarget !== null} onClose={() => setDeleteTarget(null)} title={isTh ? 'ยืนยันการลบกฎสิทธิ์' : 'Confirm delete rule'}>
         {deleteTarget && (
           <div className="space-y-4">
             <p className="text-body text-ink">
-              ต้องการลบกฎ{' '}
+              {isTh ? 'ต้องการลบกฎ ' : 'Delete rule '}
               <span className="font-semibold">
                 {BENEFIT_PLAN_LABELS[deleteTarget.benefit_key as BenefitKey]?.th ?? deleteTarget.benefit_key}
                 {' / '}{deleteTarget.policy_profile ?? '-'}
                 {' / '}{egLabel(deleteTarget.employee_group ?? '')}
                 {deleteTarget.pg_from != null ? ` PG ${deleteTarget.pg_from}–${deleteTarget.pg_to}` : ''}
-              </span>{' '}(฿{(deleteTarget.entitlement_amount ?? 0).toLocaleString('th-TH')}) ใช่หรือไม่?
+              </span>{' '}(฿{(deleteTarget.entitlement_amount ?? 0).toLocaleString('th-TH')}){isTh ? ' ใช่หรือไม่?' : '?'}
             </p>
-            <p className="text-small text-ink-muted">การลบจะตั้งค่า effective_to เป็นวันนี้ (soft-delete)</p>
+            <p className="text-small text-ink-muted">{isTh ? 'การลบจะตั้งค่า effective_to เป็นวันนี้ (soft-delete)' : 'This sets effective_to to today (soft-delete).'}</p>
             <div className="flex justify-end gap-3">
-              <Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>ยกเลิก</Button>
-              <Button variant="danger" onClick={handleDelete} loading={deleting}>ลบกฎ</Button>
+              <Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>{t('cancel')}</Button>
+              <Button variant="danger" onClick={handleDelete} loading={deleting}>{t('delete')}</Button>
             </div>
           </div>
         )}
@@ -393,9 +405,10 @@ interface RulesTableViewProps {
   historyData: EligibilityRule[];
   historyLoading: boolean;
   editTarget: EligibilityRule | null;
-  onEdit: (rule: EligibilityRule) => void;
+  editMode: Extract<ActionTagMode, 'correction' | 'insert'>;
+  onCorrection: (rule: EligibilityRule) => void;
+  onInsertRow: (rule: EligibilityRule) => void;
   onDelete: (rule: EligibilityRule) => void;
-  onHistory: (rule: EligibilityRule) => void;
   onSaveEdit: (input: Partial<EligibilityRuleInput>) => Promise<void>;
   onInsertEdit: (input: Partial<EligibilityRuleInput>) => Promise<void>;
   onCancelEdit: () => void;
@@ -408,9 +421,10 @@ function RulesTableView({
   historyData,
   historyLoading,
   editTarget,
-  onEdit,
+  editMode,
+  onCorrection,
+  onInsertRow,
   onDelete,
-  onHistory,
   onSaveEdit,
   onInsertEdit,
   onCancelEdit,
@@ -546,20 +560,22 @@ function RulesTableView({
     { id: 'entitlement_amount', header: t('colEntitlementAmount'), align: 'right' as const,
       cell: (r) => <span className="font-semibold text-ink tabular-nums whitespace-nowrap">฿{(r.entitlement_amount ?? 0).toLocaleString('th-TH')}</span>,
       sortAccessor: (r) => r.entitlement_amount ?? 0, className: 'whitespace-nowrap' },
-    // STA-102 — per-row actions ported from the former card RuleRow: history / edit / delete.
+    // STA-113 — exactly three row actions: Make Correction · Insert · Delete.
+    // (The STA-107 Clock/history icon is removed; history is reached via Make
+    // Correction, whose edit modal shows the change-history sidebar.)
     { id: 'actions', header: t('colActions'), align: 'right' as const, className: 'whitespace-nowrap',
       cell: (r) => (
         <div className="flex items-center justify-end gap-1">
-          <button type="button" aria-pressed={editTarget?.id === r.id} aria-label={t('historyToggle')} title={t('historyToggle')}
-            onClick={() => onHistory(r)}
-            className={`inline-flex items-center justify-center rounded-[var(--radius-sm)] border p-1.5 transition-colors ${editTarget?.id === r.id ? 'border-accent/40 bg-accent-soft text-accent' : 'border-hairline text-ink-muted hover:bg-canvas-soft hover:text-ink'}`}>
-            <Clock size={14} aria-hidden />
-          </button>
-          <button type="button" aria-label="แก้ไข" title="แก้ไข" onClick={() => onEdit(r)}
-            className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted hover:bg-accent/10 hover:text-accent transition-colors">
+          <button type="button" aria-pressed={editTarget?.id === r.id && editMode === 'correction'} aria-label={t('makeCorrection')} title={t('makeCorrection')}
+            onClick={() => onCorrection(r)}
+            className={`inline-flex items-center justify-center rounded-[var(--radius-sm)] border p-1.5 transition-colors ${editTarget?.id === r.id && editMode === 'correction' ? 'border-accent/40 bg-accent-soft text-accent' : 'border-hairline text-ink-muted hover:bg-accent/10 hover:text-accent'}`}>
             <Pencil size={14} aria-hidden />
           </button>
-          <button type="button" aria-label="ลบ" title="ลบ" onClick={() => onDelete(r)}
+          <button type="button" aria-label={t('insert')} title={t('insert')} onClick={() => onInsertRow(r)}
+            className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted hover:bg-accent/10 hover:text-accent transition-colors">
+            <Layers size={14} aria-hidden />
+          </button>
+          <button type="button" aria-label={t('delete')} title={t('delete')} onClick={() => onDelete(r)}
             className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted hover:bg-danger/10 hover:text-danger transition-colors">
             <Trash2 size={14} aria-hidden />
           </button>
@@ -719,15 +735,19 @@ function RulesTableView({
           change-history sidebar (+ entitlement-amount audit) on the right. Widened
           to max-w-5xl; stacks vertically on narrow viewports. */}
       {editTarget && (
-        <Modal open onClose={onCancelEdit} title="แก้ไขกฎสิทธิ์" widthClass="max-w-5xl">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <Modal open onClose={onCancelEdit} title={isTh ? 'แก้ไขกฎสิทธิ์' : 'Edit rule'} widthClass="max-w-5xl">
+          <div className="space-y-4">
+            <ActionTagChip mode={editMode} label={editMode === 'insert' ? t('tagInsert') : t('tagCorrection')} />
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <RuleForm
               inModal
               key={editTarget.id}
               initialRule={editTarget}
               createdBy={createdBy}
-              onSave={async (input) => { await onSaveEdit(input); }}
-              onInsert={async (input) => { await onInsertEdit(input); }}
+              onSave={async (input) => {
+                // STA-113 — Save branches on the popup mode: insert = supersede.
+                if (editMode === 'insert') { await onInsertEdit(input); } else { await onSaveEdit(input); }
+              }}
               onCancel={onCancelEdit}
             />
             <div className="space-y-3 lg:self-start">
@@ -753,6 +773,7 @@ function RulesTableView({
                 </div>
               )}
             </div>
+            </div>
           </div>
         </Modal>
       )}
@@ -766,15 +787,14 @@ interface RuleFormProps {
   initialRule?: EligibilityRule;
   createdBy: string;
   onSave: (input: Partial<EligibilityRuleInput>, benefitKey?: string) => Promise<void>;
-  /** STA-107 — supersede the current rule with these values (edit modal only). */
-  onInsert?: (input: Partial<EligibilityRuleInput>) => Promise<void>;
   onCancel: () => void;
   /** When rendered inside a Modal, drop the inline card chrome + internal title. */
   inModal?: boolean;
 }
 
-function RuleForm({ initialRule, createdBy, onSave, onInsert, onCancel, inModal }: RuleFormProps) {
+function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal }: RuleFormProps) {
   const { toast } = useToast();
+  const t = useTranslations('admin_benefits_entitlement_rules');
   const isEdit = !!initialRule;
 
   const [benefitKey,     setBenefitKey]     = useState<BenefitKey>((initialRule?.benefit_key as BenefitKey) ?? 'medical-reimbursement');
@@ -855,19 +875,6 @@ function RuleForm({ initialRule, createdBy, onSave, onInsert, onCancel, inModal 
       await onSave(buildPayload(), isEdit ? undefined : benefitKey);
     } catch (err) {
       toast('error', err instanceof Error ? err.message : 'บันทึกไม่สำเร็จ');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // STA-107 — Insert = supersede the current rule with the just-typed values.
-  const handleInsertClick = async () => {
-    if (!onInsert || !validate()) return;
-    setSaving(true);
-    try {
-      await onInsert(buildPayload());
-    } catch (err) {
-      toast('error', err instanceof Error ? err.message : 'แทรกไม่สำเร็จ');
     } finally {
       setSaving(false);
     }
@@ -1031,15 +1038,11 @@ function RuleForm({ initialRule, createdBy, onSave, onInsert, onCancel, inModal 
           </div>
         </div>
       </section>
+      {/* STA-113 — footer is exactly Save | Cancel. Insert is a row action; the
+          Save handler in the manager branches on the popup mode. */}
       <div className="flex justify-end gap-3 pt-2 border-t border-hairline-soft">
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={saving}>ยกเลิก</Button>
-        {/* STA-107 — Insert (supersede) sits between Cancel and Save, edit modal only. */}
-        {onInsert && (
-          <Button type="button" variant="secondary" size="sm" onClick={handleInsertClick} disabled={saving}>
-            แทรก (แทนที่)
-          </Button>
-        )}
-        <Button type="submit" variant="primary" size="sm" loading={saving}>{isEdit ? 'บันทึกการแก้ไข' : 'บันทึกกฎ'}</Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={saving}>{t('cancel')}</Button>
+        <Button type="submit" variant="primary" size="sm" loading={saving}>{t('save')}</Button>
       </div>
     </form>
   );

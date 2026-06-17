@@ -5139,7 +5139,18 @@
     "filterStartDate": "Start date:",
     "filterEffectiveDate": "Effective date:",
     "filterMonthAll": "Month",
-    "filterYearAll": "Year"
+    "filterYearAll": "Year",
+    "createPlan": "Create Plan",
+    "makeCorrection": "Make Correction",
+    "insert": "Insert",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "tagCreate": "Create",
+    "tagCorrection": "Make Correction",
+    "tagInsert": "Insert",
+    "deleteConfirmTitle": "Confirm delete plan",
+    "deleteConfirmBody": "This will deactivate the plan."
   },
   "admin_benefits_rules": {
     "eyebrow": "Benefits · Rules",
@@ -5210,7 +5221,16 @@
     "exportCsv": "Export CSV",
     "importSuccess": "Imported {count} rules",
     "importEmpty": "No valid rows found in the file",
-    "importError": "Could not read the CSV file"
+    "importError": "Could not read the CSV file",
+    "createRule": "Create Rule",
+    "makeCorrection": "Make Correction",
+    "insert": "Insert",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "tagCreate": "Create",
+    "tagCorrection": "Make Correction",
+    "tagInsert": "Insert"
   },
   "adminBenefitRecords": {
     "title": "Benefit Records",
