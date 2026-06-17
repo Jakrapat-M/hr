@@ -4,6 +4,7 @@ import { render, screen, within } from '@testing-library/react';
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => 'th',
 }));
 
 vi.mock('@/components/humi', () => ({

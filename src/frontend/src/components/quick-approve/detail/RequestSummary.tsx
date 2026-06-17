@@ -1,8 +1,9 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Calendar, Clock, User } from 'lucide-react';
 import { Avatar, Capability } from '@/components/humi';
+import { formatDate } from '@/lib/date';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 
 interface RequestSummaryProps {
@@ -11,13 +12,14 @@ interface RequestSummaryProps {
 
 export function RequestSummary({ request }: RequestSummaryProps) {
   const t = useTranslations('quick_approve_detail');
+  const locale = useLocale() === 'en' ? 'en' : 'th';
   const employeeFacts: Array<[string, string | undefined]> = [
     [t('businessUnit'), request.requester.businessUnit],
     [t('company'), request.requester.company],
     [t('branch'), request.requester.branch],
     [t('payGrade'), request.requester.payGrade],
-    [t('hireDate'), request.requester.hireDate],
-    [t('terminateDate'), request.requester.terminateDate ?? '-'],
+    [t('hireDate'), request.requester.hireDate ? formatDate(request.requester.hireDate, 'long', locale) : undefined],
+    [t('terminateDate'), request.requester.terminateDate ? formatDate(request.requester.terminateDate, 'long', locale) : '-'],
   ];
   const visibleEmployeeFacts = employeeFacts.filter((item): item is [string, string] => Boolean(item[1]));
   const requesterMeta = [request.requester.position, request.requester.department]
