@@ -3197,17 +3197,20 @@
         "all": "All",
         "pending": "Pending",
         "approved": "Approved",
-        "rejected": "Rejected"
+        "rejected": "Send back"
       },
       "columns": {
         "ref": "REF",
+        "employeeId": "Employee ID",
         "employee": "Employee",
         "type": "Type",
-        "filed": "Filed",
+        "filed": "Last modified",
+        "submitDate": "Submit date",
         "detail": "Detail",
         "status": "Status",
         "assignTo": "Assign to",
-        "assignedPeople": "Assigned people"
+        "assignedPeople": "Assigned people",
+        "totalClaimAmount": "Total claim amount"
       },
       "actions": {
         "approve": "Approve",

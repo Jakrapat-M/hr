@@ -156,19 +156,17 @@ describe('QuickApproveSimple — AC7.3 columns', () => {
 });
 
 // ────────────────────────────────────────────────────────────
-// AC7.4 — inline Approve / Reject / View per pending row
+// AC7.4 — View link per row; per-row Approve / Reject removed (STA-121)
 // ────────────────────────────────────────────────────────────
 describe('QuickApproveSimple — AC7.4 inline actions', () => {
-  it('renders Approve buttons', () => {
+  it('does NOT render per-row Approve buttons (decisions live on detail)', () => {
     renderComponent();
-    const btns = screen.getAllByRole('button', { name: /อนุมัติ/ });
-    expect(btns.length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryAllByRole('button', { name: /อนุมัติ/ })).toHaveLength(0);
   });
 
-  it('renders Reject buttons', () => {
+  it('does NOT render per-row Reject buttons (decisions live on detail)', () => {
     renderComponent();
-    const btns = screen.getAllByRole('button', { name: /ปฏิเสธ/ });
-    expect(btns.length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryAllByRole('button', { name: /ปฏิเสธ/ })).toHaveLength(0);
   });
 
   it('View links point to a detail route (/quick-approve/{id} or /workflows/<type>/{id})', () => {
@@ -202,26 +200,25 @@ describe('QuickApproveSimple — AC7.4 inline actions', () => {
 });
 
 // ────────────────────────────────────────────────────────────
-// AC7.5 — Approve moves row Pending → Approved (local state)
+// AC7.5 — per-row decision removed (STA-121): the queue no longer mutates
+// approval state; decisions move to the per-row detail surface.
 // ────────────────────────────────────────────────────────────
-describe('QuickApproveSimple — AC7.5 approve state change', () => {
-  it('clicking Approve reduces pending subtitle count by 1', () => {
+describe('QuickApproveSimple — AC7.5 no per-row decision in queue', () => {
+  it('subtitle pending count is unaffected by the queue (no Approve to click)', () => {
     renderComponent();
     const totalPending = TOTAL_SEED_COUNT;
-    const approveBtns = screen.getAllByRole('button', { name: /อนุมัติ/ });
-    fireEvent.click(approveBtns[0]);
-    // subtitle <p> should now contain totalPending - 1
-    const matches = screen.getAllByText((t) => t.includes(String(totalPending - 1)));
+    // No per-row Approve button exists to mutate the count.
+    expect(screen.queryAllByRole('button', { name: /อนุมัติ/ })).toHaveLength(0);
+    const matches = screen.getAllByText((t) => t.includes(String(totalPending)));
     expect(matches.some((el) => el.tagName === 'P')).toBe(true);
   });
 
-  it('Approved tab count shows 1 after one approve', () => {
+  it('Approved tab stays at 0 (queue cannot approve)', () => {
     renderComponent();
-    const approveBtns = screen.getAllByRole('button', { name: /อนุมัติ/ });
-    fireEvent.click(approveBtns[0]);
-    // Tab at index 2 = approved — its text should include "1"
+    expect(screen.queryAllByRole('button', { name: /อนุมัติ/ })).toHaveLength(0);
     const tabs = screen.getAllByRole('tab');
-    expect(tabs[2].textContent).toMatch(/1/);
+    // Tab at index 2 = approved — nothing approved via the queue.
+    expect(tabs[2].textContent).toMatch(/0/);
   });
 });
 
@@ -248,12 +245,9 @@ describe('QuickApproveSimple — AC7.6 token scan', () => {
     });
   });
 
-  it('Reject buttons do not use Tailwind red/rose/pink', () => {
+  it('no remaining per-row Reject button (decisions moved to detail)', () => {
     renderComponent();
-    const rejectBtns = screen.getAllByRole('button', { name: /ปฏิเสธ/ });
-    rejectBtns.forEach((btn) => {
-      expect(cls(btn)).not.toMatch(/(bg|text|border)-(red|rose|pink)-\d/);
-    });
+    expect(screen.queryAllByRole('button', { name: /ปฏิเสธ/ })).toHaveLength(0);
   });
 });
 
@@ -276,12 +270,12 @@ describe('QuickApproveSimple — AC7.7 bilingual labels', () => {
 // (full per-claim approver-routing matrix is DEFERRED)
 // ────────────────────────────────────────────────────────────
 describe('QuickApproveSimple — P2 view-only + honest count', () => {
-  it('approver persona (hr_admin) gets Approve action buttons', () => {
+  it('approver persona (hr_admin) gets View only (no per-row action buttons)', () => {
     setRoles(['hr_admin']);
     renderComponent();
-    const approveBtns = screen.getAllByRole('button', { name: /อนุมัติ/ });
-    expect(approveBtns.length).toBeGreaterThanOrEqual(1);
-    // No view-only badge for a full approver.
+    // Per-row Approve/Reject removed — even a full approver only opens the row.
+    expect(screen.queryAllByRole('button', { name: /อนุมัติ/ })).toHaveLength(0);
+    // A full approver acts on every row, so NO view-only badge renders.
     expect(screen.queryAllByTestId('view-only-badge')).toHaveLength(0);
   });
 

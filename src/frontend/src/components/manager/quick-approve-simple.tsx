@@ -3,8 +3,8 @@
 // ════════════════════════════════════════════════════════════
 // QuickApproveSimple — simplified approvals queue (PR-5 Req7)
 // Unified inbox at /quick-approve. DataTable + segmented filter.
-// PR-1c: approve/reject DISPATCH to the source store via APPROVAL_REGISTRY —
-// the row's status then derives from the store (no local override map).
+// Rows derive status from the source store (no local override map). Decisions
+// happen on the per-row detail surface — the queue is read-only (View only).
 // Danger = --color-danger (pumpkin). No Tailwind red/rose/pink. No hex.
 // ════════════════════════════════════════════════════════════
 
@@ -14,8 +14,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Card } from '@/components/humi';
 import { Button } from '@/components/humi';
 import { DataTable, type DataTableColumn } from '@/components/humi';
-import { APPROVAL_REGISTRY, isTerminationId, useSelectPendingApprovals, type QueueApproval } from '@/lib/approval-registry';
-import type { PendingRequest } from '@/lib/quick-approve-api';
+import { isTerminationId, useSelectPendingApprovals, type QueueApproval } from '@/lib/approval-registry';
+import type { PendingRequest, ClaimDetails } from '@/lib/quick-approve-api';
 import { useAuthStore } from '@/stores/auth-store';
 import { useQuickApproveAssignments, type Assignee } from '@/stores/quick-approve-assignments';
 import { canActOn, countActionable } from '@/lib/claim-permissions';
@@ -153,17 +153,6 @@ export function QuickApproveSimple() {
     return true;
   });
 
-  // PR-1c: dispatch to the correct source store by row type. The benefit adapter
-  // returns a Promise (manager-approve is mock-async) — fire it; the subscribed
-  // selector re-renders the row once the store settles. Never throws (AC-1c.2).
-  function handleApprove(row: PendingRequest) {
-    void APPROVAL_REGISTRY[row.type].approve(row.id, { name: MANAGER_NAME });
-  }
-
-  function handleReject(row: PendingRequest) {
-    void APPROVAL_REGISTRY[row.type].reject(row.id, { name: MANAGER_NAME }, 'ปฏิเสธจากคิวอนุมัติ');
-  }
-
   // ── Columns ──────────────────────────────────────────────
 
   const columns: DataTableColumn<PendingRequest>[] = [
@@ -173,6 +162,16 @@ export function QuickApproveSimple() {
       cell: (row) => (
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>
           {displayRef(row.id)}
+        </span>
+      ),
+      className: 'w-28',
+    },
+    {
+      id: 'employeeId',
+      header: t('columns.employeeId'),
+      cell: (row) => (
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>
+          {row.requester.employeeId ?? '—'}
         </span>
       ),
       className: 'w-28',
@@ -220,6 +219,17 @@ export function QuickApproveSimple() {
       ),
       className: 'w-36',
       sortAccessor: (row) => row.submittedAt,
+    },
+    {
+      id: 'submitDate',
+      header: t('columns.submitDate'),
+      cell: (row) => (
+        <span style={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>
+          {formatDateTime(row.submitDate ?? row.submittedAt)}
+        </span>
+      ),
+      className: 'w-36',
+      sortAccessor: (row) => row.submitDate ?? row.submittedAt,
     },
     {
       id: 'detail',
@@ -309,6 +319,34 @@ export function QuickApproveSimple() {
       className: 'w-44',
     },
     {
+      id: 'totalClaimAmount',
+      header: t('columns.totalClaimAmount'),
+      cell: (row) => {
+        if (row.type !== 'claim') {
+          return <span style={{ color: 'var(--color-ink-muted)' }}>—</span>;
+        }
+        const details = row.details as ClaimDetails;
+        const amount = details.totalClaimAmount ?? details.amount;
+        return (
+          <span
+            style={{
+              fontSize: 13,
+              color: 'var(--color-ink)',
+              fontVariantNumeric: 'tabular-nums',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            ฿{amount.toLocaleString('th-TH')}
+          </span>
+        );
+      },
+      className: 'w-32',
+      sortAccessor: (row) =>
+        row.type === 'claim'
+          ? (row.details as ClaimDetails).totalClaimAmount ?? (row.details as ClaimDetails).amount
+          : -1,
+    },
+    {
       id: 'actions',
       header: '',
       headerVisuallyHidden: true,
@@ -323,12 +361,12 @@ export function QuickApproveSimple() {
             {t('actions.view')}
           </Link>
         );
+        // Decisions live on the per-row detail surface — the queue only opens the
+        // row (View). A still-pending row this persona CANNOT act on keeps the
+        // explicit "view only" badge so the read-only scope stays transparent.
         if (status !== 'pending') {
           return viewLink;
         }
-        // DEFAULT-SCOPE gate: only the routed approver gets approve/reject; a
-        // non-approver persona (incl. a manager who is NOT this row's approver)
-        // sees the SAME row VIEW-ONLY — never hidden (transparency, AC).
         const item = queueById[row.id];
         const actable = item ? canActOn(item, roles) : false;
         if (!actable) {
@@ -345,27 +383,9 @@ export function QuickApproveSimple() {
             </div>
           );
         }
-        return (
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => handleApprove(row)}
-            >
-              {t('actions.approve')}
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => handleReject(row)}
-            >
-              {t('actions.reject')}
-            </Button>
-            {viewLink}
-          </div>
-        );
+        return viewLink;
       },
-      className: 'w-56',
+      className: 'w-32',
     },
   ];
 

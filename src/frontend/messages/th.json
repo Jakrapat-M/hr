@@ -3158,17 +3158,20 @@
         "all": "ทั้งหมด",
         "pending": "รออนุมัติ",
         "approved": "อนุมัติแล้ว",
-        "rejected": "ปฏิเสธแล้ว"
+        "rejected": "ส่งกลับ"
       },
       "columns": {
         "ref": "เลขที่",
+        "employeeId": "รหัสพนักงาน",
         "employee": "พนักงาน",
         "type": "ประเภท",
-        "filed": "วันที่ส่ง",
+        "filed": "แก้ไขล่าสุด",
+        "submitDate": "วันที่ยื่น",
         "detail": "รายละเอียด",
         "status": "สถานะ",
         "assignTo": "มอบหมาย",
-        "assignedPeople": "ผู้รับผิดชอบ"
+        "assignedPeople": "ผู้รับผิดชอบ",
+        "totalClaimAmount": "ยอดเบิกรวม"
       },
       "actions": {
         "approve": "อนุมัติ",
