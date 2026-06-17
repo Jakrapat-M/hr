@@ -110,7 +110,7 @@ function ClaimPayload({ details, t, locale }: { details: ClaimDetails; t: Return
       <Row label={t('category')} value={details.category} />
       <Row label={t('merchant')} value={details.merchant} />
       {/* STA-119: config-driven conditional rows, read-only mirror of submitted values. */}
-      {getConditionalFields(bucketsForType(inferBenefitType(details))).map((f) => {
+      {getConditionalFields(bucketsForType(details.benefitType ?? inferBenefitType(details))).map((f) => {
         const display = resolveClaimDisplayValue(f, dynamic[f.key], locale);
         if (!display) return null;
         const label = CLAIM_FIELD_LABELS[f.key];

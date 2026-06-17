@@ -542,6 +542,7 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
             // not just the original 5 keys.
             details: {
               category: input.benefitName ?? BENEFIT_TYPE_LABEL[benefitType],
+              benefitType,
               amount: totalClaimAmount ?? 0,
               currency: 'THB',
               merchant: input.benefitName ?? BENEFIT_TYPE_LABEL[benefitType],
