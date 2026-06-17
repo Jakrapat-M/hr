@@ -22,6 +22,8 @@ export interface PendingRequest {
  };
  description: string;
  submittedAt: string;
+ /** STA-121: original submit date, distinct from submittedAt (last modified). */
+ submitDate?: string;
  urgency: Urgency;
  waitingDays: number;
  attachments?: string[];
