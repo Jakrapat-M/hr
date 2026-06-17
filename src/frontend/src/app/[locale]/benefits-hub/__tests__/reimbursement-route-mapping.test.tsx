@@ -65,8 +65,11 @@ describe('benefits-hub reimbursement route mapping', () => {
     expect(screen.getByLabelText(/สวัสดิการที่เลือก/)).toHaveValue('ค่าโทรศัพท์');
     await user.type(await screen.findByLabelText(/เลขที่ใบเสร็จ/), 'RC-0002');
     await user.type(screen.getByLabelText(/วันที่ใบเสร็จ/), '2026-05-19');
+    // STA-120: typing Receipt amount auto-mirrors into Total Claim Amount (no separate type).
     await user.type(screen.getByLabelText(/จำนวนเงินตามใบเสร็จ/), '1000');
-    await user.type(screen.getByLabelText(/ยอดเบิกสุทธิ/), '1000');
+    // STA-119: synthetic BE-MOB-001 inherits category 'gasoline' (OQ-6 provisional),
+    // so the editable form shows the required gasoline Claim Type select.
+    await user.selectOptions(screen.getByLabelText(/ประเภทการเบิก/), 'gasoline');
     await user.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
 
     expect(submitClaim).toHaveBeenCalledWith(
@@ -78,6 +81,7 @@ describe('benefits-hub reimbursement route mapping', () => {
         receiptAmount: 1000,
         totalClaimAmount: 1000,
         claimDate: expect.any(String),
+        dynamicFields: expect.objectContaining({ gasolineClaimType: 'gasoline' }),
       }),
     );
   });

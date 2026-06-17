@@ -115,17 +115,18 @@ describe('benefit claim journey canonical route', () => {
 
     expect(screen.getByLabelText('สวัสดิการที่เลือก')).toHaveValue('ค่าโทรศัพท์');
     expect(screen.getByLabelText('วงเงินคงเหลือ')).toHaveValue('฿4,800');
-    expect(screen.getByLabelText(/วันที่เคลม/)).toBeInTheDocument();
+    // STA-120: Claim Date is a read-only display (re-encoded into STA-119 config).
+    expect(screen.getByLabelText(/วันที่เคลม/)).toHaveAttribute('readonly');
     expect(screen.getByLabelText(/เลขที่ใบเสร็จ\/เอกสาร/)).toBeInTheDocument();
     expect(screen.getByLabelText(/จำนวนเงินตามใบเสร็จ \(บาท\)/)).toBeInTheDocument();
     expect(screen.getByLabelText('ยอดเบิกสุทธิ (บาท)')).toBeInTheDocument();
     expect(screen.getByLabelText('หมายเหตุ')).toBeInTheDocument();
 
-    await user.clear(screen.getByLabelText(/วันที่เคลม/));
-    await user.type(screen.getByLabelText(/วันที่เคลม/), '2026-05-20');
     await user.type(screen.getByLabelText(/เลขที่ใบเสร็จ\/เอกสาร/), 'MOB-2026-001');
+    // STA-120: typing Receipt amount auto-mirrors into Total Claim Amount.
     await user.type(screen.getByLabelText(/จำนวนเงินตามใบเสร็จ \(บาท\)/), '799');
-    await user.type(screen.getByLabelText('ยอดเบิกสุทธิ (บาท)'), '799');
+    // STA-119: synthetic BE-MOB-001 inherits category 'gasoline' → required Claim Type.
+    await user.selectOptions(screen.getByLabelText(/ประเภทการเบิก/), 'gasoline');
     await user.type(screen.getByLabelText('หมายเหตุ'), 'ค่าโทรศัพท์เดือนพฤษภาคม');
     await user.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
 

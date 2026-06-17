@@ -384,7 +384,30 @@
     "cancelEnroll": "Cancel Enrollment",
     "enrolled": "Enrolled",
     "detail": "Plan Details",
-    "manage": "Manage"
+    "manage": "Manage",
+    "claim": {
+      "selectedBenefit": "Selected Benefit",
+      "claimDate": "Claim Date",
+      "remainingAmount": "Remaining Amount",
+      "currency": "Currency",
+      "receiptNo": "Receipt / doc no.",
+      "receiptDate": "Receipt Date",
+      "receiptAmount": "Receipt amount (THB)",
+      "totalClaimAmount": "Total Claim Amount (THB)",
+      "remark": "Remark",
+      "medicalDental": "Medical / Dental",
+      "opdIpd": "OPD / IPD",
+      "hospitalType": "Type of Hospital",
+      "hospitalName": "Hospital Name",
+      "patientTransferDoc": "Use patient transfer document?",
+      "diseaseDetails": "Disease Details",
+      "gasolineClaimType": "Claim Type",
+      "physicalInvoice": "Invoice from hospital",
+      "dependentName": "Dependent Name",
+      "dependentDob": "Date of Birth",
+      "dependentRelationship": "Relationship Type",
+      "realMonthDate": "Claim month"
+    }
   },
   "profileDetails": {
     "title": "Profile Details",

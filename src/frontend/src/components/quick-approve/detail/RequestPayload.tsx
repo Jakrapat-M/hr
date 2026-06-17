@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { ExternalLink } from 'lucide-react';
 import { Capability } from '@/components/humi';
 import type {
@@ -10,6 +10,38 @@ import type {
   ClaimDetails,
   TransferDetails,
 } from '@/lib/quick-approve-api';
+import {
+  bucketsForType,
+  getConditionalFields,
+  resolveClaimDisplayValue,
+} from '@/data/benefits/claim-field-config';
+import type { BenefitClaimType } from '@/stores/benefit-claims';
+
+// STA-119: bilingual labels for the config-driven conditional rows.
+const CLAIM_FIELD_LABELS: Record<string, { th: string; en: string }> = {
+  medicalDental: { th: 'การแพทย์ / ทันตกรรม', en: 'Medical / Dental' },
+  opdIpd: { th: 'OPD / IPD', en: 'OPD / IPD' },
+  hospitalType: { th: 'ประเภทสถานพยาบาล', en: 'Type of Hospital' },
+  hospitalName: { th: 'ชื่อสถานพยาบาล', en: 'Hospital Name' },
+  patientTransferDoc: { th: 'ใช้เอกสารส่งตัวหรือไม่', en: 'Use patient transfer document?' },
+  diseaseDetails: { th: 'รายละเอียดอาการ/โรค', en: 'Disease Details' },
+  gasolineClaimType: { th: 'ประเภทการเบิก', en: 'Claim Type' },
+  physicalInvoice: { th: 'ใบแจ้งหนี้จากโรงพยาบาล', en: 'Invoice from hospital' },
+  dependentName: { th: 'ชื่อผู้รับสิทธิ์', en: 'Dependent Name' },
+  dependentDob: { th: 'วันเกิด', en: 'Date of Birth' },
+  dependentRelationship: { th: 'ความสัมพันธ์', en: 'Relationship Type' },
+  realMonthDate: { th: 'เดือนที่ขอเบิก', en: 'Claim month' },
+};
+
+// Map the nested ClaimDetails 'category' (a benefit name) back to a benefitType
+// for the resolver; the store widens details with the same category it seeds.
+function inferBenefitType(details: ClaimDetails): BenefitClaimType {
+  const c = `${details.category ?? ''}`;
+  if (/น้ำมัน|gasoline|fuel|toll|parking/i.test(c)) return 'gasoline';
+  if (/ตรวจสุขภาพ|physical|checkup/i.test(c)) return 'physical_checkup';
+  if (/โทรศัพท์|mobile/i.test(c)) return 'mobile';
+  return 'medical';
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -61,7 +93,8 @@ function OvertimePayload({ details, t }: { details: OvertimeDetails; t: ReturnTy
   );
 }
 
-function ClaimPayload({ details, t }: { details: ClaimDetails; t: ReturnType<typeof useTranslations> }) {
+function ClaimPayload({ details, t, locale }: { details: ClaimDetails; t: ReturnType<typeof useTranslations>; locale: 'th' | 'en' }) {
+  const dynamic = (details.dynamicFields ?? {}) as Record<string, string | number | undefined>;
   return (
     <dl>
       <Row label={t('remainingAmount')} value={money(details.remainingAmount, details.currency)} />
@@ -76,6 +109,13 @@ function ClaimPayload({ details, t }: { details: ClaimDetails; t: ReturnType<typ
       />
       <Row label={t('category')} value={details.category} />
       <Row label={t('merchant')} value={details.merchant} />
+      {/* STA-119: config-driven conditional rows, read-only mirror of submitted values. */}
+      {getConditionalFields(bucketsForType(details.benefitType ?? inferBenefitType(details))).map((f) => {
+        const display = resolveClaimDisplayValue(f, dynamic[f.key], locale);
+        if (!display) return null;
+        const label = CLAIM_FIELD_LABELS[f.key];
+        return <Row key={f.key} label={label ? (locale === 'en' ? label.en : label.th) : f.key} value={display} />;
+      })}
       {details.receiptUrl && (
         <Row
           label={t('receipt')}
@@ -204,6 +244,7 @@ interface RequestPayloadProps {
 
 export function RequestPayload({ request }: RequestPayloadProps) {
   const t = useTranslations('quick_approve_detail');
+  const locale = useLocale() === 'en' ? 'en' : 'th';
 
   const inner = () => {
     switch (request.type) {
@@ -212,7 +253,7 @@ export function RequestPayload({ request }: RequestPayloadProps) {
       case 'overtime':
         return <OvertimePayload details={request.details as OvertimeDetails} t={t} />;
       case 'claim':
-        return <ClaimPayload details={request.details as ClaimDetails} t={t} />;
+        return <ClaimPayload details={request.details as ClaimDetails} t={t} locale={locale} />;
       case 'transfer':
         return <TransferPayload details={request.details as TransferDetails} t={t} />;
       case 'change_request':

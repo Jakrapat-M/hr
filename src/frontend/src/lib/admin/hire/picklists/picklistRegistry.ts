@@ -34,6 +34,13 @@ export { BRAND_OPTIONS } from './brand'
 export { PARTNER_UNIVERSITY_OPTIONS } from './partnerUniversity'
 export { DEGREE_LEVEL_OPTIONS } from './degreeLevel'
 
+// ── Benefit claim picklists (STA-119) ─────────────────────────────────────────
+export { MEDICAL_DENTAL_OPTIONS } from './medicalDental'
+export { OPD_IPD_OPTIONS } from './opdIpd'
+export { HOSPITAL_NAME_TYPE_OPTIONS } from './hospitalNameType'
+export { YES_NO_TRANSFER_DOC_OPTIONS } from './yesNoTransferDoc'
+export { GASOLINE_CLAIM_TYPE_OPTIONS } from './gasolineClaimType'
+
 // Local re-imports for the keyed registry below.
 import { OK_TO_REHIRE_OPTIONS } from './okToRehire'
 import { OT_FLAG_OPTIONS } from './otFlag'
@@ -52,6 +59,11 @@ import { STORE_BRAND_FORMAT_OPTIONS } from './storeBrandFormat'
 import { BRAND_OPTIONS } from './brand'
 import { PARTNER_UNIVERSITY_OPTIONS } from './partnerUniversity'
 import { DEGREE_LEVEL_OPTIONS } from './degreeLevel'
+import { MEDICAL_DENTAL_OPTIONS } from './medicalDental'
+import { OPD_IPD_OPTIONS } from './opdIpd'
+import { HOSPITAL_NAME_TYPE_OPTIONS } from './hospitalNameType'
+import { YES_NO_TRANSFER_DOC_OPTIONS } from './yesNoTransferDoc'
+import { GASOLINE_CLAIM_TYPE_OPTIONS } from './gasolineClaimType'
 
 /**
  * PICKLIST_REGISTRY — canonical id → options map.
@@ -79,6 +91,12 @@ export const PICKLIST_REGISTRY = {
   brand: BRAND_OPTIONS,
   DVT_PARTNER_UNIVERSITY: PARTNER_UNIVERSITY_OPTIONS,
   DVT_DEGREE_LEVEL: DEGREE_LEVEL_OPTIONS,
+  // STA-119 benefit claim picklists
+  medicalDental: MEDICAL_DENTAL_OPTIONS,
+  opdIpd: OPD_IPD_OPTIONS,
+  hospitalNameType: HOSPITAL_NAME_TYPE_OPTIONS,
+  yesNoTransferDoc: YES_NO_TRANSFER_DOC_OPTIONS,
+  gasolineClaimType: GASOLINE_CLAIM_TYPE_OPTIONS,
 } as const satisfies Record<string, PicklistDefinition>
 
 export type PicklistId = keyof typeof PICKLIST_REGISTRY

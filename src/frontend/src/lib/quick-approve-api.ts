@@ -76,6 +76,13 @@ export interface ClaimDetails {
  receiptAmount?: number;
  totalClaimAmount?: number;
  remark?: string;
+ /** STA-119: claim date carried through the nested details builder. */
+ claimDate?: string;
+ /** STA-119: config-driven conditional values (option ids for selects). */
+ dynamicFields?: Partial<Record<string, string | number>>;
+ /** STA-119: benefit type carried through so the approval surface resolves the
+  * conditional field group deterministically (no name-string inference). */
+ benefitType?: import('@/stores/benefit-claims').BenefitClaimType;
  policyChecks: { rule: string; passed: boolean }[];
 }
 

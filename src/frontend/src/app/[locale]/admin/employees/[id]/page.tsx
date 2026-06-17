@@ -52,7 +52,8 @@ import { mapEmplStatusCode } from '@/lib/employee/empStatus'
 import CompensationHistory from '@/components/profile/CompensationHistory'
 import { formatCurrency, formatDate } from '@/lib/date'
 import { getPlan, getPlansByTemplate, isV2Plan, type BenefitPlan } from '@/data/benefits/plan-registry'
-import { SimpleClaimForm } from '@/components/benefits/templates'
+import { SimpleClaimForm, type SimpleClaimSubmission } from '@/components/benefits/templates'
+import { useBenefitClaimsStore, type BenefitClaimType } from '@/stores/benefit-claims'
 import { EmptyState, DataTable, Modal, Button, FormField, FormInput, type DataTableColumn } from '@/components/humi'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
 import {
@@ -372,6 +373,23 @@ function resolveClaimPlan(b: CurrentBenefit): BenefitPlan {
     nameTh: b.benefitName,
     nameEn: b.benefitName,
     annualLimitThb: b.entitleAmount,
+  }
+}
+
+// STA-119: derive the store benefitType from the resolved plan category so the
+// admin "Start a claim" popup persists with the correct approval/store bucket.
+function claimTypeForPlan(plan: BenefitPlan): BenefitClaimType {
+  switch (plan.category) {
+    case 'gasoline':
+    case 'toll':
+    case 'parking':
+      return 'gasoline'
+    case 'physical':
+      return 'physical_checkup'
+    case 'medical':
+    case 'dental':
+    default:
+      return 'medical'
   }
 }
 
@@ -744,6 +762,10 @@ export default function EmployeeDetailPage() {
   const [enrollmentCollapsed, setEnrollmentCollapsed] = useState(true)
   // STA-106: per-row "Start a claim" modal (HR files a claim on behalf of employee).
   const [claimTarget, setClaimTarget] = useState<CurrentBenefit | null>(null)
+  // STA-119: persist the admin-filed claim into the store so it surfaces in
+  // /quick-approve + /workflows/benefit-claim identically to the employee flow.
+  const submitBenefitClaim = useBenefitClaimsStore((s) => s.submitClaim)
+  const [claimSubmitted, setClaimSubmitted] = useState<string | null>(null)
 
   // Timeline store — S3 owns this
   const { seed } = useTimelines()
@@ -1683,23 +1705,47 @@ export default function EmployeeDetailPage() {
         )}
       </Modal>
 
-      {/* STA-106: per-row "Start a claim" modal — reuses the employee SimpleClaimForm
-          verbatim so HR files a claim identically. Mockup only (no onSubmitted → no network). */}
+      {/* STA-106 / STA-119: per-row "Start a claim" modal — reuses the employee
+          SimpleClaimForm verbatim so HR files a claim identically, and persists it
+          into the claims store so it surfaces in /quick-approve + /workflows. */}
       <Modal
         open={claimTarget !== null}
-        onClose={() => setClaimTarget(null)}
+        onClose={() => { setClaimTarget(null); setClaimSubmitted(null) }}
         title={claimTarget ? `${isTh ? 'เริ่มเบิก' : 'Start a claim'} · ${claimTarget.benefitName}` : ''}
         widthClass="max-w-3xl"
       >
         {claimTarget && (
           <>
-            <p className="text-small text-ink-muted" style={{ marginBottom: 12 }}>
-              {isTh ? 'ตัวอย่างเดโม่ — ยังไม่บันทึกจริง' : 'Mockup — not persisted'}
-            </p>
+            {claimSubmitted && (
+              <div role="status" className="mb-3 rounded-[var(--radius-md)] bg-success-soft p-3 text-small font-medium text-ink">
+                {isTh
+                  ? `บันทึกคำขอ ${claimSubmitted} แล้ว — ติดตามได้ที่คิวอนุมัติ`
+                  : `Saved request ${claimSubmitted} — visible in the approval queue.`}
+              </div>
+            )}
             <SimpleClaimForm
               plan={resolveClaimPlan(claimTarget)}
               selectedBenefitLabel={claimTarget.benefitName}
               remainingAmount={Math.max(0, claimTarget.entitleAmount - claimTarget.amountUsed)}
+              onSubmitted={(wfId, submission?: SimpleClaimSubmission) => {
+                const plan = resolveClaimPlan(claimTarget)
+                const claim = submitBenefitClaim({
+                  employeeId: employee.employee_id,
+                  employeeName: nameTh,
+                  benefitCode: plan.id,
+                  benefitName: claimTarget.benefitName,
+                  benefitType: claimTypeForPlan(plan),
+                  remainingAmount: submission?.remainingAmount,
+                  receiptNo: submission?.receiptNo || wfId,
+                  receiptDate: submission?.receiptDate ?? new Date().toISOString().slice(0, 10),
+                  receiptAmount: submission?.receiptAmount ?? 0,
+                  totalClaimAmount: submission?.totalClaimAmount ?? submission?.receiptAmount ?? 0,
+                  claimDate: submission?.claimDate,
+                  remark: submission?.remark,
+                  dynamicFields: submission?.dynamicFields,
+                })
+                setClaimSubmitted(claim.workflowRequestId)
+              }}
             />
           </>
         )}

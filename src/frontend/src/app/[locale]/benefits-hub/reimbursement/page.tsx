@@ -104,6 +104,7 @@ export default function ReimbursementPage() {
       totalClaimAmount: submission?.totalClaimAmount ?? submission?.receiptAmount ?? 0,
       claimDate: submission?.claimDate,
       remark: submission?.remark,
+      dynamicFields: submission?.dynamicFields,
     };
     const claim = submitClaim(claimInput);
     setLastClaim({ id: claim.id, workflowRequestId: claim.workflowRequestId });
