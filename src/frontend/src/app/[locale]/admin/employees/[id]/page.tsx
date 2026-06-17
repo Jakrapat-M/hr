@@ -348,6 +348,36 @@ const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
     finalEntitlementAmount: 2000,
     maximumAmountPerClaim: null,
   },
+  // STA-120 — Mobile reimbursement (Remaining derives to 16,000; monthly limit 1,500
+  // is popup-local, passed only for this row — no monthlyLimit field on the plan).
+  {
+    benefitName: 'Mobile reimbursement',
+    benefitPlanId: 'TH_MOB_005',
+    amountUsed: 2000,
+    entitleAmount: 18000,
+    currency: 'THB',
+    effectiveStartDate: '2026-01-01',
+    effectiveEndDate: '2026-12-31',
+    reimbursedAmount: 2000,
+    country: 'TH',
+    benefitCategory: 'Mobile',
+    benefitType: 'Reimbursement: Employee, HR',
+    benefitSubType: '',
+    enrollment: 'AUTO',
+    claimPeriod: 'YEAR',
+    entitlementCalcMethod: 'FULL',
+    eligibleClaimDate: '30',
+    specialClaimCondition: '',
+    ruleId: '259005',
+    ruleName: 'Mobile reimbursement',
+    effectiveType: 'HireDate',
+    waitingPeriod: '',
+    originalEntitlementBeforeProrate: 18000,
+    originalEntitlementAfterProrate: 18000,
+    adjustedEntitlementAmount: 0,
+    finalEntitlementAmount: 18000,
+    maximumAmountPerClaim: null,
+  },
 ]
 
 // STA-106: "Start a claim" support on Current Benefits. Gift-Ordination is a
@@ -1428,9 +1458,11 @@ export default function EmployeeDetailPage() {
                 <tr className="text-ink-muted" style={{ textAlign: 'left' }}>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'ชื่อสวัสดิการ' : 'Benefit name'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'รหัสแผนสวัสดิการ' : 'Benefit plan ID'}</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'ยอดที่ใช้ไป' : 'Amount used'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'สิทธิ์ทั้งหมด' : 'Entitle amount'}</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}><span className="sr-only">{isTh ? 'การกระทำ' : 'Actions'}</span></th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'ยอดที่ใช้ไป' : 'Amount used'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'วงเงินคงเหลือ' : 'Remaining amount'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'ดูรายละเอียด' : 'More detail'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'เริ่มเบิก' : 'Start a claim'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1438,19 +1470,21 @@ export default function EmployeeDetailPage() {
                   <tr key={b.benefitPlanId} style={{ borderTop: '1px solid var(--color-hairline)' }}>
                     <td className="text-ink font-medium" style={{ padding: '8px 12px' }}>{b.benefitName}</td>
                     <td className="text-ink-muted font-mono" style={{ padding: '8px 12px' }}>{b.benefitPlanId}</td>
-                    <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${b.amountUsed.toLocaleString('en-US')} ${b.currency}`}</td>
                     <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${b.entitleAmount.toLocaleString('en-US')} ${b.currency}`}</td>
+                    <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${b.amountUsed.toLocaleString('en-US')} ${b.currency}`}</td>
+                    {/* STA-120 — Remaining = Entitle − Used, derived (never seeded), never negative */}
+                    <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${Math.max(0, b.entitleAmount - b.amountUsed).toLocaleString('en-US')} ${b.currency}`}</td>
                     <td style={{ padding: '8px 12px', textAlign: 'right' }}>
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setBenefitDetail(b)}>
-                          {isTh ? 'ดูรายละเอียด' : 'More detail'}
+                      <Button variant="ghost" size="sm" onClick={() => setBenefitDetail(b)}>
+                        {isTh ? 'ดูรายละเอียด' : 'More detail'}
+                      </Button>
+                    </td>
+                    <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                      {(b.benefitPlanId !== 'TH_ORD_001' || GIFT_ORD_CLAIMABLE) && (
+                        <Button variant="secondary" size="sm" onClick={() => setClaimTarget(b)}>
+                          {isTh ? 'เริ่มเบิก' : 'Start a claim'}
                         </Button>
-                        {(b.benefitPlanId !== 'TH_ORD_001' || GIFT_ORD_CLAIMABLE) && (
-                          <Button variant="secondary" size="sm" onClick={() => setClaimTarget(b)}>
-                            {isTh ? 'เริ่มเบิก' : 'Start a claim'}
-                          </Button>
-                        )}
-                      </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -1727,6 +1761,7 @@ export default function EmployeeDetailPage() {
               plan={resolveClaimPlan(claimTarget)}
               selectedBenefitLabel={claimTarget.benefitName}
               remainingAmount={Math.max(0, claimTarget.entitleAmount - claimTarget.amountUsed)}
+              monthlyLimitThb={claimTarget.benefitPlanId === 'TH_MOB_005' ? 1500 : undefined}
               onSubmitted={(wfId, submission?: SimpleClaimSubmission) => {
                 const plan = resolveClaimPlan(claimTarget)
                 const claim = submitBenefitClaim({
