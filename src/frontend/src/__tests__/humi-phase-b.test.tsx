@@ -179,13 +179,13 @@ describe('b3 — theme toggle round-trip (data-theme attribute)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// b4: Middleware — i18n routing config redirects / to /th/
+// b4: Middleware — i18n routing config redirects / to /en/
 // AC-9, AC-14
 // ─────────────────────────────────────────────────────────────────────────────
 describe('b4 — i18n routing config (locale redirect)', () => {
-  it('routing config has th as defaultLocale', async () => {
+  it('routing config has en as defaultLocale', async () => {
     const { routing } = await import('@/i18n/routing');
-    expect(routing.defaultLocale).toBe('th');
+    expect(routing.defaultLocale).toBe('en');
   });
 
   it('routing config includes both th and en locales', async () => {
