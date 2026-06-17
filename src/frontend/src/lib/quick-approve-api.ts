@@ -76,6 +76,10 @@ export interface ClaimDetails {
  receiptAmount?: number;
  totalClaimAmount?: number;
  remark?: string;
+ /** STA-119: claim date carried through the nested details builder. */
+ claimDate?: string;
+ /** STA-119: config-driven conditional values (option ids for selects). */
+ dynamicFields?: Partial<Record<string, string | number>>;
  policyChecks: { rule: string; passed: boolean }[];
 }
 

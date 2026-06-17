@@ -15,6 +15,7 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('next-intl', () => ({
   useTranslations: (ns: string) => (key: string) => `${ns}.${key}`,
+  useLocale: () => 'th',
 }));
 
 vi.mock('@/hooks/use-capabilities', () => ({

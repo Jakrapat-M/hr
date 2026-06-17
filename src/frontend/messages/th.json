@@ -384,7 +384,30 @@
     "cancelEnroll": "ยกเลิกสมัคร",
     "enrolled": "เข้าร่วมแล้ว",
     "detail": "รายละเอียดแผน",
-    "manage": "จัดการ"
+    "manage": "จัดการ",
+    "claim": {
+      "selectedBenefit": "สวัสดิการที่เลือก",
+      "claimDate": "วันที่เคลม",
+      "remainingAmount": "วงเงินคงเหลือ",
+      "currency": "สกุลเงิน",
+      "receiptNo": "เลขที่ใบเสร็จ/เอกสาร",
+      "receiptDate": "วันที่ใบเสร็จ",
+      "receiptAmount": "จำนวนเงินตามใบเสร็จ (บาท)",
+      "totalClaimAmount": "ยอดเบิกสุทธิ (บาท)",
+      "remark": "หมายเหตุ",
+      "medicalDental": "การแพทย์ / ทันตกรรม",
+      "opdIpd": "OPD / IPD",
+      "hospitalType": "ประเภทสถานพยาบาล",
+      "hospitalName": "ชื่อสถานพยาบาล",
+      "patientTransferDoc": "ใช้เอกสารส่งตัวหรือไม่",
+      "diseaseDetails": "รายละเอียดอาการ/โรค",
+      "gasolineClaimType": "ประเภทการเบิก",
+      "physicalInvoice": "ใบแจ้งหนี้จากโรงพยาบาล",
+      "dependentName": "ชื่อผู้รับสิทธิ์",
+      "dependentDob": "วันเกิด",
+      "dependentRelationship": "ความสัมพันธ์",
+      "realMonthDate": "เดือนที่ขอเบิก"
+    }
   },
   "profileDetails": {
     "title": "รายละเอียดโปรไฟล์",

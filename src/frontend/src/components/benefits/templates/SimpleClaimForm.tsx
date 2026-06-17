@@ -5,6 +5,13 @@ import { useLocale } from 'next-intl';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput, Textarea } from '@/components/humi';
 import { FileUploadField } from '@/components/humi/FileUploadField';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
+import {
+  bucketsForPlan,
+  getConditionalFields,
+  type ClaimFieldDescriptor,
+  type ClaimFieldKey,
+} from '@/data/benefits/claim-field-config';
+import { pickLabel } from '@/lib/admin/hire/picklists/picklistRegistry';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,6 +22,8 @@ export interface BenefitTemplateProps {
   className?: string;
   selectedBenefitLabel?: string;
   remainingAmount?: number;
+  /** Popup-local monthly limit (STA-120) — shown below the annual-limit line when present. */
+  monthlyLimitThb?: number;
 }
 
 export interface SimpleClaimSubmission {
@@ -27,14 +36,46 @@ export interface SimpleClaimSubmission {
   receiptAmount: number;
   totalClaimAmount: number;
   remark: string;
+  currency: string;
+  /** Conditional values keyed by descriptor key; selects carry option ids. */
+  dynamicFields: Partial<Record<ClaimFieldKey, string | number>>;
 }
 
 // ── SimpleClaimForm ───────────────────────────────────────────────────────────
-// Template: simple-claim
-// Use cases: OPD medical, dental, physical checkup, gasoline, toll, parking
-// Renders: receipt no, receipt date, amount, attachments + approval chain
+// Template: simple-claim. Field membership is config-driven (STA-119):
+// general group + the conditional groups for the plan's category bucket.
 
 const todayIsoDate = () => new Date().toISOString().slice(0, 10);
+
+// Bilingual field labels — mirrors messages/{th,en}.json `benefits.claim.*`
+// (kept in sync by the i18n parity test). Inline here to match the other
+// benefit templates (HospitalClaimForm etc.) and the test's next-intl mock.
+const CLAIM_LABELS: Record<string, { th: string; en: string }> = {
+  selectedBenefit: { th: 'สวัสดิการที่เลือก', en: 'Selected Benefit' },
+  claimDate: { th: 'วันที่เคลม', en: 'Claim Date' },
+  remainingAmount: { th: 'วงเงินคงเหลือ', en: 'Remaining Amount' },
+  currency: { th: 'สกุลเงิน', en: 'Currency' },
+  receiptNo: { th: 'เลขที่ใบเสร็จ/เอกสาร', en: 'Receipt / doc no.' },
+  receiptDate: { th: 'วันที่ใบเสร็จ', en: 'Receipt Date' },
+  receiptAmount: { th: 'จำนวนเงินตามใบเสร็จ (บาท)', en: 'Receipt amount (THB)' },
+  totalClaimAmount: { th: 'ยอดเบิกสุทธิ (บาท)', en: 'Total Claim Amount (THB)' },
+  remark: { th: 'หมายเหตุ', en: 'Remark' },
+  medicalDental: { th: 'การแพทย์ / ทันตกรรม', en: 'Medical / Dental' },
+  opdIpd: { th: 'OPD / IPD', en: 'OPD / IPD' },
+  hospitalType: { th: 'ประเภทสถานพยาบาล', en: 'Type of Hospital' },
+  hospitalName: { th: 'ชื่อสถานพยาบาล', en: 'Hospital Name' },
+  patientTransferDoc: { th: 'ใช้เอกสารส่งตัวหรือไม่', en: 'Use patient transfer document?' },
+  diseaseDetails: { th: 'รายละเอียดอาการ/โรค', en: 'Disease Details' },
+  gasolineClaimType: { th: 'ประเภทการเบิก', en: 'Claim Type' },
+  physicalInvoice: { th: 'ใบแจ้งหนี้จากโรงพยาบาล', en: 'Invoice from hospital' },
+  dependentName: { th: 'ชื่อผู้รับสิทธิ์', en: 'Dependent Name' },
+  dependentDob: { th: 'วันเกิด', en: 'Date of Birth' },
+  dependentRelationship: { th: 'ความสัมพันธ์', en: 'Relationship Type' },
+  realMonthDate: { th: 'เดือนที่ขอเบิก', en: 'Claim month' },
+};
+
+const selectClassName =
+  'h-10 w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
 
 export function SimpleClaimForm({
   plan,
@@ -42,13 +83,22 @@ export function SimpleClaimForm({
   className,
   selectedBenefitLabel,
   remainingAmount,
+  monthlyLimitThb,
 }: BenefitTemplateProps) {
   const locale = useLocale();
   const isTh = locale !== 'en';
+  const tc = (key: string) => {
+    const entry = CLAIM_LABELS[key];
+    return entry ? (isTh ? entry.th : entry.en) : key;
+  };
 
   const planName = selectedBenefitLabel ?? (isTh ? plan.nameTh : plan.nameEn);
   const requiredDocs = isTh ? plan.requiredDocsTh : plan.requiredDocsEn;
   const visibleRemainingAmount = remainingAmount ?? plan.annualLimitThb ?? undefined;
+
+  const conditionalFields = getConditionalFields(bucketsForPlan(plan));
+
+  const emptyDynamic = (): Partial<Record<ClaimFieldKey, string>> => ({});
 
   const [form, setForm] = useState({
     claimDate: todayIsoDate(),
@@ -59,14 +109,60 @@ export function SimpleClaimForm({
     remark: '',
     attachmentName: '',
   });
+  // Conditional values live here so switching benefit can clear them wholesale.
+  const [dynamic, setDynamic] = useState<Partial<Record<ClaimFieldKey, string>>>(emptyDynamic);
   const [errors, setErrors] = useState<string[]>([]);
   const [lastWorkflowId, setLastWorkflowId] = useState<string | null>(null);
 
-  const setField = (field: keyof typeof form, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+  // Reset conditional values whenever the selected benefit (plan) changes.
+  const [planKey, setPlanKey] = useState(plan.id);
+  if (planKey !== plan.id) {
+    setPlanKey(plan.id);
+    setDynamic(emptyDynamic());
+    setForm((prev) => ({ ...prev, claimAmount: '' }));
+  }
+
+  const clearTransient = () => {
     if (errors.length > 0) setErrors([]);
     if (lastWorkflowId) setLastWorkflowId(null);
   };
+
+  const setField = (field: keyof typeof form, value: string) => {
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      // STA-120 3.2a — Total Claim Amount mirrors Receipt Amount on input,
+      // capped at the remaining amount (STA-120 3.2b, clamp, NO-RED).
+      if (field === 'receiptAmount') {
+        next.claimAmount = capToRemaining(value);
+      }
+      return next;
+    });
+    clearTransient();
+  };
+
+  const capToRemaining = (raw: string): string => {
+    const n = Number(raw);
+    if (!Number.isFinite(n) || raw.trim() === '') return raw;
+    if (visibleRemainingAmount !== undefined && n > visibleRemainingAmount) {
+      return String(visibleRemainingAmount);
+    }
+    return raw;
+  };
+
+  const setTotal = (value: string) => {
+    setForm((prev) => ({ ...prev, claimAmount: capToRemaining(value) }));
+    clearTransient();
+  };
+
+  const setDynamicField = (key: ClaimFieldKey, value: string) => {
+    setDynamic((prev) => ({ ...prev, [key]: value }));
+    clearTransient();
+  };
+
+  const totalCapped =
+    visibleRemainingAmount !== undefined &&
+    Number(form.claimAmount) === visibleRemainingAmount &&
+    Number(form.receiptAmount) > visibleRemainingAmount;
 
   const submit = () => {
     const nextErrors: string[] = [];
@@ -84,12 +180,21 @@ export function SimpleClaimForm({
     if (!Number.isFinite(claimAmount) || claimAmount <= 0) {
       nextErrors.push(isTh ? 'กรุณาระบุยอดเบิกสุทธิ' : 'Total claim amount is required');
     }
+    // Required conditional fields.
+    conditionalFields.forEach((f) => {
+      if (f.required && !String(dynamic[f.key as ClaimFieldKey] ?? '').trim()) {
+        nextErrors.push((isTh ? 'กรุณาระบุ' : 'Required: ') + tc(f.labelKey));
+      }
+    });
     if (nextErrors.length > 0) {
       setErrors(nextErrors);
       return;
     }
     const wfId = `WF-${Date.now()}`;
     setLastWorkflowId(wfId);
+    const submittedDynamic = { ...dynamic } as Partial<Record<ClaimFieldKey, string | number>>;
+    const submittedClaimDate = form.claimDate;
+    const submittedReceiptDate = form.receiptDate || undefined;
     setForm({
       claimDate: todayIsoDate(),
       receiptDate: '',
@@ -99,18 +204,76 @@ export function SimpleClaimForm({
       remark: '',
       attachmentName: '',
     });
+    setDynamic(emptyDynamic());
     setErrors([]);
     onSubmitted?.(wfId, {
       selectedBenefit: planName,
       benefitCode: plan.id,
-      claimDate: form.claimDate,
-      receiptDate: form.receiptDate || undefined,
+      claimDate: submittedClaimDate,
+      receiptDate: submittedReceiptDate,
       remainingAmount: visibleRemainingAmount,
       receiptNo: form.receiptNo.trim(),
       receiptAmount: amount,
       totalClaimAmount: claimAmount,
       remark: form.remark.trim(),
+      currency: 'THB',
+      dynamicFields: submittedDynamic,
     });
+  };
+
+  const renderConditional = (f: ClaimFieldDescriptor) => {
+    const key = f.key as ClaimFieldKey;
+    const value = dynamic[key] ?? '';
+    const label = tc(f.labelKey);
+    const fieldId = `${plan.id}-${f.key}`;
+    if (f.type === 'select' && f.lov) {
+      return (
+        <FormField key={fieldId} id={fieldId} label={label} required={f.required}>
+          {(controlProps) => (
+            <select
+              {...controlProps}
+              className={selectClassName}
+              value={value}
+              onChange={(e) => setDynamicField(key, e.target.value)}
+            >
+              <option value="">{isTh ? '— เลือก —' : '— Select —'}</option>
+              {f.lov!.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {pickLabel(opt, isTh ? 'th' : 'en')}
+                </option>
+              ))}
+            </select>
+          )}
+        </FormField>
+      );
+    }
+    if (f.type === 'textarea') {
+      return (
+        <FormField key={fieldId} id={fieldId} label={label} required={f.required}>
+          {(controlProps) => (
+            <Textarea
+              {...controlProps}
+              value={value}
+              onChange={(e) => setDynamicField(key, e.target.value)}
+            />
+          )}
+        </FormField>
+      );
+    }
+    const inputType = f.type === 'date' ? 'date' : f.type === 'month' ? 'month' : 'text';
+    return (
+      <FormField key={fieldId} id={fieldId} label={label} required={f.required}>
+        {(controlProps) => (
+          <FormInput
+            {...controlProps}
+            type={inputType}
+            inputMode={f.type === 'number' ? 'numeric' : undefined}
+            value={value}
+            onChange={(e) => setDynamicField(key, e.target.value)}
+          />
+        )}
+      </FormField>
+    );
   };
 
   return (
@@ -124,30 +287,36 @@ export function SimpleClaimForm({
           {isTh ? `วงเงินรายปี: ${plan.annualLimitThb.toLocaleString()} บาท` : `Annual limit: ${plan.annualLimitThb.toLocaleString()} THB`}
         </p>
       )}
+      {monthlyLimitThb != null && (
+        <p className="mt-1 text-small font-medium text-accent">
+          {isTh ? `วงเงินรายเดือน: ${monthlyLimitThb.toLocaleString()} บาท` : `Monthly limit: ${monthlyLimitThb.toLocaleString()} THB`}
+        </p>
+      )}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <FormField id={`${plan.id}-selected-benefit`} label={isTh ? 'สวัสดิการที่เลือก' : 'Selected Benefit'}>
+        {/* ── General group ──────────────────────────────────────────────── */}
+        <FormField id={`${plan.id}-selected-benefit`} label={tc('selectedBenefit')}>
+          {(controlProps) => (
+            <FormInput {...controlProps} readOnly value={planName} />
+          )}
+        </FormField>
+
+        {/* STA-120 3.1 — Claim Date is a read-only display of today's date. */}
+        <FormField id={`${plan.id}-claim-date`} label={tc('claimDate')} required>
           {(controlProps) => (
             <FormInput
               {...controlProps}
               readOnly
-              value={planName}
+              value={new Date(form.claimDate).toLocaleDateString(isTh ? 'th-TH' : 'en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })}
             />
           )}
         </FormField>
 
-        <FormField id={`${plan.id}-claim-date`} label={isTh ? 'วันที่เคลม' : 'Claim Date'} required>
-          {(controlProps) => (
-            <FormInput
-              {...controlProps}
-              type="date"
-              value={form.claimDate}
-              onChange={(e) => setField('claimDate', e.target.value)}
-            />
-          )}
-        </FormField>
-
-        <FormField id={`${plan.id}-remaining-amount`} label={isTh ? 'วงเงินคงเหลือ' : 'Remaining Amount'}>
+        <FormField id={`${plan.id}-remaining-amount`} label={tc('remainingAmount')}>
           {(controlProps) => (
             <FormInput
               {...controlProps}
@@ -161,7 +330,13 @@ export function SimpleClaimForm({
           )}
         </FormField>
 
-        <FormField id={`${plan.id}-receipt-no`} label={isTh ? 'เลขที่ใบเสร็จ/เอกสาร' : 'Receipt / doc no.'} required>
+        <FormField id={`${plan.id}-currency`} label={tc('currency')}>
+          {(controlProps) => (
+            <FormInput {...controlProps} readOnly value="THB" />
+          )}
+        </FormField>
+
+        <FormField id={`${plan.id}-receipt-no`} label={tc('receiptNo')} required>
           {(controlProps) => (
             <FormInput
               {...controlProps}
@@ -172,7 +347,7 @@ export function SimpleClaimForm({
           )}
         </FormField>
 
-        <FormField id={`${plan.id}-receipt-date`} label={isTh ? 'วันที่ใบเสร็จ' : 'Receipt Date'}>
+        <FormField id={`${plan.id}-receipt-date`} label={tc('receiptDate')}>
           {(controlProps) => (
             <FormInput
               {...controlProps}
@@ -183,7 +358,7 @@ export function SimpleClaimForm({
           )}
         </FormField>
 
-        <FormField id={`${plan.id}-receipt-amount`} label={isTh ? 'จำนวนเงินตามใบเสร็จ (บาท)' : 'Receipt amount (THB)'} required>
+        <FormField id={`${plan.id}-receipt-amount`} label={tc('receiptAmount')} required>
           {(controlProps) => (
             <FormInput
               {...controlProps}
@@ -196,20 +371,21 @@ export function SimpleClaimForm({
 
         <FormField
           id={`${plan.id}-claim-amount`}
-          label={isTh ? 'ยอดเบิกสุทธิ (บาท)' : 'Total Claim Amount (THB)'}
-          help={isTh ? 'เว้นว่างเพื่อใช้ยอดตามใบเสร็จ' : 'Leave blank to use receipt amount'}
+          label={tc('totalClaimAmount')}
+          help={isTh ? 'เติมอัตโนมัติจากยอดใบเสร็จ' : 'Auto-filled from receipt amount'}
+          error={totalCapped ? (isTh ? 'ปรับลงเหลือเท่าวงเงินคงเหลือ' : 'Capped at remaining amount') : undefined}
         >
           {(controlProps) => (
             <FormInput
               {...controlProps}
               inputMode="numeric"
               value={form.claimAmount}
-              onChange={(e) => setField('claimAmount', e.target.value)}
+              onChange={(e) => setTotal(e.target.value)}
             />
           )}
         </FormField>
 
-        <FormField id={`${plan.id}-remark`} label={isTh ? 'หมายเหตุ' : 'Remark'}>
+        <FormField id={`${plan.id}-remark`} label={tc('remark')}>
           {(controlProps) => (
             <Textarea
               {...controlProps}
@@ -219,6 +395,9 @@ export function SimpleClaimForm({
             />
           )}
         </FormField>
+
+        {/* ── Conditional groups (config-driven) ─────────────────────────── */}
+        {conditionalFields.map(renderConditional)}
 
         <FileUploadField
           label={isTh ? 'เอกสารแนบ' : 'Attachments'}

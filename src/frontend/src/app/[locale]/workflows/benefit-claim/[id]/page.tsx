@@ -23,7 +23,13 @@ import {
   User,
 } from 'lucide-react';
 
-import { useBenefitClaimsStore, BENEFIT_STATUS_LABEL, type BenefitClaimStatus } from '@/stores/benefit-claims';
+import { useBenefitClaimsStore, BENEFIT_STATUS_LABEL, type BenefitClaimStatus, type BenefitClaimRequest } from '@/stores/benefit-claims';
+import {
+  bucketsForType,
+  getConditionalFields,
+  resolveClaimDisplayValue,
+  type ClaimFieldKey,
+} from '@/data/benefits/claim-field-config';
 import { ApproveTriadButtons } from '@/components/manager/benefits/ApproveTriadButtons';
 import { SLABadge } from '@/components/manager/benefits/SLABadge';
 import { WorkflowParticipantsPopover, type WorkflowParticipant } from '@/components/manager/benefits/WorkflowParticipantsPopover';
@@ -166,6 +172,34 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
     </div>
   );
 }
+
+// STA-119: bilingual labels for the config-driven conditional rows (read-only mirror).
+const CLAIM_FIELD_LABELS: Record<string, { th: string; en: string }> = {
+  medicalDental: { th: 'การแพทย์ / ทันตกรรม', en: 'Medical / Dental' },
+  opdIpd: { th: 'OPD / IPD', en: 'OPD / IPD' },
+  hospitalType: { th: 'ประเภทสถานพยาบาล', en: 'Type of Hospital' },
+  hospitalName: { th: 'ชื่อสถานพยาบาล', en: 'Hospital Name' },
+  patientTransferDoc: { th: 'ใช้เอกสารส่งตัวหรือไม่', en: 'Use patient transfer document?' },
+  diseaseDetails: { th: 'รายละเอียดอาการ/โรค', en: 'Disease Details' },
+  gasolineClaimType: { th: 'ประเภทการเบิก', en: 'Claim Type' },
+  physicalInvoice: { th: 'ใบแจ้งหนี้จากโรงพยาบาล', en: 'Invoice from hospital' },
+  dependentName: { th: 'ชื่อผู้รับสิทธิ์', en: 'Dependent Name' },
+  dependentDob: { th: 'วันเกิด', en: 'Date of Birth' },
+  dependentRelationship: { th: 'ความสัมพันธ์', en: 'Relationship Type' },
+  realMonthDate: { th: 'เดือนที่ขอเบิก', en: 'Claim month' },
+};
+
+// Back-compat: keys whose value also lived in a flat claim.* field before STA-119.
+const CLAIM_FLAT_FALLBACK: Partial<Record<ClaimFieldKey, keyof BenefitClaimRequest>> = {
+  opdIpd: 'opdIpd',
+  hospitalType: 'hospitalType',
+  hospitalName: 'hospitalName',
+  patientTransferDoc: 'patientTransferDocumentNo',
+  diseaseDetails: 'diseaseDetails',
+  gasolineClaimType: 'gasolineClaimType',
+  dependentName: 'dependentName',
+  dependentRelationship: 'dependentRelationship',
+};
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -342,37 +376,35 @@ export default function BenefitClaimDetailPage({ params }: PageProps) {
               <div className="divide-y divide-hairline">
                 <FieldRow label={isTh ? 'เลขที่ใบเสร็จ' : 'Receipt no.'} value={claim.receiptNo} />
                 <FieldRow
+                  label={isTh ? 'วันที่เคลม' : 'Claim Date'}
+                  value={claim.claimDate ? new Date(claim.claimDate).toLocaleDateString(isTh ? 'th-TH' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null}
+                />
+                <FieldRow
                   label={isTh ? 'วันที่ใบเสร็จ' : 'Receipt date'}
                   value={new Date(claim.receiptDate).toLocaleDateString(isTh ? 'th-TH' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                 />
+                <FieldRow label={isTh ? 'สกุลเงิน' : 'Currency'} value={claim.currency} />
                 <FieldRow
-                  label={isTh ? 'จำนวนเงินที่ขอเบิก' : 'Claim amount'}
+                  label={isTh ? 'จำนวนเงินตามใบเสร็จ' : 'Receipt amount'}
+                  value={claim.receiptAmount ? `฿${claim.receiptAmount.toLocaleString('th-TH')}` : null}
+                />
+                <FieldRow
+                  label={isTh ? 'จำนวนเงินที่ขอเบิก' : 'Total claim amount'}
                   value={<span className="font-semibold">฿{claim.totalClaimAmount.toLocaleString('th-TH')}</span>}
                 />
-                {claim.hospitalName && (
-                  <FieldRow label={isTh ? 'โรงพยาบาล' : 'Hospital'} value={claim.hospitalName} />
-                )}
-                {claim.opdIpd && (
-                  <FieldRow label="OPD / IPD" value={claim.opdIpd} />
-                )}
-                {claim.hospitalType && (
-                  <FieldRow label={isTh ? 'ประเภทโรงพยาบาล' : 'Hospital type'} value={claim.hospitalType} />
-                )}
-                {claim.patientTransferDocumentNo && (
-                  <FieldRow label={isTh ? 'เลขที่เอกสารย้ายโรงพยาบาล' : 'Transfer doc no.'} value={claim.patientTransferDocumentNo} />
-                )}
-                {claim.diseaseDetails && (
-                  <FieldRow label={isTh ? 'รายละเอียดโรค' : 'Disease details'} value={claim.diseaseDetails} />
-                )}
-                {claim.gasolineClaimType && (
-                  <FieldRow label={isTh ? 'ประเภทการเบิกน้ำมัน' : 'Gasoline type'} value={claim.gasolineClaimType} />
-                )}
-                {claim.dependentName && (
-                  <FieldRow label={isTh ? 'ชื่อผู้รับสิทธิ์' : 'Dependent name'} value={claim.dependentName} />
-                )}
-                {claim.dependentRelationship && (
-                  <FieldRow label={isTh ? 'ความสัมพันธ์' : 'Relationship'} value={claim.dependentRelationship} />
-                )}
+                <FieldRow label={isTh ? 'หมายเหตุ' : 'Remark'} value={claim.remark} />
+                {/* STA-119: config-driven conditional rows, read-only mirror of submitted values. */}
+                {getConditionalFields(bucketsForType(claim.benefitType)).map((f) => {
+                  const key = f.key as ClaimFieldKey;
+                  const flatKey = CLAIM_FLAT_FALLBACK[key];
+                  const raw =
+                    claim.dynamicFields?.[key] ??
+                    (flatKey ? (claim[flatKey] as string | number | undefined) : undefined);
+                  const display = resolveClaimDisplayValue(f, raw, isTh ? 'th' : 'en');
+                  if (!display) return null;
+                  const label = CLAIM_FIELD_LABELS[f.key];
+                  return <FieldRow key={f.key} label={label ? (isTh ? label.th : label.en) : f.key} value={display} />;
+                })}
                 <FieldRow
                   label={isTh ? 'วันที่ส่ง' : 'Submitted'}
                   value={new Date(claim.submittedAt).toLocaleString(isTh ? 'th-TH' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}

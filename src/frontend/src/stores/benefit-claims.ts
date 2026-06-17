@@ -2,6 +2,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { HumiApprovalStep, RequestStatus } from '@/lib/humi-mock-data';
 import type { PendingRequest } from '@/lib/quick-approve-api';
+import type { ClaimFieldKey } from '@/data/benefits/claim-field-config';
+
+/** STA-119: conditional claim values keyed by field-config descriptor key. */
+export type ClaimDynamicFields = Partial<Record<ClaimFieldKey, string | number>>;
 
 export type BenefitClaimStatus =
   | 'pending_manager_approval'   // STA-28: manager must approve before SPD
@@ -67,6 +71,8 @@ export interface BenefitClaimRequest {
   gasolineClaimType?: string;
   dependentName?: string;
   dependentRelationship?: string;
+  /** STA-119: config-driven conditional values (option ids for selects). */
+  dynamicFields?: ClaimDynamicFields;
   attachments: BenefitAttachment[];
   audit: BenefitClaimAuditEntry[];
   correctionReason?: string;
@@ -114,6 +120,8 @@ export interface BenefitClaimInput {
   gasolineClaimType?: string;
   dependentName?: string;
   dependentRelationship?: string;
+  /** STA-119: config-driven conditional values (option ids for selects). */
+  dynamicFields?: ClaimDynamicFields;
   attachments?: BenefitAttachment[];
 }
 
@@ -508,6 +516,7 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
           gasolineClaimType: input.gasolineClaimType,
           dependentName: input.dependentName,
           dependentRelationship: input.dependentRelationship,
+          dynamicFields: input.dynamicFields,
           attachments: normalizeAttachments(input.attachments),
           audit: [{ at, actorRole: 'employee', actorName: input.employeeName ?? 'จงรักษ์ ทานากะ', action: 'submit', note: 'ส่งคำขอเบิกสวัสดิการ' }],
           version: 1,
@@ -528,12 +537,23 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
             submittedAt: at,
             urgency: 'normal',
             waitingDays: 0,
+            // STA-119 (MF-4): widen the details builder so the quick-approve
+            // surface mirrors every submitted general field + the dynamicFields map,
+            // not just the original 5 keys.
             details: {
               category: input.benefitName ?? BENEFIT_TYPE_LABEL[benefitType],
               amount: totalClaimAmount ?? 0,
+              currency: 'THB',
+              merchant: input.benefitName ?? BENEFIT_TYPE_LABEL[benefitType],
               receiptNo: input.receiptNo,
               receiptDate: input.receiptDate,
               claimDate: input.claimDate ?? input.receiptDate,
+              receiptAmount: input.receiptAmount,
+              totalClaimAmount: totalClaimAmount ?? 0,
+              remainingAmount: input.remainingAmount,
+              remark: input.remark ?? input.remarks ?? '',
+              dynamicFields: input.dynamicFields,
+              policyChecks: [],
             },
             approvalTimeline: [
               { step: 1, approver: 'หัวหน้างาน', status: 'pending' as const },
