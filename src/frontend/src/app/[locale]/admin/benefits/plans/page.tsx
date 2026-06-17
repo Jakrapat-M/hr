@@ -259,7 +259,9 @@ function PlanFormModal({
     <Modal
       open
       onClose={onClose}
-      title={isTh ? `แก้ไขแผน: ${plan.id}` : `Edit plan: ${plan.id}`}
+      title={mode === 'insert'
+        ? (isTh ? `แทรกแผน: ${plan.id}` : `Insert plan: ${plan.id}`)
+        : (isTh ? `แก้ไขแผน: ${plan.id}` : `Edit plan: ${plan.id}`)}
       widthClass="max-w-5xl"
     >
       <div className="space-y-4">
@@ -683,9 +685,9 @@ export default function BenefitPlansPage() {
       cell: (p: BenefitPlan) => (
         <Capability action="edit" fallback={
           <div className="flex items-center justify-end gap-1 opacity-50">
-            <span className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted"><Pencil size={14} aria-hidden /></span>
-            <span className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted"><Layers size={14} aria-hidden /></span>
-            <span className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted"><Trash2 size={14} aria-hidden /></span>
+            <span role="img" aria-label={t('makeCorrection')} title={t('makeCorrection')} className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted"><Pencil size={14} aria-hidden /></span>
+            <span role="img" aria-label={t('insert')} title={t('insert')} className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted"><Layers size={14} aria-hidden /></span>
+            <span role="img" aria-label={t('delete')} title={t('delete')} className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted"><Trash2 size={14} aria-hidden /></span>
           </div>
         }>
           <div className="flex items-center justify-end gap-1">

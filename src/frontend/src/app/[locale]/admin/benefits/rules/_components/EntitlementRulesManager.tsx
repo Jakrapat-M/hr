@@ -566,9 +566,9 @@ function RulesTableView({
     { id: 'actions', header: t('colActions'), align: 'right' as const, className: 'whitespace-nowrap',
       cell: (r) => (
         <div className="flex items-center justify-end gap-1">
-          <button type="button" aria-pressed={editTarget?.id === r.id} aria-label={t('makeCorrection')} title={t('makeCorrection')}
+          <button type="button" aria-pressed={editTarget?.id === r.id && editMode === 'correction'} aria-label={t('makeCorrection')} title={t('makeCorrection')}
             onClick={() => onCorrection(r)}
-            className={`inline-flex items-center justify-center rounded-[var(--radius-sm)] border p-1.5 transition-colors ${editTarget?.id === r.id ? 'border-accent/40 bg-accent-soft text-accent' : 'border-hairline text-ink-muted hover:bg-accent/10 hover:text-accent'}`}>
+            className={`inline-flex items-center justify-center rounded-[var(--radius-sm)] border p-1.5 transition-colors ${editTarget?.id === r.id && editMode === 'correction' ? 'border-accent/40 bg-accent-soft text-accent' : 'border-hairline text-ink-muted hover:bg-accent/10 hover:text-accent'}`}>
             <Pencil size={14} aria-hidden />
           </button>
           <button type="button" aria-label={t('insert')} title={t('insert')} onClick={() => onInsertRow(r)}
