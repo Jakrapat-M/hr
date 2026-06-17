@@ -28,6 +28,7 @@ import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
 import type { ApproverStage } from '@/data/benefits/plan-registry';
 import {
   LEAVE_TYPES,
+  type LeaveTypeDef,
   getLeaveType,
   quotaTrackedTypes,
   LEAVE_CODE_TO_BALANCE_KIND,
@@ -162,6 +163,9 @@ function useEssEmployeeId(): string {
 
 // Quota summary cards — registry-driven (quotaTracked types) + reactive to the
 // leave-balances store. Same numbers + same display names as the submit gate.
+// STA-117 — curated top-3 leave types (by registry code, not array index): Sick → Annual → Personal.
+const TOP_LEAVE_CODES = ['sick_leave', 'annual_leave', 'personnel_leave'] as const;
+
 function QuotaCards({ isTh }: { isTh: boolean }) {
   const employeeId = useEssEmployeeId();
   const balances = useLeaveBalances((s) => s.balances);
@@ -181,6 +185,8 @@ function QuotaCards({ isTh }: { isTh: boolean }) {
           : 0;
         const percentUsed =
           initial > 0 ? Math.min(100, Math.round(((initial - remaining) / initial) * 100)) : 0;
+        // STA-118 — Used is exact by construction: used = debits + reserved = Total − Remaining.
+        const used = initial - remaining;
         const label = isTh ? t.nameTh : t.nameEn;
         const note =
           initial > 0
@@ -221,7 +227,31 @@ function QuotaCards({ isTh }: { isTh: boolean }) {
                 />
               </div>
             )}
-            <p className="mt-2 text-small text-ink-muted">{note}</p>
+            {initial > 0 ? (
+              <div className="mt-3 grid grid-cols-3 gap-2 border-t border-hairline pt-3">
+                {[
+                  { lbl: isTh ? 'รวมสิทธิ์' : 'Total', val: initial, over: false },
+                  { lbl: isTh ? 'ใช้ไป' : 'Used', val: used, over: false },
+                  // STA-118 — over-used remaining renders in pumpkin (--color-danger), never red.
+                  { lbl: isTh ? 'คงเหลือ' : 'Remaining', val: remaining, over: remaining < 0 },
+                ].map((s) => (
+                  <div key={s.lbl} className="flex flex-col gap-0.5">
+                    <span className="text-eyebrow uppercase tracking-wide text-ink-muted">{s.lbl}</span>
+                    <span
+                      className={cn(
+                        'text-body font-semibold tabular-nums',
+                        s.over ? 'text-[color:var(--color-danger)]' : 'text-ink',
+                      )}
+                    >
+                      {s.val}
+                    </span>
+                  </div>
+                ))}
+                <p className="col-span-3 mt-1 text-small text-ink-muted">{note}</p>
+              </div>
+            ) : (
+              <p className="mt-2 text-small text-ink-muted">{note}</p>
+            )}
           </Card>
         );
       })}
@@ -506,6 +536,16 @@ function RequestTab({
   );
 
   const [code, setCode] = useState<string>(selectableTypes[0]?.code ?? 'sick_leave');
+  // STA-117 — default to the top-3 most-used types; "More" reveals the rest.
+  const [showAll, setShowAll] = useState(false);
+  const topTypes = useMemo(
+    () =>
+      TOP_LEAVE_CODES.map((c) => selectableTypes.find((t) => t.code === c)).filter(
+        (t): t is LeaveTypeDef => Boolean(t),
+      ),
+    [selectableTypes],
+  );
+  const visibleTypes = showAll ? selectableTypes : topTypes;
   const def = getLeaveType(code);
   const [fromISO, setFromISO] = useState('');
   const [toISO, setToISO] = useState('');
@@ -781,7 +821,7 @@ function RequestTab({
         aria-label={isTh ? 'ประเภทการลา' : 'Leave type'}
         className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2"
       >
-        {selectableTypes.map((opt) => {
+        {visibleTypes.map((opt) => {
           const selected = code === opt.code;
           return (
             <button
@@ -834,6 +874,19 @@ function RequestTab({
           );
         })}
       </div>
+      {selectableTypes.length > topTypes.length && (
+        <div className="mt-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAll((v) => !v)}
+            aria-expanded={showAll}
+          >
+            {showAll ? (isTh ? 'แสดงน้อยลง' : 'Show less') : (isTh ? 'ดูทั้งหมด' : 'Show all')}
+          </Button>
+        </div>
+      )}
 
       {/* Date range — selectable month calendar (range + weekend/holiday markers) */}
       <div className="mt-5">
