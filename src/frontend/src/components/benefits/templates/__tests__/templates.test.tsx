@@ -153,6 +153,75 @@ describe('HospitalClaimForm', () => {
     render(<HospitalClaimForm plan={IPD_REFERRAL_PLAN} />);
     expect(screen.queryByLabelText(/ผู้รับสิทธิ์/)).not.toBeInTheDocument();
   });
+
+  // STA-119 FIX #2 — HospitalClaimForm renders the SAME config-driven
+  // conditional groups as SimpleClaimForm for the same (medical) bucket.
+  // hospitalName is intentionally excluded from conditionals: HospitalClaimForm
+  // owns that field natively ("ชื่อโรงพยาบาล") and maps it into dynamicFields at submit.
+  it('renders the config-driven medical conditional groups (parity with SimpleClaimForm)', () => {
+    render(<HospitalClaimForm plan={IPD_REFERRAL_PLAN} />);
+    // medical bucket → Medical/Dental, OPD/IPD, Type of Hospital, patient-transfer, Disease Details
+    expect(screen.getByLabelText(/การแพทย์ \/ ทันตกรรม/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/OPD \/ IPD/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/ประเภทสถานพยาบาล/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/ใช้เอกสารส่งตัวหรือไม่/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/รายละเอียดอาการ\/โรค/)).toBeInTheDocument();
+  });
+
+  // FIX [MEDIUM] — exactly ONE hospital-name input (no duplicate from conditional set).
+  it('renders exactly one hospital-name field (native field; conditional hospitalName suppressed)', () => {
+    render(<HospitalClaimForm plan={IPD_REFERRAL_PLAN} />);
+    // Native field label is "ชื่อโรงพยาบาล"; conditional label would be "ชื่อสถานพยาบาล".
+    // Both patterns must match exactly one element total across the form.
+    const nativeField = screen.getByLabelText(/ชื่อโรงพยาบาล/);
+    expect(nativeField).toBeInTheDocument();
+    // The conditional "ชื่อสถานพยาบาล" must NOT appear (it is filtered out).
+    expect(screen.queryByLabelText(/ชื่อสถานพยาบาล/)).not.toBeInTheDocument();
+  });
+
+  it('renders the same medical conditional field set as SimpleClaimForm for the same bucket', () => {
+    // hospitalName excluded: HospitalClaimForm owns it natively; SimpleClaimForm
+    // renders it as a conditional text input. The other 4 conditional labels are identical.
+    const sharedConditionalLabels = [
+      /การแพทย์ \/ ทันตกรรม/,
+      /OPD \/ IPD/,
+      /ประเภทสถานพยาบาล/,
+      /ใช้เอกสารส่งตัวหรือไม่/,
+      /รายละเอียดอาการ\/โรค/,
+    ];
+    const { unmount } = render(<SimpleClaimForm plan={getPlan('BE-MED-001')!} />);
+    for (const lbl of sharedConditionalLabels) {
+      expect(screen.getByLabelText(lbl)).toBeInTheDocument();
+    }
+    unmount();
+    render(<HospitalClaimForm plan={IPD_REFERRAL_PLAN} />);
+    for (const lbl of sharedConditionalLabels) {
+      expect(screen.getByLabelText(lbl)).toBeInTheDocument();
+    }
+  });
+});
+
+// ── STA-119 FIX #3 — gasoline Fleet-Card "(Info only)" rows are disabled ──────
+
+describe('Gasoline Claim Type — Info-only options', () => {
+  const GASOLINE_PLAN = getPlan('BE-GAS-001')!; // simple-claim, category=gasoline
+
+  it('renders Fleet-Card "(Info only)" options as disabled (non-selectable)', () => {
+    render(<SimpleClaimForm plan={GASOLINE_PLAN} />);
+    const select = screen.getByLabelText(/ประเภทการเบิก/) as HTMLSelectElement;
+    const byValue = (id: string) =>
+      Array.from(select.options).find((o) => o.value === id);
+
+    // Fleet-Card rows are present (label visible) but disabled.
+    for (const id of ['fleet_card_shell', 'fleet_card_bangchak', 'fleet_card_cpn']) {
+      const opt = byValue(id);
+      expect(opt, id).toBeDefined();
+      expect(opt!.disabled, id).toBe(true);
+    }
+    // Real claim types stay selectable.
+    expect(byValue('gasoline')!.disabled).toBe(false);
+    expect(byValue('expressway_toll')!.disabled).toBe(false);
+  });
 });
 
 // ── 4. RecordsFlatForm: no approval chain, shows "Recorded by HR" ─────────────

@@ -17,8 +17,8 @@ const REQUIRED_CLAIM_KEYS = [
   'dependentDob', 'dependentRelationship', 'realMonthDate',
 ] as const;
 
-const claimTh = (th as Record<string, Record<string, Record<string, string>>>).benefits?.claim ?? {};
-const claimEn = (en as Record<string, Record<string, Record<string, string>>>).benefits?.claim ?? {};
+const claimTh = (th as unknown as Record<string, Record<string, Record<string, string>>>).benefits?.claim ?? {};
+const claimEn = (en as unknown as Record<string, Record<string, Record<string, string>>>).benefits?.claim ?? {};
 
 describe('STA-119 — benefits.claim i18n parity', () => {
   it.each(REQUIRED_CLAIM_KEYS)('key benefits.claim.%s exists in both catalogs and is non-empty', (key) => {

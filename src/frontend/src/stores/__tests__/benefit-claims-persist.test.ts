@@ -18,6 +18,7 @@ import { APPROVAL_SEED_BY_TYPE } from '@/lib/approval-seed-fixtures';
 
 function makeMinimalPersistedClaim(overrides: Record<string, unknown>) {
   return {
+    id: (overrides.id as string | undefined) ?? 'REQ-TEST',
     workflowRequestId: overrides.id ?? 'REQ-TEST',
     employeeId: 'EMP001',
     employeeName: 'Test User',
