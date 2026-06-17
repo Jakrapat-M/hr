@@ -6,7 +6,13 @@ import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/co
 import { FileUploadField } from '@/components/humi/FileUploadField';
 import { Capability } from '@/components/humi';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
-import type { BenefitTemplateProps } from './SimpleClaimForm';
+import {
+  bucketsForPlan,
+  getConditionalFields,
+  type ClaimFieldKey,
+} from '@/data/benefits/claim-field-config';
+import type { BenefitTemplateProps, SimpleClaimSubmission } from './SimpleClaimForm';
+import { ConditionalClaimFields, CONDITIONAL_CLAIM_LABELS } from './ConditionalClaimFields';
 
 // Mock dependent list — Sprint 2 will wire to real API
 const MOCK_DEPENDENTS = [
@@ -33,6 +39,13 @@ export function HospitalClaimForm({
   const planName = isTh ? plan.nameTh : plan.nameEn;
   const requiredDocs = isTh ? plan.requiredDocsTh : plan.requiredDocsEn;
 
+  // STA-119: same config-driven conditional groups as SimpleClaimForm, keyed on
+  // the plan's category bucket (medical: Medical/Dental, OPD/IPD, hospital type,
+  // hospital name, patient-transfer, disease details, etc.).
+  const conditionalFields = getConditionalFields(bucketsForPlan(plan));
+
+  const emptyDynamic = (): Partial<Record<ClaimFieldKey, string>> => ({});
+
   const [form, setForm] = useState({
     admissionType: 'ipd' as 'opd' | 'ipd',
     hospitalName: '',
@@ -43,13 +56,24 @@ export function HospitalClaimForm({
     receiptAmount: '',
     attachmentName: '',
   });
+  // Conditional values live here so submit can thread dynamicFields through.
+  const [dynamic, setDynamic] = useState<Partial<Record<ClaimFieldKey, string>>>(emptyDynamic);
   const [errors, setErrors] = useState<string[]>([]);
   const [lastWorkflowId, setLastWorkflowId] = useState<string | null>(null);
 
-  const setField = (field: keyof typeof form, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+  const clearTransient = () => {
     if (errors.length > 0) setErrors([]);
     if (lastWorkflowId) setLastWorkflowId(null);
+  };
+
+  const setField = (field: keyof typeof form, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    clearTransient();
+  };
+
+  const setDynamicField = (key: ClaimFieldKey, value: string) => {
+    setDynamic((prev) => ({ ...prev, [key]: value }));
+    clearTransient();
   };
 
   const submit = () => {
@@ -72,15 +96,38 @@ export function HospitalClaimForm({
         nextErrors.push(isTh ? 'กรุณาระบุจำนวนเงิน' : 'Amount is required');
       }
     }
+    // Required config-driven conditional fields (STA-119), same as SimpleClaimForm.
+    conditionalFields.forEach((f) => {
+      if (f.required && !String(dynamic[f.key as ClaimFieldKey] ?? '').trim()) {
+        const lbl = CONDITIONAL_CLAIM_LABELS[f.key];
+        const label = lbl ? (isTh ? lbl.th : lbl.en) : f.key;
+        nextErrors.push((isTh ? 'กรุณาระบุ' : 'Required: ') + label);
+      }
+    });
     if (nextErrors.length > 0) {
       setErrors(nextErrors);
       return;
     }
     const wfId = `WF-${Date.now()}`;
     setLastWorkflowId(wfId);
+    const receiptAmount = Number(form.receiptAmount);
+    const submission: SimpleClaimSubmission = {
+      selectedBenefit: planName,
+      benefitCode: plan.id,
+      claimDate: new Date().toISOString().slice(0, 10),
+      receiptDate: form.receiptDate || undefined,
+      remainingAmount: plan.annualLimitThb ?? undefined,
+      receiptNo: form.receiptNo.trim(),
+      receiptAmount: Number.isFinite(receiptAmount) ? receiptAmount : 0,
+      totalClaimAmount: Number.isFinite(receiptAmount) ? receiptAmount : 0,
+      remark: '',
+      currency: 'THB',
+      dynamicFields: { ...dynamic },
+    };
     setForm({ admissionType: 'ipd', hospitalName: '', transferDocNo: '', dependentId: '', receiptNo: '', receiptDate: '', receiptAmount: '', attachmentName: '' });
+    setDynamic(emptyDynamic());
     setErrors([]);
-    onSubmitted?.(wfId);
+    onSubmitted?.(wfId, submission);
   };
 
   return (
@@ -195,6 +242,15 @@ export function HospitalClaimForm({
             </FormField>
           </>
         )}
+
+        {/* ── Conditional groups (config-driven, shared renderer — STA-119) ── */}
+        <ConditionalClaimFields
+          fields={conditionalFields}
+          values={dynamic}
+          onChange={setDynamicField}
+          idPrefix={plan.id}
+          isTh={isTh}
+        />
 
         {/* Attachments */}
         <FileUploadField

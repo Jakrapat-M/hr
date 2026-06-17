@@ -8,10 +8,9 @@ import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import {
   bucketsForPlan,
   getConditionalFields,
-  type ClaimFieldDescriptor,
   type ClaimFieldKey,
 } from '@/data/benefits/claim-field-config';
-import { pickLabel } from '@/lib/admin/hire/picklists/picklistRegistry';
+import { ConditionalClaimFields } from './ConditionalClaimFields';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,9 +72,6 @@ const CLAIM_LABELS: Record<string, { th: string; en: string }> = {
   dependentRelationship: { th: 'ความสัมพันธ์', en: 'Relationship Type' },
   realMonthDate: { th: 'เดือนที่ขอเบิก', en: 'Claim month' },
 };
-
-const selectClassName =
-  'h-10 w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
 
 export function SimpleClaimForm({
   plan,
@@ -221,61 +217,6 @@ export function SimpleClaimForm({
     });
   };
 
-  const renderConditional = (f: ClaimFieldDescriptor) => {
-    const key = f.key as ClaimFieldKey;
-    const value = dynamic[key] ?? '';
-    const label = tc(f.labelKey);
-    const fieldId = `${plan.id}-${f.key}`;
-    if (f.type === 'select' && f.lov) {
-      return (
-        <FormField key={fieldId} id={fieldId} label={label} required={f.required}>
-          {(controlProps) => (
-            <select
-              {...controlProps}
-              className={selectClassName}
-              value={value}
-              onChange={(e) => setDynamicField(key, e.target.value)}
-            >
-              <option value="">{isTh ? '— เลือก —' : '— Select —'}</option>
-              {f.lov!.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {pickLabel(opt, isTh ? 'th' : 'en')}
-                </option>
-              ))}
-            </select>
-          )}
-        </FormField>
-      );
-    }
-    if (f.type === 'textarea') {
-      return (
-        <FormField key={fieldId} id={fieldId} label={label} required={f.required}>
-          {(controlProps) => (
-            <Textarea
-              {...controlProps}
-              value={value}
-              onChange={(e) => setDynamicField(key, e.target.value)}
-            />
-          )}
-        </FormField>
-      );
-    }
-    const inputType = f.type === 'date' ? 'date' : f.type === 'month' ? 'month' : 'text';
-    return (
-      <FormField key={fieldId} id={fieldId} label={label} required={f.required}>
-        {(controlProps) => (
-          <FormInput
-            {...controlProps}
-            type={inputType}
-            inputMode={f.type === 'number' ? 'numeric' : undefined}
-            value={value}
-            onChange={(e) => setDynamicField(key, e.target.value)}
-          />
-        )}
-      </FormField>
-    );
-  };
-
   return (
     <Card variant="raised" size="lg" className={className}>
       <CardEyebrow>{isTh ? 'เบิกสวัสดิการ · ใบเสร็จ' : 'Benefit claim · receipt-based'}</CardEyebrow>
@@ -396,8 +337,14 @@ export function SimpleClaimForm({
           )}
         </FormField>
 
-        {/* ── Conditional groups (config-driven) ─────────────────────────── */}
-        {conditionalFields.map(renderConditional)}
+        {/* ── Conditional groups (config-driven, shared renderer) ────────── */}
+        <ConditionalClaimFields
+          fields={conditionalFields}
+          values={dynamic}
+          onChange={setDynamicField}
+          idPrefix={plan.id}
+          isTh={isTh}
+        />
 
         <FileUploadField
           label={isTh ? 'เอกสารแนบ' : 'Attachments'}
