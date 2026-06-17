@@ -42,7 +42,12 @@ export function HospitalClaimForm({
   // STA-119: same config-driven conditional groups as SimpleClaimForm, keyed on
   // the plan's category bucket (medical: Medical/Dental, OPD/IPD, hospital type,
   // hospital name, patient-transfer, disease details, etc.).
-  const conditionalFields = getConditionalFields(bucketsForPlan(plan));
+  // hospitalName is excluded from the rendered conditional set because HospitalClaimForm
+  // owns that field natively (form.hospitalName / "ชื่อโรงพยาบาล"). The native value
+  // is mapped into dynamicFields.hospitalName at submit so the approval mirror sees it.
+  const conditionalFields = getConditionalFields(bucketsForPlan(plan)).filter(
+    (f) => f.key !== 'hospitalName',
+  );
 
   const emptyDynamic = (): Partial<Record<ClaimFieldKey, string>> => ({});
 
@@ -122,7 +127,9 @@ export function HospitalClaimForm({
       totalClaimAmount: Number.isFinite(receiptAmount) ? receiptAmount : 0,
       remark: '',
       currency: 'THB',
-      dynamicFields: { ...dynamic },
+      // hospitalName is owned by the native field; map it into dynamicFields so the
+      // approval mirror (bucketsForType resolver) can display it alongside the others.
+      dynamicFields: { ...dynamic, hospitalName: form.hospitalName.trim() },
     };
     setForm({ admissionType: 'ipd', hospitalName: '', transferDocNo: '', dependentId: '', receiptNo: '', receiptDate: '', receiptAmount: '', attachmentName: '' });
     setDynamic(emptyDynamic());

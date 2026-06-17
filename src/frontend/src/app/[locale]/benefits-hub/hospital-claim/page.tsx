@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { ArrowLeft, ClipboardList } from 'lucide-react';
 import { Card, CardEyebrow, Button, buttonVariants } from '@/components/humi';
-import { HospitalClaimForm } from '@/components/benefits/templates';
+import { HospitalClaimForm, type SimpleClaimSubmission } from '@/components/benefits/templates';
 import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry';
 import { benefitsHubRoute } from '@/lib/benefit-routes';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
@@ -23,15 +23,21 @@ export default function HospitalClaimPage() {
   const [lastClaim, setLastClaim] = useState<{ id: string; workflowRequestId: string } | null>(null);
 
   // STA-63 — persist into the claims store (visible at /requests, /quick-approve, /admin/benefits/records)
-  const handleSubmitted = (wfId: string) => {
+  const handleSubmitted = (wfId: string, submission?: SimpleClaimSubmission) => {
     if (!selected) return;
+    const receiptDate = submission?.receiptDate ?? new Date().toISOString().slice(0, 10);
     const claim = submitClaim({
       benefitCode: selected.id,
       benefitName: isTh ? selected.nameTh : selected.nameEn,
       benefitType: 'medical',
-      receiptNo: wfId,
-      receiptDate: new Date().toISOString().slice(0, 10),
-      receiptAmount: 0,
+      remainingAmount: submission?.remainingAmount,
+      receiptNo: submission?.receiptNo || wfId,
+      receiptDate,
+      receiptAmount: submission?.receiptAmount ?? 0,
+      totalClaimAmount: submission?.totalClaimAmount ?? submission?.receiptAmount ?? 0,
+      claimDate: submission?.claimDate,
+      remark: submission?.remark,
+      dynamicFields: submission?.dynamicFields,
     });
     setLastClaim({ id: claim.id, workflowRequestId: claim.workflowRequestId });
     setTimeout(() => setLastClaim(null), 6000);
