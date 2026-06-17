@@ -4985,6 +4985,8 @@
     "company": "Company",
     "branch": "Branch",
     "payGrade": "PG",
+    "hireDate": "Hire date",
+    "terminateDate": "Terminate date",
     "submitted": "Submitted",
     "waiting": "Waiting",
     "days": "days",

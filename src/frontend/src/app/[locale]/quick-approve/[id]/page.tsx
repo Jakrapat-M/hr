@@ -5,12 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/humi';
-import { ApprovalChain, ApprovalTimelineChain } from '@/components/quick-approve/ApprovalChain';
-import {
-  routingStagesFor,
-  currentStep,
-  nextApproverLabel,
-} from '@/lib/approval-routing';
+import { ApprovalTimelineChain } from '@/components/quick-approve/ApprovalChain';
 import { RequestSummary } from '@/components/quick-approve/detail/RequestSummary';
 import { RequestPayload } from '@/components/quick-approve/detail/RequestPayload';
 import { HistoryTimeline } from '@/components/quick-approve/detail/HistoryTimeline';
@@ -457,7 +452,7 @@ interface PageProps {
 export default function QuickApproveDetailPage({ params }: PageProps) {
   const t = useTranslations('quick_approve_detail');
   const router = useRouter();
-  const { id, locale } = use(params);
+  const { id } = use(params);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>('reject');
@@ -539,25 +534,6 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
           {t('title')} — {request.id}
         </h1>
         <p className="text-small text-ink-muted capitalize">{t(`type_${request.type}`)}</p>
-      </div>
-
-      {/* P4: per-type approver-routing chain — ordered stage pills with the
-          current routed step highlighted + an explicit "next approver" label. */}
-      <div className="mb-4">
-        <p className="mb-1.5 text-small font-medium text-ink-muted">{t('routingChain')}</p>
-        <ApprovalChain
-          chain={routingStagesFor(request.type)}
-          locale={locale}
-          activeStage={
-            queueApproval ? currentStep(queueApproval)?.stage : undefined
-          }
-          size="md"
-        />
-        {queueApproval && nextApproverLabel(queueApproval, locale) && (
-          <p className="mt-1.5 text-small text-ink-muted">
-            {t('nextApprover', { approver: nextApproverLabel(queueApproval, locale)! })}
-          </p>
-        )}
       </div>
 
       {/* Approval chain quick view (runtime timeline steps) */}

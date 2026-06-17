@@ -4864,6 +4864,8 @@
     "company": "Company",
     "branch": "Branch",
     "payGrade": "PG",
+    "hireDate": "วันที่เริ่มงาน",
+    "terminateDate": "วันที่สิ้นสุดงาน",
     "submitted": "ส่งเมื่อ",
     "waiting": "รอนาน",
     "days": "วัน",
