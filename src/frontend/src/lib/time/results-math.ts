@@ -5,6 +5,8 @@
 
 import { getAttendanceForPeriod, ecPlanHoursFor } from './attendance-seed';
 import type { AttendanceDay } from './attendance-math';
+import { getLeaveType, LEAVE_CODE_TO_WAGE_TYPE } from './leave-types';
+import type { HolidayLabel } from './holiday-calendar';
 
 export type WageType = 'REGULAR' | 'HOLIDAY' | '2700' | '2701';
 
@@ -13,18 +15,29 @@ export type ResultRow = {
   payCodeTh: string;
   payCodeEn: string;
   wageType: WageType;
+  /**
+   * Override pill/pay-code label for leave codes WITHOUT a documented wage type
+   * (everything except Annual=2701 / Sick=2700). When set, the render prefers it
+   * over WAGE_TYPE_LABEL[wageType] so a non-2700/2701 leave shows its own TH/EN
+   * name instead of a fake numeric code — and `wageType` stays a valid union
+   * value ('REGULAR') so the WAGE_TYPE_LABEL index never throws.
+   */
+  wageLabel?: { th: string; en: string };
   planHours: number;
   actualHours: number;
   days: number;
 };
 
-// Mock public holidays falling in the current period (wiki §5 — HOLIDAY wage type).
-const HOLIDAYS = new Set<string>(['2026-06-03']);
-// Mock approved leave overlay (wage types 2701 = Annual, 2700 = Sick — wiki §5).
-const DEMO_LEAVE: { date: string; wageType: WageType; nameTh: string; nameEn: string }[] = [
-  { date: '2026-05-26', wageType: '2701', nameTh: 'ลาพักผ่อนประจำปี', nameEn: 'Annual leave' },
-  { date: '2026-05-29', wageType: '2700', nameTh: 'ลาป่วย', nameEn: 'Sick leave' },
-];
+/** Approved leave for a date, keyed by ISO date (built by useResultsInputs). */
+export type ApprovedLeaveDay = { leaveCode: string; days: number };
+
+/** Inputs the page injects so this lib stays pure (no store reads). */
+export type ResultsInputs = {
+  /** date → holiday label, from getHolidaysForPeriod. */
+  holidays: Map<string, HolidayLabel>;
+  /** working date → approved leave, range-expanded by the selector hook. */
+  approvedLeaveByDate: Map<string, ApprovedLeaveDay>;
+};
 
 export const WAGE_TYPE_LABEL: Record<WageType, { th: string; en: string }> = {
   REGULAR: { th: 'ทำงานปกติ', en: 'Regular' },
@@ -46,20 +59,42 @@ export function workedHours(d: AttendanceDay): number {
   return Math.max(0, Math.round((mins / 60) * 10) / 10);
 }
 
-export function computeResultsForPeriod(empId: string): ResultRow[] {
+/**
+ * Per-day pay-code lines for the period. PURE: holidays + approved leave are
+ * injected (built by the useResultsInputs selector hook), never read from a store
+ * here. Precedence per attendance day: holiday → leave → worked.
+ */
+export function computeResultsForPeriod(empId: string, inputs: ResultsInputs): ResultRow[] {
   const days = getAttendanceForPeriod(empId);
   const plan = ecPlanHoursFor(empId);
-  const leaveByDate = new Map(DEMO_LEAVE.map((l) => [l.date, l]));
+  const { holidays, approvedLeaveByDate } = inputs;
 
   const rows: ResultRow[] = [];
   for (const d of days) {
-    if (HOLIDAYS.has(d.date)) {
-      rows.push({ date: d.date, payCodeTh: 'วันหยุดนักขัตฤกษ์', payCodeEn: 'Public holiday', wageType: 'HOLIDAY', planHours: plan, actualHours: 0, days: 1 });
+    const holiday = holidays.get(d.date);
+    if (holiday) {
+      rows.push({ date: d.date, payCodeTh: holiday.nameTh, payCodeEn: holiday.nameEn, wageType: 'HOLIDAY', planHours: plan, actualHours: 0, days: 1 });
       continue;
     }
-    const lv = leaveByDate.get(d.date);
+    const lv = approvedLeaveByDate.get(d.date);
     if (lv) {
-      rows.push({ date: d.date, payCodeTh: lv.nameTh, payCodeEn: lv.nameEn, wageType: lv.wageType, planHours: plan, actualHours: 0, days: 1 });
+      const def = getLeaveType(lv.leaveCode);
+      const nameTh = def?.nameTh ?? lv.leaveCode;
+      const nameEn = def?.nameEn ?? lv.leaveCode;
+      const wageType = LEAVE_CODE_TO_WAGE_TYPE[lv.leaveCode];
+      rows.push({
+        date: d.date,
+        payCodeTh: nameTh,
+        payCodeEn: nameEn,
+        // Annual/Sick → their documented numeric wage type (no override label).
+        // Every other leave code → a valid 'REGULAR' union value + a wageLabel so
+        // the pill shows the leave's own name (never a fake code, never a crash).
+        wageType: wageType ?? 'REGULAR',
+        wageLabel: wageType ? undefined : { th: nameTh, en: nameEn },
+        planHours: plan,
+        actualHours: 0,
+        days: lv.days,
+      });
       continue;
     }
     if (!d.dayOff && d.actualIn) {
@@ -85,8 +120,10 @@ export function resultsSummary(rows: ResultRow[]): {
     totalPlan += r.planHours;
     totalActual += r.actualHours;
     if (r.wageType === 'HOLIDAY') holidayDays += r.days;
+    // Leave = the numeric wage types (2700/2701) OR a non-numeric leave carrying
+    // its own override label (wageType is the 'REGULAR' placeholder for those).
+    else if (r.wageType === '2700' || r.wageType === '2701' || r.wageLabel) leaveDays += r.days;
     else if (r.wageType === 'REGULAR') workedDays += r.days;
-    else leaveDays += r.days;
   }
   return {
     totalActual: Math.round(totalActual * 10) / 10,

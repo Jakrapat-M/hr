@@ -1,6 +1,10 @@
 // Time Off balance ledger (wiki §6 WFS "Time Off" tab): per leave bucket, in days,
 // Initial Balance · Credits · Debits · Ending Balance. Ending = Initial + Credits −
-// Debits. Mockup seed of the WFS buckets seen in the reference screenshot.
+// Debits. PURE: the page feeds live per-bucket numbers from the leave-balances
+// store (via useTimeOffLedger); this module only shapes them into labelled rows
+// over the 7 quota-tracked leave codes.
+
+import { quotaTrackedTypes } from './leave-types';
 
 export type LeaveLedgerRow = {
   kind: string;
@@ -11,13 +15,30 @@ export type LeaveLedgerRow = {
   debits: number;
 };
 
-export const TIME_OFF_LEDGER: LeaveLedgerRow[] = [
-  { kind: 'annual', nameTh: 'ลาพักผ่อนประจำปี', nameEn: 'Annual Leave', initial: 10, credits: 0, debits: 3 },
-  { kind: 'sick', nameTh: 'ลาป่วย', nameEn: 'Sick Leave', initial: 30, credits: 0, debits: 2 },
-  { kind: 'personal', nameTh: 'ลากิจ', nameEn: 'Personal Leave', initial: 3, credits: 0, debits: 1 },
-  { kind: 'maternity', nameTh: 'ลาคลอดบุตร', nameEn: 'Maternity Leave', initial: 98, credits: 0, debits: 0 },
-  { kind: 'maternity_spouse', nameTh: 'ลาช่วยเหลือคู่สมรสคลอดบุตร', nameEn: 'Maternity (Spouse)', initial: 15, credits: 0, debits: 0 },
-];
+/** Per-bucket settled numbers for a leave code (from the leave-balances store). */
+export type LedgerBucketInput = { initial: number; credits: number; debits: number };
+
+/**
+ * Build the Time-Off ledger rows over the 7 quota-tracked leave codes, in the
+ * registry order, with bilingual labels from LEAVE_TYPES (kind = code, since the
+ * balance buckets key on the leave code). Codes missing from `buckets` render as
+ * an all-zero row so the tab always shows all 7 buckets. PURE → unit-testable.
+ */
+export function buildTimeOffLedger(
+  buckets: Record<string, LedgerBucketInput>,
+): LeaveLedgerRow[] {
+  return quotaTrackedTypes().map((t) => {
+    const b = buckets[t.code] ?? { initial: 0, credits: 0, debits: 0 };
+    return {
+      kind: t.code,
+      nameTh: t.nameTh,
+      nameEn: t.nameEn,
+      initial: b.initial,
+      credits: b.credits,
+      debits: b.debits,
+    };
+  });
+}
 
 export function endingBalance(r: LeaveLedgerRow): number {
   return r.initial + r.credits - r.debits;
