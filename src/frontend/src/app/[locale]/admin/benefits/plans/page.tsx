@@ -145,7 +145,6 @@ function editPlanDefaultIdentity(plan: BenefitPlan, isTh: boolean): Tab1Identity
   };
 }
 
-
 // STA-113 — Make Correction + Insert share ONE mode-aware popup. The action that
 // opened it (correction = update in place, insert = supersede) is shown as an
 // ActionTagChip at the top of the body, and Save branches on the mode. The footer
@@ -191,7 +190,6 @@ function PlanFormModal({
       isTh={isTh}
     />
   );
-
 
   // STA-113 — Save branches on the popup mode: correction = update in place,
   // insert = supersede (the old footer Insert behaviour, now driven by the row).
@@ -369,7 +367,6 @@ function CreatePlanModal({
       isTh={isTh}
     />
   );
-
 
   return (
     <Modal
