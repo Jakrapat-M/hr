@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { ExternalLink } from 'lucide-react';
 import { Capability } from '@/components/humi';
+import { formatDate } from '@/lib/date';
 import type {
   PendingRequest,
   LeaveDetails,
@@ -98,7 +99,7 @@ function ClaimPayload({ details, t, locale }: { details: ClaimDetails; t: Return
   return (
     <dl>
       <Row label={t('remainingAmount')} value={money(details.remainingAmount, details.currency)} />
-      <Row label={t('receiptDate')} value={details.receiptDate ?? '—'} />
+      <Row label={t('receiptDate')} value={details.receiptDate ? formatDate(details.receiptDate, 'long', locale) : '—'} />
       <Row label={t('receiptNo')} value={details.receiptNo ?? '—'} />
       <Row label={t('receiptAmount')} value={money(details.receiptAmount, details.currency)} />
       <Row label={t('totalClaimAmount')} value={money(details.totalClaimAmount ?? details.amount, details.currency)} />
