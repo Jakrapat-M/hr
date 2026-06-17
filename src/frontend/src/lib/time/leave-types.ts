@@ -65,3 +65,14 @@ export function quotaTrackedTypes(): LeaveTypeDef[] {
 export const LEAVE_CODE_TO_BALANCE_KIND: Record<string, string> = Object.fromEntries(
   quotaTrackedTypes().map((t) => [t.code, t.code]),
 );
+
+/**
+ * Map the leave codes with a KNOWN payroll wage type to that code (wiki §5).
+ * Only Annual (2701) and Sick (2700) are documented by WFS; every other leave
+ * code renders its own bilingual label on Results instead of a numeric wage code
+ * (see results-math `wageLabel`), until BA supplies the full wage-type table.
+ */
+export const LEAVE_CODE_TO_WAGE_TYPE: Record<string, '2700' | '2701'> = {
+  annual_leave: '2701',
+  sick_leave: '2700',
+};

@@ -27,7 +27,9 @@ import { templateForEmployee } from '@/lib/time/schedule-template';
 import { validateDwsDay, validateDwsPeriod, DWS_LEVEL_CLASS, dwsLabel } from '@/lib/time/dws-validation';
 import { lateMinutesFor, formatLate, periodLateSummary, type AttendanceDay } from '@/lib/time/attendance-math';
 import { computeResultsForPeriod, resultsSummary, WAGE_TYPE_LABEL } from '@/lib/time/results-math';
-import { TIME_OFF_LEDGER, endingBalance, leaveBalanceCard } from '@/lib/time/time-off-ledger';
+import { endingBalance, leaveBalanceCard } from '@/lib/time/time-off-ledger';
+import { useResultsInputs } from '@/hooks/use-results-inputs';
+import { useTimeOffLedger } from '@/hooks/use-time-off-ledger';
 import { heroSummary, getExceptionsForPeriod } from '@/lib/time/exceptions';
 import {
   useTimeCorrections,
@@ -111,8 +113,15 @@ export default function TimesheetPage() {
   const corrForDate = (date: string) => latestCorrectionForDate(correctionRequests, empId, date);
   const ecPlan = ecPlanHoursFor(empId);
   const tmpl = templateForEmployee(empId);
-  const results = useMemo(() => computeResultsForPeriod(empId), [empId]);
+  // Real holiday calendar + live approved-leave overlay (reactive subscription).
+  const resultsInputs = useResultsInputs(empId, period);
+  const results = useMemo(
+    () => computeResultsForPeriod(empId, resultsInputs),
+    [empId, resultsInputs],
+  );
   const resSummary = useMemo(() => resultsSummary(results), [results]);
+  // Live Time-Off ledger from the leave-balances store (7 quota-tracked buckets).
+  const timeOffLedger = useTimeOffLedger(empId);
   const messages = useMemo(() => {
     const dws = validateDwsPeriod(days);
     const msgs: { level: 'ok' | 'warn'; th: string; en: string }[] = [
@@ -393,7 +402,7 @@ export default function TimesheetPage() {
                     <tr key={`${r.date}-${r.wageType}`} className="border-b border-hairline last:border-0">
                       <td className="py-2 px-3 text-ink whitespace-nowrap">{fmtDate(r.date, isTh)}</td>
                       <td className="py-2 px-3 text-ink">{isTh ? r.payCodeTh : r.payCodeEn}</td>
-                      <td className="py-2 px-3"><span className="rounded-full bg-canvas-soft px-2 py-0.5 text-xs font-medium text-ink-muted">{isTh ? WAGE_TYPE_LABEL[r.wageType].th : WAGE_TYPE_LABEL[r.wageType].en}</span></td>
+                      <td className="py-2 px-3"><span className="rounded-full bg-canvas-soft px-2 py-0.5 text-xs font-medium text-ink-muted">{r.wageLabel ? (isTh ? r.wageLabel.th : r.wageLabel.en) : (isTh ? WAGE_TYPE_LABEL[r.wageType].th : WAGE_TYPE_LABEL[r.wageType].en)}</span></td>
                       <td className="py-2 px-3 text-right tabular-nums text-ink-muted">{r.planHours.toFixed(1)}</td>
                       <td className="py-2 px-3 text-right tabular-nums text-ink">{r.actualHours.toFixed(1)}</td>
                       <td className="py-2 px-3 text-right tabular-nums text-ink">{r.days}</td>
@@ -445,7 +454,7 @@ export default function TimesheetPage() {
         <div className="space-y-4">
           {/* At-a-glance leave-balance progress cards (remaining vs entitlement) */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {TIME_OFF_LEDGER.map((r) => {
+            {timeOffLedger.map((r) => {
               const c = leaveBalanceCard(r);
               const name = isTh ? r.nameTh : r.nameEn;
               return (
@@ -488,7 +497,7 @@ export default function TimesheetPage() {
                 </tr>
               </thead>
               <tbody>
-                {TIME_OFF_LEDGER.map((r) => (
+                {timeOffLedger.map((r) => (
                   <tr key={r.kind} className="border-b border-hairline last:border-0">
                     <td className="py-2 px-3 text-ink">{isTh ? r.nameTh : r.nameEn}</td>
                     <td className="py-2 px-3 text-right tabular-nums text-ink-muted">{r.initial}</td>

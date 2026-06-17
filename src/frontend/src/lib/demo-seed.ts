@@ -31,6 +31,9 @@ import { useTimeCorrections, type TimeCorrectionRequest } from '@/stores/time-co
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { appliedChainFor } from '@/lib/time/approval-rules';
 import { getLeaveType } from '@/lib/time/leave-types';
+import { currentPeriod } from '@/lib/time/period';
+import { getHolidaysForPeriod } from '@/lib/time/holiday-calendar';
+import { getAttendanceForPeriod } from '@/lib/time/attendance-seed';
 
 const MOCK_TERMINATION_REQUESTS: TerminationRequest[] = [
   {
@@ -312,6 +315,39 @@ const DEMO_LEAVE_EMPLOYEE = { id: 'EMP-0301', name: 'พิมพ์ชนก �
 // for the pre-seeded demo *rows*, a different identity by design.)
 const DEMO_ESS_EMPLOYEE = { id: 'EMP001', name: 'สมชาย ใจดี' };
 
+/**
+ * Pick an in-period leave date for EMP001 derived from the LIVE payroll period —
+ * never a hardcoded date (which falls out of the window as wall-clock time moves
+ * and silently empties the demo). Anchors at period.start + 14 days, then walks
+ * forward to the first WORKING attendance day (scheduled, not a day-off) that is
+ * not a public holiday, so the seeded leave always lights up a Results row.
+ * Returns null only in the degenerate case of no working day after the anchor.
+ */
+function deriveInPeriodLeaveDate(empId: string): string | null {
+  const period = currentPeriod();
+  const holidays = getHolidaysForPeriod(period.start, period.end);
+  const workingDates = new Set(
+    getAttendanceForPeriod(empId)
+      .filter((d) => !d.dayOff)
+      .map((d) => d.date),
+  );
+
+  const end = new Date(period.end + 'T00:00:00Z');
+  // First working, non-holiday date at or after `fromISO` (within the period).
+  const firstWorkingDay = (fromISO: string): string | null => {
+    for (const d = new Date(fromISO + 'T00:00:00Z'); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+      const iso = d.toISOString().slice(0, 10);
+      if (workingDates.has(iso) && !holidays.has(iso)) return iso;
+    }
+    return null;
+  };
+
+  const anchor = new Date(period.start + 'T00:00:00Z');
+  anchor.setUTCDate(anchor.getUTCDate() + 14);
+  // Prefer mid-period; fall back to the period start if the +14 anchor over-shot.
+  return firstWorkingDay(anchor.toISOString().slice(0, 10)) ?? firstWorkingDay(period.start);
+}
+
 const DEMO_LEAVE_BALANCE_SEEDS: Array<{ kind: string; initial: number }> = [
   { kind: 'sick_leave', initial: 30 },
   { kind: 'annual_leave', initial: 10 },
@@ -556,6 +592,39 @@ export function ensureDemoSeed(): void {
         queueSnapshot: snapshot,
       });
     }
+  }
+
+  // ── Group A: one APPROVED in-period leave for the timesheet landing persona ──
+  // The /time/timesheet Results + Time-Off tabs resolve to EMP001 (NextAuth
+  // mockSession id; resolveCurrentEmpId returns null for its email so the userId
+  // fallback wins) — a clocking employee, so the Results tab renders. The pending
+  // rows above are owned by EMP-0301, so without THIS the landing persona's
+  // Results leave section + Time-Off debits stay empty. annual_leave is a 1-LEVEL
+  // code, so a single approve() reaches 'approved' AND deduct() moves the reserve
+  // into debits (lights up the Results row + the Time-Off debits/ending). The
+  // date is DERIVED from the live currentPeriod() (never hardcoded) so it always
+  // lands in-period on a working, non-holiday day.
+  const essLeaveDate = deriveInPeriodLeaveDate(DEMO_ESS_EMPLOYEE.id);
+  const ESS_APPROVED_LEAVE_ID = 'LV-DEMO-EMP001-ANNUAL';
+  const leaveStoreForEss = useLeaveApprovals.getState();
+  const alreadySeeded = leaveStoreForEss.requests.some((r) => r.id === ESS_APPROVED_LEAVE_ID);
+  if (essLeaveDate && !alreadySeeded) {
+    useLeaveApprovals.getState().addRequest({
+      id: ESS_APPROVED_LEAVE_ID,
+      employeeId: DEMO_ESS_EMPLOYEE.id,
+      employeeName: DEMO_ESS_EMPLOYEE.name,
+      leaveType: 'annual_leave',
+      leaveCode: 'annual_leave',
+      startDate: essLeaveDate,
+      endDate: essLeaveDate,
+      reason: 'ลาพักผ่อนประจำปี',
+      days: 1,
+      unit: '1-day',
+    });
+    // 1-level → a single approve() finalises: status → approved + deduct() runs.
+    useLeaveApprovals
+      .getState()
+      .approve(ESS_APPROVED_LEAVE_ID, { id: 'MGR-DEMO', name: 'สมชาย หัวหน้าทีม' });
   }
 
   APPROVAL_REGISTRY.change_request.seed(APPROVAL_SEED_BY_TYPE.change_request);
