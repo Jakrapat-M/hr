@@ -5044,7 +5044,18 @@
     "filterStartDate": "วันที่เริ่ม:",
     "filterEffectiveDate": "วันที่มีผล:",
     "filterMonthAll": "เดือน",
-    "filterYearAll": "ปี"
+    "filterYearAll": "ปี",
+    "createPlan": "สร้างแผน",
+    "makeCorrection": "แก้ไขข้อมูล",
+    "insert": "แทรก",
+    "delete": "ลบ",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "tagCreate": "สร้าง",
+    "tagCorrection": "แก้ไขข้อมูล",
+    "tagInsert": "แทรก",
+    "deleteConfirmTitle": "ยืนยันการลบแผน",
+    "deleteConfirmBody": "การลบจะปิดใช้งานแผนนี้"
   },
   "benefitHub": {
     "reimbursement": {
@@ -5133,7 +5144,16 @@
     "exportCsv": "ส่งออก CSV",
     "importSuccess": "นำเข้า {count} กฎเรียบร้อย",
     "importEmpty": "ไม่พบข้อมูลที่ถูกต้องในไฟล์",
-    "importError": "ไม่สามารถอ่านไฟล์ CSV ได้"
+    "importError": "ไม่สามารถอ่านไฟล์ CSV ได้",
+    "createRule": "สร้างกฎ",
+    "makeCorrection": "แก้ไขข้อมูล",
+    "insert": "แทรก",
+    "delete": "ลบ",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "tagCreate": "สร้าง",
+    "tagCorrection": "แก้ไขข้อมูล",
+    "tagInsert": "แทรก"
   },
   "adminBenefitRecords": {
     "title": "บันทึกสวัสดิการพิเศษ",

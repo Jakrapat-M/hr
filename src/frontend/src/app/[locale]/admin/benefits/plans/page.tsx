@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
+import { Pencil, Layers, Trash2 } from 'lucide-react';
 
 // Benefits with DB-driven eligibility editor — matches rules/[benefitKey] pages
 const ELIGIBILITY_MANAGED_BENEFIT_KEYS = new Set([
@@ -24,6 +25,7 @@ import {
 import { PlanConfiguratorShell, type PlanConfiguratorTab } from '@/components/benefits/PlanConfiguratorShell';
 import { Tab1IdentityFields, type Tab1IdentityValues } from '@/components/benefits/Tab1IdentityFields';
 import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar';
+import { ActionTagChip, type ActionTagMode } from '@/components/benefits/ActionTagChip';
 import { useAuthStore } from '@/stores/auth-store';
 import { useBenefitHistoryStore } from '@/stores/benefit-history-store';
 import { applyIdentityToPlan, buildPlanFromCreate } from './plan-builders';
@@ -187,20 +189,29 @@ function buildTabs(
   ];
 }
 
-function EditPlanModal({
+// STA-113 — Make Correction + Insert share ONE mode-aware popup. The action that
+// opened it (correction = update in place, insert = supersede) is shown as an
+// ActionTagChip at the top of the body, and Save branches on the mode. The footer
+// is exactly Save | Cancel (the old footer Insert button is removed — Insert is now
+// a row action). The history sidebar is shown for both edit-style modes.
+function PlanFormModal({
   plan,
+  mode,
   onClose,
   onSubmit,
   onInsert,
   isTh,
   locale,
+  t,
 }: {
   plan: BenefitPlan;
+  mode: Extract<ActionTagMode, 'correction' | 'insert'>;
   onClose: () => void;
   onSubmit: (updated: BenefitPlan) => void;
   onInsert: (original: BenefitPlan, edited: BenefitPlan) => void;
   isTh: boolean;
   locale: string;
+  t: (key: string) => string;
 }) {
   const [tab1Values, setTab1Values] = useState<Tab1IdentityValues>(() =>
     editPlanDefaultIdentity(plan, isTh),
@@ -227,23 +238,22 @@ function EditPlanModal({
 
   const tabs = buildTabs(tab1Panel, isTh);
 
+  // STA-113 — Save branches on the popup mode: correction = update in place,
+  // insert = supersede (the old footer Insert behaviour, now driven by the row).
   const handleSave = () => {
     setSaving(true);
     // In-session mutation only — no backend POST/PUT in this mockup phase.
-    onSubmit(applyIdentityToPlan(plan, tab1Values));
+    if (mode === 'insert') {
+      onInsert(plan, applyIdentityToPlan(plan, tab1Values));
+    } else {
+      onSubmit(applyIdentityToPlan(plan, tab1Values));
+    }
     setSaving(false);
     setSaved(true);
     setTimeout(onClose, 1200);
   };
 
-  // STA-98 FU-2 — Insert = supersede the current plan with these values.
-  const handleInsert = () => {
-    setSaving(true);
-    onInsert(plan, applyIdentityToPlan(plan, tab1Values));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(onClose, 1200);
-  };
+  const chipLabel = mode === 'insert' ? t('tagInsert') : t('tagCorrection');
 
   return (
     <Modal
@@ -253,6 +263,8 @@ function EditPlanModal({
       widthClass="max-w-5xl"
     >
       <div className="space-y-4">
+        <ActionTagChip mode={mode} label={chipLabel} />
+
         {/* History panel beside the plan's current info (STA-102) */}
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <PlanConfiguratorShell
@@ -299,17 +311,12 @@ function EditPlanModal({
         )}
 
         <div className="flex justify-end gap-2 pt-2 border-t border-hairline">
-          <Button variant="ghost" onClick={onClose}>{isTh ? 'ยกเลิก' : 'Cancel'}</Button>
-          <Capability action="edit">
-            <Button variant="secondary" onClick={handleInsert} disabled={saving}>
-              {saving ? (isTh ? 'กำลังแทรก…' : 'Inserting…') : (isTh ? 'แทรก (แทนที่)' : 'Insert')}
-            </Button>
-          </Capability>
+          <Button variant="ghost" onClick={onClose}>{t('cancel')}</Button>
           <Capability action="edit" fallback={
-            <Button variant="primary" disabled>{isTh ? 'บันทึก' : 'Save'}</Button>
+            <Button variant="primary" disabled>{t('save')}</Button>
           }>
             <Button variant="primary" onClick={handleSave} disabled={saving}>
-              {saving ? (isTh ? 'กำลังบันทึก…' : 'Saving…') : (isTh ? 'บันทึก' : 'Save')}
+              {saving ? (isTh ? 'กำลังบันทึก…' : 'Saving…') : t('save')}
             </Button>
           </Capability>
         </div>
@@ -323,11 +330,13 @@ function CreatePlanModal({
   onSubmit,
   existingIds,
   isTh,
+  t,
 }: {
   onClose: () => void;
   onSubmit: (created: BenefitPlan) => void;
   existingIds: Set<string>;
   isTh: boolean;
+  t: (key: string) => string;
 }) {
   const defaultTab1: Tab1IdentityValues = {
     ttt: '',
@@ -419,6 +428,8 @@ function CreatePlanModal({
       widthClass="max-w-3xl"
     >
       <div className="space-y-4">
+        <ActionTagChip mode="create" label={t('tagCreate')} />
+
         <PlanConfiguratorShell
           tabs={tabs}
           activeTab={activeTab}
@@ -438,18 +449,20 @@ function CreatePlanModal({
           </div>
         )}
 
+        {/* STA-113 — Create keeps Save-as-Draft (documented STA-98 carve-out);
+            Make Correction + Insert popups are strictly Save | Cancel. */}
         <div className="flex justify-end gap-2 pt-2 border-t border-hairline">
-          <Button variant="ghost" onClick={onClose}>{isTh ? 'ยกเลิก' : 'Cancel'}</Button>
+          <Button variant="ghost" onClick={onClose}>{t('cancel')}</Button>
           <Capability action="edit">
             <Button variant="secondary" onClick={handleSaveDraft} disabled={saving || !draftValid}>
               {isTh ? 'บันทึกฉบับร่าง' : 'Save as Draft'}
             </Button>
           </Capability>
           <Capability action="edit" fallback={
-            <Button variant="primary" disabled>{isTh ? 'สร้างแผน' : 'Create Plan'}</Button>
+            <Button variant="primary" disabled>{t('createPlan')}</Button>
           }>
             <Button variant="primary" onClick={handleSave} disabled={saving || !isValid}>
-              {saving ? (isTh ? 'กำลังสร้าง…' : 'Creating…') : (isTh ? 'สร้างแผน' : 'Create Plan')}
+              {saving ? (isTh ? 'กำลังสร้าง…' : 'Creating…') : t('createPlan')}
             </Button>
           </Capability>
         </div>
@@ -471,8 +484,14 @@ export default function BenefitPlansPage() {
   const [startYear, setStartYear] = useState<string>('all');
   const [effectiveMonth, setEffectiveMonth] = useState<string>('all');
   const [effectiveYear, setEffectiveYear] = useState<string>('all');
+  // STA-113 — one mode-aware popup for Make Correction / Insert (null = closed).
   const [editingPlan, setEditingPlan] = useState<BenefitPlan | null>(null);
+  const [editMode, setEditMode] = useState<Extract<ActionTagMode, 'correction' | 'insert'>>('correction');
+  const [deleteTarget, setDeleteTarget] = useState<BenefitPlan | null>(null);
   const [creatingPlan, setCreatingPlan] = useState(false);
+
+  const openCorrection = (p: BenefitPlan) => { setEditMode('correction'); setEditingPlan(p); };
+  const openInsert = (p: BenefitPlan) => { setEditMode('insert'); setEditingPlan(p); };
 
   // In-session plan list — seeded from the static registry. Create/Edit mutate
   // this list so changes appear without a backend (out of scope this phase).
@@ -532,6 +551,20 @@ export default function BenefitPlansPage() {
       effectiveDate: planEffectiveDate(edited) ?? undefined,
       ...(changes.length > 0 ? { changes } : {}),
     });
+  };
+
+  // STA-113 — Delete = soft-inactivate the plan (mirrors the rules soft-delete);
+  // no hard removal in this mockup. Logs the deletion to the history store.
+  const handleDeletePlan = (target: BenefitPlan) => {
+    setPlans((prev) => prev.map((p) => (p.id === target.id ? { ...p, status: 'inactive' as const } : p)));
+    addHistoryEntry({
+      targetType: 'plan',
+      targetId: target.id,
+      targetName: target.nameTh || target.nameEn || target.id,
+      action: 'delete',
+      actorName,
+    });
+    setDeleteTarget(null);
   };
 
   // Years present in the registry's effective dates — drives the year dropdowns.
@@ -646,16 +679,32 @@ export default function BenefitPlansPage() {
       id: 'actions',
       header: t('colActions'),
       headerVisuallyHidden: true,
+      // STA-113 — exactly three row actions: Make Correction · Insert · Delete.
       cell: (p: BenefitPlan) => (
         <Capability action="edit" fallback={
-          <Button variant="ghost" disabled>{isTh ? 'แก้ไข' : 'Edit'}</Button>
+          <div className="flex items-center justify-end gap-1 opacity-50">
+            <span className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted"><Pencil size={14} aria-hidden /></span>
+            <span className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted"><Layers size={14} aria-hidden /></span>
+            <span className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted"><Trash2 size={14} aria-hidden /></span>
+          </div>
         }>
-          <Button variant="ghost" onClick={() => setEditingPlan(p)}>
-            {isTh ? 'แก้ไขแผน' : 'Edit Plan'}
-          </Button>
+          <div className="flex items-center justify-end gap-1">
+            <button type="button" aria-label={t('makeCorrection')} title={t('makeCorrection')} onClick={() => openCorrection(p)}
+              className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted hover:bg-accent/10 hover:text-accent transition-colors">
+              <Pencil size={14} aria-hidden />
+            </button>
+            <button type="button" aria-label={t('insert')} title={t('insert')} onClick={() => openInsert(p)}
+              className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted hover:bg-accent/10 hover:text-accent transition-colors">
+              <Layers size={14} aria-hidden />
+            </button>
+            <button type="button" aria-label={t('delete')} title={t('delete')} onClick={() => setDeleteTarget(p)}
+              className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-hairline p-1.5 text-ink-muted hover:bg-danger/10 hover:text-danger transition-colors">
+              <Trash2 size={14} aria-hidden />
+            </button>
+          </div>
         </Capability>
       ),
-      className: 'w-28',
+      className: 'w-32',
       align: 'right' as const,
     },
   ], [isTh, t]);
@@ -677,10 +726,10 @@ export default function BenefitPlansPage() {
           </Capability>
           <Button variant="secondary" disabled>{t('export')}</Button>
           <Capability action="edit" fallback={
-            <Button variant="primary" disabled>{isTh ? '+ เพิ่มแผน' : '+ Add Plan'}</Button>
+            <Button variant="primary" disabled>{t('createPlan')}</Button>
           }>
             <Button variant="primary" onClick={() => setCreatingPlan(true)}>
-              {isTh ? '+ เพิ่มแผน' : '+ Add Plan'}
+              {t('createPlan')}
             </Button>
           </Capability>
         </div>
@@ -856,15 +905,17 @@ export default function BenefitPlansPage() {
         <p className="mt-2 text-small text-ink-muted">{t('disclaimerBody')}</p>
       </Card>
 
-      {/* Edit modal */}
+      {/* Make Correction / Insert modal (mode-aware, shared form) */}
       {editingPlan && (
-        <EditPlanModal
+        <PlanFormModal
           plan={editingPlan}
+          mode={editMode}
           onClose={() => setEditingPlan(null)}
           onSubmit={handleUpdatePlan}
           onInsert={handleSupersedePlan}
           isTh={isTh}
           locale={locale}
+          t={t}
         />
       )}
 
@@ -875,8 +926,29 @@ export default function BenefitPlansPage() {
           onSubmit={handleCreatePlan}
           existingIds={existingIds}
           isTh={isTh}
+          t={t}
         />
       )}
+
+      {/* STA-113 — Delete confirm (soft-inactivate), mirrors the rules delete modal. */}
+      <Modal open={deleteTarget !== null} onClose={() => setDeleteTarget(null)} title={t('deleteConfirmTitle')}>
+        {deleteTarget && (
+          <div className="space-y-4">
+            <p className="text-body text-ink">
+              {isTh ? 'ต้องการลบแผน ' : 'Delete plan '}
+              <span className="font-semibold">{isTh ? deleteTarget.nameTh : deleteTarget.nameEn} ({deleteTarget.id})</span>
+              {isTh ? ' ใช่หรือไม่?' : '?'}
+            </p>
+            <p className="text-small text-ink-muted">{t('deleteConfirmBody')}</p>
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setDeleteTarget(null)}>{t('cancel')}</Button>
+              <Capability action="edit" fallback={<Button variant="danger" disabled>{t('delete')}</Button>}>
+                <Button variant="danger" onClick={() => handleDeletePlan(deleteTarget)}>{t('delete')}</Button>
+              </Capability>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
