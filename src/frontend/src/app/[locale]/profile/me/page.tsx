@@ -506,10 +506,11 @@ export default function HumiProfileMePage({
     setTimeout(() => setToast(null), 2500);
   }, []);
 
-  // Auto-cancel edit when user switches tab — only the personal panel renders
-  // an edit form; leaving mid-edit strands Save/Cancel with no visible fields.
+  // Auto-cancel edit when the user switches away from the only panel that uses
+  // the global isEditing bar (emergency: Emergency Contacts + Dependents).
+  // Personal/Marital/Contact now edit per-section via their own draft state.
   useEffect(() => {
-    if (isEditing && panelKey !== 'personal') {
+    if (isEditing && panelKey !== 'emergency') {
       cancelEdit();
     }
   }, [panelKey, isEditing, cancelEdit]);
@@ -1079,7 +1080,7 @@ export default function HumiProfileMePage({
           that still use the isEditing pattern (emergency tab: Emergency Contacts +
           Dependents). Suppress it on 'personal' to avoid confusion. */}
       <div className="mb-5 flex items-center justify-end gap-3 flex-wrap">
-        {panelKey !== 'personal' && (
+        {panelKey === 'emergency' && (
           // Render all 3 buttons always, toggle visibility via CSS — avoids
           // React mount/unmount flash. Container reserves 2-button width so
           // layout doesn't jump when swapping (Ken UAT 2026-04-22 "กระตุก").
@@ -2222,24 +2223,6 @@ export default function HumiProfileMePage({
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <div
-      style={{
-        fontSize: 11,
-        fontWeight: 700,
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase',
-        color: 'var(--color-ink-muted)',
-        marginBottom: 10,
-        marginTop: 4,
-      }}
-    >
-      {title}
-    </div>
-  );
-}
-
 // ── STA-82 section-level edit presentational helpers ──────────────────────────
 
 // Section header row with a single ghost "Edit" button (replaces the per-field
@@ -2315,147 +2298,6 @@ function ReadOnlyField({
       <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-ink)', padding: '5px 0' }}>
         {value || '—'}
       </span>
-    </div>
-  );
-}
-
-function FullEditField({
-  label,
-  value,
-  onChange,
-  onEdit,
-  options,
-  inputType = 'text',
-  requiresAttachment = false,
-  pendingChange,
-  tPending,
-  isEditing,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  onEdit: () => void;
-  options?: string[];
-  inputType?: string;
-  requiresAttachment?: boolean;
-  pendingChange?: PendingChange;
-  tPending: ReturnType<typeof useTranslations>;
-  isEditing: boolean;
-}) {
-  const hasPending = !!pendingChange;
-
-  return (
-    <div
-      className="humi-col"
-      style={{
-        gap: 4,
-        borderBottom: '1px solid var(--color-hairline-soft)',
-        paddingBottom: 12,
-      }}
-    >
-      <div className="humi-row" style={{ gap: 6, alignItems: 'center' }}>
-        <span style={{ fontSize: 12, color: 'var(--color-ink-muted)', flex: 1 }}>
-          {label}
-          {requiresAttachment && (
-            <span className="ml-1 text-xs text-ink-muted">(ต้องแนบเอกสาร)</span>
-          )}
-        </span>
-        {hasPending && (
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              background: 'var(--color-butter)',
-              color: 'var(--color-danger-ink)',
-              borderRadius: 4,
-              padding: '1px 6px',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {tPending('badge')}
-          </span>
-        )}
-      </div>
-
-      <div className="humi-row" style={{ gap: 8, alignItems: 'center' }}>
-        {isEditing ? (
-          <>
-            {options ? (
-              <select
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                style={{
-                  flex: 1,
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: 'var(--color-ink)',
-                  background: 'var(--color-canvas-soft)',
-                  border: '1px solid var(--color-hairline)',
-                  borderRadius: 7,
-                  padding: '5px 10px',
-                  outline: 'none',
-                }}
-              >
-                {options.map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type={inputType}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                style={{
-                  flex: 1,
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: 'var(--color-ink)',
-                  background: 'var(--color-canvas-soft)',
-                  border: '1px solid var(--color-hairline)',
-                  borderRadius: 7,
-                  padding: '5px 10px',
-                  outline: 'none',
-                }}
-              />
-            )}
-            <button
-              type="button"
-              onClick={onEdit}
-              aria-label={`แก้ไข ${label}`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 30,
-                height: 30,
-                borderRadius: 7,
-                border: '1px solid var(--color-hairline)',
-                background: 'var(--color-canvas-soft)',
-                cursor: 'pointer',
-                color: 'var(--color-ink-muted)',
-                flexShrink: 0,
-              }}
-            >
-              <Pencil size={13} />
-            </button>
-          </>
-        ) : (
-          // Display mode — read-only text, no pencil
-          <span
-            style={{
-              flex: 1,
-              fontSize: 14,
-              fontWeight: 500,
-              color: 'var(--color-ink)',
-              padding: '5px 0',
-            }}
-          >
-            {value || '—'}
-          </span>
-        )}
-      </div>
     </div>
   );
 }
