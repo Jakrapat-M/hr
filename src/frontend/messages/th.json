@@ -5086,6 +5086,13 @@
     "tagCreate": "สร้าง",
     "tagCorrection": "แก้ไขข้อมูล",
     "tagInsert": "แทรก",
+    "insertPopupTitle": "แทรกการเปลี่ยนแปลงใหม่สำหรับสวัสดิการ: {name}",
+    "insertPopupDateLabel": "ระบุวันที่มีผลสำหรับการเปลี่ยนแปลงนี้",
+    "proceed": "ดำเนินการต่อ",
+    "confirmInsert": "ยืนยันการแทรก",
+    "editPlan": "แก้ไขแผน: {id}",
+    "insertPlan": "แทรกแผน: {id}",
+    "correctionPlan": "แก้ไขข้อมูลย้อนหลัง: {id}",
     "deleteConfirmTitle": "ยืนยันการลบแผน",
     "deleteConfirmBody": "การลบจะปิดใช้งานแผนนี้"
   },
@@ -5185,7 +5192,14 @@
     "cancel": "ยกเลิก",
     "tagCreate": "สร้าง",
     "tagCorrection": "แก้ไขข้อมูล",
-    "tagInsert": "แทรก"
+    "tagInsert": "แทรก",
+    "insertPopupTitle": "แทรกการเปลี่ยนแปลงใหม่สำหรับสวัสดิการ: {name}",
+    "insertPopupDateLabel": "ระบุวันที่มีผลสำหรับการเปลี่ยนแปลงนี้",
+    "proceed": "ดำเนินการต่อ",
+    "confirmInsert": "ยืนยันการแทรก",
+    "editRule": "แก้ไขกฎสิทธิ์",
+    "insertRule": "แทรกกฎสิทธิ์",
+    "makeCorrectionTitle": "แก้ไขข้อมูลย้อนหลัง"
   },
   "adminBenefitRecords": {
     "title": "บันทึกสวัสดิการพิเศษ",

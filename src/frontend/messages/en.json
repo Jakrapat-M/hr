@@ -5181,6 +5181,13 @@
     "tagCreate": "Create",
     "tagCorrection": "Make Correction",
     "tagInsert": "Insert",
+    "insertPopupTitle": "Insert new changes for Benefit: {name}",
+    "insertPopupDateLabel": "Enter Effective Date for this change",
+    "proceed": "Proceed",
+    "confirmInsert": "Confirm insert",
+    "editPlan": "Edit plan: {id}",
+    "insertPlan": "Insert plan: {id}",
+    "correctionPlan": "Make correction: {id}",
     "deleteConfirmTitle": "Confirm delete plan",
     "deleteConfirmBody": "This will deactivate the plan."
   },
@@ -5262,7 +5269,14 @@
     "cancel": "Cancel",
     "tagCreate": "Create",
     "tagCorrection": "Make Correction",
-    "tagInsert": "Insert"
+    "tagInsert": "Insert",
+    "insertPopupTitle": "Insert new changes for Benefit: {name}",
+    "insertPopupDateLabel": "Enter Effective Date for this change",
+    "proceed": "Proceed",
+    "confirmInsert": "Confirm insert",
+    "editRule": "Edit rule",
+    "insertRule": "Insert rule",
+    "makeCorrectionTitle": "Make correction"
   },
   "adminBenefitRecords": {
     "title": "Benefit Records",

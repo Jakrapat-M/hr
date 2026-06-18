@@ -12,6 +12,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useBenefitHistoryStore } from '@/stores/benefit-history-store';
 import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar';
 import { ActionTagChip, type ActionTagMode } from '@/components/benefits/ActionTagChip';
+import { InsertChangePopup } from '@/components/benefits/InsertChangePopup';
 import {
   listAllEligibilityRules,
   addEligibilityRule,
@@ -120,6 +121,11 @@ export function EntitlementRulesManager() {
   // STA-113 — the edit modal serves both Make Correction (update) and Insert
   // (supersede). The active row action sets this; Save branches on it.
   const [editMode,       setEditMode]       = useState<Extract<ActionTagMode, 'correction' | 'insert'>>('correction');
+  // STA-123 — Insert is a two-step gated flow: the row action opens a date-gate
+  // pop-up (insertGateTarget); Proceed then opens the edit modal in insert mode
+  // carrying the chosen date (insertSeedDate, baked into the RuleForm mount key).
+  const [insertGateTarget, setInsertGateTarget] = useState<EligibilityRule | null>(null);
+  const [insertSeedDate,   setInsertSeedDate]   = useState<string | null>(null);
   const [historyData,    setHistoryData]    = useState<EligibilityRule[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [deleting,       setDeleting]       = useState(false);
@@ -170,6 +176,8 @@ export function EntitlementRulesManager() {
     });
     toast('success', 'แก้ไขกฎสิทธิ์เรียบร้อย');
     setEditTarget(null);
+    setInsertSeedDate(null);
+    setEditMode('correction');
   };
 
   // STA-107 — Insert = supersede the current rule: inactivate it (effective_to set
@@ -208,6 +216,8 @@ export function EntitlementRulesManager() {
     });
     toast('success', 'แทรกกฎสิทธิ์ใหม่เรียบร้อย');
     setEditTarget(null);
+    setInsertSeedDate(null);
+    setEditMode('correction');
   };
 
   const handleDelete = async () => {
@@ -252,6 +262,15 @@ export function EntitlementRulesManager() {
     } finally {
       setHistoryLoading(false);
     }
+  };
+
+  // STA-123 — Proceed from the Insert date-gate pop-up: carry the chosen date into
+  // the edit modal opened in insert mode.
+  const handleInsertProceed = (date: string) => {
+    if (!insertGateTarget) return;
+    setInsertSeedDate(date);
+    void openEditForm(insertGateTarget, 'insert');
+    setInsertGateTarget(null);
   };
 
   // STA-100 — export current rules to a client-side CSV download.
@@ -359,12 +378,24 @@ export function EntitlementRulesManager() {
           historyLoading={historyLoading}
           editTarget={editTarget}
           editMode={editMode}
+          insertSeedDate={insertSeedDate}
           onCorrection={(rule) => openEditForm(rule, 'correction')}
-          onInsertRow={(rule) => openEditForm(rule, 'insert')}
+          onInsertRow={(rule) => setInsertGateTarget(rule)}
           onDelete={(rule) => setDeleteTarget(rule)}
           onSaveEdit={async (input) => { await handleUpdate(input); }}
           onInsertEdit={async (input) => { await handleInsert(input); }}
-          onCancelEdit={() => { setEditTarget(null); setHistoryData([]); }}
+          onCancelEdit={() => { setEditTarget(null); setHistoryData([]); setInsertSeedDate(null); }}
+        />
+      )}
+
+      {/* STA-123 — Insert date-gate pop-up (shared with the plan surface). */}
+      {insertGateTarget && (
+        <InsertChangePopup
+          open
+          benefitName={ruleTargetName(insertGateTarget)}
+          defaultDate={insertGateTarget.effective_from?.slice(0, 10) ?? undefined}
+          onCancel={() => setInsertGateTarget(null)}
+          onProceed={handleInsertProceed}
         />
       )}
 
@@ -406,6 +437,8 @@ interface RulesTableViewProps {
   historyLoading: boolean;
   editTarget: EligibilityRule | null;
   editMode: Extract<ActionTagMode, 'correction' | 'insert'>;
+  /** STA-123 — chosen effective date carried from the Insert date-gate pop-up. */
+  insertSeedDate: string | null;
   onCorrection: (rule: EligibilityRule) => void;
   onInsertRow: (rule: EligibilityRule) => void;
   onDelete: (rule: EligibilityRule) => void;
@@ -422,6 +455,7 @@ function RulesTableView({
   historyLoading,
   editTarget,
   editMode,
+  insertSeedDate,
   onCorrection,
   onInsertRow,
   onDelete,
@@ -735,14 +769,18 @@ function RulesTableView({
           change-history sidebar (+ entitlement-amount audit) on the right. Widened
           to max-w-5xl; stacks vertically on narrow viewports. */}
       {editTarget && (
-        <Modal open onClose={onCancelEdit} title={isTh ? 'แก้ไขกฎสิทธิ์' : 'Edit rule'} widthClass="max-w-5xl">
+        <Modal open onClose={onCancelEdit} title={editMode === 'insert' ? t('insertRule') : t('editRule')} widthClass="max-w-5xl">
           <div className="space-y-4">
             <ActionTagChip mode={editMode} label={editMode === 'insert' ? t('tagInsert') : t('tagCorrection')} />
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <RuleForm
               inModal
-              key={editTarget.id}
+              // STA-123 — bake the seed date into the mount key so insert remounts
+              // RuleForm with the chosen effective-from in its initializer.
+              key={`${editTarget.id}-${insertSeedDate ?? 'edit'}`}
               initialRule={editTarget}
+              isInsert={editMode === 'insert'}
+              seedEffectiveStart={editMode === 'insert' ? (insertSeedDate ?? undefined) : undefined}
               createdBy={createdBy}
               onSave={async (input) => {
                 // STA-113 — Save branches on the popup mode: insert = supersede.
@@ -790,9 +828,13 @@ interface RuleFormProps {
   onCancel: () => void;
   /** When rendered inside a Modal, drop the inline card chrome + internal title. */
   inModal?: boolean;
+  /** STA-123 — Insert mode: relabel submit to "Confirm insert". */
+  isInsert?: boolean;
+  /** STA-123 — chosen effective date from the Insert date-gate (seeds effectiveStart). */
+  seedEffectiveStart?: string;
 }
 
-function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal }: RuleFormProps) {
+function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal, isInsert, seedEffectiveStart }: RuleFormProps) {
   const { toast } = useToast();
   const t = useTranslations('admin_benefits_entitlement_rules');
   const isEdit = !!initialRule;
@@ -802,7 +844,7 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal }: RuleFor
   const [ruleName,       setRuleName]       = useState(('rule_name' in (initialRule ?? {}) ? String((initialRule as EligibilityRule & { rule_name?: string }).rule_name ?? '') : ''));
   const [ruleType,       setRuleType]       = useState<'standard' | 'special'>((initialRule?.rule_type as 'standard' | 'special') ?? 'special');
   const [status,         setStatus]         = useState(initialRule?.allow === false ? 'inactive' : 'active');
-  const [effectiveStart, setEffectiveStart] = useState(initialRule?.effective_from?.slice(0, 10) ?? new Date().toISOString().slice(0, 10));
+  const [effectiveStart, setEffectiveStart] = useState(seedEffectiveStart ?? initialRule?.effective_from?.slice(0, 10) ?? new Date().toISOString().slice(0, 10));
   const [effectiveEnd,   setEffectiveEnd]   = useState(initialRule?.effective_to?.slice(0, 10) ?? '');
   const [policyProfile,  setPolicyProfile]  = useState(initialRule?.policy_profile ?? 'CPN');
   const [businessUnit,   setBusinessUnit]   = useState(('business_unit' in (initialRule ?? {}) ? String((initialRule as EligibilityRule & { business_unit?: string }).business_unit ?? '') : ''));
@@ -1042,7 +1084,7 @@ function RuleForm({ initialRule, createdBy, onSave, onCancel, inModal }: RuleFor
           Save handler in the manager branches on the popup mode. */}
       <div className="flex justify-end gap-3 pt-2 border-t border-hairline-soft">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={saving}>{t('cancel')}</Button>
-        <Button type="submit" variant="primary" size="sm" loading={saving}>{t('save')}</Button>
+        <Button type="submit" variant="primary" size="sm" loading={saving}>{isInsert ? t('confirmInsert') : t('save')}</Button>
       </div>
     </form>
   );
