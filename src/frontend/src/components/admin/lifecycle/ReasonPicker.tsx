@@ -9,7 +9,7 @@
 
 // Thai labels สำหรับแต่ละ event reason code (Rule C10: Thai-primary)
 // ข้อมูล source: Appendix 2 + FOEventReason.json + sf-qas-workflow-2026-04-25.json
-const REASON_LABELS: Record<string, string> = {
+export const REASON_LABELS: Record<string, string> = {
   // REHIRE (event=5584)
   RE_REHIRE_LT1: 'จ้างใหม่ — ออกไม่เกิน 1 ปี (Rehiring LT 1 year)',
   RE_REHIRE_GE1: 'จ้างใหม่ — ออกเกิน 1 ปี (Rehiring GE 1 year)',

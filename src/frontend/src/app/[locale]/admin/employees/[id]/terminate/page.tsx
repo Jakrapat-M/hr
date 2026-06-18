@@ -38,6 +38,13 @@ import {
 } from '@/lib/admin/termination-logic'
 import type { MockEmployee } from '@/mocks/employees'
 import type { TerminateEvent } from '@hrms/shared/types/timeline'
+import { ExitInterviewSection } from '@/components/admin/terminate/ExitInterviewSection'
+import {
+  useExitFeedback,
+  EMPTY_EXIT_INTERVIEW,
+  isExitInterviewEmpty,
+  type ExitInterviewRecord,
+} from '@/stores/exit-feedback'
 
 // ─── Chain progress stepper (BRD #22, #111) ───────────────────────────────────
 // HR-admin initiates termination → triggers 4-step approval chain post-submit.
@@ -120,6 +127,8 @@ interface TerminationData {
   additionalInfo: string
   /** Mockup files — real upload deferred. */
   attachmentFiles: AttachedFile[]
+  /** Optional Exit Interview questionnaire (STA-124). Blank by default. */
+  exitInterview: ExitInterviewRecord
 }
 
 interface TerminateForm {
@@ -138,10 +147,16 @@ const INITIAL_FORM: TerminateForm = {
     personalEmail: '',
     additionalInfo: '',
     attachmentFiles: [],
+    exitInterview: EMPTY_EXIT_INTERVIEW,
   },
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Personal Email source (Q2): MockEmployee has no email field, so auto-fill from
+// a single seeded value on mount. The field stays editable + required; if this
+// is empty the field renders blank and required-validation still fires.
+const SEEDED_PERSONAL_EMAIL = 'personal.email@gmail.com'
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -361,6 +376,20 @@ export default function TerminatePage() {
     if (employee) seed(employee)
   }, [employee, seed])
 
+  // Exit-feedback read-model — written on submit alongside the timeline append.
+  const recordExitFeedback = useExitFeedback((s) => s.record)
+
+  // Auto-fill Personal Email from the seeded source on mount (Q2 default).
+  // Field stays editable + required; only fills when currently blank so manual
+  // edits aren't clobbered on re-render.
+  useEffect(() => {
+    if (!employee || !setStepData) return
+    if (!termination.personalEmail && SEEDED_PERSONAL_EMAIL) {
+      setStepData('termination', { personalEmail: SEEDED_PERSONAL_EMAIL })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employee, setStepData])
+
   // ── Patch handler ──────────────────────────────────────────────────────────
   const patch = useCallback(
     (partial: Partial<TerminationData>) => {
@@ -441,6 +470,22 @@ export default function TerminatePage() {
 
     append(empId, event)
 
+    // STA-124: persist the structured Exit Interview record alongside the
+    // timeline append (NOT folded into `notes`). Only when answers were given —
+    // the section is fully optional. An HRBP-reachable surface reads this.
+    if (!isExitInterviewEmpty(termination.exitInterview)) {
+      recordExitFeedback({
+        employeeId: empId,
+        employeeNameTh: `${employee.first_name_th} ${employee.last_name_th}`,
+        employeeNameEn: `${employee.first_name_en} ${employee.last_name_en}`,
+        positionTitle: employee.position_title,
+        reasonCode: termination.reasonCode,
+        resignedDate: termination.resignedDate!,
+        recordedAt: new Date().toISOString(),
+        record: termination.exitInterview,
+      })
+    }
+
     // Update employee status to terminated
     // Phase 2.5+: real status transition goes through backend approval chain (BRD #111)
     updateEmployee(empId, { status: 'terminated' })
@@ -451,7 +496,7 @@ export default function TerminatePage() {
     router.push(
       `/${locale}/admin/employees/${empId}?banner=${encodeURIComponent('บันทึกการสิ้นสุดสภาพพนักงานแล้ว — ส่งข้อมูลไป Payroll')}`,
     )
-  }, [employee, isValid, termination, isTransferOutReason, empId, append, updateEmployee, reset, router, locale])
+  }, [employee, isValid, termination, isTransferOutReason, empId, append, recordExitFeedback, updateEmployee, reset, router, locale])
 
   const handleSubmit = useCallback(() => {
     if (!isValid) return
@@ -806,8 +851,18 @@ export default function TerminatePage() {
             />
           </div>
 
+          {/* ── Exit Interview (STA-124) — optional questionnaire ── */}
+          <ExitInterviewSection
+            value={termination.exitInterview}
+            onChange={(partial) =>
+              patch({
+                exitInterview: { ...termination.exitInterview, ...partial },
+              })
+            }
+          />
+
           {/* ── Submit button ── */}
-          <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
+          <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 24 }}>
             <Link
               href={`/${locale}/admin/employees/${empId}`}
               className="humi-btn humi-btn--ghost"
