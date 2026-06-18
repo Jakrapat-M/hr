@@ -7,6 +7,7 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
+  CalendarCheck,
   Check,
   Clock,
   Shield,
@@ -17,7 +18,6 @@ import {
 import {
   useProbationCase,
   type ProbationOutcome,
-  type ProbationFailReason,
   type ProbationDecisionInput,
 } from '@/hooks/use-probation';
 import { formatDate } from '@/lib/date';
@@ -31,7 +31,7 @@ import { Modal } from '@/components/humi';
 // Outcome cards (ref: pass / extend / no_pass)
 // ---------------------------------------------------------------------------
 
-type OutcomeCard = 'pass' | 'extend' | 'no_pass';
+type OutcomeCard = 'pass' | 'pass_before_due' | 'extend' | 'no_pass';
 
 const OUTCOME_CARDS: {
   value: OutcomeCard;
@@ -49,6 +49,15 @@ const OUTCOME_CARDS: {
     subTh: 'พนักงานจะถูกบรรจุเป็น Permanent',
     subEn: 'Employee becomes permanent',
     icon: Check,
+    tone: 'accent',
+  },
+  {
+    value: 'pass_before_due',
+    labelTh: 'ผ่านทดลองงาน (ก่อนกำหนด)',
+    labelEn: 'Pass probation before due date (special)',
+    subTh: 'บรรจุก่อนวันครบกำหนดทดลองงาน',
+    subEn: 'Confirm permanent before the due date',
+    icon: CalendarCheck,
     tone: 'accent',
   },
   {
@@ -74,18 +83,32 @@ const OUTCOME_CARDS: {
 // Map ref outcome card → store ProbationOutcome (keeps existing store wiring intact).
 const OUTCOME_TO_STORE: Record<OutcomeCard, ProbationOutcome> = {
   pass: 'pass_normal',
+  pass_before_due: 'pass_before_due',
   extend: 'extend',
   no_pass: 'fail_normal',
 };
 
-// BA fail-reason LOV (company-use) — shown only when outcome = ไม่ผ่าน.
-const FAIL_REASON_OPTIONS: { value: ProbationFailReason; labelTh: string; labelEn: string }[] = [
-  { value: 'performance', labelTh: 'ผลงานต่ำกว่ามาตรฐาน', labelEn: 'Performance below standard' },
-  { value: 'attitude', labelTh: 'ทัศนคติ / พฤติกรรม', labelEn: 'Attitude / Behavior issue' },
-  { value: 'policy', labelTh: 'ฝ่าฝืนระเบียบบริษัท', labelEn: 'Policy violation' },
-  { value: 'skill_mismatch', labelTh: 'ทักษะไม่ตรงกับตำแหน่ง', labelEn: 'Skill mismatch' },
-  { value: 'other', labelTh: 'อื่นๆ', labelEn: 'Other' },
-];
+// Effective-date direction per outcome: hidden for normal pass/fail, earlier-than-due for
+// pass-before-due, later-than-due for extend.
+type EffectiveRule = 'earlier' | 'later' | null;
+
+function deriveOutcomeRules(outcome: OutcomeCard): {
+  showEffective: boolean;
+  effectiveRule: EffectiveRule;
+  showFailReason: boolean;
+} {
+  switch (outcome) {
+    case 'pass_before_due':
+      return { showEffective: true, effectiveRule: 'earlier', showFailReason: false };
+    case 'extend':
+      return { showEffective: true, effectiveRule: 'later', showFailReason: false };
+    case 'no_pass':
+      return { showEffective: false, effectiveRule: null, showFailReason: true };
+    case 'pass':
+    default:
+      return { showEffective: false, effectiveRule: null, showFailReason: false };
+  }
+}
 
 const EXTEND_DURATIONS = ['30 วัน', '45 วัน', '60 วัน'];
 
@@ -212,38 +235,71 @@ export default function ProbationDetailPage() {
 
   // Outcome + conditional BA fields
   const [outcome, setOutcome] = useState<OutcomeCard>('pass');
-  const [passEffectiveDate, setPassEffectiveDate] = useState('');
+  const [passBeforeDueDate, setPassBeforeDueDate] = useState('');
   const [extendDate, setExtendDate] = useState('');
   const [extendDuration, setExtendDuration] = useState(EXTEND_DURATIONS[1]);
-  const [failReason, setFailReason] = useState<ProbationFailReason | ''>('');
+  const [failReasonText, setFailReasonText] = useState('');
   const [comment, setComment] = useState('');
 
   const [policyOpen, setPolicyOpen] = useState(false);
+
+  const { effectiveRule, showFailReason } = deriveOutcomeRules(outcome);
 
   const handleOutcomeChange = (val: OutcomeCard) => {
     setOutcome(val);
     if (val === 'extend' && c?.probationEndDate && !extendDate) {
       setExtendDate(defaultExtendDate(c.probationEndDate));
     }
-    if (val !== 'no_pass') setFailReason('');
+    // Clear stale date/reason state when switching INTO a hide-effective outcome so the
+    // hidden field's value cannot be evaluated by effectiveDateError and silently block submit.
+    const nextRules = deriveOutcomeRules(val);
+    if (!nextRules.showEffective) {
+      setPassBeforeDueDate('');
+      setExtendDate('');
+    }
+    if (!nextRules.showFailReason) setFailReasonText('');
   };
 
-  // Extend date must fall AFTER the normal probation end date (BA rule).
-  const extendDateError = useMemo<string | null>(() => {
-    if (outcome !== 'extend' || !extendDate || !c?.probationEndDate) return null;
-    if (new Date(extendDate).getTime() <= new Date(c.probationEndDate).getTime()) {
+  // The chosen effective date for the active outcome (pass-before-due → earlier, extend → later).
+  const effectiveDateValue =
+    effectiveRule === 'earlier' ? passBeforeDueDate : effectiveRule === 'later' ? extendDate : '';
+
+  // Unified effective-date validation. 'earlier' (pass-before-due): >= hireDate AND < due.
+  // 'later' (extend): > due. Compared against probationEndDate (canonical due date).
+  const effectiveDateError = useMemo<string | null>(() => {
+    if (!effectiveRule || !effectiveDateValue || !c?.probationEndDate) return null;
+    const due = new Date(c.probationEndDate).getTime();
+    const picked = new Date(effectiveDateValue).getTime();
+
+    if (effectiveRule === 'earlier') {
+      if (c.hireDate && picked < new Date(c.hireDate).getTime()) {
+        return isTh
+          ? 'วันที่บรรจุต้องไม่ก่อนวันเริ่มงาน'
+          : 'Effective date cannot be before the hire date';
+      }
+      if (picked >= due) {
+        return isTh
+          ? 'ต้องเป็นวันก่อนวันครบกำหนดทดลองงาน'
+          : 'Must be EARLIER than the normal probation due date';
+      }
+      return null;
+    }
+
+    // 'later' (extend) — keep existing message verbatim.
+    if (picked <= due) {
       return isTh
         ? 'วันที่ขยายต้องอยู่หลังวันสิ้นสุดทดลองงานปกติ'
         : 'Extend date must be AFTER the normal pass date';
     }
     return null;
-  }, [outcome, extendDate, c?.probationEndDate, isTh]);
+  }, [effectiveRule, effectiveDateValue, c?.probationEndDate, c?.hireDate, isTh]);
 
   const submitDisabled = useMemo(() => {
-    if (outcome === 'extend' && (!extendDate || !!extendDateError)) return true;
-    if (outcome === 'no_pass' && !failReason) return true;
+    if (outcome === 'extend' && (!extendDate || !!effectiveDateError)) return true;
+    if (outcome === 'pass_before_due' && (!passBeforeDueDate || !!effectiveDateError)) return true;
+    if (outcome === 'no_pass' && !failReasonText.trim()) return true;
     return false;
-  }, [outcome, extendDate, extendDateError, failReason]);
+  }, [outcome, extendDate, passBeforeDueDate, effectiveDateError, failReasonText]);
 
   const days = useMemo(() => {
     if (!c) return 0;
@@ -256,12 +312,12 @@ export default function ProbationDetailPage() {
     const input: ProbationDecisionInput = {
       outcome: OUTCOME_TO_STORE[outcome],
       effectiveDate:
-        outcome === 'pass'
-          ? passEffectiveDate || undefined
+        outcome === 'pass_before_due'
+          ? passBeforeDueDate || undefined
           : outcome === 'extend'
             ? extendDate || undefined
             : undefined,
-      failReason: outcome === 'no_pass' ? (failReason as ProbationFailReason) : undefined,
+      failReasonText: outcome === 'no_pass' ? failReasonText.trim() || undefined : undefined,
       comment,
     };
     submitDecision(input);
@@ -390,7 +446,7 @@ export default function ProbationDetailPage() {
               ผลการประเมิน <span className="text-accent">*</span>
             </h3>
 
-            <div role="radiogroup" className="grid grid-cols-3 gap-2.5">
+            <div role="radiogroup" className="grid grid-cols-2 gap-2.5">
               {OUTCOME_CARDS.map((o) => {
                 const Glyph = o.icon;
                 const sel = outcome === o.value;
@@ -438,17 +494,28 @@ export default function ProbationDetailPage() {
               })}
             </div>
 
-            {/* Conditional — pass: optional effective (placement) date */}
-            {outcome === 'pass' && (
+            {/* Conditional — pass before due: required EARLIER-than-due effective date */}
+            {outcome === 'pass_before_due' && (
               <div className="mt-4">
-                <FieldLabel>{isTh ? 'วันที่บรรจุ (effective)' : 'Effective date'}</FieldLabel>
+                <FieldLabel required>
+                  {isTh ? 'วันที่บรรจุ (ก่อนกำหนด)' : 'Effective date (before due)'}
+                </FieldLabel>
                 <input
                   type="date"
-                  value={passEffectiveDate}
-                  onChange={(e) => setPassEffectiveDate(e.target.value)}
-                  aria-label={isTh ? 'วันที่บรรจุ' : 'Effective date'}
-                  className={FIELD_INPUT_CLASS}
+                  value={passBeforeDueDate}
+                  onChange={(e) => setPassBeforeDueDate(e.target.value)}
+                  aria-label={isTh ? 'วันที่บรรจุก่อนกำหนด' : 'Effective date before due'}
+                  className={effectiveDateError ? FIELD_INPUT_ERROR_CLASS : FIELD_INPUT_CLASS}
                 />
+                {effectiveDateError ? (
+                  <p className="mt-1 text-xs text-danger">{effectiveDateError}</p>
+                ) : (
+                  <p className="mt-1 text-xs text-ink-muted">
+                    {isTh
+                      ? 'เลือกวันระหว่างวันเริ่มงานถึงก่อนวันครบกำหนดทดลองงาน'
+                      : 'Pick a date between the hire date and before the probation due date'}
+                  </p>
+                )}
               </div>
             )}
 
@@ -462,10 +529,10 @@ export default function ProbationDetailPage() {
                     value={extendDate}
                     onChange={(e) => setExtendDate(e.target.value)}
                     aria-label={isTh ? 'ขยายถึงวันที่' : 'Extend until'}
-                    className={extendDateError ? FIELD_INPUT_ERROR_CLASS : FIELD_INPUT_CLASS}
+                    className={effectiveDateError ? FIELD_INPUT_ERROR_CLASS : FIELD_INPUT_CLASS}
                   />
-                  {extendDateError ? (
-                    <p className="mt-1 text-xs text-danger">{extendDateError}</p>
+                  {effectiveDateError ? (
+                    <p className="mt-1 text-xs text-danger">{effectiveDateError}</p>
                   ) : (
                     <p className="mt-1 text-xs text-ink-muted">
                       {isTh ? 'ต้องไม่เกินวันเริ่มงาน + 119 วัน' : 'Must not exceed hire date + 119 days'}
@@ -490,25 +557,22 @@ export default function ProbationDetailPage() {
               </div>
             )}
 
-            {/* Conditional — no_pass: BA fail-reason LOV */}
-            {outcome === 'no_pass' && (
+            {/* Conditional — no_pass: free-text fail reason (required) */}
+            {showFailReason && (
               <div className="mt-4">
                 <FieldLabel required>
-                  {isTh ? 'เหตุผลการไม่ผ่านทดลองงาน (ใช้ภายในบริษัท)' : 'Reason for Fail Probation (company use only)'}
+                  {isTh ? 'เหตุผลการไม่ผ่านทดลองงาน' : 'Reason for fail probation'}
                 </FieldLabel>
-                <select
-                  value={failReason}
-                  onChange={(e) => setFailReason(e.target.value as ProbationFailReason)}
-                  aria-label={isTh ? 'เหตุผลการไม่ผ่านทดลองงาน' : 'Reason for Fail Probation'}
-                  className={FIELD_INPUT_CLASS}
-                >
-                  <option value="">{isTh ? 'เลือกเหตุผล...' : 'Select a reason...'}</option>
-                  {FAIL_REASON_OPTIONS.map((r) => (
-                    <option key={r.value} value={r.value}>
-                      {isTh ? r.labelTh : r.labelEn}
-                    </option>
-                  ))}
-                </select>
+                <textarea
+                  rows={3}
+                  value={failReasonText}
+                  onChange={(e) => setFailReasonText(e.target.value)}
+                  placeholder={
+                    isTh ? 'ระบุเหตุผลการไม่ผ่านทดลองงาน...' : 'Enter the reason for fail probation...'
+                  }
+                  aria-label={isTh ? 'เหตุผลการไม่ผ่านทดลองงาน' : 'Reason for fail probation'}
+                  className={FIELD_TEXTAREA_CLASS}
+                />
               </div>
             )}
 
