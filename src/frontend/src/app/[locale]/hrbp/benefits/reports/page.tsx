@@ -4,7 +4,7 @@
 // 4-tab HRBP benefits reports: Claim, Cost Analysis, Enrollment, Special Privilege.
 // STA-68 — Persona/store-based mock scope filter demo.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
@@ -13,6 +13,8 @@ import { ClaimReport } from '@/components/hrbp/reports/ClaimReport';
 import { CostAnalysisReport } from '@/components/hrbp/reports/CostAnalysisReport';
 import { EnrollmentReport } from '@/components/hrbp/reports/EnrollmentReport';
 import { SpecialPrivilegeReport } from '@/components/hrbp/reports/SpecialPrivilegeReport';
+import { HrbpScopeProvider, useSetHrbpScope } from '@/hooks/hrbp-scope-context';
+import type { BenefitScope } from '@/lib/benefit-scope-filter';
 
 type ReportTab = 'claims' | 'cost' | 'enrollment' | 'privilege';
 
@@ -35,7 +37,21 @@ const PERSONAS: { id: string; scope: PersonaScope; labelTh: string; labelEn: str
   { id: 'admin',        scope: { kind: 'admin' },                       labelTh: 'HR Admin (ดูทุกแผนก)', labelEn: 'HR Admin (sees all)', visibleDeptsTh: 'ทุกแผนก',  visibleDeptsEn: 'all departments' },
 ];
 
+/** Map the page's persona union onto the shared BenefitScope (single source). */
+function toBenefitScope(scope: PersonaScope): BenefitScope {
+  if (scope.kind === 'admin') return { kind: 'admin' };
+  return { kind: 'dept', departments: [scope.department] };
+}
+
 export default function HRBPBenefitsReportsPage() {
+  return (
+    <HrbpScopeProvider initialScope={toBenefitScope(PERSONAS[0].scope)}>
+      <HRBPBenefitsReportsContent />
+    </HrbpScopeProvider>
+  );
+}
+
+function HRBPBenefitsReportsContent() {
   const locale = useLocale();
   const isTh = locale !== 'en';
 
@@ -44,6 +60,13 @@ export default function HRBPBenefitsReportsPage() {
   const [personaId, setPersonaId] = useState<string>(PERSONAS[0].id);
   const persona = useMemo(() => PERSONAS.find((p) => p.id === personaId) ?? PERSONAS[0], [personaId]);
   const isAdmin = persona.scope.kind === 'admin';
+
+  // Single scope source: push the active persona's scope into the page context
+  // that useHrbpScope() reads. The reports filter their rows off this value.
+  const setScope = useSetHrbpScope();
+  useEffect(() => {
+    setScope(toBenefitScope(persona.scope));
+  }, [persona, setScope]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">

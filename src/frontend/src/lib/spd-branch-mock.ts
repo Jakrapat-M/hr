@@ -72,6 +72,29 @@ const BRANCH_EMPLOYEES: Record<string, BranchEmployee[]> = {
     { id: 'EMP-HKT-P-011', nameTh: 'กัลยา กมลา', nameEn: 'Kanlaya Kamala', position: 'Senior Analyst', branchCode: 'HKT-Patong' },
     { id: 'EMP-HKT-P-012', nameTh: 'สราวุธ ในยอง', nameEn: 'Sarawut Naiyong', position: 'Loan Officer', branchCode: 'HKT-Patong' },
   ],
+  // Branches outside the demo SPD's assignment — only an HR Admin "all branches"
+  // view surfaces these, which is how the admin bypass is demonstrable.
+  'KKN-Central': [
+    { id: 'EMP-KKN-C-001', nameTh: 'บรรพต อีสานเหนือ', nameEn: 'Banphot Isannuea', position: 'Branch Manager', branchCode: 'KKN-Central' },
+    { id: 'EMP-KKN-C-002', nameTh: 'จันทิมา ขอนแก่น', nameEn: 'Jantima Khonkaen', position: 'Senior Teller', branchCode: 'KKN-Central' },
+    { id: 'EMP-KKN-C-003', nameTh: 'ไพโรจน์ ที่ราบสูง', nameEn: 'Pairoj Thirabsung', position: 'Loan Officer', branchCode: 'KKN-Central' },
+    { id: 'EMP-KKN-C-004', nameTh: 'สุดารัตน์ มอดินแดง', nameEn: 'Sudarat Modindaeng', position: 'Customer Advisor', branchCode: 'KKN-Central' },
+    { id: 'EMP-KKN-C-005', nameTh: 'อภิชาติ แก่นนคร', nameEn: 'Apichat Kaennakhon', position: 'Relationship Manager', branchCode: 'KKN-Central' },
+    { id: 'EMP-KKN-C-006', nameTh: 'รัชนี ลำน้ำพอง', nameEn: 'Ratchanee Lamnamphong', position: 'Teller', branchCode: 'KKN-Central' },
+    { id: 'EMP-KKN-C-007', nameTh: 'ธวัชชัย ศรีจันทร์', nameEn: 'Thawatchai Srichan', position: 'Operations Specialist', branchCode: 'KKN-Central' },
+    { id: 'EMP-KKN-C-008', nameTh: 'พิมพ์ใจ หนองคาย', nameEn: 'Pimjai Nongkhai', position: 'Branch Coordinator', branchCode: 'KKN-Central' },
+  ],
+  'HDY-Central': [
+    { id: 'EMP-HDY-C-001', nameTh: 'สมพงษ์ ใต้สุด', nameEn: 'Sompong Taisud', position: 'Branch Manager', branchCode: 'HDY-Central' },
+    { id: 'EMP-HDY-C-002', nameTh: 'นารีรัตน์ หาดใหญ่', nameEn: 'Nareerat Hatyai', position: 'Senior Teller', branchCode: 'HDY-Central' },
+    { id: 'EMP-HDY-C-003', nameTh: 'วิชัย สงขลา', nameEn: 'Wichai Songkhla', position: 'Loan Officer', branchCode: 'HDY-Central' },
+    { id: 'EMP-HDY-C-004', nameTh: 'กนกวรรณ ทะเลสาบ', nameEn: 'Kanokwan Thalesap', position: 'Customer Advisor', branchCode: 'HDY-Central' },
+    { id: 'EMP-HDY-C-005', nameTh: 'ประเสริฐ ด่านนอก', nameEn: 'Prasert Dannok', position: 'Relationship Manager', branchCode: 'HDY-Central' },
+    { id: 'EMP-HDY-C-006', nameTh: 'อรพรรณ คลองแงะ', nameEn: 'Orapan Khlongngae', position: 'Teller', branchCode: 'HDY-Central' },
+    { id: 'EMP-HDY-C-007', nameTh: 'สุริยา เบตง', nameEn: 'Suriya Betong', position: 'Operations Specialist', branchCode: 'HDY-Central' },
+    { id: 'EMP-HDY-C-008', nameTh: 'มยุรี นาทวี', nameEn: 'Mayuree Nathawi', position: 'Branch Coordinator', branchCode: 'HDY-Central' },
+    { id: 'EMP-HDY-C-009', nameTh: 'เกรียงไกร สะเดา', nameEn: 'Kriangkrai Sadao', position: 'Senior Analyst', branchCode: 'HDY-Central' },
+  ],
 };
 
 /**
@@ -80,6 +103,11 @@ const BRANCH_EMPLOYEES: Record<string, BranchEmployee[]> = {
  */
 export function getBranchEmployees(branchCode: string): BranchEmployee[] {
   return BRANCH_EMPLOYEES[branchCode] ?? BRANCH_EMPLOYEES['BKK-Sukhumvit'];
+}
+
+/** All branch codes in the mock pool — used by the SPD HR-Admin "all branches" mode. */
+export function getAllBranchCodes(): string[] {
+  return Object.keys(BRANCH_EMPLOYEES);
 }
 
 /**

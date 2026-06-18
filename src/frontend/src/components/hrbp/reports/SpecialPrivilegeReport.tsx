@@ -1,8 +1,8 @@
 'use client';
 
 // STA-27 PR-B' — SpecialPrivilegeReport (HR-RP-04 BRD #138)
-// Special privilege records per employee — table view.
-// NOTE: partneredDepts scope filter degraded in mockup phase.
+// STA-64 — Special privilege records per employee, filtered by the active HRBP
+// persona's department scope (single source: useHrbpScope().scope). Admin sees all.
 
 import { useState, useMemo } from 'react';
 import { useLocale } from 'next-intl';
@@ -10,15 +10,18 @@ import { Download } from 'lucide-react';
 import { Card, DemoValuesDisclaimer } from '@/components/humi';
 import { useHrbpScope } from '@/hooks/use-hrbp-scope';
 import { getSpecialPrivilegeRecords } from '@/lib/hrbp-reports-mock';
+import { filterByDept } from '@/lib/benefit-scope-filter';
 import { csvExport } from '@/lib/manager-reports-mock';
 
 export function SpecialPrivilegeReport() {
   const locale = useLocale();
   const isTh = locale !== 'en';
-  const { partneredDepts } = useHrbpScope();
+  const { scope } = useHrbpScope();
   const [exporting, setExporting] = useState(false);
 
-  const records = useMemo(() => getSpecialPrivilegeRecords(partneredDepts), [partneredDepts]);
+  // Single scope source: filter the full pool by the active persona scope before
+  // computing tiles + table, so counts recompute from the scoped set.
+  const records = useMemo(() => filterByDept(getSpecialPrivilegeRecords(), scope), [scope]);
 
   const activeRecords = records.filter((r) => r.isActive);
   const expiringThisQuarter = records.filter((r) => {
@@ -142,9 +145,11 @@ export function SpecialPrivilegeReport() {
         <div className="border-t border-hairline px-4 py-2 text-xs text-ink-muted">
           {isTh ? `${records.length} รายการ` : `${records.length} records`}
           {' · '}
-          {isTh
-            ? 'ขอบเขตแผนก: ข้อมูลตัวอย่าง (การกรองเป็นตัวอย่าง)'
-            : 'Department scope: sample data (filtering is illustrative)'}
+          {scope.kind === 'dept'
+            ? isTh
+              ? `ขอบเขตแผนก: ${scope.departments.join(', ')}`
+              : `Department scope: ${scope.departments.join(', ')}`
+            : isTh ? 'ขอบเขตแผนก: ทุกแผนก' : 'Department scope: all departments'}
         </div>
       </Card>
     </div>

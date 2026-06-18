@@ -35,26 +35,30 @@ function usageChipClass(used: number, total: number): string {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function SpdBranchViewPage() {
+export function SpdBranchViewPage({ branches }: { branches: string[] }) {
   const locale = useLocale();
   const isTh = locale !== 'en';
 
-  const { assignedBranches, isLoading } = useSpdBranches();
+  // STA-64 — `branches` is the single scope source resolved by the route's local
+  // switcher (assigned branches for SPD, all branches for HR Admin). The hook is
+  // read only for the loading flag.
+  const { isLoading } = useSpdBranches();
+  const visibleBranches = branches;
 
   // Default to first branch
-  const [selectedBranch, setSelectedBranch] = useState<string>(assignedBranches[0] ?? '');
+  const [selectedBranch, setSelectedBranch] = useState<string>(visibleBranches[0] ?? '');
 
-  // Ensure selectedBranch stays valid if assignedBranches changes (defensive)
+  // Ensure selectedBranch stays valid if the visible branch set changes (defensive)
   const activeBranch =
-    assignedBranches.includes(selectedBranch) ? selectedBranch : (assignedBranches[0] ?? '');
+    visibleBranches.includes(selectedBranch) ? selectedBranch : (visibleBranches[0] ?? '');
 
   // Employees for selected branch
   const employees = useMemo(() => getBranchEmployees(activeBranch), [activeBranch]);
 
-  // Total employees across all branches (for tiles)
+  // Total employees across all visible branches (for tiles)
   const totalEmployees = useMemo(
-    () => assignedBranches.reduce((sum, b) => sum + getBranchEmployees(b).length, 0),
-    [assignedBranches],
+    () => visibleBranches.reduce((sum, b) => sum + getBranchEmployees(b).length, 0),
+    [visibleBranches],
   );
 
   // Resolve plan metadata from registry for the 6 branch matrix columns
@@ -87,7 +91,7 @@ export function SpdBranchViewPage() {
     <div className="flex flex-col gap-6">
       {/* Summary tiles */}
       <SpdBranchSummaryTiles
-        assignedBranches={assignedBranches}
+        assignedBranches={visibleBranches}
         totalEmployees={totalEmployees}
       />
 
@@ -97,7 +101,7 @@ export function SpdBranchViewPage() {
           {isTh ? 'เลือกสาขา' : 'Select Branch'}
         </p>
         <div className="flex flex-wrap gap-2">
-          {assignedBranches.map((branch) => (
+          {visibleBranches.map((branch) => (
             <button
               key={branch}
               type="button"

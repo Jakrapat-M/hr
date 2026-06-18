@@ -1,8 +1,8 @@
 'use client';
 
 // STA-27 PR-B' — ClaimReport (HR-RP-01 BE_26 r1)
-// Cross-employee Benefit Claim report scoped to HRBP partneredDepts.
-// NOTE: scope filter degraded in mockup phase — see sta-27-quick-approve-predicate-audit.md
+// STA-64 — Cross-employee Benefit Claim report, filtered by the active HRBP
+// persona's department scope (single source: useHrbpScope().scope). Admin sees all.
 
 import { useState, useMemo } from 'react';
 import { useLocale } from 'next-intl';
@@ -10,6 +10,7 @@ import { Download } from 'lucide-react';
 import { Card, DemoValuesDisclaimer } from '@/components/humi';
 import { useHrbpScope } from '@/hooks/use-hrbp-scope';
 import { getClaimReportData } from '@/lib/hrbp-reports-mock';
+import { filterByDept } from '@/lib/benefit-scope-filter';
 import { csvExport } from '@/lib/manager-reports-mock';
 
 type FilterPlan = 'all' | 'medical' | 'dental' | 'optical';
@@ -23,12 +24,14 @@ const STATUS_LABEL: Record<string, { en: string; th: string; cls: string }> = {
 export function ClaimReport() {
   const locale = useLocale();
   const isTh = locale !== 'en';
-  const { partneredDepts } = useHrbpScope();
+  const { scope } = useHrbpScope();
 
   const [filterPlan, setFilterPlan] = useState<FilterPlan>('all');
   const [exporting, setExporting] = useState(false);
 
-  const allClaims = useMemo(() => getClaimReportData(partneredDepts), [partneredDepts]);
+  // Single scope source: filter the full pool by the active persona scope
+  // BEFORE computing tiles + table, so counts recompute from the scoped set.
+  const allClaims = useMemo(() => filterByDept(getClaimReportData(), scope), [scope]);
 
   const filtered = useMemo(() => {
     if (filterPlan === 'all') return allClaims;
@@ -174,9 +177,11 @@ export function ClaimReport() {
         <div className="border-t border-hairline px-4 py-2 text-xs text-ink-muted">
           {isTh ? `แสดง ${filtered.length} รายการ` : `Showing ${filtered.length} records`}
           {' · '}
-          {isTh
-            ? 'ขอบเขตแผนก: ข้อมูลตัวอย่าง (การกรองเป็นตัวอย่าง)'
-            : 'Department scope: sample data (filtering is illustrative)'}
+          {scope.kind === 'dept'
+            ? isTh
+              ? `ขอบเขตแผนก: ${scope.departments.join(', ')}`
+              : `Department scope: ${scope.departments.join(', ')}`
+            : isTh ? 'ขอบเขตแผนก: ทุกแผนก' : 'Department scope: all departments'}
         </div>
       </Card>
     </div>

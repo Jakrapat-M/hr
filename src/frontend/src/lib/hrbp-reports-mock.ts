@@ -1,8 +1,8 @@
 // STA-27 PR-B' — hrbp-reports-mock.ts
 // Deterministic mock helpers for the 4 HRBP benefits reports.
 // All values are hash-based — stable across renders. No real API.
-// Scope filter (partneredDepts) documents limitation: mock claim rows are not
-// actually narrowed by dept in the mockup phase — see sta-27-quick-approve-predicate-audit.md
+// Generators are scope-agnostic: they return the full pool, and callers narrow
+// the rows via benefit-scope-filter's filterByDept against the active persona scope.
 
 /** djb2 hash — stable numeric key from a string */
 function hashStr(s: string): number {
@@ -53,11 +53,10 @@ export interface ClaimRecord {
 }
 
 /**
- * Returns mock claim records.
- * NOTE: partneredDepts param is accepted for API-stability but does not
- * actually filter rows in the mockup phase (scope-filter degraded — see audit doc).
+ * Returns the full pool of mock claim records (scope-agnostic).
+ * Callers narrow by department via `filterByDept`.
  */
-export function getClaimReportData(_partneredDepts: string[]): ClaimRecord[] {
+export function getClaimReportData(): ClaimRecord[] {
   const records: ClaimRecord[] = [];
   MOCK_EMPLOYEES.forEach((emp) => {
     PLAN_CODES.forEach((plan) => {
@@ -200,10 +199,10 @@ const REASONS = [
 ] as const;
 
 /**
- * Returns mock special privilege records.
- * NOTE: partneredDepts not used to filter in mockup phase (scope-filter degraded).
+ * Returns the full pool of mock special privilege records (scope-agnostic).
+ * Callers narrow by department via `filterByDept`.
  */
-export function getSpecialPrivilegeRecords(_partneredDepts: string[]): PrivilegeRecord[] {
+export function getSpecialPrivilegeRecords(): PrivilegeRecord[] {
   const records: PrivilegeRecord[] = [];
   // Generate 8 records from mock employees
   MOCK_EMPLOYEES.forEach((emp, i) => {
