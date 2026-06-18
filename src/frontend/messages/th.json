@@ -5700,5 +5700,79 @@
     "saved": "บันทึกแล้ว",
     "rowCount": "{count} แถว",
     "previewCap": "แสดง {shown} อันดับแรกจาก {total} รายการ — ดาวน์โหลด CSV เพื่อดูทั้งหมด"
+  },
+  "terminationFeedback": {
+    "eyebrow": "สัมภาษณ์ก่อนลาออก",
+    "sectionTitle": "แบบสัมภาษณ์ก่อนลาออก",
+    "optional": "ไม่บังคับ",
+    "intro": "แบบสัมภาษณ์นี้จัดทำขึ้นเพื่อรับฟังความคิดเห็นและข้อเสนอแนะเกี่ยวกับประสบการณ์ การทำงานของท่าน รวมถึงเหตุผลในการลาออก เพื่อนำไปปรับปรุงและพัฒนากลยุทธ์ ด้านทรัพยากรบุคคลให้ดียิ่งขึ้น",
+    "rankedHint": "กรุณาเลือก 3 ปัจจัยที่ส่งผลต่อการลาออก",
+    "rankLabel": "อันดับ {rank}",
+    "selectPlaceholder": "— เลือก —",
+    "partCommentLabel": "ความคิดเห็นเพิ่มเติม",
+    "partCommentPlaceholder": "ระบุรายละเอียดเพิ่มเติม (ไม่บังคับ)…",
+    "overallCommentLabel": "กรุณาอธิบายรายละเอียดเพิ่มเติมเกี่ยวกับการตัดสินใจลาออกของท่าน",
+    "overallCommentPlaceholder": "ความคิดเห็นโดยรวมของท่าน…",
+    "parts": {
+      "job": {
+        "title": "ส่วนที่ 1 — ลักษณะงาน",
+        "options": {
+          "job_sales_target_high": "ตั้งเป้ายอดขายสูงเกินไป",
+          "job_overload": "งานมากเกินไป",
+          "job_shift_unstable": "เปลี่ยนตารางกะถี่เกินไป ไม่มีความแน่นอน",
+          "job_duty_mismatch": "หน้าที่ได้รับมอบหมายไม่ตรงกับที่ตกลงไว้",
+          "job_relocated": "ถูกโอนย้ายสถานที่ทำงาน",
+          "job_no_progress": "ไม่ก้าวหน้าในงาน"
+        }
+      },
+      "compensation": {
+        "title": "ส่วนที่ 2 — ค่าจ้างและสวัสดิการ",
+        "options": {
+          "comp_low_income": "รายได้น้อย",
+          "comp_low_bonus": "โบนัสหรือค่าคอมมิชชั่นน้อย",
+          "comp_low_raise": "เงินเดือนขึ้นน้อย",
+          "comp_unpaid_ot": "ทำงานล่วงเวลามากแต่ไม่ได้รับค่าล่วงเวลา",
+          "comp_insufficient_holiday": "วันหยุดไม่เพียงพอ",
+          "comp_benefit_mismatch": "สวัสดิการไม่ตอบสนองต่อความต้องการ"
+        }
+      },
+      "workRelationship": {
+        "title": "ส่วนที่ 3 — หัวหน้างานและเพื่อนร่วมงาน",
+        "options": {
+          "rel_no_coaching": "หัวหน้างานไม่สอนงาน",
+          "rel_harsh_criticism": "หัวหน้างานชอบตำหนิ ใช้คำพูดรุนแรง",
+          "rel_unfair": "หัวหน้าไม่ยุติธรรม",
+          "rel_unfriendly_peers": "เพื่อนร่วมงานไม่เป็นมิตร",
+          "rel_no_personal_leave": "ขอลากิจไม่ได้"
+        }
+      },
+      "personalReason": {
+        "title": "ส่วนที่ 4 — เหตุผลส่วนตัว",
+        "options": {
+          "personal_study": "ศึกษาต่อ",
+          "personal_business": "ทำธุรกิจส่วนตัว",
+          "personal_health": "สุขภาพไม่ดี",
+          "personal_commute": "เดินทางไม่สะดวก บ้านไกลจากที่ทำงาน"
+        }
+      },
+      "newJob": {
+        "title": "ส่วนที่ 5 — ท่านได้งานใหม่แล้วหรือไม่",
+        "subSelectLabel": "หากได้งานใหม่แล้ว ลักษณะงานใหม่เป็นอย่างไร",
+        "options": {
+          "newjob_yes": "ได้งานใหม่แล้ว",
+          "newjob_no": "ยังไม่ได้งานใหม่",
+          "newjob_no_disclose": "ไม่ประสงค์ให้ข้อมูล"
+        },
+        "typeOptions": {
+          "newjobtype_better_pay": "ได้ผลตอบแทนที่ดีกว่าในงานที่คล้ายเดิม",
+          "newjobtype_senior_role": "ได้ตำแหน่งงานที่สูงขึ้น",
+          "newjobtype_better_growth": "ได้โอกาสในการเติบโตที่ดีขึ้น"
+        }
+      }
+    },
+    "panelEyebrow": "ความคิดเห็นการลาออก",
+    "panelTitle": "ความคิดเห็นก่อนลาออก",
+    "panelEmpty": "ยังไม่มีความคิดเห็นก่อนลาออกที่บันทึกไว้",
+    "panelRankWord": "อันดับ"
   }
 }

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Capability } from '@/components/humi';
 import { QuickActionsTile, type QuickAction } from '@/components/humi/QuickActionsTile';
+import { ExitFeedbackPanel } from '@/components/hrbp/ExitFeedbackPanel';
 import {
   HUMI_PENDING_REQUESTS,
   HUMI_EMPLOYEES,
@@ -218,6 +219,9 @@ export default function HRBPDashboardPage() {
           );
         })}
       </div>
+
+      {/* ── Exit Feedback (STA-124) — read-only, admin-captured ──────────── */}
+      <ExitFeedbackPanel />
 
       {/* ── Row: Approval queue + Recent activity ────────────────────────── */}
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]" style={{ marginBottom: 20 }}>

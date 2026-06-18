@@ -5700,5 +5700,79 @@
     "saved": "Saved",
     "rowCount": "{count} rows",
     "previewCap": "Showing top {shown} of {total} — export the CSV for all rows."
+  },
+  "terminationFeedback": {
+    "eyebrow": "Exit interview",
+    "sectionTitle": "Exit Interview",
+    "optional": "optional",
+    "intro": "This Exit Interview is designated to share your thoughts and feedback on your work experience, including the reasons for your departure. This will keep us determine areas of improvement for better HR strategy.",
+    "rankedHint": "Please choose 3 factors that influenced your decision to leave.",
+    "rankLabel": "Rank {rank}",
+    "selectPlaceholder": "— Select —",
+    "partCommentLabel": "Additional comment",
+    "partCommentPlaceholder": "Add more detail (optional)…",
+    "overallCommentLabel": "Please explain more detail for your decision to leave.",
+    "overallCommentPlaceholder": "Your overall feedback…",
+    "parts": {
+      "job": {
+        "title": "Part 1 — Job",
+        "options": {
+          "job_sales_target_high": "Sales targets set too high",
+          "job_overload": "Too much work",
+          "job_shift_unstable": "Shift schedule changed too often / unpredictable",
+          "job_duty_mismatch": "Assigned duties did not match what was agreed",
+          "job_relocated": "Transferred to a different work location",
+          "job_no_progress": "No career progress in the role"
+        }
+      },
+      "compensation": {
+        "title": "Part 2 — Compensation & Benefit",
+        "options": {
+          "comp_low_income": "Low income",
+          "comp_low_bonus": "Low bonus or commission",
+          "comp_low_raise": "Small salary increase",
+          "comp_unpaid_ot": "Worked a lot of overtime but received no overtime pay",
+          "comp_insufficient_holiday": "Not enough days off",
+          "comp_benefit_mismatch": "Benefits did not meet my needs"
+        }
+      },
+      "workRelationship": {
+        "title": "Part 3 — Work Relationship",
+        "options": {
+          "rel_no_coaching": "Supervisor did not provide coaching",
+          "rel_harsh_criticism": "Supervisor often criticised / used harsh words",
+          "rel_unfair": "Supervisor was unfair",
+          "rel_unfriendly_peers": "Co-workers were unfriendly",
+          "rel_no_personal_leave": "Could not take personal leave"
+        }
+      },
+      "personalReason": {
+        "title": "Part 4 — Personal Reason",
+        "options": {
+          "personal_study": "Further study",
+          "personal_business": "Starting my own business",
+          "personal_health": "Poor health",
+          "personal_commute": "Difficult commute / home far from work"
+        }
+      },
+      "newJob": {
+        "title": "Part 5 — Have you got a new job?",
+        "subSelectLabel": "If you have a new job, what is the new role like?",
+        "options": {
+          "newjob_yes": "Yes, I have a new job",
+          "newjob_no": "Not yet",
+          "newjob_no_disclose": "Prefer not to say"
+        },
+        "typeOptions": {
+          "newjobtype_better_pay": "For better pay in a similar role",
+          "newjobtype_senior_role": "For a more senior role",
+          "newjobtype_better_growth": "For better career opportunities"
+        }
+      }
+    },
+    "panelEyebrow": "Termination feedback",
+    "panelTitle": "Exit Feedback",
+    "panelEmpty": "No exit feedback captured yet.",
+    "panelRankWord": "Rank"
   }
 }
