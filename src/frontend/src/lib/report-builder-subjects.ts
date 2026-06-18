@@ -9,9 +9,9 @@
 //   - Employee-derived subjects (headcount / leave / turnover) compute over the
 //     persona-scoped employee slice passed in (filterEmployeesByPersona) so the
 //     same data-scope posture as /reports applies.
-//   - Benefits subjects (enrollment / claims) read the hrbp-reports-mock pool,
-//     which is a separate fixed pool (partneredDepts ignored in mockup) — not
-//     persona-narrowed. This matches the existing benefits-report mockup behaviour.
+//   - Benefits subjects (enrollment / claims) read the scope-agnostic
+//     hrbp-reports-mock pool (full pool, not persona-narrowed here). This matches
+//     the report-builder's portfolio-wide posture for benefits subjects.
 
 import type { HumiEmployee } from './humi-mock-data';
 import { getClaimReportData, getEnrollmentByPlan } from './hrbp-reports-mock';
@@ -289,7 +289,7 @@ export function buildSubjects(
       filters: [PLAN_STATUS_FILTER],
       compute: (_emps, filters, locale) => {
         const isTh = locale !== 'en';
-        return getClaimReportData([])
+        return getClaimReportData()
           .filter((c) => !filters.status || c.status === filters.status)
           .map((c) => ({
             claimId: c.claimId,
