@@ -163,6 +163,31 @@ const ATTACHMENT_REQUIRED_FIELDS = new Set([
   'spouseName',
 ]);
 
+// ── Section-level edit config (STA-82) ─────────────────────────────────────────
+// BA directive: Personal / Marital / Contact are edited per SECTION (one Edit
+// button per group → one form with all the section's fields + one effective date
+// + one optional attachment → one submit). Each changed field is still captured
+// as its own PendingChange (so the approval view shows what changed), but the
+// user interaction is a single grouped edit. Address/Bank/Emergency/Dependents
+// already work this way (their own section editors) and are untouched.
+type SectionId = 'personal' | 'marital' | 'contact' | 'advanced';
+
+interface SectionFieldSpec {
+  key: keyof EditFormValues;
+  options?: string[];
+  inputType?: string;
+}
+
+// sectionKey mapping submitted to the store. Marital groups under 'personal'
+// (no dedicated 'marital' SectionKey exists; marital is identity data and shares
+// the personal section's attachment requirement — smallest correct change).
+const SECTION_TO_STORE_KEY: Record<SectionId, SectionKey> = {
+  personal: 'personal',
+  marital: 'personal',
+  contact: 'contact',
+  advanced: 'personal',
+};
+
 // Picklist options
 const SALUTATION_TH = ['นาย', 'นาง', 'นางสาว', 'น.ส.'];
 const SALUTATION_EN = ['Mr.', 'Mrs.', 'Miss', 'Ms.'];
@@ -175,6 +200,43 @@ const MILITARY_OPTIONS = ['completed', 'exempted', 'deferred', 'not_applicable']
 // Humi extends with Rh factor (+/-) for clinical completeness — intentional superset.
 // SF cite: qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json BLOODGROUP optionIds AB/A/O/B
 const DISABILITY_OPTIONS = ['none', 'physical', 'visual', 'hearing', 'cognitive', 'other'];
+
+// Editable field roster per section (STA-82). Order mirrors the prior FullEditField
+// layout. `spouseName` is conditional (married only) and handled at render time.
+const SECTION_FIELDS: Record<SectionId, SectionFieldSpec[]> = {
+  personal: [
+    { key: 'salutationTh', options: SALUTATION_TH },
+    { key: 'salutationEn', options: SALUTATION_EN },
+    { key: 'firstNameTh' },
+    { key: 'firstNameEn' },
+    { key: 'lastNameTh' },
+    { key: 'lastNameEn' },
+    { key: 'nickname' },
+    { key: 'preferredName' },
+    { key: 'secondLastName' },
+    { key: 'gender', options: GENDER_OPTIONS },
+    { key: 'dateOfBirth', inputType: 'date' },
+    { key: 'nationality' },
+    { key: 'nationalId' },
+  ],
+  marital: [
+    { key: 'maritalStatus', options: MARITAL_OPTIONS },
+    { key: 'maritalStatusSince', inputType: 'date' },
+    { key: 'spouseName' },
+  ],
+  contact: [
+    { key: 'personalEmail', inputType: 'email' },
+    { key: 'businessPhone', inputType: 'tel' },
+    { key: 'personalMobile', inputType: 'tel' },
+    { key: 'homePhone', inputType: 'tel' },
+  ],
+  advanced: [
+    { key: 'religion', options: RELIGION_OPTIONS },
+    { key: 'bloodType', options: BLOOD_TYPES },
+    { key: 'militaryStatus', options: MILITARY_OPTIONS },
+    { key: 'disabilityStatus', options: DISABILITY_OPTIONS },
+  ],
+};
 
 // BRD #29: PerPerson personIdExternal — stable SF external ID surfaced alongside generated employee ID
 // SF cite: sf-extract/qas-fields-2026-04-26/sf-qas-PerPerson-2026-04-26.json .d.results[0].personIdExternal
@@ -389,6 +451,13 @@ export default function HumiProfileMePage({
   const [gateOpen, setGateOpen] = useState(false);
   const [modalDate, setModalDate] = useState<string>(''); // ISO yyyy-MM-dd
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  // STA-82 — section-level edit (Personal / Marital / Contact). One Edit button
+  // per section opens a single form with all that section's fields + one
+  // effective date + one optional attachment, submitting one section-level CR.
+  const [editingSection, setEditingSection] = useState<SectionId | null>(null);
+  const [sectionDraft, setSectionDraft] = useState<EditFormValues>(initialFormValues);
+  const [sectionDate, setSectionDate] = useState<string>('');
+  const [sectionAttachmentIds, setSectionAttachmentIds] = useState<string[]>([]);
   const benefitClaims = useBenefitClaimsStore((state) => state.claims);
   const lastAppliedProfileSearchRef = useRef<string | null>(null);
 
@@ -481,6 +550,67 @@ export default function HumiProfileMePage({
     });
     showToast(tToast('submitted'));
     handleGateClose();
+  }
+
+  // ── STA-82 section-level edit handlers ────────────────────────────────────
+
+  function openSectionEdit(section: SectionId) {
+    setSectionDraft(formValues); // snapshot current values into the section form
+    const today = new Date();
+    const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    setSectionDate(iso);
+    setSectionAttachmentIds([]);
+    setEditingSection(section);
+  }
+
+  function closeSectionEdit() {
+    setEditingSection(null);
+    setSectionAttachmentIds([]);
+    setSectionDate('');
+  }
+
+  // Fields visible for the active section (spouseName only when married).
+  function visibleSectionFields(section: SectionId): SectionFieldSpec[] {
+    return SECTION_FIELDS[section].filter(
+      (f) => f.key !== 'spouseName' || sectionDraft.maritalStatus === 'สมรส',
+    );
+  }
+
+  // Does the active section require an attachment? (any visible field is in the
+  // attachment-required set — mirrors the prior per-field rule.)
+  const sectionAttachmentRequired =
+    editingSection !== null &&
+    visibleSectionFields(editingSection).some((f) => ATTACHMENT_REQUIRED_FIELDS.has(f.key));
+
+  const sectionSaveDisabled =
+    !sectionDate || (sectionAttachmentRequired && sectionAttachmentIds.length === 0);
+
+  function handleSubmitSection() {
+    if (!editingSection || !sectionDate) return;
+    const fields = visibleSectionFields(editingSection);
+    const sectionKey = SECTION_TO_STORE_KEY[editingSection];
+    let changeCount = 0;
+    // Commit section-draft into the live form values, then emit one CR per
+    // changed field (so the approval view still lists every change) sharing the
+    // section's effective date + attachment + sectionKey.
+    fields.forEach((f) => {
+      const newValue = sectionDraft[f.key];
+      const oldValue = formValues[f.key];
+      if (newValue !== oldValue) {
+        submitChangeRequest({
+          field: f.key,
+          oldValue: FORM_DEFAULTS[f.key],
+          newValue,
+          effectiveDate: sectionDate,
+          attachmentIds: sectionAttachmentIds,
+          sectionKey,
+        });
+        changeCount += 1;
+      }
+    });
+    setFormValues(sectionDraft);
+    showToast(changeCount > 0 ? tToast('submitted') : t('profileCancelEdit'));
+    closeSectionEdit();
   }
 
   // ── Determine if save is disabled (date missing OR required attachment missing) ──
@@ -795,7 +925,7 @@ export default function HumiProfileMePage({
                 </span>
               </p>
               <FileUploadField
-                label="แนบเอกสารประกอบ"
+                label={tEdit('attachLabel')}
                 required
                 onUpload={(id) => setPendingAttachmentIds((prev) => [...prev, id])}
                 onRemove={(id) => setPendingAttachmentIds((prev) => prev.filter((x) => x !== id))}
@@ -807,8 +937,8 @@ export default function HumiProfileMePage({
           {saveDisabled && (
             <p role="alert" className="text-xs text-danger">
               {attachmentRequired && pendingAttachmentIds.length === 0
-                ? 'กรุณาแนบเอกสารก่อนบันทึก'
-                : 'กรุณาระบุวันที่มีผล'}
+                ? tEdit('attachmentRequiredHint')
+                : tEdit('effectiveDateRequiredHint')}
             </p>
           )}
           <div className="border-t pt-4 flex justify-end gap-2">
@@ -827,12 +957,129 @@ export default function HumiProfileMePage({
         </div>
       </Modal>
 
+      {/* STA-82 — Section-level edit modal: all of a section's editable fields +
+          one effective date + one optional attachment, submitted as one CR.
+          Replaces the per-field edit for Personal / Marital / Contact. */}
+      <Modal
+        open={editingSection !== null}
+        onClose={closeSectionEdit}
+        title={
+          editingSection
+            ? tEdit(`section.${editingSection}` as Parameters<typeof tEdit>[0])
+            : ''
+        }
+      >
+        {editingSection && (
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {visibleSectionFields(editingSection).map((spec) => (
+                <div key={spec.key} className="space-y-1.5">
+                  <label className="text-sm font-medium text-ink">
+                    {tEdit(`field.${spec.key}` as Parameters<typeof tEdit>[0])}
+                    {ATTACHMENT_REQUIRED_FIELDS.has(spec.key) && (
+                      <span className="ml-1 text-xs text-ink-muted">({tEdit('required')})</span>
+                    )}
+                  </label>
+                  {spec.options ? (
+                    <select
+                      value={sectionDraft[spec.key]}
+                      onChange={(e) =>
+                        setSectionDraft((d) => ({ ...d, [spec.key]: e.target.value }))
+                      }
+                      className="w-full rounded-md border border-hairline bg-canvas-soft px-3 py-2 text-sm outline-none focus:border-accent"
+                    >
+                      {spec.options.map((o) => (
+                        <option key={o} value={o}>
+                          {o}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={spec.inputType ?? 'text'}
+                      value={sectionDraft[spec.key]}
+                      onChange={(e) =>
+                        setSectionDraft((d) => ({ ...d, [spec.key]: e.target.value }))
+                      }
+                      className="w-full rounded-md border border-hairline px-3 py-2 text-sm outline-none focus:border-accent"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Effective date — one for the whole section change */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-ink">
+                {tEdit('effectiveDate')}
+                <span className="ml-1 text-danger" aria-hidden>
+                  *
+                </span>
+              </label>
+              <input
+                type="date"
+                value={sectionDate}
+                onChange={(e) => setSectionDate(e.target.value)}
+                className="w-full rounded-md border border-hairline px-3 py-2 text-sm outline-none focus:border-accent"
+              />
+            </div>
+
+            {/* Optional attachment — one for the whole section change. Required
+                only when the section contains an attachment-gated field. */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-ink">
+                {tEdit('required')}
+                {sectionAttachmentRequired && (
+                  <span className="ml-1 text-danger" aria-hidden>
+                    *
+                  </span>
+                )}
+              </p>
+              <FileUploadField
+                label={tEdit('attachLabel')}
+                required={sectionAttachmentRequired}
+                onUpload={(id) => setSectionAttachmentIds((prev) => [...prev, id])}
+                onRemove={(id) =>
+                  setSectionAttachmentIds((prev) => prev.filter((x) => x !== id))
+                }
+              />
+            </div>
+
+            {sectionSaveDisabled && (
+              <p role="alert" className="text-xs text-danger">
+                {sectionAttachmentRequired && sectionAttachmentIds.length === 0
+                  ? tEdit('attachmentRequiredHint')
+                  : tEdit('effectiveDateRequiredHint')}
+              </p>
+            )}
+
+            <div className="border-t pt-4 flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={closeSectionEdit}>
+                {t('profileCancelEdit')}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleSubmitSection}
+                disabled={sectionSaveDisabled}
+              >
+                {t('save')}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
       {/* Top action bar — Edit controls only on personal panel (tab guard
           prevents stranded Save/Cancel on other tabs). Buttons container uses
           fixed min-width to reserve space for 2-button state so toggling
           Edit↔(Cancel+Save) doesn't jump layout (Ken UAT 2026-04-22 "กระตุก"). */}
+      {/* STA-82: personal panel is 100% section-level — every section has its own
+          Edit button. The global Edit/Save/Cancel bar is only needed for panels
+          that still use the isEditing pattern (emergency tab: Emergency Contacts +
+          Dependents). Suppress it on 'personal' to avoid confusion. */}
       <div className="mb-5 flex items-center justify-end gap-3 flex-wrap">
-        {panelKey === 'personal' && (
+        {panelKey !== 'personal' && (
           // Render all 3 buttons always, toggle visibility via CSS — avoids
           // React mount/unmount flash. Container reserves 2-button width so
           // layout doesn't jump when swapping (Ken UAT 2026-04-22 "กระตุก").
@@ -995,165 +1242,24 @@ export default function HumiProfileMePage({
               <h3 className="mb-4 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
                 {t('personalTitle')}
               </h3>
-              {/* Section A — Personal Info */}
-              <SectionHeader title={tEdit('section.personal')} />
+              {/* Section A — Personal Info (STA-82 section-level edit) */}
+              <SectionEditHeader
+                title={tEdit('section.personal')}
+                editLabel={tEdit('editSection')}
+                onEdit={() => openSectionEdit('personal')}
+              />
               <div className="grid gap-3 sm:grid-cols-2" style={{ marginBottom: 20 }}>
-                <FullEditField
-                  label={tEdit('field.salutationTh')}
-                  value={formValues.salutationTh}
-                  requiresAttachment
-                  onChange={(v) => setFormValues((f) => ({ ...f, salutationTh: v }))}
-                  onEdit={() => handleEditField('salutationTh')}
-                  options={SALUTATION_TH}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'salutationTh' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.salutationEn')}
-                  value={formValues.salutationEn}
-                  requiresAttachment
-                  onChange={(v) => setFormValues((f) => ({ ...f, salutationEn: v }))}
-                  onEdit={() => handleEditField('salutationEn')}
-                  options={SALUTATION_EN}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'salutationEn' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.firstNameTh')}
-                  value={formValues.firstNameTh}
-                  requiresAttachment
-                  onChange={(v) => setFormValues((f) => ({ ...f, firstNameTh: v }))}
-                  onEdit={() => handleEditField('firstNameTh')}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'firstNameTh' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.firstNameEn')}
-                  value={formValues.firstNameEn}
-                  requiresAttachment
-                  onChange={(v) => setFormValues((f) => ({ ...f, firstNameEn: v }))}
-                  onEdit={() => handleEditField('firstNameEn')}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'firstNameEn' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.lastNameTh')}
-                  value={formValues.lastNameTh}
-                  requiresAttachment
-                  onChange={(v) => setFormValues((f) => ({ ...f, lastNameTh: v }))}
-                  onEdit={() => handleEditField('lastNameTh')}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'lastNameTh' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.lastNameEn')}
-                  value={formValues.lastNameEn}
-                  requiresAttachment
-                  onChange={(v) => setFormValues((f) => ({ ...f, lastNameEn: v }))}
-                  onEdit={() => handleEditField('lastNameEn')}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'lastNameEn' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.nickname')}
-                  value={formValues.nickname}
-                  onChange={(v) => setFormValues((f) => ({ ...f, nickname: v }))}
-                  onEdit={() => handleEditField('nickname')}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'nickname' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                {/* BRD #20: preferredName — PerPersonal.preferredName */}
-                <FullEditField
-                  label={tEdit('field.preferredName')}
-                  value={formValues.preferredName}
-                  onChange={(v) => setFormValues((f) => ({ ...f, preferredName: v }))}
-                  onEdit={() => handleEditField('preferredName')}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'preferredName' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                {/* BRD #20: secondLastName — PerPersonal.secondLastName (post-marriage Thai surname) */}
-                <FullEditField
-                  label={tEdit('field.secondLastName')}
-                  value={formValues.secondLastName}
-                  onChange={(v) => setFormValues((f) => ({ ...f, secondLastName: v }))}
-                  onEdit={() => handleEditField('secondLastName')}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'secondLastName' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.gender')}
-                  value={formValues.gender}
-                  onChange={(v) => setFormValues((f) => ({ ...f, gender: v }))}
-                  onEdit={() => handleEditField('gender')}
-                  options={GENDER_OPTIONS}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'gender' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.dateOfBirth')}
-                  value={formValues.dateOfBirth}
-                  inputType="date"
-                  onChange={(v) => setFormValues((f) => ({ ...f, dateOfBirth: v }))}
-                  onEdit={() => handleEditField('dateOfBirth')}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'dateOfBirth' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.nationality')}
-                  value={formValues.nationality}
-                  onChange={(v) => setFormValues((f) => ({ ...f, nationality: v }))}
-                  onEdit={() => handleEditField('nationality')}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'nationality' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.nationalId')}
-                  value={formValues.nationalId}
-                  requiresAttachment
-                  onChange={(v) => setFormValues((f) => ({ ...f, nationalId: v }))}
-                  onEdit={() => handleEditField('nationalId')}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'nationalId' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
+                {SECTION_FIELDS.personal.map((spec) => (
+                  <ReadOnlyField
+                    key={spec.key}
+                    label={tEdit(`field.${spec.key}` as Parameters<typeof tEdit>[0])}
+                    value={formValues[spec.key]}
+                    pendingChange={pendingChanges.find(
+                      (pc) => pc.field === spec.key && pc.status === 'pending',
+                    )}
+                    tPending={tPending}
+                  />
+                ))}
                 {/* BRD #29: personIdExternal — PerPerson stable external ID, read-only */}
                 {/* SF cite: sf-extract/qas-fields-2026-04-26/sf-qas-PerPerson-2026-04-26.json .d.results[0].personIdExternal */}
                 <div className="humi-col" style={{ gap: 4 }}>
@@ -1169,55 +1275,36 @@ export default function HumiProfileMePage({
                 </div>
               </div>
 
-              {/* Section B — Marital */}
-              <SectionHeader title={tEdit('section.marital')} />
+              {/* Section B — Marital (STA-82 section-level edit) */}
+              <SectionEditHeader
+                title={tEdit('section.marital')}
+                editLabel={tEdit('editSection')}
+                onEdit={() => openSectionEdit('marital')}
+              />
               <div className="grid gap-3 sm:grid-cols-2" style={{ marginBottom: 20 }}>
-                <FullEditField
-                  label={tEdit('field.maritalStatus')}
-                  value={formValues.maritalStatus}
-                  requiresAttachment
-                  onChange={(v) => setFormValues((f) => ({ ...f, maritalStatus: v }))}
-                  onEdit={() => handleEditField('maritalStatus')}
-                  options={MARITAL_OPTIONS}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'maritalStatus' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.maritalStatusSince')}
-                  value={formValues.maritalStatusSince}
-                  requiresAttachment
-                  inputType="date"
-                  onChange={(v) => setFormValues((f) => ({ ...f, maritalStatusSince: v }))}
-                  onEdit={() => handleEditField('maritalStatusSince')}
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'maritalStatusSince' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                {formValues.maritalStatus === 'สมรส' && (
-                  <FullEditField
-                    label={tEdit('field.spouseName')}
-                    value={formValues.spouseName}
-                    requiresAttachment
-                    onChange={(v) => setFormValues((f) => ({ ...f, spouseName: v }))}
-                    onEdit={() => handleEditField('spouseName')}
-                    pendingChange={pendingChanges.find(
-                      (pc) => pc.field === 'spouseName' && pc.status === 'pending',
-                    )}
-                    tPending={tPending}
-                    isEditing={isEditing}
-                  />
-                )}
+                {SECTION_FIELDS.marital
+                  .filter((spec) => spec.key !== 'spouseName' || formValues.maritalStatus === 'สมรส')
+                  .map((spec) => (
+                    <ReadOnlyField
+                      key={spec.key}
+                      label={tEdit(`field.${spec.key}` as Parameters<typeof tEdit>[0])}
+                      value={formValues[spec.key]}
+                      pendingChange={pendingChanges.find(
+                        (pc) => pc.field === spec.key && pc.status === 'pending',
+                      )}
+                      tPending={tPending}
+                    />
+                  ))}
               </div>
 
-              {/* Section C — Contact (no attachment required) */}
-              <SectionHeader title={tEdit('section.contact')} />
+              {/* Section C — Contact (STA-82 section-level edit) */}
+              <SectionEditHeader
+                title={tEdit('section.contact')}
+                editLabel={tEdit('editSection')}
+                onEdit={() => openSectionEdit('contact')}
+              />
               <div className="grid gap-3 sm:grid-cols-2" style={{ marginBottom: 20 }}>
-                {/* Business email = read-only */}
+                {/* Business email = read-only (edited by HR only) */}
                 <div className="humi-col" style={{ gap: 4 }}>
                   <span style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
                     {tEdit('field.businessEmail')}
@@ -1235,57 +1322,20 @@ export default function HumiProfileMePage({
                     (อีเมลธุรกิจแก้ไขโดย HR เท่านั้น)
                   </span>
                 </div>
-                <FullEditField
-                  label={tEdit('field.personalEmail')}
-                  value={formValues.personalEmail}
-                  onChange={(v) => setFormValues((f) => ({ ...f, personalEmail: v }))}
-                  onEdit={() => handleEditField('personalEmail')}
-                  inputType="email"
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'personalEmail' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.businessPhone')}
-                  value={formValues.businessPhone}
-                  onChange={(v) => setFormValues((f) => ({ ...f, businessPhone: v }))}
-                  onEdit={() => handleEditField('businessPhone')}
-                  inputType="tel"
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'businessPhone' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.personalMobile')}
-                  value={formValues.personalMobile}
-                  onChange={(v) => setFormValues((f) => ({ ...f, personalMobile: v }))}
-                  onEdit={() => handleEditField('personalMobile')}
-                  inputType="tel"
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'personalMobile' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
-                <FullEditField
-                  label={tEdit('field.homePhone')}
-                  value={formValues.homePhone}
-                  onChange={(v) => setFormValues((f) => ({ ...f, homePhone: v }))}
-                  onEdit={() => handleEditField('homePhone')}
-                  inputType="tel"
-                  pendingChange={pendingChanges.find(
-                    (pc) => pc.field === 'homePhone' && pc.status === 'pending',
-                  )}
-                  tPending={tPending}
-                  isEditing={isEditing}
-                />
+                {SECTION_FIELDS.contact.map((spec) => (
+                  <ReadOnlyField
+                    key={spec.key}
+                    label={tEdit(`field.${spec.key}` as Parameters<typeof tEdit>[0])}
+                    value={formValues[spec.key]}
+                    pendingChange={pendingChanges.find(
+                      (pc) => pc.field === spec.key && pc.status === 'pending',
+                    )}
+                    tPending={tPending}
+                  />
+                ))}
               </div>
 
-              {/* Section D — Advanced (collapsible, no attachment) */}
+              {/* Section D — Advanced (STA-82 section-level edit, collapsible) */}
               <button
                 type="button"
                 onClick={() => setAdvancedOpen((o) => !o)}
@@ -1296,58 +1346,26 @@ export default function HumiProfileMePage({
                 {tEdit('section.advanced')}
               </button>
               {advancedOpen && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <FullEditField
-                    label={tEdit('field.religion')}
-                    value={formValues.religion}
-                    onChange={(v) => setFormValues((f) => ({ ...f, religion: v }))}
-                    onEdit={() => handleEditField('religion')}
-                    options={RELIGION_OPTIONS}
-                    pendingChange={pendingChanges.find(
-                      (pc) => pc.field === 'religion' && pc.status === 'pending',
-                    )}
-                    tPending={tPending}
-                    isEditing={isEditing}
+                <>
+                  <SectionEditHeader
+                    title=""
+                    editLabel={tEdit('editSection')}
+                    onEdit={() => openSectionEdit('advanced')}
                   />
-                  <FullEditField
-                    label={tEdit('field.bloodType')}
-                    value={formValues.bloodType}
-                    onChange={(v) => setFormValues((f) => ({ ...f, bloodType: v }))}
-                    onEdit={() => handleEditField('bloodType')}
-                    options={BLOOD_TYPES}
-                    pendingChange={pendingChanges.find(
-                      (pc) => pc.field === 'bloodType' && pc.status === 'pending',
-                    )}
-                    tPending={tPending}
-                    isEditing={isEditing}
-                  />
-                  <FullEditField
-                    label={tEdit('field.militaryStatus')}
-                    value={formValues.militaryStatus}
-                    onChange={(v) => setFormValues((f) => ({ ...f, militaryStatus: v }))}
-                    onEdit={() => handleEditField('militaryStatus')}
-                    options={MILITARY_OPTIONS}
-                    pendingChange={pendingChanges.find(
-                      (pc) => pc.field === 'militaryStatus' && pc.status === 'pending',
-                    )}
-                    tPending={tPending}
-                    isEditing={isEditing}
-                  />
-                  {/* BRD #168: disabilityStatus — PerPersonal.customString9 disability code */}
-                  {/* SF cite: sf-extract/qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json .d.results[0].customString9 */}
-                  <FullEditField
-                    label={tEdit('field.disabilityStatus')}
-                    value={formValues.disabilityStatus}
-                    onChange={(v) => setFormValues((f) => ({ ...f, disabilityStatus: v }))}
-                    onEdit={() => handleEditField('disabilityStatus')}
-                    options={DISABILITY_OPTIONS}
-                    pendingChange={pendingChanges.find(
-                      (pc) => pc.field === 'disabilityStatus' && pc.status === 'pending',
-                    )}
-                    tPending={tPending}
-                    isEditing={isEditing}
-                  />
-                </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {SECTION_FIELDS.advanced.map((spec) => (
+                      <ReadOnlyField
+                        key={spec.key}
+                        label={tEdit(`field.${spec.key}` as Parameters<typeof tEdit>[0])}
+                        value={formValues[spec.key]}
+                        pendingChange={pendingChanges.find(
+                          (pc) => pc.field === spec.key && pc.status === 'pending',
+                        )}
+                        tPending={tPending}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -2218,6 +2236,85 @@ function SectionHeader({ title }: { title: string }) {
       }}
     >
       {title}
+    </div>
+  );
+}
+
+// ── STA-82 section-level edit presentational helpers ──────────────────────────
+
+// Section header row with a single ghost "Edit" button (replaces the per-field
+// pencil for Personal / Marital / Contact). Mirrors the section-editor pattern.
+function SectionEditHeader({
+  title,
+  editLabel,
+  onEdit,
+}: {
+  title: string;
+  editLabel: string;
+  onEdit: () => void;
+}) {
+  return (
+    <div
+      className="humi-row"
+      style={{ alignItems: 'center', justifyContent: 'space-between', marginTop: 4, marginBottom: 10 }}
+    >
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: 'var(--color-ink-muted)',
+        }}
+      >
+        {title}
+      </span>
+      <Button variant="ghost" size="sm" leadingIcon={<Pencil size={13} />} onClick={onEdit}>
+        {editLabel}
+      </Button>
+    </div>
+  );
+}
+
+// Read-only label/value pair (display mode for section fields). Shows the pending
+// badge when a CR for this field is awaiting approval.
+function ReadOnlyField({
+  label,
+  value,
+  pendingChange,
+  tPending,
+}: {
+  label: string;
+  value: string;
+  pendingChange?: PendingChange;
+  tPending: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <div
+      className="humi-col"
+      style={{ gap: 4, borderBottom: '1px solid var(--color-hairline-soft)', paddingBottom: 12 }}
+    >
+      <div className="humi-row" style={{ gap: 6, alignItems: 'center' }}>
+        <span style={{ fontSize: 12, color: 'var(--color-ink-muted)', flex: 1 }}>{label}</span>
+        {pendingChange && (
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              background: 'var(--color-butter)',
+              color: 'var(--color-danger-ink)',
+              borderRadius: 4,
+              padding: '1px 6px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {tPending('badge')}
+          </span>
+        )}
+      </div>
+      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-ink)', padding: '5px 0' }}>
+        {value || '—'}
+      </span>
     </div>
   );
 }

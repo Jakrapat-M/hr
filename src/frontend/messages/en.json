@@ -4138,6 +4138,10 @@
   "profileEdit": {
     "newValue": "New value",
     "effectiveDate": "Effective date",
+    "editSection": "Edit",
+    "attachLabel": "Attach supporting document",
+    "attachmentRequiredHint": "Please attach a document before saving",
+    "effectiveDateRequiredHint": "Please specify the effective date",
     "section": {
       "personal": "Personal Information",
       "marital": "Marital Status",

@@ -4017,6 +4017,10 @@
   "profileEdit": {
     "newValue": "ค่าใหม่",
     "effectiveDate": "วันที่มีผล",
+    "editSection": "แก้ไข",
+    "attachLabel": "แนบเอกสารประกอบ",
+    "attachmentRequiredHint": "กรุณาแนบเอกสารก่อนบันทึก",
+    "effectiveDateRequiredHint": "กรุณาระบุวันที่มีผล",
     "section": {
       "personal": "ข้อมูลส่วนตัว",
       "marital": "สถานภาพสมรส",
