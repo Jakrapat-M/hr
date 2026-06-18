@@ -163,6 +163,24 @@ test.describe('persona walkthrough (slow-paced visual capture)', () => {
     await visit(page, '/th/admin/benefits/rules', 'admin-12-benefits-rules');
     await visit(page, '/th/workflows', 'admin-13-workflows-landing');
     await visit(page, '/th/workflows/probation', 'admin-14-workflows-probation');
+    // STA-125 — probation evaluation detail: 4 outcome cards + conditional effective date.
+    await visit(page, '/th/workflows/probation/PB-001', 'admin-14b-probation-detail');
+    // pass-before-due → earlier-than-due effective date input appears
+    await page.getByRole('button', { name: /ก่อนกำหนด/ }).click();
+    await page.waitForTimeout(STEP_PAUSE_MS);
+    await expect(page.getByLabel(/วันที่บรรจุก่อนกำหนด/i)).toBeVisible();
+    await page.screenshot({
+      path: 'e2e/screenshots/persona-walkthrough/admin-14c-probation-pass-before-due.png',
+      fullPage: true,
+    });
+    // no_pass → free-text fail reason appears, no effective date input
+    await page.getByRole('button', { name: /ไม่ผ่าน/ }).click();
+    await page.waitForTimeout(STEP_PAUSE_MS);
+    await expect(page.getByLabel(/เหตุผลการไม่ผ่านทดลองงาน/i)).toBeVisible();
+    await page.screenshot({
+      path: 'e2e/screenshots/persona-walkthrough/admin-14d-probation-no-pass-reason.png',
+      fullPage: true,
+    });
     await visit(page, '/th/admin/employees/EMP001/transfer', 'admin-15-transfer-wizard');
     await visit(page, '/th/admin/employees/EMP001/probation', 'admin-16-probation-wizard');
     // Filter known-missing Sprint-1 routes (404 expected), dev-mode first-compile

@@ -29,6 +29,7 @@ export interface ProbationDecisionInput {
   outcome: ProbationOutcome;
   effectiveDate?: string; // ISO date — required for *_before_due + extend
   failReason?: ProbationFailReason; // required only when outcome === 'fail_normal'
+  failReasonText?: string; // free-text fail reason — required only when outcome === 'fail_normal'
   comment: string; // section comments
 }
 
@@ -42,6 +43,7 @@ export interface ProbationTimelineEntry {
   outcome?: ProbationOutcome;
   effectiveDate?: string;
   failReason?: ProbationFailReason;
+  failReasonText?: string;
 }
 
 export interface ProbationCase {
@@ -427,7 +429,7 @@ export function useProbationCase(id: string) {
     (input: ProbationDecisionInput) => {
       if (!probationCase) return;
       const now = new Date().toISOString();
-      const { outcome, effectiveDate, failReason, comment } = input;
+      const { outcome, effectiveDate, failReason, failReasonText, comment } = input;
 
       const isPass = outcome === 'pass_normal' || outcome === 'pass_before_due';
       const isFail = outcome === 'fail_normal' || outcome === 'fail_before_due';
@@ -458,6 +460,7 @@ export function useProbationCase(id: string) {
         outcome,
         effectiveDate: effectiveDate || undefined,
         failReason: failReason || undefined,
+        failReasonText: failReasonText || undefined,
       };
 
       setProbationCase({
