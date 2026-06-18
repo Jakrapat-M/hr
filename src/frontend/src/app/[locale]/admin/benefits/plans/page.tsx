@@ -25,6 +25,7 @@ import {
 import { Tab1IdentityFields, type Tab1IdentityValues } from '@/components/benefits/Tab1IdentityFields';
 import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar';
 import { ActionTagChip, type ActionTagMode } from '@/components/benefits/ActionTagChip';
+import { InsertChangePopup } from '@/components/benefits/InsertChangePopup';
 import { useAuthStore } from '@/stores/auth-store';
 import { useBenefitHistoryStore } from '@/stores/benefit-history-store';
 import { applyIdentityToPlan, buildPlanFromCreate } from './plan-builders';
@@ -153,6 +154,7 @@ function editPlanDefaultIdentity(plan: BenefitPlan, isTh: boolean): Tab1Identity
 function PlanFormModal({
   plan,
   mode,
+  seedEffectiveStart,
   onClose,
   onSubmit,
   onInsert,
@@ -162,16 +164,21 @@ function PlanFormModal({
 }: {
   plan: BenefitPlan;
   mode: Extract<ActionTagMode, 'correction' | 'insert'>;
+  /** STA-123 — chosen effective date carried from the Insert date-gate pop-up. */
+  seedEffectiveStart?: string;
   onClose: () => void;
   onSubmit: (updated: BenefitPlan) => void;
-  onInsert: (original: BenefitPlan, edited: BenefitPlan) => void;
+  onInsert: (original: BenefitPlan, edited: BenefitPlan, seedDate?: string) => void;
   isTh: boolean;
   locale: string;
-  t: (key: string) => string;
+  t: (key: string, values?: Record<string, string>) => string;
 }) {
-  const [tab1Values, setTab1Values] = useState<Tab1IdentityValues>(() =>
-    editPlanDefaultIdentity(plan, isTh),
-  );
+  const [tab1Values, setTab1Values] = useState<Tab1IdentityValues>(() => ({
+    ...editPlanDefaultIdentity(plan, isTh),
+    // STA-123 — seed the Identity effective-from cosmetically; the authoritative
+    // stamp happens in handleSupersedePlan.
+    ...(mode === 'insert' && seedEffectiveStart ? { effectiveFrom: seedEffectiveStart } : {}),
+  }));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -197,7 +204,7 @@ function PlanFormModal({
     setSaving(true);
     // In-session mutation only — no backend POST/PUT in this mockup phase.
     if (mode === 'insert') {
-      onInsert(plan, applyIdentityToPlan(plan, tab1Values));
+      onInsert(plan, applyIdentityToPlan(plan, tab1Values), seedEffectiveStart);
     } else {
       onSubmit(applyIdentityToPlan(plan, tab1Values));
     }
@@ -213,8 +220,8 @@ function PlanFormModal({
       open
       onClose={onClose}
       title={mode === 'insert'
-        ? (isTh ? `แทรกแผน: ${plan.id}` : `Insert plan: ${plan.id}`)
-        : (isTh ? `แก้ไขแผน: ${plan.id}` : `Edit plan: ${plan.id}`)}
+        ? t('insertPlan', { id: plan.id })
+        : t('correctionPlan', { id: plan.id })}
       widthClass="max-w-5xl"
     >
       <div className="space-y-4">
@@ -264,10 +271,12 @@ function PlanFormModal({
         <div className="flex justify-end gap-2 pt-2 border-t border-hairline">
           <Button variant="ghost" onClick={onClose}>{t('cancel')}</Button>
           <Capability action="edit" fallback={
-            <Button variant="primary" disabled>{t('save')}</Button>
+            <Button variant="primary" disabled>{mode === 'insert' ? t('confirmInsert') : t('save')}</Button>
           }>
             <Button variant="primary" onClick={handleSave} disabled={saving}>
-              {saving ? (isTh ? 'กำลังบันทึก…' : 'Saving…') : t('save')}
+              {saving
+                ? (isTh ? 'กำลังบันทึก…' : 'Saving…')
+                : (mode === 'insert' ? t('confirmInsert') : t('save'))}
             </Button>
           </Capability>
         </div>
@@ -433,9 +442,21 @@ export default function BenefitPlansPage() {
   const [editMode, setEditMode] = useState<Extract<ActionTagMode, 'correction' | 'insert'>>('correction');
   const [deleteTarget, setDeleteTarget] = useState<BenefitPlan | null>(null);
   const [creatingPlan, setCreatingPlan] = useState(false);
+  // STA-123 — Insert is a two-step gated flow: the row action opens a date-gate
+  // pop-up; Proceed then opens the edit modal in insert mode carrying that date.
+  const [insertTarget, setInsertTarget] = useState<BenefitPlan | null>(null);
+  const [insertSeedDate, setInsertSeedDate] = useState<string | null>(null);
 
   const openCorrection = (p: BenefitPlan) => { setEditMode('correction'); setEditingPlan(p); };
-  const openInsert = (p: BenefitPlan) => { setEditMode('insert'); setEditingPlan(p); };
+  const openInsert = (p: BenefitPlan) => { setInsertTarget(p); };
+  const handleInsertProceed = (date: string) => {
+    if (!insertTarget) return;
+    setEditMode('insert');
+    setInsertSeedDate(date);
+    setEditingPlan(insertTarget);
+    setInsertTarget(null);
+  };
+  const closePlanModal = () => { setEditingPlan(null); setInsertSeedDate(null); };
 
   // In-session plan list — seeded from the static registry. Create/Edit mutate
   // this list so changes appear without a backend (out of scope this phase).
@@ -464,9 +485,18 @@ export default function BenefitPlansPage() {
 
   // STA-98 FU-2 — Insert = supersede: inactivate the edited plan and prepend a
   // NEW active plan (versioned id) built from the just-typed values. Show both.
-  const handleSupersedePlan = (original: BenefitPlan, edited: BenefitPlan) => {
+  const handleSupersedePlan = (original: BenefitPlan, edited: BenefitPlan, seedDate?: string) => {
     const newId = nextVersionId(original.id, existingIds);
-    const replacement: BenefitPlan = { ...edited, id: newId, status: 'active' };
+    const replacement: BenefitPlan = {
+      ...edited,
+      id: newId,
+      status: 'active',
+      // STA-123 — stamp the chosen revision start date onto the new revision.
+      // Guarded for v1 plans which carry no `eligibility` sub-object.
+      ...(seedDate && 'eligibility' in edited && edited.eligibility
+        ? { eligibility: { ...edited.eligibility, effectiveStartDate: seedDate } }
+        : {}),
+    };
     setPlans((prev) => [
       replacement,
       ...prev.map((p) => (p.id === original.id ? { ...p, status: 'inactive' as const } : p)),
@@ -854,12 +884,23 @@ export default function BenefitPlansPage() {
         <PlanFormModal
           plan={editingPlan}
           mode={editMode}
-          onClose={() => setEditingPlan(null)}
+          seedEffectiveStart={insertSeedDate ?? undefined}
+          onClose={closePlanModal}
           onSubmit={handleUpdatePlan}
           onInsert={handleSupersedePlan}
           isTh={isTh}
           locale={locale}
           t={t}
+        />
+      )}
+
+      {/* STA-123 — Insert date-gate pop-up (shared with the rule surface). */}
+      {insertTarget && (
+        <InsertChangePopup
+          open
+          benefitName={isTh ? insertTarget.nameTh : insertTarget.nameEn}
+          onCancel={() => setInsertTarget(null)}
+          onProceed={handleInsertProceed}
         />
       )}
 
