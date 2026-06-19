@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Clock, CalendarOff, Timer, CheckSquare, ClipboardList, PencilLine, CalendarDays, LogIn } from 'lucide-react';
+import { Clock, CalendarOff, Timer, ClipboardList, PencilLine, CalendarDays, LogIn } from 'lucide-react';
 import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
@@ -62,15 +62,6 @@ const TILES = [
 // They live here — gated by `canReview` — never in the self-service TILES list.
 const MANAGER_TILES = [
   {
-    key: 'approvals',
-    icon: CheckSquare,
-    titleEn: 'Team Approvals',
-    titleTh: 'อนุมัติทีม',
-    descEn: 'Review pending requests from your team',
-    descTh: 'ตรวจสอบคำขอที่รอดำเนินการจากทีม',
-    href: 'quick-approve',
-  },
-  {
     key: 'timesheet-review',
     icon: ClipboardList,
     titleEn: 'Timesheet Review',
@@ -110,8 +101,8 @@ export default function TimeLandingPage() {
         </h1>
         <p className="mt-2 text-sm text-ink-muted max-w-xl">
           {isTh
-            ? 'บันทึกเวลางาน ยื่นคำขอลา ขอทำงานล่วงเวลา และอนุมัติคำขอของทีม — ครบถ้วนในที่เดียว'
-            : 'Log hours, request leave, submit overtime, and approve team requests — all in one place.'}
+            ? 'บันทึกเวลางาน ยื่นคำขอลา และขอทำงานล่วงเวลา — ครบถ้วนในที่เดียว'
+            : 'Log hours, request leave, and submit overtime — all in one place.'}
         </p>
       </div>
 
