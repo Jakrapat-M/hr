@@ -45,12 +45,12 @@ describe('STA-66 — /time hub role-specific visibility', () => {
     expect(screen.queryByText(APPROVALS_TILE)).not.toBeInTheDocument();
   });
 
-  it('manager sees the Team Approvals tile linking to /quick-approve', () => {
+  it('manager no longer sees the Team Approvals tile (approval lives only in /quick-approve)', () => {
     h.roles = ['manager'];
     render(<TimeLandingPage />);
-    const tile = screen.getByText(APPROVALS_TILE);
-    expect(tile).toBeInTheDocument();
-    expect(tile.closest('a')?.getAttribute('href')).toBe('/th/quick-approve');
+    // STA-129: the duplicate อนุมัติทีม shortcut was removed from the Time hub;
+    // the canonical approval entry point is the /quick-approve umbrella module.
+    expect(screen.queryByText(APPROVALS_TILE)).not.toBeInTheDocument();
   });
 
   it('manager sees the Timesheet Review reporting tile linking to /time/review', () => {
@@ -61,10 +61,10 @@ describe('STA-66 — /time hub role-specific visibility', () => {
     expect(tile.closest('a')?.getAttribute('href')).toBe('/th/time/review');
   });
 
-  it('hr_admin also sees the approvals + review tiles (manager/hrbp+ tiers)', () => {
+  it('hr_admin sees the review tile but NOT the removed approvals tile (manager/hrbp+ tiers)', () => {
     h.roles = ['hr_admin'];
     render(<TimeLandingPage />);
-    expect(screen.getByText(APPROVALS_TILE)).toBeInTheDocument();
+    expect(screen.queryByText(APPROVALS_TILE)).not.toBeInTheDocument();
     expect(screen.getByText(REVIEW_TILE)).toBeInTheDocument();
   });
 });
