@@ -44,8 +44,6 @@ const SELECT_CLASS = [
 ].join(' ')
 
 const EXCEPTION_FOR_KEYS: ExceptionFor[] = ['claim', 'entitlement', 'accumulation']
-const LEGAL_ENTITY_KEYS = ['ris', 'central', 'dvt', 'robinson'] as const
-const RELEVANT_PERIOD_KEYS = ['none', 'p2026', 'p2025'] as const
 const SELECTED_PERIOD_KEYS = ['claim2026', 'entitlement2026', 'accum2026'] as const
 
 let rowSeq = 0
@@ -71,10 +69,9 @@ export default function ReallocateBudgetPage() {
   const actorName = useAuthStore((s) => s.username) ?? 'HR Admin'
 
   // ── Header state ──────────────────────────────────────────────────────────
+  // Legal Entity is fixed to RIS (read-only) and email notification was removed
+  // per STA-134 — both are no longer user-editable.
   const [exceptionFor, setExceptionFor] = useState<ExceptionFor>('claim')
-  const [legalEntities, setLegalEntities] = useState<string[]>([])
-  const [pendingEntity, setPendingEntity] = useState<string>('ris')
-  const [emailNotification, setEmailNotification] = useState<boolean>(false)
 
   // ── Detail rows ───────────────────────────────────────────────────────────
   const [rows, setRows] = useState<BenefitExceptionRow[]>(() => [newRow()])
@@ -107,13 +104,6 @@ export default function ReallocateBudgetPage() {
   }, [])
   const addRow = useCallback(() => setRows((rs) => [...rs, newRow()]), [])
 
-  const addEntity = useCallback(() => {
-    setLegalEntities((es) => (es.includes(pendingEntity) ? es : [...es, pendingEntity]))
-  }, [pendingEntity])
-  const removeEntity = useCallback((key: string) => {
-    setLegalEntities((es) => es.filter((e) => e !== key))
-  }, [])
-
   const doSubmit = useCallback(() => {
     if (!employee) return
     if (rows.length === 0) {
@@ -132,16 +122,16 @@ export default function ReallocateBudgetPage() {
       employeeId: empId,
       workerId: employee.employee_id,
       exceptionFor,
-      legalEntities,
+      legalEntities: ['ris'],
       creationDate: new Date().toISOString(),
-      emailNotification,
+      emailNotification: false,
       rows,
       createdBy: actorName,
     })
     setError(null)
     setSubmitted(true)
   }, [
-    employee, rows, exceptionFor, legalEntities, emailNotification,
+    employee, rows, exceptionFor,
     addException, empId, actorName, tx,
   ])
 
@@ -292,81 +282,20 @@ export default function ReallocateBudgetPage() {
             />
           </div>
 
-          {/* Email notification */}
+          {/* Legal Entity (read-only — fixed to RIS per STA-134) */}
           <div style={{ flex: '1 1 220px' }}>
-            <label htmlFor="bex-email" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
-              {tx('fields.emailNotification')}
+            <label htmlFor="bex-legal" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
+              {tx('fields.legalEntity')}
             </label>
-            <select
-              id="bex-email"
-              value={emailNotification ? 'yes' : 'no'}
-              onChange={(e) => setEmailNotification(e.target.value === 'yes')}
-              className={SELECT_CLASS}
-              style={{ maxWidth: 160 }}
-            >
-              <option value="no">{tx('yesNo.no')}</option>
-              <option value="yes">{tx('yesNo.yes')}</option>
-            </select>
+            <input
+              id="bex-legal"
+              type="text"
+              value={tx('legalEntityOptions.ris')}
+              readOnly
+              className="humi-input"
+              style={{ maxWidth: 240, background: 'var(--color-canvas-soft)' }}
+            />
           </div>
-        </div>
-
-        {/* Legal Entity — multi-add */}
-        <div style={{ marginBottom: 24 }}>
-          <label className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
-            {tx('fields.legalEntity')}
-          </label>
-          <div className="humi-row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <select
-              value={pendingEntity}
-              onChange={(e) => setPendingEntity(e.target.value)}
-              className={SELECT_CLASS}
-              style={{ maxWidth: 280 }}
-              aria-label={tx('legalEntity.placeholder')}
-            >
-              {LEGAL_ENTITY_KEYS.map((k) => (
-                <option key={k} value={k}>{tx(`legalEntityOptions.${k}`)}</option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={addEntity}
-              className="humi-btn humi-btn--ghost"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-            >
-              <Plus size={16} aria-hidden />
-              {tx('legalEntity.add')}
-            </button>
-          </div>
-
-          {legalEntities.length === 0 ? (
-            <p className="text-small text-ink-soft" style={{ marginTop: 8 }}>
-              {tx('legalEntity.empty')}
-            </p>
-          ) : (
-            <div className="humi-row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-              {legalEntities.map((k) => (
-                <span
-                  key={k}
-                  className="humi-row text-small text-ink"
-                  style={{
-                    gap: 6, alignItems: 'center', padding: '4px 10px', borderRadius: 999,
-                    background: 'var(--color-canvas-soft)', border: '1px solid var(--color-hairline)',
-                  }}
-                >
-                  {tx(`legalEntityOptions.${k}`)}
-                  <button
-                    type="button"
-                    onClick={() => removeEntity(k)}
-                    aria-label={tx('legalEntity.remove')}
-                    className="text-ink-muted hover:text-danger transition-colors"
-                    style={{ display: 'inline-flex', lineHeight: 0 }}
-                  >
-                    <Trash2 size={14} aria-hidden />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* ── Benefit Exception Details — editable grid ── */}
@@ -377,7 +306,7 @@ export default function ReallocateBudgetPage() {
             <thead>
               <tr style={{ borderBottom: '1px solid var(--color-hairline)' }}>
                 {[
-                  'benefit', 'relevantPeriod', 'selectedPeriod', 'adjustmentAmount', 'details', 'actions',
+                  'benefit', 'selectedPeriod', 'adjustmentAmount', 'details', 'actions',
                 ].map((c) => (
                   <th
                     key={c}
@@ -410,20 +339,6 @@ export default function ReallocateBudgetPage() {
                           <option key={p.id} value={p.id}>
                             {locale === 'th' ? p.nameTh : p.nameEn}
                           </option>
-                        ))}
-                      </select>
-                    </td>
-
-                    {/* Relevant period */}
-                    <td style={{ padding: '8px 10px', minWidth: 200 }}>
-                      <select
-                        value={row.relevantPeriod}
-                        onChange={(e) => updateRow(row.id, { relevantPeriod: e.target.value })}
-                        className={SELECT_CLASS}
-                        aria-label={tx('columns.relevantPeriod')}
-                      >
-                        {RELEVANT_PERIOD_KEYS.map((k) => (
-                          <option key={k} value={k}>{tx(`relevantPeriodOptions.${k}`)}</option>
                         ))}
                       </select>
                     </td>
