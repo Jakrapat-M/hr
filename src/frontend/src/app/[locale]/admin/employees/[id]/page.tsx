@@ -13,7 +13,7 @@
 //
 // C8: action card count is driven by ACTION_CARDS — no hardcoded count
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useShallow } from 'zustand/react/shallow'
@@ -65,7 +65,7 @@ import {
   type BenefitClaimRequest,
   type BenefitClaimStatus,
 } from '@/stores/benefit-claims'
-import { EmptyState, DataTable, Modal, Button, FormField, FormInput, type DataTableColumn } from '@/components/humi'
+import { EmptyState, Modal, Button, FormField, FormInput } from '@/components/humi'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
 import {
   useSpecialPrivilegeStore,
@@ -74,7 +74,6 @@ import {
 import {
   useBudgetReallocationStore,
   selectReallocationsForEmployee,
-  type ReallocationRecord,
 } from '@/stores/budget-reallocation-store'
 
 // ── Avatar color by status ───────────────────────────────────
@@ -200,6 +199,20 @@ interface ActionCard {
 // actionAvailability moved to @/lib/admin/actionAvailability — shared with
 // per-route guard banners (P3). Single source of truth for status gating.
 import { actionAvailability } from '@/lib/admin/actionAvailability'
+
+// STA-133 (Part 3) — reallocation-log view row + grouped borrow-between-years pair.
+type ReallocRow = {
+  id: string
+  date: string
+  planLabel: string
+  /** signed THB entitlement delta (+ borrow into this year, − release from a year) */
+  adjusted: number
+  year: number
+  entitleAmount: number
+  reason: string
+}
+// A bordered group bundles ≥2 related transactions (one reallocation event).
+type ReallocGroup = { groupId: string; rows: ReallocRow[] }
 
 // Current-benefit roll-up (illustrative seed — the admin employee store has no
 // per-employee enrollment schema; mockup phase shows standard Central Group
@@ -430,6 +443,42 @@ export function toClaimEmployeeId(routeId: string): string {
   const m = routeId.match(/^EMP-?0*(\d+)$/i)
   if (!m) return routeId
   return `EMP${m[1].padStart(3, '0')}`
+}
+
+// STA-133 (Part 2) — claim-history sort: by status group first, then newest→oldest.
+// Status group order (top→bottom):
+//   1. send_back            → 'ขอข้อมูลเพิ่ม' (need-more-info / sent back for more info)
+//   2. pending_*            → 'รออนุมัติ' (pending manager or SPD)
+//   3. approved             → 'อนุมัติแล้ว'
+//   4. anything else (e.g. rejected) → last, stable.
+const CLAIM_STATUS_RANK: Record<BenefitClaimStatus, number> = {
+  send_back: 0,
+  pending_manager_approval: 1,
+  pending_spd: 1,
+  approved: 2,
+  rejected: 3,
+}
+
+export function claimStatusRank(status: BenefitClaimStatus): number {
+  return CLAIM_STATUS_RANK[status] ?? Number.MAX_SAFE_INTEGER
+}
+
+/** Pure comparator: status group asc, then submittedAt desc (latest first). */
+export function compareClaimHistory(
+  a: Pick<BenefitClaimRequest, 'status' | 'submittedAt'>,
+  b: Pick<BenefitClaimRequest, 'status' | 'submittedAt'>,
+): number {
+  const rankDiff = claimStatusRank(a.status) - claimStatusRank(b.status)
+  if (rankDiff !== 0) return rankDiff
+  // Within a status group: latest submission first.
+  return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+}
+
+/** Stable sort of claim rows by {@link compareClaimHistory}. */
+export function sortClaimHistory<T extends Pick<BenefitClaimRequest, 'status' | 'submittedAt'>>(
+  claims: readonly T[],
+): T[] {
+  return [...claims].sort(compareClaimHistory)
 }
 
 // STA-132 (Part 5) — inline-copied status chip from /benefits-hub/history
@@ -816,19 +865,24 @@ export default function EmployeeDetailPage() {
     }
     const nextBaseOf = (pid: string) =>
       nextYearBases.find((b) => b.employeeId === empId && b.planId === pid)?.nextYearBase ?? 0
-    // Per-row running totals (records arrive oldest-first from the selector).
-    const cum: Record<string, number> = {}
-    const rows = reallocations.map((rec) => {
-      cum[rec.planId] = (cum[rec.planId] ?? 0) + rec.amount
-      return {
-        rec,
-        // STA-95 (BA rule 2026-06-11): this-year stays at the annual entitlement;
-        // only next year is reduced by the borrowed amount, so the gap between the
-        // two years equals the transferred sum.
-        currentTotal: regBase(rec.planId),
-        nextTotal: nextBaseOf(rec.planId) - cum[rec.planId],
-      }
-    })
+    // STA-133 (Part 3.1) — display the plan name WITHOUT the "(OPD)" suffix.
+    const planLabel = (pid: string) => {
+      const plan = getPlan(pid)
+      const raw = plan ? (locale === 'th' ? plan.nameTh : plan.nameEn) : pid
+      return raw.replace(/\s*\((?:OPD|ผู้ป่วยนอก)\)\s*$/, '').trim()
+    }
+    // STA-133 (Part 3.2) — view-model: date · plan · adjusted entitle amount ·
+    // year · entitle amount · reason. (the running next-year total column is dropped.)
+    const rows: ReallocRow[] = reallocations.map((rec) => ({
+      id: rec.id,
+      date: rec.createdAt,
+      planLabel: planLabel(rec.planId),
+      adjusted: rec.amount, // borrow into this year is a positive entitlement bump
+      year: new Date(rec.effectiveStartDate).getFullYear(),
+      // this-year stays at the annual entitlement; only next year is reduced.
+      entitleAmount: regBase(rec.planId),
+      reason: rec.reason,
+    }))
     // Aggregate "medical budget" pools across every plan with a seeded base/record.
     const plans = new Set<string>(
       nextYearBases.filter((b) => b.employeeId === empId).map((b) => b.planId),
@@ -842,47 +896,38 @@ export default function EmployeeDetailPage() {
       next += nextBaseOf(p) - moved
     })
     return { reallocRows: rows, currentPool: current, nextPool: next, hasReallocData: plans.size > 0 || rows.length > 0 }
-  }, [reallocations, nextYearBases, empId])
-
-  type ReallocRow = { rec: ReallocationRecord; currentTotal: number; nextTotal: number }
-  const reallocColumns: DataTableColumn<ReallocRow>[] = [
-    {
-      id: 'date', header: tReallocate('log.colDate'),
-      cell: (r) => <span className="text-small text-ink-muted">{formatDate(r.rec.createdAt, 'medium', locale)}</span>,
-      className: 'w-32',
-    },
-    {
-      id: 'plan', header: tReallocate('log.colPlan'),
-      cell: (r) => {
-        const plan = getPlan(r.rec.planId)
-        return <span className="text-small text-ink">{plan ? (locale === 'th' ? plan.nameTh : plan.nameEn) : r.rec.planId}</span>
-      },
-    },
-    {
-      id: 'amount', header: tReallocate('log.colAmount'), align: 'right' as const,
-      cell: (r) => <span className="text-small font-semibold text-accent tabular-nums">+{formatCurrency(r.rec.amount)}</span>,
-      className: 'w-28',
-    },
-    {
-      id: 'current', header: tReallocate('log.colCurrentTotal'), align: 'right' as const,
-      cell: (r) => <span className="text-small text-ink tabular-nums">{formatCurrency(r.currentTotal)}</span>,
-      className: 'w-32',
-    },
-    {
-      id: 'next', header: tReallocate('log.colNextTotal'), align: 'right' as const,
-      cell: (r) => <span className={`text-small tabular-nums ${r.nextTotal < 0 ? 'text-danger' : 'text-ink'}`}>{formatCurrency(r.nextTotal)}</span>,
-      className: 'w-32',
-    },
-    {
-      id: 'reason', header: tReallocate('log.colReason'),
-      cell: (r) => <span className="text-small text-ink-muted">{r.rec.reason}</span>,
-    },
-  ]
+  }, [reallocations, nextYearBases, empId, locale])
 
   // Collapsible section state (BA: page collapsible + Current Benefits default-closed).
   const isTh = locale === 'th'
   const expandLabel = isTh ? 'ขยาย' : 'Expand'
   const collapseLabel = isTh ? 'ย่อ' : 'Collapse'
+  // STA-133 (Part 3.3) — seeded borrow-between-years pair: a single reallocation
+  // that moves ฿2,000 from Dental into Medical (same year). Rendered as one
+  // visually-grouped, bordered unit so the two transactions read as one event.
+  const reallocBorrowGroup: ReallocGroup = {
+    groupId: 'RB-BORROW-2026',
+    rows: [
+      {
+        id: 'RB-BORROW-2026-1',
+        date: '2026-05-20T00:00:00.000Z',
+        planLabel: isTh ? 'ค่ารักษาพยาบาล' : 'Medical reimbursement',
+        adjusted: 2000,
+        year: 2026,
+        entitleAmount: 40000,
+        reason: isTh ? 'โอนจากทันตกรรม' : 'allocate from dental',
+      },
+      {
+        id: 'RB-BORROW-2026-2',
+        date: '2026-05-20T00:00:00.000Z',
+        planLabel: isTh ? 'ค่าทันตกรรม' : 'Dental reimbursement',
+        adjusted: -2000,
+        year: 2026,
+        entitleAmount: 0,
+        reason: isTh ? 'โอนไปค่ารักษาพยาบาล' : 'allocate to medical',
+      },
+    ],
+  }
   // BA: every collapsible section starts COLLAPSED — the admin opens only what they need.
   const [employmentCollapsed, setEmploymentCollapsed] = useState(true)
   const [privilegeCollapsed, setPrivilegeCollapsed] = useState(true)
@@ -932,7 +977,8 @@ export default function EmployeeDetailPage() {
   const allClaims = useBenefitClaimsStore((s) => s.claims)
   const claimEmployeeId = toClaimEmployeeId(empId)
   const employeeClaims = useMemo(
-    () => allClaims.filter((c) => c.employeeId === claimEmployeeId),
+    // STA-133 (Part 2) — sort by status group then newest→oldest within each group.
+    () => sortClaimHistory(allClaims.filter((c) => c.employeeId === claimEmployeeId)),
     [allClaims, claimEmployeeId],
   )
   // STA-106: per-row "Start a claim" modal (HR files a claim on behalf of employee).
@@ -1661,11 +1707,22 @@ export default function EmployeeDetailPage() {
                       </Button>
                     </td>
                     <td style={{ padding: '8px 12px', textAlign: 'right' }}>
-                      {(b.benefitPlanId !== 'TH_ORD_001' || GIFT_ORD_CLAIMABLE) && (
-                        <Button variant="secondary" size="sm" onClick={() => setClaimTarget(b)}>
-                          {isTh ? 'เริ่มเบิก' : 'Start a claim'}
-                        </Button>
-                      )}
+                      {(b.benefitPlanId !== 'TH_ORD_001' || GIFT_ORD_CLAIMABLE) && (() => {
+                        // STA-133 (Part 1) — can't claim when remaining = 0: greyed-out + non-clickable.
+                        const remaining = Math.max(0, b.entitleAmount - b.amountUsed)
+                        const noRemaining = remaining === 0
+                        return (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={noRemaining}
+                            onClick={() => setClaimTarget(b)}
+                            title={noRemaining ? (isTh ? 'วงเงินคงเหลือ 0 — เบิกไม่ได้' : 'No remaining entitlement — cannot claim') : undefined}
+                          >
+                            {isTh ? 'เริ่มเบิก' : 'Start a claim'}
+                          </Button>
+                        )
+                      })()}
                     </td>
                     {/* STA-132 (1.3a) — Insert row-action → effective-date popup */}
                     <td style={{ padding: '8px 12px', textAlign: 'right' }}>
@@ -1933,15 +1990,72 @@ export default function EmployeeDetailPage() {
                 <div className={`font-display text-2xl font-semibold tabular-nums ${nextPool < 0 ? 'text-danger' : 'text-ink'}`}>{formatCurrency(nextPool)}</div>
               </div>
             </div>
-            {/* Change log — newest first; resulting totals are the running prefix-sum */}
-            <DataTable<ReallocRow>
-              caption={tReallocate('log.title')}
-              captionVisuallyHidden
-              columns={reallocColumns}
-              rows={[...reallocRows].reverse()}
-              rowKey={(r) => r.rec.id}
-              dense
-            />
+            {/* STA-133 (Part 3.2) — change log: date · plan · adjusted entitle
+                amount · year · entitle amount · reason (newest first). */}
+            <div style={{ overflowX: 'auto' }}>
+              <table className="w-full text-small" style={{ borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr className="text-ink-muted" style={{ textAlign: 'left' }}>
+                    <th style={{ padding: '8px 12px', fontWeight: 600 }}>{tReallocate('log.colDate')}</th>
+                    <th style={{ padding: '8px 12px', fontWeight: 600 }}>{tReallocate('log.colPlan')}</th>
+                    <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{tReallocate('log.colAdjusted')}</th>
+                    <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{tReallocate('log.colYear')}</th>
+                    <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{tReallocate('log.colEntitle')}</th>
+                    <th style={{ padding: '8px 12px', fontWeight: 600 }}>{tReallocate('log.colReason')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...reallocRows].reverse().map((r) => {
+                    const adj = formatAdjustedAmount(r.adjusted, 'THB')
+                    return (
+                      <tr key={r.id} style={{ borderTop: '1px solid var(--color-hairline)' }}>
+                        <td className="text-ink-muted" style={{ padding: '8px 12px' }}>{formatDate(r.date, 'medium', locale)}</td>
+                        <td className="text-ink" style={{ padding: '8px 12px' }}>{r.planLabel}</td>
+                        <td className={`tabular-nums ${adj.className}`} style={{ padding: '8px 12px', textAlign: 'right' }}>{adj.text}</td>
+                        <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{r.year}</td>
+                        <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${r.entitleAmount.toLocaleString('en-US')} THB`}</td>
+                        <td className="text-ink-muted" style={{ padding: '8px 12px' }}>{r.reason}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+                {/* STA-133 (Part 3.3) — grouped borrow-between-years pair: the two
+                    related transactions share one bordered box so they read as one
+                    reallocation event. */}
+                <tbody style={{ borderTop: '1px solid var(--color-hairline)' }}>
+                  <tr>
+                    <td colSpan={6} style={{ padding: '8px 12px 0' }}>
+                      <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.08em] text-ink-muted">
+                        {isTh ? 'การโอนระหว่างปี' : 'Borrow between years'}
+                      </span>
+                    </td>
+                  </tr>
+                  {reallocBorrowGroup.rows.map((r, i) => {
+                    const adj = formatAdjustedAmount(r.adjusted, 'THB')
+                    const isFirst = i === 0
+                    const isLast = i === reallocBorrowGroup.rows.length - 1
+                    const cellStyle: CSSProperties = {
+                      padding: '8px 12px',
+                      borderTop: isFirst ? '2px solid var(--color-accent)' : '1px solid var(--color-hairline)',
+                      borderBottom: isLast ? '2px solid var(--color-accent)' : undefined,
+                      background: 'var(--color-accent-soft)',
+                    }
+                    const firstCellStyle: CSSProperties = { ...cellStyle, borderLeft: '2px solid var(--color-accent)' }
+                    const lastCellStyle: CSSProperties = { ...cellStyle, borderRight: '2px solid var(--color-accent)' }
+                    return (
+                      <tr key={r.id}>
+                        <td className="text-ink-muted" style={firstCellStyle}>{formatDate(r.date, 'medium', locale)}</td>
+                        <td className="text-ink" style={cellStyle}>{r.planLabel}</td>
+                        <td className={`tabular-nums ${adj.className}`} style={{ ...cellStyle, textAlign: 'right' }}>{adj.text}</td>
+                        <td className="text-ink tabular-nums" style={{ ...cellStyle, textAlign: 'right' }}>{r.year}</td>
+                        <td className="text-ink tabular-nums" style={{ ...cellStyle, textAlign: 'right' }}>{`${r.entitleAmount.toLocaleString('en-US')} THB`}</td>
+                        <td className="text-ink-muted" style={lastCellStyle}>{r.reason}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </CollapsibleSectionCard>
