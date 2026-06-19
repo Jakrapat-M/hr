@@ -20,7 +20,7 @@ import { useTimesheet } from '@/hooks/use-time';
 import { useAuthStore } from '@/stores/auth-store';
 import { resolveCurrentEmpId } from '@/lib/scope-filter';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
-import { currentPeriod } from '@/lib/time/period';
+import { currentPeriod, demoToday } from '@/lib/time/period';
 import { getAttendanceForPeriod, ecPlanHoursFor } from '@/lib/time/attendance-seed';
 import { getShiftCode } from '@/lib/time/shift-codes';
 import { templateForEmployee } from '@/lib/time/schedule-template';
@@ -83,7 +83,7 @@ export default function TimesheetPage() {
   const attrs = getEmployeeTimeAttrs(empId);
   const isClocking = attrs.employeeType === 'clocking';
 
-  const period = currentPeriod();
+  const period = currentPeriod(demoToday());
   const days = useMemo(() => getAttendanceForPeriod(empId), [empId]);
   const lateSummary = useMemo(() => periodLateSummary(days), [days]);
   const heroRaw = useMemo(() => heroSummary(empId), [empId]);

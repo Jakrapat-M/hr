@@ -7,10 +7,8 @@
 
 import { getScheduleForPeriod, templateForEmployee } from './schedule-template';
 import { getShiftCode } from './shift-codes';
+import { DEMO_TODAY } from './period';
 import type { AttendanceDay } from './attendance-math';
-
-// Aligns with period.ts DEMO_TODAY so "past" days (with punches) are consistent.
-const DEMO_TODAY = '2026-06-07';
 
 function addMinutes(hhmm: string, add: number): string {
   const [h, m] = hhmm.split(':').map(Number);
