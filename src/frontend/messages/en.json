@@ -4436,9 +4436,9 @@
         "empty": "No reallocation for this employee yet",
         "colDate": "Date",
         "colPlan": "Plan",
-        "colAmount": "Moved",
-        "colCurrentTotal": "This-year total",
-        "colNextTotal": "Next-year total",
+        "colAdjusted": "Adjusted entitle amount",
+        "colYear": "Year",
+        "colEntitle": "Entitle amount",
         "colReason": "Reason"
       },
       "validation": {

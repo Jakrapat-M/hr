@@ -4315,9 +4315,9 @@
         "empty": "ยังไม่มีการโอนงบของพนักงานคนนี้",
         "colDate": "วันที่",
         "colPlan": "แผน",
-        "colAmount": "โอน",
-        "colCurrentTotal": "ยอดปีนี้",
-        "colNextTotal": "ยอดปีหน้า",
+        "colAdjusted": "สิทธิ์ที่ปรับแล้ว",
+        "colYear": "ปี",
+        "colEntitle": "สิทธิ์ทั้งหมด",
         "colReason": "เหตุผล"
       },
       "validation": {
