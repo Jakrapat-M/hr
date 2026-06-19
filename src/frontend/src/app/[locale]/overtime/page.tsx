@@ -23,6 +23,7 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { Plus, Clock, ChevronRight } from 'lucide-react';
 import { Card, CardEyebrow, Button } from '@/components/humi';
+import { FileUploadField } from '@/components/humi/FileUploadField';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -133,6 +134,7 @@ export default function OvertimePage() {
     endDate: '',
     endTime: '20:00',
     reason: '',
+    attachmentId: null as string | null,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -198,9 +200,9 @@ export default function OvertimePage() {
       endAt,
       hours: liveHours,
       reason: form.reason.trim(),
-      docs: [],
+      docs: form.attachmentId ? [form.attachmentId] : [],
     });
-    setForm({ otType: 'OT', startDate: '', startTime: '18:00', endDate: '', endTime: '20:00', reason: '' });
+    setForm({ otType: 'OT', startDate: '', startTime: '18:00', endDate: '', endTime: '20:00', reason: '', attachmentId: null });
     setError(null);
     setShowForm(false);
   }
@@ -365,6 +367,16 @@ export default function OvertimePage() {
                 placeholder={isTh ? 'ระบุเหตุผลการทำ OT' : 'Describe the reason for OT'}
               />
             </div>
+          </div>
+
+          {/* Optional document attachment (single file) */}
+          <div className="mt-4">
+            <FileUploadField
+              label={isTh ? 'เอกสารแนบ (ไม่บังคับ)' : 'Attachment (optional)'}
+              maxFiles={1}
+              onUpload={(id) => setForm((p) => ({ ...p, attachmentId: id }))}
+              onRemove={() => setForm((p) => ({ ...p, attachmentId: null }))}
+            />
           </div>
 
           {/* Inline validation error (pumpkin) */}
