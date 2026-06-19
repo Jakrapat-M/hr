@@ -5538,8 +5538,42 @@
     }
   },
   "roster": {
-    "title": "Roster & Shifts",
+    "title": "Team Timesheet",
     "coverage": "Coverage",
+    "nav": {
+      "prev": "Previous week",
+      "next": "Next week",
+      "today": "Today"
+    },
+    "weekday": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "filter": {
+      "label": "Filter clock state",
+      "all": "All clock states",
+      "late": "Late only",
+      "mismatch": "Mismatch only",
+      "absent": "Absent only"
+    },
+    "legend": {
+      "shift": "Shift (plan)",
+      "clockOnTime": "Clock: on time",
+      "clockLate": "Clock: late",
+      "clockMismatch": "Clock: mismatch",
+      "clockAbsent": "Clock: absent",
+      "ot": "OT",
+      "dayOff": "Day off",
+      "holiday": "Holiday"
+    },
+    "empty": "No data for this week",
+    "viewHourly": "Hourly view",
+    "viewWeekly": "Weekly view",
     "shiftEditor": {
       "title": "Edit shift"
     },
