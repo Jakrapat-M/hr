@@ -35,6 +35,21 @@ function refOf(refDate?: Date): Date {
 export const LEAVE_BOOKING_HORIZON_DAYS = 90;
 
 /**
+ * Frozen reference day for the DEMO time-grid seeds (schedule/attendance) and the
+ * roster + timesheet surfaces that render them. Pins the seeded ~30-day payroll
+ * window so it never slides off wall-clock today (otherwise demo cells go blank
+ * once real today leaves the seeded period). Intentionally DISTINCT from
+ * `currentPeriod()`'s default ref (real today) — the leave-booking/locking logic
+ * must keep tracking wall-clock time, so only the demo seeds/displays pin to this.
+ */
+export const DEMO_TODAY = '2026-06-07';
+
+/** `DEMO_TODAY` as a UTC-midnight Date, for passing as `currentPeriod(refDate)`. */
+export function demoToday(): Date {
+  return new Date(DEMO_TODAY + 'T00:00:00Z');
+}
+
+/**
  * The payroll period (21st → 20th) containing `refDate` (or the demo today).
  * If the ref day is >= 21, the window is [this month 21 → next month 20];
  * otherwise it is [previous month 21 → this month 20].

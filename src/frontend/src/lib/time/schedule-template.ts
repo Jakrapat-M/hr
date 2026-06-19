@@ -6,7 +6,7 @@
 // the Schedule tab, Results, and (later) /roster all derive from `getScheduleForPeriod`
 // instead of ad-hoc seeds. Mockup: real CG shift codes (wiki §3), no backend.
 
-import { currentPeriod } from './period';
+import { currentPeriod, demoToday } from './period';
 import { getShiftCode } from './shift-codes';
 import { getEmployeeTimeAttrs } from './employee-time-attrs';
 import type { AttendanceDay } from './attendance-math';
@@ -67,7 +67,9 @@ export function templateForEmployee(empId: string): ScheduleTemplate {
 /** Per-day schedule for the current period from a GIVEN template (used by the
  *  manager shift-schedule surface to preview a manager override). */
 export function scheduleFromTemplate(tmpl: ScheduleTemplate): DaySchedule[] {
-  const { start, end } = currentPeriod();
+  // Pin the demo schedule window to DEMO_TODAY (not wall-clock today) so the
+  // seeded ~30-day grid never slides off the seeded period and goes blank.
+  const { start, end } = currentPeriod(demoToday());
   const startD = new Date(start + 'T00:00:00Z');
   const endD = new Date(end + 'T00:00:00Z');
 

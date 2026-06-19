@@ -31,7 +31,7 @@ import { useTimeCorrections, type TimeCorrectionRequest } from '@/stores/time-co
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { appliedChainFor } from '@/lib/time/approval-rules';
 import { getLeaveType } from '@/lib/time/leave-types';
-import { currentPeriod } from '@/lib/time/period';
+import { currentPeriod, demoToday } from '@/lib/time/period';
 import { getHolidaysForPeriod } from '@/lib/time/holiday-calendar';
 import { getAttendanceForPeriod } from '@/lib/time/attendance-seed';
 
@@ -324,7 +324,9 @@ const DEMO_ESS_EMPLOYEE = { id: 'EMP001', name: 'สมชาย ใจดี' }
  * Returns null only in the degenerate case of no working day after the anchor.
  */
 function deriveInPeriodLeaveDate(empId: string): string | null {
-  const period = currentPeriod();
+  // Pin to DEMO_TODAY so this window matches the (now DEMO_TODAY-pinned) attendance
+  // seed — wall-clock currentPeriod() would diverge after the 21st and empty the row.
+  const period = currentPeriod(demoToday());
   const holidays = getHolidaysForPeriod(period.start, period.end);
   const workingDates = new Set(
     getAttendanceForPeriod(empId)

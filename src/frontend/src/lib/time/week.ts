@@ -7,15 +7,15 @@
 // 'YYYY-MM-DD' strings, so the grid window must use the same basis to line up).
 
 import { formatDate } from '@/lib/date';
-import { currentPeriod } from './period';
+import { currentPeriod, DEMO_TODAY } from './period';
 
 // ── Single demo-today constant (FIX 2) ──────────────────────────────────────
 // The grid's initial week anchor AND the attendance past/future cutoff both
-// derive from this one date (mirrors attendance-seed.ts:13). The "today" button
-// resets to the Mon-started week that contains it. Do NOT introduce a second
-// anchor — a different date would put the grid's "past" days into the seed's
-// blank "future" range.
-export const DEMO_TODAY = '2026-06-07';
+// derive from ONE date — the canonical `DEMO_TODAY` in period.ts (re-exported
+// here for the roster components). The "today" button resets to the Mon-started
+// week that contains it. A second/different anchor would put the grid's "past"
+// days into the seed's blank "future" range.
+export { DEMO_TODAY };
 
 export type WeekWindow = {
   /** Monday of the week (UTC midnight). */
