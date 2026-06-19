@@ -53,7 +53,18 @@ import CompensationHistory from '@/components/profile/CompensationHistory'
 import { formatCurrency, formatDate } from '@/lib/date'
 import { getPlan, getPlansByTemplate, isV2Plan, type BenefitPlan } from '@/data/benefits/plan-registry'
 import { SimpleClaimForm, type SimpleClaimSubmission } from '@/components/benefits/templates'
-import { useBenefitClaimsStore, type BenefitClaimType } from '@/stores/benefit-claims'
+import { InsertChangePopup } from '@/components/benefits/InsertChangePopup'
+import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar'
+import { useBenefitHistoryStore } from '@/stores/benefit-history-store'
+import { inactiveEndDate } from '@/lib/date'
+import {
+  useBenefitClaimsStore,
+  BENEFIT_STATUS_LABEL,
+  BENEFIT_TYPE_LABEL,
+  type BenefitClaimType,
+  type BenefitClaimRequest,
+  type BenefitClaimStatus,
+} from '@/stores/benefit-claims'
 import { EmptyState, DataTable, Modal, Button, FormField, FormInput, type DataTableColumn } from '@/components/humi'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
 import {
@@ -199,6 +210,10 @@ import { actionAvailability } from '@/lib/admin/actionAvailability'
 type CurrentBenefit = {
   benefitName: string
   benefitPlanId: string
+  // STA-132 — discrete benefit type column (Standard vs employee-specific Special)
+  type: 'Standard' | 'Special'
+  // STA-132 — current status; flipping to 'Inactive' (via Insert) sets end date = today − 1
+  status: 'Active' | 'Inactive'
   amountUsed: number
   entitleAmount: number
   currency: string
@@ -237,6 +252,8 @@ const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
   {
     benefitName: 'Medical Reimbursement',
     benefitPlanId: 'TH_MED_001',
+    type: 'Standard',
+    status: 'Active',
     amountUsed: 38000,
     entitleAmount: 38000,
     currency: 'THB',
@@ -265,6 +282,8 @@ const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
   {
     benefitName: 'Dental Reimbursement',
     benefitPlanId: 'TH_DEN_001',
+    type: 'Standard',
+    status: 'Active',
     amountUsed: 500,
     entitleAmount: 2000,
     currency: 'THB',
@@ -293,6 +312,8 @@ const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
   {
     benefitName: 'Gasoline Reimbursement',
     benefitPlanId: 'TH_GAS_001',
+    type: 'Standard',
+    status: 'Active',
     amountUsed: 84000,
     entitleAmount: 84000,
     currency: 'THB',
@@ -314,7 +335,8 @@ const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
     waitingPeriod: '',
     originalEntitlementBeforeProrate: 84000,
     originalEntitlementAfterProrate: 84000,
-    adjustedEntitlementAmount: 0,
+    // STA-132 — Gasoline carries a +16,000 adjustment (others 0)
+    adjustedEntitlementAmount: 16000,
     finalEntitlementAmount: 84000,
     maximumAmountPerClaim: null,
   },
@@ -323,6 +345,8 @@ const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
   {
     benefitName: 'Gift-Ordination',
     benefitPlanId: 'TH_ORD_001',
+    type: 'Standard',
+    status: 'Active',
     amountUsed: 0,
     entitleAmount: 2000,
     currency: 'THB',
@@ -353,6 +377,8 @@ const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
   {
     benefitName: 'Mobile reimbursement',
     benefitPlanId: 'TH_MOB_005',
+    type: 'Special',
+    status: 'Active',
     amountUsed: 2000,
     entitleAmount: 18000,
     currency: 'THB',
@@ -379,6 +405,51 @@ const CURRENT_BENEFITS: ReadonlyArray<CurrentBenefit> = [
     maximumAmountPerClaim: null,
   },
 ]
+
+// STA-132 — format the Adjusted-entitle-amount cell with a +/- prefix.
+// NO-RED: a positive delta is informational teal (`text-accent`), a negative is
+// neutral `text-ink-muted` — NEVER the danger token. Zero renders plain.
+export function formatAdjustedAmount(
+  value: number | null,
+  currency: string,
+): { text: string; className: string } {
+  if (value === null || value === undefined || value === 0) {
+    return { text: `0 ${currency}`, className: 'text-ink' }
+  }
+  const sign = value > 0 ? '+' : ''
+  return {
+    text: `${sign}${value.toLocaleString('en-US')} ${currency}`,
+    className: value > 0 ? 'text-accent' : 'text-ink-muted',
+  }
+}
+
+// STA-132 (Part 5) — the claim store keys claims as `EMP002` (no dash) while the
+// employee route resolves `EMP-0002` (with dash + zero padding). Normalize the
+// route id to the store's shape so the inline claim-history table is not empty.
+export function toClaimEmployeeId(routeId: string): string {
+  const m = routeId.match(/^EMP-?0*(\d+)$/i)
+  if (!m) return routeId
+  return `EMP${m[1].padStart(3, '0')}`
+}
+
+// STA-132 (Part 5) — inline-copied status chip from /benefits-hub/history
+// (B2 default: no refactor of the working route). NO-RED tokens only.
+const CLAIM_STATUS_CHIP: Record<BenefitClaimStatus, { labelTh: string; className: string }> = {
+  pending_manager_approval: { labelTh: 'รออนุมัติจากหัวหน้า', className: 'bg-warning-soft text-warning border border-warning/30' },
+  pending_spd: { labelTh: 'รออนุมัติ', className: 'bg-warning-soft text-warning border border-warning/30' },
+  send_back: { labelTh: 'ส่งคืน', className: 'bg-accent-soft text-accent border border-accent/30' },
+  approved: { labelTh: 'อนุมัติแล้ว', className: 'bg-success-soft text-success border border-success/30' },
+  rejected: { labelTh: 'ปฏิเสธ', className: 'bg-danger-soft text-danger border border-danger/30' },
+}
+
+function ClaimStatusChip({ status, isTh }: { status: BenefitClaimStatus; isTh: boolean }) {
+  const chip = CLAIM_STATUS_CHIP[status]
+  return (
+    <span className={`inline-flex items-center rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] ${chip.className}`}>
+      {isTh ? chip.labelTh : BENEFIT_STATUS_LABEL[status]}
+    </span>
+  )
+}
 
 // STA-106: "Start a claim" support on Current Benefits. Gift-Ordination is a
 // registry "records" plan; BA confirmed (2026-06-12) it gets the same receipt
@@ -565,7 +636,25 @@ function EnrollmentFormBody({
 // STA-103: detail body for the "more detail" modal. Groups the benefit's
 // attributes into the BA-spec sections (Individual plan / Benefit Plan /
 // Benefit Eligibility rule). Read-only; blank values render as "-".
-function BenefitDetailBody({ benefit, isTh }: { benefit: CurrentBenefit; isTh: boolean }) {
+function BenefitDetailBody({
+  benefit,
+  isTh,
+  mode = 'view',
+  status,
+  onStatusChange,
+  effectiveEndDateOverride,
+}: {
+  benefit: CurrentBenefit
+  isTh: boolean
+  // STA-132 (1.3c) — 'edit' renders an editable Status dropdown (Insert flow);
+  // 'view' (default) keeps the original display-only behaviour.
+  mode?: 'view' | 'edit'
+  status?: 'Active' | 'Inactive'
+  onStatusChange?: (next: 'Active' | 'Inactive') => void
+  // STA-132 (1.3d) — when Inactive, the effective end date is computed (today − 1)
+  // and passed in so the body shows it instead of the seeded window.
+  effectiveEndDateOverride?: string | null
+}) {
   const dash = (v: string | number | null | undefined): string => {
     if (v === null || v === undefined || v === '') return '-'
     return String(v)
@@ -596,8 +685,22 @@ function BenefitDetailBody({ benefit, isTh }: { benefit: CurrentBenefit; isTh: b
       <section className="space-y-3">
         <GroupHeading>{isTh ? 'แผนรายบุคคล' : 'Individual plan'}</GroupHeading>
         <Grid>
+          {/* STA-132 (1.3c) — editable Status dropdown in edit mode (Insert flow). */}
+          {mode === 'edit' && (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[length:var(--text-eyebrow)] text-ink-muted">{isTh ? 'สถานะ' : 'Status'}</span>
+              <select
+                value={status ?? 'Active'}
+                onChange={(e) => onStatusChange?.(e.target.value as 'Active' | 'Inactive')}
+                className="rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2 text-small text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="Active">{isTh ? 'ใช้งาน' : 'Active'}</option>
+                <option value="Inactive">{isTh ? 'ไม่ใช้งาน' : 'Inactive'}</option>
+              </select>
+            </div>
+          )}
           <Field label={isTh ? 'วันเริ่มมีผล' : 'Effective start date'} value={dash(benefit.effectiveStartDate ? formatDate(benefit.effectiveStartDate, 'medium', isTh ? 'th' : 'en') : '')} />
-          <Field label={isTh ? 'วันสิ้นสุด' : 'Effective end date'} value={dash(benefit.effectiveEndDate ? formatDate(benefit.effectiveEndDate, 'medium', isTh ? 'th' : 'en') : '')} />
+          <Field label={isTh ? 'วันสิ้นสุด' : 'Effective end date'} value={dash((effectiveEndDateOverride ?? benefit.effectiveEndDate) ? formatDate(effectiveEndDateOverride ?? benefit.effectiveEndDate, 'medium', isTh ? 'th' : 'en') : '')} />
           <Field label={isTh ? 'ยอดที่เบิกแล้ว' : 'Reimbursed amount'} value={money(benefit.reimbursedAmount)} />
         </Grid>
       </section>
@@ -787,9 +890,51 @@ export default function EmployeeDetailPage() {
   const [benefitsCollapsed, setBenefitsCollapsed] = useState(true)
   // STA-103: which Current Benefit row's "more detail" modal is open (null = closed)
   const [benefitDetail, setBenefitDetail] = useState<CurrentBenefit | null>(null)
+  // STA-132 (1.3) — Insert flow: row → effective-date popup → editable detail.
+  const [insertTarget, setInsertTarget] = useState<CurrentBenefit | null>(null)
+  const [insertSeedDate, setInsertSeedDate] = useState<string | null>(null)
+  // STA-132 (1.3c/d) — editable Status on the post-Proceed detail modal.
+  const [detailMode, setDetailMode] = useState<'view' | 'edit'>('view')
+  const [detailStatus, setDetailStatus] = useState<'Active' | 'Inactive'>('Active')
+  const addBenefitHistory = useBenefitHistoryStore((s) => s.addEntry)
+
+  // STA-132 (1.3d / Part 4) — flip the detail Status; setting Inactive computes
+  // the effective end date (today − 1) and logs a "change from active to
+  // inactive" history entry so it shows in the right-rail change log.
+  const handleDetailStatusChange = (
+    benefit: CurrentBenefit,
+    next: 'Active' | 'Inactive',
+  ) => {
+    setDetailStatus(next)
+    if (next === 'Inactive') {
+      addBenefitHistory({
+        targetType: 'plan',
+        targetId: benefit.benefitPlanId,
+        targetName: benefit.benefitName,
+        action: 'insert',
+        actorName: nameTh,
+        effectiveDate: inactiveEndDate(new Date()),
+        changes: [
+          {
+            field: isTh ? 'สถานะ' : 'Status',
+            from: isTh ? 'ใช้งาน' : 'active',
+            to: isTh ? 'ไม่ใช้งาน' : 'inactive',
+          },
+        ],
+      })
+    }
+  }
   // STA-104: "Benefit enrollment" section + per-row enroll modal (default-collapsed).
   const [enrollTarget, setEnrollTarget] = useState<EnrollableBenefit | null>(null)
   const [enrollmentCollapsed, setEnrollmentCollapsed] = useState(true)
+  // STA-132 (Part 5) — claim-history block (default-collapsed) below enrollment.
+  const [claimHistoryCollapsed, setClaimHistoryCollapsed] = useState(true)
+  const allClaims = useBenefitClaimsStore((s) => s.claims)
+  const claimEmployeeId = toClaimEmployeeId(empId)
+  const employeeClaims = useMemo(
+    () => allClaims.filter((c) => c.employeeId === claimEmployeeId),
+    [allClaims, claimEmployeeId],
+  )
   // STA-106: per-row "Start a claim" modal (HR files a claim on behalf of employee).
   const [claimTarget, setClaimTarget] = useState<CurrentBenefit | null>(null)
   // STA-119: persist the admin-filed claim into the store so it surfaces in
@@ -1442,6 +1587,18 @@ export default function EmployeeDetailPage() {
         expandLabel={expandLabel}
         collapseLabel={collapseLabel}
         dense
+        headerAction={
+          // STA-132 (Part 2) — "Create special benefit" trigger moved here from
+          // the old special-privilege section header. Same route + form.
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={!avail.change_type.ok}
+            onClick={() => router.push(`/${locale}/admin/employees/${empId}/special-privilege`)}
+          >
+            {tSpecial('cardLabel')}
+          </Button>
+        }
       >
         {CURRENT_BENEFITS.length === 0 ? (
           <EmptyState
@@ -1458,11 +1615,17 @@ export default function EmployeeDetailPage() {
                 <tr className="text-ink-muted" style={{ textAlign: 'left' }}>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'ชื่อสวัสดิการ' : 'Benefit name'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'รหัสแผนสวัสดิการ' : 'Benefit plan ID'}</th>
+                  {/* STA-132 — Type (after Plan ID) */}
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'ประเภท' : 'Type'}</th>
+                  {/* STA-132 — Adjusted entitle amount (before Entitle amount) */}
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'สิทธิ์ที่ปรับแล้ว' : 'Adjusted entitle amount'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'สิทธิ์ทั้งหมด' : 'Entitle amount'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'ยอดที่ใช้ไป' : 'Amount used'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'วงเงินคงเหลือ' : 'Remaining amount'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'ดูรายละเอียด' : 'More detail'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'เริ่มเบิก' : 'Start a claim'}</th>
+                  {/* STA-132 — Insert row-action */}
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}><span className="sr-only">{isTh ? 'แทรกการเปลี่ยนแปลง' : 'Insert'}</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -1470,13 +1633,31 @@ export default function EmployeeDetailPage() {
                   <tr key={b.benefitPlanId} style={{ borderTop: '1px solid var(--color-hairline)' }}>
                     <td className="text-ink font-medium" style={{ padding: '8px 12px' }}>{b.benefitName}</td>
                     <td className="text-ink-muted font-mono" style={{ padding: '8px 12px' }}>{b.benefitPlanId}</td>
+                    {/* STA-132 — Type */}
+                    <td className="text-ink" style={{ padding: '8px 12px' }}>
+                      {b.type === 'Special' ? (isTh ? 'พิเศษ' : 'Special') : (isTh ? 'มาตรฐาน' : 'Standard')}
+                    </td>
+                    {/* STA-132 — Adjusted entitle amount (+/- teal/ink, NO-RED) */}
+                    {(() => {
+                      const adj = formatAdjustedAmount(b.adjustedEntitlementAmount, b.currency)
+                      return (
+                        <td className={`tabular-nums ${adj.className}`} style={{ padding: '8px 12px', textAlign: 'right' }}>{adj.text}</td>
+                      )
+                    })()}
                     <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${b.entitleAmount.toLocaleString('en-US')} ${b.currency}`}</td>
                     <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${b.amountUsed.toLocaleString('en-US')} ${b.currency}`}</td>
                     {/* STA-120 — Remaining = Entitle − Used, derived (never seeded), never negative */}
                     <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${Math.max(0, b.entitleAmount - b.amountUsed).toLocaleString('en-US')} ${b.currency}`}</td>
+                    {/* STA-132 (1.2) — More detail as a document icon button */}
                     <td style={{ padding: '8px 12px', textAlign: 'right' }}>
-                      <Button variant="ghost" size="sm" onClick={() => setBenefitDetail(b)}>
-                        {isTh ? 'ดูรายละเอียด' : 'More detail'}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={isTh ? 'ดูรายละเอียด' : 'More detail'}
+                        title={isTh ? 'ดูรายละเอียด' : 'More detail'}
+                        onClick={() => setBenefitDetail(b)}
+                      >
+                        <FileText size={16} aria-hidden />
                       </Button>
                     </td>
                     <td style={{ padding: '8px 12px', textAlign: 'right' }}>
@@ -1485,6 +1666,18 @@ export default function EmployeeDetailPage() {
                           {isTh ? 'เริ่มเบิก' : 'Start a claim'}
                         </Button>
                       )}
+                    </td>
+                    {/* STA-132 (1.3a) — Insert row-action → effective-date popup */}
+                    <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={!avail.change_type.ok}
+                        onClick={() => setInsertTarget(b)}
+                      >
+                        <BadgePlus size={16} aria-hidden />
+                        <span style={{ marginLeft: 4 }}>{isTh ? 'แทรก' : 'Insert'}</span>
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -1531,6 +1724,58 @@ export default function EmployeeDetailPage() {
         </div>
       </CollapsibleSectionCard>
 
+      {/* ── STA-132 (Part 5): Claim history (inline-copied from /benefits-hub/history;
+            default-collapsed; id normalized EMP-0002 → EMP002 so rows render) ── */}
+      <CollapsibleSectionCard
+        id="emp-claim-history"
+        icon={FileText}
+        eyebrow={isTh ? 'สวัสดิการ' : 'Benefits'}
+        title={isTh ? 'ประวัติการเบิกสวัสดิการ' : 'Claim history'}
+        sub=""
+        collapsed={claimHistoryCollapsed}
+        onToggle={() => setClaimHistoryCollapsed((v) => !v)}
+        expandLabel={expandLabel}
+        collapseLabel={collapseLabel}
+        dense
+      >
+        {employeeClaims.length === 0 ? (
+          <EmptyState
+            icon={FileText}
+            titleTh="ยังไม่มีประวัติการเบิก"
+            titleEn="No claims yet"
+            descTh="คำขอเบิกสวัสดิการจะปรากฏที่นี่"
+            descEn="Benefit claims will appear here"
+          />
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="w-full text-small" style={{ borderCollapse: 'collapse' }}>
+              <thead>
+                <tr className="text-ink-muted" style={{ textAlign: 'left' }}>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'ประเภทสวัสดิการ' : 'Benefit type'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'เลขที่ใบเสร็จ' : 'Receipt no.'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'วันที่ใบเสร็จ' : 'Receipt date'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'จำนวนเงิน (บาท)' : 'Amount (THB)'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'สถานะ' : 'Status'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'วันที่ส่ง' : 'Submitted'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employeeClaims.map((c: BenefitClaimRequest) => (
+                  <tr key={c.id} style={{ borderTop: '1px solid var(--color-hairline)' }}>
+                    <td className="text-ink" style={{ padding: '8px 12px' }}>{isTh ? c.benefitName : (BENEFIT_TYPE_LABEL[c.benefitType] ?? c.benefitName)}</td>
+                    <td className="text-ink-muted" style={{ padding: '8px 12px' }}>{c.receiptNo}</td>
+                    <td className="text-ink-muted tabular-nums" style={{ padding: '8px 12px' }}>{c.receiptDate}</td>
+                    <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`฿${c.totalClaimAmount.toLocaleString('th-TH')}`}</td>
+                    <td style={{ padding: '8px 12px' }}><ClaimStatusChip status={c.status} isTh={isTh} /></td>
+                    <td className="text-ink-muted tabular-nums" style={{ padding: '8px 12px' }}>{new Date(c.submittedAt).toLocaleDateString(isTh ? 'th-TH' : 'en-GB')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CollapsibleSectionCard>
+
       {/* ── STA-90: Special Privilege list (BE-03) ─────────────── */}
       <CollapsibleSectionCard
         id="emp-special-privilege"
@@ -1543,17 +1788,9 @@ export default function EmployeeDetailPage() {
         expandLabel={expandLabel}
         collapseLabel={collapseLabel}
         dense
-        headerAction={
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!avail.change_type.ok}
-            onClick={() => router.push(`/${locale}/admin/employees/${empId}/special-privilege`)}
-          >
-            {tSpecial('cardLabel')}
-          </Button>
-        }
       >
+        {/* STA-132 (Part 3) — the "Create special benefit" trigger moved to the
+            Current Benefits header; the old in-section button is removed. */}
         {specialPrivileges.length === 0 ? (
           <EmptyState
             icon={BadgePlus}
@@ -1709,18 +1946,55 @@ export default function EmployeeDetailPage() {
         )}
       </CollapsibleSectionCard>
 
-      {/* STA-103: per-benefit "more detail" modal — Individual plan + Benefit Plan
-          + Benefit Eligibility rule attribute groups. Read-only, no backend. */}
+      {/* STA-103 / STA-132: per-benefit "more detail" modal. Read-only in view
+          mode (More-detail); the Insert flow opens it in edit mode with a Status
+          dropdown (1.3c) + a right-rail change log (Part 4). No backend. */}
       <Modal
         open={benefitDetail !== null}
-        onClose={() => setBenefitDetail(null)}
+        onClose={() => { setBenefitDetail(null); setDetailMode('view'); setInsertSeedDate(null) }}
         title={benefitDetail ? `${benefitDetail.benefitName} · ${benefitDetail.benefitPlanId}` : ''}
-        widthClass="max-w-3xl"
+        widthClass="max-w-5xl"
       >
         {benefitDetail && (
-          <BenefitDetailBody benefit={benefitDetail} isTh={isTh} />
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <BenefitDetailBody
+              benefit={detailMode === 'edit' && insertSeedDate
+                ? { ...benefitDetail, effectiveStartDate: insertSeedDate }
+                : benefitDetail}
+              isTh={isTh}
+              mode={detailMode}
+              status={detailStatus}
+              onStatusChange={(next) => handleDetailStatusChange(benefitDetail, next)}
+              effectiveEndDateOverride={detailMode === 'edit' && detailStatus === 'Inactive'
+                ? inactiveEndDate(new Date())
+                : null}
+            />
+            {/* Part 4 — right-rail change log (reuses STA-102/107 history panel) */}
+            <BenefitHistorySidebar
+              targetType="plan"
+              targetId={benefitDetail.benefitPlanId}
+              isTh={isTh}
+            />
+          </div>
         )}
       </Modal>
+
+      {/* STA-132 (1.3b) — Insert effective-date popup (shipped STA-123 component).
+          Proceed opens the detail modal in edit mode, seeded with the chosen date. */}
+      <InsertChangePopup
+        open={insertTarget !== null}
+        benefitName={insertTarget?.benefitName ?? ''}
+        onCancel={() => setInsertTarget(null)}
+        onProceed={(d) => {
+          if (insertTarget) {
+            setInsertSeedDate(d)
+            setDetailStatus(insertTarget.status)
+            setDetailMode('edit')
+            setBenefitDetail(insertTarget)
+          }
+          setInsertTarget(null)
+        }}
+      />
 
       {/* STA-104: per-row "Enroll now" modal — 8-field enrollment form. Mockup only. */}
       <Modal

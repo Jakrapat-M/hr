@@ -1,5 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { formatDate, maskValue, formatCurrency } from '../date';
+import { formatDate, maskValue, formatCurrency, inactiveEndDate } from '../date';
+
+// STA-132 — Inactive → effective end date = today − 1 (date-only, no tz drift).
+describe('inactiveEndDate', () => {
+  it('returns the day before "today" (19 Jun 2026 → 18 Jun 2026)', () => {
+    expect(inactiveEndDate(new Date('2026-06-19T00:00:00Z'))).toBe('2026-06-18');
+  });
+
+  it('handles month/year boundary (1 Jan 2026 → 31 Dec 2025)', () => {
+    expect(inactiveEndDate(new Date('2026-01-01T00:00:00Z'))).toBe('2025-12-31');
+  });
+
+  it('is timezone-stable for a late-evening local time', () => {
+    expect(inactiveEndDate(new Date(2026, 5, 19, 23, 30))).toBe('2026-06-18');
+  });
+});
 
 describe('formatDate', () => {
  it('formats date in English medium format', () => {

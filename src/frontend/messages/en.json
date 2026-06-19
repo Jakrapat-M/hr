@@ -4348,11 +4348,11 @@
       }
     },
     "specialPrivilege": {
-      "menu": "Add / adjust individual benefit",
+      "menu": "Create special benefit",
       "pageTitle": "Special Privilege",
-      "title": "Add / adjust individual benefit",
+      "title": "Create special benefit",
       "subtitle": "Assign a benefit plan and override the entitlement limit for this employee",
-      "cardLabel": "Add / adjust individual benefit",
+      "cardLabel": "Create special benefit",
       "cardDesc": "Assign a plan and override the entitlement limit per employee",
       "fields": {
         "specialBenefitGroup": "Special Benefit Group",
@@ -4409,11 +4409,11 @@
       }
     },
     "reallocateBudget": {
-      "cardLabel": "Allocate Entitlement amount",
+      "cardLabel": "Adjust entitle amount",
       "cardDesc": "Move part of next year’s medical budget into this year",
       "flag": "Budget Reallocation",
       "pageTitle": "Benefits",
-      "title": "Allocate Entitlement amount",
+      "title": "Adjust entitle amount",
       "subtitle": "Transfer part of this employee’s next-year medical budget into the current year.",
       "fields": {
         "plan": "Medical plan",

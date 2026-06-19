@@ -52,6 +52,15 @@ export function formatDate(
  }
 }
 
+// STA-132 — when a current benefit is set Inactive, its effective end date is
+// the day BEFORE "today" (set Inactive on 19 Jun 2026 → end date 18 Jun 2026).
+// Pure + date-only math (no timezone drift): returns an ISO `YYYY-MM-DD` string.
+export function inactiveEndDate(today: Date): string {
+ const prev = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+ prev.setUTCDate(prev.getUTCDate() - 1);
+ return prev.toISOString().slice(0, 10);
+}
+
 export function maskValue(value: string | null | undefined, visibleChars = 4): string {
  if (!value) return'-';
  if (value.length <= visibleChars) return value;
