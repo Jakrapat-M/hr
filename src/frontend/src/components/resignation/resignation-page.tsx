@@ -16,6 +16,14 @@ import {
 } from '@/stores/termination-approvals';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button, FormField, FormInput, Modal } from '@/components/humi';
+import { ExitInterviewSection } from '@/components/admin/terminate/ExitInterviewSection';
+import {
+  useExitFeedback,
+  EMPTY_EXIT_INTERVIEW,
+  isExitInterviewEmpty,
+  type ExitInterviewRecord,
+} from '@/stores/exit-feedback';
+import { HUMI_MY_PROFILE } from '@/lib/humi-mock-data';
 
 const selectClassName =
   'h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
@@ -40,6 +48,16 @@ export function ResignationPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // Optional Exit Interview (STA-124 follow-up — BA: the form belongs on the
+  // employee's resignation submit page, not the admin terminate form). Reuses
+  // the shared section + exit-feedback store; persisted on submit, flows to HRBP.
+  const recordExitFeedback = useExitFeedback((s) => s.record);
+  const [exitInterview, setExitInterview] = useState<ExitInterviewRecord>(() =>
+    structuredClone(EMPTY_EXIT_INTERVIEW),
+  );
+  const patchExit = (patch: Partial<ExitInterviewRecord>) =>
+    setExitInterview((prev) => ({ ...prev, ...patch }));
 
   // Find a pending or approved request by this user.
   // If the most recent request is `rejected`, allow re-submission — the form
@@ -78,6 +96,20 @@ export function ResignationPage() {
       attachments: attachmentName ? [attachmentName] : undefined,
       submittedBy: { id: userId, name: userName, role: 'employee' },
     });
+    // Optional Exit Interview — persist only if the employee filled anything;
+    // surfaces read-only on the HRBP dashboard (same store as admin terminate).
+    if (!isExitInterviewEmpty(exitInterview)) {
+      recordExitFeedback({
+        employeeId: userId,
+        employeeNameTh: userName,
+        employeeNameEn: userName,
+        positionTitle: HUMI_MY_PROFILE.position,
+        reasonCode: reasonCode as string,
+        resignedDate: lastWorkingDate,
+        recordedAt: new Date().toISOString(),
+        record: exitInterview,
+      });
+    }
     setConfirmOpen(false);
     setSubmittedId(id);
     setSubmitted(true);
@@ -278,17 +310,20 @@ export function ResignationPage() {
             )}
           </div>
         </div>
+      </div>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-2 mt-5">
-          <Button
-            variant="primary"
-            onClick={requestSubmit}
-            disabled={!isFormValid}
-          >
-            ส่งคำขอลาออก
-          </Button>
-        </div>
+      {/* Optional Exit Interview — flows to HRBP on submit */}
+      <ExitInterviewSection value={exitInterview} onChange={patchExit} />
+
+      {/* Actions */}
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="primary"
+          onClick={requestSubmit}
+          disabled={!isFormValid}
+        >
+          ส่งคำขอลาออก
+        </Button>
       </div>
 
       {/* Info note */}
