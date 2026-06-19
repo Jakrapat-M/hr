@@ -35,7 +35,9 @@ import {
   MapPin,
   Network,
   Star,
-  BadgePlus,
+  Layers,
+  Search,
+  Download,
   Trash2,
   Gift,
   ArrowLeftRight,
@@ -67,10 +69,6 @@ import {
 } from '@/stores/benefit-claims'
 import { EmptyState, Modal, Button, FormField, FormInput } from '@/components/humi'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
-import {
-  useSpecialPrivilegeStore,
-  selectPrivilegesForEmployee,
-} from '@/stores/special-privilege-store'
 import {
   useBudgetReallocationStore,
   selectReallocationsForEmployee,
@@ -842,13 +840,10 @@ export default function EmployeeDetailPage() {
   const authRoles = useAuthStore((s) => s.roles)
   const isHRBPPlus = authRoles.some((r) => ['hrbp', 'spd', 'hr_admin', 'hr_manager'].includes(r))
 
-  // STA-90: per-employee special privileges (shared single join path).
-  // Selector returns a fresh array — wrap with useShallow to avoid re-render churn.
+  // tSpecial: i18n namespace for the "Create special benefit" action, which now
+  // lives in the Current Benefits header (STA-132 part 2). The standalone Special
+  // Privileges list was removed per STA-132 part 3.
   const tSpecial = useTranslations('admin.specialPrivilege')
-  const specialPrivileges = useSpecialPrivilegeStore(
-    useShallow(selectPrivilegesForEmployee(empId)),
-  )
-  const removePrivilege = useSpecialPrivilegeStore((s) => s.removePrivilege)
 
   // STA-95: next-year budget reallocation log + live medical-pool totals.
   // Current base derives from the plan registry (single source of truth); the
@@ -930,7 +925,6 @@ export default function EmployeeDetailPage() {
   }
   // BA: every collapsible section starts COLLAPSED — the admin opens only what they need.
   const [employmentCollapsed, setEmploymentCollapsed] = useState(true)
-  const [privilegeCollapsed, setPrivilegeCollapsed] = useState(true)
   const [reallocCollapsed, setReallocCollapsed] = useState(true)
   const [benefitsCollapsed, setBenefitsCollapsed] = useState(true)
   // STA-103: which Current Benefit row's "more detail" modal is open (null = closed)
@@ -981,6 +975,23 @@ export default function EmployeeDetailPage() {
     () => sortClaimHistory(allClaims.filter((c) => c.employeeId === claimEmployeeId)),
     [allClaims, claimEmployeeId],
   )
+  // STA-132 (Part 5, revised) — claim-history search + date-range filters, mirroring
+  // the /benefits-hub "Me" claim history so the admin view matches the reference.
+  const [claimSearch, setClaimSearch] = useState('')
+  const [claimStart, setClaimStart] = useState('')
+  const [claimEnd, setClaimEnd] = useState('')
+  const filteredClaims = useMemo(() => {
+    const q = claimSearch.trim().toLocaleLowerCase('th-TH')
+    return employeeClaims.filter((c) => {
+      const day = c.submittedAt.slice(0, 10)
+      const hay = `${c.benefitName} ${BENEFIT_TYPE_LABEL[c.benefitType] ?? ''} ${c.status}`.toLocaleLowerCase('th-TH')
+      const okSearch = q ? hay.includes(q) : true
+      const okStart = claimStart ? day >= claimStart : true
+      const okEnd = claimEnd ? day <= claimEnd : true
+      return okSearch && okStart && okEnd
+    })
+  }, [employeeClaims, claimSearch, claimStart, claimEnd])
+  const resetClaimFilters = () => { setClaimSearch(''); setClaimStart(''); setClaimEnd('') }
   // STA-106: per-row "Start a claim" modal (HR files a claim on behalf of employee).
   const [claimTarget, setClaimTarget] = useState<CurrentBenefit | null>(null)
   // STA-119: persist the admin-filed claim into the store so it surfaces in
@@ -1732,7 +1743,7 @@ export default function EmployeeDetailPage() {
                         disabled={!avail.change_type.ok}
                         onClick={() => setInsertTarget(b)}
                       >
-                        <BadgePlus size={16} aria-hidden />
+                        <Layers size={16} aria-hidden />
                         <span style={{ marginLeft: 4 }}>{isTh ? 'แทรก' : 'Insert'}</span>
                       </Button>
                     </td>
@@ -1795,36 +1806,85 @@ export default function EmployeeDetailPage() {
         collapseLabel={collapseLabel}
         dense
       >
-        {employeeClaims.length === 0 ? (
+        {/* Export action (top-right) — mirrors /benefits-hub claim history */}
+        <div className="humi-row" style={{ justifyContent: 'flex-end', marginBottom: 12 }}>
+          <Button variant="ghost" size="sm" type="button">
+            <Download size={14} aria-hidden />
+            <span style={{ marginLeft: 4 }}>{isTh ? 'ส่งออกรายการ' : 'Export'}</span>
+          </Button>
+        </div>
+
+        {/* Search + start/end date filter row */}
+        <div
+          className="rounded-[var(--radius-md)] border border-hairline bg-canvas-soft"
+          style={{
+            display: 'grid', gap: 12, padding: 16, marginBottom: 16,
+            gridTemplateColumns: 'minmax(200px,1fr) 170px 170px auto', alignItems: 'end',
+          }}
+        >
+          <FormField id="emp-claim-search" label={isTh ? 'ค้นหา' : 'Search'}>
+            {(cp) => (
+              <div style={{ position: 'relative' }}>
+                <Search
+                  size={16}
+                  aria-hidden
+                  style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ink-faint)', pointerEvents: 'none' }}
+                />
+                <FormInput
+                  {...cp}
+                  type="search"
+                  value={claimSearch}
+                  onChange={(e) => setClaimSearch(e.target.value)}
+                  placeholder={isTh ? 'ชื่อสวัสดิการ หรือสถานะ' : 'Benefit name or status'}
+                  style={{ paddingLeft: 32 }}
+                />
+              </div>
+            )}
+          </FormField>
+          <FormField id="emp-claim-start" label={isTh ? 'วันที่เริ่มต้น' : 'Start Date'}>
+            {(cp) => (
+              <FormInput {...cp} type="date" value={claimStart} max={claimEnd || undefined} onChange={(e) => setClaimStart(e.target.value)} />
+            )}
+          </FormField>
+          <FormField id="emp-claim-end" label={isTh ? 'วันที่สิ้นสุด' : 'End Date'}>
+            {(cp) => (
+              <FormInput {...cp} type="date" value={claimEnd} min={claimStart || undefined} onChange={(e) => setClaimEnd(e.target.value)} />
+            )}
+          </FormField>
+          <Button type="button" variant="ghost" size="sm" className="min-h-[44px] justify-center" onClick={resetClaimFilters}>
+            {isTh ? 'ล้างตัวกรอง' : 'Clear'}
+          </Button>
+        </div>
+
+        {filteredClaims.length === 0 ? (
           <EmptyState
             icon={FileText}
-            titleTh="ยังไม่มีประวัติการเบิก"
-            titleEn="No claims yet"
-            descTh="คำขอเบิกสวัสดิการจะปรากฏที่นี่"
-            descEn="Benefit claims will appear here"
+            titleTh="ไม่พบประวัติการเบิก"
+            titleEn="No claims found"
+            descTh="ลองปรับคำค้นหา หรือช่วงวันที่"
+            descEn="Try adjusting the search or date range"
           />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table className="w-full text-small" style={{ borderCollapse: 'collapse' }}>
               <thead>
                 <tr className="text-ink-muted" style={{ textAlign: 'left' }}>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'ประเภทสวัสดิการ' : 'Benefit type'}</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'เลขที่ใบเสร็จ' : 'Receipt no.'}</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'วันที่ใบเสร็จ' : 'Receipt date'}</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'จำนวนเงิน (บาท)' : 'Amount (THB)'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'ชื่อสวัสดิการ' : 'Benefit Name'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'จำนวนเงินเบิก' : 'Claim Amount'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'วันที่ส่ง' : 'Submission Date'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'สถานะ' : 'Status'}</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'วันที่ส่ง' : 'Submitted'}</th>
                 </tr>
               </thead>
               <tbody>
-                {employeeClaims.map((c: BenefitClaimRequest) => (
+                {filteredClaims.map((c: BenefitClaimRequest) => (
                   <tr key={c.id} style={{ borderTop: '1px solid var(--color-hairline)' }}>
-                    <td className="text-ink" style={{ padding: '8px 12px' }}>{isTh ? c.benefitName : (BENEFIT_TYPE_LABEL[c.benefitType] ?? c.benefitName)}</td>
-                    <td className="text-ink-muted" style={{ padding: '8px 12px' }}>{c.receiptNo}</td>
-                    <td className="text-ink-muted tabular-nums" style={{ padding: '8px 12px' }}>{c.receiptDate}</td>
+                    <td style={{ padding: '8px 12px' }}>
+                      <p className="font-semibold text-ink">{c.benefitName}</p>
+                      <p className="text-ink-muted">{BENEFIT_TYPE_LABEL[c.benefitType] ?? ''}</p>
+                    </td>
                     <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`฿${c.totalClaimAmount.toLocaleString('th-TH')}`}</td>
-                    <td style={{ padding: '8px 12px' }}><ClaimStatusChip status={c.status} isTh={isTh} /></td>
                     <td className="text-ink-muted tabular-nums" style={{ padding: '8px 12px' }}>{new Date(c.submittedAt).toLocaleDateString(isTh ? 'th-TH' : 'en-GB')}</td>
+                    <td style={{ padding: '8px 12px' }}><ClaimStatusChip status={c.status} isTh={isTh} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -1833,118 +1893,8 @@ export default function EmployeeDetailPage() {
         )}
       </CollapsibleSectionCard>
 
-      {/* ── STA-90: Special Privilege list (BE-03) ─────────────── */}
-      <CollapsibleSectionCard
-        id="emp-special-privilege"
-        icon={BadgePlus}
-        eyebrow={tSpecial('flag')}
-        title={tSpecial('list.heading')}
-        sub=""
-        collapsed={privilegeCollapsed}
-        onToggle={() => setPrivilegeCollapsed((v) => !v)}
-        expandLabel={expandLabel}
-        collapseLabel={collapseLabel}
-        dense
-      >
-        {/* STA-132 (Part 3) — the "Create special benefit" trigger moved to the
-            Current Benefits header; the old in-section button is removed. */}
-        {specialPrivileges.length === 0 ? (
-          <EmptyState
-            icon={BadgePlus}
-            titleTh={tSpecial('list.empty')}
-            titleEn={tSpecial('list.empty')}
-            descTh={tSpecial('subtitle')}
-            descEn={tSpecial('subtitle')}
-          />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {specialPrivileges.map((rec) => {
-              const plan = getPlan(rec.planId)
-              const planName = plan
-                ? (locale === 'th' ? plan.nameTh : plan.nameEn)
-                : rec.planId
-              // Status from the effective window — drives the badge (NO-RED:
-              // expired is a muted neutral, not a danger colour).
-              const now = new Date()
-              const start = new Date(rec.effectiveStartDate)
-              const end = new Date(rec.effectiveEndDate)
-              const status = now < start ? 'upcoming' : now > end ? 'expired' : 'active'
-              const statusClass =
-                status === 'active'
-                  ? 'bg-success-soft text-success border-success/30'
-                  : status === 'upcoming'
-                    ? 'bg-accent-soft text-accent border-accent/30'
-                    : 'bg-canvas-soft text-ink-muted border-hairline'
-              return (
-                <div
-                  key={rec.id}
-                  className={`rounded-[var(--radius-md)] border border-hairline bg-surface p-4 shadow-[var(--shadow-card)] ${status === 'expired' ? 'opacity-80' : ''}`}
-                >
-                  {/* Header — plan identity + status + remove */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-                        <BadgePlus size={18} aria-hidden />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-body font-semibold text-ink">{planName}</p>
-                        <p className="font-mono text-xs uppercase tracking-wide text-ink-muted">{rec.planId}</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-shrink-0 items-center gap-2">
-                      <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusClass}`}>
-                        {tSpecial(`list.status.${status}` as never)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => removePrivilege(rec.id)}
-                        aria-label={tSpecial('list.delete')}
-                        className="humi-btn humi-btn--ghost"
-                        style={{ padding: '4px 8px' }}
-                      >
-                        <Trash2 size={14} aria-hidden />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Entitlement — the benefit the employee receives, made prominent */}
-                  <div className="mt-3 flex flex-wrap items-end gap-x-8 gap-y-2">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-ink-muted">{tSpecial('list.entitlementAmount')}</p>
-                      <p className="text-2xl font-bold tabular-nums text-ink">
-                        {formatCurrency(rec.benefitEntitlementAmount)}
-                        <span className="ml-1.5 text-small font-normal text-ink-muted">
-                          {tSpecial(`fields.schedulePeriodOptions.${rec.schedulePeriod}` as never)}
-                        </span>
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-ink-muted">{tSpecial('list.maxPerClaim')}</p>
-                      <p className="text-body font-semibold tabular-nums text-ink">{formatCurrency(rec.maxPerClaim)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-ink-muted">{tSpecial('list.effectivePeriod')}</p>
-                      <p className="text-small text-ink">
-                        {formatDate(rec.effectiveStartDate, 'medium', locale)} — {formatDate(rec.effectiveEndDate, 'medium', locale)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Reason — secondary context in a subtle box */}
-                  <p className="mt-3 rounded-[var(--radius-sm)] bg-canvas-soft px-3 py-2 text-small text-ink-soft">
-                    {rec.reason}
-                  </p>
-
-                  {/* Audit footer — de-emphasized (this used to dominate the row) */}
-                  <p className="mt-2 text-xs text-ink-muted">
-                    {tSpecial('list.createdBy')}: {rec.createdBy} · {formatDate(rec.createdAt, 'medium', locale)}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </CollapsibleSectionCard>
+      {/* STA-132 (Part 3) — the standalone "Special privileges" list was removed;
+          "Create special benefit" now lives in the Current Benefits header. */}
 
       {/* ── STA-95: Reallocate Next Year Budget — change log + medical pools ── */}
       <CollapsibleSectionCard
