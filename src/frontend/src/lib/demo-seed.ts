@@ -426,7 +426,10 @@ export const LEAVE_DEMO_COUNT = DEMO_PENDING_LEAVE.length;
 // Seed 2 pending OT rows into the dedicated overtime-requests store with STABLE
 // ids so the detail route resolves them across a full reload. One is a
 // cross-midnight example (23:00 → 02:00 = 3h) to exercise the wrap math.
-const DEMO_OT_EMPLOYEE = { id: 'EMP-0301', name: 'พิมพ์ชนก ศรีวัฒน์', department: 'Store' };
+// Exported so the weekly Team Timesheet (STA-126) can surface this same canonical
+// OT-seeded employee as a grid row — reusing the single OT source rather than a
+// parallel mock, so an OT chip is demonstrable in the week of its seeded rows.
+export const DEMO_OT_EMPLOYEE = { id: 'EMP-0301', name: 'พิมพ์ชนก ศรีวัฒน์', department: 'Store' };
 
 const DEMO_PENDING_OT: OTRequest[] = [
   {

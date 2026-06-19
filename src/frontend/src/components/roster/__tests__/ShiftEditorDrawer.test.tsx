@@ -98,6 +98,7 @@ describe('RosterPage interactions — AC1.4 / AC1.5 / AC1.6', () => {
   }
 
   it('AC1.4 — clicking a shift opens the editor drawer, Cancel closes it', async () => {
+    searchParams = new URLSearchParams('view=hourly'); // shift-cell editing lives behind the hourly view
     await renderPage();
     const firstShift = screen.getAllByTestId('shift-cell')[0];
     fireEvent.click(firstShift);
@@ -113,6 +114,7 @@ describe('RosterPage interactions — AC1.4 / AC1.5 / AC1.6', () => {
   });
 
   it('AC1.6 — Bulk Assign button opens the bulk-assign modal', async () => {
+    searchParams = new URLSearchParams('view=hourly'); // bulk-assign toolbar lives behind the hourly view
     await renderPage();
     expect(screen.queryByTestId('bulk-assign-modal')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'กำหนดกะแบบกลุ่ม' }));
