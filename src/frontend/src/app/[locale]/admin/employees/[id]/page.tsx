@@ -68,6 +68,7 @@ import {
   type BenefitClaimStatus,
 } from '@/stores/benefit-claims'
 import { EmptyState, Modal, Button, FormField, FormInput } from '@/components/humi'
+import { FileUploadField } from '@/components/humi/FileUploadField'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
 import {
   useBudgetReallocationStore,
@@ -632,35 +633,20 @@ function EnrollmentFormBody({
         {(p) => <FormInput {...p} value={benefit.enrolledInPeriod} readOnly disabled />}
       </FormField>
 
-      {/* 7 — Request Date (editable, defaults today) */}
+      {/* 7 — Request Date (read-only; defaults today) */}
       <FormField label={isTh ? 'วันที่ยื่นคำขอ' : 'Request Date'} required>
-        {(p) => <FormInput {...p} type="date" defaultValue={today} />}
+        {(p) => <FormInput {...p} type="date" value={today} readOnly disabled />}
       </FormField>
 
       {/* 8 — Attachment (optional; filename-only preview, no persistence) */}
-      <FormField
+      <FileUploadField
         label={isTh ? 'เอกสารแนบ' : 'Attachment'}
-        help={
-          isTh
-            ? 'PDF, JPG, PNG, PPTX, XLSX — สูงสุด 10 MB (ไม่บังคับ)'
-            : 'PDF, JPG, PNG, PPTX, XLSX — up to 10 MB (optional)'
-        }
-      >
-        {(p) => (
-          <input
-            {...p}
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png,.pptx,.xlsx"
-            onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
-            className="block w-full text-small text-ink file:mr-3 file:rounded-md file:border file:border-hairline file:bg-canvas-soft file:px-3 file:py-1.5 file:text-small file:font-medium file:text-ink hover:file:border-accent hover:file:text-accent file:transition-colors file:cursor-pointer"
-          />
-        )}
-      </FormField>
-      {fileName && (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-canvas-soft px-2.5 py-1 text-small text-ink-muted">
-          {fileName}
-        </span>
-      )}
+        required={false}
+        maxSizeMB={10}
+        helperText={isTh ? 'สูงสุด 10 MB (ไม่บังคับ)' : 'up to 10 MB (optional)'}
+        onUpload={(_, file) => setFileName(file?.filename ?? null)}
+        onRemove={() => setFileName(null)}
+      />
 
       {submitted && (
         <div role="status" className="rounded-[var(--radius-md)] bg-success-soft p-3 text-small font-medium text-ink">
@@ -690,17 +676,23 @@ function BenefitDetailBody({
   status,
   onStatusChange,
   effectiveEndDateOverride,
+  endDateValue,
+  onEffectiveEndChange,
 }: {
   benefit: CurrentBenefit
   isTh: boolean
-  // STA-132 (1.3c) — 'edit' renders an editable Status dropdown (Insert flow);
+  // 'edit' renders an editable Status dropdown (Insert flow);
   // 'view' (default) keeps the original display-only behaviour.
   mode?: 'view' | 'edit'
   status?: 'Active' | 'Inactive'
   onStatusChange?: (next: 'Active' | 'Inactive') => void
-  // STA-132 (1.3d) — when Inactive, the effective end date is computed (today − 1)
+  // When Inactive, the effective end date is computed (today − 1)
   // and passed in so the body shows it instead of the seeded window.
   effectiveEndDateOverride?: string | null
+  // Edit mode — controlled effective-end-date draft lifted to the parent so the
+  // value survives status flips (the auto-default re-applies on Active↔Inactive).
+  endDateValue?: string
+  onEffectiveEndChange?: (value: string) => void
 }) {
   const dash = (v: string | number | null | undefined): string => {
     if (v === null || v === undefined || v === '') return '-'
@@ -747,7 +739,22 @@ function BenefitDetailBody({
             </div>
           )}
           <Field label={isTh ? 'วันเริ่มมีผล' : 'Effective start date'} value={dash(benefit.effectiveStartDate ? formatDate(benefit.effectiveStartDate, 'medium', isTh ? 'th' : 'en') : '')} />
-          <Field label={isTh ? 'วันสิ้นสุด' : 'Effective end date'} value={dash((effectiveEndDateOverride ?? benefit.effectiveEndDate) ? formatDate(effectiveEndDateOverride ?? benefit.effectiveEndDate, 'medium', isTh ? 'th' : 'en') : '')} />
+          {mode === 'edit' ? (
+            // Editable effective end date — controlled by the parent's endDateDraft
+            // (seeded from the auto-default; re-applies on status flips).
+            <FormField label={isTh ? 'วันสิ้นสุด' : 'Effective end date'}>
+              {(p) => (
+                <FormInput
+                  {...p}
+                  type="date"
+                  value={endDateValue ?? effectiveEndDateOverride ?? benefit.effectiveEndDate ?? ''}
+                  onChange={(e) => onEffectiveEndChange?.(e.target.value)}
+                />
+              )}
+            </FormField>
+          ) : (
+            <Field label={isTh ? 'วันสิ้นสุด' : 'Effective end date'} value={dash((effectiveEndDateOverride ?? benefit.effectiveEndDate) ? formatDate(effectiveEndDateOverride ?? benefit.effectiveEndDate, 'medium', isTh ? 'th' : 'en') : '')} />
+          )}
           <Field label={isTh ? 'ยอดที่เบิกแล้ว' : 'Reimbursed amount'} value={money(benefit.reimbursedAmount)} />
         </Grid>
       </section>
@@ -935,6 +942,19 @@ export default function EmployeeDetailPage() {
   // STA-132 (1.3c/d) — editable Status on the post-Proceed detail modal.
   const [detailMode, setDetailMode] = useState<'view' | 'edit'>('view')
   const [detailStatus, setDetailStatus] = useState<'Active' | 'Inactive'>('Active')
+  // Editable effective-end-date draft (in-session). Seeded from the auto-default
+  // and re-applied whenever status flips (Inactive → today−1; Active → seed).
+  const [endDateDraft, setEndDateDraft] = useState<string>('')
+  useEffect(() => {
+    if (detailMode !== 'edit' || !benefitDetail) return
+    setEndDateDraft(
+      detailStatus === 'Inactive'
+        ? inactiveEndDate(new Date())
+        : (benefitDetail.effectiveEndDate ?? ''),
+    )
+    // Re-seed on status flip (and when the edit modal opens for a benefit).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detailStatus, detailMode, benefitDetail])
   const addBenefitHistory = useBenefitHistoryStore((s) => s.addEntry)
 
   // STA-132 (1.3d / Part 4) — flip the detail Status; setting Inactive computes
@@ -1645,16 +1665,26 @@ export default function EmployeeDetailPage() {
         collapseLabel={collapseLabel}
         dense
         headerAction={
-          // STA-132 (Part 2) — "Create special benefit" trigger moved here from
-          // the old special-privilege section header. Same route + form.
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!avail.change_type.ok}
-            onClick={() => router.push(`/${locale}/admin/employees/${empId}/special-privilege`)}
-          >
-            {tSpecial('cardLabel')}
-          </Button>
+          // "Adjust entitle amount" + "Create special benefit" triggers live here.
+          // Adjust sits to the left of Create-special. Same routes + forms.
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!avail.change_type.ok}
+              onClick={() => router.push(`/${locale}/admin/employees/${empId}/reallocate-budget`)}
+            >
+              {tReallocate('cardLabel')}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!avail.change_type.ok}
+              onClick={() => router.push(`/${locale}/admin/employees/${empId}/special-privilege`)}
+            >
+              {tSpecial('cardLabel')}
+            </Button>
+          </div>
         }
       >
         {CURRENT_BENEFITS.length === 0 ? (
@@ -1908,16 +1938,6 @@ export default function EmployeeDetailPage() {
         expandLabel={expandLabel}
         collapseLabel={collapseLabel}
         dense
-        headerAction={
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!avail.change_type.ok}
-            onClick={() => router.push(`/${locale}/admin/employees/${empId}/reallocate-budget`)}
-          >
-            {tReallocate('cardLabel')}
-          </Button>
-        }
       >
         {!hasReallocData ? (
           <EmptyState
@@ -2032,6 +2052,8 @@ export default function EmployeeDetailPage() {
               effectiveEndDateOverride={detailMode === 'edit' && detailStatus === 'Inactive'
                 ? inactiveEndDate(new Date())
                 : null}
+              endDateValue={endDateDraft}
+              onEffectiveEndChange={setEndDateDraft}
             />
             {/* Part 4 — right-rail change log (reuses STA-102/107 history panel) */}
             <BenefitHistorySidebar
@@ -2048,6 +2070,7 @@ export default function EmployeeDetailPage() {
       <InsertChangePopup
         open={insertTarget !== null}
         benefitName={insertTarget?.benefitName ?? ''}
+        showAttachment
         onCancel={() => setInsertTarget(null)}
         onProceed={(d) => {
           if (insertTarget) {

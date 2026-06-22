@@ -17,7 +17,6 @@ import { useTranslations } from 'next-intl'
 import {
   ArrowLeft,
   ArrowLeftRight,
-  Paperclip,
   Plus,
   Trash2,
   ArrowUp,
@@ -78,7 +77,6 @@ export default function ReallocateBudgetPage() {
 
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showUpload, setShowUpload] = useState(false)
 
   const creationDate = useMemo(() => formatDate(new Date(), 'long', locale), [locale])
 
@@ -441,21 +439,9 @@ export default function ReallocateBudgetPage() {
           </p>
         )}
 
-        {/* Attachments (kept from #268) — button-gated upload reveal */}
+        {/* Attachments — always visible (no toggle). */}
         <div style={{ marginBottom: 24 }}>
-          {!showUpload ? (
-            <button
-              type="button"
-              onClick={() => setShowUpload(true)}
-              className="humi-btn humi-btn--ghost"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-            >
-              <Paperclip size={16} aria-hidden />
-              {t('buttons.addAttachment')}
-            </button>
-          ) : (
-            <FileUploadField label={tx('fields.attachments')} maxFiles={5} />
-          )}
+          <FileUploadField label={tx('fields.attachments')} maxFiles={5} />
         </div>
 
         {/* Actions */}

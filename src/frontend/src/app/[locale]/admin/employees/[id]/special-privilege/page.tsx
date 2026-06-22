@@ -18,6 +18,7 @@ import { useAuthStore } from '@/stores/auth-store'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
 import { Toggle, Textarea } from '@/components/humi'
+import { FileUploadField } from '@/components/humi/FileUploadField'
 import {
   BENEFIT_PLAN_REGISTRY,
   getPlan,
@@ -358,6 +359,14 @@ export default function SpecialPrivilegePage() {
               {t('validation.reasonRequired')}
             </p>
           )}
+        </div>
+
+        {/* Attachment (optional) */}
+        <div style={{ marginBottom: 24, maxWidth: 560 }}>
+          <FileUploadField
+            label={locale === 'th' ? 'เอกสารแนบ' : 'Attachment'}
+            required={false}
+          />
         </div>
 
         {/* Actions */}
