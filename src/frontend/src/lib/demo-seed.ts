@@ -571,6 +571,17 @@ export function ensureDemoSeed(): void {
       ...DEMO_LEAVE_BALANCE_SEEDS.map((s) => ({ employeeId: DEMO_ESS_EMPLOYEE.id, ...s })),
     ]);
 
+  // Demo: one in-flight ลากิจ (personnel_leave) so the Time-Off ledger shows a
+  // non-zero "รออนุมัติ / Pending" column. IDEMPOTENT — the balances store
+  // persists to localStorage and this seed re-runs every load, so only reserve
+  // when the bucket has no pending yet (else it would climb 1→2→3 on reload).
+  const lb = useLeaveBalances.getState();
+  for (const empId of [DEMO_ESS_EMPLOYEE.id, DEMO_LEAVE_EMPLOYEE.id]) {
+    if ((lb.balances[`${empId}:personnel_leave`]?.reserved ?? 0) === 0) {
+      lb.reserve(empId, 'personnel_leave', 1);
+    }
+  }
+
   // Add the demo pending ESS leave rows (reserves quota, carries a queueSnapshot
   // so they surface in /quick-approve). Only seed when no ESS leave row exists.
   const leaveStore = useLeaveApprovals.getState();
