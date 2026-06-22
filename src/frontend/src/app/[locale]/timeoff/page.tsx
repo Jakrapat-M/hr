@@ -21,6 +21,7 @@ import { DOCUMENT_UPLOAD_HELPER_TH, DOCUMENT_UPLOAD_HELPER_EN } from '@/lib/docu
 import {
   HUMI_LEAVE_COVERAGE,
   HUMI_TH_HOLIDAYS,
+  HUMI_MY_PROFILE,
   type LeaveKind,
 } from '@/lib/humi-mock-data';
 import { useTimeoffStore, type TimeoffHistoryItem } from '@/stores/humi-timeoff-slice';
@@ -34,6 +35,8 @@ import {
   LEAVE_CODE_TO_BALANCE_KIND,
 } from '@/lib/time/leave-types';
 import { requiredDocsFor } from '@/lib/time/doc-rules';
+import { validateLeaveRequest } from '@/lib/time/leave-validation';
+import { deriveEmployeeEligibility } from '@/lib/time/employee-eligibility';
 import { levelsForLeaveType, appliedChainFor } from '@/lib/time/approval-rules';
 import { isBookableLeaveDate, LEAVE_BOOKING_HORIZON_DAYS } from '@/lib/time/period';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
@@ -579,6 +582,10 @@ function RequestTab({
   const balanceKind = def?.quotaTracked ? LEAVE_CODE_TO_BALANCE_KIND[code] : undefined;
   const remaining = useRemainingFor(employeeId, balanceKind ?? '__none__');
   const overQuota = !!balanceKind && totalDays > 0 && remaining < totalDays;
+  // STA-131 — DISPLAY-ONLY clamp so the "Remaining after" chip never shows a
+  // negative number. The blocking gate (overQuota) keeps using RAW values; this
+  // floor is strictly cosmetic and must NOT feed any predicate.
+  const remainingAfter = Math.max(0, remaining - totalDays);
 
   // Doc rule: the named documents this request must attach.
   const requiredDocs = useMemo(
@@ -621,6 +628,45 @@ function RequestTab({
     // inclusive interval overlap
     return ownIntervals.some((iv) => iv.start <= end && iv.end >= start);
   }, [ownIntervals, fromISO, toISO]);
+
+  // STA-131 — new restriction predicates (day-off, min/max, service, gender,
+  // marital, one-time). Eligibility from the clean HUMI_MY_PROFILE enums; YoS via
+  // calcYearOfService. One-time looks at the employee's own non-rejected history
+  // for a prior request of the SAME leave code. Each predicate no-ops when the
+  // type carries no matching restriction, so the other types are unaffected.
+  const eligibility = useMemo(
+    () =>
+      deriveEmployeeEligibility({
+        gender: HUMI_MY_PROFILE.gender,
+        maritalStatus: HUMI_MY_PROFILE.maritalStatus,
+        hireDate: HUMI_MY_PROFILE.hireDate,
+      }),
+    [],
+  );
+  const hasPriorSameCodeRequest = useMemo(
+    () =>
+      existingRequests.some(
+        (r) =>
+          r.employeeId === employeeId &&
+          r.status !== 'rejected' &&
+          // Match on the canonical 23-registry code only. `leaveType` is a coarse
+          // enum label (sick/other), a different namespace — never use it as a
+          // fallback here or the one-time check silently mis-fires/no-ops.
+          r.leaveCode === code,
+      ),
+    [existingRequests, employeeId, code],
+  );
+  const extraReasons = useMemo(
+    () =>
+      validateLeaveRequest({
+        type: def,
+        totalDays,
+        hasRange: !!fromISO,
+        eligibility,
+        hasPriorSameCodeRequest,
+      }).reasons,
+    [def, totalDays, fromISO, eligibility, hasPriorSameCodeRequest],
+  );
 
   // Overlap (calendar): the exact ISO days covered by existing requests, so the
   // calendar can mark them. Expanded across each interval (inclusive).
@@ -762,7 +808,12 @@ function RequestTab({
   }
 
   const blocking =
-    !hasEntitlement || overQuota || overlaps || outsideBookable || missingDocs.length > 0;
+    !hasEntitlement ||
+    overQuota ||
+    overlaps ||
+    outsideBookable ||
+    missingDocs.length > 0 ||
+    extraReasons.length > 0;
 
   // Live block reasons — derived from the SAME predicates that compute `blocking`,
   // so every state where Submit is disabled visibly says WHY + what to do. These
@@ -781,8 +832,8 @@ function RequestTab({
     liveBlocks.push({
       key: 'quota',
       msg: isTh
-        ? `เกินสิทธิ — คงเหลือ ${remaining} วัน แต่ขอลา ${totalDays} วัน ลองลดจำนวนวันหรือเลือกวันอื่น`
-        : `Over quota — ${remaining} day(s) left but requesting ${totalDays}. Reduce the days or pick another range`,
+        ? `ยอดวันลาไม่เพียงพอ — คงเหลือ ${remaining} วัน แต่ขอลา ${totalDays} วัน ลองลดจำนวนวันหรือเลือกวันอื่น`
+        : `Insufficient Leave Balance — ${remaining} day(s) left but requesting ${totalDays}. Reduce the days or pick another range`,
     });
   if (overlaps)
     liveBlocks.push({
@@ -805,6 +856,18 @@ function RequestTab({
         ? `ต้องแนบเอกสาร: ${missingDocs.join(', ')} — กดปุ่ม “แนบ” ในรายการเอกสารด้านบน`
         : `Attach required document(s): ${missingDocs.join(', ')} — use the "Attach" buttons above`,
     });
+  // STA-131 — new restriction reasons (day-off, min/max, service, gender,
+  // marital, one-time). The seeded gender restriction (Maternity = Female) is
+  // a SAMPLE pending BA, so its block carries an explicit "sample rule" label so
+  // HR does not read it as confirmed policy.
+  for (const r of extraReasons) {
+    const isSeededGenderSample = r.key === 'gender' && !!def?.genderRestriction;
+    const sampleLabel = isTh ? ' · ตัวอย่าง (รอยืนยันจาก BA)' : ' · sample rule (pending BA confirmation)';
+    liveBlocks.push({
+      key: r.key,
+      msg: (isTh ? r.msgTh : r.msgEn) + (isSeededGenderSample ? sampleLabel : ''),
+    });
+  }
 
   return (
     <div className="pt-6">
@@ -999,7 +1062,7 @@ function RequestTab({
                     {isTh ? 'คงเหลือหลังลา' : 'Remaining after'}
                   </p>
                   <p className="text-body font-semibold text-ink tabular-nums">
-                    {remaining - totalDays} {isTh ? 'วัน' : 'd'}
+                    {remainingAfter} {isTh ? 'วัน' : 'd'}
                   </p>
                 </div>
               </>

@@ -15,13 +15,27 @@ export type LeaveTypeDef = {
   docRequired: boolean;
   dayCountMode: 'CalendarDay' | 'WorkingDay';
   storeOnly?: boolean;
+  // ── STA-131 optional eligibility/duration restrictions (BA-gated) ──
+  // All OPTIONAL: a type that omits a field carries NO restriction of that
+  // kind, so the other types are unaffected. The validateLeaveRequest
+  // predicates no-op when a field is absent. Concrete restriction VALUES are
+  // BA policy and stay UNSEEDED — only maternity_leave is seeded with
+  // genderRestriction: 'F' as a single labelled sample (pending BA).
+  minDays?: number;
+  maxDays?: number;
+  minYearsOfService?: number;
+  genderRestriction?: 'M' | 'F';
+  maritalRestriction?: 'single' | 'married';
+  oneTimePerEmployment?: boolean;
 };
 
 export const LEAVE_TYPES: LeaveTypeDef[] = [
   { code: 'sick_leave', nameEn: 'Sick Leave', nameTh: 'ลาป่วย', paid: true, quotaTracked: true, minUnit: '1-day', docRequired: true, dayCountMode: 'WorkingDay' },
   { code: 'annual_leave', nameEn: 'Annual Leave', nameTh: 'ลาพักผ่อนประจำปี', paid: true, quotaTracked: true, minUnit: 'half-day', docRequired: false, dayCountMode: 'WorkingDay' },
   { code: 'personnel_leave', nameEn: 'Personnel Leave', nameTh: 'ลากิจ', paid: true, quotaTracked: true, minUnit: 'half-day', docRequired: false, dayCountMode: 'WorkingDay' },
-  { code: 'maternity_leave', nameEn: 'Maternity Leave', nameTh: 'ลาคลอดบุตร', paid: true, quotaTracked: true, minUnit: '1-day', docRequired: true, dayCountMode: 'CalendarDay' },
+  // genderRestriction: 'F' is the single seeded SAMPLE (pending BA confirmation);
+  // its live block is UI-labelled "sample rule". No other restriction value is seeded.
+  { code: 'maternity_leave', nameEn: 'Maternity Leave', nameTh: 'ลาคลอดบุตร', paid: true, quotaTracked: true, minUnit: '1-day', docRequired: true, dayCountMode: 'CalendarDay', genderRestriction: 'F' },
   { code: 'sterilization_leave', nameEn: 'Sterilization Leave', nameTh: 'ลาเพื่อทำหมัน', paid: true, quotaTracked: false, minUnit: '1-day', docRequired: true, dayCountMode: 'WorkingDay' },
   { code: 'priesthood_leave', nameEn: 'Priesthood Leave', nameTh: 'ลาอุปสมบท', paid: true, quotaTracked: false, minUnit: '1-day', docRequired: true, dayCountMode: 'CalendarDay' },
   { code: 'investigation', nameEn: 'Investigation', nameTh: 'พักงานเพื่อการสอบสวน', paid: false, quotaTracked: false, minUnit: '1-day', docRequired: false, dayCountMode: 'CalendarDay' },
