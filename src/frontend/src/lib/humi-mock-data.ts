@@ -1079,6 +1079,10 @@ export const HUMI_MY_PROFILE = {
   // Job tab (~7 ปี). The re-hire/job-row 2566 date is forbidden as a source.
   hireDate: '2019-03-01',
   lifecycleEvents: HUMI_LIFECYCLE_EVENTS,
+  // STA-131 — clean enum facts for leave eligibility (the `personal[...]` tuples
+  // above are display-only/positional; these are the machine-readable source).
+  gender: 'M' as const,
+  maritalStatus: 'married' as const,
 
   // ── Personal Information (14 fields — SF EC Core "Personal Information" portlet)
   personal: [
