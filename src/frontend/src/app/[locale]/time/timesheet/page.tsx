@@ -482,7 +482,7 @@ export default function TimesheetPage() {
             })}
           </div>
 
-          {/* Balance detail ledger (Initial · Credits · Debits · Ending) */}
+          {/* Balance detail ledger (Total quota · Pending · Debits · Ending) */}
           <Card>
             <CardTitle className="text-base">{isTh ? 'รายละเอียดยอดวันลา' : 'Balance detail'}</CardTitle>
             <div className="mt-3 overflow-x-auto">
@@ -490,8 +490,8 @@ export default function TimesheetPage() {
               <thead>
                 <tr className="border-b border-hairline text-left text-ink-muted">
                   <th className="py-3 px-3 font-semibold">{isTh ? 'ประเภทการลา' : 'Leave type'}</th>
-                  <th className="py-3 px-3 font-semibold text-right">{isTh ? 'ยอดยกมา' : 'Initial'}</th>
-                  <th className="py-3 px-3 font-semibold text-right">{isTh ? 'เพิ่ม' : 'Credits'}</th>
+                  <th className="py-3 px-3 font-semibold text-right">{isTh ? 'โควต้ารวม' : 'Total quota'}</th>
+                  <th className="py-3 px-3 font-semibold text-right">{isTh ? 'รออนุมัติ' : 'Pending'}</th>
                   <th className="py-3 px-3 font-semibold text-right">{isTh ? 'ใช้ไป' : 'Debits'}</th>
                   <th className="py-3 px-3 font-semibold text-right">{isTh ? 'คงเหลือ' : 'Ending'}</th>
                 </tr>
@@ -501,7 +501,7 @@ export default function TimesheetPage() {
                   <tr key={r.kind} className="border-b border-hairline last:border-0">
                     <td className="py-2 px-3 text-ink">{isTh ? r.nameTh : r.nameEn}</td>
                     <td className="py-2 px-3 text-right tabular-nums text-ink-muted">{r.initial}</td>
-                    <td className="py-2 px-3 text-right tabular-nums text-ink-muted">{r.credits}</td>
+                    <td className="py-2 px-3 text-right tabular-nums text-ink-muted">{r.pending}</td>
                     <td className="py-2 px-3 text-right tabular-nums text-ink-muted">{r.debits}</td>
                     <td className="py-2 px-3 text-right tabular-nums font-semibold text-ink">{endingBalance(r)}</td>
                   </tr>
@@ -509,7 +509,7 @@ export default function TimesheetPage() {
               </tbody>
             </table>
           </div>
-            <p className="mt-2 text-small text-ink-muted">{isTh ? 'หน่วย: วัน · คงเหลือ = ยอดยกมา + เพิ่ม − ใช้ไป' : 'In days · Ending = Initial + Credits − Debits'}</p>
+            <p className="mt-2 text-small text-ink-muted">{isTh ? 'หน่วย: วัน · คงเหลือ = โควต้ารวม − (รออนุมัติ + ใช้ไป)' : 'In days · Ending = Total quota − (Pending + Debits)'}</p>
           </Card>
         </div>
       )}

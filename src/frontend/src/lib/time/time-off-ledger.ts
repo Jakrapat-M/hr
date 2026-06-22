@@ -1,8 +1,9 @@
 // Time Off balance ledger (wiki §6 WFS "Time Off" tab): per leave bucket, in days,
-// Initial Balance · Credits · Debits · Ending Balance. Ending = Initial + Credits −
-// Debits. PURE: the page feeds live per-bucket numbers from the leave-balances
-// store (via useTimeOffLedger); this module only shapes them into labelled rows
-// over the 7 quota-tracked leave codes.
+// Total quota · Pending · Debits · Ending Balance. Ending = Total quota −
+// (Pending + Debits). PURE: the page feeds live per-bucket numbers from the
+// leave-balances store (via useTimeOffLedger) — `pending` surfaces the store's
+// in-flight `reserved` days; this module only shapes them into labelled rows over
+// the 7 quota-tracked leave codes.
 
 import { quotaTrackedTypes } from './leave-types';
 
@@ -11,12 +12,12 @@ export type LeaveLedgerRow = {
   nameTh: string;
   nameEn: string;
   initial: number;
-  credits: number;
+  pending: number;
   debits: number;
 };
 
-/** Per-bucket settled numbers for a leave code (from the leave-balances store). */
-export type LedgerBucketInput = { initial: number; credits: number; debits: number };
+/** Per-bucket numbers for a leave code (from the leave-balances store). */
+export type LedgerBucketInput = { initial: number; pending: number; debits: number };
 
 /**
  * Build the Time-Off ledger rows over the 7 quota-tracked leave codes, in the
@@ -28,24 +29,24 @@ export function buildTimeOffLedger(
   buckets: Record<string, LedgerBucketInput>,
 ): LeaveLedgerRow[] {
   return quotaTrackedTypes().map((t) => {
-    const b = buckets[t.code] ?? { initial: 0, credits: 0, debits: 0 };
+    const b = buckets[t.code] ?? { initial: 0, pending: 0, debits: 0 };
     return {
       kind: t.code,
       nameTh: t.nameTh,
       nameEn: t.nameEn,
       initial: b.initial,
-      credits: b.credits,
+      pending: b.pending,
       debits: b.debits,
     };
   });
 }
 
 export function endingBalance(r: LeaveLedgerRow): number {
-  return r.initial + r.credits - r.debits;
+  return r.initial - (r.pending + r.debits);
 }
 
 export type LeaveBalanceCard = {
-  /** Total available this period (initial + credits). */
+  /** Total quota (initial). */
   entitled: number;
   /** Days taken (debits). */
   used: number;
@@ -57,7 +58,7 @@ export type LeaveBalanceCard = {
 
 /** At-a-glance metrics for a leave-balance progress card. Pure → unit-testable. */
 export function leaveBalanceCard(r: LeaveLedgerRow): LeaveBalanceCard {
-  const entitled = r.initial + r.credits;
+  const entitled = r.initial;
   const used = r.debits;
   const remaining = endingBalance(r);
   const percentUsed = entitled > 0 ? Math.round((used / entitled) * 100) : 0;
