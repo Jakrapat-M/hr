@@ -412,7 +412,7 @@ export function EntitlementRulesManager() {
                 {deleteTarget.pg_from != null ? ` PG ${deleteTarget.pg_from}–${deleteTarget.pg_to}` : ''}
               </span>{' '}(฿{(deleteTarget.entitlement_amount ?? 0).toLocaleString('th-TH')}){isTh ? ' ใช่หรือไม่?' : '?'}
             </p>
-            <p className="text-small text-ink-muted">{isTh ? 'การลบจะตั้งค่า effective_to เป็นวันนี้ (soft-delete)' : 'This sets effective_to to today (soft-delete).'}</p>
+            <p className="text-small text-ink-muted">{isTh ? 'ลบกฎสิทธินี้ออกจากรายการ' : 'This removes the rule from your entitlement list.'}</p>
             <div className="flex justify-end gap-3">
               <Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>{t('cancel')}</Button>
               <Button variant="danger" onClick={handleDelete} loading={deleting}>{t('delete')}</Button>

@@ -48,6 +48,10 @@ export interface Tab1IdentityFieldsProps {
   onChange: <K extends keyof Tab1IdentityValues>(field: K, value: Tab1IdentityValues[K]) => void;
   mode: 'create' | 'edit';
   isTh: boolean;
+  /** STA-139: show the "Schema version" radio. Defaults true so the component
+   *  contract is unchanged; the legacy plan Create/Edit modals pass false
+   *  (the value still persists as 'v2', only the input control is hidden). */
+  showSchemaVersion?: boolean;
 }
 
 const CATEGORY_LABELS_TH: Record<PlanCategory, string> = {
@@ -112,6 +116,7 @@ export function Tab1IdentityFields({
   onChange,
   mode,
   isTh,
+  showSchemaVersion = true,
 }: Tab1IdentityFieldsProps) {
   // STA-70: recordType is derived from the Benefit type/group — the manual
   // "Plan name prefix" radio was removed. No useEffect; pure derivation.
@@ -272,29 +277,32 @@ export function Tab1IdentityFields({
         )}
       </FormField>
 
-      {/* 7. schemaVersion radio */}
-      <div className="flex flex-col gap-1.5">
-        <span className="text-small font-medium text-ink">
-          {isTh ? 'เวอร์ชันโครงสร้าง' : 'Schema version'}
-        </span>
-        <div className="flex flex-wrap gap-4" role="radiogroup" aria-label={isTh ? 'เวอร์ชันโครงสร้าง' : 'Schema version'}>
-          {(['v1', 'v2'] as const).map((sv) => (
-            <label key={sv} className="flex items-center gap-2 cursor-pointer text-small text-ink">
-              <input
-                type="radio"
-                name="tab1-schemaVersion"
-                value={sv}
-                checked={values.schemaVersion === sv}
-                onChange={() => onChange('schemaVersion', sv)}
-                className="accent-accent"
-              />
-              {sv === 'v1'
-                ? (isTh ? 'v1 (legacy)' : 'v1 (legacy)')
-                : (isTh ? 'v2 (hybrid)' : 'v2 (hybrid)')}
-            </label>
-          ))}
+      {/* 7. schemaVersion radio — STA-139: hidden on the legacy plan modals
+          (gated false); the value still persists as 'v2'. */}
+      {showSchemaVersion && (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-small font-medium text-ink">
+            {isTh ? 'เวอร์ชันโครงสร้าง' : 'Schema version'}
+          </span>
+          <div className="flex flex-wrap gap-4" role="radiogroup" aria-label={isTh ? 'เวอร์ชันโครงสร้าง' : 'Schema version'}>
+            {(['v1', 'v2'] as const).map((sv) => (
+              <label key={sv} className="flex items-center gap-2 cursor-pointer text-small text-ink">
+                <input
+                  type="radio"
+                  name="tab1-schemaVersion"
+                  value={sv}
+                  checked={values.schemaVersion === sv}
+                  onChange={() => onChange('schemaVersion', sv)}
+                  className="accent-accent"
+                />
+                {sv === 'v1'
+                  ? (isTh ? 'v1 (legacy)' : 'v1 (legacy)')
+                  : (isTh ? 'v2 (hybrid)' : 'v2 (hybrid)')}
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 8. Template picker */}
       <FormField

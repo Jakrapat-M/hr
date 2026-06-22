@@ -195,6 +195,7 @@ function PlanFormModal({
       onChange={handleTab1Change}
       mode="edit"
       isTh={isTh}
+      showSchemaVersion={false}
     />
   );
 
@@ -374,6 +375,7 @@ function CreatePlanModal({
       onChange={handleTab1Change}
       mode="create"
       isTh={isTh}
+      showSchemaVersion={false}
     />
   );
 
