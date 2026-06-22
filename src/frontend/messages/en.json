@@ -5189,7 +5189,7 @@
     "insertPlan": "Insert plan: {id}",
     "correctionPlan": "Make correction: {id}",
     "deleteConfirmTitle": "Confirm delete plan",
-    "deleteConfirmBody": "This will deactivate the plan."
+    "deleteConfirmBody": "This removes the plan from your benefit list."
   },
   "admin_benefits_rules": {
     "eyebrow": "Benefits · Rules",

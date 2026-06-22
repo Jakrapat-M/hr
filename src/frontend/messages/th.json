@@ -5094,7 +5094,7 @@
     "insertPlan": "แทรกแผน: {id}",
     "correctionPlan": "แก้ไขข้อมูลย้อนหลัง: {id}",
     "deleteConfirmTitle": "ยืนยันการลบแผน",
-    "deleteConfirmBody": "การลบจะปิดใช้งานแผนนี้"
+    "deleteConfirmBody": "ลบแผนนี้ออกจากรายการสวัสดิการ"
   },
   "benefitHub": {
     "reimbursement": {
