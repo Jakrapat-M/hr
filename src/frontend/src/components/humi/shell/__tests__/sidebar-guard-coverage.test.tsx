@@ -210,6 +210,7 @@ describe('P3-9 — gating coverage matrix: menu show ⊆ route guard for every l
         'approvals', // → /quick-approve
         'audit', // → /admin/system (under the /admin guard)
         'benefits-admin', // → /admin/benefits
+        'bulk-import', // → /admin/import (under the /admin guard)
         'catalog', // → /admin/foundation (tighter inner gate wins)
         'changes', // → /admin/change-requests
         'docreview', // → /hrbp/doc-review

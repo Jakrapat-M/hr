@@ -80,6 +80,8 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/en/admin/hire', title: 'Hire Employee' },
   { prefix: '/th/admin/employees/import', title: 'นำเข้าพนักงาน' },
   { prefix: '/en/admin/employees/import', title: 'Import Employees' },
+  { prefix: '/th/admin/import', title: 'นำเข้าแบบกลุ่ม' },
+  { prefix: '/en/admin/import', title: 'Bulk Import' },
   { prefix: '/th/admin/employees', title: 'ทะเบียนพนักงาน' },
   { prefix: '/en/admin/employees', title: 'Employees' },
   { prefix: '/th/admin/foundation', title: 'โครงสร้างองค์กร' },

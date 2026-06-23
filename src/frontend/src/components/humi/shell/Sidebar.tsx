@@ -143,6 +143,7 @@ export const MODULES: ModuleGroup[] = [
       { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'hris'] }, // merges welfare+claims; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
       { id: 'hr-docs', label: 'HR Documents', labelTh: 'เอกสารบุคคล', href: '/admin/documents', show: ['hradmin', 'hris'] }, // merges confirm; P2 Item 3: dropped hrbp — admin/layout gates hr_admin+ → hrbp dead-ended in AccessDenied
       { id: 'changes', label: 'Change Requests', labelTh: 'คำขอเปลี่ยนแปลง', href: '/admin/change-requests', show: ['hradmin', 'hris'] }, // merges transfer+regular; P1 Item 2: dropped hrbp (change-requests approver roles exclude hrbp → barrier)
+      { id: 'bulk-import', label: 'Bulk Import', labelTh: 'นำเข้าแบบกลุ่ม', href: '/admin/import', show: ['hradmin', 'hris'] }, // STA-136: single bulk-import hub (subject picker → ModuleImportWizard); under /admin guard (hr_admin+)
       // REMOVED 2026-05-27 (user: "ลาออกไม่ควรอยู่ใน บุคคล"): /resignation is an
       // employee SELF-SERVICE submission ("ยื่นคำขอลาออก … SPD รับทราบและดำเนินการต่อ"),
       // not an HR-admin console — it belongs to the "ฉัน" journey (entered from the
