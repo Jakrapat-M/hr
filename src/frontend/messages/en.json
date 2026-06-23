@@ -4298,6 +4298,26 @@
     "submit": "Submit Promotion Request"
   },
   "admin": {
+    "bulkImport": {
+      "menu": "Bulk Import",
+      "eyebrow": "Admin · Bulk Import",
+      "title": "Bulk Import",
+      "subtitle": "Pick what you want to import, then upload your CSV.",
+      "step0Prompt": "Choose import type",
+      "step0Hint": "Select a subject to start the upload wizard.",
+      "changeType": "Change type",
+      "comingSoon": "Coming soon",
+      "subjects": {
+        "employeeChange": {
+          "label": "Change employee information",
+          "desc": "Bulk-update existing employees — transfer, position, department, manager or work location."
+        },
+        "benefitPlan": {
+          "label": "Add benefit plan",
+          "desc": "Bulk-add benefit plan enrolment data."
+        }
+      }
+    },
     "promotionPayChange": {
       "menu": "Promotion / Pay change",
       "pageTitle": "Promotion / Pay change information",

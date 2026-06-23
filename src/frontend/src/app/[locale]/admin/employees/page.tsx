@@ -292,7 +292,7 @@ export default function EmployeesPage() {
   }, [filtered])
 
   const handleImportClick = useCallback(() => {
-    router.push(`/${locale}/admin/employees/import`)
+    router.push(`/${locale}/admin/import?subject=employee-change`)
   }, [router, locale])
 
   const handleAddEmployee = useCallback(() => {

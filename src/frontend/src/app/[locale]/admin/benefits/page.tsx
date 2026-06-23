@@ -73,7 +73,7 @@ type NavCardDef = {
 const NAV_CARDS: NavCardDef[] = [
   { href: 'plans', icon: FileText, titleTh: 'แผนสวัสดิการ', titleEn: 'Benefit plans', descTh: 'สร้างและแก้ไขแผน (configurator)', descEn: 'Create & edit plans (configurator)' },
   { href: 'rules', icon: ShieldCheck, titleTh: 'กฎสิทธิ์', titleEn: 'Eligibility rules', descTh: 'เงื่อนไขสิทธิ์ตามแผน (สร้างหลังตั้งแผน)', descEn: 'Eligibility conditions per plan' },
-  { href: 'import', icon: Upload, titleTh: 'นำเข้าข้อมูล', titleEn: 'Import', descTh: 'นำเข้าข้อมูลสวัสดิการแบบกลุ่ม', descEn: 'Bulk benefit data import' },
+  { href: 'import', icon: Upload, titleTh: 'เคลม/ปรับสิทธิ (รายการเดิม)', titleEn: 'Claims & adjustments (existing)', descTh: 'นำเข้าเคลมและปรับสิทธิสวัสดิการแบบกลุ่ม', descEn: 'Bulk-import benefit claims & entitlement adjustments' },
   { href: 'reports', icon: PieChart, titleTh: 'รายงาน / ส่งออก', titleEn: 'Reports & export', descTh: 'รายงานและไฟล์ส่งออก', descEn: 'Reports and export files' },
   { href: 'payment', icon: CreditCard, titleTh: 'การจ่ายสวัสดิการ', titleEn: 'Payment', descTh: 'สถานะรอบจ่าย (อ่านอย่างเดียว)', descEn: 'Payment period status (read-only)' },
   { href: 'records', icon: ClipboardList, titleTh: 'บันทึกการเคลม', titleEn: 'Claim records', descTh: 'ประวัติและรายการเคลม', descEn: 'Claim history & records' },
