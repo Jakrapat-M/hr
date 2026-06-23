@@ -44,12 +44,15 @@ test.describe('STA-140 — individual benefit plan revisions', () => {
     await expect(page.locator('#emp-budget-reallocation').getByRole('button', { name: /Adjust entitle amount/i })).toHaveCount(0)
   })
 
-  test('Change 3: Insert popup on the employee page renders an attachment (showAttachment gate)', async ({ page }) => {
+  // STA-141 moved the attachment off the Insert date-gate popup (now date-only)
+  // onto the Insert detail page — see e2e/sta-141-current-benefit.spec.ts. The
+  // popup must therefore have NO attachment.
+  test('Insert date-gate popup is date-only (attachment moved to the detail page)', async ({ page }) => {
     await seed(page)
     await page.goto(EMP)
     const cb = await expand(page, '#emp-current-benefits')
     await cb.locator('tbody tr').first().getByRole('button', { name: /Insert/i }).click()
-    await expect(page.locator('input[type="file"]')).toHaveCount(1)
+    await expect(page.locator('input[type="file"]')).toHaveCount(0)
   })
 
   test('Change 2: detail edit mode (via Insert → Proceed) shows an editable end-date input', async ({ page }) => {

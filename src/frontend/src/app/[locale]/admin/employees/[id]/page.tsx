@@ -678,6 +678,7 @@ function BenefitDetailBody({
   effectiveEndDateOverride,
   endDateValue,
   onEffectiveEndChange,
+  onAttachmentChange,
 }: {
   benefit: CurrentBenefit
   isTh: boolean
@@ -693,6 +694,9 @@ function BenefitDetailBody({
   // value survives status flips (the auto-default re-applies on Active↔Inactive).
   endDateValue?: string
   onEffectiveEndChange?: (value: string) => void
+  // STA-141 (Change 2) — fires with the uploaded filename (or null on remove).
+  // Mockup: parent tracks filename only, no real upload.
+  onAttachmentChange?: (filename: string | null) => void
 }) {
   const dash = (v: string | number | null | undefined): string => {
     if (v === null || v === undefined || v === '') return '-'
@@ -757,6 +761,17 @@ function BenefitDetailBody({
           )}
           <Field label={isTh ? 'ยอดที่เบิกแล้ว' : 'Reimbursed amount'} value={money(benefit.reimbursedAmount)} />
         </Grid>
+        {/* STA-141 (Change 2) — attachment moved here from the Insert date popup.
+            Edit/Insert flow only (same gate as the Status dropdown above). */}
+        {mode === 'edit' && (
+          <FileUploadField
+            label={isTh ? 'เอกสารแนบ' : 'Attachment'}
+            required={false}
+            maxSizeMB={10}
+            onUpload={(_id, file) => onAttachmentChange?.(file?.filename ?? null)}
+            onRemove={() => onAttachmentChange?.(null)}
+          />
+        )}
       </section>
 
       {/* ── Benefit Plan ── */}
@@ -856,6 +871,8 @@ export default function EmployeeDetailPage() {
   // Current base derives from the plan registry (single source of truth); the
   // store owns only the next-year base + the reallocation deltas.
   const tReallocate = useTranslations('admin.reallocateBudget')
+  // STA-141 — reuse STA-139's shipped delete-confirm copy (single source of truth).
+  const tPlans = useTranslations('admin_benefits_plans')
   const reallocations = useBudgetReallocationStore(
     useShallow(selectReallocationsForEmployee(empId)),
   )
@@ -939,12 +956,19 @@ export default function EmployeeDetailPage() {
   // STA-132 (1.3) — Insert flow: row → effective-date popup → editable detail.
   const [insertTarget, setInsertTarget] = useState<CurrentBenefit | null>(null)
   const [insertSeedDate, setInsertSeedDate] = useState<string | null>(null)
+  // STA-141 (Change 1) — in-session shadow of CURRENT_BENEFITS so deleting a row
+  // actually removes it from the rendered list (mockup; no backend).
+  const [benefitRows, setBenefitRows] = useState<ReadonlyArray<CurrentBenefit>>(CURRENT_BENEFITS)
+  // STA-141 (Change 1) — which row's delete-confirm modal is open (null = closed).
+  const [deleteTarget, setDeleteTarget] = useState<CurrentBenefit | null>(null)
   // STA-132 (1.3c/d) — editable Status on the post-Proceed detail modal.
   const [detailMode, setDetailMode] = useState<'view' | 'edit'>('view')
   const [detailStatus, setDetailStatus] = useState<'Active' | 'Inactive'>('Active')
   // Editable effective-end-date draft (in-session). Seeded from the auto-default
   // and re-applied whenever status flips (Inactive → today−1; Active → seed).
   const [endDateDraft, setEndDateDraft] = useState<string>('')
+  // STA-141 (Change 2) — in-session attachment filename for the Insert detail.
+  const [insertAttachment, setInsertAttachment] = useState<string | null>(null)
   useEffect(() => {
     if (detailMode !== 'edit' || !benefitDetail) return
     setEndDateDraft(
@@ -982,6 +1006,58 @@ export default function EmployeeDetailPage() {
         ],
       })
     }
+  }
+  // STA-141 (Change 1) — remove the row from the in-session shadow + close the
+  // confirm modal. Mockup: no backend call; the list re-renders without the row.
+  const handleDelete = (b: CurrentBenefit) => {
+    setBenefitRows((prev) => prev.filter((r) => r.benefitPlanId !== b.benefitPlanId))
+    setDeleteTarget(null)
+  }
+  // STA-141 (Change 3) — shared close for the Insert detail modal (X + Cancel).
+  const closeDetail = () => {
+    setBenefitDetail(null)
+    setDetailMode('view')
+    setInsertSeedDate(null)
+    setInsertAttachment(null)
+  }
+  // STA-141 (Change 3) — Save the inserted version: append a change-log entry via
+  // the same history store the file already uses, then close. Mockup: in-session
+  // history only, no backend persistence.
+  const handleInsertSave = () => {
+    if (benefitDetail) {
+      const changes = [
+        {
+          field: isTh ? 'สวัสดิการ' : 'Benefit',
+          from: '-',
+          to: `${benefitDetail.benefitName} (${benefitDetail.benefitPlanId})`,
+        },
+        {
+          field: isTh ? 'สถานะ' : 'Status',
+          from: '-',
+          to: detailStatus === 'Inactive'
+            ? (isTh ? 'ไม่ใช้งาน' : 'inactive')
+            : (isTh ? 'ใช้งาน' : 'active'),
+        },
+        {
+          field: isTh ? 'วันสิ้นสุด' : 'Effective end date',
+          from: '-',
+          to: endDateDraft || (benefitDetail.effectiveEndDate ?? '-'),
+        },
+        ...(insertAttachment
+          ? [{ field: isTh ? 'เอกสารแนบ' : 'Attachment', from: '-', to: insertAttachment }]
+          : []),
+      ]
+      addBenefitHistory({
+        targetType: 'plan',
+        targetId: benefitDetail.benefitPlanId,
+        targetName: benefitDetail.benefitName,
+        action: 'insert',
+        actorName: nameTh,
+        effectiveDate: insertSeedDate ?? benefitDetail.effectiveStartDate ?? '',
+        changes,
+      })
+    }
+    closeDetail()
   }
   // STA-104: "Benefit enrollment" section + per-row enroll modal (default-collapsed).
   const [enrollTarget, setEnrollTarget] = useState<EnrollableBenefit | null>(null)
@@ -1687,7 +1763,7 @@ export default function EmployeeDetailPage() {
           </div>
         }
       >
-        {CURRENT_BENEFITS.length === 0 ? (
+        {benefitRows.length === 0 ? (
           <EmptyState
             icon={Gift}
             titleTh="ยังไม่มีสวัสดิการ"
@@ -1713,10 +1789,12 @@ export default function EmployeeDetailPage() {
                   <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'เริ่มเบิก' : 'Start a claim'}</th>
                   {/* STA-132 — Insert row-action */}
                   <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}><span className="sr-only">{isTh ? 'แทรกการเปลี่ยนแปลง' : 'Insert'}</span></th>
+                  {/* STA-141 — Delete row-action */}
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}><span className="sr-only">{isTh ? 'ลบ' : 'Delete'}</span></th>
                 </tr>
               </thead>
               <tbody>
-                {CURRENT_BENEFITS.map((b) => (
+                {benefitRows.map((b) => (
                   <tr key={b.benefitPlanId} style={{ borderTop: '1px solid var(--color-hairline)' }}>
                     <td className="text-ink font-medium" style={{ padding: '8px 12px' }}>{b.benefitName}</td>
                     <td className="text-ink-muted font-mono" style={{ padding: '8px 12px' }}>{b.benefitPlanId}</td>
@@ -1775,6 +1853,19 @@ export default function EmployeeDetailPage() {
                       >
                         <Layers size={16} aria-hidden />
                         <span style={{ marginLeft: 4 }}>{isTh ? 'แทรก' : 'Insert'}</span>
+                      </Button>
+                    </td>
+                    {/* STA-141 (Change 1) — Delete row-action → confirm modal */}
+                    <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={isTh ? 'ลบ' : 'Delete'}
+                        title={isTh ? 'ลบ' : 'Delete'}
+                        onClick={() => setDeleteTarget(b)}
+                      >
+                        <Trash2 size={16} aria-hidden />
+                        <span className="sr-only">{isTh ? 'ลบ' : 'Delete'}</span>
                       </Button>
                     </td>
                   </tr>
@@ -2035,33 +2126,43 @@ export default function EmployeeDetailPage() {
           dropdown (1.3c) + a right-rail change log (Part 4). No backend. */}
       <Modal
         open={benefitDetail !== null}
-        onClose={() => { setBenefitDetail(null); setDetailMode('view'); setInsertSeedDate(null) }}
+        onClose={closeDetail}
         title={benefitDetail ? `${benefitDetail.benefitName} · ${benefitDetail.benefitPlanId}` : ''}
         widthClass="max-w-5xl"
       >
         {benefitDetail && (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-            <BenefitDetailBody
-              benefit={detailMode === 'edit' && insertSeedDate
-                ? { ...benefitDetail, effectiveStartDate: insertSeedDate }
-                : benefitDetail}
-              isTh={isTh}
-              mode={detailMode}
-              status={detailStatus}
-              onStatusChange={(next) => handleDetailStatusChange(benefitDetail, next)}
-              effectiveEndDateOverride={detailMode === 'edit' && detailStatus === 'Inactive'
-                ? inactiveEndDate(new Date())
-                : null}
-              endDateValue={endDateDraft}
-              onEffectiveEndChange={setEndDateDraft}
-            />
-            {/* Part 4 — right-rail change log (reuses STA-102/107 history panel) */}
-            <BenefitHistorySidebar
-              targetType="plan"
-              targetId={benefitDetail.benefitPlanId}
-              isTh={isTh}
-            />
-          </div>
+          <>
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+              <BenefitDetailBody
+                benefit={detailMode === 'edit' && insertSeedDate
+                  ? { ...benefitDetail, effectiveStartDate: insertSeedDate }
+                  : benefitDetail}
+                isTh={isTh}
+                mode={detailMode}
+                status={detailStatus}
+                onStatusChange={(next) => handleDetailStatusChange(benefitDetail, next)}
+                effectiveEndDateOverride={detailMode === 'edit' && detailStatus === 'Inactive'
+                  ? inactiveEndDate(new Date())
+                  : null}
+                endDateValue={endDateDraft}
+                onEffectiveEndChange={setEndDateDraft}
+                onAttachmentChange={setInsertAttachment}
+              />
+              {/* Part 4 — right-rail change log (reuses STA-102/107 history panel) */}
+              <BenefitHistorySidebar
+                targetType="plan"
+                targetId={benefitDetail.benefitPlanId}
+                isTh={isTh}
+              />
+            </div>
+            {/* STA-141 (Change 3) — Cancel/Save footer for the Insert (edit) flow only. */}
+            {detailMode === 'edit' && (
+              <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-hairline">
+                <Button variant="secondary" onClick={closeDetail}>{isTh ? 'ยกเลิก' : 'Cancel'}</Button>
+                <Button variant="primary" onClick={handleInsertSave}>{isTh ? 'บันทึก' : 'Save'}</Button>
+              </div>
+            )}
+          </>
         )}
       </Modal>
 
@@ -2070,7 +2171,6 @@ export default function EmployeeDetailPage() {
       <InsertChangePopup
         open={insertTarget !== null}
         benefitName={insertTarget?.benefitName ?? ''}
-        showAttachment
         onCancel={() => setInsertTarget(null)}
         onProceed={(d) => {
           if (insertTarget) {
@@ -2082,6 +2182,28 @@ export default function EmployeeDetailPage() {
           setInsertTarget(null)
         }}
       />
+
+      {/* STA-141 (Change 1) — Delete-confirm modal (reuses STA-139 copy). */}
+      <Modal
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        title={tPlans('deleteConfirmTitle')}
+      >
+        {deleteTarget && (
+          <div className="space-y-4">
+            <p className="text-body text-ink">
+              {isTh ? 'ต้องการลบแผน ' : 'Delete plan '}
+              <span className="font-semibold">{deleteTarget.benefitName} ({deleteTarget.benefitPlanId})</span>
+              {isTh ? ' ใช่หรือไม่?' : '?'}
+            </p>
+            <p className="text-small text-ink-muted">{tPlans('deleteConfirmBody')}</p>
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setDeleteTarget(null)}>{tPlans('cancel')}</Button>
+              <Button variant="danger" onClick={() => handleDelete(deleteTarget)}>{tPlans('delete')}</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* STA-104: per-row "Enroll now" modal — 8-field enrollment form. Mockup only. */}
       <Modal

@@ -8,10 +8,9 @@
 // has to thread an isTh flag.
 
 import { useState } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import { Modal, Button, FormField } from '@/components/humi';
-import { FileUploadField } from '@/components/humi/FileUploadField';
 
 interface InsertChangePopupProps {
   open: boolean;
@@ -19,12 +18,6 @@ interface InsertChangePopupProps {
   benefitName: string;
   /** Optional initial date (defaults to today). */
   defaultDate?: string;
-  /**
-   * Render an optional attachment uploader before the action buttons.
-   * Default false so the benefits-catalog / eligibility callers are unaffected;
-   * only the employee benefit page opts in.
-   */
-  showAttachment?: boolean;
   /** Fires with the chosen effective date (YYYY-MM-DD) when Proceed is clicked. */
   onProceed: (effectiveDate: string) => void;
   onCancel: () => void;
@@ -36,12 +29,10 @@ export function InsertChangePopup({
   open,
   benefitName,
   defaultDate,
-  showAttachment = false,
   onProceed,
   onCancel,
 }: InsertChangePopupProps) {
   const t = useTranslations('admin_benefits_entitlement_rules');
-  const isTh = useLocale() === 'th';
   const [date, setDate] = useState<string>(defaultDate ?? today());
 
   return (
@@ -63,13 +54,6 @@ export function InsertChangePopup({
             />
           )}
         </FormField>
-
-        {showAttachment && (
-          <FileUploadField
-            label={isTh ? 'เอกสารแนบ' : 'Attachment'}
-            required={false}
-          />
-        )}
 
         <div className="flex justify-end gap-2 pt-2 border-t border-hairline">
           <Button variant="ghost" onClick={onCancel}>{t('cancel')}</Button>
