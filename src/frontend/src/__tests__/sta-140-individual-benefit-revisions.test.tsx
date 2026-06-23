@@ -90,25 +90,12 @@ describe('STA-140 Change 2 — Effective end date editable in edit mode', () => 
   });
 });
 
-// ── Change 3 — InsertChangePopup prop-gate (real render) ───────────────────────
-describe('STA-140 Change 3 — InsertChangePopup attachment is prop-gated (default false)', () => {
-  it('renders FileUploadField when showAttachment is set', () => {
-    render(
-      <InsertChangePopup
-        open
-        benefitName="Medical"
-        showAttachment
-        onProceed={() => {}}
-        onCancel={() => {}}
-      />,
-    );
-    // FileUploadField exposes a labelled file input.
-    expect(
-      document.querySelector('input[type="file"]'),
-    ).not.toBeNull();
-  });
-
-  it('does NOT render FileUploadField without the prop (catalog callers safe)', () => {
+// ── Change 3 — InsertChangePopup is date-only (STA-141 moved the attachment) ────
+// STA-141 reverted STA-140's insert-popup attachment: the `showAttachment` prop
+// is gone and the uploader now lives on BenefitDetailBody (edit mode). These
+// assertions are updated to STA-141's behaviour so the build gate stays green.
+describe('STA-141 — InsertChangePopup renders date-only (attachment relocated)', () => {
+  it('renders no file input (the popup is date-only)', () => {
     render(
       <InsertChangePopup
         open
@@ -120,8 +107,17 @@ describe('STA-140 Change 3 — InsertChangePopup attachment is prop-gated (defau
     expect(document.querySelector('input[type="file"]')).toBeNull();
   });
 
-  it('page.tsx passes showAttachment to the employee-page InsertChangePopup', () => {
-    expect(PAGE_SRC).toMatch(/<InsertChangePopup[\s\S]*?showAttachment[\s\S]*?\/>/);
+  it('Insert call-site no longer passes showAttachment', () => {
+    const idx = PAGE_SRC.indexOf('<InsertChangePopup');
+    expect(idx).toBeGreaterThan(-1);
+    const block = PAGE_SRC.slice(idx, idx + 600);
+    expect(block).not.toContain('showAttachment');
+  });
+
+  it('BenefitDetailBody renders FileUploadField gated on edit mode', () => {
+    // The attachment now lives in BenefitDetailBody, gated by mode === 'edit'.
+    expect(PAGE_SRC).toContain('onAttachmentChange');
+    expect(PAGE_SRC).toMatch(/mode === 'edit' && \(\s*<FileUploadField/);
   });
 
   it('page.tsx imports FileUploadField directly (not the barrel)', () => {
