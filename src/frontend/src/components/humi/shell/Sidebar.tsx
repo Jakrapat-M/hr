@@ -55,6 +55,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { benefitsHubRoute } from '@/lib/benefit-routes';
 import type { Role } from '@/lib/rbac';
 import { PERSONA_ROLE, type PersonaId } from '@/lib/persona-tiers';
+import { useSelectPendingApprovals } from '@/lib/approval-registry';
+import { countActionable } from '@/lib/claim-permissions';
 
 export interface SidebarProps {
   /** Called when any nav item is clicked — used by AppShell to close the
@@ -211,6 +213,17 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const userRoles = useAuthStore((s) => s.roles);
+  // STA-128: live, persona-aware badge for the Team-cluster `อนุมัติ` leaf.
+  // Source the count from the SAME selector the /quick-approve pending tab uses
+  // (countActionable over the unified queue) so the nav badge can never drift
+  // from the queue header. 0 → no badge (handled at render via the badgeValue ternary).
+  const approvalQueue = useSelectPendingApprovals();
+  // Defer the live count to AFTER mount: the queue stores are persisted
+  // (localStorage), so reading them during SSR / first client paint would risk a
+  // hydration mismatch on the badge. Pre-mount the badge is simply absent.
+  const [badgeMounted, setBadgeMounted] = useState(false);
+  useEffect(() => setBadgeMounted(true), []);
+  const liveApprovalsCount = badgeMounted ? countActionable(approvalQueue, userRoles) : 0;
   const barePath = stripLocale(pathname);
   const currentLocale = pathname.match(/^\/(th|en)/)?.[1] ?? 'th';
   const isTh = currentLocale === 'th';
@@ -481,6 +494,13 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
             const bareHref = leafBareHref(l);
             const href = `/${currentLocale}${bareHref}${leafSuffix(l)}`;
             const active = isActive(bareHref);
+            // STA-128: the `approvals` leaf badge is LIVE — the persona-aware
+            // actionable count (hidden when 0); every other leaf keeps its
+            // static MODULES badge.
+            const badgeValue =
+              l.id === 'approvals'
+                ? (liveApprovalsCount > 0 ? String(liveApprovalsCount) : null)
+                : l.badge;
             return (
               <Link
                 key={l.id}
@@ -490,9 +510,9 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
                 onClick={onNavigate}
               >
                 <span className="bp-child-label">{navLabel(l, isTh)}</span>
-                {l.badge && (
-                  <span className="bp-badge" aria-label={`${l.badge} รายการใหม่`}>
-                    {l.badge}
+                {badgeValue && (
+                  <span className="bp-badge" aria-label={`${badgeValue} รายการใหม่`}>
+                    {badgeValue}
                   </span>
                 )}
               </Link>

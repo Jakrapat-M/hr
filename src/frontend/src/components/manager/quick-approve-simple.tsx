@@ -169,9 +169,15 @@ export function QuickApproveSimple() {
     {
       id: 'employeeId',
       header: t('columns.employeeId'),
+      // STA-128: the emp code is the requester's structural identifier. Adapters
+      // populate the explicit `employeeId` field; the static seed fixtures carry
+      // the same code in `requester.id` (codebase invariant: id === employeeId for
+      // every real requester, '' only for the source-less generic placeholder).
+      // Read employeeId first, fall back to a non-empty id, else '—' — never parse
+      // the description string.
       cell: (row) => (
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>
-          {row.requester.employeeId ?? '—'}
+          {row.requester.employeeId || row.requester.id || '—'}
         </span>
       ),
       className: 'w-28',

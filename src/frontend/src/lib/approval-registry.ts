@@ -102,6 +102,7 @@ export function probationToPendingRequest(c: ProbationCase): PendingRequest {
     type: 'probation',
     requester: {
       id: c.employeeId,
+      employeeId: c.employeeId,
       name: c.fullNameTh,
       position: c.position,
       department: c.department,
@@ -134,6 +135,7 @@ export function benefitClaimToPendingRequest(c: BenefitClaimRequest): PendingReq
     type: 'claim',
     requester: {
       id: c.employeeId,
+      employeeId: c.employeeId,
       name: c.employeeName,
       position: c.benefitName,
       department: c.businessUnit,
@@ -156,7 +158,9 @@ export function benefitClaimToPendingRequest(c: BenefitClaimRequest): PendingReq
       department: c.businessUnit,
       assignment: 'Manager approval',
     },
-    details: {},
+    // STA-128: surface the claim total structurally so the queue's ยอดเบิกรวม
+    // column reads row.details.totalClaimAmount instead of parsing the description.
+    details: { totalClaimAmount: c.totalClaimAmount },
     approvalTimeline: [
       { step: 1, approver: 'หัวหน้างาน', status: 'pending' },
       { step: 2, approver: 'SPD Benefits', status: 'pending' },
@@ -183,6 +187,7 @@ export function payRateToPendingRequest(r: PayRateRequest): PendingRequest {
     type: 'pay_rate',
     requester: {
       id: r.employeeId,
+      employeeId: r.employeeId,
       name: r.employeeName,
       position: r.payComponent,
       department: r.payGroup,
@@ -211,6 +216,7 @@ export function taxPlanToPendingRequest(d: TaxPlanningDraft): PendingRequest {
     type: 'tax_planning',
     requester: {
       id: d.employeeId,
+      employeeId: d.employeeId,
       name: d.employeeName,
       position: `ปีภาษี ${d.taxYear}`,
       department: 'Payroll review',
@@ -241,6 +247,7 @@ export function timeCorrectionToPendingRequest(r: TimeCorrectionRequest): Pendin
     type: 'time_correction',
     requester: {
       id: r.employeeId,
+      employeeId: r.employeeId,
       name: r.employeeName,
       position: reasonLabel,
       department: r.department,
@@ -274,6 +281,7 @@ export function otToPendingRequest(req: OTRequest): PendingRequest {
     type: 'overtime',
     requester: {
       id: req.employeeId,
+      employeeId: req.employeeId,
       name: req.employeeName,
       position: otTypeLabelTh(req.otType),
       department: req.department,
@@ -305,6 +313,7 @@ export function terminationToPendingRequest(r: TerminationRequest): PendingReque
     type: 'change_request',
     requester: {
       id: r.employeeId,
+      employeeId: r.employeeId,
       name: r.employeeName,
       position: 'คำขอลาออก',
       department: '',

@@ -143,6 +143,8 @@ function probationToPendingRequest_ORIGINAL(c: ProbationCase): PendingRequest {
     type: 'probation',
     requester: {
       id: c.employeeId,
+      // STA-128: emp code surfaced structurally for the รหัสพนักงาน queue column.
+      employeeId: c.employeeId,
       name: c.fullNameTh,
       position: c.position,
       department: c.department,
@@ -169,6 +171,8 @@ function benefitClaimToPendingRequest_ORIGINAL(c: BenefitClaimRequest): PendingR
     type: 'claim',
     requester: {
       id: c.employeeId,
+      // STA-128: emp code surfaced structurally for the รหัสพนักงาน queue column.
+      employeeId: c.employeeId,
       name: c.employeeName,
       position: c.benefitName,
       department: c.businessUnit,
@@ -191,7 +195,8 @@ function benefitClaimToPendingRequest_ORIGINAL(c: BenefitClaimRequest): PendingR
       department: c.businessUnit,
       assignment: 'Manager approval',
     },
-    details: {},
+    // STA-128: claim total surfaced structurally for the ยอดเบิกรวม queue column.
+    details: { totalClaimAmount: c.totalClaimAmount },
     approvalTimeline: [
       { step: 1, approver: 'หัวหน้างาน', status: 'pending' },
       { step: 2, approver: 'SPD Benefits', status: 'pending' },
@@ -300,5 +305,27 @@ describe('lifted helper parity (AC-1a.4)', () => {
     expect(APPROVAL_REGISTRY.probation.toQueueItem(PROBATION_FIXTURES[0])).toEqual(
       probationToPendingRequest(PROBATION_FIXTURES[0]),
     );
+  });
+});
+
+// ── STA-128 — queue rows carry structured emp-code + claim-total fields ──────────
+// Guards the รหัสพนักงาน / ยอดเบิกรวม columns: the values come from structured row
+// fields populated at the adapter, NEVER by parsing the description string.
+describe('STA-128 — structured emp-code + claim-total population', () => {
+  it('claim row exposes requester.employeeId from the source claim', () => {
+    const row = benefitClaimToPendingRequest(BENEFIT_FIXTURE);
+    expect(row.requester.employeeId).toBe(BENEFIT_FIXTURE.employeeId);
+  });
+
+  it('claim row exposes details.totalClaimAmount structurally (not description-parsed)', () => {
+    const row = benefitClaimToPendingRequest(BENEFIT_FIXTURE);
+    expect((row.details as { totalClaimAmount?: number }).totalClaimAmount).toBe(
+      BENEFIT_FIXTURE.totalClaimAmount,
+    );
+  });
+
+  it('probation row exposes requester.employeeId from the source case', () => {
+    const row = probationToPendingRequest(PROBATION_FIXTURES[0]);
+    expect(row.requester.employeeId).toBe(PROBATION_FIXTURES[0].employeeId);
   });
 });

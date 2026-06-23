@@ -377,6 +377,7 @@ function buildDemoLeaveRow(args: {
     type: 'leave',
     requester: {
       id: DEMO_LEAVE_EMPLOYEE.id,
+      employeeId: DEMO_LEAVE_EMPLOYEE.id,
       name: DEMO_LEAVE_EMPLOYEE.name,
       position: def?.nameTh ?? args.code,
       department: 'Store',
