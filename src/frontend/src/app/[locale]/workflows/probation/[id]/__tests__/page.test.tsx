@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom/vitest';
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { ProbationDecisionInput } from '@/hooks/use-probation';
+import { useAuthStore } from '@/stores/auth-store';
 
 // ------------------------------------------------------------------
 // Navigation mocks
@@ -110,7 +111,7 @@ describe('ProbationDetailPage — STA-125 pass-probation feedback', () => {
     const dateInput = screen.getByLabelText(/วันที่บรรจุก่อนกำหนด/i);
     expect(dateInput).toBeInTheDocument();
 
-    const submitBtn = screen.getByRole('button', { name: /อนุมัติและส่งให้ HR Admin/i });
+    const submitBtn = screen.getByRole('button', { name: /อนุมัติและส่งให้ HRBP/i });
     // no date yet → disabled
     expect(submitBtn).toBeDisabled();
 
@@ -183,7 +184,7 @@ describe('ProbationDetailPage — STA-125 pass-probation feedback', () => {
 
   it('submits pass_normal by default (pass card preselected), no effective date', async () => {
     await renderLoaded();
-    const submitBtn = screen.getByRole('button', { name: /อนุมัติและส่งให้ HR Admin/i });
+    const submitBtn = screen.getByRole('button', { name: /อนุมัติและส่งให้ HRBP/i });
     expect(submitBtn).not.toBeDisabled();
     fireEvent.click(submitBtn);
 
@@ -221,7 +222,7 @@ describe('ProbationDetailPage — STA-125 pass-probation feedback', () => {
       target: { value: DATE_BEFORE_END },
     });
 
-    const submitBtn = screen.getByRole('button', { name: /อนุมัติและส่งให้ HR Admin/i });
+    const submitBtn = screen.getByRole('button', { name: /อนุมัติและส่งให้ HRBP/i });
     await waitFor(() => expect(submitBtn).not.toBeDisabled());
     fireEvent.click(submitBtn);
 
@@ -246,11 +247,69 @@ describe('ProbationDetailPage — STA-125 pass-probation feedback', () => {
     // switch back to normal pass → effective input gone, submit enabled (stale date cleared)
     fireEvent.click(passCard());
     expect(screen.queryByLabelText(/วันที่บรรจุก่อนกำหนด/i)).not.toBeInTheDocument();
-    const submitBtn = screen.getByRole('button', { name: /อนุมัติและส่งให้ HR Admin/i });
+    const submitBtn = screen.getByRole('button', { name: /อนุมัติและส่งให้ HRBP/i });
     expect(submitBtn).not.toBeDisabled();
 
     // re-select pass-before-due → the previously typed date must NOT persist
     fireEvent.click(passBeforeDueCard());
     expect(screen.getByLabelText(/วันที่บรรจุก่อนกำหนด/i)).toHaveValue('');
+  });
+});
+
+// ------------------------------------------------------------------
+// Tests — STA-23 HRBP approval chain + send-back seam + exempt shortcut
+// ------------------------------------------------------------------
+
+describe('ProbationDetailPage — STA-23 HRBP chain + send-back + exempt', () => {
+  afterEach(() => {
+    useAuthStore.setState({ roles: [] });
+  });
+
+  it('approval chain shows the HRBP step and drops the Payroll step', async () => {
+    useAuthStore.setState({ roles: [] }); // manager viewer
+    await renderLoaded('PB-001');
+    expect(screen.getByText(/HRBP ·/)).toBeInTheDocument();
+    expect(screen.queryByText(/HR Admin ·/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Payroll$/)).not.toBeInTheDocument();
+  });
+
+  it('manager submit CTA reads "Approve & send to HRBP" (TH)', async () => {
+    useAuthStore.setState({ roles: [] });
+    await renderLoaded('PB-001');
+    expect(
+      screen.getByRole('button', { name: /อนุมัติและส่งให้ HRBP/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('does NOT render the HRBP panel for a manager viewer', async () => {
+    useAuthStore.setState({ roles: ['manager'] });
+    await renderLoaded('PB-002'); // pending_hr case
+    expect(screen.queryByText(/การดำเนินการของ HRBP/)).not.toBeInTheDocument();
+  });
+
+  it('HRBP viewer on a pending_hr case sees Approve + Send back; send-back needs a reason', async () => {
+    useAuthStore.setState({ roles: ['hrbp'] });
+    await renderLoaded('PB-002');
+
+    expect(screen.getByText(/การดำเนินการของ HRBP/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /อนุมัติ \(HRBP\)/ })).toBeInTheDocument();
+
+    const sendBack = screen.getByRole('button', { name: /ส่งกลับให้หัวหน้างาน/ });
+    expect(sendBack).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText(/เหตุผลในการส่งกลับ/), {
+      target: { value: 'แนบผลประเมินไม่ครบ' },
+    });
+    await waitFor(() => expect(sendBack).not.toBeDisabled());
+  });
+
+  it('exempt case: HRBP sees a mark-passed action pre-filled with the hire date', async () => {
+    useAuthStore.setState({ roles: ['hrbp'] });
+    await renderLoaded('PB-005'); // exempt case, hireDate 2026-05-04
+    expect(
+      screen.getByRole('button', { name: /บรรจุ \(ยกเว้นทดลองงาน\)/ }),
+    ).toBeInTheDocument();
+    // pass date read-back uses the hire date (long TH format includes 2569 BE year)
+    expect(screen.getByText(/วันบรรจุ \(= วันเริ่มงาน\)/)).toBeInTheDocument();
   });
 });

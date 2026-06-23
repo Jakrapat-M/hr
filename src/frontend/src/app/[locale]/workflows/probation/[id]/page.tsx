@@ -10,9 +10,10 @@ import {
   CalendarCheck,
   Check,
   Clock,
+  CornerUpLeft,
   Shield,
   User,
-  Wallet,
+  UserCheck,
   X,
 } from 'lucide-react';
 import {
@@ -20,6 +21,8 @@ import {
   type ProbationOutcome,
   type ProbationDecisionInput,
 } from '@/hooks/use-probation';
+import { useAuthStore } from '@/stores/auth-store';
+import { personaTiers } from '@/lib/persona-tiers';
 import { formatDate } from '@/lib/date';
 import { Modal } from '@/components/humi';
 
@@ -231,7 +234,18 @@ export default function ProbationDetailPage() {
   const pathname = usePathname();
   const locale = pathname.startsWith('/th') ? 'th' : 'en';
   const isTh = locale === 'th';
-  const { probationCase: c, loading, submitDecision } = useProbationCase(id);
+  const {
+    probationCase: c,
+    loading,
+    submitDecision,
+    hrbpApprove,
+    sendBackToManager,
+    markExemptPassed,
+  } = useProbationCase(id);
+
+  // STA-23 — viewer persona tier (B = hrbp/spd) gates the HRBP action seam.
+  const roles = useAuthStore((s) => s.roles);
+  const isHrbpViewer = personaTiers(roles).includes('B');
 
   // Outcome + conditional BA fields
   const [outcome, setOutcome] = useState<OutcomeCard>('pass');
@@ -242,6 +256,9 @@ export default function ProbationDetailPage() {
   const [comment, setComment] = useState('');
 
   const [policyOpen, setPolicyOpen] = useState(false);
+
+  // STA-23 — HRBP send-back reason input
+  const [sendBackReason, setSendBackReason] = useState('');
 
   const { effectiveRule, showFailReason } = deriveOutcomeRules(outcome);
 
@@ -345,8 +362,7 @@ export default function ProbationDetailPage() {
 
   const approvalSteps: ApprovalStep[] = [
     { label: `หัวหน้างาน · ${c.manager.name}`, sub: 'ผู้บังคับบัญชาโดยตรง', status: 'current', icon: User },
-    { label: `HR Admin · ${c.currentApprover.name ?? 'TBD'}`, sub: 'ตรวจสอบเอกสารและบันทึก EC', status: 'pending', icon: Shield },
-    { label: 'Payroll', sub: 'ส่งเข้าระบบจ่ายเงิน', status: 'pending', icon: Wallet },
+    { label: `HRBP · ${c.currentApprover.name ?? 'TBD'}`, sub: 'อนุมัติผลและบันทึก EC', status: 'pending', icon: UserCheck },
   ];
 
   const historyEvents = (c.timeline ?? []).slice(0, 3).map((entry) => {
@@ -593,6 +609,85 @@ export default function ProbationDetailPage() {
 
         {/* RIGHT — sidebar */}
         <div className="flex flex-col gap-5">
+          {/* HRBP action seam — tier B viewer on a pending_hr case (STA-23) */}
+          {isHrbpViewer && c.status === 'pending_hr' && (
+            <div className="humi-card">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] bg-accent-soft text-accent">
+                  <UserCheck className="h-4 w-4" />
+                </span>
+                {eyebrow(isTh ? 'การดำเนินการของ HRBP' : 'HRBP action')}
+              </div>
+
+              {c.isProbationExempt ? (
+                <>
+                  <p className="mb-3 text-sm text-ink-soft">
+                    {isTh
+                      ? 'พนักงานกลุ่มยกเว้นทดลองงาน — บรรจุได้ทันที โดยใช้วันเริ่มงานเป็นวันบรรจุ'
+                      : 'Probation-exempt employee — mark passed now with the hire date as the pass date.'}
+                  </p>
+                  <div className="mb-3 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-3 py-2.5 text-xs">
+                    <span className="text-ink-muted">
+                      {isTh ? 'วันบรรจุ (= วันเริ่มงาน): ' : 'Pass date (= hire date): '}
+                    </span>
+                    <span className="font-semibold text-ink">
+                      {formatDate(c.hireDate, 'long', locale)}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => markExemptPassed()}
+                    className="humi-button humi-button--primary inline-flex w-full items-center justify-center gap-1.5"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    {isTh ? 'บรรจุ (ยกเว้นทดลองงาน)' : 'Mark passed (exempt)'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="mb-3 text-sm text-ink-soft">
+                    {isTh
+                      ? 'ตรวจสอบผลที่หัวหน้างานส่งมา แล้วอนุมัติ หรือส่งกลับให้แก้ไข'
+                      : "Review the manager's result, then approve or send it back for revision."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => hrbpApprove()}
+                    className="humi-button humi-button--primary mb-3 inline-flex w-full items-center justify-center gap-1.5"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    {isTh ? 'อนุมัติ (HRBP)' : 'Approve (HRBP)'}
+                  </button>
+
+                  <div className="rounded-[var(--radius-md)] border border-warning bg-warning-soft p-3">
+                    <FieldLabel required>
+                      {isTh ? 'เหตุผลในการส่งกลับ' : 'Reason to send back'}
+                    </FieldLabel>
+                    <textarea
+                      rows={2}
+                      value={sendBackReason}
+                      onChange={(e) => setSendBackReason(e.target.value)}
+                      placeholder={
+                        isTh ? 'ระบุสิ่งที่หัวหน้างานต้องแก้ไข...' : 'What the manager should revise...'
+                      }
+                      aria-label={isTh ? 'เหตุผลในการส่งกลับ' : 'Reason to send back'}
+                      className={FIELD_TEXTAREA_CLASS}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => sendBackToManager(sendBackReason.trim())}
+                      disabled={!sendBackReason.trim()}
+                      className="humi-button humi-button--ghost mt-2.5 inline-flex w-full items-center justify-center gap-1.5 border border-warning text-warning-ink disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <CornerUpLeft className="h-3.5 w-3.5" />
+                      {isTh ? 'ส่งกลับให้หัวหน้างาน' : 'Send back to manager'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Approval chain */}
           <div className="humi-card">
             <div className="mb-3">{eyebrow('ขั้นตอนอนุมัติ')}</div>
@@ -684,7 +779,7 @@ export default function ProbationDetailPage() {
             className="humi-button humi-button--primary inline-flex items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Check className="h-3.5 w-3.5" />
-            {isTh ? 'อนุมัติและส่งให้ HR Admin' : 'Approve & send to HR Admin'}
+            {isTh ? 'อนุมัติและส่งให้ HRBP' : 'Approve & send to HRBP'}
           </button>
         )}
       </div>

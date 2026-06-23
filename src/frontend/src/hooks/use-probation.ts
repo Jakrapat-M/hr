@@ -8,7 +8,8 @@ export type ProbationStatus =
   | 'approved'
   | 'rejected'
   | 'extended'
-  | 'escalated_ceo';
+  | 'escalated_ceo'
+  | 'sent_back';
 
 // STA-23 PO v2 — outcome / decision types
 export type ProbationOutcome =
@@ -60,6 +61,8 @@ export interface ProbationCase {
   jobCode?: string;
   jobLevel?: string;
   employeeGroup?: string;
+  /** STA-23: employees exempted from probation — HRBP marks passed with pass date = hire date. */
+  isProbationExempt?: boolean;
   hireDate: string;
   probationEndDate: string;
   status: ProbationStatus;
@@ -94,11 +97,12 @@ export interface ProbationCase {
 
 const STATUS_LABEL: Record<ProbationStatus, string> = {
   pending_manager: 'รอหัวหน้างาน',
-  pending_hr: 'รอ HR Director',
+  pending_hr: 'รอ HRBP',
   approved: 'ผ่านทดลองงาน',
   rejected: 'ไม่ผ่าน',
   extended: 'ขยายเวลา',
   escalated_ceo: 'ส่ง CEO',
+  sent_back: 'ส่งกลับหัวหน้างาน',
 };
 
 export { STATUS_LABEL };
@@ -176,7 +180,7 @@ const MOCK_CASES: ProbationCase[] = [
     hireDate: '2026-03-02',
     probationEndDate: '2026-06-30',
     status: 'pending_hr',
-    currentApprover: { name: 'กัณณิกา ศรีสวัสดิ์', role: 'VP Human Resources' },
+    currentApprover: { name: 'กัณณิกา ศรีสวัสดิ์', role: 'HRBP' },
     request: {
       requestedBy: 'ระบบ',
       requestedRole: 'System',
@@ -358,6 +362,60 @@ const MOCK_CASES: ProbationCase[] = [
       },
     ],
   },
+  {
+    id: 'PB-005',
+    employeeId: 'EMP070',
+    fullNameTh: 'ศุภวิชญ์ เกียรติกุล',
+    fullNameEn: 'Suppawit Kiattikul',
+    photo: 'https://i.pravatar.cc/150?img=12',
+    position: 'Senior Advisor',
+    department: 'Executive Office',
+    company: 'Central Group',
+    businessUnit: 'Corporate',
+    location: 'Silom Tower',
+    jobCode: 'EXC-SR',
+    jobLevel: 'SR',
+    employeeGroup: 'E - Executive',
+    isProbationExempt: true,
+    hireDate: '2026-05-04',
+    probationEndDate: '2026-09-01',
+    status: 'pending_hr',
+    currentApprover: { name: 'กัณณิกา ศรีสวัสดิ์', role: 'HRBP' },
+    request: {
+      requestedBy: 'ระบบ',
+      requestedRole: 'System',
+      requestedAt: '2026-05-04T09:00:00',
+      source: 'TBD: EC probation workflow API',
+    },
+    manager: { name: 'Rungrote Amnuaysopon', role: 'Direct Manager', employeeId: 'EMP006' },
+    assessment: {
+      result: 'Exempt from probation',
+      score: 'N/A',
+      reason: 'พนักงานกลุ่มยกเว้นทดลองงาน — HRBP บรรจุได้ทันที',
+      remarks: 'pass date = วันเริ่มงาน',
+    },
+    slaDeadline: '2026-08-30T17:00:00',
+    requestType: 'Probation HRBP exempt',
+    requestReason: 'พนักงานยกเว้นทดลองงาน — HRBP บรรจุโดยใช้วันเริ่มงานเป็นวันบรรจุ',
+    assessmentSummary: 'พนักงานกลุ่มยกเว้นทดลองงาน ไม่ต้องประเมินผลทดลองงาน',
+    managerRemarks: 'N/A',
+    hrRemarks: 'รอ HRBP บรรจุ (ยกเว้นทดลองงาน)',
+    submittedAt: '2026-05-04T09:00:00',
+    timeline: [
+      {
+        actor: 'ระบบ',
+        actorRole: 'System',
+        action: 'สร้าง workflow — พนักงานยกเว้นทดลองงาน',
+        date: '2026-05-04T09:00:00',
+      },
+      {
+        actor: 'ระบบ',
+        actorRole: 'System',
+        action: 'แจ้ง HRBP — บรรจุพนักงานยกเว้นทดลองงาน',
+        date: '2026-05-04T09:01:00',
+      },
+    ],
+  },
 ];
 
 export function useProbationCases() {
@@ -487,5 +545,87 @@ export function useProbationCase(id: string) {
     [probationCase],
   );
 
-  return { probationCase, loading, approve, reject, submitDecision };
+  // STA-23 — HRBP approves the manager result (pending_hr → approved).
+  const hrbpApprove = useCallback(
+    (comment?: string) => {
+      if (!probationCase) return;
+      const now = new Date().toISOString();
+      setProbationCase({
+        ...probationCase,
+        status: 'approved',
+        hrRemarks: comment || probationCase.hrRemarks,
+        decidedAt: now,
+        timeline: [
+          ...probationCase.timeline,
+          {
+            actor: 'You',
+            actorRole: 'HRBP',
+            action: 'HRBP อนุมัติ / HRBP approved',
+            date: now,
+            comment: comment || undefined,
+          },
+          { actor: 'ระบบ', actorRole: 'System', action: 'อัพเดทสถานะ → พนักงานประจำ', date: now },
+        ],
+      });
+    },
+    [probationCase],
+  );
+
+  // STA-23 — HRBP sends the case back to the direct manager (pending_hr → sent_back).
+  const sendBackToManager = useCallback(
+    (reason: string) => {
+      if (!probationCase) return;
+      const now = new Date().toISOString();
+      setProbationCase({
+        ...probationCase,
+        status: 'sent_back',
+        hrRemarks: reason || probationCase.hrRemarks,
+        timeline: [
+          ...probationCase.timeline,
+          {
+            actor: 'You',
+            actorRole: 'HRBP',
+            action: `HRBP ส่งกลับให้หัวหน้างาน — ${reason}`,
+            date: now,
+            comment: reason || undefined,
+          },
+        ],
+      });
+    },
+    [probationCase],
+  );
+
+  // STA-23 — HRBP marks an exempt employee as passed; pass date = hire date.
+  const markExemptPassed = useCallback(() => {
+    if (!probationCase) return;
+    const now = new Date().toISOString();
+    setProbationCase({
+      ...probationCase,
+      status: 'approved',
+      decidedAt: now,
+      timeline: [
+        ...probationCase.timeline,
+        {
+          actor: 'You',
+          actorRole: 'HRBP',
+          action: 'ยกเว้นทดลองงาน — ผ่านโดย HRBP (pass date = วันเริ่มงาน)',
+          date: now,
+          outcome: 'pass_normal',
+          effectiveDate: probationCase.hireDate,
+        },
+        { actor: 'ระบบ', actorRole: 'System', action: 'อัพเดทสถานะ → พนักงานประจำ', date: now },
+      ],
+    });
+  }, [probationCase]);
+
+  return {
+    probationCase,
+    loading,
+    approve,
+    reject,
+    submitDecision,
+    hrbpApprove,
+    sendBackToManager,
+    markExemptPassed,
+  };
 }
