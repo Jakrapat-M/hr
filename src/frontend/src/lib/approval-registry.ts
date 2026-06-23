@@ -87,10 +87,14 @@ export function probationToPendingRequest(c: ProbationCase): PendingRequest {
   );
   const managerStatus =
     c.status === 'pending_manager' ? 'pending'
+    // STA-23: sent_back returns the case to the manager's court → still 'pending' (explicit, no behavior change).
+    : c.status === 'sent_back' ? 'pending'
     : c.status === 'pending_hr' || c.status === 'escalated_ceo' || c.status === 'approved' ? 'approved'
     : 'pending';
   const hrStatus =
     c.status === 'pending_hr' || c.status === 'escalated_ceo' ? 'pending'
+    // STA-23: sent_back is awaiting the manager again, so HR has not yet approved → 'pending'.
+    : c.status === 'sent_back' ? 'pending'
     : c.status === 'approved' ? 'approved'
     : 'pending';
   return {
