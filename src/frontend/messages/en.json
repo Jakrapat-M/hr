@@ -4452,14 +4452,15 @@
         "nextPool": "Next year — medical budget"
       },
       "log": {
-        "title": "Reallocation log",
+        "title": "Adjust entitlement amount history",
         "empty": "No reallocation for this employee yet",
         "colDate": "Date",
         "colPlan": "Plan",
         "colAdjusted": "Adjusted entitle amount",
         "colYear": "Year",
         "colEntitle": "Entitle amount",
-        "colReason": "Reason"
+        "colReason": "Reason",
+        "colMoreDetail": "More detail"
       },
       "validation": {
         "reasonRequired": "Reason is required",
