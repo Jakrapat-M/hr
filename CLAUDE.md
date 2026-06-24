@@ -78,18 +78,18 @@ Next.js 16 **App Router**, React 19 Server/Client components, TypeScript, Tailwi
 ```
 src/frontend/src/
 ├── app/
-│   ├── [locale]/...          # all product routes (file-based; ~46 route groups)
-│   │   ├── home, profile, benefits-hub, payroll, quick-approve, admin/*, hrbp/*, ...
-│   │   └── globals.css       # Humi design tokens (CSS variables) — source of truth
-│   └── api/auth/[...nextauth]
+│   ├── [locale]/...          # all product routes (file-based; ~48 route groups)
+│   │   ├── home, profile/[tab], benefits-hub, payroll, quick-approve/[id], timeoff, admin/*, hrbp/*, ...
+│   │   └── globals.css       # Humi design tokens (Tailwind @theme) — source of truth
+│   └── api/                  # minimal (auth redirects)
 ├── components/
-│   ├── humi/                 # Humi design system: 18 primitives + index.ts
-│   │   └── shell/            # AppShell, Sidebar, Topbar, CommandPalette, LoginAsRibbon, PersonaSwitcher
-│   └── <domain>/             # feature components (benefits, payroll, quick-approve, roster, ...)
-├── stores/                   # Zustand stores (see State below)
-├── lib/                      # API mocks, rbac, persona tiers, mock data, date/mask helpers
+│   ├── humi/                 # Humi design system: 20 primitives + index.ts
+│   │   └── shell/            # 6 shell components: AppShell, Sidebar, Topbar, CommandPalette, LoginAsRibbon, PersonaSwitcher
+│   └── <domain>/             # ~35 feature folders (benefits, payroll, leave, time, quick-approve, roster, ...)
+├── stores/                   # ~44 Zustand stores (see State below)
+├── lib/                      # ~50 files: API mocks, rbac, persona tiers, mock data, date/mask helpers
 ├── i18n/                     # routing.ts, config.ts (locales), request.ts
-└── messages/                 # en.json, th.json (next-intl catalogs)
+└── messages/                 # en.json, th.json (next-intl catalogs, ~5.6k lines each, kept at parity)
 ```
 
 ### Routing (App Router — file-based)
