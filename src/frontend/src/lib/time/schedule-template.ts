@@ -47,20 +47,81 @@ const PART_TIME: ScheduleTemplate = {
   nameTh: 'พาร์ทไทม์',
   nameEn: 'Part-time',
   effectiveDate: '2026-01-01',
-  // Sat/Sun off; Mon–Fri 4h part-time, no break
-  byWeekday: [null, '4C0800', '4C0800', '4C0800', '4C0800', '4C0800', null],
+  // STA-137: MON + SAT off (works Sun, Tue–Fri). Two reasons:
+  //  • Monday-off gives the demo week's holiday 2026-06-01 (a Monday) real
+  //    coverage contrast — part-timers are off while full-timers work + earn
+  //    holiday pay, instead of every row working the holiday.
+  //  • Saturday-off keeps a NON-holiday Day-Off column visible in the week, so
+  //    the rotating-day-off story (≥3 distinct day-off columns) still reads
+  //    (Monday's day-off is otherwise masked by the holiday chip).
+  // 4h part-time block, no break.
+  byWeekday: ['4C0800', null, '4C0800', '4C0800', '4C0800', '4C0800', null],
 };
 
-export const SCHEDULE_TEMPLATES: Record<string, ScheduleTemplate> = { STORE_STD, HO_STD, PART_TIME };
+// STA-137 — Morning store variant (06:00–15:00). Day off on TUE (weekday 2) so the
+// weekly grid shows a Day-Off column that differs from the Store-standard Sunday.
+const MORNING_STD: ScheduleTemplate = {
+  id: 'TMPL-MORNING-STD',
+  nameTh: 'กะเช้า มาตรฐาน',
+  nameEn: 'Morning standard',
+  effectiveDate: '2026-01-01',
+  // Tue off; otherwise morning retail shift 06:00–15:00
+  byWeekday: ['9A0600', '9A0600', null, '9A0600', '9A0600', '9A0600', '9A0600'],
+};
+
+// STA-137 — Afternoon/evening store variant (14:00–23:00). Day off on WED (weekday
+// 3). This template also backs the "Night/กะดึก" DISPLAY label — it is a real,
+// non-wrapping evening block (out > in), never a cross-midnight 22:00→07:00 code.
+const AFTERNOON_STD: ScheduleTemplate = {
+  id: 'TMPL-AFTERNOON-STD',
+  nameTh: 'กะบ่าย มาตรฐาน',
+  nameEn: 'Afternoon standard',
+  effectiveDate: '2026-01-01',
+  // Wed off; otherwise afternoon retail shift 14:00–23:00
+  byWeekday: ['9A1400', '9A1400', '9A1400', null, '9A1400', '9A1400', '9A1400'],
+};
+
+export const SCHEDULE_TEMPLATES: Record<string, ScheduleTemplate> = {
+  STORE_STD,
+  HO_STD,
+  PART_TIME,
+  MORNING_STD,
+  AFTERNOON_STD,
+};
+
+// STA-137 — deterministic Store-template spread. Store employees fan out across
+// these four non-wrapping variants by a STABLE hash of empId (never Math.random,
+// so SSR + tests are stable). Day-offs are staggered (Sun / Tue / Wed / Sat+Sun)
+// so a single visible week shows Day-Off chips in ≥3 different weekday columns.
+const STORE_SPREAD: ScheduleTemplate[] = [STORE_STD, MORNING_STD, AFTERNOON_STD, PART_TIME];
+
+/** Stable, deterministic hash of an empId → index into STORE_SPREAD. */
+function empIdHash(empId: string): number {
+  let sum = 0;
+  for (let i = 0; i < empId.length; i += 1) sum += empId.charCodeAt(i);
+  return sum;
+}
 
 /**
  * Table 1 — Rule. Resolves the template for an employee. Mockup heuristic:
- * HO calendar → office template, Store calendar → retail template. (Real rule:
- * Pattern + BU + Company + Division → Template.)
+ * HO calendar → office template; Store calendar → one of four non-wrapping retail
+ * variants chosen by a deterministic empId hash (Morning/Afternoon/Store/Part-time),
+ * so the weekly grid shows realistic shift + day-off variety instead of a uniform
+ * 10:00–19:00 / Sunday-off grid. (Real rule: Pattern + BU + Company + Division.)
  */
 export function templateForEmployee(empId: string): ScheduleTemplate {
   const attrs = getEmployeeTimeAttrs(empId);
-  return attrs.calendarType === 'HO' ? HO_STD : STORE_STD;
+  if (attrs.calendarType === 'HO') return HO_STD;
+
+  // STA-137 PIN (mandatory): EMP-0301 is the canonical OT-on-holiday demo employee
+  // (pre-seeded OT rows on the 2026-06-01 holiday) and is NOT in employee-time-attrs,
+  // so it would otherwise fall through the hash spread — which could land it on a
+  // template whose Monday (06-01) is a day-off, orphaning its OT off the holiday.
+  // Pin it to a Mon-working variant (STORE_STD works Mon) so its 06-01 cell keeps
+  // Shift + Clock + OT.
+  if (empId === 'EMP-0301') return STORE_STD;
+
+  return STORE_SPREAD[empIdHash(empId) % STORE_SPREAD.length];
 }
 
 /** Per-day scheduled shift for the current payroll period (21→20) — single source. */
