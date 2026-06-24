@@ -31,7 +31,8 @@ export type DayCellProps = {
 
 type Chip = { kind: ChipKind; label: string; sub?: string; testid: string };
 
-const MAX_CHIPS = 3;
+// 4 so a worked-holiday cell can stack Shift + Clock + OT + Holiday-pay (STA-137).
+const MAX_CHIPS = 4;
 
 export function DayCell({
   schedule,
@@ -43,8 +44,19 @@ export function DayCell({
 }: DayCellProps) {
   const chips: Chip[] = [];
 
-  // 1) Holiday — display precedence over Day Off / Shift.
-  if (isHoliday) {
+  // STA-137 — does the employee actually WORK this holiday? (a scheduled shift or
+  // an actual punch). A worked holiday must keep its Shift / Clock / OT chips
+  // instead of being suppressed behind the Holiday chip; an UNWORKED holiday
+  // (day-off-on-holiday) still reads as a clean Holiday cell.
+  const worksHoliday =
+    isHoliday &&
+    ((!!schedule && !schedule.dayOff && !!schedule.scheduledIn) ||
+      (!!attendance && !attendance.dayOff && !!attendance.actualIn));
+  const suppressForHoliday = isHoliday && !worksHoliday;
+
+  // 1) Holiday — display precedence over Day Off / Shift, EXCEPT on a worked
+  //    holiday where the work chips win and a holiday-pay indicator is added.
+  if (suppressForHoliday) {
     chips.push({
       kind: 'holiday',
       label: isTh ? 'วันหยุด' : 'Holiday',
@@ -52,8 +64,8 @@ export function DayCell({
     });
   }
 
-  // 2) Day Off (only when NOT a holiday — holiday already owns the cell intent).
-  if (!isHoliday && schedule?.dayOff) {
+  // 2) Day Off (only when NOT a suppressed holiday — holiday owns the cell intent).
+  if (!suppressForHoliday && schedule?.dayOff) {
     chips.push({
       kind: 'dayOff',
       label: isTh ? 'วันหยุดประจำ' : 'Day off',
@@ -61,8 +73,8 @@ export function DayCell({
     });
   }
 
-  // 3) Shift (planned) — only on a scheduled working day, hidden behind a holiday.
-  if (!isHoliday && schedule && !schedule.dayOff && schedule.scheduledIn) {
+  // 3) Shift (planned) — on a scheduled working day; shown even on a worked holiday.
+  if (!suppressForHoliday && schedule && !schedule.dayOff && schedule.scheduledIn) {
     chips.push({
       kind: 'shift',
       label: isTh ? 'กะ' : 'Shift',
@@ -72,7 +84,7 @@ export function DayCell({
   }
 
   // 4) Clock (actual) — classified sub-state from the attendance seed.
-  if (attendance && !attendance.dayOff && attendance.scheduledIn) {
+  if (!suppressForHoliday && attendance && !attendance.dayOff && attendance.scheduledIn) {
     const state = classifyClock(attendance, cutoffISO);
     const kind = clockChipKind(state);
     if (kind && state !== 'none') {
@@ -98,6 +110,16 @@ export function DayCell({
       kind: 'ot',
       label: `OT ${otHours}${isTh ? ' ชม.' : 'h'}`,
       testid: 'chip-ot',
+    });
+  }
+
+  // 6) STA-137 — worked-holiday pay indicator. DISPLAY ONLY: no rate, no number,
+  //    no calc (payroll is another team's). Amber `holiday` token (NO-RED).
+  if (worksHoliday) {
+    chips.push({
+      kind: 'holiday',
+      label: isTh ? 'ค่าทำงานวันหยุด' : 'Holiday pay',
+      testid: 'chip-holiday-pay',
     });
   }
 

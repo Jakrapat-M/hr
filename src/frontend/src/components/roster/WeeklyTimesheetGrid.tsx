@@ -109,20 +109,33 @@ export function WeeklyTimesheetGrid({
         <div className="sticky left-0 z-10 border-b border-hairline bg-surface px-4 py-3 text-small font-semibold text-ink-muted">
           {isTh ? 'พนักงาน' : 'Employee'}
         </div>
-        {week.days.map((d, i) => (
-          <div
-            key={toIsoDate(d)}
-            data-testid="day-header"
-            className="border-b border-l border-hairline-soft bg-surface px-2 py-3 text-center"
-          >
-            <div className="text-small font-semibold text-ink">
-              {isTh ? WEEKDAY_SHORT[i].th : WEEKDAY_SHORT[i].en}
+        {week.days.map((d, i) => {
+          const isHolidayCol = HOLIDAY_SET.has(toIsoDate(d));
+          return (
+            <div
+              key={toIsoDate(d)}
+              data-testid="day-header"
+              className="border-b border-l border-hairline-soft bg-surface px-2 py-3 text-center"
+            >
+              <div className="text-small font-semibold text-ink">
+                {isTh ? WEEKDAY_SHORT[i].th : WEEKDAY_SHORT[i].en}
+              </div>
+              <div className="font-mono text-xs text-ink-muted">
+                {formatDate(d, 'medium', isTh ? 'th' : 'en')}
+              </div>
+              {/* STA-137 — amber "(Holiday)" pill beneath the date on a public-
+                  holiday column (HUMI_TH_HOLIDAYS). NO-RED: warning-soft amber. */}
+              {isHolidayCol && (
+                <div
+                  data-testid="header-holiday-pill"
+                  className="mt-1 inline-flex rounded-[var(--radius-sm)] border border-warning bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning"
+                >
+                  {isTh ? 'วันหยุดนักขัตฤกษ์' : 'Holiday'}
+                </div>
+              )}
             </div>
-            <div className="font-mono text-xs text-ink-muted">
-              {formatDate(d, 'medium', isTh ? 'th' : 'en')}
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* ── Body rows ── */}
         {visibleRows.map((row) => {

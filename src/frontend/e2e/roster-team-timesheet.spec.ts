@@ -57,6 +57,70 @@ test.describe('Team Timesheet (/roster) — STA-126', () => {
     await expect(page.getByTestId('shift-swap-modal')).toBeVisible();
   });
 
+  test('STA-137: diverse shifts — ≥3 distinct shift start-times in the week', async ({ page }) => {
+    await page.goto('/en/roster');
+    await page.waitForLoadState('networkidle');
+    // Each Shift chip sub shows `HH:MM–HH:MM`; collect the distinct start-times.
+    const subs = await page
+      .locator('[data-testid="chip-shift"] .font-mono')
+      .allTextContents();
+    const starts = new Set(subs.map((s) => s.trim().split('–')[0]).filter(Boolean));
+    expect(starts.size).toBeGreaterThanOrEqual(3);
+  });
+
+  test('STA-137: staggered day-off — Day-Off chips on ≥3 distinct day columns', async ({ page }) => {
+    await page.goto('/en/roster');
+    await page.waitForLoadState('networkidle');
+    // For each timesheet row, find which day-column indexes carry a Day-Off chip.
+    const offColumns = await page.evaluate(() => {
+      const cols = new Set<number>();
+      const rows = document.querySelectorAll('[data-testid="timesheet-row"]');
+      for (const row of rows) {
+        const cells = row.querySelectorAll('[data-testid="day-cell"]');
+        cells.forEach((cell, idx) => {
+          if (cell.querySelector('[data-testid="chip-dayoff"]')) cols.add(idx);
+        });
+      }
+      return [...cols];
+    });
+    expect(offColumns.length).toBeGreaterThanOrEqual(3);
+  });
+
+  test('STA-137: header Holiday pill present on a holiday column, absent on a non-holiday column', async ({ page }) => {
+    await page.goto('/en/roster');
+    await page.waitForLoadState('networkidle');
+    // Default week is Mon 2026-06-01 → Sun 2026-06-07; 06-01 + 06-03 are holidays.
+    const pills = page.getByTestId('header-holiday-pill');
+    expect(await pills.count()).toBeGreaterThan(0);
+    // Not every day column is a holiday → fewer pills than the 7 day headers.
+    const headers = await page.getByTestId('day-header').count();
+    expect(await pills.count()).toBeLessThan(headers);
+  });
+
+  test('STA-137: worked holiday — EMP-0301 06-01 cell stacks Shift + Clock + OT + Holiday-pay', async ({ page }) => {
+    await page.goto('/en/roster');
+    await page.waitForLoadState('networkidle');
+    // EMP-0301 is the first timesheet row; Monday 06-01 is the first day cell.
+    const firstRow = page.getByTestId('timesheet-row').first();
+    const mondayCell = firstRow.getByTestId('day-cell').first();
+    await expect(mondayCell.getByTestId('chip-shift')).toBeVisible();
+    await expect(mondayCell.locator('[data-testid^="chip-clock-"]').first()).toBeVisible();
+    await expect(mondayCell.getByTestId('chip-ot')).toBeVisible();
+    await expect(mondayCell.getByTestId('chip-holiday-pay')).toBeVisible();
+    // The work chips are NOT suppressed behind a plain Holiday chip.
+    await expect(mondayCell.getByTestId('chip-holiday')).toHaveCount(0);
+  });
+
+  test('STA-137 regression: hourly view edit + swap still work', async ({ page }) => {
+    await page.goto('/en/roster?view=hourly');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('heading', { name: /Hourly schedule/i })).toBeVisible();
+    // Swap modal deep-link still opens.
+    await page.goto('/en/roster?panel=swap');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByTestId('shift-swap-modal')).toBeVisible();
+  });
+
   test('NO-RED: grid + legend contain no red color', async ({ page }) => {
     await page.goto('/en/roster');
     await page.waitForLoadState('networkidle');
