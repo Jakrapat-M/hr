@@ -595,6 +595,17 @@ function EnrollmentFormBody({
   const today = '2026-06-12'
   const [fileName, setFileName] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
+  // STA-143: Enrolment Amount is now editable and must NOT exceed the Benefit
+  // Entitlement Amount. Integer-only parse (strip everything but digits) sidesteps
+  // the thousands-vs-decimal ambiguity in strings like "1,500 THB/Month" / "18,000".
+  const [enrolment, setEnrolment] = useState(benefit.enrolmentAmount)
+  const parseAmount = (s: string) => Number(String(s).replace(/[^\d]/g, '')) || 0
+  const entitlementNum = parseAmount(benefit.entitlementAmount)
+  const enrolmentNum = parseAmount(enrolment)
+  const exceedsCap = enrolmentNum > entitlementNum
+  const capMsg = isTh
+    ? 'จำนวนเงินที่ลงทะเบียนต้องไม่เกินสิทธิ์สวัสดิการ'
+    : 'Enrolment amount cannot exceed the benefit entitlement amount'
 
   const handleSubmit = () => {
     setSubmitted(true)
@@ -613,14 +624,26 @@ function EnrollmentFormBody({
         {(p) => <FormInput {...p} type="date" defaultValue={today} />}
       </FormField>
 
-      {/* 3 — Enrolment Amount (read-only, derived) */}
-      <FormField label={isTh ? 'จำนวนเงินที่ลงทะเบียน' : 'Enrolment Amount'} required>
-        {(p) => <FormInput {...p} value={benefit.enrolmentAmount} readOnly disabled />}
+      {/* 3 — Enrolment Amount (editable; capped at entitlement) */}
+      <FormField
+        label={isTh ? 'จำนวนเงินที่ลงทะเบียน' : 'Enrolment Amount'}
+        required
+        error={exceedsCap ? capMsg : undefined}
+      >
+        {(p) => (
+          <FormInput
+            {...p}
+            value={enrolment}
+            onChange={(e) => setEnrolment(e.target.value)}
+            invalid={exceedsCap}
+            inputMode="numeric"
+          />
+        )}
       </FormField>
 
-      {/* 4 — Benefit Entitlement Amount (editable) */}
+      {/* 4 — Benefit Entitlement Amount (read-only) */}
       <FormField label={isTh ? 'สิทธิ์สวัสดิการ (วงเงิน)' : 'Benefit Entitlement Amount'} required>
-        {(p) => <FormInput {...p} defaultValue={benefit.entitlementAmount} inputMode="numeric" />}
+        {(p) => <FormInput {...p} value={benefit.entitlementAmount} readOnly disabled />}
       </FormField>
 
       {/* 5 — Currency (read-only, fixed THB) */}
@@ -658,7 +681,7 @@ function EnrollmentFormBody({
         <Button variant="secondary" onClick={onCancel} disabled={submitted}>
           {isTh ? 'ยกเลิก' : 'Cancel'}
         </Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={submitted}>
+        <Button variant="primary" onClick={handleSubmit} disabled={submitted || exceedsCap}>
           {isTh ? 'ลงทะเบียน' : 'Enroll now'}
         </Button>
       </div>
