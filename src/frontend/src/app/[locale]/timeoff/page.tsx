@@ -664,10 +664,11 @@ function RequestTab({
   // Entitlement: the selected type must be in the persona's selectable set.
   const hasEntitlement = selectableTypes.some((t) => t.code === code);
 
-  // Bookable window (STA-130): from the start of the current payroll period
-  // (the backdate floor — in-cycle backdating is allowed, e.g. retroactive sick
-  // leave) through +90d advance booking. Both ends of the selected range must
-  // fall inside it. (The timesheet-correction lock is separate, see period.ts.)
+  // Bookable window (STA-156): from the start of the PREVIOUS payroll cycle
+  // (the backdate floor — retroactive leave is allowed up to 1 previous cycle,
+  // cycle = 21st→20th) through +90d advance booking. Both ends of the selected
+  // range must fall inside it. (The timesheet-correction lock is separate, see
+  // period.ts.)
   const outsideBookable =
     (!!fromISO && !isBookableLeaveDate(fromISO)) ||
     (!!toISO && !isBookableLeaveDate(toISO));
@@ -780,8 +781,8 @@ function RequestTab({
         : 'This range overlaps a pending/approved leave';
     if (outsideBookable)
       errs.period = isTh
-        ? `จองได้ตั้งแต่ต้นรอบจ่ายเงินเดือนปัจจุบัน จนถึงล่วงหน้า ${LEAVE_BOOKING_HORIZON_DAYS} วัน`
-        : `Bookable from the start of the current payroll period up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead`;
+        ? `จองย้อนหลังได้ถึงต้นรอบจ่ายเงินเดือนก่อนหน้า (1 รอบ) จนถึงล่วงหน้า ${LEAVE_BOOKING_HORIZON_DAYS} วัน`
+        : `Bookable from the start of the previous payroll cycle (1 cycle back) up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead`;
     if (missingDocs.length > 0)
       errs.docs = isTh
         ? `ต้องแนบเอกสาร: ${missingDocs.join(', ')}`
@@ -932,8 +933,8 @@ function RequestTab({
     liveBlocks.push({
       key: 'period',
       msg: isTh
-        ? `จองได้ตั้งแต่ต้นรอบจ่ายเงินเดือนปัจจุบัน จนถึงล่วงหน้า ${LEAVE_BOOKING_HORIZON_DAYS} วัน — เลือกวันในช่วงที่จองได้`
-        : `Bookable from the start of the current payroll period up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead — pick a date in range`,
+        ? `จองย้อนหลังได้ถึงต้นรอบจ่ายเงินเดือนก่อนหน้า (1 รอบ) จนถึงล่วงหน้า ${LEAVE_BOOKING_HORIZON_DAYS} วัน — เลือกวันในช่วงที่จองได้`
+        : `Bookable from the start of the previous payroll cycle (1 cycle back) up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead — pick a date in range`,
     });
   if (missingDocs.length > 0)
     liveBlocks.push({
