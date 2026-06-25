@@ -22,7 +22,7 @@ import {
   type RecordType,
   isV2Plan,
 } from '@/data/benefits/plan-registry';
-import { Tab1IdentityFields, type Tab1IdentityValues } from '@/components/benefits/Tab1IdentityFields';
+import { Tab1IdentityFields, INSERT_EDITABLE_KEYS, type Tab1IdentityValues } from '@/components/benefits/Tab1IdentityFields';
 import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar';
 import { ActionTagChip, type ActionTagMode } from '@/components/benefits/ActionTagChip';
 import { InsertChangePopup } from '@/components/benefits/InsertChangePopup';
@@ -198,6 +198,9 @@ function PlanFormModal({
       mode="edit"
       isTh={isTh}
       showSchemaVersion={false}
+      // STA-146: Insert mode locks every identity field except Status + Company.
+      // Correction mode passes undefined → nothing locked (unchanged).
+      lockExceptKeys={mode === 'insert' ? INSERT_EDITABLE_KEYS : undefined}
     />
   );
 
