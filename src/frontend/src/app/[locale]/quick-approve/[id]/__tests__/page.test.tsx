@@ -176,6 +176,8 @@ describe('QuickApproveDetailPage', () => {
     expect(screen.queryByText('quick_approve_detail.reject')).not.toBeInTheDocument();
     expect(screen.queryByText('quick_approve_detail.reroute')).not.toBeInTheDocument();
     expect(screen.queryByText('quick_approve_detail.override')).not.toBeInTheDocument();
+    // STA-147 FU-2: the Merchant row is removed (Hospital Name supersedes it).
+    expect(screen.queryByText('quick_approve_detail.merchant')).not.toBeInTheDocument();
   });
 
   it('renders STA-79 claim approval timeline latest-first', async () => {

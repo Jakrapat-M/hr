@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
@@ -458,6 +458,13 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>('reject');
   const [toast, setToast] = useState<string | null>(null);
+  // STA-147 FU-1 — capture the send-back reason in session for IMMEDIATE reflection
+  // in the read-only Send Back Comment box after Confirm. (managerSendBack also
+  // writes queueSnapshot.sendBackComment, but behind a ~300ms mock-async delay, so
+  // local state avoids a flash of '-'.) Reset per request id so the reason from one
+  // request never bleeds into another on client-side navigation (same mounted page).
+  const [sentBackReason, setSentBackReason] = useState<string | null>(null);
+  useEffect(() => { setSentBackReason(null); }, [id]);
 
   function openDrawer(mode: DrawerMode) {
     setDrawerMode(mode);
@@ -499,6 +506,7 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
   function handleDrawerConfirm(requestId: string, reason: string, _comment: string) {
     if (!request) return;
     void APPROVAL_REGISTRY[request.type].reject(requestId, { name: MANAGER_NAME }, reason);
+    setSentBackReason(reason); // FU-1: reflect the reason in the read-only Send Back Comment box
     setDrawerOpen(false);
     showToast(drawerMode === 'return' ? t('toastReturned') : t('toastRejected'));
   }
@@ -556,7 +564,7 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
         )}
         <HistoryTimeline steps={request.approvalTimeline} />
         {/* STA-147 req-2: Note + read-only Send Back Comment below the history. */}
-        <ApproverNotesPanel sendBackComment={request.sendBackComment} />
+        <ApproverNotesPanel sendBackComment={sentBackReason ?? request.sendBackComment} />
       </div>
 
       {/* Sticky action panel */}
