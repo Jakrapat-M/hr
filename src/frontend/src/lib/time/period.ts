@@ -91,22 +91,37 @@ export function isTimesheetLocked(dateISO: string, refDate?: Date): boolean {
 }
 
 /**
- * STA-130 (BA, 2026-06-25) — earliest backdate allowed for a leave request: the
- * start of the current payroll period. Backdated leave is permitted within the
- * still-open period (sick leave is inherently retroactive), but not into a prior,
- * already-processed period — i.e. the "≈1 รอบ" cap Pattranuch asked for.
+ * The payroll period (21st → 20th) immediately BEFORE the one containing
+ * `refDate`. Derived from `currentPeriod`: the day before the current period
+ * start (the 20th) falls inside the previous cycle.
+ */
+export function previousPeriod(refDate?: Date): { start: string; end: string } {
+  const { start } = currentPeriod(refDate);
+  const dayBeforeStart = new Date(`${start}T00:00:00Z`);
+  dayBeforeStart.setUTCDate(dayBeforeStart.getUTCDate() - 1);
+  return currentPeriod(dayBeforeStart);
+}
+
+/**
+ * STA-156 (BA, 2026-06-25) — earliest backdate allowed for a leave request: the
+ * start of the PREVIOUS payroll cycle (1 cycle back). Backdated leave is permitted
+ * for up to one previous attendance/payroll cycle (cycle = 21st → 20th); anything
+ * before that previous-cycle start is already processed and not bookable. This
+ * supersedes STA-130's current-period-only floor — Pattranuch's "1 previous cycle"
+ * rule. Example: today 25 Jun 2026 → current cycle 21 Jun–20 Jul, previous cycle
+ * 21 May–20 Jun → earliest selectable date = 21 May 2026.
  */
 export function LEAVE_BACKDATE_MIN(refDate?: Date): string {
-  return currentPeriod(refDate).start;
+  return previousPeriod(refDate).start;
 }
 
 /**
  * MOCK ONLY — leave-specific bookable window. Leave supports SF-style advance
- * booking up to `LEAVE_BOOKING_HORIZON_DAYS` days ahead, AND (STA-130) backdating
- * within the current payroll period (down to `LEAVE_BACKDATE_MIN`). Dates before
- * the current period start (already-processed) and beyond the horizon are not
- * bookable. The payroll-period functions above are intentionally left untouched so
- * the time-correction lock semantics do not change.
+ * booking up to `LEAVE_BOOKING_HORIZON_DAYS` days ahead, AND (STA-156) backdating
+ * down to the start of the previous payroll cycle (`LEAVE_BACKDATE_MIN`). Dates
+ * before that previous-cycle start (already-processed) and beyond the horizon are
+ * not bookable. The payroll-period functions above are intentionally left untouched
+ * so the time-correction lock semantics do not change.
  */
 export function isBookableLeaveDate(dateISO: string, refDate?: Date): boolean {
   if (!dateISO) return false;
