@@ -6,17 +6,14 @@
 //   • Time Entry — actual IN/OUT per day vs the scheduled shift + Late badge.
 //   • Schedule   — the assigned shift (IN/OUT + break) per day (DWS shift codes).
 //   • Late       — late-day roll-up for the payroll period.
-//   • ชั่วโมงรายสัปดาห์ — the legacy weekly project-hours grid, preserved so the
-//     manager review (/time/review), import, and submissions store keep working.
 // Mockup: deterministic seeds, no backend. Humi tokens; Late = pumpkin, never red.
 
 import { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Check, Plus, AlertTriangle, Clock, PencilLine } from 'lucide-react';
+import { Check, AlertTriangle, Clock, PencilLine } from 'lucide-react';
 import { Card, CardTitle, Button } from '@/components/humi';
 import { cn } from '@/lib/utils';
-import { useTimesheet } from '@/hooks/use-time';
 import { useAuthStore } from '@/stores/auth-store';
 import { resolveCurrentEmpId } from '@/lib/scope-filter';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
@@ -44,12 +41,6 @@ import {
 } from '@/lib/time/correction-overlay';
 import { TimeCorrectionForm } from '@/components/time/TimeCorrectionForm';
 import { Modal } from '@/components/humi';
-import {
-  useTimesheetSubmissions,
-  validateTimesheet,
-  sumTimesheetHours,
-  type TimesheetSubmissionRow,
-} from '@/stores/timesheet-submissions';
 
 /** Best-guess punch type for a row's correction prefill (user can still change it). */
 function detectCorrectionType(d: AttendanceDay): CorrectionType {
@@ -58,12 +49,7 @@ function detectCorrectionType(d: AttendanceDay): CorrectionType {
   return 'in';
 }
 
-const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
-type Day = typeof DAYS[number];
-const DAY_LABEL_EN: Record<Day, string> = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
-const DAY_LABEL_TH: Record<Day, string> = { mon: 'จ', tue: 'อ', wed: 'พ', thu: 'พฤ', fri: 'ศ', sat: 'ส', sun: 'อา' };
-
-type TabKey = 'entry' | 'schedule' | 'late' | 'results' | 'punch' | 'timeoff' | 'messages' | 'weekly';
+type TabKey = 'entry' | 'schedule' | 'late' | 'results' | 'punch' | 'timeoff' | 'messages';
 
 function fmtDate(iso: string, isTh: boolean): string {
   return new Date(iso + 'T00:00:00Z').toLocaleDateString(isTh ? 'th-TH' : 'en-US', {
@@ -135,31 +121,8 @@ export default function TimesheetPage() {
 
   const [tab, setTab] = useState<TabKey>('entry');
 
-  // ── Legacy weekly project-hours grid (preserved; feeds /time/review + import) ──
-  const { rows, weekStart, updateHours, addRow, totalPerDay } = useTimesheet();
-  const submit = useTimesheetSubmissions((s) => s.submit);
-  const [newProject, setNewProject] = useState('');
+  // Toast for the inline time-correction modal.
   const [toast, setToast] = useState<string | null>(null);
-  const [status, setStatus] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
-  const grandTotal = totalPerDay.reduce((s, v) => s + v, 0);
-
-  const handleSave = () => {
-    const snapshot: TimesheetSubmissionRow[] = rows.map((r) => ({ ...r }));
-    const result = validateTimesheet(snapshot);
-    if (!result.valid) {
-      const message =
-        result.reason === 'day-over-24'
-          ? isTh ? 'ชั่วโมงต่อวันต้องไม่เกิน 24 ชม.' : 'A single day cannot exceed 24 hours.'
-          : isTh ? 'กรุณาบันทึกชั่วโมงงานก่อนส่ง' : 'Please log some hours before submitting.';
-      setStatus({ kind: 'error', message });
-      return;
-    }
-    const total = sumTimesheetHours(snapshot);
-    submit({ employeeId: userId ?? 'EMP001', employeeName: username ?? 'พนักงาน', weekStart, rows: snapshot, totalHours: total });
-    setStatus({ kind: 'success', message: isTh ? `ส่งใบบันทึกเวลาแล้ว · รวม ${total} ชม.` : `Timesheet submitted · ${total} hrs total` });
-    setToast(isTh ? `บันทึกแล้ว · รวม ${total} ชม.` : `Saved · ${total} hrs total`);
-    window.setTimeout(() => setToast(null), 3200);
-  };
 
   const TABS: { key: TabKey; labelTh: string; labelEn: string }[] = [
     { key: 'entry', labelTh: 'บันทึกเวลา', labelEn: 'Time Entry' },
@@ -169,7 +132,6 @@ export default function TimesheetPage() {
     { key: 'results', labelTh: 'ผลคำนวณ', labelEn: 'Results' },
     { key: 'timeoff', labelTh: 'วันลาคงเหลือ', labelEn: 'Time Off' },
     { key: 'messages', labelTh: 'ข้อความ', labelEn: 'Messages' },
-    { key: 'weekly', labelTh: 'ชั่วโมงรายสัปดาห์', labelEn: 'Weekly hours' },
   ];
 
   return (
@@ -247,7 +209,7 @@ export default function TimesheetPage() {
       </div>
 
       {/* ── Clocking gate for the attendance tabs ── */}
-      {tab !== 'weekly' && !isClocking ? (
+      {!isClocking ? (
         <Card>
           <div className="flex flex-col items-center gap-2 py-10 text-center">
             <Clock className="text-ink-faint" size={28} aria-hidden />
@@ -526,60 +488,6 @@ export default function TimesheetPage() {
             ))}
           </ul>
         </Card>
-      )}
-
-      {/* ── Tab: Weekly hours (legacy project-hours grid — preserved) ── */}
-      {tab === 'weekly' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <p className="text-sm text-ink-muted">{isTh ? `สัปดาห์: ${weekStart}` : `Week of ${weekStart}`}</p>
-            <Button variant="primary" size="sm" onClick={handleSave}>{isTh ? 'บันทึก' : 'Save'}</Button>
-          </div>
-          {status && (
-            <div role={status.kind === 'error' ? 'alert' : 'status'} aria-live="polite" className={cn('flex items-center gap-2 rounded-[var(--radius-md)] border px-4 py-3 text-body font-medium', status.kind === 'error' ? 'bg-danger-soft border-danger text-danger' : 'bg-accent-soft border-accent text-accent')}>
-              {status.kind === 'error' ? <AlertTriangle size={16} aria-hidden /> : <Check size={16} aria-hidden />}
-              {status.message}
-            </div>
-          )}
-          <Card>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-hairline">
-                    <th className="text-left py-3 px-4 font-semibold text-ink min-w-[160px]">{isTh ? 'โครงการ' : 'Project'}</th>
-                    {DAYS.map((d) => (<th key={d} className={`py-3 px-2 text-center font-semibold w-16 ${['sat', 'sun'].includes(d) ? 'text-ink-muted' : 'text-ink'}`}>{isTh ? DAY_LABEL_TH[d] : DAY_LABEL_EN[d]}</th>))}
-                    <th className="py-3 px-3 text-center font-semibold text-ink w-16">{isTh ? 'รวม' : 'Total'}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, rowIdx) => {
-                    const rowTotal = DAYS.reduce((s, d) => s + row[d], 0);
-                    return (
-                      <tr key={rowIdx} className="border-b border-hairline last:border-0 hover:bg-canvas-soft">
-                        <td className="py-2 px-4 font-medium text-ink">{row.project}</td>
-                        {DAYS.map((d) => (
-                          <td key={d} className="py-2 px-2">
-                            <input type="number" min={0} max={24} step={0.5} value={row[d] === 0 ? '' : row[d]} onChange={(e) => updateHours(rowIdx, d, Number(e.target.value) || 0)} className="w-14 text-center rounded border border-hairline bg-surface px-1 py-1 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-accent-soft" placeholder="0" />
-                          </td>
-                        ))}
-                        <td className="py-2 px-3 text-center font-semibold text-ink">{rowTotal}</td>
-                      </tr>
-                    );
-                  })}
-                  <tr className="bg-canvas-soft font-semibold">
-                    <td className="py-2 px-4 text-ink-muted">{isTh ? 'รวมต่อวัน' : 'Daily total'}</td>
-                    {totalPerDay.map((t, i) => (<td key={i} className={`py-2 px-2 text-center ${t > 8 ? 'text-[var(--color-danger)]' : 'text-ink'}`}>{t}</td>))}
-                    <td className="py-2 px-3 text-center text-accent">{grandTotal}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </Card>
-          <div className="flex items-center gap-3">
-            <input type="text" value={newProject} onChange={(e) => setNewProject(e.target.value)} placeholder={isTh ? 'ชื่อโครงการใหม่' : 'New project name'} className="flex-1 max-w-xs rounded border border-hairline bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-accent-soft" onKeyDown={(e) => { if (e.key === 'Enter' && newProject.trim()) { addRow(newProject.trim()); setNewProject(''); } }} />
-            <Button variant="secondary" size="sm" onClick={() => { if (newProject.trim()) { addRow(newProject.trim()); setNewProject(''); } }}><Plus size={14} className="mr-1" />{isTh ? 'เพิ่มโครงการ' : 'Add project'}</Button>
-          </div>
-        </div>
       )}
 
       {/* Inline time-correction modal (SF-parity: edit on the row, no nav away) */}
