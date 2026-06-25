@@ -406,7 +406,12 @@
       "dependentName": "ชื่อผู้รับสิทธิ์",
       "dependentDob": "วันเกิด",
       "dependentRelationship": "ความสัมพันธ์",
-      "realMonthDate": "เดือนที่ขอเบิก"
+      "realMonthDate": "เดือนที่ขอเบิก",
+      "admittedStart": "วันที่เริ่มเข้ารักษา (ผู้ป่วยใน)",
+      "admittedEnd": "วันที่สิ้นสุดการรักษา (ผู้ป่วยใน)",
+      "medicalHospitalName": "ชื่อสถานพยาบาล",
+      "hospitalOthers": "ระบุสถานพยาบาลอื่นๆ",
+      "diseaseDetailsDetail": "ระบุรายละเอียดเพิ่มเติม"
     }
   },
   "profileDetails": {

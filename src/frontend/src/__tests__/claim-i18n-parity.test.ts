@@ -7,6 +7,9 @@ import {
   HOSPITAL_NAME_TYPE_OPTIONS,
   YES_NO_TRANSFER_DOC_OPTIONS,
   GASOLINE_CLAIM_TYPE_OPTIONS,
+  HOSPITAL_MASTER_OPTIONS,
+  DISEASE_DETAILS_OPTIONS,
+  DEPENDENT_RELATIONSHIP_OPTIONS,
 } from '@/lib/admin/hire/picklists/picklistRegistry';
 
 const REQUIRED_CLAIM_KEYS = [
@@ -15,6 +18,9 @@ const REQUIRED_CLAIM_KEYS = [
   'medicalDental', 'opdIpd', 'hospitalType', 'hospitalName', 'patientTransferDoc',
   'diseaseDetails', 'gasolineClaimType', 'physicalInvoice', 'dependentName',
   'dependentDob', 'dependentRelationship', 'realMonthDate',
+  // STA-145 Phase B
+  'admittedStart', 'admittedEnd', 'medicalHospitalName', 'hospitalOthers',
+  'diseaseDetailsDetail',
 ] as const;
 
 const claimTh = (th as unknown as Record<string, Record<string, Record<string, string>>>).benefits?.claim ?? {};
@@ -38,6 +44,10 @@ describe('STA-119 — LOV options carry both TH + EN labels', () => {
     HOSPITAL_NAME_TYPE_OPTIONS,
     YES_NO_TRANSFER_DOC_OPTIONS,
     GASOLINE_CLAIM_TYPE_OPTIONS,
+    // STA-145 Phase B
+    HOSPITAL_MASTER_OPTIONS,
+    DISEASE_DETAILS_OPTIONS,
+    DEPENDENT_RELATIONSHIP_OPTIONS,
   ];
   it('every option has a non-empty labelTh and labelEn', () => {
     for (const lov of LOVS) {

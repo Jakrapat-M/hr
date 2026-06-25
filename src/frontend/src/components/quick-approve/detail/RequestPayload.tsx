@@ -12,7 +12,7 @@ import type {
   TransferDetails,
 } from '@/lib/quick-approve-api';
 import {
-  bucketsForType,
+  bucketsForTypeAndName,
   getConditionalFields,
   resolveClaimDisplayValue,
 } from '@/data/benefits/claim-field-config';
@@ -22,10 +22,15 @@ import type { BenefitClaimType } from '@/stores/benefit-claims';
 const CLAIM_FIELD_LABELS: Record<string, { th: string; en: string }> = {
   medicalDental: { th: 'การแพทย์ / ทันตกรรม', en: 'Medical / Dental' },
   opdIpd: { th: 'OPD / IPD', en: 'OPD / IPD' },
+  admittedStart: { th: 'วันที่เริ่มเข้ารักษา (ผู้ป่วยใน)', en: 'Admitted start date' },
+  admittedEnd: { th: 'วันที่สิ้นสุดการรักษา (ผู้ป่วยใน)', en: 'Admitted end date' },
   hospitalType: { th: 'ประเภทสถานพยาบาล', en: 'Type of Hospital' },
   hospitalName: { th: 'ชื่อสถานพยาบาล', en: 'Hospital Name' },
+  medicalHospitalName: { th: 'ชื่อสถานพยาบาล', en: 'Hospital Name' },
+  hospitalOthers: { th: 'ระบุสถานพยาบาลอื่นๆ', en: 'Others (specify hospital)' },
   patientTransferDoc: { th: 'ใช้เอกสารส่งตัวหรือไม่', en: 'Use patient transfer document?' },
   diseaseDetails: { th: 'รายละเอียดอาการ/โรค', en: 'Disease Details' },
+  diseaseDetailsDetail: { th: 'ระบุรายละเอียดเพิ่มเติม', en: 'Details' },
   gasolineClaimType: { th: 'ประเภทการเบิก', en: 'Claim Type' },
   physicalInvoice: { th: 'ใบแจ้งหนี้จากโรงพยาบาล', en: 'Invoice from hospital' },
   dependentName: { th: 'ชื่อผู้รับสิทธิ์', en: 'Dependent Name' },
@@ -110,8 +115,11 @@ function ClaimPayload({ details, t, locale }: { details: ClaimDetails; t: Return
       />
       <Row label={t('category')} value={details.category} />
       <Row label={t('merchant')} value={details.merchant} />
-      {/* STA-119: config-driven conditional rows, read-only mirror of submitted values. */}
-      {getConditionalFields(bucketsForType(details.benefitType ?? inferBenefitType(details))).map((f) => {
+      {/* STA-119: config-driven conditional rows, read-only mirror of submitted values.
+          NOTE: details.category here carries the benefit *name* (not a PlanCategory enum),
+          which is what bucketsForTypeAndName's dependent-name detection needs. If category
+          is ever refactored to hold the enum, pass the benefit name explicitly instead. */}
+      {getConditionalFields(bucketsForTypeAndName(details.benefitType ?? inferBenefitType(details), details.category)).map((f) => {
         const display = resolveClaimDisplayValue(f, dynamic[f.key], locale);
         if (!display) return null;
         const label = CLAIM_FIELD_LABELS[f.key];

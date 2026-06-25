@@ -406,7 +406,12 @@
       "dependentName": "Dependent Name",
       "dependentDob": "Date of Birth",
       "dependentRelationship": "Relationship Type",
-      "realMonthDate": "Claim month"
+      "realMonthDate": "Claim month",
+      "admittedStart": "Admitted start date",
+      "admittedEnd": "Admitted end date",
+      "medicalHospitalName": "Hospital Name",
+      "hospitalOthers": "Others (specify hospital)",
+      "diseaseDetailsDetail": "Details"
     }
   },
   "profileDetails": {

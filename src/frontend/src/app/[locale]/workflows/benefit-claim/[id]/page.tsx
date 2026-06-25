@@ -25,7 +25,7 @@ import {
 
 import { useBenefitClaimsStore, BENEFIT_STATUS_LABEL, type BenefitClaimStatus, type BenefitClaimRequest } from '@/stores/benefit-claims';
 import {
-  bucketsForType,
+  bucketsForTypeAndName,
   getConditionalFields,
   resolveClaimDisplayValue,
   type ClaimFieldKey,
@@ -177,10 +177,15 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
 const CLAIM_FIELD_LABELS: Record<string, { th: string; en: string }> = {
   medicalDental: { th: 'การแพทย์ / ทันตกรรม', en: 'Medical / Dental' },
   opdIpd: { th: 'OPD / IPD', en: 'OPD / IPD' },
+  admittedStart: { th: 'วันที่เริ่มเข้ารักษา (ผู้ป่วยใน)', en: 'Admitted start date' },
+  admittedEnd: { th: 'วันที่สิ้นสุดการรักษา (ผู้ป่วยใน)', en: 'Admitted end date' },
   hospitalType: { th: 'ประเภทสถานพยาบาล', en: 'Type of Hospital' },
   hospitalName: { th: 'ชื่อสถานพยาบาล', en: 'Hospital Name' },
+  medicalHospitalName: { th: 'ชื่อสถานพยาบาล', en: 'Hospital Name' },
+  hospitalOthers: { th: 'ระบุสถานพยาบาลอื่นๆ', en: 'Others (specify hospital)' },
   patientTransferDoc: { th: 'ใช้เอกสารส่งตัวหรือไม่', en: 'Use patient transfer document?' },
   diseaseDetails: { th: 'รายละเอียดอาการ/โรค', en: 'Disease Details' },
+  diseaseDetailsDetail: { th: 'ระบุรายละเอียดเพิ่มเติม', en: 'Details' },
   gasolineClaimType: { th: 'ประเภทการเบิก', en: 'Claim Type' },
   physicalInvoice: { th: 'ใบแจ้งหนี้จากโรงพยาบาล', en: 'Invoice from hospital' },
   dependentName: { th: 'ชื่อผู้รับสิทธิ์', en: 'Dependent Name' },
@@ -394,7 +399,7 @@ export default function BenefitClaimDetailPage({ params }: PageProps) {
                 />
                 <FieldRow label={isTh ? 'หมายเหตุ' : 'Remark'} value={claim.remark} />
                 {/* STA-119: config-driven conditional rows, read-only mirror of submitted values. */}
-                {getConditionalFields(bucketsForType(claim.benefitType)).map((f) => {
+                {getConditionalFields(bucketsForTypeAndName(claim.benefitType, claim.benefitName)).map((f) => {
                   const key = f.key as ClaimFieldKey;
                   const flatKey = CLAIM_FLAT_FALLBACK[key];
                   const raw =
