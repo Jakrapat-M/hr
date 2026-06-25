@@ -52,7 +52,8 @@ describe('benefits-hub reimbursement route mapping', () => {
 
     render(<ReimbursementPage />);
 
-    expect(screen.getByLabelText(/สวัสดิการที่เลือก/)).toHaveValue('ค่ารักษาพยาบาล (ผู้ป่วยนอก)');
+    // STA-148 req-4 — BE-MED-001 renamed "Medical Reimbursement" (dropped OPD suffix).
+    expect(screen.getByLabelText(/สวัสดิการที่เลือก/)).toHaveValue('ค่ารักษาพยาบาล');
   });
 
   it('maps ca-phone allowance to canonical BE-MOB-001 and submits with mobile benefitType', async () => {

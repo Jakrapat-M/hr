@@ -370,3 +370,55 @@ describe('pickTemplate', () => {
     expect(seenTemplates).toEqual(expectedTemplates);
   });
 });
+
+// ── STA-148 — reimbursement / start-a-claim revisions ─────────────────────────
+describe('STA-148 — SimpleClaimForm revisions', () => {
+  it('renders the certification notice immediately before the Attachments field', () => {
+    const { container } = render(<SimpleClaimForm plan={OPD_PLAN} />);
+    const cert = screen.getByText('ข้าพเจ้าขอรับรองว่าข้อมูลข้างต้นถูกต้องและครบถ้วน');
+    expect(cert).toBeInTheDocument();
+    const attach = screen.getByText(/เอกสารแนบ/);
+    // Cert notice precedes the Attachments label in document order (req-1).
+    expect(cert.compareDocumentPosition(attach) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // ...and the cert notice is NOT red — uses the pumpkin danger token (NO-RED).
+    expect(container.querySelector('.text-\\[var\\(--color-danger\\)\\]')).not.toBeNull();
+  });
+
+  it('places Remark after the conditional fields and before Attachments (req-3)', () => {
+    render(<SimpleClaimForm plan={OPD_PLAN} />);
+    const remark = screen.getByLabelText(/หมายเหตุ/);
+    const opdIpd = screen.getByLabelText(/OPD \/ IPD/); // a medical conditional field
+    const attach = screen.getByText(/เอกสารแนบ/);
+    // conditional (opdIpd) → remark → attachments
+    expect(opdIpd.compareDocumentPosition(remark) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(remark.compareDocumentPosition(attach) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('opens the Clinic not-allowed Modal when Type of Hospital = Clinic (req-2)', () => {
+    render(<SimpleClaimForm plan={OPD_PLAN} />);
+    const hospitalType = screen.getByLabelText(/ประเภทสถานพยาบาล/) as HTMLSelectElement;
+    expect(screen.queryByText(/ไม่สามารถเบิกค่าใช้จ่ายจากคลินิก/)).not.toBeInTheDocument();
+    fireEvent.change(hospitalType, { target: { value: 'clinic' } });
+    expect(screen.getByText(/ไม่สามารถเบิกค่าใช้จ่ายจากคลินิก/)).toBeInTheDocument();
+  });
+});
+
+describe('STA-148 req-4 — merged Medical Reimbursement', () => {
+  it('renames BE-MED-001 to "Medical Reimbursement" (OPD suffix dropped)', () => {
+    const med = getPlan('BE-MED-001')!;
+    expect(med.nameEn).toBe('Medical Reimbursement');
+    expect(med.nameTh).toBe('ค่ารักษาพยาบาล');
+  });
+
+  it('keeps the BE-MED-003 registry entry (excluded from chips, not deleted)', () => {
+    expect(getPlan('BE-MED-003')).toBeDefined();
+  });
+
+  it('the ESS simple-claim chip set has exactly one claimable medical plan', () => {
+    const medicalChips = BENEFIT_PLAN_REGISTRY.filter(
+      (p) => p.template === 'simple-claim' && p.recordType === 'claimable'
+        && p.category === 'medical' && p.id !== 'BE-MED-003',
+    );
+    expect(medicalChips.map((p) => p.id)).toEqual(['BE-MED-001']);
+  });
+});
