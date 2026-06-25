@@ -91,18 +91,28 @@ export function isTimesheetLocked(dateISO: string, refDate?: Date): boolean {
 }
 
 /**
- * MOCK ONLY — leave-specific bookable window. Unlike time corrections (which the
- * payroll period 21→20 locks), leave supports SF-style advance booking: a date is
- * bookable from today through `LEAVE_BOOKING_HORIZON_DAYS` days ahead, inclusive.
- * Past dates are not bookable. The payroll-period functions above are intentionally
- * left untouched so the time-correction lock semantics do not change.
+ * STA-130 (BA, 2026-06-25) — earliest backdate allowed for a leave request: the
+ * start of the current payroll period. Backdated leave is permitted within the
+ * still-open period (sick leave is inherently retroactive), but not into a prior,
+ * already-processed period — i.e. the "≈1 รอบ" cap Pattranuch asked for.
+ */
+export function LEAVE_BACKDATE_MIN(refDate?: Date): string {
+  return currentPeriod(refDate).start;
+}
+
+/**
+ * MOCK ONLY — leave-specific bookable window. Leave supports SF-style advance
+ * booking up to `LEAVE_BOOKING_HORIZON_DAYS` days ahead, AND (STA-130) backdating
+ * within the current payroll period (down to `LEAVE_BACKDATE_MIN`). Dates before
+ * the current period start (already-processed) and beyond the horizon are not
+ * bookable. The payroll-period functions above are intentionally left untouched so
+ * the time-correction lock semantics do not change.
  */
 export function isBookableLeaveDate(dateISO: string, refDate?: Date): boolean {
   if (!dateISO) return false;
   const today = refOf(refDate);
   const horizon = new Date(today.getTime());
   horizon.setUTCDate(horizon.getUTCDate() + LEAVE_BOOKING_HORIZON_DAYS);
-  const todayISO = toISODate(today);
   const horizonISO = toISODate(horizon);
-  return dateISO >= todayISO && dateISO <= horizonISO;
+  return dateISO >= LEAVE_BACKDATE_MIN(refDate) && dateISO <= horizonISO;
 }

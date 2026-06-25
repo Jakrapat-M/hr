@@ -1032,8 +1032,7 @@
       "exceedsBalance": "Request exceeds available balance",
       "hrApprovalRequired": "HR approval required for leaves over 5 consecutive days",
       "medicalCertNeeded": "Medical certificate required for sick leave over 3 days",
-      "overlapping": "Leave dates overlap with existing request",
-      "pastDate": "Cannot request leave for past dates"
+      "overlapping": "Leave dates overlap with existing request"
     },
     "submit": "Submit Request",
     "cancel": "Cancel Request",
