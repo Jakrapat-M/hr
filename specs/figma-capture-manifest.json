@@ -1,0 +1,2401 @@
+[
+  {
+    "route": "/",
+    "captureUrl": "/en",
+    "lane": 0,
+    "laneName": "Entry / Auth",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "45:2",
+    "aliasOf": "/en/home",
+    "wallmapArchive": true,
+    "note": "redirect-alias of /en/home (root → home); archived in wall-map to avoid dup"
+  },
+  {
+    "route": "/home",
+    "captureUrl": "/en/home",
+    "lane": 0,
+    "laneName": "Entry / Auth",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "55:2"
+  },
+  {
+    "route": "/login",
+    "captureUrl": "/en/login",
+    "lane": 0,
+    "laneName": "Entry / Auth",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "56:2"
+  },
+  {
+    "route": "/announcements",
+    "captureUrl": "/en/announcements",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "57:2"
+  },
+  {
+    "route": "/careers",
+    "captureUrl": "/en/careers",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "58:2"
+  },
+  {
+    "route": "/employees/me",
+    "captureUrl": "/en/employees/me",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "59:2",
+    "wallmapArchive": true,
+    "aliasOf": "/en/profile/me",
+    "note": "renders identical screen to /en/profile/me (visual dup); archived in wall-map"
+  },
+  {
+    "route": "/employees/me/benefits",
+    "captureUrl": "/en/employees/me/benefits",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "60:2",
+    "wallmapArchive": true,
+    "aliasOf": "/en/profile/benefits",
+    "note": "renders identical screen to /en/profile/benefits (visual dup); archived in wall-map"
+  },
+  {
+    "route": "/employees/me/payslip",
+    "captureUrl": "/en/employees/me/payslip",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "61:2"
+  },
+  {
+    "route": "/ess/profile/edit",
+    "captureUrl": "/en/ess/profile/edit",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "62:2"
+  },
+  {
+    "route": "/ess/workflows",
+    "captureUrl": "/en/ess/workflows",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "249:2"
+  },
+  {
+    "route": "/me/documents",
+    "captureUrl": "/en/me/documents",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "64:2"
+  },
+  {
+    "route": "/me/documents/request",
+    "captureUrl": "/en/me/documents/request",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "65:2"
+  },
+  {
+    "route": "/payslip",
+    "captureUrl": "/en/payslip",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "66:2"
+  },
+  {
+    "route": "/profile/[tab]",
+    "captureUrl": "/en/profile/personal",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": "personal",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "51:2",
+    "wallmapArchive": true,
+    "aliasOf": "/en/profile/me",
+    "note": "renders identical screen to /en/profile/me (visual dup); archived in wall-map"
+  },
+  {
+    "route": "/profile/[tab]/benefits",
+    "captureUrl": "/en/profile/personal/benefits",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": "personal",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "67:2",
+    "wallmapArchive": true,
+    "aliasOf": "/en/profile/benefits",
+    "note": "renders identical screen to /en/profile/benefits (visual dup); archived in wall-map"
+  },
+  {
+    "route": "/profile/benefits",
+    "captureUrl": "/en/profile/benefits",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "68:2"
+  },
+  {
+    "route": "/profile/me",
+    "captureUrl": "/en/profile/me",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "46:2"
+  },
+  {
+    "route": "/requests",
+    "captureUrl": "/en/requests",
+    "lane": 1,
+    "laneName": "Employee Self-Service",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "248:2"
+  },
+  {
+    "route": "/overtime",
+    "captureUrl": "/en/overtime",
+    "lane": 2,
+    "laneName": "Time & Leave (ESS)",
+    "persona": [
+      "D",
+      "C"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "70:2"
+  },
+  {
+    "route": "/resignation",
+    "captureUrl": "/en/resignation",
+    "lane": 2,
+    "laneName": "Time & Leave (ESS)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "71:2"
+  },
+  {
+    "route": "/time/clock",
+    "captureUrl": "/en/time/clock",
+    "lane": 2,
+    "laneName": "Time & Leave (ESS)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "72:2"
+  },
+  {
+    "route": "/timeoff",
+    "captureUrl": "/en/timeoff",
+    "lane": 2,
+    "laneName": "Time & Leave (ESS)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "73:2"
+  },
+  {
+    "route": "/benefits",
+    "captureUrl": "/en/benefits",
+    "lane": 3,
+    "laneName": "Benefits (Employee)",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "74:2",
+    "wallmapArchive": true,
+    "aliasOf": "/en/benefits-hub",
+    "note": "renders identical screen to /en/benefits-hub (visual dup); archived in wall-map"
+  },
+  {
+    "route": "/benefits-hub",
+    "captureUrl": "/en/benefits-hub",
+    "lane": 3,
+    "laneName": "Benefits (Employee)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "247:2"
+  },
+  {
+    "route": "/benefits-hub/beneficiary",
+    "captureUrl": "/en/benefits-hub/beneficiary",
+    "lane": 3,
+    "laneName": "Benefits (Employee)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "76:2"
+  },
+  {
+    "route": "/benefits-hub/history",
+    "captureUrl": "/en/benefits-hub/history",
+    "lane": 3,
+    "laneName": "Benefits (Employee)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "77:2"
+  },
+  {
+    "route": "/benefits-hub/hospital-claim",
+    "captureUrl": "/en/benefits-hub/hospital-claim",
+    "lane": 3,
+    "laneName": "Benefits (Employee)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "78:2"
+  },
+  {
+    "route": "/benefits-hub/life-accident",
+    "captureUrl": "/en/benefits-hub/life-accident",
+    "lane": 3,
+    "laneName": "Benefits (Employee)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "79:2"
+  },
+  {
+    "route": "/benefits-hub/physical-checkup",
+    "captureUrl": "/en/benefits-hub/physical-checkup",
+    "lane": 3,
+    "laneName": "Benefits (Employee)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "80:2"
+  },
+  {
+    "route": "/benefits-hub/referral",
+    "captureUrl": "/en/benefits-hub/referral",
+    "lane": 3,
+    "laneName": "Benefits (Employee)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "81:2"
+  },
+  {
+    "route": "/benefits-hub/reimbursement",
+    "captureUrl": "/en/benefits-hub/reimbursement",
+    "lane": 3,
+    "laneName": "Benefits (Employee)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "82:2"
+  },
+  {
+    "route": "/hospital-referral",
+    "captureUrl": "/en/hospital-referral",
+    "lane": 3,
+    "laneName": "Benefits (Employee)",
+    "persona": [
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "83:2"
+  },
+  {
+    "route": "/quick-approve",
+    "captureUrl": "/en/quick-approve",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "A",
+      "B",
+      "C"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "47:2"
+  },
+  {
+    "route": "/quick-approve/[id]",
+    "captureUrl": "/en/quick-approve/TR-20260424-0800-X1KM",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "A",
+      "B",
+      "C"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "TR-20260424-0800-X1KM",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "48:2"
+  },
+  {
+    "route": "/quick-approve/bulk",
+    "captureUrl": "/en/quick-approve/bulk",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "A",
+      "B",
+      "C"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "84:2"
+  },
+  {
+    "route": "/workflows",
+    "captureUrl": "/en/workflows",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "C",
+      "B",
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "85:2",
+    "wallmapArchive": true,
+    "aliasOf": "/en/quick-approve",
+    "note": "renders identical screen to /en/quick-approve (visual dup); archived in wall-map"
+  },
+  {
+    "route": "/workflows/benefit-claim/[id]",
+    "captureUrl": "/en/workflows/benefit-claim/BEN-CLM-0001",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "C",
+      "B",
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": "BEN-CLM-0001",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "86:2"
+  },
+  {
+    "route": "/workflows/leave/[id]",
+    "captureUrl": "/en/workflows/leave/LV-DEMO-ANNUAL-0001",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "C",
+      "B",
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": "LV-DEMO-ANNUAL-0001",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "87:2"
+  },
+  {
+    "route": "/workflows/ot/[id]",
+    "captureUrl": "/en/workflows/ot/OT-DEMO-0001",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "C",
+      "B",
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": "OT-DEMO-0001",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "88:2"
+  },
+  {
+    "route": "/workflows/pay-rate/[id]",
+    "captureUrl": "/en/workflows/pay-rate/PR-20260424-0930-A1BC",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "C",
+      "B",
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": "PR-20260424-0930-A1BC",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "89:2"
+  },
+  {
+    "route": "/workflows/probation",
+    "captureUrl": "/en/workflows/probation",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "A",
+      "B",
+      "C"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "90:2"
+  },
+  {
+    "route": "/workflows/probation/[id]",
+    "captureUrl": "/en/workflows/probation/PM-20260424-0930-D4HK",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "A",
+      "B",
+      "C"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "PM-20260424-0930-D4HK",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "91:2"
+  },
+  {
+    "route": "/workflows/resignation/[id]",
+    "captureUrl": "/en/workflows/resignation/TR-20260424-0800-X1KM",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "C",
+      "B",
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": "TR-20260424-0800-X1KM",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "92:2"
+  },
+  {
+    "route": "/workflows/tax-planning/[id]",
+    "captureUrl": "/en/workflows/tax-planning/TAX-PLAN-9001",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "C",
+      "B",
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": "TAX-PLAN-9001",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "93:2"
+  },
+  {
+    "route": "/workflows/time-correction/[id]",
+    "captureUrl": "/en/workflows/time-correction/TCR-DEMO-0001",
+    "lane": 4,
+    "laneName": "Approvals Hub",
+    "persona": [
+      "C",
+      "B",
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": "TCR-DEMO-0001",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "94:2"
+  },
+  {
+    "route": "/manager-dashboard",
+    "captureUrl": "/en/manager-dashboard",
+    "lane": 5,
+    "laneName": "Manager",
+    "persona": [
+      "C"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "95:2"
+  },
+  {
+    "route": "/manager-dashboard/probations",
+    "captureUrl": "/en/manager-dashboard/probations",
+    "lane": 5,
+    "laneName": "Manager",
+    "persona": [
+      "C"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "96:2",
+    "wallmapArchive": true,
+    "aliasOf": "/en/workflows/probation",
+    "note": "renders identical screen to /en/workflows/probation (visual dup); archived in wall-map"
+  },
+  {
+    "route": "/manager/benefits/reports",
+    "captureUrl": "/en/manager/benefits/reports",
+    "lane": 5,
+    "laneName": "Manager",
+    "persona": [
+      "C"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "98:2"
+  },
+  {
+    "route": "/manager/benefits/team",
+    "captureUrl": "/en/manager/benefits/team",
+    "lane": 5,
+    "laneName": "Manager",
+    "persona": [
+      "C"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "99:2"
+  },
+  {
+    "route": "/manager/team",
+    "captureUrl": "/en/manager/team",
+    "lane": 5,
+    "laneName": "Manager",
+    "persona": [
+      "A",
+      "C"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "242:2"
+  },
+  {
+    "route": "/hrbp/benefits/exceptions",
+    "captureUrl": "/en/hrbp/benefits/exceptions",
+    "lane": 6,
+    "laneName": "People Partners (HRBP/SPD)",
+    "persona": [
+      "B"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "101:2"
+  },
+  {
+    "route": "/hrbp/benefits/reports",
+    "captureUrl": "/en/hrbp/benefits/reports",
+    "lane": 6,
+    "laneName": "People Partners (HRBP/SPD)",
+    "persona": [
+      "B"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "102:2"
+  },
+  {
+    "route": "/hrbp/dashboard",
+    "captureUrl": "/en/hrbp/dashboard",
+    "lane": 6,
+    "laneName": "People Partners (HRBP/SPD)",
+    "persona": [
+      "B"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "103:2"
+  },
+  {
+    "route": "/hrbp/doc-review",
+    "captureUrl": "/en/hrbp/doc-review",
+    "lane": 6,
+    "laneName": "People Partners (HRBP/SPD)",
+    "persona": [
+      "A",
+      "B"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "104:2"
+  },
+  {
+    "route": "/hrbp/employees",
+    "captureUrl": "/en/hrbp/employees",
+    "lane": 6,
+    "laneName": "People Partners (HRBP/SPD)",
+    "persona": [
+      "B"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "241:2"
+  },
+  {
+    "route": "/hrbp/talent-search",
+    "captureUrl": "/en/hrbp/talent-search",
+    "lane": 6,
+    "laneName": "People Partners (HRBP/SPD)",
+    "persona": [
+      "B"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "106:2"
+  },
+  {
+    "route": "/spd-management",
+    "captureUrl": "/en/spd-management",
+    "lane": 6,
+    "laneName": "People Partners (HRBP/SPD)",
+    "persona": [
+      "B"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "107:2"
+  },
+  {
+    "route": "/spd/benefits/branch-view",
+    "captureUrl": "/en/spd/benefits/branch-view",
+    "lane": 6,
+    "laneName": "People Partners (HRBP/SPD)",
+    "persona": [
+      "B"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "108:2"
+  },
+  {
+    "route": "/spd/benefits/reports",
+    "captureUrl": "/en/spd/benefits/reports",
+    "lane": 6,
+    "laneName": "People Partners (HRBP/SPD)",
+    "persona": [
+      "B"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "109:2"
+  },
+  {
+    "route": "/roster",
+    "captureUrl": "/en/roster",
+    "lane": 7,
+    "laneName": "Time & Attendance (Admin)",
+    "persona": [
+      "A",
+      "C"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "110:2"
+  },
+  {
+    "route": "/time",
+    "captureUrl": "/en/time",
+    "lane": 7,
+    "laneName": "Time & Attendance (Admin)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "111:2"
+  },
+  {
+    "route": "/time/corrections",
+    "captureUrl": "/en/time/corrections",
+    "lane": 7,
+    "laneName": "Time & Attendance (Admin)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "112:2"
+  },
+  {
+    "route": "/time/import",
+    "captureUrl": "/en/time/import",
+    "lane": 7,
+    "laneName": "Time & Attendance (Admin)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "113:2"
+  },
+  {
+    "route": "/time/review",
+    "captureUrl": "/en/time/review",
+    "lane": 7,
+    "laneName": "Time & Attendance (Admin)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "243:2"
+  },
+  {
+    "route": "/time/shift-schedule",
+    "captureUrl": "/en/time/shift-schedule",
+    "lane": 7,
+    "laneName": "Time & Attendance (Admin)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "115:2"
+  },
+  {
+    "route": "/time/timesheet",
+    "captureUrl": "/en/time/timesheet",
+    "lane": 7,
+    "laneName": "Time & Attendance (Admin)",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "116:2"
+  },
+  {
+    "route": "/admin/change-requests",
+    "captureUrl": "/en/admin/change-requests",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "117:2"
+  },
+  {
+    "route": "/admin/documents",
+    "captureUrl": "/en/admin/documents",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "118:2"
+  },
+  {
+    "route": "/admin/employees",
+    "captureUrl": "/en/admin/employees",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "44:2"
+  },
+  {
+    "route": "/admin/employees/[id]",
+    "captureUrl": "/en/admin/employees/EMP-0002",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0002",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "119:2"
+  },
+  {
+    "route": "/admin/employees/[id]/acting",
+    "captureUrl": "/en/admin/employees/EMP-0002/acting",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0002",
+    "dynamic": true,
+    "gateNote": "EffectiveDateGate: enter effective date + click ยืนยันวันที่มีผล before form renders",
+    "nodeId": "120:2"
+  },
+  {
+    "route": "/admin/employees/[id]/change-type",
+    "captureUrl": "/en/admin/employees/EMP-0009/change-type",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0009",
+    "dynamic": true,
+    "gateNote": "EffectiveDateGate: enter effective date + click ยืนยันวันที่มีผล before form renders; use PARTIME employee EMP-0009 to toggle PARTIME→PERMANENT or vice versa",
+    "nodeId": "121:2"
+  },
+  {
+    "route": "/admin/employees/[id]/contract-renewal",
+    "captureUrl": "/en/admin/employees/EMP-0009/contract-renewal",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0009",
+    "dynamic": true,
+    "gateNote": "EffectiveDateGate: enter effective date + click ยืนยันวันที่มีผล before form renders; PARTIME-only: use EMP-0009, EMP-0010, EMP-0021, or EMP-0025",
+    "nodeId": "122:2"
+  },
+  {
+    "route": "/admin/employees/[id]/edit",
+    "captureUrl": "/en/admin/employees/EMP-0002/edit",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0002",
+    "dynamic": true,
+    "gateNote": "EffectiveDateGate: not required for edit form; renders immediately",
+    "nodeId": "136:2"
+  },
+  {
+    "route": "/admin/employees/[id]/pay-rate-change",
+    "captureUrl": "/en/admin/employees/EMP-0002/pay-rate-change",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0002",
+    "dynamic": true,
+    "gateNote": "EffectiveDateGate: enter effective date + click ยืนยันวันที่มีผล before form renders; requires passed probation",
+    "nodeId": "135:2"
+  },
+  {
+    "route": "/admin/employees/[id]/probation",
+    "captureUrl": "/en/admin/employees/EMP-0002/probation",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0002",
+    "dynamic": true,
+    "gateNote": "EffectiveDateGate: enter effective date + click ยืนยันวันที่มีผล before form renders",
+    "nodeId": "139:2"
+  },
+  {
+    "route": "/admin/employees/[id]/reallocate-budget",
+    "captureUrl": "/en/admin/employees/EMP-0009/reallocate-budget",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0009",
+    "dynamic": true,
+    "gateNote": "EffectiveDateGate: enter effective date + click ยืนยันวันที่มีผล before form renders; PARTIME recommended (EMP-0009)",
+    "nodeId": "140:2"
+  },
+  {
+    "route": "/admin/employees/[id]/rehire",
+    "captureUrl": "/en/admin/employees/EMP-0012/rehire",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0012",
+    "dynamic": true,
+    "gateNote": "EffectiveDateGate: enter effective date + click ยืนยันวันที่มีผล before form renders; TERMINATED employees only: EMP-0012 is terminated",
+    "nodeId": "123:2"
+  },
+  {
+    "route": "/admin/employees/[id]/special-privilege",
+    "captureUrl": "/en/admin/employees/EMP-0002/special-privilege",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0002",
+    "dynamic": true,
+    "gateNote": "EffectiveDateGate: enter effective date + click ยืนยันวันที่มีผล before form renders",
+    "nodeId": "124:2"
+  },
+  {
+    "route": "/admin/employees/[id]/terminate",
+    "captureUrl": "/en/admin/employees/EMP-0009/terminate",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0009",
+    "dynamic": true,
+    "gateNote": "EffectiveDateGate: enter effective date + click ยืนยันวันที่มีผล before form renders; any active employee",
+    "nodeId": "49:2"
+  },
+  {
+    "route": "/admin/employees/[id]/transfer",
+    "captureUrl": "/en/admin/employees/EMP-0002/transfer",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "EMP-0002",
+    "dynamic": true,
+    "gateNote": "EffectiveDateGate: enter effective date + click ยืนยันวันที่มีผล before form renders",
+    "nodeId": "137:2"
+  },
+  {
+    "route": "/admin/employees/import",
+    "captureUrl": "/en/admin/employees/import",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "141:2"
+  },
+  {
+    "route": "/admin/hire",
+    "captureUrl": "/en/admin/hire",
+    "lane": 8,
+    "laneName": "HR Admin — Employee Lifecycle",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "142:2"
+  },
+  {
+    "route": "/admin/benefits",
+    "captureUrl": "/en/admin/benefits",
+    "lane": 9,
+    "laneName": "HR Admin — Benefits Admin",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "143:2"
+  },
+  {
+    "route": "/admin/benefits/beneficiaries",
+    "captureUrl": "/en/admin/benefits/beneficiaries",
+    "lane": 9,
+    "laneName": "HR Admin — Benefits Admin",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "144:2"
+  },
+  {
+    "route": "/admin/benefits/exception",
+    "captureUrl": "/en/admin/benefits/exception",
+    "lane": 9,
+    "laneName": "HR Admin — Benefits Admin",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "145:2"
+  },
+  {
+    "route": "/admin/benefits/import",
+    "captureUrl": "/en/admin/benefits/import",
+    "lane": 9,
+    "laneName": "HR Admin — Benefits Admin",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "146:2"
+  },
+  {
+    "route": "/admin/benefits/lifecycle",
+    "captureUrl": "/en/admin/benefits/lifecycle",
+    "lane": 9,
+    "laneName": "HR Admin — Benefits Admin",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "147:2"
+  },
+  {
+    "route": "/admin/benefits/payment",
+    "captureUrl": "/en/admin/benefits/payment",
+    "lane": 9,
+    "laneName": "HR Admin — Benefits Admin",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "148:2"
+  },
+  {
+    "route": "/admin/benefits/plans",
+    "captureUrl": "/en/admin/benefits/plans",
+    "lane": 9,
+    "laneName": "HR Admin — Benefits Admin",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "149:2"
+  },
+  {
+    "route": "/admin/benefits/records",
+    "captureUrl": "/en/admin/benefits/records",
+    "lane": 9,
+    "laneName": "HR Admin — Benefits Admin",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "150:2"
+  },
+  {
+    "route": "/admin/benefits/records/[planId]",
+    "captureUrl": "/en/admin/benefits/records/BE-FUN-001",
+    "lane": 9,
+    "laneName": "HR Admin — Benefits Admin",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": "BE-FUN-001",
+    "dynamic": true,
+    "gateNote": null,
+    "nodeId": "50:2"
+  },
+  {
+    "route": "/admin/benefits/reports",
+    "captureUrl": "/en/admin/benefits/reports",
+    "lane": 9,
+    "laneName": "HR Admin — Benefits Admin",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "151:2"
+  },
+  {
+    "route": "/admin/benefits/rules",
+    "captureUrl": "/en/admin/benefits/rules",
+    "lane": 9,
+    "laneName": "HR Admin — Benefits Admin",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "152:2"
+  },
+  {
+    "route": "/admin/foundation",
+    "captureUrl": "/en/admin/foundation",
+    "lane": 10,
+    "laneName": "HR Admin — Foundation / Org",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "153:2"
+  },
+  {
+    "route": "/admin/foundation/divisions",
+    "captureUrl": "/en/admin/foundation/divisions",
+    "lane": 10,
+    "laneName": "HR Admin — Foundation / Org",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "154:2"
+  },
+  {
+    "route": "/admin/jobs",
+    "captureUrl": "/en/admin/jobs",
+    "lane": 10,
+    "laneName": "HR Admin — Foundation / Org",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "244:2"
+  },
+  {
+    "route": "/admin/organization",
+    "captureUrl": "/en/admin/organization",
+    "lane": 10,
+    "laneName": "HR Admin — Foundation / Org",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "156:2"
+  },
+  {
+    "route": "/admin/positions",
+    "captureUrl": "/en/admin/positions",
+    "lane": 10,
+    "laneName": "HR Admin — Foundation / Org",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "240:2"
+  },
+  {
+    "route": "/locations",
+    "captureUrl": "/en/locations",
+    "lane": 10,
+    "laneName": "HR Admin — Foundation / Org",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "158:2"
+  },
+  {
+    "route": "/org-chart",
+    "captureUrl": "/en/org-chart",
+    "lane": 10,
+    "laneName": "HR Admin — Foundation / Org",
+    "persona": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "159:2"
+  },
+  {
+    "route": "/admin/self-service",
+    "captureUrl": "/en/admin/self-service",
+    "lane": 11,
+    "laneName": "HR Admin — Self-Service Config",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "160:2"
+  },
+  {
+    "route": "/admin/self-service/field-config",
+    "captureUrl": "/en/admin/self-service/field-config",
+    "lane": 11,
+    "laneName": "HR Admin — Self-Service Config",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "161:2"
+  },
+  {
+    "route": "/admin/self-service/mandatory",
+    "captureUrl": "/en/admin/self-service/mandatory",
+    "lane": 11,
+    "laneName": "HR Admin — Self-Service Config",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "162:2"
+  },
+  {
+    "route": "/admin/self-service/quick-actions",
+    "captureUrl": "/en/admin/self-service/quick-actions",
+    "lane": 11,
+    "laneName": "HR Admin — Self-Service Config",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "163:2"
+  },
+  {
+    "route": "/admin/self-service/readonly",
+    "captureUrl": "/en/admin/self-service/readonly",
+    "lane": 11,
+    "laneName": "HR Admin — Self-Service Config",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "164:2"
+  },
+  {
+    "route": "/admin/self-service/tiles",
+    "captureUrl": "/en/admin/self-service/tiles",
+    "lane": 11,
+    "laneName": "HR Admin — Self-Service Config",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "165:2"
+  },
+  {
+    "route": "/admin/self-service/visibility",
+    "captureUrl": "/en/admin/self-service/visibility",
+    "lane": 11,
+    "laneName": "HR Admin — Self-Service Config",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "166:2"
+  },
+  {
+    "route": "/admin/import",
+    "captureUrl": "/en/admin/import",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "167:2"
+  },
+  {
+    "route": "/admin/system",
+    "captureUrl": "/en/admin/system",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "168:2"
+  },
+  {
+    "route": "/admin/system/benefit-catalog",
+    "captureUrl": "/en/admin/system/benefit-catalog",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "169:2"
+  },
+  {
+    "route": "/admin/system/integration",
+    "captureUrl": "/en/admin/system/integration",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "170:2"
+  },
+  {
+    "route": "/admin/system/notifications",
+    "captureUrl": "/en/admin/system/notifications",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "134:2"
+  },
+  {
+    "route": "/admin/system/payroll-rules",
+    "captureUrl": "/en/admin/system/payroll-rules",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "171:2"
+  },
+  {
+    "route": "/admin/system/reports",
+    "captureUrl": "/en/admin/system/reports",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "172:2"
+  },
+  {
+    "route": "/admin/system/reports/automation",
+    "captureUrl": "/en/admin/system/reports/automation",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "173:2"
+  },
+  {
+    "route": "/admin/system/reports/builder",
+    "captureUrl": "/en/admin/system/reports/builder",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "176:2"
+  },
+  {
+    "route": "/admin/system/reports/favourites",
+    "captureUrl": "/en/admin/system/reports/favourites",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "177:2"
+  },
+  {
+    "route": "/admin/system/reports/schedule",
+    "captureUrl": "/en/admin/system/reports/schedule",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "178:2"
+  },
+  {
+    "route": "/admin/system/security",
+    "captureUrl": "/en/admin/system/security",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "179:2"
+  },
+  {
+    "route": "/admin/system/security/audit",
+    "captureUrl": "/en/admin/system/security/audit",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "246:2"
+  },
+  {
+    "route": "/admin/system/security/consent",
+    "captureUrl": "/en/admin/system/security/consent",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "181:2"
+  },
+  {
+    "route": "/admin/system/security/settings",
+    "captureUrl": "/en/admin/system/security/settings",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "182:2"
+  },
+  {
+    "route": "/admin/system/security/traffic",
+    "captureUrl": "/en/admin/system/security/traffic",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "183:2"
+  },
+  {
+    "route": "/admin/system/system-features",
+    "captureUrl": "/en/admin/system/system-features",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "184:2"
+  },
+  {
+    "route": "/admin/system/system-features/data-migration",
+    "captureUrl": "/en/admin/system/system-features/data-migration",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "185:2"
+  },
+  {
+    "route": "/admin/system/system-features/edocuments",
+    "captureUrl": "/en/admin/system/system-features/edocuments",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "186:2"
+  },
+  {
+    "route": "/admin/system/system-features/language",
+    "captureUrl": "/en/admin/system/system-features/language",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "187:2"
+  },
+  {
+    "route": "/admin/system/time-policy",
+    "captureUrl": "/en/admin/system/time-policy",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "188:2"
+  },
+  {
+    "route": "/admin/users",
+    "captureUrl": "/en/admin/users",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "189:2"
+  },
+  {
+    "route": "/admin/users/audit-report",
+    "captureUrl": "/en/admin/users/audit-report",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "190:2"
+  },
+  {
+    "route": "/admin/users/data-permissions",
+    "captureUrl": "/en/admin/users/data-permissions",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "191:2"
+  },
+  {
+    "route": "/admin/users/foundation-audit",
+    "captureUrl": "/en/admin/users/foundation-audit",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "192:2"
+  },
+  {
+    "route": "/admin/users/proxy",
+    "captureUrl": "/en/admin/users/proxy",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "193:2"
+  },
+  {
+    "route": "/admin/users/role-groups",
+    "captureUrl": "/en/admin/users/role-groups",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "194:2"
+  },
+  {
+    "route": "/admin/users/user-assignment",
+    "captureUrl": "/en/admin/users/user-assignment",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "195:2"
+  },
+  {
+    "route": "/integrations",
+    "captureUrl": "/en/integrations",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "196:2"
+  },
+  {
+    "route": "/permissions",
+    "captureUrl": "/en/permissions",
+    "lane": 12,
+    "laneName": "HR Admin — System & Users",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "197:2"
+  },
+  {
+    "route": "/payroll",
+    "captureUrl": "/en/payroll",
+    "lane": 13,
+    "laneName": "Payroll",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "262:2"
+  },
+  {
+    "route": "/payroll/import",
+    "captureUrl": "/en/payroll/import",
+    "lane": 13,
+    "laneName": "Payroll",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "264:2"
+  },
+  {
+    "route": "/payroll/processing",
+    "captureUrl": "/en/payroll/processing",
+    "lane": 13,
+    "laneName": "Payroll",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "265:2"
+  },
+  {
+    "route": "/payroll/reports",
+    "captureUrl": "/en/payroll/reports",
+    "lane": 13,
+    "laneName": "Payroll",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "263:2"
+  },
+  {
+    "route": "/payroll/setup",
+    "captureUrl": "/en/payroll/setup",
+    "lane": 13,
+    "laneName": "Payroll",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "266:2"
+  },
+  {
+    "route": "/payroll/tax-planning",
+    "captureUrl": "/en/payroll/tax-planning",
+    "lane": 13,
+    "laneName": "Payroll",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "267:2"
+  },
+  {
+    "route": "/payroll/tax-review",
+    "captureUrl": "/en/payroll/tax-review",
+    "lane": 13,
+    "laneName": "Payroll",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "268:2"
+  },
+  {
+    "route": "/admin/reports",
+    "captureUrl": "/en/admin/reports",
+    "lane": 14,
+    "laneName": "Reports & Analytics",
+    "persona": [
+      "A",
+      "B"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "198:2"
+  },
+  {
+    "route": "/reports",
+    "captureUrl": "/en/reports",
+    "lane": 14,
+    "laneName": "Reports & Analytics",
+    "persona": [
+      "A",
+      "B",
+      "C"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "245:2"
+  },
+  {
+    "route": "/reports/builder",
+    "captureUrl": "/en/reports/builder",
+    "lane": 14,
+    "laneName": "Reports & Analytics",
+    "persona": [
+      "A",
+      "B",
+      "C"
+    ],
+    "personaSource": "nav-parent",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "200:2"
+  },
+  {
+    "route": "/development",
+    "captureUrl": "/en/development",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "201:2"
+  },
+  {
+    "route": "/goals",
+    "captureUrl": "/en/goals",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "202:2"
+  },
+  {
+    "route": "/idp",
+    "captureUrl": "/en/idp",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "203:2"
+  },
+  {
+    "route": "/learning",
+    "captureUrl": "/en/learning",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "204:2"
+  },
+  {
+    "route": "/learning-directory",
+    "captureUrl": "/en/learning-directory",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "205:2"
+  },
+  {
+    "route": "/performance",
+    "captureUrl": "/en/performance",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "206:2"
+  },
+  {
+    "route": "/performance-form",
+    "captureUrl": "/en/performance-form",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A",
+      "B",
+      "C"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "207:2"
+  },
+  {
+    "route": "/recruiting",
+    "captureUrl": "/en/recruiting",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "nav",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "208:2"
+  },
+  {
+    "route": "/screening",
+    "captureUrl": "/en/screening",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "209:2"
+  },
+  {
+    "route": "/succession",
+    "captureUrl": "/en/succession",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "210:2"
+  },
+  {
+    "route": "/talent-management",
+    "captureUrl": "/en/talent-management",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "211:2"
+  },
+  {
+    "route": "/training-records",
+    "captureUrl": "/en/training-records",
+    "lane": 15,
+    "laneName": "Talent / Perf / Learning",
+    "persona": [
+      "A",
+      "C",
+      "D"
+    ],
+    "personaSource": "lane-fallback",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": null,
+    "nodeId": "212:2"
+  }
+]
