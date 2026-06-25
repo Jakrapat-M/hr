@@ -626,12 +626,28 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
                 if (claim.id !== claimId) return claim;
                 // Q10 Option A: restore remainingAmount to originalRemainingAmount immediately on Send Back.
                 const restored = claim.originalRemainingAmount ?? claim.remainingAmount;
+                // STA-147 req-2: persist the send-back reason onto the queueSnapshot
+                // (the row the detail page reads) so the read-only "Send Back Comment"
+                // box populates after re-resolve, and keep the last history step's
+                // comment in sync with the same reason (req-2/req-3 consistency).
+                const snapshot = claim.queueSnapshot
+                  ? {
+                      ...claim.queueSnapshot,
+                      sendBackComment: note,
+                      approvalTimeline: claim.queueSnapshot.approvalTimeline.map((s, i, arr) =>
+                        i === arr.length - 1
+                          ? { ...s, status: 'rejected' as const, comment: note }
+                          : s,
+                      ),
+                    }
+                  : claim.queueSnapshot;
                 return {
                   ...claim,
                   status: 'send_back' as BenefitClaimStatus,
                   updatedAt: at,
                   remainingAmount: restored,
                   correctionReason: note,
+                  queueSnapshot: snapshot,
                   audit: [
                     ...claim.audit,
                     { at, actorRole: 'manager' as const, actorName: managerName, action: 'send_back' as const, note },

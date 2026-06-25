@@ -101,8 +101,19 @@ function OvertimePayload({ details, t }: { details: OvertimeDetails; t: ReturnTy
 
 function ClaimPayload({ details, t, locale }: { details: ClaimDetails; t: ReturnType<typeof useTranslations>; locale: 'th' | 'en' }) {
   const dynamic = (details.dynamicFields ?? {}) as Record<string, string | number | undefined>;
+  // STA-147 req-5: Selected Benefit + Claim Date are gold "general" fields. They
+  // live in dynamicFields but the conditional loop only renders non-general
+  // buckets, so surface them explicitly above the summary rows when present.
+  const selectedBenefit = dynamic.selectedBenefit ?? details.category;
+  const claimDate = dynamic.claimDate ?? details.claimDate;
   return (
     <dl>
+      {selectedBenefit !== undefined && selectedBenefit !== '' && (
+        <Row label={t('selectedBenefit')} value={String(selectedBenefit)} />
+      )}
+      {claimDate !== undefined && claimDate !== '' && (
+        <Row label={t('claimDate')} value={formatDate(String(claimDate), 'long', locale)} />
+      )}
       <Row label={t('remainingAmount')} value={money(details.remainingAmount, details.currency)} />
       <Row label={t('receiptDate')} value={details.receiptDate ? formatDate(details.receiptDate, 'long', locale) : '—'} />
       <Row label={t('receiptNo')} value={details.receiptNo ?? '—'} />

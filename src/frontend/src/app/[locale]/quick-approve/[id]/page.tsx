@@ -5,10 +5,11 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/humi';
-import { ApprovalTimelineChain } from '@/components/quick-approve/ApprovalChain';
 import { RequestSummary } from '@/components/quick-approve/detail/RequestSummary';
 import { RequestPayload } from '@/components/quick-approve/detail/RequestPayload';
+import { AttachmentViewPanel } from '@/components/quick-approve/detail/AttachmentViewPanel';
 import { HistoryTimeline } from '@/components/quick-approve/detail/HistoryTimeline';
+import { ApproverNotesPanel } from '@/components/quick-approve/detail/ApproverNotesPanel';
 import { ActionPanel } from '@/components/quick-approve/detail/ActionPanel';
 import { RejectReturnDrawer, type DrawerMode } from '@/components/quick-approve/detail/RejectReturnDrawer';
 import { APPROVAL_REGISTRY, useSelectPendingApprovals, type QueueApproval, type QueueStatus } from '@/lib/approval-registry';
@@ -515,8 +516,12 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
     );
   }
 
+  // STA-147 req-1: claims with attachments use the 2-col grid, so widen the page
+  // container to give the Attachment View panel room; other types stay narrow.
+  const wide = request.type === 'claim' && (request.attachments?.length ?? 0) > 0;
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className={`mx-auto px-4 py-6 ${wide ? 'max-w-5xl' : 'max-w-3xl'}`}>
       {/* Back nav */}
       <Button
         variant="ghost"
@@ -536,16 +541,22 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
         <p className="text-small text-ink-muted capitalize">{t(`type_${request.type}`)}</p>
       </div>
 
-      {/* Approval chain quick view (runtime timeline steps) */}
-      <div className="mb-4">
-        <ApprovalTimelineChain steps={request.approvalTimeline} size="md" />
-      </div>
-
       {/* Content stack */}
       <div className="flex flex-col gap-4">
         <RequestSummary request={request} />
-        <RequestPayload request={request} />
+        {/* STA-147 req-1: Attachment View sits beside Request Details for claims
+            with attachments; this is the ONLY row wrapped in the 2-col grid. */}
+        {request.type === 'claim' && (request.attachments?.length ?? 0) > 0 ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <RequestPayload request={request} />
+            <AttachmentViewPanel attachments={request.attachments ?? []} />
+          </div>
+        ) : (
+          <RequestPayload request={request} />
+        )}
         <HistoryTimeline steps={request.approvalTimeline} />
+        {/* STA-147 req-2: Note + read-only Send Back Comment below the history. */}
+        <ApproverNotesPanel sendBackComment={request.sendBackComment} />
       </div>
 
       {/* Sticky action panel */}
