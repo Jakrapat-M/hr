@@ -229,10 +229,12 @@ export const BENEFIT_PLAN_REGISTRY: BenefitPlan[] = [
   // ── Medical reimbursement (BE_06) — 4 tier plans ── v2 A3 hybrid ──
   {
     schemaVersion: 'v2',
+    // STA-148 req-4 — merged "Medical Reimbursement" chip (OPD/IPD chosen in-form);
+    // BE-MED-003 (IPD-self-paid) is excluded from the ESS chip list (entry kept).
     id: 'BE-MED-001',
     ttt: 'BE_06',
-    nameTh: 'ค่ารักษาพยาบาล (ผู้ป่วยนอก)',
-    nameEn: 'Medical Reimbursement (OPD)',
+    nameTh: 'ค่ารักษาพยาบาล',
+    nameEn: 'Medical Reimbursement',
     template: SIMPLE,
     category: 'medical',
     recordType: 'claimable',

@@ -17,7 +17,9 @@ import { useBenefitClaimsStore, type BenefitClaimInput, type BenefitClaimType } 
 // The prior synthesis from the gasoline plan leaked category 'gasoline' into the
 // Mobile claim form (the Mobile-renders-Gasoline bug).
 const SIMPLE_PLANS = BENEFIT_PLAN_REGISTRY.filter(
-  (p) => p.template === 'simple-claim' && p.recordType === 'claimable',
+  // STA-148 req-4 — BE-MED-003 (IPD-self-paid) merged into the single
+  // "Medical Reimbursement" chip (BE-MED-001); excluded here, registry entry kept.
+  (p) => p.template === 'simple-claim' && p.recordType === 'claimable' && p.id !== 'BE-MED-003',
 );
 
 const allowanceRemaining = (allowanceId: string) => {

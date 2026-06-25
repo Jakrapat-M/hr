@@ -119,6 +119,8 @@ export function SimpleClaimForm({
   // STA-145 Phase B — patient-transfer "Yes" opens an error popup that asks the
   // claimant to close + cancel (E-patient reconciles outside Humi).
   const [transferModalOpen, setTransferModalOpen] = useState(false);
+  // STA-148 req-2 — selecting Type of Hospital = Clinic opens a not-allowed notice.
+  const [clinicModalOpen, setClinicModalOpen] = useState(false);
 
   const resetForm = () => {
     setForm({
@@ -181,6 +183,17 @@ export function SimpleClaimForm({
     if (key === 'patientTransferDoc' && value === 'yes') {
       setTransferModalOpen(true);
     }
+    // STA-148 req-2 — selecting Type of Hospital = Clinic is not claimable.
+    if (key === 'hospitalType' && value === 'clinic') {
+      setClinicModalOpen(true);
+    }
+  };
+
+  // STA-148 req-2 — on closing the clinic notice, clear the Clinic selection so
+  // the user must pick a valid hospital type.
+  const closeClinicModal = () => {
+    setClinicModalOpen(false);
+    setDynamic((prev) => ({ ...prev, hospitalType: '' }));
   };
 
   const totalCapped =
@@ -358,7 +371,17 @@ export function SimpleClaimForm({
           )}
         </FormField>
 
-        <FormField id={`${plan.id}-remark`} label={tc('remark')}>
+        {/* ── Conditional groups (config-driven, shared renderer) ────────── */}
+        <ConditionalClaimFields
+          fields={conditionalFields}
+          values={dynamic}
+          onChange={setDynamicField}
+          idPrefix={plan.id}
+          isTh={isTh}
+        />
+
+        {/* STA-148 req-3 — Remark relocated to the last field before Attachments. */}
+        <FormField id={`${plan.id}-remark`} label={tc('remark')} className="sm:col-span-2">
           {(controlProps) => (
             <Textarea
               {...controlProps}
@@ -369,14 +392,14 @@ export function SimpleClaimForm({
           )}
         </FormField>
 
-        {/* ── Conditional groups (config-driven, shared renderer) ────────── */}
-        <ConditionalClaimFields
-          fields={conditionalFields}
-          values={dynamic}
-          onChange={setDynamicField}
-          idPrefix={plan.id}
-          isTh={isTh}
-        />
+        {/* STA-148 req-1 — Certification notice above Attachments, all claim types.
+            NO-RED: Tan asked for "red"; rendered in pumpkin --color-danger per the
+            design system (flagged to BA). */}
+        <p className="sm:col-span-2 text-small font-medium text-[var(--color-danger)]">
+          {isTh
+            ? 'ข้าพเจ้าขอรับรองว่าข้อมูลข้างต้นถูกต้องและครบถ้วน'
+            : 'I hereby certify that the above information is accurate and complete'}
+        </p>
 
         <FileUploadField
           label={isTh ? 'เอกสารแนบ' : 'Attachments'}
@@ -439,6 +462,27 @@ export function SimpleClaimForm({
               }}
             >
               {isTh ? 'ยกเลิกคำขอนี้' : 'Cancel this claim'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* STA-148 req-2 — Clinic not-allowed notice. NO-RED: pumpkin accent. */}
+      <Modal
+        open={clinicModalOpen}
+        onClose={closeClinicModal}
+        title={isTh ? 'ข้อผิดพลาด' : 'Error'}
+      >
+        <div className="-mx-6 -mt-5 mb-4 h-1 bg-[var(--color-danger)]" aria-hidden />
+        <div className="space-y-3 text-body text-ink">
+          <p>
+            {isTh
+              ? 'ไม่สามารถเบิกค่าใช้จ่ายจากคลินิก (Clinic) ได้ กรุณาติดต่อผู้ดูแลระบบ'
+              : 'You are not allowed to claim receipt from คลินิค(Clinic). Please contact you administrator'}
+          </p>
+          <div className="mt-2 flex justify-end">
+            <Button variant="ghost" onClick={closeClinicModal}>
+              {isTh ? 'ปิด' : 'Close'}
             </Button>
           </div>
         </div>
