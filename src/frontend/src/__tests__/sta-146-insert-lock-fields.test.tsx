@@ -112,6 +112,37 @@ describe('STA-146 — Insert mode locks all identity fields except Status + Comp
     expect([...INSERT_EDITABLE_KEYS].sort()).toEqual(['company', 'status'])
   })
 
+  // STA-146 FU (Tan): the editable Status select offers only Active/Inactive —
+  // "user does not use draft status". The 'draft' value is retained elsewhere
+  // (Save-as-Draft + status filter), just not selectable here.
+  it('Status select offers only Active/Inactive (no Draft option)', () => {
+    const { container } = renderCorrection()
+    const statusSelect = container.querySelector<HTMLSelectElement>('#tab1-status')
+    expect(statusSelect).not.toBeNull()
+    const values = [...statusSelect!.querySelectorAll('option')].map((o) => o.value)
+    expect(values).toEqual(['active', 'inactive'])
+    expect(values).not.toContain('draft')
+  })
+
+  // A plan already saved as Draft still displays its true status (a DISABLED draft
+  // option) instead of silently coercing to Active — but Draft stays non-selectable.
+  it('shows a disabled Draft option only when the value is already draft', () => {
+    const { container } = render(
+      <Tab1IdentityFields
+        values={{ ...baseValues, status: 'draft' }}
+        onChange={() => {}}
+        mode="edit"
+        isTh={false}
+        showSchemaVersion={false}
+      />,
+    )
+    const statusSelect = container.querySelector<HTMLSelectElement>('#tab1-status')!
+    const draftOpt = [...statusSelect.querySelectorAll('option')].find((o) => o.value === 'draft')
+    expect(draftOpt, 'draft option should render for a draft-valued plan').not.toBeUndefined()
+    expect(draftOpt!.disabled, 'draft option must be non-selectable').toBe(true)
+    expect(statusSelect.value).toBe('draft') // reflects the true status, no coercion
+  })
+
   // Closes the "future field silently uncovered" gap: RENDERED_KEYS must equal the
   // set of identity controls actually in the DOM, so a newly added #tab1-<key>
   // control (which the deny-by-default lock would correctly disable in product)
