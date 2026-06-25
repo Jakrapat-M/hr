@@ -176,6 +176,11 @@ function useEssEmployeeId(): string {
 // STA-117 — curated top-3 leave types (by registry code, not array index): Sick → Annual → Personal.
 const TOP_LEAVE_CODES = ['sick_leave', 'annual_leave', 'personnel_leave'] as const;
 
+// STA-151/STA-152 — leave types that get the Full/Half/Hourly duration cards
+// (sick types only). 'sick_leave_unpaid' is quotaTracked:false, so its hourly
+// fractional amount is display-only and never decrements a balance.
+const HOURLY_DURATION_CODES = ['sick_leave', 'sick_leave_unpaid'] as const;
+
 function QuotaCards({ isTh }: { isTh: boolean }) {
   const employeeId = useEssEmployeeId();
   const balances = useLeaveBalances((s) => s.balances);
@@ -601,11 +606,14 @@ function RequestTab({
 
   const isHalfUnit = def?.minUnit === 'half-day';
   const isSingleDay = !!fromISO && (!toISO || toISO === fromISO);
-  // STA-151 — Sick is minUnit '1-day' in the registry, so Half is dead for Sick.
-  // Enable Half + Hourly for Sick via a Sick-specific override (NOT a minUnit
-  // change, which would ripple into quota/docs/the registry). Half is available
-  // when the type allows it OR it's Sick; Hourly is Sick-only.
-  const isSick = code === 'sick_leave';
+  // STA-151/STA-152 — Sick (paid + unpaid) is minUnit '1-day' in the registry,
+  // so Half is dead for it. Enable Half + Hourly via a Sick-specific override
+  // (NOT a minUnit change, which would ripple into quota/docs/the registry).
+  // Both 'sick_leave' (paid) and 'sick_leave_unpaid' get Full/Half/Hourly; the
+  // unpaid type is quotaTracked:false so its fractional amount is display-only.
+  // Half is available when the type allows it OR it's a sick type; Hourly is
+  // sick-only.
+  const isSick = (HOURLY_DURATION_CODES as readonly string[]).includes(code);
   const halfEnabled = isHalfUnit || isSick;
   const hourlyEnabled = isSick;
   const useHalf = durationMode === 'half' && halfEnabled && isSingleDay;
