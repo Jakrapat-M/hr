@@ -93,6 +93,42 @@ describe('STA-151 — duration cards (Full / Half / Hourly)', () => {
     expect(hourly).toBeDisabled()
   })
 
+  it('STA-152 — Unpaid Sick Leave renders 3 cards with all enabled (same as paid Sick)', () => {
+    render(<HumiTimeoffPage />)
+    selectType('ลาป่วยไม่รับเงิน') // sick_leave_unpaid — quotaTracked:false
+    pickFirstBookableDay()
+
+    const radios = durationRadios()
+    expect(radios).toHaveLength(3)
+    const labels = radios.map((r) => r.textContent)
+    expect(labels).toEqual(['เต็มวัน', 'ครึ่งวัน', 'รายชั่วโมง'])
+    // Unpaid Sick gets the same Full/Half/Hourly override as paid Sick.
+    radios.forEach((r) => expect(r).not.toBeDisabled())
+  })
+
+  it('STA-152 — Unpaid Sick Hourly gates end-options identically (no 4.5h)', () => {
+    render(<HumiTimeoffPage />)
+    selectType('ลาป่วยไม่รับเงิน')
+    pickFirstBookableDay()
+
+    const radios = durationRadios()
+    fireEvent.click(radios[2]) // Hourly
+
+    const startSelect = screen.getByRole('combobox', { name: 'เวลาเริ่ม' }) as HTMLSelectElement
+    fireEvent.change(startSelect, { target: { value: '09:30' } })
+
+    const endSelect = screen.getByRole('combobox', { name: 'เวลาสิ้นสุด' }) as HTMLSelectElement
+    const endValues = within(endSelect)
+      .getAllByRole('option')
+      .map((o) => (o as HTMLOptionElement).value)
+      .filter(Boolean)
+    expect(endValues).toContain('10:00') // min 30min
+    expect(endValues).toContain('13:30') // 4h max
+    expect(endValues).not.toContain('14:00') // 4.5h blocked
+    // Unpaid type is quotaTracked:false → no leave-balance card rendered.
+    expect(screen.queryByText('คงเหลือหลังลา')).toBeNull()
+  })
+
   it('Sick Hourly reveals Start/End selects and a 4.5h end is not offered', () => {
     render(<HumiTimeoffPage />)
     selectType('ลาป่วย')
