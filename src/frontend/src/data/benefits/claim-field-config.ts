@@ -216,11 +216,16 @@ export function isDependentScopedName(name?: string | null): boolean {
 }
 
 export function bucketsForPlan(
-  plan: Pick<BenefitPlan, 'category'> & Partial<Pick<BenefitPlan, 'nameEn' | 'nameTh'>>,
+  plan: Pick<BenefitPlan, 'category'> &
+    Partial<Pick<BenefitPlan, 'nameEn' | 'nameTh' | 'requiresDependent'>>,
 ): ClaimSpecBucket[] {
   const base = BUCKETS_BY_CATEGORY[plan.category] ?? ['general'];
+  // Prefer the explicit `requiresDependent` flag; fall back to the name marker for
+  // gold plans that carry the suffix but not the flag.
   const dependentScoped =
-    isDependentScopedName(plan.nameEn) || isDependentScopedName(plan.nameTh);
+    plan.requiresDependent === true ||
+    isDependentScopedName(plan.nameEn) ||
+    isDependentScopedName(plan.nameTh);
   if (dependentScoped && !base.includes('dependent')) {
     return [...base, 'dependent'];
   }
@@ -229,6 +234,23 @@ export function bucketsForPlan(
 
 export function bucketsForType(t: BenefitClaimType): ClaimSpecBucket[] {
   return BUCKETS_BY_TYPE[t] ?? ['general'];
+}
+
+/**
+ * Approval-side resolver (STA-145 Phase B). Store/approval surfaces hold only a
+ * benefitType + the benefit name, not a plan. Mirror the editable side's
+ * dependent-append so a dependent-scoped claim shows its Dependent rows to the
+ * approver instead of silently dropping them.
+ */
+export function bucketsForTypeAndName(
+  t: BenefitClaimType,
+  name?: string | null,
+): ClaimSpecBucket[] {
+  const base = bucketsForType(t);
+  if (isDependentScopedName(name) && !base.includes('dependent')) {
+    return [...base, 'dependent'];
+  }
+  return base;
 }
 
 // ── Config → field set ────────────────────────────────────────────────────────

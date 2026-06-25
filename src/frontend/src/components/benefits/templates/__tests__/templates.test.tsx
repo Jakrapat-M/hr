@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 // ── next-intl mock ────────────────────────────────────────────────────────────
@@ -160,12 +160,28 @@ describe('HospitalClaimForm', () => {
   // owns that field natively ("ชื่อโรงพยาบาล") and maps it into dynamicFields at submit.
   it('renders the config-driven medical conditional groups (parity with SimpleClaimForm)', () => {
     render(<HospitalClaimForm plan={IPD_REFERRAL_PLAN} />);
-    // medical bucket → Medical/Dental, OPD/IPD, Type of Hospital, patient-transfer, Disease Details
+    // medical bucket → Medical/Dental, Type of Hospital, patient-transfer, Disease Details.
+    // OPD/IPD is owned by the native Admission-type control here (not the shared select).
     expect(screen.getByLabelText(/การแพทย์ \/ ทันตกรรม/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/OPD \/ IPD/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/ประเภทการรักษา/)).toBeInTheDocument();
     expect(screen.getByLabelText(/ประเภทสถานพยาบาล/)).toBeInTheDocument();
     expect(screen.getByLabelText(/ใช้เอกสารส่งตัวหรือไม่/)).toBeInTheDocument();
     expect(screen.getByLabelText(/รายละเอียดอาการ\/โรค/)).toBeInTheDocument();
+  });
+
+  // STA-145 Phase B — admitted dates show on IPD (bridged from the native Admission
+  // type into the conditional values). Regression guard: previously inert here.
+  it('shows Admitted start/end dates on the default IPD admission', () => {
+    render(<HospitalClaimForm plan={IPD_REFERRAL_PLAN} />);
+    expect(screen.getByLabelText(/วันที่เริ่มเข้ารักษา/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/วันที่สิ้นสุดการรักษา/)).toBeInTheDocument();
+  });
+
+  it('hides Admitted dates when admission is switched to OPD', () => {
+    render(<HospitalClaimForm plan={IPD_REFERRAL_PLAN} />);
+    const admission = screen.getByLabelText(/ประเภทการรักษา/) as HTMLSelectElement;
+    fireEvent.change(admission, { target: { value: 'opd' } });
+    expect(screen.queryByLabelText(/วันที่เริ่มเข้ารักษา/)).not.toBeInTheDocument();
   });
 
   // FIX [MEDIUM] — exactly ONE hospital-name input (no duplicate from conditional set).
@@ -180,11 +196,10 @@ describe('HospitalClaimForm', () => {
   });
 
   it('renders the same medical conditional field set as SimpleClaimForm for the same bucket', () => {
-    // hospitalName excluded: HospitalClaimForm owns it natively; SimpleClaimForm
-    // renders it as a conditional text input. The other 4 conditional labels are identical.
+    // hospitalName + OPD/IPD are owned natively by HospitalClaimForm; SimpleClaimForm
+    // renders them via the shared renderer. The remaining conditional labels are identical.
     const sharedConditionalLabels = [
       /การแพทย์ \/ ทันตกรรม/,
-      /OPD \/ IPD/,
       /ประเภทสถานพยาบาล/,
       /ใช้เอกสารส่งตัวหรือไม่/,
       /รายละเอียดอาการ\/โรค/,

@@ -12,7 +12,7 @@ import type {
   TransferDetails,
 } from '@/lib/quick-approve-api';
 import {
-  bucketsForType,
+  bucketsForTypeAndName,
   getConditionalFields,
   resolveClaimDisplayValue,
 } from '@/data/benefits/claim-field-config';
@@ -115,8 +115,11 @@ function ClaimPayload({ details, t, locale }: { details: ClaimDetails; t: Return
       />
       <Row label={t('category')} value={details.category} />
       <Row label={t('merchant')} value={details.merchant} />
-      {/* STA-119: config-driven conditional rows, read-only mirror of submitted values. */}
-      {getConditionalFields(bucketsForType(details.benefitType ?? inferBenefitType(details))).map((f) => {
+      {/* STA-119: config-driven conditional rows, read-only mirror of submitted values.
+          NOTE: details.category here carries the benefit *name* (not a PlanCategory enum),
+          which is what bucketsForTypeAndName's dependent-name detection needs. If category
+          is ever refactored to hold the enum, pass the benefit name explicitly instead. */}
+      {getConditionalFields(bucketsForTypeAndName(details.benefitType ?? inferBenefitType(details), details.category)).map((f) => {
         const display = resolveClaimDisplayValue(f, dynamic[f.key], locale);
         if (!display) return null;
         const label = CLAIM_FIELD_LABELS[f.key];

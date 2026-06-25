@@ -25,7 +25,7 @@ import {
 
 import { useBenefitClaimsStore, BENEFIT_STATUS_LABEL, type BenefitClaimStatus, type BenefitClaimRequest } from '@/stores/benefit-claims';
 import {
-  bucketsForType,
+  bucketsForTypeAndName,
   getConditionalFields,
   resolveClaimDisplayValue,
   type ClaimFieldKey,
@@ -399,7 +399,7 @@ export default function BenefitClaimDetailPage({ params }: PageProps) {
                 />
                 <FieldRow label={isTh ? 'หมายเหตุ' : 'Remark'} value={claim.remark} />
                 {/* STA-119: config-driven conditional rows, read-only mirror of submitted values. */}
-                {getConditionalFields(bucketsForType(claim.benefitType)).map((f) => {
+                {getConditionalFields(bucketsForTypeAndName(claim.benefitType, claim.benefitName)).map((f) => {
                   const key = f.key as ClaimFieldKey;
                   const flatKey = CLAIM_FLAT_FALLBACK[key];
                   const raw =
