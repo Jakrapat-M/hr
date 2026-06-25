@@ -18,6 +18,11 @@ import {
   YES_NO_TRANSFER_DOC_OPTIONS,
   GASOLINE_CLAIM_TYPE_OPTIONS,
   USAGE_MONTH_OPTIONS,
+  HOSPITAL_MASTER_OPTIONS,
+  HOSPITAL_MASTER_OTHERS_ID,
+  DISEASE_DETAILS_OPTIONS,
+  DISEASE_DETAIL_REQUIRES_DETAIL_IDS,
+  DEPENDENT_RELATIONSHIP_OPTIONS,
 } from '@/lib/admin/hire/picklists/picklistRegistry';
 import type { PlanCategory, BenefitPlan } from './plan-registry';
 import type { BenefitClaimType } from '@/stores/benefit-claims';
@@ -42,6 +47,9 @@ export type ClaimSpecBucket =
   | 'dependent'
   | 'mobile';
 
+/** Live conditional values keyed by descriptor key (selects carry option ids). */
+export type ClaimFieldValues = Partial<Record<string, string>>;
+
 export interface ClaimFieldDescriptor {
   /** Stable key + dynamicFields map key (e.g. 'opdIpd'). */
   key: string;
@@ -57,6 +65,14 @@ export interface ClaimFieldDescriptor {
   readOnlyField?: boolean;
   /** Gasoline "(Info only)" Fleet-Card rows — display-only selection (OQ-7). */
   infoOnlyOptionIds?: string[];
+  /** STA-145 Phase B — render only when the predicate is true (e.g. Admitted
+   *  dates show only on IPD; Others shows only when Hospital=others). */
+  showIf?: (values: ClaimFieldValues) => boolean;
+  /** STA-145 Phase B — conditional Mandatory (same predicates as showIf). When
+   *  present it overrides the static `required` for both the marker + submit gate. */
+  requiredIf?: (values: ClaimFieldValues) => boolean;
+  /** STA-145 Phase B — input maxLength (Others / Details = 100, names = 50). */
+  maxLength?: number;
 }
 
 // ── General group (every claim) ───────────────────────────────────────────────
@@ -83,12 +99,24 @@ const MEDICAL_DENTAL_GROUP: ClaimFieldDescriptor[] = [
   { key: 'medicalDental', labelKey: 'medicalDental', type: 'select', required: true, lov: MEDICAL_DENTAL_OPTIONS },
 ];
 
+// STA-145 Phase B — IPD predicate (Admitted dates show + required only on IPD).
+const isIpd = (v: ClaimFieldValues) => v.opdIpd === 'IPD';
+// Hospital Name = "others" reveals the conditional free-text field.
+const isHospitalOthers = (v: ClaimFieldValues) => v.medicalHospitalName === HOSPITAL_MASTER_OTHERS_ID;
+// Disease ∈ the 3 accident/other values reveals the mandatory "Details" field.
+const diseaseRequiresDetail = (v: ClaimFieldValues) =>
+  (DISEASE_DETAIL_REQUIRES_DETAIL_IDS as readonly string[]).includes(v.diseaseDetails ?? '');
+
 const MEDICAL_GROUP: ClaimFieldDescriptor[] = [
   { key: 'opdIpd', labelKey: 'opdIpd', type: 'select', required: true, lov: OPD_IPD_OPTIONS },
+  { key: 'admittedStart', labelKey: 'admittedStart', type: 'date', required: false, showIf: isIpd, requiredIf: isIpd },
+  { key: 'admittedEnd', labelKey: 'admittedEnd', type: 'date', required: false, showIf: isIpd, requiredIf: isIpd },
   { key: 'hospitalType', labelKey: 'hospitalType', type: 'select', required: true, lov: HOSPITAL_NAME_TYPE_OPTIONS },
-  { key: 'hospitalName', labelKey: 'hospitalName', type: 'text', required: true },
-  { key: 'patientTransferDoc', labelKey: 'patientTransferDoc', type: 'select', required: false, lov: YES_NO_TRANSFER_DOC_OPTIONS },
-  { key: 'diseaseDetails', labelKey: 'diseaseDetails', type: 'textarea', required: false },
+  { key: 'medicalHospitalName', labelKey: 'medicalHospitalName', type: 'select', required: true, lov: HOSPITAL_MASTER_OPTIONS },
+  { key: 'hospitalOthers', labelKey: 'hospitalOthers', type: 'text', required: false, maxLength: 100, showIf: isHospitalOthers, requiredIf: isHospitalOthers },
+  { key: 'patientTransferDoc', labelKey: 'patientTransferDoc', type: 'select', required: true, lov: YES_NO_TRANSFER_DOC_OPTIONS },
+  { key: 'diseaseDetails', labelKey: 'diseaseDetails', type: 'select', required: true, lov: DISEASE_DETAILS_OPTIONS },
+  { key: 'diseaseDetailsDetail', labelKey: 'diseaseDetailsDetail', type: 'text', required: false, maxLength: 100, showIf: diseaseRequiresDetail, requiredIf: diseaseRequiresDetail },
 ];
 
 const GASOLINE_GROUP: ClaimFieldDescriptor[] = [
@@ -109,10 +137,13 @@ const PHYSICAL_GROUP: ClaimFieldDescriptor[] = [
 
 // PROVISIONAL — pending BA OQ-1/OQ-3 (no category/type/entry path). Defined so the
 // bucket is buildable when a path appears, but not asserted-testable this iteration.
+// STA-145 Phase B — reachable for dependent-scoped plans (BA-Q2, 2026-06-25):
+// any benefit whose name carries a "(Spouse)" / "(Parents & Child)" / "— Dependent"
+// marker appends this group (see isDependentScopedName + bucketsForPlan).
 const DEPENDENT_GROUP: ClaimFieldDescriptor[] = [
-  { key: 'dependentName', labelKey: 'dependentName', type: 'text', required: true },
+  { key: 'dependentName', labelKey: 'dependentName', type: 'text', required: true, maxLength: 50 },
   { key: 'dependentDob', labelKey: 'dependentDob', type: 'date', required: false },
-  { key: 'dependentRelationship', labelKey: 'dependentRelationship', type: 'text', required: false },
+  { key: 'dependentRelationship', labelKey: 'dependentRelationship', type: 'select', required: false, lov: DEPENDENT_RELATIONSHIP_OPTIONS },
 ];
 
 // STA-145 — Usage month is a fixed Jan–Dec LOV (gold matrix), not a native
@@ -167,8 +198,33 @@ export const BUCKETS_BY_TYPE: Record<BenefitClaimType, ClaimSpecBucket[]> = {
   dependent: ['general', 'dependent'], // PROVISIONAL (OQ-1/OQ-3)
 };
 
-export function bucketsForPlan(plan: Pick<BenefitPlan, 'category'>): ClaimSpecBucket[] {
-  return BUCKETS_BY_CATEGORY[plan.category] ?? ['general'];
+/**
+ * STA-145 Phase B (BA-Q2) — a plan is "dependent-scoped" when its name carries a
+ * Spouse / Parents & Child / Dependent marker (the gold uses "(Spouse)" /
+ * "(Parents & Child)"; our registry uses "— Spouse" / "— Dependent"). Such a
+ * claim appends the Dependent field group so the claimant identifies the
+ * dependent. Matches either naming, EN or TH name.
+ */
+export function isDependentScopedName(name?: string | null): boolean {
+  if (!name) return false;
+  // Require an explicit Spouse / "Parents & Child" / Dependent marker, prefixed
+  // by "(" or a dash ("—"/"-"). Deliberately NOT a bare "child"/"parents" so
+  // names like "Gift — Child Birth" don't false-positive into a dependent claim.
+  return /(?:\(|—\s*|-\s*)\s*(?:spouse|parents?\s*(?:&|and)\s*child|dependent|คู่สมรส|ผู้อยู่ในอุปการะ)\s*\)?/i.test(
+    name,
+  );
+}
+
+export function bucketsForPlan(
+  plan: Pick<BenefitPlan, 'category'> & Partial<Pick<BenefitPlan, 'nameEn' | 'nameTh'>>,
+): ClaimSpecBucket[] {
+  const base = BUCKETS_BY_CATEGORY[plan.category] ?? ['general'];
+  const dependentScoped =
+    isDependentScopedName(plan.nameEn) || isDependentScopedName(plan.nameTh);
+  if (dependentScoped && !base.includes('dependent')) {
+    return [...base, 'dependent'];
+  }
+  return base;
 }
 
 export function bucketsForType(t: BenefitClaimType): ClaimSpecBucket[] {
@@ -187,6 +243,27 @@ export function getConditionalFields(buckets: ClaimSpecBucket[]): ClaimFieldDesc
   return buckets
     .filter((bucket) => bucket !== 'general')
     .flatMap((bucket) => CLAIM_FIELD_GROUPS[bucket] ?? []);
+}
+
+// ── Conditional visibility / required (STA-145 Phase B) ───────────────────────
+// Shared by ConditionalClaimFields (render + marker) and every form's submit gate
+// so visibility/required logic never diverges between surfaces.
+
+/** A field renders when it has no showIf, or its showIf predicate is true. */
+export function isClaimFieldVisible(
+  f: ClaimFieldDescriptor,
+  values: ClaimFieldValues,
+): boolean {
+  return f.showIf ? f.showIf(values) : true;
+}
+
+/** A field is mandatory when visible AND (requiredIf ?? static required). */
+export function isClaimFieldRequired(
+  f: ClaimFieldDescriptor,
+  values: ClaimFieldValues,
+): boolean {
+  if (!isClaimFieldVisible(f, values)) return false;
+  return f.requiredIf ? f.requiredIf(values) : f.required;
 }
 
 /**

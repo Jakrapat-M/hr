@@ -11,6 +11,8 @@ import { FormField, FormInput, Textarea } from '@/components/humi';
 import {
   type ClaimFieldDescriptor,
   type ClaimFieldKey,
+  isClaimFieldVisible,
+  isClaimFieldRequired,
 } from '@/data/benefits/claim-field-config';
 import { pickLabel } from '@/lib/admin/hire/picklists/picklistRegistry';
 
@@ -20,10 +22,15 @@ import { pickLabel } from '@/lib/admin/hire/picklists/picklistRegistry';
 export const CONDITIONAL_CLAIM_LABELS: Record<string, { th: string; en: string }> = {
   medicalDental: { th: 'การแพทย์ / ทันตกรรม', en: 'Medical / Dental' },
   opdIpd: { th: 'OPD / IPD', en: 'OPD / IPD' },
+  admittedStart: { th: 'วันที่เริ่มเข้ารักษา (ผู้ป่วยใน)', en: 'Admitted start date' },
+  admittedEnd: { th: 'วันที่สิ้นสุดการรักษา (ผู้ป่วยใน)', en: 'Admitted end date' },
   hospitalType: { th: 'ประเภทสถานพยาบาล', en: 'Type of Hospital' },
   hospitalName: { th: 'ชื่อสถานพยาบาล', en: 'Hospital Name' },
+  medicalHospitalName: { th: 'ชื่อสถานพยาบาล', en: 'Hospital Name' },
+  hospitalOthers: { th: 'ระบุสถานพยาบาลอื่นๆ', en: 'Others (specify hospital)' },
   patientTransferDoc: { th: 'ใช้เอกสารส่งตัวหรือไม่', en: 'Use patient transfer document?' },
   diseaseDetails: { th: 'รายละเอียดอาการ/โรค', en: 'Disease Details' },
+  diseaseDetailsDetail: { th: 'ระบุรายละเอียดเพิ่มเติม', en: 'Details' },
   gasolineClaimType: { th: 'ประเภทการเบิก', en: 'Claim Type' },
   physicalInvoice: { th: 'ใบแจ้งหนี้จากโรงพยาบาล', en: 'Invoice from hospital' },
   dependentName: { th: 'ชื่อผู้รับสิทธิ์', en: 'Dependent Name' },
@@ -64,10 +71,12 @@ function renderField(
     : f.key;
   const fieldId = `${idPrefix}-${f.key}`;
   const infoOnly = f.infoOnlyOptionIds ?? [];
+  // STA-145 Phase B — conditional Mandatory marker (requiredIf ?? required).
+  const required = isClaimFieldRequired(f, values);
 
   if (f.type === 'select' && f.lov) {
     return (
-      <FormField key={fieldId} id={fieldId} label={label} required={f.required}>
+      <FormField key={fieldId} id={fieldId} label={label} required={required}>
         {(controlProps) => (
           <select
             {...controlProps}
@@ -88,11 +97,12 @@ function renderField(
   }
   if (f.type === 'textarea') {
     return (
-      <FormField key={fieldId} id={fieldId} label={label} required={f.required}>
+      <FormField key={fieldId} id={fieldId} label={label} required={required}>
         {(controlProps) => (
           <Textarea
             {...controlProps}
             value={value}
+            maxLength={f.maxLength}
             onChange={(e) => onChange(key, e.target.value)}
           />
         )}
@@ -101,12 +111,13 @@ function renderField(
   }
   const inputType = f.type === 'date' ? 'date' : f.type === 'month' ? 'month' : 'text';
   return (
-    <FormField key={fieldId} id={fieldId} label={label} required={f.required}>
+    <FormField key={fieldId} id={fieldId} label={label} required={required}>
       {(controlProps) => (
         <FormInput
           {...controlProps}
           type={inputType}
           inputMode={f.type === 'number' ? 'numeric' : undefined}
+          maxLength={f.type === 'text' ? f.maxLength : undefined}
           value={value}
           onChange={(e) => onChange(key, e.target.value)}
         />
@@ -116,5 +127,7 @@ function renderField(
 }
 
 export function ConditionalClaimFields(props: ConditionalClaimFieldsProps) {
-  return <>{props.fields.map((f) => renderField(f, props))}</>;
+  // STA-145 Phase B — drop fields whose showIf predicate is false this render.
+  const visible = props.fields.filter((f) => isClaimFieldVisible(f, props.values));
+  return <>{visible.map((f) => renderField(f, props))}</>;
 }

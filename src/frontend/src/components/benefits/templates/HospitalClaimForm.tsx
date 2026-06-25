@@ -9,6 +9,7 @@ import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import {
   bucketsForPlan,
   getConditionalFields,
+  isClaimFieldRequired,
   type ClaimFieldKey,
 } from '@/data/benefits/claim-field-config';
 import type { BenefitTemplateProps, SimpleClaimSubmission } from './SimpleClaimForm';
@@ -42,11 +43,21 @@ export function HospitalClaimForm({
   // STA-119: same config-driven conditional groups as SimpleClaimForm, keyed on
   // the plan's category bucket (medical: Medical/Dental, OPD/IPD, hospital type,
   // hospital name, patient-transfer, disease details, etc.).
-  // hospitalName is excluded from the rendered conditional set because HospitalClaimForm
-  // owns that field natively (form.hospitalName / "ชื่อโรงพยาบาล"). The native value
-  // is mapped into dynamicFields.hospitalName at submit so the approval mirror sees it.
+  // HospitalClaimForm owns hospital-name + dependent natively (form.hospitalName /
+  // "ชื่อโรงพยาบาล" + the dependent picker), so those conditional descriptors are
+  // excluded from the shared renderer to avoid duplicate fields. The native values
+  // are mapped into dynamicFields at submit so the approval mirror still sees them.
+  // STA-145 Phase B: medicalHospitalName (the new master-list select) + the
+  // dependent group are likewise owned natively here.
+  const NATIVELY_OWNED_KEYS: ReadonlySet<string> = new Set([
+    'hospitalName',
+    'medicalHospitalName',
+    'dependentName',
+    'dependentDob',
+    'dependentRelationship',
+  ]);
   const conditionalFields = getConditionalFields(bucketsForPlan(plan)).filter(
-    (f) => f.key !== 'hospitalName',
+    (f) => !NATIVELY_OWNED_KEYS.has(f.key),
   );
 
   const emptyDynamic = (): Partial<Record<ClaimFieldKey, string>> => ({});
@@ -103,7 +114,10 @@ export function HospitalClaimForm({
     }
     // Required config-driven conditional fields (STA-119), same as SimpleClaimForm.
     conditionalFields.forEach((f) => {
-      if (f.required && !String(dynamic[f.key as ClaimFieldKey] ?? '').trim()) {
+      if (
+        isClaimFieldRequired(f, dynamic) &&
+        !String(dynamic[f.key as ClaimFieldKey] ?? '').trim()
+      ) {
         const lbl = CONDITIONAL_CLAIM_LABELS[f.key];
         const label = lbl ? (isTh ? lbl.th : lbl.en) : f.key;
         nextErrors.push((isTh ? 'กรุณาระบุ' : 'Required: ') + label);
