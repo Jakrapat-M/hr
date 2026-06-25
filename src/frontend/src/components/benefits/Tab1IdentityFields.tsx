@@ -204,9 +204,18 @@ export function Tab1IdentityFields({
                 disabled={isLocked('status')}
                 className={selectClass}
               >
+                {/* STA-146 FU (Tan): the editable Status select offers only
+                    Active/Inactive — "user does not use draft status in benefit
+                    plan/benefit rule". The 'draft' PlanStatus value is kept (the
+                    STA-98 Save-as-Draft button + status filter still use it). */}
                 <option value="active">{isTh ? 'ใช้งาน (Active)' : 'Active'}</option>
                 <option value="inactive">{isTh ? 'ไม่ใช้งาน (Inactive)' : 'Inactive'}</option>
-                <option value="draft">{isTh ? 'ฉบับร่าง (Draft)' : 'Draft'}</option>
+                {/* A plan saved as Draft keeps showing its true status here (a
+                    DISABLED option) instead of silently coercing to Active — but
+                    Draft stays non-selectable for new edits. */}
+                {values.status === 'draft' && (
+                  <option value="draft" disabled>{isTh ? 'ฉบับร่าง (Draft)' : 'Draft'}</option>
+                )}
               </select>
             )}
           </FormField>
