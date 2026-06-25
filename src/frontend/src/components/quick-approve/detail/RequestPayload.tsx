@@ -125,7 +125,8 @@ function ClaimPayload({ details, t, locale }: { details: ClaimDetails; t: Return
         value={`${details.amount.toLocaleString()} ${details.currency}`}
       />
       <Row label={t('category')} value={details.category} />
-      <Row label={t('merchant')} value={details.merchant} />
+      {/* STA-147 FU-2 — Merchant row removed: Hospital Name (gold field) supersedes it.
+          The `merchant` i18n key + type field are kept (RequestSlideOver still uses them). */}
       {/* STA-119: config-driven conditional rows, read-only mirror of submitted values.
           NOTE: details.category here carries the benefit *name* (not a PlanCategory enum),
           which is what bucketsForTypeAndName's dependent-name detection needs. If category
