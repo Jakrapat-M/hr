@@ -16,7 +16,14 @@ import {
 } from '@/components/humi';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/date';
-import { countLeaveDays } from '@/lib/leave-math';
+import {
+  countLeaveDays,
+  durationMinutes as spanMinutes,
+  hourlyLeaveFraction,
+  isValidHourlySpan,
+  timeOptions,
+  endTimeOptions,
+} from '@/lib/leave-math';
 import { DOCUMENT_UPLOAD_HELPER_TH, DOCUMENT_UPLOAD_HELPER_EN } from '@/lib/document-boundary';
 import {
   HUMI_LEAVE_COVERAGE,
@@ -579,8 +586,13 @@ function RequestTab({
   const def = getLeaveType(code);
   const [fromISO, setFromISO] = useState('');
   const [toISO, setToISO] = useState('');
-  const [halfDay, setHalfDay] = useState(false);
+  // STA-151 — single source of truth for leave duration. Replaces the old
+  // `halfDay` bool so `half` and `hourly` can never both be truthy.
+  const [durationMode, setDurationMode] = useState<'full' | 'half' | 'hourly'>('full');
   const [halfSlot, setHalfSlot] = useState<'morning' | 'afternoon'>('morning');
+  // STA-151 — hourly window (Sick only). 30-min increments, default 08:00–18:00.
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [reason, setReason] = useState('');
   // Mock attachments — the names the employee "attached". The doc-rule check
   // matches required-doc names against this list.
@@ -589,12 +601,32 @@ function RequestTab({
 
   const isHalfUnit = def?.minUnit === 'half-day';
   const isSingleDay = !!fromISO && (!toISO || toISO === fromISO);
-  const useHalf = isHalfUnit && isSingleDay && halfDay;
+  // STA-151 — Sick is minUnit '1-day' in the registry, so Half is dead for Sick.
+  // Enable Half + Hourly for Sick via a Sick-specific override (NOT a minUnit
+  // change, which would ripple into quota/docs/the registry). Half is available
+  // when the type allows it OR it's Sick; Hourly is Sick-only.
+  const isSick = code === 'sick_leave';
+  const halfEnabled = isHalfUnit || isSick;
+  const hourlyEnabled = isSick;
+  const useHalf = durationMode === 'half' && halfEnabled && isSingleDay;
+  const useHourly = durationMode === 'hourly' && hourlyEnabled && isSingleDay;
+
+  // STA-151 — hourly span → fractional day (Sick only, single day).
+  const hourlyMinutes = useHourly ? spanMinutes(startTime, endTime) : null;
+  const hourlySpanValid = isValidHourlySpan(hourlyMinutes);
+  // End-time options are gated by the chosen start (min 30 / max 4h / end>start).
+  const endTimeChoices = useMemo(() => endTimeOptions(startTime), [startTime]);
 
   // Day count honors the type's dayCountMode (CalendarDay incl. holidays vs
-  // WorkingDay excl.). Half-day collapses a single working day to 0.5.
+  // WorkingDay excl.). Half-day collapses a single working day to 0.5. Hourly
+  // (Sick only) bypasses countLeaveDays and uses a fractional-day amount.
   const totalDays = useMemo(() => {
     if (!fromISO) return 0;
+    if (useHourly) {
+      return hourlySpanValid && hourlyMinutes !== null
+        ? hourlyLeaveFraction(hourlyMinutes)
+        : 0;
+    }
     const end = toISO || fromISO;
     if (def?.dayCountMode === 'CalendarDay') {
       return calendarDayCount(fromISO, end);
@@ -603,7 +635,7 @@ function RequestTab({
       holidays: HUMI_TH_HOLIDAYS,
       halfDay: useHalf ? halfSlot : 'none',
     });
-  }, [fromISO, toISO, def?.dayCountMode, useHalf, halfSlot]);
+  }, [fromISO, toISO, def?.dayCountMode, useHalf, halfSlot, useHourly, hourlySpanValid, hourlyMinutes]);
 
   // Quota: only quotaTracked types draw a balance bucket.
   const balanceKind = def?.quotaTracked ? LEAVE_CODE_TO_BALANCE_KIND[code] : undefined;
@@ -746,6 +778,12 @@ function RequestTab({
       errs.docs = isTh
         ? `ต้องแนบเอกสาร: ${missingDocs.join(', ')}`
         : `Attach required document(s): ${missingDocs.join(', ')}`;
+    // STA-151 — hourly span gate (distinct from STA-130's errs.period). Require
+    // both times; span must be 30 ≤ minutes ≤ 240 (inclusive), end > start.
+    if (useHourly && (!startTime || !endTime || !hourlySpanValid))
+      errs.hourly = isTh
+        ? 'เลือกเวลาเริ่มและสิ้นสุด — ลารายชั่วโมงต้องไม่ต่ำกว่า 30 นาที และไม่เกิน 4 ชั่วโมง'
+        : 'Pick a start and end time — hourly leave must be 30 minutes to 4 hours';
     return errs;
   }
 
@@ -758,7 +796,13 @@ function RequestTab({
     const fromLabel = formatDate(fromISO, 'medium', 'th');
     const toLabel = formatDate(endISO, 'medium', 'th');
     const levels = levelsForLeaveType(code);
-    const unit: '30min' | 'half-day' | '1-day' = useHalf ? 'half-day' : def?.minUnit ?? '1-day';
+    // STA-151 — derive unit from durationMode (overrides def.minUnit for the
+    // Sick half/hourly cases that minUnit can't express). hourly → '30min'.
+    const unit: '30min' | 'half-day' | '1-day' = useHourly
+      ? '30min'
+      : useHalf
+        ? 'half-day'
+        : def?.minUnit ?? '1-day';
 
     // Build the canonical queue snapshot so the request surfaces in the unified
     // /quick-approve inbox with the correct (sliced) approval chain.
@@ -798,6 +842,10 @@ function RequestTab({
       unit,
       days: totalDays,
       halfDay: useHalf,
+      // STA-151 — carry the hourly span on the payload (Sick only).
+      ...(useHourly && hourlyMinutes !== null
+        ? { startTime, endTime, durationMinutes: hourlyMinutes }
+        : {}),
       docs: attachments,
       queueSnapshot: { ...queueSnapshot, id: '' },
     });
@@ -819,7 +867,9 @@ function RequestTab({
 
     setFromISO('');
     setToISO('');
-    setHalfDay(false);
+    setDurationMode('full');
+    setStartTime('');
+    setEndTime('');
     setReason('');
     setAttachments([]);
     setErrors({});
@@ -923,7 +973,9 @@ function RequestTab({
               onClick={() => {
                 setCode(opt.code);
                 setAttachments([]);
-                setHalfDay(false);
+                setDurationMode('full');
+                setStartTime('');
+                setEndTime('');
               }}
               className={cn(
                 'flex items-start gap-3 rounded-[var(--radius-md)] border p-3 text-left transition-colors',
@@ -994,58 +1046,63 @@ function RequestTab({
           onChange={({ from, to }) => {
             setFromISO(from);
             setToISO(to);
-            if (halfDay && from && to && from !== to) setHalfDay(false);
+            // Half / hourly only apply to a single day — drop them on a range.
+            if (durationMode !== 'full' && from && to && from !== to) {
+              setDurationMode('full');
+            }
           }}
         />
         {errors.fromDate && <InlineError msg={errors.fromDate} />}
 
-        {/* Duration — explicit full-day / half-day choice on every single-day leave.
-            Half-day is enabled only for types whose minUnit allows it; 1-day-min
-            types show the choice with half-day disabled + a hint. */}
+        {/* Duration — Full / Half / Hourly cards on every single-day leave.
+            STA-151: Half is enabled for half-day types OR Sick (Sick-specific
+            override). Hourly is Sick-only. Full is always available. */}
         {isSingleDay && fromISO && (
           <div className="mt-3 flex flex-col gap-2">
             <p className="text-small font-medium text-ink-soft">
               {isTh ? 'ระยะเวลา *' : 'Duration *'}
             </p>
-            <div role="radiogroup" aria-label={isTh ? 'ระยะเวลาการลา' : 'Leave duration'} className="flex gap-2">
-              <button
-                type="button"
-                role="radio"
-                aria-checked={!halfDay}
-                onClick={() => setHalfDay(false)}
-                className={cn(
-                  'rounded-[var(--radius-sm)] border px-4 py-1.5 text-small font-medium transition-colors',
-                  !halfDay
-                    ? 'border-accent bg-accent-soft text-accent'
-                    : 'border-hairline bg-surface text-ink-muted hover:border-ink-faint',
-                )}
-              >
-                {isTh ? 'เต็มวัน' : 'Full day'}
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={halfDay}
-                disabled={!isHalfUnit}
-                onClick={() => isHalfUnit && setHalfDay(true)}
-                title={!isHalfUnit ? (isTh ? 'ประเภทนี้ลาขั้นต่ำ 1 วัน' : 'This type has a 1-day minimum') : undefined}
-                className={cn(
-                  'rounded-[var(--radius-sm)] border px-4 py-1.5 text-small font-medium transition-colors',
-                  halfDay
-                    ? 'border-accent bg-accent-soft text-accent'
-                    : 'border-hairline bg-surface text-ink-muted hover:border-ink-faint',
-                  !isHalfUnit && 'cursor-not-allowed opacity-50',
-                )}
-              >
-                {isTh ? 'ครึ่งวัน' : 'Half day'}
-              </button>
+            <div
+              role="radiogroup"
+              aria-label={isTh ? 'ระยะเวลาการลา' : 'Leave duration'}
+              className="flex flex-wrap gap-2"
+            >
+              {([
+                { mode: 'full', enabled: true, labelTh: 'เต็มวัน', labelEn: 'Full day' },
+                { mode: 'half', enabled: halfEnabled, labelTh: 'ครึ่งวัน', labelEn: 'Half day' },
+                { mode: 'hourly', enabled: hourlyEnabled, labelTh: 'รายชั่วโมง', labelEn: 'Hourly' },
+              ] as const).map((opt) => {
+                const active = durationMode === opt.mode;
+                const disabledHint = !opt.enabled
+                  ? opt.mode === 'hourly'
+                    ? isTh ? 'ลารายชั่วโมงรองรับเฉพาะลาป่วย' : 'Hourly is available for Sick Leave only'
+                    : isTh ? 'ประเภทนี้ลาขั้นต่ำ 1 วัน' : 'This type has a 1-day minimum'
+                  : undefined;
+                return (
+                  <button
+                    key={opt.mode}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    disabled={!opt.enabled}
+                    onClick={() => opt.enabled && setDurationMode(opt.mode)}
+                    title={disabledHint}
+                    className={cn(
+                      'rounded-[var(--radius-sm)] border px-4 py-1.5 text-small font-medium transition-colors',
+                      active
+                        ? 'border-accent bg-accent-soft text-accent'
+                        : 'border-hairline bg-surface text-ink-muted hover:border-ink-faint',
+                      !opt.enabled && 'cursor-not-allowed opacity-50',
+                    )}
+                  >
+                    {isTh ? opt.labelTh : opt.labelEn}
+                  </button>
+                );
+              })}
             </div>
-            {!isHalfUnit && (
-              <p className="text-small text-ink-muted">
-                {isTh ? 'ประเภทการลานี้ลาขั้นต่ำ 1 วัน (นับเป็นเต็มวัน)' : 'This leave type has a 1-day minimum (counts as full day)'}
-              </p>
-            )}
-            {halfDay && isHalfUnit && (
+
+            {/* AM/PM slot — Half day only */}
+            {durationMode === 'half' && halfEnabled && (
               <div role="radiogroup" aria-label={isTh ? 'ช่วงครึ่งวัน' : 'Half-day slot'} className="flex gap-2">
                 {(['morning', 'afternoon'] as const).map((slot) => (
                   <button
@@ -1066,6 +1123,63 @@ function RequestTab({
                       : isTh ? 'ครึ่งบ่าย' : 'Afternoon'}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Hourly — Start + End selects. End options gated by start
+                (min 30 min / max 4 hr / end > start). */}
+            {durationMode === 'hourly' && hourlyEnabled && (
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-end gap-3">
+                  <label className="flex flex-col gap-1">
+                    <span className="text-small font-medium text-ink-soft">
+                      {isTh ? 'เวลาเริ่ม' : 'Start time'}
+                    </span>
+                    <select
+                      value={startTime}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        setStartTime(next);
+                        // Drop a now-invalid end so the gate stays consistent.
+                        if (endTime && !endTimeOptions(next).includes(endTime)) {
+                          setEndTime('');
+                        }
+                      }}
+                      className="rounded-[var(--radius-sm)] border border-hairline bg-surface px-3 py-1.5 text-small text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    >
+                      <option value="">{isTh ? 'เลือกเวลา' : 'Select'}</option>
+                      {/* cap last start at 17:30 so every start admits a valid ≥30min end ≤18:00 */}
+                      {timeOptions(8, 17.5).map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-small font-medium text-ink-soft">
+                      {isTh ? 'เวลาสิ้นสุด' : 'End time'}
+                    </span>
+                    <select
+                      value={endTime}
+                      disabled={!startTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className={cn(
+                        'rounded-[var(--radius-sm)] border border-hairline bg-surface px-3 py-1.5 text-small text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                        !startTime && 'cursor-not-allowed opacity-50',
+                      )}
+                    >
+                      <option value="">{isTh ? 'เลือกเวลา' : 'Select'}</option>
+                      {endTimeChoices.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <p className="text-small text-ink-muted">
+                  {isTh
+                    ? 'ลารายชั่วโมง: ขั้นต่ำ 30 นาที สูงสุด 4 ชั่วโมง'
+                    : 'Hourly leave: minimum 30 minutes, maximum 4 hours'}
+                </p>
+                {errors.hourly && <InlineError msg={errors.hourly} />}
               </div>
             )}
           </div>

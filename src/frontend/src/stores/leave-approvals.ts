@@ -70,6 +70,11 @@ export type LeaveRequest = {
   reservedDays?: number;
   /** True for a single half-day booking (morning/afternoon slot). */
   halfDay?: boolean;
+  /** STA-151 — hourly leave (Sick only): `HH:MM` start/end of the span. */
+  startTime?: string;
+  endTime?: string;
+  /** STA-151 — hourly span in minutes (30–240); `days` carries the fraction. */
+  durationMinutes?: number;
   /**
    * 2-level chain flag: set true after the FIRST (manager) approval on a
    * 2-level type so the row advances to the HR step while staying `pending`.
