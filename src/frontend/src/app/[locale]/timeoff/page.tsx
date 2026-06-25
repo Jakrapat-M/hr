@@ -624,9 +624,10 @@ function RequestTab({
   // Entitlement: the selected type must be in the persona's selectable set.
   const hasEntitlement = selectableTypes.some((t) => t.code === code);
 
-  // Bookable window: leave supports SF-style advance booking (today..+90d), so it
-  // is NOT gated by the payroll period (21→20) — that lock is for time corrections.
-  // Both ends of the selected range must fall inside the bookable window.
+  // Bookable window (STA-130): from the start of the current payroll period
+  // (the backdate floor — in-cycle backdating is allowed, e.g. retroactive sick
+  // leave) through +90d advance booking. Both ends of the selected range must
+  // fall inside it. (The timesheet-correction lock is separate, see period.ts.)
   const outsideBookable =
     (!!fromISO && !isBookableLeaveDate(fromISO)) ||
     (!!toISO && !isBookableLeaveDate(toISO));
@@ -739,8 +740,8 @@ function RequestTab({
         : 'This range overlaps a pending/approved leave';
     if (outsideBookable)
       errs.period = isTh
-        ? `จองล่วงหน้าได้ไม่เกิน ${LEAVE_BOOKING_HORIZON_DAYS} วัน และต้องไม่ใช่วันที่ผ่านมาแล้ว`
-        : `Bookable only from today up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead (no past dates)`;
+        ? `จองได้ตั้งแต่ต้นรอบจ่ายเงินเดือนปัจจุบัน จนถึงล่วงหน้า ${LEAVE_BOOKING_HORIZON_DAYS} วัน`
+        : `Bookable from the start of the current payroll period up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead`;
     if (missingDocs.length > 0)
       errs.docs = isTh
         ? `ต้องแนบเอกสาร: ${missingDocs.join(', ')}`
@@ -873,8 +874,8 @@ function RequestTab({
     liveBlocks.push({
       key: 'period',
       msg: isTh
-        ? `จองล่วงหน้าได้ไม่เกิน ${LEAVE_BOOKING_HORIZON_DAYS} วัน และต้องไม่ใช่วันที่ผ่านมาแล้ว — เลือกวันในช่วงที่จองได้`
-        : `Bookable only from today up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead (no past dates) — pick a date in range`,
+        ? `จองได้ตั้งแต่ต้นรอบจ่ายเงินเดือนปัจจุบัน จนถึงล่วงหน้า ${LEAVE_BOOKING_HORIZON_DAYS} วัน — เลือกวันในช่วงที่จองได้`
+        : `Bookable from the start of the current payroll period up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead — pick a date in range`,
     });
   if (missingDocs.length > 0)
     liveBlocks.push({

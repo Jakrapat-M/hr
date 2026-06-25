@@ -1,12 +1,9 @@
-// STA-130 — Restrict Backdated Leave Request (verify-and-lock regression gate).
-//
-// The past-date guard already works (predicate `isBookableLeaveDate` +
-// `isCalendarDateDisabled` on the picker + `outsideBookable` on submit). This
-// spec LOCKS that behavior so it can't silently regress:
-//   1. past day cells render disabled (non-clickable, struck-through)
-//   2. clicking a past cell does NOT start a range
-//   3. a today/future cell IS selectable
-//   4. navigating to a fully-past month shows that month's days disabled
+// STA-130 (REVERSAL) — Allow backdated leave within the current payroll period,
+// capped at the period floor (BA Pattranuch 2026-06-25). Backdated leave is now
+// ALLOWED for the open period (sick leave is inherently retroactive) but NOT into
+// a prior, processed period. This spec locks the inverted behavior:
+//   1. an in-cycle past day cell IS enabled + selectable (backdate within period)
+//   2. the floor seam: the day before the period start is disabled, the start is enabled
 //
 // The clock is PINNED (page.clock) to a known weekday midday so the assertions
 // are deterministic and do not flake on the local-vs-UTC day boundary
@@ -31,35 +28,30 @@ async function seed(page: Page) {
   })
 }
 
-test.describe('STA-130 — leave backdate guard', () => {
-  test('past dates are disabled and non-selectable; today/future selectable', async ({ page }) => {
+test.describe('STA-130 — backdated leave allowed within the current period', () => {
+  // Pinned today 2026-06-15 → current payroll period 2026-05-21 … 06-20,
+  // so the backdate floor is 2026-05-21.
+  test('in-cycle past dates are selectable; pre-period dates stay capped', async ({ page }) => {
     await seed(page)
     await page.goto('/en/timeoff')
 
     // The leave request calendar (default tab) is visible on June 2026.
     await expect(page.getByText('June 2026')).toBeVisible()
 
-    // 1. A past weekday cell (Wed 10 Jun, < pinned today 15 Jun) is disabled.
-    const past = page.getByRole('button', { name: /^10 · outside booking window$/ })
-    await expect(past).toBeVisible()
-    await expect(past).toBeDisabled()
+    // 1. An in-cycle past cell (Wed 10 Jun, ≥ 21 May floor, < today 15 Jun) is now
+    //    ENABLED and selectable (backdate within the open period).
+    const inCyclePast = page.getByRole('button', { name: '10', exact: true })
+    await expect(inCyclePast).toBeEnabled()
+    await inCyclePast.click()
+    await expect(inCyclePast).toHaveAttribute('aria-pressed', 'true')
 
-    // 2. Force-clicking the past cell does not select it (disabled → inert).
-    await past.click({ force: true })
-    await expect(past).toHaveAttribute('aria-pressed', 'false')
-
-    // 3. A future cell (Tue 16 Jun, today+1, within the 90-day window) is selectable.
-    const future = page.getByRole('button', { name: '16', exact: true })
-    await expect(future).toBeEnabled()
-    await future.click()
-    await expect(future).toHaveAttribute('aria-pressed', 'true')
-
-    // 4. Navigate to the previous (fully-past) month — May 2026 — and confirm a
-    //    representative day there is disabled.
+    // 2. The floor seam in May 2026: 20 May (before the period start) is disabled,
+    //    21 May (the period start) is enabled.
     await page.getByRole('button', { name: 'Previous month' }).click()
     await expect(page.getByText('May 2026')).toBeVisible()
-    const mayDay = page.getByRole('button', { name: /^20 · outside booking window$/ })
-    await expect(mayDay).toBeVisible()
-    await expect(mayDay).toBeDisabled()
+    const preFloor = page.getByRole('button', { name: /^20 · outside booking window$/ })
+    await expect(preFloor).toBeVisible()
+    await expect(preFloor).toBeDisabled()
+    await expect(page.getByRole('button', { name: '21', exact: true })).toBeEnabled()
   })
 })

@@ -4,6 +4,7 @@ import {
   isWithinCurrentPeriod,
   isTimesheetLocked,
   isBookableLeaveDate,
+  LEAVE_BACKDATE_MIN,
   LEAVE_BOOKING_HORIZON_DAYS,
 } from '@/lib/time/period';
 
@@ -75,8 +76,19 @@ describe('isBookableLeaveDate (today..+90d advance window)', () => {
     expect(isBookableLeaveDate(isoPlusDays(REF, LEAVE_BOOKING_HORIZON_DAYS + 1), REF)).toBe(false);
   });
 
-  test('past dates are not bookable', () => {
-    expect(isBookableLeaveDate('2026-06-06', REF)).toBe(false);
+  // STA-130 — backdated leave is allowed within the current payroll period
+  // (floor = currentPeriod start = 2026-05-21 for ref 06-07), but not before it.
+  test('an in-cycle past date IS bookable (backdate within the open period)', () => {
+    expect(isBookableLeaveDate('2026-06-06', REF)).toBe(true); // ≥ 2026-05-21 floor
+    expect(isBookableLeaveDate('2026-05-21', REF)).toBe(true); // the floor itself
+  });
+
+  test('a pre-cycle past date is NOT bookable (the backdate cap)', () => {
+    expect(isBookableLeaveDate('2026-05-20', REF)).toBe(false); // one day before the floor
+  });
+
+  test('LEAVE_BACKDATE_MIN returns the current payroll-period start', () => {
+    expect(LEAVE_BACKDATE_MIN(REF)).toBe('2026-05-21');
   });
 
   test('empty string is not bookable', () => {
