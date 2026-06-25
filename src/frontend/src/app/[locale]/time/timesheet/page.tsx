@@ -20,6 +20,11 @@ import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
 import { currentPeriod, demoToday } from '@/lib/time/period';
 import { getAttendanceForPeriod, ecPlanHoursFor } from '@/lib/time/attendance-seed';
 import { getShiftCode } from '@/lib/time/shift-codes';
+import {
+  buildScheduleWeeks,
+  WEEKDAY_LABELS_EN,
+  WEEKDAY_LABELS_TH,
+} from '@/lib/time/schedule-calendar';
 import { templateForEmployee } from '@/lib/time/schedule-template';
 import { validateDwsDay, validateDwsPeriod, DWS_LEVEL_CLASS, dwsLabel } from '@/lib/time/dws-validation';
 import { lateMinutesFor, formatLate, periodLateSummary, type AttendanceDay } from '@/lib/time/attendance-math';
@@ -120,6 +125,11 @@ export default function TimesheetPage() {
   }, [days, lateSummary]);
 
   const [tab, setTab] = useState<TabKey>('entry');
+
+  // STA-153 — the Schedule tab can show the work schedule as a table (default) or
+  // a month calendar. Default Table View per the ticket.
+  const [scheduleView, setScheduleView] = useState<'table' | 'calendar'>('table');
+  const scheduleWeeks = useMemo(() => buildScheduleWeeks(days), [days]);
 
   // Toast for the inline time-correction modal.
   const [toast, setToast] = useState<string | null>(null);
@@ -259,6 +269,35 @@ export default function TimesheetPage() {
             <span className="text-ink-faint">·</span>
             <span className="text-ink-muted">{isTh ? 'มีผล' : 'Effective'} {fmtDate(tmpl.effectiveDate, isTh)}</span>
           </div>
+
+          {/* STA-153 — Table / Calendar view toggle (default Table). */}
+          <div
+            className="mb-3 inline-flex rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-0.5"
+            role="group"
+            aria-label={isTh ? 'รูปแบบการแสดงตารางกะ' : 'Schedule view'}
+          >
+            {([
+              { key: 'table', labelTh: 'ตาราง', labelEn: 'Table' },
+              { key: 'calendar', labelTh: 'ปฏิทิน', labelEn: 'Calendar' },
+            ] as const).map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                aria-pressed={scheduleView === v.key}
+                onClick={() => setScheduleView(v.key)}
+                className={cn(
+                  'rounded-[var(--radius-sm)] px-3 py-1.5 text-small font-medium transition-colors',
+                  scheduleView === v.key
+                    ? 'bg-surface text-accent shadow-[var(--shadow-card)]'
+                    : 'text-ink-muted hover:text-ink',
+                )}
+              >
+                {isTh ? v.labelTh : v.labelEn}
+              </button>
+            ))}
+          </div>
+
+          {scheduleView === 'table' && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -295,6 +334,57 @@ export default function TimesheetPage() {
               </tbody>
             </table>
           </div>
+          )}
+
+          {scheduleView === 'calendar' && (
+            <div className="overflow-x-auto">
+              <div className="min-w-[640px]">
+                {/* Weekday header (Mon → Sun) */}
+                <div className="grid grid-cols-7 gap-1">
+                  {(isTh ? WEEKDAY_LABELS_TH : WEEKDAY_LABELS_EN).map((w) => (
+                    <div key={w} className="px-2 py-1 text-center text-xs font-semibold uppercase tracking-widest text-ink-muted">
+                      {w}
+                    </div>
+                  ))}
+                </div>
+                {/* Week rows */}
+                {scheduleWeeks.map((week, wi) => (
+                  <div key={wi} className="grid grid-cols-7 gap-1">
+                    {week.map((d, di) => {
+                      if (!d) return <div key={di} className="min-h-[76px] rounded-[var(--radius-sm)] bg-canvas-soft/40" />;
+                      const sc = getShiftCode(d.shiftCode);
+                      const dayNum = Number(d.date.slice(8, 10));
+                      return (
+                        <div
+                          key={d.date}
+                          className={cn(
+                            'min-h-[76px] rounded-[var(--radius-sm)] border border-hairline p-1.5',
+                            d.dayOff ? 'bg-canvas-soft' : 'bg-surface',
+                          )}
+                        >
+                          <div className="text-right text-xs font-semibold text-ink-muted tabular-nums">{dayNum}</div>
+                          {d.dayOff ? (
+                            <div className="mt-1 inline-flex rounded-full bg-canvas px-2 py-0.5 text-xs font-medium text-ink-muted">
+                              {isTh ? 'หยุด (F)' : 'Day off (F)'}
+                            </div>
+                          ) : (
+                            <>
+                              <div className="mt-1 inline-flex rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
+                                {sc ? sc.code : '—'}
+                              </div>
+                              {d.scheduledIn && d.scheduledOut && (
+                                <div className="mt-1 text-xs tabular-nums text-ink-muted">{d.scheduledIn}–{d.scheduledOut}</div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
       )}
 
