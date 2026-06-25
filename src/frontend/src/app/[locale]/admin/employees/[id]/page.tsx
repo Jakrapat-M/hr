@@ -510,6 +510,7 @@ const CURRENT_BENEFIT_TO_PLAN_ID: Record<string, string> = {
   TH_DEN_001: 'BE-DEN-001',
   TH_GAS_001: 'BE-GAS-001',
   TH_ORD_001: 'BE-GIF-002',
+  TH_MOB_005: 'BE-MOB-001', // STA-145
 }
 // Resolve a Current-Benefits row to a claimable BenefitPlan for the claim form.
 // Falls back to a safe simple-claim plan so we never spread undefined; overrides
@@ -535,6 +536,8 @@ function claimTypeForPlan(plan: BenefitPlan): BenefitClaimType {
       return 'gasoline'
     case 'physical':
       return 'physical_checkup'
+    case 'mobile':
+      return 'mobile'
     case 'medical':
     case 'dental':
     default:

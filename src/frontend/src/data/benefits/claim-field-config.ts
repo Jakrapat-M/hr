@@ -17,6 +17,7 @@ import {
   HOSPITAL_NAME_TYPE_OPTIONS,
   YES_NO_TRANSFER_DOC_OPTIONS,
   GASOLINE_CLAIM_TYPE_OPTIONS,
+  USAGE_MONTH_OPTIONS,
 } from '@/lib/admin/hire/picklists/picklistRegistry';
 import type { PlanCategory, BenefitPlan } from './plan-registry';
 import type { BenefitClaimType } from '@/stores/benefit-claims';
@@ -102,7 +103,7 @@ const GASOLINE_GROUP: ClaimFieldDescriptor[] = [
 ];
 
 const PHYSICAL_GROUP: ClaimFieldDescriptor[] = [
-  { key: 'physicalInvoice', labelKey: 'physicalInvoice', type: 'text', required: false },
+  { key: 'physicalInvoice', labelKey: 'physicalInvoice', type: 'text', required: true }, // STA-145
   { key: 'hospitalName', labelKey: 'hospitalName', type: 'select', required: true, lov: HOSPITAL_NAME_TYPE_OPTIONS },
 ];
 
@@ -114,9 +115,11 @@ const DEPENDENT_GROUP: ClaimFieldDescriptor[] = [
   { key: 'dependentRelationship', labelKey: 'dependentRelationship', type: 'text', required: false },
 ];
 
-// PROVISIONAL — pending BA OQ-6 (synthetic plan + Excel cutoff).
+// STA-145 — Usage month is a fixed Jan–Dec LOV (gold matrix), not a native
+// <input type="month">. Stored value is the option id (e.g. 'jan'); the display
+// resolver re-resolves it via the LOV for TH/EN approver parity.
 const MOBILE_GROUP: ClaimFieldDescriptor[] = [
-  { key: 'realMonthDate', labelKey: 'realMonthDate', type: 'month', required: true },
+  { key: 'realMonthDate', labelKey: 'realMonthDate', type: 'select', required: true, lov: USAGE_MONTH_OPTIONS },
 ];
 
 // ── Ordered groups by bucket ──────────────────────────────────────────────────
@@ -152,6 +155,7 @@ export const BUCKETS_BY_CATEGORY: Record<PlanCategory, ClaimSpecBucket[]> = {
   wreath: ['general'],
   beneficiary: ['general'],
   lifecycle: ['general'],
+  mobile: ['general', 'mobile'], // STA-145
 };
 
 /** Store / approval side holds only benefitType → resolve by type. */

@@ -19,12 +19,13 @@ const BUILDABLE: Array<{ planId: string; type: BenefitClaimType }> = [
   { planId: 'BE-GAS-001', type: 'gasoline' },
   { planId: 'BE-PHY-001', type: 'physical_checkup' },
   { planId: 'BE-PHY-002', type: 'physical_checkup' },
+  { planId: 'BE-MOB-001', type: 'mobile' }, // STA-145
 ];
 
 describe('claim-field-config — resolvers are total', () => {
   const ALL_CATEGORIES: PlanCategory[] = [
     'medical', 'dental', 'physical', 'gasoline', 'toll', 'parking',
-    'life', 'gift', 'funeral', 'wreath', 'beneficiary', 'lifecycle',
+    'life', 'gift', 'funeral', 'wreath', 'beneficiary', 'lifecycle', 'mobile',
   ];
   const ALL_TYPES: BenefitClaimType[] = ['medical', 'gasoline', 'mobile', 'physical_checkup', 'dependent'];
 

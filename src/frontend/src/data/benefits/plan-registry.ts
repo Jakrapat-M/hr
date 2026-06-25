@@ -32,7 +32,8 @@ export type PlanCategory =
   | 'funeral'
   | 'wreath'
   | 'beneficiary'
-  | 'lifecycle';
+  | 'lifecycle'
+  | 'mobile';
 
 export type RecordType = 'records' | 'info' | 'claimable';
 
@@ -643,6 +644,29 @@ export const BENEFIT_PLAN_REGISTRY: BenefitPlan[] = [
       showRemaningNoOfDaysForClaim: true,
       showRemaningNoOfDaysForEnrollment: false,
     },
+  },
+
+  // ── Mobile reimbursement (BE_MOB) — 1 plan — v1 flat (STA-145) ──
+  // Canonical claimable mobile plan. category 'mobile' routes the claim form to
+  // the MOBILE bucket (Usage month) instead of leaking Medical/Gasoline fields.
+  // annualLimitThb mirrors the STA-120 TH_MOB_005 seed (1500).
+  {
+    schemaVersion: 'v1',
+    id: 'BE-MOB-001',
+    ttt: 'BE_MOB',
+    nameTh: 'ค่าโทรศัพท์',
+    nameEn: 'Mobile reimbursement',
+    template: SIMPLE,
+    category: 'mobile',
+    recordType: 'claimable',
+    approvalChain: BE_CHAIN,
+    annualLimitThb: 1500,
+    requiresDependent: false,
+    requiresHospital: false,
+    requiresReceipt: true,
+    requiredDocsTh: ['ใบแจ้งค่าบริการโทรศัพท์', 'ใบเสร็จรับเงิน'],
+    requiredDocsEn: ['Mobile bill', 'Receipt'],
+    eligibilityTh: 'พนักงานที่ได้รับสิทธิ์ค่าโทรศัพท์รายเดือน',
   },
 
   // ── Toll / Parking (BE_23–24) — 2 plans — v2 A3 hybrid ──

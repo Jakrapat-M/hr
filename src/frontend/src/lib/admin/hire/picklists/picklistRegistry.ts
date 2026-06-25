@@ -41,6 +41,9 @@ export { HOSPITAL_NAME_TYPE_OPTIONS } from './hospitalNameType'
 export { YES_NO_TRANSFER_DOC_OPTIONS } from './yesNoTransferDoc'
 export { GASOLINE_CLAIM_TYPE_OPTIONS } from './gasolineClaimType'
 
+// ── Mobile reimbursement picklists (STA-145) ──────────────────────────────────
+export { USAGE_MONTH_OPTIONS } from './usageMonth'
+
 // Local re-imports for the keyed registry below.
 import { OK_TO_REHIRE_OPTIONS } from './okToRehire'
 import { OT_FLAG_OPTIONS } from './otFlag'
@@ -64,6 +67,7 @@ import { OPD_IPD_OPTIONS } from './opdIpd'
 import { HOSPITAL_NAME_TYPE_OPTIONS } from './hospitalNameType'
 import { YES_NO_TRANSFER_DOC_OPTIONS } from './yesNoTransferDoc'
 import { GASOLINE_CLAIM_TYPE_OPTIONS } from './gasolineClaimType'
+import { USAGE_MONTH_OPTIONS } from './usageMonth'
 
 /**
  * PICKLIST_REGISTRY — canonical id → options map.
@@ -97,6 +101,8 @@ export const PICKLIST_REGISTRY = {
   hospitalNameType: HOSPITAL_NAME_TYPE_OPTIONS,
   yesNoTransferDoc: YES_NO_TRANSFER_DOC_OPTIONS,
   gasolineClaimType: GASOLINE_CLAIM_TYPE_OPTIONS,
+  // STA-145 mobile reimbursement picklist
+  usageMonth: USAGE_MONTH_OPTIONS,
 } as const satisfies Record<string, PicklistDefinition>
 
 export type PicklistId = keyof typeof PICKLIST_REGISTRY
