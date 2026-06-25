@@ -67,6 +67,7 @@ const CATEGORY_LABELS_TH: Record<PlanCategory, string> = {
   wreath:      'พวงหรีด',
   beneficiary: 'ผู้รับผลประโยชน์',
   lifecycle:   'วงจรสวัสดิการ',
+  mobile:      'ค่าโทรศัพท์',
 };
 
 const CATEGORY_LABELS_EN: Record<PlanCategory, string> = {
@@ -82,6 +83,7 @@ const CATEGORY_LABELS_EN: Record<PlanCategory, string> = {
   wreath:      'Wreath',
   beneficiary: 'Beneficiary',
   lifecycle:   'Lifecycle',
+  mobile:      'Mobile',
 };
 
 const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS_EN) as PlanCategory[];

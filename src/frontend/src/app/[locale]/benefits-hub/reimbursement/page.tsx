@@ -7,45 +7,18 @@ import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, ClipboardList } from 'lucide-react';
 import { Card, CardEyebrow, Button, buttonVariants } from '@/components/humi';
 import { SimpleClaimForm, type SimpleClaimSubmission } from '@/components/benefits/templates';
-import { BENEFIT_PLAN_REGISTRY, type BenefitPlan } from '@/data/benefits/plan-registry';
+import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry';
 import { benefitsHubRoute } from '@/lib/benefit-routes';
 import { HUMI_CLAIM_ALLOWANCES } from '@/lib/humi-mock-data';
 import { useBenefitClaimsStore, type BenefitClaimInput, type BenefitClaimType } from '@/stores/benefit-claims';
 
-const REGISTERED_SIMPLE_PLANS = BENEFIT_PLAN_REGISTRY.filter(
+// STA-145: BE-MOB-001 is now a canonical claimable plan in the registry
+// (category 'mobile'), so it is already included here — no synthetic override.
+// The prior synthesis from the gasoline plan leaked category 'gasoline' into the
+// Mobile claim form (the Mobile-renders-Gasoline bug).
+const SIMPLE_PLANS = BENEFIT_PLAN_REGISTRY.filter(
   (p) => p.template === 'simple-claim' && p.recordType === 'claimable',
 );
-
-const gasPlan = REGISTERED_SIMPLE_PLANS.find((p) => p.id === 'BE-GAS-001');
-const createMobileClaimPlan = (basePlan: BenefitPlan): BenefitPlan => {
-  const mobileOverrides = {
-    id: 'BE-MOB-001',
-    ttt: 'BE_MOB_LOCAL',
-    nameTh: 'ค่าโทรศัพท์',
-    nameEn: 'Mobile Phone Reimbursement',
-    annualLimitThb: 9600,
-    requiredDocsTh: ['ใบแจ้งค่าบริการโทรศัพท์', 'ใบเสร็จรับเงิน'],
-    requiredDocsEn: ['Mobile bill', 'Receipt'],
-    eligibilityTh: 'พนักงานที่ได้รับสิทธิ์ค่าโทรศัพท์รายเดือน',
-  };
-
-  return basePlan.schemaVersion === 'v2'
-    ? {
-        ...basePlan,
-        ...mobileOverrides,
-        eligibilityEn: 'Employees with monthly mobile allowance entitlement',
-      }
-    : {
-        ...basePlan,
-        ...mobileOverrides,
-      };
-};
-const mobileClaimPlan = createMobileClaimPlan(gasPlan ?? REGISTERED_SIMPLE_PLANS[0]);
-
-const SIMPLE_PLANS = [
-  ...REGISTERED_SIMPLE_PLANS,
-  mobileClaimPlan,
-];
 
 const allowanceRemaining = (allowanceId: string) => {
   const allowance = HUMI_CLAIM_ALLOWANCES.find((item) => item.id === allowanceId);
