@@ -21,7 +21,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
-import { Plus, Clock, ChevronRight } from 'lucide-react';
+import { Clock, ChevronRight } from 'lucide-react';
 import { Card, CardEyebrow, Button } from '@/components/humi';
 import { FileUploadField } from '@/components/humi/FileUploadField';
 import { cn } from '@/lib/utils';
@@ -126,7 +126,9 @@ export default function OvertimePage() {
     [allRequests, empId],
   );
 
-  const [showForm, setShowForm] = useState(false);
+  // STA-149 — open on the request FORM by default; the status list lives in a
+  // secondary "Status" tab (single control model — no separate show/hide button).
+  const [activeTab, setActiveTab] = useState<'request' | 'status'>('request');
   const [form, setForm] = useState({
     otType: 'OT' as OtTypeCode,
     startDate: '',
@@ -204,7 +206,7 @@ export default function OvertimePage() {
     });
     setForm({ otType: 'OT', startDate: '', startTime: '18:00', endDate: '', endTime: '20:00', reason: '', attachmentId: null });
     setError(null);
-    setShowForm(false);
+    setActiveTab('status'); // STA-149 — jump to the status list to show the new request
   }
 
   const pendingCount = myRequests.filter((r) => r.status === 'pending').length;
@@ -235,18 +237,31 @@ export default function OvertimePage() {
             {isTh ? 'ยื่นคำขอ · ติดตามสถานะ OT' : 'Submit requests · Track OT status'}
           </p>
         </div>
-        <div className="humi-spacer" />
-        <Button
-          variant="primary"
-          leadingIcon={<Plus size={16} />}
-          onClick={() => {
-            setShowForm((v) => !v);
-            setError(null);
-          }}
-        >
-          {isTh ? 'ยื่นคำขอ OT' : 'New OT Request'}
-        </Button>
       </header>
+
+      {/* STA-149 — Request / Status tabs (Request is the default view). */}
+      <div role="tablist" aria-label={isTh ? 'มุมมอง OT' : 'OT views'} className="flex gap-1 border-b border-hairline">
+        {([
+          { key: 'request' as const, label: isTh ? 'ยื่นคำขอ' : 'Request' },
+          { key: 'status' as const, label: `${isTh ? 'สถานะ' : 'Status'}${myRequests.length > 0 ? ` (${myRequests.length})` : ''}` },
+        ]).map((tab) => (
+          <button
+            key={tab.key}
+            role="tab"
+            type="button"
+            aria-selected={activeTab === tab.key}
+            onClick={() => { setActiveTab(tab.key); setError(null); }}
+            className={cn(
+              '-mb-px border-b-2 px-4 py-2 text-small font-medium transition-colors',
+              activeTab === tab.key
+                ? 'border-accent text-ink'
+                : 'border-transparent text-ink-muted hover:text-ink',
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       {/* OT-flag gate banner (B2) */}
       {!attrs.otEligible && (
@@ -255,7 +270,8 @@ export default function OvertimePage() {
         </div>
       )}
 
-      {/* Summary chips */}
+      {/* Summary chips (Status tab) */}
+      {activeTab === 'status' && (
       <div className="flex gap-3 flex-wrap">
         {pendingCount > 0 && (
           <span className="rounded-full px-3 py-1 text-xs font-medium bg-[color:var(--color-warning-soft)] text-[color:var(--color-warning)] border border-[color:var(--color-warning)]">
@@ -272,9 +288,10 @@ export default function OvertimePage() {
           {monthTotal}h / {MONTHLY_OT_CAP_HOURS}h {isTh ? 'รอบนี้' : 'this period'}
         </span>
       </div>
+      )}
 
-      {/* Submit form */}
-      {showForm && (
+      {/* Submit form (Request tab — default) */}
+      {activeTab === 'request' && (
         <Card variant="raised" size="lg">
           <h2 className="font-semibold text-ink mb-4">
             {isTh ? 'ยื่นคำขอทำงานล่วงเวลา' : 'Submit OT Request'}
@@ -387,7 +404,14 @@ export default function OvertimePage() {
           )}
 
           <div className="mt-4 flex gap-3 justify-end">
-            <Button variant="ghost" onClick={() => { setShowForm(false); setError(null); }}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setForm({ otType: 'OT', startDate: '', startTime: '18:00', endDate: '', endTime: '20:00', reason: '', attachmentId: null });
+                setError(null);
+                setActiveTab('status');
+              }}
+            >
               {isTh ? 'ยกเลิก' : 'Cancel'}
             </Button>
             <Button variant="primary" onClick={handleSubmit} disabled={!attrs.otEligible}>
@@ -397,8 +421,8 @@ export default function OvertimePage() {
         </Card>
       )}
 
-      {/* Request list */}
-      {myRequests.length === 0 ? (
+      {/* Request list (Status tab) */}
+      {activeTab === 'status' && (myRequests.length === 0 ? (
         <div className="humi-card humi-card--cream" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">
             {isTh ? 'ยังไม่มีคำขอ OT' : 'No OT requests yet'}
@@ -410,7 +434,7 @@ export default function OvertimePage() {
             <OTRow key={req.id} req={req} locale={locale} />
           ))}
         </ul>
-      )}
+      ))}
     </div>
   );
 }
