@@ -173,13 +173,22 @@ function QuotaCards({ isTh }: { isTh: boolean }) {
   const employeeId = useEssEmployeeId();
   const balances = useLeaveBalances((s) => s.balances);
   const quotaTypes = useMemo(() => quotaTrackedTypes(), []);
+  // STA-150 — default to the curated top-3 (Sick → Annual → Personal); the rest
+  // live behind a View All / Show Less toggle (mirrors the RequestTab pattern).
+  const [showAllBalances, setShowAllBalances] = useState(false);
+  const topCodes = TOP_LEAVE_CODES as readonly string[];
+  const visible = showAllBalances
+    ? quotaTypes
+    : quotaTypes.filter((t) => topCodes.includes(t.code));
+  const hasMore = quotaTypes.length > topCodes.length;
 
   return (
+    <>
     <section
       aria-label={isTh ? 'ยอดวันลาคงเหลือ' : 'Leave balances'}
-      className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3"
+      className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3"
     >
-      {quotaTypes.map((t, i) => {
+      {visible.map((t, i) => {
         const kind = LEAVE_CODE_TO_BALANCE_KIND[t.code] ?? t.code;
         const bucket = balances[`${employeeId}:${kind}`];
         const initial = bucket ? bucket.initial + bucket.credits : 0;
@@ -225,7 +234,7 @@ function QuotaCards({ isTh }: { isTh: boolean }) {
                 className="humi-progress mt-3"
               >
                 <div
-                  className={cn('h-full rounded-full', QUOTA_BAR_CLASSES[i % QUOTA_BAR_CLASSES.length])}
+                  className={cn('h-full rounded-full', QUOTA_BAR_CLASSES[quotaTypes.indexOf(t) % QUOTA_BAR_CLASSES.length])}
                   style={{ width: `${percentUsed}%` }}
                 />
               </div>
@@ -259,6 +268,24 @@ function QuotaCards({ isTh }: { isTh: boolean }) {
         );
       })}
     </section>
+    {hasMore && (
+      <div className="mb-8 flex justify-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-expanded={showAllBalances}
+          aria-label={
+            showAllBalances
+              ? (isTh ? 'แสดงยอดวันลาน้อยลง' : 'Show fewer leave balances')
+              : (isTh ? 'ดูยอดวันลาทั้งหมด' : 'View all leave balances')
+          }
+          onClick={() => setShowAllBalances((v) => !v)}
+        >
+          {showAllBalances ? (isTh ? 'แสดงน้อยลง' : 'Show less') : (isTh ? 'ดูทั้งหมด' : 'View all')}
+        </Button>
+      </div>
+    )}
+    </>
   );
 }
 

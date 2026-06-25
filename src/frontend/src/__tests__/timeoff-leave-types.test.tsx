@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, cleanup, within } from '@testing-library/react'
+import { render, screen, cleanup, within, fireEvent } from '@testing-library/react'
 
 let mockRoles: string[] = []
 
@@ -70,5 +70,32 @@ describe('/timeoff — leave types (23-registry driven)', () => {
     for (const label of SAMPLE_LABELS) {
       expect(within(group).getByText(label)).toBeInTheDocument()
     }
+  })
+})
+
+// STA-150 — leave-balance cards default to the curated top-3 with a View All toggle.
+describe('/timeoff — leave balance cards (STA-150 top-3 default)', () => {
+  const balanceSection = () => screen.getByRole('region', { name: 'ยอดวันลาคงเหลือ' })
+  const cardCount = () => within(balanceSection()).getAllByText('วันคงเหลือ').length
+
+  it('defaults to exactly 3 balance cards (Sick / Annual / Personal)', () => {
+    render(<HumiTimeoffPage />)
+    expect(cardCount()).toBe(3)
+    const section = balanceSection()
+    expect(within(section).getByText('ลาป่วย')).toBeInTheDocument()
+    expect(within(section).getByText('ลาพักผ่อนประจำปี')).toBeInTheDocument()
+    expect(within(section).getByText('ลากิจ')).toBeInTheDocument()
+  })
+
+  it('View All reveals all quota-tracked cards; Show Less collapses back to 3', () => {
+    render(<HumiTimeoffPage />)
+    const viewAll = screen.getByRole('button', { name: 'ดูยอดวันลาทั้งหมด' })
+    expect(viewAll).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(viewAll)
+    expect(cardCount()).toBeGreaterThan(3)
+    const showLess = screen.getByRole('button', { name: 'แสดงยอดวันลาน้อยลง' })
+    expect(showLess).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(showLess)
+    expect(cardCount()).toBe(3)
   })
 })
