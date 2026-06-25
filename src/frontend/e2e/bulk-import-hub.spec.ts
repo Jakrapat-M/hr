@@ -2,11 +2,11 @@ import { expect, test } from '@playwright/test'
 import { authedContext } from './helpers/storage-auth.helper'
 
 // STA-136 — Bulk Import hub (/admin/import): Step 0 subject picker → shared
-// ModuleImportWizard. Employee-change subject is live; benefit-plan is a
-// disabled "Coming soon" card. Old entry points repoint here; no dead-ends.
+// ModuleImportWizard. STA-115 — both employee-change AND benefit-plan subjects
+// are now live. Old entry points repoint here; no dead-ends.
 
 test.describe('Bulk Import hub — Step 0 picker', () => {
-  test('hr_admin sees Step 0 with an enabled employee card + a disabled benefit card (TH)', async ({ browser }) => {
+  test('hr_admin sees Step 0 with both subjects enabled (TH)', async ({ browser }) => {
     const context = await authedContext(browser, 'hr_admin')
     const page = await context.newPage()
     await page.goto('/th/admin/import')
@@ -16,11 +16,10 @@ test.describe('Bulk Import hub — Step 0 picker', () => {
     await expect(employeeCard).toBeVisible()
     await expect(benefitCard).toBeVisible()
 
-    // Enabled subject is selectable; disabled subject is not.
+    // STA-115 — both subjects are now selectable (benefit-plan no longer "Coming soon").
     await expect(employeeCard).toBeEnabled()
-    await expect(benefitCard).toBeDisabled()
-    await expect(benefitCard).toHaveAttribute('data-disabled', 'true')
-    await expect(benefitCard).toContainText('เร็วๆ นี้')
+    await expect(benefitCard).toBeEnabled()
+    await expect(benefitCard).toContainText('เพิ่ม/ปรับสิทธิสวัสดิการ')
 
     // Breadcrumb resolves to "นำเข้าแบบกลุ่ม", NOT the broad "ศูนย์ Admin" fallback
     // (proves the TITLE_MAP entry sits above the broad /admin entry). The crumb
@@ -59,30 +58,53 @@ test.describe('Bulk Import hub — Step 0 picker', () => {
     await context.close()
   })
 
-  test('?subject=employee-change deep-link skips Step 0; ?subject=benefit-plan shows the picker', async ({ browser }) => {
+  test('both deep-links skip Step 0 and mount their wizard (STA-115)', async ({ browser }) => {
     const context = await authedContext(browser, 'hr_admin')
     const page = await context.newPage()
 
-    // Enabled deep-link → wizard (Step 1 upload affordance visible, no picker).
+    // employee-change deep-link → wizard (Step 1 upload affordance visible, no picker).
     await page.goto('/th/admin/import?subject=employee-change')
     await expect(page.getByRole('button', { name: /ถัดไป: ดูตัวอย่าง/ })).toBeVisible()
     await expect(page.locator('[data-subject="benefit-plan"]')).toHaveCount(0)
 
-    // Disabled deep-link → picker (the disabled card is shown, non-selectable).
+    // benefit-plan deep-link → wizard too (now live).
     await page.goto('/th/admin/import?subject=benefit-plan')
-    await expect(page.locator('[data-subject="benefit-plan"]')).toBeDisabled()
-    await expect(page.locator('[data-subject="employee-change"]')).toBeVisible()
+    await expect(page.getByRole('button', { name: /ถัดไป: ดูตัวอย่าง/ })).toBeVisible()
+    await expect(page.locator('[data-subject="employee-change"]')).toHaveCount(0)
 
     await context.close()
   })
 
-  test('EN locale localizes the subject labels and the breadcrumb', async ({ browser }) => {
+  test('selecting benefit-plan runs the 4 steps and records a benefit-plan job (TH)', async ({ browser }) => {
+    const context = await authedContext(browser, 'hr_admin')
+    const page = await context.newPage()
+    await page.goto('/th/admin/import')
+
+    await page.locator('[data-subject="benefit-plan"]').click()
+
+    // The benefit preview columns are present (Action + plan code).
+    await page.setInputFiles('input[type="file"]', {
+      name: 'benefit_grant.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('employee_id,action,plan_code,entitle_amount,effective_date\nEMP-0001,add,BE-MED-001,40000,2026-01-01\n'),
+    })
+    await page.getByRole('button', { name: /ถัดไป: ดูตัวอย่าง/ }).click()
+    await expect(page.getByText('BE-MED-001').first()).toBeVisible()
+    await page.getByRole('button', { name: /ถัดไป: ตรวจสอบความถูกต้อง/ }).click()
+    await page.getByRole('button', { name: /ถัดไป: นำเข้า/ }).click()
+    await page.getByRole('button', { name: /เริ่มนำเข้าข้อมูล/ }).click()
+    await expect(page.getByRole('button', { name: /นำเข้าไฟล์ใหม่/ })).toBeVisible({ timeout: 15000 })
+
+    await context.close()
+  })
+
+  test('EN locale localizes both subject labels and the breadcrumb', async ({ browser }) => {
     const context = await authedContext(browser, 'hr_admin')
     const page = await context.newPage()
     await page.goto('/en/admin/import')
 
     await expect(page.locator('[data-subject="employee-change"]')).toContainText('Change employee information')
-    await expect(page.locator('[data-subject="benefit-plan"]')).toContainText('Coming soon')
+    await expect(page.locator('[data-subject="benefit-plan"]')).toContainText('Add / adjust benefit')
     await expect(page.getByText('ศูนย์ Admin')).toHaveCount(0)
     await expect(page.getByText('Bulk Import').first()).toBeAttached()
 

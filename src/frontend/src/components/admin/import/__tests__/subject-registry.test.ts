@@ -20,9 +20,10 @@ describe('STA-136 — Bulk Import subject registry', () => {
     }
   });
 
-  it('launches with exactly one enabled subject: employee-change', () => {
+  // STA-115 — benefit-plan subject is now LIVE (was a Coming-soon card under STA-136).
+  it('launches with two enabled subjects: employee-change + benefit-plan', () => {
     const enabled = IMPORT_SUBJECTS.filter((s) => !s.disabled);
-    expect(enabled.map((s) => s.key)).toEqual(['employee-change']);
+    expect(enabled.map((s) => s.key).sort()).toEqual(['benefit-plan', 'employee-change']);
   });
 
   it('enabled subjects carry a useConfig hook; disabled subjects do not', () => {
@@ -35,11 +36,11 @@ describe('STA-136 — Bulk Import subject registry', () => {
     }
   });
 
-  it('benefit-plan is registered but flagged disabled (Coming soon, no config)', () => {
+  it('benefit-plan is registered, enabled, and carries a config hook (STA-115)', () => {
     const benefit = getImportSubject('benefit-plan');
     expect(benefit).toBeDefined();
-    expect(benefit?.disabled).toBe(true);
-    expect(benefit?.useConfig).toBeUndefined();
+    expect(benefit?.disabled).toBeFalsy();
+    expect(typeof benefit?.useConfig).toBe('function');
   });
 
   it('lookup by key returns the right subject; unknown key → undefined', () => {
