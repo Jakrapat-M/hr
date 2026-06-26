@@ -33,10 +33,14 @@ import {
   type OTRequest,
 } from '@/stores/overtime-requests';
 import { OT_TYPES, type OtTypeCode } from '@/lib/time/ot-types';
+import { buildTimeOptions } from '@/lib/time/time-options';
 import { computeOtHours, monthlyOtTotal, MONTHLY_OT_CAP_HOURS } from '@/lib/time/ot-math';
 import { isWithinCurrentPeriod } from '@/lib/time/period';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
 import { useLeaveApprovals } from '@/stores/leave-approvals';
+
+// STA-158 — OT Start/End time pickers are 15-minute dropdowns (00:00 … 23:45).
+const OT_TIME_OPTIONS = buildTimeOptions(15);
 
 // Fall back to the demo employee (EMP001 — seeded quota + attrs) when the live
 // persona has no concrete id, so the gates stay demoable.
@@ -331,12 +335,15 @@ export default function OvertimePage() {
               <label className="text-small font-medium text-ink-soft">
                 {isTh ? 'เวลาเริ่ม' : 'Start time'}
               </label>
-              <input
-                type="time"
+              <select
                 value={form.startTime}
                 onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))}
                 className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-              />
+              >
+                {OT_TIME_OPTIONS.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
             </div>
 
             {/* End date + time (separate date enables cross-midnight) */}
@@ -356,12 +363,15 @@ export default function OvertimePage() {
               <label className="text-small font-medium text-ink-soft">
                 {isTh ? 'เวลาสิ้นสุด' : 'End time'}
               </label>
-              <input
-                type="time"
+              <select
                 value={form.endTime}
                 onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))}
                 className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-              />
+              >
+                {OT_TIME_OPTIONS.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
             </div>
 
             {/* Live computed hours */}
