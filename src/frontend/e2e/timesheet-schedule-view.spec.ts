@@ -37,6 +37,12 @@ test.describe('STA-153 — timesheet Schedule view toggle', () => {
     await expect(page.getByText('Mon', { exact: true })).toBeVisible()
     await expect(page.getByRole('columnheader', { name: 'Shift code' })).toHaveCount(0)
 
+    // STA-153 rework — the calendar cell shows the shift TIME, never the shift
+    // ID/code (e.g. "8A1000"). A working cell renders an HH:MM–HH:MM range.
+    // Generic shift-code shape <hrs><break-letter><HHMM> (e.g. 8A1000, 9A0600, 4C0800).
+    await expect(page.getByText(/\b\d(?:\.\d)?[A-C]\d?\d{4}\b/)).toHaveCount(0)
+    await expect(page.getByText(/^\d{2}:\d{2}–\d{2}:\d{2}$/).first()).toBeVisible()
+
     // Back to Table restores the table.
     await tableToggle.click()
     await expect(page.getByRole('columnheader', { name: 'Shift code' })).toBeVisible()
