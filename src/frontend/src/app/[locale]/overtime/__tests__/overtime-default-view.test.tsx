@@ -31,6 +31,7 @@ vi.mock('lucide-react', async (importOriginal) => {
 })
 
 import OvertimePage from '@/app/[locale]/overtime/page'
+import { currentPeriod } from '@/lib/time/period'
 
 afterEach(() => cleanup())
 
@@ -71,5 +72,27 @@ describe('/overtime — form-by-default (STA-149)', () => {
     expect((timeSelects[1] as HTMLSelectElement).value).toBe('20:00')
     // No native time picker remains.
     expect(container.querySelector('input[type="time"]')).toBeNull()
+  })
+
+  // STA-163 — the OT-type selector is removed from the form; every request is 'OT'.
+  it('no longer renders the "ประเภท OT" field/label', () => {
+    render(<OvertimePage />)
+    expect(screen.queryByText('ประเภท OT')).not.toBeInTheDocument()
+    expect(screen.queryByText('OT type')).not.toBeInTheDocument()
+  })
+
+  it('still submits a valid request (otType defaults to OT) → jumps to the Status tab', () => {
+    const { container } = render(<OvertimePage />)
+    // Pick a date inside the current payroll period (validate() gates on the
+    // wall-clock current period, so a hardcoded date would drift out of range).
+    const inPeriodDate = currentPeriod().start // the 21st — always in-period
+    const startDate = container.querySelector('input[type="date"]') as HTMLInputElement
+    fireEvent.change(startDate, { target: { value: inPeriodDate } })
+    const reason = container.querySelector('textarea') as HTMLTextAreaElement
+    fireEvent.change(reason, { target: { value: 'งานเร่งด่วน' } })
+    fireEvent.click(screen.getByRole('button', { name: 'ส่งคำขอ' }))
+    // After a successful submit the page switches to the Status tab (form heading gone).
+    expect(formHeading()).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /สถานะ/ })).toHaveAttribute('aria-selected', 'true')
   })
 })

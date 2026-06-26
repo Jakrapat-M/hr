@@ -134,7 +134,7 @@ export default function OvertimePage() {
   // secondary "Status" tab (single control model — no separate show/hide button).
   const [activeTab, setActiveTab] = useState<'request' | 'status'>('request');
   const [form, setForm] = useState({
-    otType: 'OT' as OtTypeCode,
+    otType: 'OT' as OtTypeCode, // pinned to 'OT' — selector removed (every request is one type); kept for the OTRequest store contract + status/approval labels
     startDate: '',
     startTime: '18:00',
     endDate: '',
@@ -301,24 +301,6 @@ export default function OvertimePage() {
             {isTh ? 'ยื่นคำขอทำงานล่วงเวลา' : 'Submit OT Request'}
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            {/* OT type */}
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <label className="text-small font-medium text-ink-soft">
-                {isTh ? 'ประเภท OT' : 'OT type'}
-              </label>
-              <select
-                value={form.otType}
-                onChange={(e) => setForm((p) => ({ ...p, otType: e.target.value as OtTypeCode }))}
-                className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-              >
-                {OT_TYPES.map((t) => (
-                  <option key={t.code} value={t.code}>
-                    {isTh ? t.nameTh : t.nameEn}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* Start date + time */}
             <div className="flex flex-col gap-1.5">
               <label className="text-small font-medium text-ink-soft">
