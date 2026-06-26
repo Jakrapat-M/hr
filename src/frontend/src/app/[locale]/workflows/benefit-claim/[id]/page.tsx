@@ -45,6 +45,7 @@ const STATUS_CHIP_STYLE: Record<BenefitClaimStatus, string> = {
   send_back:                'bg-canvas-soft text-ink-muted border border-hairline',
   approved:                 'bg-success-soft text-success border border-success/20',
   rejected:                 'bg-danger-soft border border-danger/20',
+  cancelled:                'bg-canvas-soft text-ink-muted border border-hairline',
 };
 
 const STATUS_LABEL_EN: Record<BenefitClaimStatus, string> = {
@@ -53,6 +54,7 @@ const STATUS_LABEL_EN: Record<BenefitClaimStatus, string> = {
   send_back:                'Sent back',
   approved:                 'Approved',
   rejected:                 'Rejected',
+  cancelled:                'Cancelled',
 };
 
 // ── File icon helper ──────────────────────────────────────────────────────────

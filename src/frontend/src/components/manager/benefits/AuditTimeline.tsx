@@ -46,6 +46,7 @@ const ACTION_LABEL_TH: Record<BenefitClaimAuditEntry['action'], string> = {
   reject:    'ไม่อนุมัติ',
   send_back: 'ส่งกลับแก้ไข',
   resubmit:  'ส่งใหม่ / คืนสิทธิ์',
+  cancel:    'ยกเลิกคำขอ',
 };
 
 const ACTION_LABEL_EN: Record<BenefitClaimAuditEntry['action'], string> = {
@@ -54,6 +55,7 @@ const ACTION_LABEL_EN: Record<BenefitClaimAuditEntry['action'], string> = {
   reject:    'Rejected',
   send_back: 'Sent back',
   resubmit:  'Resubmitted / Restored',
+  cancel:    'Cancelled',
 };
 
 // ── Relative time ─────────────────────────────────────────────────────────────

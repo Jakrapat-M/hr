@@ -54,6 +54,7 @@ const STATUS_STYLE: Record<OTStatus, string> = {
   pending: 'bg-[color:var(--color-warning-soft)] text-[color:var(--color-warning)] border border-[color:var(--color-warning)]',
   approved: 'bg-[color:var(--color-success-soft)] text-[color:var(--color-success)] border border-[color:var(--color-success)]',
   rejected: 'bg-danger-soft text-danger-ink border border-danger',
+  cancelled: 'bg-canvas-soft text-ink-muted border border-hairline',
 };
 
 function combineDateTime(date: string, time: string): string {
