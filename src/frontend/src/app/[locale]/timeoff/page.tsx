@@ -1534,6 +1534,11 @@ function HistoryTab({
     [allRequests, userId],
   );
 
+  // STA-157 — the request being cancelled, surfaced in the confirm modal so the
+  // employee sees WHICH leave (type + dates) they are cancelling before confirming.
+  const cancelReq = cancelTarget ? liveRequests.find((r) => r.id === cancelTarget) ?? null : null;
+  const cancelReqDef = cancelReq ? getLeaveType(cancelReq.leaveCode ?? '') : null;
+
   if (history.length === 0 && liveRequests.length === 0) {
     return (
       <div className="py-12 text-center text-small text-ink-muted">
@@ -1613,6 +1618,23 @@ function HistoryTab({
         title={isTh ? 'ยกเลิกคำขอลา' : 'Cancel leave request'}
         widthClass="max-w-md"
       >
+        {cancelReq && (
+          <div className="mb-4 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-4 py-3">
+            <dl className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-1.5 text-small">
+              <dt className="text-ink-muted">{isTh ? 'ประเภทการลา' : 'Leave type'}</dt>
+              <dd className="font-medium text-ink">
+                {(isTh ? cancelReqDef?.nameTh : cancelReqDef?.nameEn) ?? cancelReq.leaveType}
+              </dd>
+              <dt className="text-ink-muted">{isTh ? 'วันที่' : 'Dates'}</dt>
+              <dd className="font-medium text-ink">
+                {formatDate(cancelReq.startDate, 'medium', locale)}
+                {cancelReq.endDate !== cancelReq.startDate
+                  ? ` – ${formatDate(cancelReq.endDate, 'medium', locale)}`
+                  : ''}
+              </dd>
+            </dl>
+          </div>
+        )}
         <p className="text-body text-ink">
           {isTh
             ? 'ต้องการยกเลิกคำขอลานี้ใช่หรือไม่?'
