@@ -350,15 +350,25 @@ function deriveInPeriodLeaveDate(empId: string): string | null {
   return firstWorkingDay(anchor.toISOString().slice(0, 10)) ?? firstWorkingDay(period.start);
 }
 
-const DEMO_LEAVE_BALANCE_SEEDS: Array<{ kind: string; initial: number }> = [
-  { kind: 'sick_leave', initial: 30 },
-  { kind: 'annual_leave', initial: 10 },
-  { kind: 'personnel_leave', initial: 3 },
-  { kind: 'maternity_leave', initial: 98 },
+// Shared leave-balance seed row. `debits` lights up the "Used" figure on the
+// quota cards (used = debits + reserved). NEVER add `reserved` here: seedBalances
+// merges field-by-field (`reserved: seed.reserved ?? next[key]?.reserved ?? 0`),
+// so seeding `reserved` would force-reset the persisted value every reload and
+// re-arm the personnel +1 reserve loop below — drifting the /quick-approve count.
+const DEMO_LEAVE_BALANCE_SEEDS: Array<{ kind: string; initial: number; debits?: number }> = [
+  { kind: 'sick_leave', initial: 30, debits: 6 },     // Used 6 → Remaining 24
+  { kind: 'annual_leave', initial: 10, debits: 3 },   // Used 3 → Remaining 7
+  { kind: 'personnel_leave', initial: 3, debits: 1 }, // Used 1 → Remaining 2
+  { kind: 'maternity_leave', initial: 98 },           // maternity rows: initial only, no debits
   { kind: 'maternity_leave_unpaid', initial: 90 },
   { kind: 'maternity_risk_case', initial: 90 },
   { kind: 'maternity_spouse', initial: 15 },
 ];
+
+// Clean exact-assertable demo viewer (Tier-A HR Admin; id matches demo-users.ts ADM001).
+// Excluded from the personnel +1 reserve loop and the EMP001 annual deduct, so its
+// cards read EXACTLY 30/6/24, 10/3/7, 3/1/2.
+const DEMO_ADMIN_EMPLOYEE = { id: 'ADM001' };
 
 /** Build a pending ESS leave row carrying its canonical queue snapshot. */
 function buildDemoLeaveRow(args: {
@@ -570,6 +580,7 @@ export function ensureDemoSeed(): void {
     .seedBalances([
       ...DEMO_LEAVE_BALANCE_SEEDS.map((s) => ({ employeeId: DEMO_LEAVE_EMPLOYEE.id, ...s })),
       ...DEMO_LEAVE_BALANCE_SEEDS.map((s) => ({ employeeId: DEMO_ESS_EMPLOYEE.id, ...s })),
+      ...DEMO_LEAVE_BALANCE_SEEDS.map((s) => ({ employeeId: DEMO_ADMIN_EMPLOYEE.id, ...s })), // ADM001 (clean exact viewer)
     ]);
 
   // Demo: one in-flight ลากิจ (personnel_leave) so the Time-Off ledger shows a
