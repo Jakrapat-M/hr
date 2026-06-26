@@ -3,13 +3,14 @@
 // ════════════════════════════════════════════════════════════
 // QuickApproveSimple — simplified approvals queue (PR-5 Req7)
 // Unified inbox at /quick-approve. DataTable + segmented filter.
-// Rows derive status from the source store (no local override map). Decisions
-// happen on the per-row detail surface — the queue is read-only (View only).
+// Rows derive status from the source store (no local override map). Clicking a
+// ROW opens the RequestDetailModal popup (Approve / Cancel / Open full page) in
+// place — the table stays the LIST. Reject/Return live on the full-page surface
+// reached via the popup's "Open full page" link.
 // Danger = --color-danger (pumpkin). No Tailwind red/rose/pink. No hex.
 // ════════════════════════════════════════════════════════════
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { Card } from '@/components/humi';
 import { Button } from '@/components/humi';
@@ -20,6 +21,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useQuickApproveAssignments, type Assignee } from '@/stores/quick-approve-assignments';
 import { canActOn, countActionable } from '@/lib/claim-permissions';
 import { nextApproverLabel } from '@/lib/approval-routing';
+import { RequestDetailModal } from '@/components/quick-approve/RequestDetailModal';
 
 // Demo manager actor for mock dispatch (mirrors workflows/benefit-claim/[id]).
 const MANAGER_NAME = 'ผู้จัดการ / Manager';
@@ -132,6 +134,10 @@ export function QuickApproveSimple() {
   }
 
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
+
+  // STA-172 — the request-detail POPUP. Clicking a row selects it; the modal
+  // mounts the generic detail + Approve / Cancel / Open-full-page.
+  const [selected, setSelected] = useState<PendingRequest | null>(null);
 
   // Effective status = the collapsed store status (no local override).
   function effectiveStatus(req: PendingRequest): 'pending' | 'approved' | 'rejected' {
@@ -295,7 +301,11 @@ export function QuickApproveSimple() {
           <Button
             variant={mine ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => (mine ? unassign(row.id) : assignToMe(row.id, me))}
+            onClick={(e) => {
+              // Don't open the row's detail popup when assigning.
+              e.stopPropagation();
+              mine ? unassign(row.id) : assignToMe(row.id, me);
+            }}
           >
             {mine ? t('actions.assigned') : t('actions.assignToMe')}
           </Button>
@@ -357,39 +367,26 @@ export function QuickApproveSimple() {
       header: '',
       headerVisuallyHidden: true,
       cell: (row) => {
+        // The ROW is the affordance now (click → RequestDetailModal popup), so the
+        // old actions-column "View" link is gone. A still-pending row this persona
+        // CANNOT act on keeps the explicit "view only" badge so the read-only scope
+        // stays transparent.
         const status = effectiveStatus(row);
-        const viewLink = (
-          <Link
-            href={detailHref(locale, row)}
-            className="humi-button humi-button--ghost"
-            style={{ fontSize: 12, padding: '4px 10px' }}
-          >
-            {t('actions.view')}
-          </Link>
-        );
-        // Decisions live on the per-row detail surface — the queue only opens the
-        // row (View). A still-pending row this persona CANNOT act on keeps the
-        // explicit "view only" badge so the read-only scope stays transparent.
-        if (status !== 'pending') {
-          return viewLink;
-        }
+        if (status !== 'pending') return null;
         const item = queueById[row.id];
         const actable = item ? canActOn(item, roles) : false;
         if (!actable) {
           return (
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <span
-                className="humi-tag"
-                style={{ fontSize: 12 }}
-                data-testid="view-only-badge"
-              >
-                {t('actions.viewOnly')}
-              </span>
-              {viewLink}
-            </div>
+            <span
+              className="humi-tag"
+              style={{ fontSize: 12 }}
+              data-testid="view-only-badge"
+            >
+              {t('actions.viewOnly')}
+            </span>
           );
         }
-        return viewLink;
+        return null;
       },
       className: 'w-32',
     },
@@ -475,9 +472,19 @@ export function QuickApproveSimple() {
           columns={columns}
           rows={visibleRows}
           rowKey={(row) => row.id}
+          onRowClick={(row) => setSelected(row)}
           dense
         />
       </Card>
+
+      {/* STA-172 — per-row detail POPUP (Approve / Cancel / Open full page). */}
+      <RequestDetailModal
+        request={selected}
+        open={selected != null}
+        onClose={() => setSelected(null)}
+        fullPageHref={selected ? detailHref(locale, selected) : undefined}
+        actorName={me.name}
+      />
     </div>
   );
 }
