@@ -367,6 +367,8 @@
   },
   "benefits": {
     "title": "สวัสดิการ",
+    "claimDetailTitle": "รายละเอียดการเบิก",
+    "moreDetail": "ดูรายละเอียด",
     "overview": "ภาพรวมสวัสดิการ",
     "activeEnrollments": "สวัสดิการที่ลงทะเบียน",
     "benefitPlan": "แผนสวัสดิการ",
