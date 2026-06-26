@@ -89,6 +89,53 @@ describe('leave-approvals — reserve / 2-level advance / deduct / release', () 
     expect(remainingFor(EMP, 'maternity_leave')).toBe(98); // released back
   });
 
+  // STA-157 — employee cancels a first-approval pending request.
+  const EMPLOYEE = { id: EMP, name: 'Mom' };
+
+  function addPendingMaternity() {
+    return useLeaveApprovals.getState().addRequest({
+      employeeId: EMP,
+      employeeName: 'Mom',
+      leaveType: 'maternity_leave',
+      leaveCode: 'maternity_leave',
+      startDate: '2026-06-10',
+      endDate: '2026-06-19',
+      reason: 'maternity',
+      days: 10,
+    });
+  }
+
+  it('cancel sets status cancelled, releases reserved quota, and records an audit entry', () => {
+    const id = addPendingMaternity();
+    expect(remainingFor(EMP, 'maternity_leave')).toBe(88); // reserved
+
+    useLeaveApprovals.getState().cancel(id, EMPLOYEE);
+    const req = useLeaveApprovals.getState().requests.find((r) => r.id === id)!;
+    expect(req.status).toBe('cancelled');
+    expect(remainingFor(EMP, 'maternity_leave')).toBe(98); // released back immediately
+    const last = req.audit[req.audit.length - 1];
+    expect(last.action).toBe('cancel');
+    expect(last.actorName).toBe('Mom');
+  });
+
+  it('cancel is a no-op once the request has moved past the first approval stage', () => {
+    const id = addPendingMaternity();
+    useLeaveApprovals.getState().approve(id, MGR); // → awaitingNext (HR), still pending
+    useLeaveApprovals.getState().cancel(id, EMPLOYEE);
+    const req = useLeaveApprovals.getState().requests.find((r) => r.id === id)!;
+    expect(req.status).toBe('pending'); // NOT cancelled
+    expect(req.awaitingNext).toBe(true);
+    expect(remainingFor(EMP, 'maternity_leave')).toBe(88); // quota untouched
+  });
+
+  it('cancel is a no-op on an already-rejected request', () => {
+    const id = addPendingMaternity();
+    useLeaveApprovals.getState().reject(id, MGR, 'no');
+    useLeaveApprovals.getState().cancel(id, EMPLOYEE);
+    const req = useLeaveApprovals.getState().requests.find((r) => r.id === id)!;
+    expect(req.status).toBe('rejected'); // unchanged
+  });
+
   it('a 1-level quotaTracked type deducts on the single approval', () => {
     useLeaveBalances.getState().clear();
     useLeaveBalances

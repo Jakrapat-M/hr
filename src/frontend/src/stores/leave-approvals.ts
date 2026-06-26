@@ -30,12 +30,12 @@ export type LeaveType =
   // truth without duplicating its 23 codes here.
   | (string & {});
 
-export type LeaveStatus = 'pending' | 'approved' | 'rejected';
+export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
 export type LeaveAuditEntry = {
   actorId: string;
   actorName: string;
-  action: 'submit' | 'approve' | 'reject';
+  action: 'submit' | 'approve' | 'reject' | 'cancel';
   comment?: string;
   at: string; // ISO timestamp
 };
@@ -98,6 +98,7 @@ export const LEAVE_STATUS_LABEL: Record<LeaveStatus, string> = {
   pending: 'รอหัวหน้าอนุมัติ',
   approved: 'อนุมัติแล้ว',
   rejected: 'ถูกปฏิเสธ',
+  cancelled: 'ยกเลิกแล้ว',
 };
 
 /**
@@ -116,6 +117,7 @@ export function leaveStageLabel(
 ): string {
   if (status === 'approved') return isTh ? 'อนุมัติแล้ว' : 'Approved';
   if (status === 'rejected') return isTh ? 'ไม่อนุมัติ' : 'Rejected';
+  if (status === 'cancelled') return isTh ? 'ยกเลิกแล้ว' : 'Cancelled';
   if (awaitingNext)
     return isTh ? 'หัวหน้าอนุมัติแล้ว · รอฝ่ายบุคคล' : 'Manager approved · awaiting HR';
   return isTh ? 'รอหัวหน้าอนุมัติ' : 'Awaiting manager';
@@ -137,6 +139,15 @@ interface LeaveApprovalsState {
   ) => string;
   approve: (id: string, by: { id: string; name: string }, comment?: string) => void;
   reject: (id: string, by: { id: string; name: string }, reason: string) => void;
+  /**
+   * STA-157 — employee cancels their OWN pending leave request while it is still
+   * at the FIRST approval stage (pending && !awaitingNext). Sets status
+   * 'cancelled', releases any reserved quota immediately, and records the audit
+   * entry. Drops out of the approver queue automatically (selectPendingApprovals
+   * filters status==='pending'). No-op once approved/rejected/cancelled or past
+   * the first stage.
+   */
+  cancel: (id: string, by: { id: string; name: string }) => void;
   /** PR-1b: init-overwrite-empties seed from the canonical queue rows (R1). */
   seedFromQueue: (rows: PendingRequest[]) => void;
   clear: () => void;
@@ -301,6 +312,36 @@ export const useLeaveApprovals = create<LeaveApprovalsState>()(
                         actorName: by.name,
                         action: 'reject' as const,
                         comment: reason,
+                        at: new Date().toISOString(),
+                      },
+                    ],
+                  },
+            ),
+          };
+        }),
+      cancel: (id, by) =>
+        set((state) => {
+          const target = state.requests.find((r) => r.id === id);
+          // Only a first-approval pending request can be cancelled by the employee.
+          if (!target || target.status !== 'pending' || target.awaitingNext) return state;
+          // Restore any reserved quota immediately.
+          const bucket = quotaBucketFor(target);
+          if (bucket) {
+            useLeaveBalances.getState().release(target.employeeId, bucket.kind, bucket.days);
+          }
+          return {
+            requests: state.requests.map((r) =>
+              r.id !== id
+                ? r
+                : {
+                    ...r,
+                    status: 'cancelled' as LeaveStatus,
+                    audit: [
+                      ...r.audit,
+                      {
+                        actorId: by.id,
+                        actorName: by.name,
+                        action: 'cancel' as const,
                         at: new Date().toISOString(),
                       },
                     ],
