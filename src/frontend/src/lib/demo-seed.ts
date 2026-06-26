@@ -468,7 +468,7 @@ const DEMO_PENDING_OT: OTRequest[] = [
     employeeId: DEMO_OT_EMPLOYEE.id,
     employeeName: DEMO_OT_EMPLOYEE.name,
     department: DEMO_OT_EMPLOYEE.department,
-    otType: 'OT_BREAK',
+    otType: 'OT', // OT-type selector removed: every request is 'OT', so no seed should render a different label
     startAt: '2026-06-01T23:00:00',
     endAt: '2026-06-02T02:00:00',
     hours: 3,
