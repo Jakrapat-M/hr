@@ -367,6 +367,8 @@
   },
   "benefits": {
     "title": "Benefits",
+    "claimDetailTitle": "Claim detail",
+    "moreDetail": "More detail",
     "overview": "Benefits Overview",
     "activeEnrollments": "My Active Enrollments",
     "benefitPlan": "Benefit Plan",

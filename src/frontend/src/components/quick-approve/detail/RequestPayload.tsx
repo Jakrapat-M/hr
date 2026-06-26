@@ -99,7 +99,7 @@ function OvertimePayload({ details, t }: { details: OvertimeDetails; t: ReturnTy
   );
 }
 
-function ClaimPayload({ details, t, locale }: { details: ClaimDetails; t: ReturnType<typeof useTranslations>; locale: 'th' | 'en' }) {
+export function ClaimPayload({ details, t, locale }: { details: ClaimDetails; t: ReturnType<typeof useTranslations>; locale: 'th' | 'en' }) {
   const dynamic = (details.dynamicFields ?? {}) as Record<string, string | number | undefined>;
   // STA-147 req-5: Selected Benefit + Claim Date are gold "general" fields. They
   // live in dynamicFields but the conditional loop only renders non-general

@@ -56,6 +56,7 @@ import { formatDate } from '@/lib/date'
 import { getPlan, getPlansByTemplate, isV2Plan, type BenefitPlan } from '@/data/benefits/plan-registry'
 import { SimpleClaimForm, type SimpleClaimSubmission } from '@/components/benefits/templates'
 import { InsertChangePopup } from '@/components/benefits/InsertChangePopup'
+import { ClaimDetailModal } from '@/components/benefits/ClaimDetailModal'
 import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar'
 import { useBenefitHistoryStore } from '@/stores/benefit-history-store'
 import { inactiveEndDate } from '@/lib/date'
@@ -899,6 +900,8 @@ export default function EmployeeDetailPage() {
   const tReallocate = useTranslations('admin.reallocateBudget')
   // STA-141 — reuse STA-139's shipped delete-confirm copy (single source of truth).
   const tPlans = useTranslations('admin_benefits_plans')
+  // STA-159 — benefits namespace for the claim-detail "more detail" affordance.
+  const tBenefits = useTranslations('benefits')
   const reallocations = useBudgetReallocationStore(
     useShallow(selectReallocationsForEmployee(empId)),
   )
@@ -1034,6 +1037,46 @@ export default function EmployeeDetailPage() {
   const handleDelete = (b: CurrentBenefit) => {
     setBenefitRows((prev) => prev.filter((r) => r.benefitPlanId !== b.benefitPlanId))
     setDeleteTarget(null)
+  }
+  // STA-159 (Part A) — which claim's read-only detail modal is open (null = closed).
+  const [claimDetail, setClaimDetail] = useState<BenefitClaimRequest | null>(null)
+  // STA-159 (Part B) — map an enrollable benefit onto a Current Benefits row.
+  // Mockup: fields unknown at enroll-time stay blank ("-"); amounts default to 0.
+  const enrollableToCurrentBenefit = (b: EnrollableBenefit): CurrentBenefit => ({
+    benefitName: b.benefitName,
+    benefitPlanId: b.benefitPlanId,
+    type: 'Standard',
+    status: 'Active',
+    amountUsed: 0,
+    entitleAmount: parseInt(b.entitlementAmount.replace(/[^\d]/g, ''), 10) || 0,
+    currency: 'THB',
+    effectiveStartDate: '2026-06-12',
+    effectiveEndDate: '2026-12-31',
+    reimbursedAmount: 0,
+    country: 'TH',
+    benefitCategory: '',
+    benefitType: '',
+    benefitSubType: '',
+    enrollment: '',
+    claimPeriod: '',
+    entitlementCalcMethod: '',
+    eligibleClaimDate: '',
+    specialClaimCondition: '',
+    ruleId: '',
+    ruleName: '',
+    effectiveType: '',
+    waitingPeriod: '',
+    originalEntitlementBeforeProrate: null,
+    originalEntitlementAfterProrate: null,
+    adjustedEntitlementAmount: null,
+    finalEntitlementAmount: null,
+    maximumAmountPerClaim: null,
+  })
+  // STA-159 (Part B) — append the enrolled plan to the in-session Current
+  // Benefits shadow so the new row appears immediately with working actions.
+  const handleEnrollSubmit = (b: EnrollableBenefit) => {
+    setBenefitRows((prev) => [...prev, enrollableToCurrentBenefit(b)])
+    setEnrollTarget(null)
   }
   // STA-141 (Change 3) — shared close for the Insert detail modal (X + Cancel).
   const closeDetail = () => {
@@ -2016,6 +2059,9 @@ export default function EmployeeDetailPage() {
                   <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'จำนวนเงินเบิก' : 'Claim Amount'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'วันที่ส่ง' : 'Submission Date'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'สถานะ' : 'Status'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>
+                    <span className="sr-only">{tBenefits('moreDetail')}</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -2028,6 +2074,16 @@ export default function EmployeeDetailPage() {
                     <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`฿${c.totalClaimAmount.toLocaleString('th-TH')}`}</td>
                     <td className="text-ink-muted tabular-nums" style={{ padding: '8px 12px' }}>{new Date(c.submittedAt).toLocaleDateString(isTh ? 'th-TH' : 'en-GB')}</td>
                     <td style={{ padding: '8px 12px' }}><ClaimStatusChip status={c.status} isTh={isTh} /></td>
+                    <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={tBenefits('moreDetail')}
+                        onClick={() => setClaimDetail(c)}
+                      >
+                        <FileText size={16} aria-hidden />
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -2286,11 +2342,18 @@ export default function EmployeeDetailPage() {
           <EnrollmentFormBody
             benefit={enrollTarget}
             isTh={isTh}
-            onSubmit={() => setEnrollTarget(null)}
+            onSubmit={() => handleEnrollSubmit(enrollTarget)}
             onCancel={() => setEnrollTarget(null)}
           />
         )}
       </Modal>
+
+      {/* STA-159 — read-only claim-detail modal (Option C: unwrapped ClaimPayload). */}
+      <ClaimDetailModal
+        claim={claimDetail}
+        open={claimDetail !== null}
+        onClose={() => setClaimDetail(null)}
+      />
 
       {/* STA-106 / STA-119: per-row "Start a claim" modal — reuses the employee
           SimpleClaimForm verbatim so HR files a claim identically, and persists it
