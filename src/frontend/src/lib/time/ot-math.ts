@@ -94,6 +94,10 @@ export type LeaveSpan = { startDate: string; endDate: string };
 /**
  * Discriminated validation outcome for a multi-day OT submission.
  *   • invalid_row     — a row is missing a date / has a zero-hour window.
+ *   • bad_range       — a row's end is at or before its start (backwards/equal
+ *                       range). With explicit Start/End dates (STA-173) the
+ *                       +1day inference is gone, so a backwards range is a real
+ *                       error, distinct from a blank row.
  *   • outside_period  — a row's date is outside the current payroll period.
  *   • cross_row       — two days in THIS request overlap.
  *   • existing_ot     — a day overlaps the employee's stored pending/approved OT.
@@ -103,6 +107,7 @@ export type LeaveSpan = { startDate: string; endDate: string };
  */
 export type OtValidation =
   | { code: 'invalid_row' }
+  | { code: 'bad_range' }
   | { code: 'outside_period' }
   | { code: 'cross_row' }
   | { code: 'existing_ot' }
@@ -130,8 +135,14 @@ export function validateOtDayRows(args: {
   const cap = args.cap ?? MONTHLY_OT_CAP_HOURS;
 
   // (i) per-row validity + payroll period.
+  // Ordering invariant: empty → bad_range → hours<=0 → outside_period. The
+  // backwards-range check reads the RAW window (endAt <= startAt) BEFORE the
+  // hours<=0 guard, so an explicit backwards/equal range surfaces as bad_range
+  // rather than being masked as a zeroed invalid_row (STA-173).
   for (const d of dayWindows) {
-    if (!d.date || !d.startAt || !d.endAt || d.hours <= 0) return { code: 'invalid_row' };
+    if (!d.date || !d.startAt || !d.endAt) return { code: 'invalid_row' };
+    if (d.endAt <= d.startAt) return { code: 'bad_range' };
+    if (d.hours <= 0) return { code: 'invalid_row' };
     if (!isWithinCurrentPeriod(d.date, refDate)) return { code: 'outside_period' };
   }
 
@@ -153,8 +164,19 @@ export function validateOtDayRows(args: {
     return { code: 'existing_ot' };
   }
 
-  // (iv) OT + Leave overlap on each row's date.
-  if (dayWindows.some((d) => leave.some((l) => d.date >= l.startDate && d.date <= l.endDate))) {
+  // (iv) OT + Leave overlap on each row's date. With explicit cross-day OT
+  // (STA-173) the row can END on a different day than it starts, so test BOTH
+  // the start (anchor) day and the end day against each leave span.
+  if (
+    dayWindows.some((d) => {
+      const endDay = (d.endAt ?? '').slice(0, 10);
+      return leave.some(
+        (l) =>
+          (d.date >= l.startDate && d.date <= l.endDate) || // start day
+          (endDay >= l.startDate && endDay <= l.endDate), // STA-173: end day too
+      );
+    })
+  ) {
     return { code: 'leave' };
   }
 

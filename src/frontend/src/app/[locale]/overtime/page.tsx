@@ -64,13 +64,16 @@ function combineDateTime(date: string, time: string): string {
 
 // STA-164 — one editable row per OT day. A request can carry N day rows; the
 // store keeps the summed total in `hours` and the span in startAt/endAt.
-type OtDayRow = { id: string; date: string; startTime: string; endTime: string };
+// STA-173 — explicit Start/End date per row (cross-day OT), all fields blank by
+// default so nothing reads pre-selected. `OtDayRow` is form-local (not exported).
+type OtDayRow = { id: string; startDate: string; startTime: string; endDate: string; endTime: string };
 let rowSeq = 0;
 const newRow = (): OtDayRow => ({
   id: `ot-day-${++rowSeq}`,
-  date: '',
-  startTime: '18:00',
-  endTime: '20:00',
+  startDate: '',
+  startTime: '',
+  endDate: '',
+  endTime: '',
 });
 
 function OTRow({ req, locale }: { req: OTRequest; locale: string }) {
@@ -155,25 +158,23 @@ export default function OvertimePage() {
 
   const attrs = getEmployeeTimeAttrs(empId);
 
-  // Per-row windows + summed total. A cross-midnight row (end ≤ start, e.g.
-  // 23:00→02:00) rolls its end to the NEXT calendar day so the stored window reads
-  // chronologically (the approver detail shows a sensible Start/End, not an end that
-  // precedes the start). Hours are unchanged — computeOtHours measures the real span.
-  // The request span is the earliest start … latest end across all rows.
+  // Per-row windows + summed total. STA-173 — the user now supplies an explicit
+  // End Date, so build startAt/endAt strictly from the four chosen fields with NO
+  // +1day inference. A row only contributes hours when all four fields are filled
+  // AND end > start; a backwards/half-filled row yields 0 (cannot leak a fabricated
+  // computeOtHours value into the total). The request span is the earliest start …
+  // latest end across all rows.
   const dayWindows = rows.map((r) => {
-    const startAt = combineDateTime(r.date, r.startTime);
-    let endAt = combineDateTime(r.date, r.endTime);
-    if (r.date && r.startTime && r.endTime && endAt <= startAt) {
-      const next = new Date(r.date + 'T00:00:00Z');
-      next.setUTCDate(next.getUTCDate() + 1);
-      endAt = combineDateTime(next.toISOString().slice(0, 10), r.endTime);
-    }
+    const filled = r.startDate && r.startTime && r.endDate && r.endTime;
+    const startAt = combineDateTime(r.startDate, r.startTime);
+    const endAt = combineDateTime(r.endDate, r.endTime);
+    const valid = Boolean(filled) && endAt > startAt;
     return {
       id: r.id,
-      date: r.date,
+      date: r.startDate, // helper anchor day = the start date
       startAt,
       endAt,
-      hours: r.date && r.startTime && r.endTime ? computeOtHours(startAt, endAt) : 0,
+      hours: valid ? computeOtHours(startAt, endAt) : 0,
     };
   });
   const totalHours = Math.round(dayWindows.reduce((s, d) => s + d.hours, 0) * 100) / 100;
@@ -194,6 +195,18 @@ export default function OvertimePage() {
     if (!form.reason.trim()) {
       return isTh ? 'กรุณากรอกเหตุผล' : 'Please enter a reason';
     }
+    // STA-173 — explicit end-after-start guard (the user now supplies End Date).
+    // Fast-feedback only; the helper `bad_range` code is the testable source of
+    // truth. A half-filled row falls through to the helper's invalid_row path.
+    const badRange = rows.some((r) => {
+      if (!r.startDate || !r.startTime || !r.endDate || !r.endTime) return false;
+      return combineDateTime(r.endDate, r.endTime) <= combineDateTime(r.startDate, r.startTime);
+    });
+    if (badRange) {
+      return isTh
+        ? 'เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่ม — สำหรับ OT ข้ามวันให้เลือกวันสิ้นสุดเป็นวันถัดไป'
+        : 'End must be after start — for overnight OT, pick the next day as the End Date';
+    }
     const result = validateOtDayRows({
       dayWindows,
       storedOt: myRequests,
@@ -208,6 +221,10 @@ export default function OvertimePage() {
         return isTh
           ? 'แต่ละวัน OT ต้องมีวันที่และช่วงเวลาที่ถูกต้อง'
           : 'Each OT day needs a date and a valid time range';
+      case 'bad_range':
+        return isTh
+          ? 'เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่ม — สำหรับ OT ข้ามวันให้เลือกวันสิ้นสุดเป็นวันถัดไป'
+          : 'End must be after start — for overnight OT, pick the next day as the End Date';
       case 'outside_period':
         return isTh
           ? 'วันที่อยู่นอกรอบจ่ายเงินเดือนปัจจุบัน'
@@ -373,27 +390,29 @@ export default function OvertimePage() {
                       </Button>
                     )}
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  {/* STA-173 — Start Date · Start Time · End Date · End Time (cross-day). */}
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-small font-medium text-ink-soft">
-                        {isTh ? 'วันที่ *' : 'Date *'}
+                        {isTh ? 'วันที่เริ่ม *' : 'Start Date *'}
                       </label>
                       <input
                         type="date"
-                        value={row.date}
-                        onChange={(e) => updateRow(row.id, { date: e.target.value })}
+                        value={row.startDate}
+                        onChange={(e) => updateRow(row.id, { startDate: e.target.value })}
                         className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-small font-medium text-ink-soft">
-                        {isTh ? 'เวลาเริ่ม' : 'Start time'}
+                        {isTh ? 'เวลาเริ่ม *' : 'Start Time *'}
                       </label>
                       <select
                         value={row.startTime}
                         onChange={(e) => updateRow(row.id, { startTime: e.target.value })}
                         className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                       >
+                        <option value="">{isTh ? '— เลือกเวลา —' : '— Select time —'}</option>
                         {OT_TIME_OPTIONS.map((t) => (
                           <option key={t} value={t}>{t}</option>
                         ))}
@@ -401,13 +420,25 @@ export default function OvertimePage() {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-small font-medium text-ink-soft">
-                        {isTh ? 'เวลาสิ้นสุด' : 'End time'}
+                        {isTh ? 'วันที่สิ้นสุด *' : 'End Date *'}
+                      </label>
+                      <input
+                        type="date"
+                        value={row.endDate}
+                        onChange={(e) => updateRow(row.id, { endDate: e.target.value })}
+                        className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-small font-medium text-ink-soft">
+                        {isTh ? 'เวลาสิ้นสุด *' : 'End Time *'}
                       </label>
                       <select
                         value={row.endTime}
                         onChange={(e) => updateRow(row.id, { endTime: e.target.value })}
                         className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                       >
+                        <option value="">{isTh ? '— เลือกเวลา —' : '— Select time —'}</option>
                         {OT_TIME_OPTIONS.map((t) => (
                           <option key={t} value={t}>{t}</option>
                         ))}

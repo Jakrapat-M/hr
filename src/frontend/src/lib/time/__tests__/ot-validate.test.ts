@@ -54,10 +54,39 @@ describe('validateOtDayRows — per-row + period', () => {
     expect(validateOtDayRows({ ...base, dayWindows: [bad] })).toEqual({ code: 'invalid_row' });
   });
 
-  it('rejects a zero-hour row', () => {
+  it('rejects an equal-time row as bad_range (ordering: bad_range precedes hours<=0)', () => {
+    // startAt === endAt → backwards/equal range. STA-173 drops the +1day
+    // inference, so equal-time now surfaces as bad_range, not invalid_row.
     expect(validateOtDayRows({ ...base, dayWindows: [win('2026-06-02', '18:00', '18:00', 0)] })).toEqual({
-      code: 'invalid_row',
+      code: 'bad_range',
     });
+  });
+
+  it('rejects a backwards range (same date, earlier end) as bad_range', () => {
+    // Build the window manually — win() assumes end>start; feed a genuine
+    // backwards endAt (23:00 → 02:00 with NO date bump).
+    const bad: OtDayWindow = {
+      date: '2026-06-02',
+      startAt: '2026-06-02T23:00:00',
+      endAt: '2026-06-02T02:00:00',
+      hours: 0,
+    };
+    expect(validateOtDayRows({ ...base, dayWindows: [bad] })).toEqual({ code: 'bad_range' });
+  });
+
+  it('keeps a blank row as invalid_row (empty check precedes bad_range)', () => {
+    const blank: OtDayWindow = { date: '', startAt: '', endAt: '', hours: 0 };
+    expect(validateOtDayRows({ ...base, dayWindows: [blank] })).toEqual({ code: 'invalid_row' });
+  });
+
+  it('accepts a valid cross-day row (23:00 → next-day 01:00)', () => {
+    const crossDay: OtDayWindow = {
+      date: '2026-06-02',
+      startAt: '2026-06-02T23:00:00',
+      endAt: '2026-06-03T01:00:00',
+      hours: 2,
+    };
+    expect(validateOtDayRows({ ...base, dayWindows: [crossDay] })).toBeNull();
   });
 
   it('rejects a row outside the current payroll period', () => {
@@ -149,6 +178,19 @@ describe('validateOtDayRows — leave + cap', () => {
     const rows = [win('2026-06-04', '18:00', '21:00', 3)];
     const leave = [{ startDate: '2026-06-03', endDate: '2026-06-05' }];
     expect(validateOtDayRows({ ...base, leave, dayWindows: rows })).toEqual({ code: 'leave' });
+  });
+
+  it('rejects when the END day of a cross-day row falls inside a leave span (start day leave-free)', () => {
+    // STA-173 Change C — row 2 Jun 23:00 → 3 Jun 14:00; leave on 3 Jun only.
+    // The start day (2 Jun) is leave-free; only the END day (3 Jun) collides.
+    const crossDay: OtDayWindow = {
+      date: '2026-06-02',
+      startAt: '2026-06-02T23:00:00',
+      endAt: '2026-06-03T14:00:00',
+      hours: 15,
+    };
+    const leave = [{ startDate: '2026-06-03', endDate: '2026-06-03' }];
+    expect(validateOtDayRows({ ...base, leave, dayWindows: [crossDay] })).toEqual({ code: 'leave' });
   });
 
   it('rejects when month-to-date + SUMMED total exceeds the cap; total carries the sum', () => {
