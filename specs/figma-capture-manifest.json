@@ -1053,6 +1053,21 @@
     "nodeId": "116:2"
   },
   {
+    "route": "/admin",
+    "captureUrl": "http://localhost:3000/en/admin",
+    "lane": 8,
+    "laneName": "ADMIN CENTER · HR Admin hub",
+    "persona": [
+      "A"
+    ],
+    "personaSource": "admin landing hub (entry to all admin modules)",
+    "seedId": null,
+    "dynamic": false,
+    "gateNote": "client-rendered hub; capture needs ~4s hydration delay",
+    "nodeId": "281:2",
+    "note": "standalone ADMIN CENTER section, placed before LANE 8 in journey order"
+  },
+  {
     "route": "/admin/change-requests",
     "captureUrl": "/en/admin/change-requests",
     "lane": 8,
