@@ -318,14 +318,20 @@ export default function TimesheetPage() {
                     <tr key={d.date} className="border-b border-hairline last:border-0">
                       <td className="py-2 px-3 text-ink">{fmtDate(d.date, isTh)}</td>
                       <td className="py-2 px-3 text-ink-soft">
-                        {d.dayOff ? (isTh ? 'วันหยุด (F)' : 'Day off (F)') : (sc ? `${sc.code} · ${isTh ? sc.nameTh : sc.nameEn}` : '—')}
+                        {d.dayOff
+                          ? d.shiftCode
+                            ? (isTh ? 'วันหยุด (ทำงาน)' : 'Day off (worked)')
+                            : (isTh ? 'วันหยุด (F)' : 'Day off (F)')
+                          : (sc ? `${sc.code} · ${isTh ? sc.nameTh : sc.nameEn}` : '—')}
                       </td>
                       <td className="py-2 px-3 tabular-nums text-ink">{d.scheduledIn ?? '—'}</td>
                       <td className="py-2 px-3 tabular-nums text-ink">{d.scheduledOut ?? '—'}</td>
                       <td className="py-2 px-3 tabular-nums text-ink-muted">{d.breakStart ? `${d.breakStart}–${d.breakEnd}` : '—'}</td>
                       <td className="py-2 px-3">
+                        {/* STA-167 — a worked day-off shows a shift; relabel the DWS pill
+                            so it doesn't read a contradictory plain "Day off" on the same row. */}
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${DWS_LEVEL_CLASS[dws.level]}`} title={isTh ? dws.reasonTh : dws.reasonEn}>
-                          {dwsLabel(dws.level, isTh)}
+                          {d.dayOff && sc ? (isTh ? 'ทำงานวันหยุด' : 'Worked day off') : dwsLabel(dws.level, isTh)}
                         </span>
                       </td>
                     </tr>
@@ -359,6 +365,10 @@ export default function TimesheetPage() {
                       // never show the shift ID/code — show the shift name + time.
                       const holiday = resultsInputs.holidays.get(d.date);
                       const isWorking = !d.dayOff && !!sc;
+                      // STA-167 — an employee may be scheduled to work on a Day Off (F)
+                      // or Holiday; when a shift resolves, surface its time too.
+                      const worksDayOff = d.dayOff && !!sc;
+                      const showsShiftTime = !!sc;
                       return (
                         <div
                           key={d.date}
@@ -377,14 +387,19 @@ export default function TimesheetPage() {
                                 {isTh ? holiday.nameTh : holiday.nameEn}
                               </div>
                               {/* worked holiday — show the scheduled shift time too */}
-                              {isWorking && (
+                              {showsShiftTime && (
                                 <div className="mt-1 text-xs tabular-nums text-ink-muted">{sc!.in}–{sc!.out}</div>
                               )}
                             </>
                           ) : d.dayOff ? (
-                            <div className="mt-1 inline-flex rounded-full bg-canvas px-2 py-0.5 text-xs font-medium text-ink-muted">
-                              {isTh ? 'หยุด (F)' : 'Day off (F)'}
-                            </div>
+                            <>
+                              <div className="mt-1 inline-flex rounded-full bg-canvas px-2 py-0.5 text-xs font-medium text-ink-muted">
+                                {worksDayOff ? (isTh ? 'วันหยุด (ทำงาน)' : 'Day off (worked)') : isTh ? 'หยุด (F)' : 'Day off (F)'}
+                              </div>
+                              {worksDayOff && (
+                                <div className="mt-1 text-xs tabular-nums text-ink-muted">{sc!.in}–{sc!.out}</div>
+                              )}
+                            </>
                           ) : sc ? (
                             <div className="mt-1 inline-flex rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent tabular-nums">
                               {sc.in}–{sc.out}
