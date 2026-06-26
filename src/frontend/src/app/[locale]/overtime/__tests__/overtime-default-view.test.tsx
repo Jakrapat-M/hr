@@ -56,4 +56,20 @@ describe('/overtime — form-by-default (STA-149)', () => {
     expect(statusTab).toHaveAttribute('aria-selected', 'true')
     expect(formHeading()).not.toBeInTheDocument()
   })
+
+  // STA-158 — Start/End time are 15-minute dropdown <select>s (00:00…23:45),
+  // defaulting to 18:00 / 20:00, not native <input type="time">.
+  it('renders Start/End time as 15-minute dropdowns (96 options), defaults 18:00/20:00', () => {
+    const { container } = render(<OvertimePage />)
+    // The two time selects are the comboboxes with 96 options (the OT-type select
+    // has far fewer); identify them structurally.
+    const timeSelects = [...container.querySelectorAll('select')].filter(
+      (s) => s.querySelectorAll('option').length === 96,
+    )
+    expect(timeSelects).toHaveLength(2)
+    expect((timeSelects[0] as HTMLSelectElement).value).toBe('18:00')
+    expect((timeSelects[1] as HTMLSelectElement).value).toBe('20:00')
+    // No native time picker remains.
+    expect(container.querySelector('input[type="time"]')).toBeNull()
+  })
 })
