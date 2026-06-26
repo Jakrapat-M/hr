@@ -252,7 +252,12 @@ export function timeCorrectionToPendingRequest(r: TimeCorrectionRequest): Pendin
       position: reasonLabel,
       department: r.department,
     },
-    description: `แก้ไขเวลา (${typeLabel}) — ${r.date} · ${r.correctedTime}`,
+    // Convention X (multi-day): when the request carries days 1..n, summarize the
+    // N-day span (N = 1 + days.length) as ONE queue item. A single-day request
+    // (no `days`) keeps the EXACT original string (byte-identical).
+    description: r.days?.length
+      ? `แก้ไขเวลา (${typeLabel}) — ${r.date} +${r.days.length} วัน`
+      : `แก้ไขเวลา (${typeLabel}) — ${r.date} · ${r.correctedTime}`,
     submittedAt: r.submittedAt,
     urgency,
     waitingDays,

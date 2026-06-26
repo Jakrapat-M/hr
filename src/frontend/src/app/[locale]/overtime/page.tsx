@@ -37,6 +37,7 @@ import { buildTimeOptions } from '@/lib/time/time-options';
 import { computeOtHours, monthlyOtTotal, MONTHLY_OT_CAP_HOURS } from '@/lib/time/ot-math';
 import { isWithinCurrentPeriod } from '@/lib/time/period';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
+import { overlaps } from '@/lib/time/time-overlap';
 import { useLeaveApprovals } from '@/stores/leave-approvals';
 
 // STA-158 — OT Start/End time pickers are 15-minute dropdowns (00:00 … 23:45).
@@ -55,19 +56,6 @@ const STATUS_STYLE: Record<OTStatus, string> = {
 function combineDateTime(date: string, time: string): string {
   if (!date || !time) return '';
   return `${date}T${time}:00`;
-}
-
-/** Two OT windows overlap when start < other.end AND other.start < end. */
-function overlaps(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
-  const as = new Date(aStart).getTime();
-  let ae = new Date(aEnd).getTime();
-  const bs = new Date(bStart).getTime();
-  let be = new Date(bEnd).getTime();
-  if ([as, ae, bs, be].some(Number.isNaN)) return false;
-  // Normalize cross-midnight ends so the comparison stays a simple interval test.
-  if (ae <= as) ae += 24 * 60 * 60 * 1000;
-  if (be <= bs) be += 24 * 60 * 60 * 1000;
-  return as < be && bs < ae;
 }
 
 function OTRow({ req, locale }: { req: OTRequest; locale: string }) {

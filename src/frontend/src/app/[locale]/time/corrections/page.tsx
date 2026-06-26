@@ -123,7 +123,11 @@ export default function TimeCorrectionsPage() {
                       href={`/${locale}/workflows/time-correction/${r.id}`}
                       className="text-sm font-medium text-ink hover:text-accent transition"
                     >
-                      {r.date} · {isTh ? CORRECTION_TYPE_LABEL[r.correctionType].th : CORRECTION_TYPE_LABEL[r.correctionType].en}
+                      {r.date}
+                      {r.days?.length
+                        ? ` +${r.days.length} ${isTh ? 'วัน' : 'days'}`
+                        : ''}{' '}
+                      · {isTh ? CORRECTION_TYPE_LABEL[r.correctionType].th : CORRECTION_TYPE_LABEL[r.correctionType].en}
                     </Link>
                     <div className="text-xs text-ink-muted truncate">{r.reason}</div>
                   </div>
