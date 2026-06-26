@@ -606,6 +606,10 @@ export function selectPendingApprovals(input: {
   // it stays collapsed-`pending` but is now awaiting the HR step (currentStepIndex
   // reads awaitingNext to advance the chain — same idiom as the claim flow).
   for (const r of input.leave) {
+    // STA-157 — a request the employee cancelled is terminal; drop it from the
+    // approver queue (collapseQueueStatus's catch-all would otherwise re-tag it
+    // 'pending' and keep it actionable).
+    if (r.status === 'cancelled') continue;
     if (r.queueSnapshot)
       out.push({
         row: r.queueSnapshot,

@@ -682,6 +682,7 @@ function RequestTab({
           (r) =>
             r.employeeId === employeeId &&
             r.status !== 'rejected' &&
+            r.status !== 'cancelled' &&
             !!r.startDate &&
             !!r.endDate,
         )
@@ -718,6 +719,7 @@ function RequestTab({
         (r) =>
           r.employeeId === employeeId &&
           r.status !== 'rejected' &&
+          r.status !== 'cancelled' &&
           // Match on the canonical 23-registry code only. `leaveType` is a coarse
           // enum label (sick/other), a different namespace — never use it as a
           // fallback here or the one-time check silently mis-fires/no-ops.
@@ -1388,7 +1390,10 @@ function InlineError({ msg }: { msg: string }) {
 // seeded history. Shows pending → (awaiting HR) → approved | rejected.
 // ────────────────────────────────────────────────────────────
 
-const APPROVAL_STATUS_TONE: Record<ApprovalLeaveStatus, string> = HISTORY_TONE;
+const APPROVAL_STATUS_TONE: Record<ApprovalLeaveStatus, string> = {
+  ...HISTORY_TONE,
+  cancelled: 'bg-canvas-soft text-ink-muted',
+};
 
 function liveStatusLabel(r: LeaveRequest, isTh: boolean): { label: string; tone: string } {
   const tone =
@@ -1396,7 +1401,9 @@ function liveStatusLabel(r: LeaveRequest, isTh: boolean): { label: string; tone:
       ? HISTORY_TONE.approved
       : r.status === 'rejected'
         ? HISTORY_TONE.rejected
-        : HISTORY_TONE.pending;
+        : r.status === 'cancelled'
+          ? 'bg-canvas-soft text-ink-muted'
+          : HISTORY_TONE.pending;
   // Single source of truth — narrates the manager → HR stage on 2-level chains.
   return { label: leaveStageLabel(r.status, r.awaitingNext, isTh), tone };
 }
@@ -1499,6 +1506,10 @@ function HistoryTab({
   const isTh = locale !== 'en';
   const history = useTimeoffStore((s) => s.history);
   const userId = useAuthStore((s) => s.userId) ?? DEMO_EMPLOYEE.id;
+  const userName = useAuthStore((s) => s.username) ?? DEMO_EMPLOYEE.name;
+  // STA-157 — employee cancel of a first-approval pending leave request.
+  const cancelRequest = useLeaveApprovals((s) => s.cancel);
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
 
   // Post-submit highlight: ring the new row, then fade it after ~2.4s. Clearing
   // the parent's flag prevents the ring from re-applying on later re-renders.
@@ -1578,12 +1589,51 @@ function HistoryTab({
                       {isTh ? `จองสิทธิ์ ${r.reservedDays} วัน` : `Reserved ${r.reservedDays}d`}
                     </span>
                   )}
+                  {/* STA-157 — cancel a first-approval pending request only. */}
+                  {r.status === 'pending' && !r.awaitingNext && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCancelTarget(r.id)}
+                    >
+                      {isTh ? 'ยกเลิกคำขอ' : 'Cancel'}
+                    </Button>
+                  )}
                 </div>
               </li>
             );
           })}
         </ul>
       )}
+
+      {/* STA-157 — cancel confirmation dialog */}
+      <Modal
+        open={cancelTarget !== null}
+        onClose={() => setCancelTarget(null)}
+        title={isTh ? 'ยกเลิกคำขอลา' : 'Cancel leave request'}
+        widthClass="max-w-md"
+      >
+        <p className="text-body text-ink">
+          {isTh
+            ? 'ต้องการยกเลิกคำขอลานี้ใช่หรือไม่?'
+            : 'Are you sure you want to cancel this leave request?'}
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="ghost" size="md" onClick={() => setCancelTarget(null)}>
+            {isTh ? 'ปิด' : 'Cancel'}
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => {
+              if (cancelTarget) cancelRequest(cancelTarget, { id: userId, name: userName });
+              setCancelTarget(null);
+            }}
+          >
+            {isTh ? 'ยืนยันยกเลิก' : 'Confirm'}
+          </Button>
+        </div>
+      </Modal>
 
       {/* Legacy seeded history */}
       {history.length > 0 && (

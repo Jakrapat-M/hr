@@ -75,6 +75,7 @@ export default function LeaveDetailPage({ params }: PageProps) {
       (r) =>
         r.employeeId !== request.employeeId &&
         r.status !== 'rejected' &&
+        r.status !== 'cancelled' &&
         !!r.startDate &&
         !!r.endDate &&
         r.startDate <= end &&
@@ -91,6 +92,7 @@ export default function LeaveDetailPage({ params }: PageProps) {
       (r) =>
         r.employeeId === request.employeeId &&
         r.status !== 'rejected' &&
+        r.status !== 'cancelled' &&
         new Date(r.submittedAt).getFullYear() === year,
     ).length;
   }, [allRequests, request]);
