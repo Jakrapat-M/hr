@@ -8,6 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeOtHours,
+  otDisplayHours,
   monthlyOtTotal,
   yearlyOtTotal,
   MONTHLY_OT_CAP_HOURS,
@@ -58,6 +59,37 @@ describe('computeOtHours', () => {
 
   it('invalid input = 0', () => {
     expect(computeOtHours('nope', '2026-06-01T20:00:00')).toBe(0);
+  });
+});
+
+describe('otDisplayHours (STA-164)', () => {
+  it('single-day (no days[]) → equals computeOtHours(startAt, endAt)', () => {
+    const req = ot({ startAt: '2026-06-01T18:00:00', endAt: '2026-06-01T21:30:00', hours: 3.5 });
+    expect(otDisplayHours(req)).toBe(3.5);
+    expect(otDisplayHours(req)).toBe(computeOtHours(req.startAt, req.endAt));
+  });
+
+  it('single-day with an empty days[] still recomputes from the window', () => {
+    const req = ot({ startAt: '2026-06-01T18:00:00', endAt: '2026-06-01T20:00:00', hours: 2, days: [] });
+    expect(otDisplayHours(req)).toBe(2);
+  });
+
+  it('multi-day → returns the stored TOTAL, not the span (span ≠ duration)', () => {
+    // Span 1 Jun 18:00 → 3 Jun 02:00; the wall-clock span via computeOtHours would
+    // wildly over-count (~32h), but the stored total is the summed 11h.
+    const req = ot({
+      startAt: '2026-06-01T18:00:00',
+      endAt: '2026-06-03T02:00:00',
+      hours: 11,
+      days: [
+        { date: '2026-06-01', startAt: '2026-06-01T18:00:00', endAt: '2026-06-01T22:00:00', hours: 4 },
+        { date: '2026-06-02', startAt: '2026-06-02T18:00:00', endAt: '2026-06-02T21:00:00', hours: 3 },
+        { date: '2026-06-03', startAt: '2026-06-03T18:00:00', endAt: '2026-06-03T22:00:00', hours: 4 },
+      ],
+    });
+    expect(otDisplayHours(req)).toBe(11);
+    // Guard: the naive span recompute really does diverge from the stored total.
+    expect(computeOtHours(req.startAt, req.endAt)).not.toBe(11);
   });
 });
 

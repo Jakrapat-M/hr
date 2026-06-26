@@ -7,7 +7,7 @@
 // map. Most grid rows have NO OT rows (only canonical seeded employees do).
 
 import type { OTRequest } from '@/stores/overtime-requests';
-import { computeOtHours } from './ot-math';
+import { otDisplayHours } from './ot-math';
 import { toIsoDate, type WeekWindow } from './week';
 
 /** Per-date OT hours for one employee, keyed by ISO 'YYYY-MM-DD'. */
@@ -32,9 +32,10 @@ export function otHoursByDateForWeek(
     if (r.status === 'rejected') continue;
     const day = (r.startAt ?? '').slice(0, 10);
     if (!dayKeys.has(day)) continue;
-    // Prefer the stored hours; fall back to computing from the punch window when
-    // the row carries no positive total (defensive — seeds always set hours).
-    const hours = r.hours && r.hours > 0 ? r.hours : computeOtHours(r.startAt, r.endAt);
+    // Display hours via the centralized read: stored total for multi-day rows,
+    // recomputed from the window for single-day rows (keeps the span≠duration
+    // rule in one place — see otDisplayHours).
+    const hours = otDisplayHours(r);
     if (hours <= 0) continue;
     out[day] = Math.round(((out[day] ?? 0) + hours) * 100) / 100;
   }

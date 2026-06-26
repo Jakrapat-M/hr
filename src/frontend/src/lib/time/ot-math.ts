@@ -5,7 +5,8 @@
 // the next day and adds 24h. Deterministic + unit-tested.
 
 import type { OTRequest } from '@/stores/overtime-requests';
-import { currentPeriod } from '@/lib/time/period';
+import { currentPeriod, isWithinCurrentPeriod } from '@/lib/time/period';
+import { overlaps } from '@/lib/time/time-overlap';
 
 /**
  * Illustrative monthly OT cap (hours). Thai labour law caps OT differently per
@@ -33,6 +34,15 @@ export function computeOtHours(startAtISO: string, endAtISO: string): number {
   if (diffMs <= 0) return 0;
   const hours = diffMs / (60 * 60 * 1000);
   return Math.round(hours * 100) / 100;
+}
+
+/**
+ * Display/total OT hours for one request. For a multi-day request (`days?.length`)
+ * `startAt`/`endAt` are the SPAN (earliest start … latest end), NOT a duration —
+ * so return the stored total `hours`. For a single-day request recompute from the
+ * window (cross-midnight aware). The single derived read for all consumers. */
+export function otDisplayHours(req: OTRequest): number {
+  return req.days?.length ? req.hours : computeOtHours(req.startAt, req.endAt);
 }
 
 /** Sum approved+pending OT hours for an employee within a [start,end] window. */
@@ -71,4 +81,86 @@ export function yearlyOtTotal(reqs: OTRequest[], employeeId: string, refDate?: D
   const { end } = currentPeriod(refDate);
   const year = end.slice(0, 4);
   return sumWithin(reqs, employeeId, `${year}-01-01`, `${year}-12-31`);
+}
+
+// ── STA-164 multi-day OT validation (pure; the form maps codes → i18n) ────────
+
+/** One candidate OT-day window built from a form row. */
+export type OtDayWindow = { date: string; startAt: string; endAt: string; hours: number };
+
+/** A pending/approved leave span the OT must not collide with (by date). */
+export type LeaveSpan = { startDate: string; endDate: string };
+
+/**
+ * Discriminated validation outcome for a multi-day OT submission.
+ *   • invalid_row     — a row is missing a date / has a zero-hour window.
+ *   • outside_period  — a row's date is outside the current payroll period.
+ *   • cross_row       — two days in THIS request overlap.
+ *   • existing_ot     — a day overlaps the employee's stored pending/approved OT.
+ *   • leave           — a day collides with a pending/approved leave span.
+ *   • over_cap        — month-to-date + summed total exceeds the monthly cap.
+ *                       Carries `total` so the message can interpolate it.
+ */
+export type OtValidation =
+  | { code: 'invalid_row' }
+  | { code: 'outside_period' }
+  | { code: 'cross_row' }
+  | { code: 'existing_ot' }
+  | { code: 'leave' }
+  | { code: 'over_cap'; total: number }
+  | null;
+
+/**
+ * Validate the candidate OT-day windows against per-row validity, the payroll
+ * period, cross-row overlap, the employee's stored OT, leave spans, and the
+ * monthly cap on the SUMMED total. Pure + deterministic. `storedOt` should be
+ * the employee's pending/approved requests — a single-day stored request is
+ * compared against its span, a multi-day one against each of its days[].
+ */
+export function validateOtDayRows(args: {
+  dayWindows: OtDayWindow[];
+  storedOt: OTRequest[];
+  leave: LeaveSpan[];
+  monthToDateHours: number;
+  cap?: number;
+  /** Pins the payroll-period reference day (defaults to today); used in tests. */
+  refDate?: Date;
+}): OtValidation {
+  const { dayWindows, storedOt, leave, monthToDateHours, refDate } = args;
+  const cap = args.cap ?? MONTHLY_OT_CAP_HOURS;
+
+  // (i) per-row validity + payroll period.
+  for (const d of dayWindows) {
+    if (!d.date || !d.startAt || !d.endAt || d.hours <= 0) return { code: 'invalid_row' };
+    if (!isWithinCurrentPeriod(d.date, refDate)) return { code: 'outside_period' };
+  }
+
+  // (ii) cross-row overlap within this request (i<j).
+  for (let i = 0; i < dayWindows.length; i++) {
+    for (let j = i + 1; j < dayWindows.length; j++) {
+      if (overlaps(dayWindows[i].startAt, dayWindows[i].endAt, dayWindows[j].startAt, dayWindows[j].endAt)) {
+        return { code: 'cross_row' };
+      }
+    }
+  }
+
+  // (iii) overlap with the employee's own pending/approved OT. A stored single-day
+  // request participates via its span; a multi-day one via each days[] window.
+  const storedWindows = storedOt
+    .filter((r) => r.status === 'pending' || r.status === 'approved')
+    .flatMap((r) => r.days ?? [{ startAt: r.startAt, endAt: r.endAt }]);
+  if (dayWindows.some((d) => storedWindows.some((w) => overlaps(d.startAt, d.endAt, w.startAt, w.endAt)))) {
+    return { code: 'existing_ot' };
+  }
+
+  // (iv) OT + Leave overlap on each row's date.
+  if (dayWindows.some((d) => leave.some((l) => d.date >= l.startDate && d.date <= l.endDate))) {
+    return { code: 'leave' };
+  }
+
+  // (v) monthly cap on the SUMMED total.
+  const total = Math.round((monthToDateHours + dayWindows.reduce((s, d) => s + d.hours, 0)) * 100) / 100;
+  if (total > cap) return { code: 'over_cap', total };
+
+  return null;
 }
