@@ -354,28 +354,43 @@ export default function TimesheetPage() {
                       if (!d) return <div key={di} className="min-h-[76px] rounded-[var(--radius-sm)] bg-canvas-soft/40" />;
                       const sc = getShiftCode(d.shiftCode);
                       const dayNum = Number(d.date.slice(8, 10));
+                      // STA-153 — public holiday (from the same holiday source the
+                      // period summary uses) is distinct from a weekly day-off (F);
+                      // never show the shift ID/code — show the shift name + time.
+                      const holiday = resultsInputs.holidays.get(d.date);
+                      const isWorking = !d.dayOff && !!sc;
                       return (
                         <div
                           key={d.date}
                           className={cn(
                             'min-h-[76px] rounded-[var(--radius-sm)] border border-hairline p-1.5',
-                            d.dayOff ? 'bg-canvas-soft' : 'bg-surface',
+                            holiday ? 'bg-info-soft' : d.dayOff ? 'bg-canvas-soft' : 'bg-surface',
                           )}
                         >
                           <div className="text-right text-xs font-semibold text-ink-muted tabular-nums">{dayNum}</div>
-                          {d.dayOff ? (
+                          {holiday ? (
+                            <>
+                              <div className="mt-1 inline-flex rounded-full bg-info px-2 py-0.5 text-xs font-medium text-canvas">
+                                {isTh ? 'วันหยุดนักขัตฤกษ์' : 'Holiday'}
+                              </div>
+                              <div className="mt-1 text-xs text-ink-muted line-clamp-2">
+                                {isTh ? holiday.nameTh : holiday.nameEn}
+                              </div>
+                              {/* worked holiday — show the scheduled shift time too */}
+                              {isWorking && (
+                                <div className="mt-1 text-xs tabular-nums text-ink-muted">{sc!.in}–{sc!.out}</div>
+                              )}
+                            </>
+                          ) : d.dayOff ? (
                             <div className="mt-1 inline-flex rounded-full bg-canvas px-2 py-0.5 text-xs font-medium text-ink-muted">
                               {isTh ? 'หยุด (F)' : 'Day off (F)'}
                             </div>
+                          ) : sc ? (
+                            <div className="mt-1 inline-flex rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent tabular-nums">
+                              {sc.in}–{sc.out}
+                            </div>
                           ) : (
-                            <>
-                              <div className="mt-1 inline-flex rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
-                                {sc ? sc.code : '—'}
-                              </div>
-                              {d.scheduledIn && d.scheduledOut && (
-                                <div className="mt-1 text-xs tabular-nums text-ink-muted">{d.scheduledIn}–{d.scheduledOut}</div>
-                              )}
-                            </>
+                            <div className="mt-1 text-xs text-ink-muted">—</div>
                           )}
                         </div>
                       );
