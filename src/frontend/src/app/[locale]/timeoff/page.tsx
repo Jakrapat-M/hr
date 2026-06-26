@@ -766,9 +766,13 @@ function RequestTab({
   function validate(): Record<string, string> {
     const errs: Record<string, string> = {};
     if (!fromISO) errs.fromDate = isTh ? 'กรุณาเลือกวันที่เริ่มลา' : 'Select a start date';
-    if (!reason.trim()) errs.reason = isTh ? 'กรุณาระบุเหตุผล' : 'Reason is required';
-    else if (reason.trim().length < 5)
-      errs.reason = isTh ? 'เหตุผลต้องมีอย่างน้อย 5 ตัวอักษร' : 'At least 5 characters';
+    // STA-176 — reason is OPTIONAL for sick leave (visible but not required).
+    // Non-sick types keep the existing reason-required rule.
+    if (!isSick) {
+      if (!reason.trim()) errs.reason = isTh ? 'กรุณาระบุเหตุผล' : 'Reason is required';
+      else if (reason.trim().length < 5)
+        errs.reason = isTh ? 'เหตุผลต้องมีอย่างน้อย 5 ตัวอักษร' : 'At least 5 characters';
+    }
     if (!hasEntitlement)
       errs.entitlement = isTh
         ? 'คุณไม่มีสิทธิ์ลาประเภทนี้'
@@ -1232,7 +1236,7 @@ function RequestTab({
 
       {/* Reason */}
       <Field
-        label={isTh ? 'เหตุผล *' : 'Reason *'}
+        label={`${isTh ? 'เหตุผล' : 'Reason'}${isSick ? '' : ' *'}`}
         htmlFor="leave-reason"
         className="mt-3"
         error={errors.reason}
@@ -1242,7 +1246,15 @@ function RequestTab({
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
-          placeholder={isTh ? 'อธิบายเหตุผลการลา (อย่างน้อย 5 ตัวอักษร)' : 'Describe the reason (min 5 chars)'}
+          placeholder={
+            isSick
+              ? isTh
+                ? 'อธิบายเหตุผลการลา (ถ้ามี)'
+                : 'Describe the reason (optional)'
+              : isTh
+                ? 'อธิบายเหตุผลการลา (อย่างน้อย 5 ตัวอักษร)'
+                : 'Describe the reason (min 5 chars)'
+          }
           aria-invalid={!!errors.reason}
           aria-describedby={errors.reason ? 'err-reason' : undefined}
           className={cn(inputClass, 'min-h-[80px] resize-y', errors.reason && 'border-[color:var(--color-warning)]')}

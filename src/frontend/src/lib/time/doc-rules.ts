@@ -20,14 +20,20 @@ const REQUIRED_DOCS: Record<string, string[]> = {
   accident_leave: ['บันทึกอุบัติเหตุ / Accident report'],
 };
 
+// Sick leave requires a medical certificate when the absence is ≥ 3 consecutive
+// WORKING days. `days` is already the working-day count (weekend + holiday
+// excluding) — the form passes the WorkingDay-mode `totalDays` from countLeaveDays.
+// The boundary is INCLUSIVE: 3 working days already requires the cert.
+const SICK_CODES = ['sick_leave', 'sick_leave_unpaid'];
+
 /**
- * Required attachments for a leave request of `code` lasting `days` days.
- * sick_leave is conditional (medical cert only when days > 3); all other
- * entries are unconditional; unknown codes require nothing.
+ * Required attachments for a leave request of `code` lasting `days` working days.
+ * Sick leave (paid + unpaid) is conditional (medical cert when days ≥ 3); all
+ * other entries are unconditional; unknown codes require nothing.
  */
 export function requiredDocsFor(code: string, days: number): string[] {
-  if (code === 'sick_leave') {
-    return days > 3 ? [MEDICAL_CERT] : [];
+  if (SICK_CODES.includes(code)) {
+    return days >= 3 ? [MEDICAL_CERT] : [];
   }
   return REQUIRED_DOCS[code] ?? [];
 }
