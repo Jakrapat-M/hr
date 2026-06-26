@@ -537,7 +537,8 @@
     "seedId": null,
     "dynamic": false,
     "gateNote": null,
-    "nodeId": "47:2"
+    "nodeId": "292:2",
+    "note": "re-captured with DataTable previewRows cap (Showing 8 of N); replaced stale full-dump frame"
   },
   {
     "route": "/quick-approve/[id]",
