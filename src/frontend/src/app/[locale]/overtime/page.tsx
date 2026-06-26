@@ -34,10 +34,13 @@ import {
 } from '@/stores/overtime-requests';
 import { OT_TYPES, type OtTypeCode } from '@/lib/time/ot-types';
 import { buildTimeOptions } from '@/lib/time/time-options';
-import { computeOtHours, monthlyOtTotal, MONTHLY_OT_CAP_HOURS } from '@/lib/time/ot-math';
-import { isWithinCurrentPeriod } from '@/lib/time/period';
+import {
+  computeOtHours,
+  monthlyOtTotal,
+  validateOtDayRows,
+  MONTHLY_OT_CAP_HOURS,
+} from '@/lib/time/ot-math';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
-import { overlaps } from '@/lib/time/time-overlap';
 import { useLeaveApprovals } from '@/stores/leave-approvals';
 
 // STA-158 — OT Start/End time pickers are 15-minute dropdowns (00:00 … 23:45).
@@ -57,6 +60,17 @@ function combineDateTime(date: string, time: string): string {
   if (!date || !time) return '';
   return `${date}T${time}:00`;
 }
+
+// STA-164 — one editable row per OT day. A request can carry N day rows; the
+// store keeps the summed total in `hours` and the span in startAt/endAt.
+type OtDayRow = { id: string; date: string; startTime: string; endTime: string };
+let rowSeq = 0;
+const newRow = (): OtDayRow => ({
+  id: `ot-day-${++rowSeq}`,
+  date: '',
+  startTime: '18:00',
+  endTime: '20:00',
+});
 
 function OTRow({ req, locale }: { req: OTRequest; locale: string }) {
   const isTh = locale !== 'en';
@@ -121,62 +135,95 @@ export default function OvertimePage() {
   // STA-149 — open on the request FORM by default; the status list lives in a
   // secondary "Status" tab (single control model — no separate show/hide button).
   const [activeTab, setActiveTab] = useState<'request' | 'status'>('request');
+  // STA-163 — otType pinned to 'OT' at the request level (no per-request selector);
+  // STA-164 — the date/time inputs moved into the repeatable `rows` editor below.
   const [form, setForm] = useState({
-    otType: 'OT' as OtTypeCode, // pinned to 'OT' — selector removed (every request is one type); kept for the OTRequest store contract + status/approval labels
-    startDate: '',
-    startTime: '18:00',
-    endDate: '',
-    endTime: '20:00',
+    otType: 'OT' as OtTypeCode, // pinned to 'OT' — kept for the OTRequest store contract + status/approval labels
     reason: '',
     attachmentId: null as string | null,
   });
+  const [rows, setRows] = useState<OtDayRow[]>(() => [newRow()]);
   const [error, setError] = useState<string | null>(null);
+
+  const updateRow = (id: string, patch: Partial<OtDayRow>) =>
+    setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  // Never drop the last row — a request always has ≥1 OT day.
+  const removeRow = (id: string) =>
+    setRows((rs) => (rs.length > 1 ? rs.filter((r) => r.id !== id) : rs));
+  const addRow = () => setRows((rs) => [...rs, newRow()]);
 
   const attrs = getEmployeeTimeAttrs(empId);
 
-  const startAt = combineDateTime(form.startDate, form.startTime);
-  const endAt = combineDateTime(form.endDate || form.startDate, form.endTime);
-  const liveHours = startAt && endAt ? computeOtHours(startAt, endAt) : 0;
+  // Per-row windows + summed total. A cross-midnight row (end ≤ start, e.g.
+  // 23:00→02:00) rolls its end to the NEXT calendar day so the stored window reads
+  // chronologically (the approver detail shows a sensible Start/End, not an end that
+  // precedes the start). Hours are unchanged — computeOtHours measures the real span.
+  // The request span is the earliest start … latest end across all rows.
+  const dayWindows = rows.map((r) => {
+    const startAt = combineDateTime(r.date, r.startTime);
+    let endAt = combineDateTime(r.date, r.endTime);
+    if (r.date && r.startTime && r.endTime && endAt <= startAt) {
+      const next = new Date(r.date + 'T00:00:00Z');
+      next.setUTCDate(next.getUTCDate() + 1);
+      endAt = combineDateTime(next.toISOString().slice(0, 10), r.endTime);
+    }
+    return {
+      id: r.id,
+      date: r.date,
+      startAt,
+      endAt,
+      hours: r.date && r.startTime && r.endTime ? computeOtHours(startAt, endAt) : 0,
+    };
+  });
+  const totalHours = Math.round(dayWindows.reduce((s, d) => s + d.hours, 0) * 100) / 100;
+  const spanStart =
+    [...dayWindows].filter((d) => d.startAt).sort((a, b) => (a.startAt < b.startAt ? -1 : 1))[0]
+      ?.startAt ?? '';
+  const spanEnd =
+    [...dayWindows].filter((d) => d.endAt).sort((a, b) => (a.endAt > b.endAt ? -1 : 1))[0]
+      ?.endAt ?? '';
 
-  // SINGLE validate point (B2/B4). Returns a localized message or null.
+  // SINGLE validate point (B2/B4), now multi-row (STA-164). Eligibility + reason
+  // stay here; the per-row / overlap / cap rules live in the pure
+  // validateOtDayRows helper (unit-tested) and are mapped to localized copy.
   function validate(): string | null {
     if (!attrs.otEligible) {
       return isTh ? 'ไม่มีสิทธิ์ขอ OT' : 'Not eligible for OT';
     }
-    if (!form.startDate || !form.reason.trim()) {
-      return isTh ? 'กรุณากรอกวันที่และเหตุผล' : 'Please enter a date and reason';
+    if (!form.reason.trim()) {
+      return isTh ? 'กรุณากรอกเหตุผล' : 'Please enter a reason';
     }
-    if (!startAt || !endAt || liveHours <= 0) {
-      return isTh ? 'ช่วงเวลาไม่ถูกต้อง' : 'Invalid time range';
+    const result = validateOtDayRows({
+      dayWindows,
+      storedOt: myRequests,
+      leave: leaveRequests
+        .filter((r) => r.employeeId === empId && r.status !== 'rejected')
+        .map((r) => ({ startDate: r.startDate, endDate: r.endDate })),
+      monthToDateHours: monthlyOtTotal(myRequests, empId),
+    });
+    if (!result) return null;
+    switch (result.code) {
+      case 'invalid_row':
+        return isTh
+          ? 'แต่ละวัน OT ต้องมีวันที่และช่วงเวลาที่ถูกต้อง'
+          : 'Each OT day needs a date and a valid time range';
+      case 'outside_period':
+        return isTh
+          ? 'วันที่อยู่นอกรอบจ่ายเงินเดือนปัจจุบัน'
+          : 'Date is outside the current payroll period';
+      case 'cross_row':
+        return isTh ? 'วัน OT ในคำขอนี้ทับซ้อนกัน' : 'OT days in this request overlap';
+      case 'existing_ot':
+        return isTh ? 'ช่วงเวลาทับซ้อนกับคำขอ OT เดิม' : 'Overlaps with an existing OT request';
+      case 'leave':
+        return isTh ? 'วันที่ทับซ้อนกับวันลา' : 'Overlaps with a leave request';
+      case 'over_cap':
+        return isTh
+          ? `เกินเพดาน OT รายเดือน (${result.total}/${MONTHLY_OT_CAP_HOURS} ชม.)`
+          : `Exceeds monthly OT cap (${result.total}/${MONTHLY_OT_CAP_HOURS}h)`;
+      default:
+        return null;
     }
-    const day = startAt.slice(0, 10);
-    if (!isWithinCurrentPeriod(day)) {
-      return isTh
-        ? 'วันที่อยู่นอกรอบจ่ายเงินเดือนปัจจุบัน'
-        : 'Date is outside the current payroll period';
-    }
-    // Overlap with the employee's own pending/approved OT.
-    const hasOtOverlap = myRequests
-      .filter((r) => r.status === 'pending' || r.status === 'approved')
-      .some((r) => overlaps(startAt, endAt, r.startAt, r.endAt));
-    if (hasOtOverlap) {
-      return isTh ? 'ช่วงเวลาทับซ้อนกับคำขอ OT เดิม' : 'Overlaps with an existing OT request';
-    }
-    // OT + Leave overlap (same calendar day, pending/approved leave).
-    const hasLeaveOverlap = leaveRequests
-      .filter((r) => r.employeeId === empId && r.status !== 'rejected')
-      .some((r) => day >= r.startDate && day <= r.endDate);
-    if (hasLeaveOverlap) {
-      return isTh ? 'วันที่ทับซ้อนกับวันลา' : 'Overlaps with a leave request';
-    }
-    // Monthly cap.
-    const monthTotal = monthlyOtTotal(myRequests, empId);
-    if (monthTotal + liveHours > MONTHLY_OT_CAP_HOURS) {
-      return isTh
-        ? `เกินเพดาน OT รายเดือน (${monthTotal + liveHours}/${MONTHLY_OT_CAP_HOURS} ชม.)`
-        : `Exceeds monthly OT cap (${monthTotal + liveHours}/${MONTHLY_OT_CAP_HOURS}h)`;
-    }
-    return null;
   }
 
   function handleSubmit() {
@@ -190,13 +237,26 @@ export default function OvertimePage() {
       employeeName: empName,
       department: DEMO_EMPLOYEE.department,
       otType: form.otType,
-      startAt,
-      endAt,
-      hours: liveHours,
+      startAt: spanStart,
+      endAt: spanEnd,
+      hours: totalHours,
+      // Single-day OT leaves `days` undefined → byte-identical to the pre-STA-164
+      // shape (no per-day breakdown rendered). Only a true multi-day request carries
+      // the per-day array.
+      days:
+        dayWindows.length > 1
+          ? dayWindows.map((d) => ({
+              date: d.date,
+              startAt: d.startAt,
+              endAt: d.endAt,
+              hours: d.hours,
+            }))
+          : undefined,
       reason: form.reason.trim(),
       docs: form.attachmentId ? [form.attachmentId] : [],
     });
-    setForm({ otType: 'OT', startDate: '', startTime: '18:00', endDate: '', endTime: '20:00', reason: '', attachmentId: null });
+    setForm({ otType: 'OT', reason: '', attachmentId: null });
+    setRows([newRow()]);
     setError(null);
     setActiveTab('status'); // STA-149 — jump to the status list to show the new request
   }
@@ -288,71 +348,97 @@ export default function OvertimePage() {
           <h2 className="font-semibold text-ink mb-4">
             {isTh ? 'ยื่นคำขอทำงานล่วงเวลา' : 'Submit OT Request'}
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {/* Start date + time */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-small font-medium text-ink-soft">
-                {isTh ? 'วันที่เริ่ม *' : 'Start date *'}
-              </label>
-              <input
-                type="date"
-                value={form.startDate}
-                onChange={(e) => setForm((p) => ({ ...p, startDate: e.target.value }))}
-                className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-small font-medium text-ink-soft">
-                {isTh ? 'เวลาเริ่ม' : 'Start time'}
-              </label>
-              <select
-                value={form.startTime}
-                onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))}
-                className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-              >
-                {OT_TIME_OPTIONS.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+          {/* STA-164 — repeatable OT-day rows (Add / Remove). */}
+          <div className="flex flex-col gap-3">
+            {rows.map((row, idx) => {
+              const win = dayWindows[idx];
+              return (
+                <div
+                  key={row.id}
+                  className="rounded-[var(--radius-md)] border border-hairline bg-surface p-3"
+                >
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="text-small font-semibold text-ink">
+                      {isTh ? `วัน OT ${idx + 1}` : `OT Day ${idx + 1}`}
+                    </span>
+                    {rows.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[var(--color-danger)]"
+                        onClick={() => removeRow(row.id)}
+                      >
+                        {isTh ? 'ลบ' : 'Remove'}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-small font-medium text-ink-soft">
+                        {isTh ? 'วันที่ *' : 'Date *'}
+                      </label>
+                      <input
+                        type="date"
+                        value={row.date}
+                        onChange={(e) => updateRow(row.id, { date: e.target.value })}
+                        className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-small font-medium text-ink-soft">
+                        {isTh ? 'เวลาเริ่ม' : 'Start time'}
+                      </label>
+                      <select
+                        value={row.startTime}
+                        onChange={(e) => updateRow(row.id, { startTime: e.target.value })}
+                        className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                      >
+                        {OT_TIME_OPTIONS.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-small font-medium text-ink-soft">
+                        {isTh ? 'เวลาสิ้นสุด' : 'End time'}
+                      </label>
+                      <select
+                        value={row.endTime}
+                        onChange={(e) => updateRow(row.id, { endTime: e.target.value })}
+                        className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                      >
+                        {OT_TIME_OPTIONS.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5 text-small text-ink-muted">
+                    <Clock size={13} aria-hidden />
+                    {isTh ? 'ชั่วโมง OT วันนี้:' : 'OT hours this day:'}{' '}
+                    <span className="font-semibold text-ink">{win?.hours ?? 0}</span>{' '}
+                    {isTh ? 'ชม.' : 'h'}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Add OT day */}
+            <div>
+              <Button variant="ghost" size="sm" onClick={addRow}>
+                {isTh ? '+ เพิ่มวัน OT' : '+ Add OT Day'}
+              </Button>
             </div>
 
-            {/* End date + time (separate date enables cross-midnight) */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-small font-medium text-ink-soft">
-                {isTh ? 'วันที่สิ้นสุด' : 'End date'}
-              </label>
-              <input
-                type="date"
-                value={form.endDate}
-                onChange={(e) => setForm((p) => ({ ...p, endDate: e.target.value }))}
-                placeholder={form.startDate}
-                className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-small font-medium text-ink-soft">
-                {isTh ? 'เวลาสิ้นสุด' : 'End time'}
-              </label>
-              <select
-                value={form.endTime}
-                onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))}
-                className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-              >
-                {OT_TIME_OPTIONS.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Live computed hours */}
-            <div className="sm:col-span-2 flex items-center gap-2 text-small text-ink-muted">
+            {/* Total OT hours */}
+            <div className="flex items-center gap-2 border-t border-hairline pt-3 text-small text-ink-muted">
               <Clock size={14} aria-hidden />
-              {isTh ? 'จำนวนชั่วโมง OT:' : 'Computed OT hours:'}{' '}
-              <span className="font-semibold text-ink">{liveHours}</span> {isTh ? 'ชม.' : 'h'}
+              {isTh ? 'รวมชั่วโมง OT:' : 'Total OT hours:'}{' '}
+              <span className="font-semibold text-ink">{totalHours}</span> {isTh ? 'ชม.' : 'h'}
             </div>
 
             {/* Reason */}
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <div className="flex flex-col gap-1.5">
               <label className="text-small font-medium text-ink-soft">
                 {isTh ? 'เหตุผล *' : 'Reason *'}
               </label>
@@ -387,7 +473,8 @@ export default function OvertimePage() {
             <Button
               variant="ghost"
               onClick={() => {
-                setForm({ otType: 'OT', startDate: '', startTime: '18:00', endDate: '', endTime: '20:00', reason: '', attachmentId: null });
+                setForm({ otType: 'OT', reason: '', attachmentId: null });
+                setRows([newRow()]);
                 setError(null);
                 setActiveTab('status');
               }}

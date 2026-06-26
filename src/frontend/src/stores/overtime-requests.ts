@@ -28,6 +28,9 @@ export type OTAuditEntry = {
   at: string; // ISO timestamp
 };
 
+/** One day's OT window inside a multi-day request (STA-164). */
+export type OtDay = { date: string; startAt: string; endAt: string; hours: number };
+
 export type OTRequest = {
   id: string; // OT-YYYYMMDDHHMMSS-<rand> (or a stable demo id)
   employeeId: string;
@@ -36,7 +39,14 @@ export type OTRequest = {
   otType: OtTypeCode;
   startAt: string; // ISO datetime
   endAt: string; // ISO datetime
+  /** Authoritative TOTAL OT hours. For a multi-day request (days?.length),
+   *  startAt..endAt is the SPAN (earliest start … latest end), NOT the duration —
+   *  never derive hours from the span; read display hours via otDisplayHours()
+   *  from lib/time/ot-math. */
   hours: number; // computed OT hours (cross-midnight aware)
+  /** Per-day breakdown for a multi-day OT request (STA-164). Undefined for a
+   *  single-day request → byte-identical to the legacy single-window shape. */
+  days?: OtDay[];
   reason: string;
   docs: string[];
   status: OTStatus;

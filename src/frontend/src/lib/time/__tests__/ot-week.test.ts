@@ -41,8 +41,13 @@ describe('otHoursByDateForWeek', () => {
   });
 
   it('sums multiple rows on the same day', () => {
+    // Display hours derive from each single-day window (otDisplayHours): row `a`
+    // is the default 18:00→21:00 (3h), row `b` is a 19:00→21:00 (2h) window.
     const map = otHoursByDateForWeek(
-      [ot({ id: 'a', hours: 3 }), ot({ id: 'b', hours: 2 })],
+      [
+        ot({ id: 'a', startAt: '2026-06-01T18:00:00', endAt: '2026-06-01T21:00:00', hours: 3 }),
+        ot({ id: 'b', startAt: '2026-06-01T19:00:00', endAt: '2026-06-01T21:00:00', hours: 2 }),
+      ],
       'EMP-0301',
       week,
     );
