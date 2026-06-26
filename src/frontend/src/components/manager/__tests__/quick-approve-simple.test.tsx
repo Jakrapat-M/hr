@@ -89,6 +89,15 @@ function cls(el: Element): string {
     : String((el.className as SVGAnimatedString).baseVal ?? '');
 }
 
+// STA-172: rows are now interactive (<tr role="button">), so a name regex can match
+// the ROW's accessible name. Count only real per-row action <button>s (exclude TR
+// rows + any control inside the open detail popup dialog).
+function queryQueueButtons(name: RegExp) {
+  return screen
+    .queryAllByRole('button', { name })
+    .filter((b) => b.tagName === 'BUTTON' && b.closest('[role="dialog"]') === null);
+}
+
 // ────────────────────────────────────────────────────────────
 // AC7.1 — breadcrumb + title + subtitle with pending count
 // ────────────────────────────────────────────────────────────
@@ -156,46 +165,46 @@ describe('QuickApproveSimple — AC7.3 columns', () => {
 });
 
 // ────────────────────────────────────────────────────────────
-// AC7.4 — View link per row; per-row Approve / Reject removed (STA-121)
+// AC7.4 — row-click opens the detail POPUP (STA-172); per-row Approve/Reject + the
+// actions-column View link are gone (the ROW is the affordance).
 // ────────────────────────────────────────────────────────────
-describe('QuickApproveSimple — AC7.4 inline actions', () => {
-  it('does NOT render per-row Approve buttons (decisions live on detail)', () => {
+describe('QuickApproveSimple — AC7.4 row-click popup', () => {
+  it('does NOT render per-row Approve buttons in the queue (decisions live in the popup)', () => {
     renderComponent();
-    expect(screen.queryAllByRole('button', { name: /อนุมัติ/ })).toHaveLength(0);
+    // The popup is closed on mount, so no Approve button is present yet.
+    expect(screen.queryAllByRole('button', { name: /^อนุมัติ$/ })).toHaveLength(0);
   });
 
   it('does NOT render per-row Reject buttons (decisions live on detail)', () => {
     renderComponent();
-    expect(screen.queryAllByRole('button', { name: /ปฏิเสธ/ })).toHaveLength(0);
+    expect(queryQueueButtons(/ปฏิเสธ/)).toHaveLength(0);
   });
 
-  it('View links point to a detail route (/quick-approve/{id} or /workflows/<type>/{id})', () => {
+  it('does NOT render an actions-column View link (the row is the affordance)', () => {
     renderComponent();
-    const viewLinks = screen.getAllByRole('link', { name: /ดูรายละเอียด/ });
-    expect(viewLinks.length).toBeGreaterThanOrEqual(1);
-    // Most rows open the unified /quick-approve/[id] detail; pay-rate, tax-planning,
-    // time-correction, leave, ot, probation + resignation rows open their own
-    // /workflows/<type>/[id] page. Every view link must resolve to one of those.
-    viewLinks.forEach((link) => {
-      expect(link).toHaveAttribute(
-        'href',
-        expect.stringMatching(
-          /\/(quick-approve|workflows\/(pay-rate|tax-planning|time-correction|leave|ot|probation|resignation))\//,
-        ),
-      );
-    });
-    // At least one canonical row still opens the unified /quick-approve detail.
+    expect(screen.queryAllByRole('link', { name: /ดูรายละเอียด/ })).toHaveLength(0);
+  });
+
+  it('clicking a request ROW opens the detail popup with an "Open full page" deep link', () => {
+    renderComponent();
+    // Rows are interactive (role=button) once onRowClick is wired by the inbox.
+    const rowButtons = screen.getAllByRole('button').filter((b) => b.tagName === 'TR');
+    expect(rowButtons.length).toBeGreaterThanOrEqual(1);
+    fireEvent.click(rowButtons[0]);
+    // The popup mounts the generic detail + an "Open full page" deep link that
+    // resolves to the row's per-type detail route (so Reject/Return there aren't
+    // stranded). The inbox passes its full per-type detailHref.
+    const fullPage = screen.getByRole('link', { name: /ดูเต็มหน้า/ });
+    expect(fullPage).toHaveAttribute(
+      'href',
+      expect.stringMatching(
+        /\/(quick-approve|workflows\/(pay-rate|tax-planning|time-correction|leave|ot|probation|resignation))\//,
+      ),
+    );
+    // The popup's Approve control (Modal footer) is now present.
     expect(
-      viewLinks.some((l) => /\/quick-approve\//.test(l.getAttribute('href') ?? '')),
-    ).toBe(true);
-  });
-
-  it('pay-rate + tax-planning view links route to /workflows/<type>/{id}', () => {
-    renderComponent();
-    const viewLinks = screen.getAllByRole('link', { name: /ดูรายละเอียด/ });
-    const hrefs = viewLinks.map((l) => l.getAttribute('href') ?? '');
-    expect(hrefs.some((h) => /\/workflows\/pay-rate\//.test(h))).toBe(true);
-    expect(hrefs.some((h) => /\/workflows\/tax-planning\//.test(h))).toBe(true);
+      screen.getByRole('dialog'),
+    ).toBeInTheDocument();
   });
 });
 
@@ -208,14 +217,14 @@ describe('QuickApproveSimple — AC7.5 no per-row decision in queue', () => {
     renderComponent();
     const totalPending = TOTAL_SEED_COUNT;
     // No per-row Approve button exists to mutate the count.
-    expect(screen.queryAllByRole('button', { name: /อนุมัติ/ })).toHaveLength(0);
+    expect(queryQueueButtons(/อนุมัติ/)).toHaveLength(0);
     const matches = screen.getAllByText((t) => t.includes(String(totalPending)));
     expect(matches.some((el) => el.tagName === 'P')).toBe(true);
   });
 
   it('Approved tab stays at 0 (queue cannot approve)', () => {
     renderComponent();
-    expect(screen.queryAllByRole('button', { name: /อนุมัติ/ })).toHaveLength(0);
+    expect(queryQueueButtons(/อนุมัติ/)).toHaveLength(0);
     const tabs = screen.getAllByRole('tab');
     // Tab at index 2 = approved — nothing approved via the queue.
     expect(tabs[2].textContent).toMatch(/0/);
@@ -247,7 +256,7 @@ describe('QuickApproveSimple — AC7.6 token scan', () => {
 
   it('no remaining per-row Reject button (decisions moved to detail)', () => {
     renderComponent();
-    expect(screen.queryAllByRole('button', { name: /ปฏิเสธ/ })).toHaveLength(0);
+    expect(queryQueueButtons(/ปฏิเสธ/)).toHaveLength(0);
   });
 });
 
@@ -274,7 +283,7 @@ describe('QuickApproveSimple — P2 view-only + honest count', () => {
     setRoles(['hr_admin']);
     renderComponent();
     // Per-row Approve/Reject removed — even a full approver only opens the row.
-    expect(screen.queryAllByRole('button', { name: /อนุมัติ/ })).toHaveLength(0);
+    expect(queryQueueButtons(/อนุมัติ/)).toHaveLength(0);
     // A full approver acts on every row, so NO view-only badge renders.
     expect(screen.queryAllByTestId('view-only-badge')).toHaveLength(0);
   });
@@ -283,8 +292,8 @@ describe('QuickApproveSimple — P2 view-only + honest count', () => {
     setRoles(['employee']);
     renderComponent();
     // Action buttons absent for every row...
-    expect(screen.queryAllByRole('button', { name: /อนุมัติ/ })).toHaveLength(0);
-    expect(screen.queryAllByRole('button', { name: /ปฏิเสธ/ })).toHaveLength(0);
+    expect(queryQueueButtons(/อนุมัติ/)).toHaveLength(0);
+    expect(queryQueueButtons(/ปฏิเสธ/)).toHaveLength(0);
     // ...but rows are NOT hidden — view-only badges render instead (transparency).
     expect(screen.getAllByTestId('view-only-badge').length).toBeGreaterThanOrEqual(1);
   });
