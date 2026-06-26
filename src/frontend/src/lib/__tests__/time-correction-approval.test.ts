@@ -112,4 +112,71 @@ describe('time-correction → unified quick-approve row', () => {
     // payCode is derived from the reason registry (UNABLE_TO_SCAN → UNABLE_TO_SCAN).
     expect(stored.payCode).toBe('UNABLE_TO_SCAN');
   });
+
+  it('single-day stores NO `days` key (byte-identical shape)', () => {
+    const id = submitOne();
+    const stored = useTimeCorrections.getState().requests.find((r) => r.id === id)!;
+    expect(stored.days).toBeUndefined();
+  });
+});
+
+describe('multi-day time correction — Convention X (one request, N days)', () => {
+  function submitMultiDay() {
+    return useTimeCorrections.getState().addRequest({
+      employeeId: 'EMP102',
+      employeeName: 'Natcha Panyasiri',
+      department: 'My Team',
+      date: '2026-05-20',
+      correctionType: 'in',
+      reasonCode: 'UNABLE_TO_SCAN',
+      originalTime: '09:22',
+      correctedTime: '09:05',
+      reason: 'Badge scanned at 09:05',
+      days: [
+        {
+          date: '2026-05-21',
+          correctionType: 'out',
+          reasonCode: 'FORGET_CARD',
+          correctedTime: '18:10',
+          reason: 'Forgot to clock out',
+        },
+        {
+          date: '2026-05-22',
+          correctionType: 'both',
+          reasonCode: 'MACHINE_BROKE',
+          correctedTime: '08:30',
+          reason: 'Scanner down',
+        },
+      ],
+    });
+  }
+
+  it('stores ONE request carrying days 1..n; top-level === day 0', () => {
+    const id = submitMultiDay();
+    const stored = useTimeCorrections.getState().requests.find((r) => r.id === id)!;
+    // Convention X: day 0 lives top-level, days[] holds days 1..n ONLY.
+    expect(stored.date).toBe('2026-05-20');
+    expect(stored.correctionType).toBe('in');
+    expect(stored.days).toHaveLength(2);
+    expect(stored.days!.map((d) => d.date)).toEqual(['2026-05-21', '2026-05-22']);
+    // Exactly ONE request was stored for the whole submission.
+    expect(useTimeCorrections.getState().requests.filter((r) => r.id === id)).toHaveLength(1);
+  });
+
+  it('surfaces as ONE quick-approve row summarizing N days', () => {
+    const id = submitMultiDay();
+    const queue = getPendingApprovals().filter((q) => q.row.id === id);
+    expect(queue).toHaveLength(1); // ONE queue item for the multi-day request
+    const stored = useTimeCorrections.getState().requests.find((r) => r.id === id)!;
+    const pr = timeCorrectionToPendingRequest(stored);
+    // N = 1 + days.length = 3; description summarizes the +N extra days.
+    expect(pr.description).toContain('+2');
+  });
+
+  it('single-day description is byte-identical (no days summary)', () => {
+    const id = submitOne();
+    const stored = useTimeCorrections.getState().requests.find((r) => r.id === id)!;
+    const pr = timeCorrectionToPendingRequest(stored);
+    expect(pr.description).toBe('แก้ไขเวลา (เวลาเข้า (ลืมกดเข้า)) — 2026-05-20 · 09:05');
+  });
 });

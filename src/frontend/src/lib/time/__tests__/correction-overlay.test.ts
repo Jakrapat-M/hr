@@ -95,4 +95,67 @@ describe('latestCorrectionForDate', () => {
     const reqs = [corr({ id: 'a', date: '2026-06-02' }), corr({ id: 'b', employeeId: 'emp-999' })];
     expect(latestCorrectionForDate(reqs, 'emp-001', '2026-06-01')).toBeUndefined();
   });
+
+  // Convention X (multi-day): a days[1..n] date matches and projects onto that day.
+  it('matches a days[] (day 1..n) date and projects the matching day', () => {
+    const reqs = [
+      corr({
+        id: 'multi',
+        date: '2026-06-01',
+        correctionType: 'in',
+        correctedTime: '08:00',
+        status: 'approved',
+        days: [
+          { date: '2026-06-02', correctionType: 'out', reasonCode: 'R2', correctedTime: '17:30', reason: 'fix d2' },
+          { date: '2026-06-03', correctionType: 'both', reasonCode: 'R3', correctedTime: '09:15', reason: 'fix d3' },
+        ],
+      }),
+    ];
+    const day2 = latestCorrectionForDate(reqs, 'emp-001', '2026-06-02');
+    expect(day2?.id).toBe('multi');
+    expect(day2?.date).toBe('2026-06-02');
+    expect(day2?.correctionType).toBe('out');
+    expect(day2?.correctedTime).toBe('17:30');
+    // Day 0 still projects from the top-level fields.
+    const day0 = latestCorrectionForDate(reqs, 'emp-001', '2026-06-01');
+    expect(day0?.correctionType).toBe('in');
+    expect(day0?.correctedTime).toBe('08:00');
+  });
+
+  it('single-day request is byte-identical (no days projection)', () => {
+    const reqs = [corr({ id: 'single', date: '2026-06-05', status: 'approved' })];
+    const r = latestCorrectionForDate(reqs, 'emp-001', '2026-06-05');
+    expect(r).toBe(reqs[0]); // same reference — unchanged path
+  });
+});
+
+describe('approvedCorrectionDates — multi-day (MF-3)', () => {
+  const PERIOD3 = new Set(['2026-06-01', '2026-06-02', '2026-06-03', '2026-06-04']);
+
+  it('collects EVERY covered date of an approved multi-day request', () => {
+    const reqs = [
+      corr({
+        date: '2026-06-01',
+        status: 'approved',
+        days: [
+          { date: '2026-06-02', correctionType: 'in', reasonCode: 'R', correctedTime: '08:00', reason: 'x' },
+          { date: '2026-06-03', correctionType: 'in', reasonCode: 'R', correctedTime: '08:00', reason: 'x' },
+        ],
+      }),
+    ];
+    const set = approvedCorrectionDates(reqs, 'emp-001', PERIOD3);
+    expect([...set].sort()).toEqual(['2026-06-01', '2026-06-02', '2026-06-03']);
+  });
+
+  it('intersects covered days with the period (out-of-period days dropped)', () => {
+    const reqs = [
+      corr({
+        date: '2026-06-03',
+        status: 'approved',
+        days: [{ date: '2026-05-20', correctionType: 'in', reasonCode: 'R', correctedTime: '08:00', reason: 'x' }],
+      }),
+    ];
+    const set = approvedCorrectionDates(reqs, 'emp-001', PERIOD3);
+    expect([...set]).toEqual(['2026-06-03']);
+  });
 });

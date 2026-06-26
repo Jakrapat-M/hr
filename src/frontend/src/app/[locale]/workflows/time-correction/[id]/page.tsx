@@ -10,7 +10,7 @@
 // canActOn parity: a non-approver persona sees this VIEW-ONLY (never hidden).
 // Phase: UI mockup. Humi tokens only. Danger = pumpkin (--color-danger).
 
-import { use, useState } from 'react';
+import { Fragment, use, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -100,9 +100,22 @@ export default function TimeCorrectionDetailPage({ params }: PageProps) {
 
   const isPending = request.status === 'pending_manager';
   const stepLabel = TIME_CORRECTION_STEP_LABEL[request.status];
-  const typeLabel = CORRECTION_TYPE_LABEL[request.correctionType];
-  const reasonDef = getCorrectionReason(request.reasonCode);
-  const reasonLabel = (isTh ? reasonDef?.reasonTh : reasonDef?.reasonEn) ?? request.reasonCode;
+
+  // Convention X (multi-day): the full day-set is day 0 (top-level) + days 1..n
+  // (`request.days`). Render one Date / Type / Before→After / Reason block PER day
+  // (MF-1). Single-day requests have no `days` → `isMultiDay` is false and the
+  // original flat layout renders byte-identically (never double-render day 0).
+  const fullDays = [
+    {
+      date: request.date,
+      correctionType: request.correctionType,
+      reasonCode: request.reasonCode,
+      originalTime: request.originalTime,
+      correctedTime: request.correctedTime,
+    },
+    ...(request.days ?? []),
+  ];
+  const isMultiDay = (request.days?.length ?? 0) > 0;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
@@ -141,23 +154,38 @@ export default function TimeCorrectionDetailPage({ params }: PageProps) {
         <div className="divide-y divide-hairline">
           <FieldRow label={isTh ? 'รหัสพนักงาน' : 'Employee ID'} value={request.employeeId} />
           <FieldRow label={isTh ? 'แผนก' : 'Department'} value={request.department} />
-          <FieldRow label={isTh ? 'ประเภท' : 'Type'} value={isTh ? typeLabel.th : typeLabel.en} />
-          <FieldRow
-            label={isTh ? 'วันที่' : 'Date'}
-            value={formatDate(request.date, 'medium', locale)}
-          />
-          {/* Before → After (C2) — original time mapped to the corrected time. */}
-          <FieldRow
-            label={isTh ? 'ก่อน → หลัง' : 'Before → After'}
-            value={
-              <span className="inline-flex items-center gap-2">
-                <span className="text-ink-muted">{request.originalTime ?? '—'}</span>
-                <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden />
-                <span className="font-semibold text-accent">{request.correctedTime}</span>
-              </span>
-            }
-          />
-          <FieldRow label={isTh ? 'เหตุผล' : 'Reason'} value={reasonLabel} />
+          {fullDays.map((day, idx) => {
+            const dayType = CORRECTION_TYPE_LABEL[day.correctionType];
+            const dayReasonDef = getCorrectionReason(day.reasonCode);
+            const dayReasonLabel =
+              (isTh ? dayReasonDef?.reasonTh : dayReasonDef?.reasonEn) ?? day.reasonCode;
+            return (
+              <Fragment key={`${day.date}-${idx}`}>
+                {isMultiDay && (
+                  <div className="py-1.5 text-xs font-semibold uppercase tracking-wide text-accent">
+                    {isTh ? `วันแก้ไขเวลา ${idx + 1}` : `Correction Day ${idx + 1}`}
+                  </div>
+                )}
+                <FieldRow label={isTh ? 'ประเภท' : 'Type'} value={isTh ? dayType.th : dayType.en} />
+                <FieldRow
+                  label={isTh ? 'วันที่' : 'Date'}
+                  value={formatDate(day.date, 'medium', locale)}
+                />
+                {/* Before → After (C2) — original time mapped to the corrected time. */}
+                <FieldRow
+                  label={isTh ? 'ก่อน → หลัง' : 'Before → After'}
+                  value={
+                    <span className="inline-flex items-center gap-2">
+                      <span className="text-ink-muted">{day.originalTime ?? '—'}</span>
+                      <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden />
+                      <span className="font-semibold text-accent">{day.correctedTime}</span>
+                    </span>
+                  }
+                />
+                <FieldRow label={isTh ? 'เหตุผล' : 'Reason'} value={dayReasonLabel} />
+              </Fragment>
+            );
+          })}
           <FieldRow label={isTh ? 'รหัสค่าจ้าง' : 'Pay code'} value={request.payCode} />
           {request.reason && (
             <FieldRow label={isTh ? 'รายละเอียดเพิ่มเติม' : 'Note'} value={request.reason} />
