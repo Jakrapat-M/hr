@@ -12,7 +12,8 @@ export type BenefitClaimStatus =
   | 'pending_spd'
   | 'send_back'
   | 'approved'
-  | 'rejected';
+  | 'rejected'
+  | 'cancelled';                 // STA-175: employee self-cancel before first approval
 export type BenefitClaimType = 'medical' | 'gasoline' | 'mobile' | 'physical_checkup' | 'dependent';
 
 export interface BenefitAttachment {
@@ -34,7 +35,7 @@ export interface BenefitClaimAuditEntry {
   // STA-27 PR-A — widened to include 'hrbp' for exception oversight audit entries
   actorRole: 'employee' | 'spd' | 'manager' | 'hrbp' | 'system';
   actorName: string;
-  action: 'submit' | 'approve' | 'reject' | 'send_back' | 'resubmit';
+  action: 'submit' | 'approve' | 'reject' | 'send_back' | 'resubmit' | 'cancel';
   note?: string;
 }
 
@@ -151,6 +152,15 @@ interface BenefitClaimsState {
    */
   managerSendBack: (claimId: string, managerName: string, note: string) => Promise<void>;
   /**
+   * STA-175 — employee self-cancels their OWN claim before the first approval
+   * lands. Gated to status 'pending_manager_approval' OR 'send_back' (a sent-back
+   * claim is returned to the employee, still pre-approval). NOT cancellable once
+   * 'pending_spd' (manager already approved), approved, rejected, or cancelled.
+   * Sets status 'cancelled' + appends a 'cancel' audit entry. Mirrors the
+   * mock-async Promise shape of managerApprove.
+   */
+  cancel: (claimId: string, actorName: string) => Promise<void>;
+  /**
    * PR-1b: seed the canonical claim queue rows (init-overwrite-empties — only adds
    * rows whose id is not already present). Orchestrated by ensureDemoSeed (R1).
    */
@@ -164,6 +174,7 @@ export const BENEFIT_STATUS_LABEL: Record<BenefitClaimStatus, string> = {
   send_back: 'ส่งกลับให้แก้ไข',
   approved: 'อนุมัติแล้ว',
   rejected: 'ไม่อนุมัติ',
+  cancelled: 'ยกเลิกแล้ว',
 };
 
 export const BENEFIT_TYPE_LABEL: Record<BenefitClaimType, string> = {
@@ -192,6 +203,9 @@ function nextId(prefix: string, size: number, count: number) {
 function statusToRequestStatus(status: BenefitClaimStatus): RequestStatus {
   if (status === 'approved') return 'approved';
   if (status === 'rejected') return 'rejected';
+  // STA-175: a cancelled claim is terminal — collapse to 'rejected' (RequestStatus
+  // has no 'cancelled' member) so the tracker chip never mislabels it 'pending'.
+  if (status === 'cancelled') return 'rejected';
   if (status === 'send_back') return 'info';
   // pending_manager_approval and pending_spd both map to 'pending'
   return 'pending';
@@ -652,6 +666,35 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
                     ...claim.audit,
                     { at, actorRole: 'manager' as const, actorName: managerName, action: 'send_back' as const, note },
                     { at, actorRole: 'system' as const, actorName: 'ระบบ / System', action: 'resubmit' as const, note: 'Entitlement auto-restored (Q10 Option A)' },
+                  ],
+                };
+              }),
+            }));
+            resolve();
+          }, 300);
+        }),
+      cancel: (claimId, actorName) =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => {
+            const at = nowIso();
+            set((s) => ({
+              claims: s.claims.map((claim) => {
+                // Gate: only a pre-approval claim the employee still owns is
+                // cancellable (pending_manager_approval OR send_back). No-op
+                // otherwise (pending_spd / approved / rejected / cancelled).
+                if (
+                  claim.id !== claimId ||
+                  (claim.status !== 'pending_manager_approval' && claim.status !== 'send_back')
+                ) {
+                  return claim;
+                }
+                return {
+                  ...claim,
+                  status: 'cancelled' as BenefitClaimStatus,
+                  updatedAt: at,
+                  audit: [
+                    ...claim.audit,
+                    { at, actorRole: 'employee' as const, actorName, action: 'cancel' as const, note: 'ยกเลิกคำขอ / Request cancelled' },
                   ],
                 };
               }),

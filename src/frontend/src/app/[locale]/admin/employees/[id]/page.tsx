@@ -457,6 +457,7 @@ const CLAIM_STATUS_RANK: Record<BenefitClaimStatus, number> = {
   pending_spd: 1,
   approved: 2,
   rejected: 3,
+  cancelled: 3,
 }
 
 export function claimStatusRank(status: BenefitClaimStatus): number {
@@ -489,6 +490,7 @@ const CLAIM_STATUS_CHIP: Record<BenefitClaimStatus, { labelTh: string; className
   send_back: { labelTh: 'ส่งคืน', className: 'bg-accent-soft text-accent border border-accent/30' },
   approved: { labelTh: 'อนุมัติแล้ว', className: 'bg-success-soft text-success border border-success/30' },
   rejected: { labelTh: 'ปฏิเสธ', className: 'bg-danger-soft text-danger border border-danger/30' },
+  cancelled: { labelTh: 'ยกเลิกแล้ว', className: 'bg-canvas-soft text-ink-muted border border-hairline' },
 }
 
 function ClaimStatusChip({ status, isTh }: { status: BenefitClaimStatus; isTh: boolean }) {

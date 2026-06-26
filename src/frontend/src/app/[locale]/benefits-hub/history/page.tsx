@@ -19,6 +19,7 @@ const STATUS_CHIP: Record<BenefitClaimStatus, { labelTh: string; className: stri
   send_back:   { labelTh: 'ส่งคืน',      className: 'bg-accent-soft text-accent border border-accent/30' },
   approved:    { labelTh: 'อนุมัติแล้ว', className: 'bg-success-soft text-success border border-success/30' },
   rejected:    { labelTh: 'ปฏิเสธ',      className: 'bg-danger-soft text-danger border border-danger/30' },
+  cancelled:   { labelTh: 'ยกเลิกแล้ว',  className: 'bg-canvas-soft text-ink-muted border border-hairline' },
 };
 
 function StatusChip({ status, isTh }: { status: BenefitClaimStatus; isTh: boolean }) {

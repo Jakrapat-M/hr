@@ -18,14 +18,14 @@ import { getCorrectionReason } from '@/lib/time/correction-reasons';
 //
 // Phase: UI mockup. No backend. setTimeout-free synchronous mock dispatch.
 
-export type TimeCorrectionStep = 'pending_manager' | 'approved' | 'rejected';
+export type TimeCorrectionStep = 'pending_manager' | 'approved' | 'rejected' | 'cancelled';
 
 /** Which punch the correction targets: in (missing-in) / out (missing-out) / both. */
 export type CorrectionType = 'in' | 'out' | 'both';
 
 export type TimeCorrectionAuditEntry = {
   actorName: string;
-  action: 'submit' | 'approve' | 'reject';
+  action: 'submit' | 'approve' | 'reject' | 'cancel';
   comment?: string;
   at: string; // ISO timestamp
 };
@@ -94,6 +94,7 @@ export const TIME_CORRECTION_STEP_LABEL: Record<TimeCorrectionStep, { th: string
   pending_manager: { th: 'รอหัวหน้าอนุมัติ', en: 'Awaiting manager' },
   approved: { th: 'อนุมัติแล้ว', en: 'Approved' },
   rejected: { th: 'ถูกปฏิเสธ', en: 'Rejected' },
+  cancelled: { th: 'ยกเลิกแล้ว', en: 'Cancelled' },
 };
 
 /** Bilingual labels for the in/out/both punch selector + detail display. */
@@ -110,6 +111,13 @@ interface TimeCorrectionsState {
   ) => string;
   approve: (id: string, by: { name: string }, comment?: string) => void;
   reject: (id: string, by: { name: string }, reason: string) => void;
+  /**
+   * STA-175 — employee cancels their OWN pending correction while it is still at
+   * the first-line manager step. Sets status 'cancelled' + appends a 'cancel'
+   * audit entry. Drops out of the unified inbox via the selector's cancelled
+   * guard. No-op once approved/rejected/cancelled.
+   */
+  cancel: (id: string, by: { name: string }) => void;
   clear: () => void;
 }
 
@@ -276,6 +284,25 @@ export const useTimeCorrections = create<TimeCorrectionsState>()(
                       actorName: by.name,
                       action: 'reject' as const,
                       comment: reason,
+                      at: new Date().toISOString(),
+                    },
+                  ],
+                },
+          ),
+        })),
+      cancel: (id, by) =>
+        set((state) => ({
+          requests: state.requests.map((r) =>
+            r.id !== id || r.status !== 'pending_manager'
+              ? r
+              : {
+                  ...r,
+                  status: 'cancelled' as TimeCorrectionStep,
+                  audit: [
+                    ...r.audit,
+                    {
+                      actorName: by.name,
+                      action: 'cancel' as const,
                       at: new Date().toISOString(),
                     },
                   ],

@@ -8,6 +8,7 @@ import { Check, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight, Sun, X 
 import {
   Avatar,
   Button,
+  CancelRequestModal,
   Card,
   CardEyebrow,
   CardTitle,
@@ -1623,51 +1624,28 @@ function HistoryTab({
         </ul>
       )}
 
-      {/* STA-157 — cancel confirmation dialog */}
-      <Modal
-        open={cancelTarget !== null}
-        onClose={() => setCancelTarget(null)}
-        title={isTh ? 'ยกเลิกคำขอลา' : 'Cancel leave request'}
-        widthClass="max-w-md"
-      >
-        {cancelReq && (
-          <div className="mb-4 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-4 py-3">
-            <dl className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-1.5 text-small">
-              <dt className="text-ink-muted">{isTh ? 'ประเภทการลา' : 'Leave type'}</dt>
-              <dd className="font-medium text-ink">
-                {(isTh ? cancelReqDef?.nameTh : cancelReqDef?.nameEn) ?? cancelReq.leaveType}
-              </dd>
-              <dt className="text-ink-muted">{isTh ? 'วันที่' : 'Dates'}</dt>
-              <dd className="font-medium text-ink">
-                {formatDate(cancelReq.startDate, 'medium', locale)}
-                {cancelReq.endDate !== cancelReq.startDate
-                  ? ` – ${formatDate(cancelReq.endDate, 'medium', locale)}`
-                  : ''}
-              </dd>
-            </dl>
-          </div>
-        )}
-        <p className="text-body text-ink">
-          {isTh
-            ? 'ต้องการยกเลิกคำขอลานี้ใช่หรือไม่?'
-            : 'Are you sure you want to cancel this leave request?'}
-        </p>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" size="md" onClick={() => setCancelTarget(null)}>
-            {isTh ? 'ปิด' : 'Cancel'}
-          </Button>
-          <Button
-            variant="primary"
-            size="md"
-            onClick={() => {
-              if (cancelTarget) cancelRequest(cancelTarget, { id: userId, name: userName });
-              setCancelTarget(null);
-            }}
-          >
-            {isTh ? 'ยืนยันยกเลิก' : 'Confirm'}
-          </Button>
-        </div>
-      </Modal>
+      {/* STA-157 / STA-175 — cancel confirmation via the shared CancelRequestModal. */}
+      {cancelReq && (
+        <CancelRequestModal
+          open={cancelTarget !== null}
+          onClose={() => setCancelTarget(null)}
+          onConfirm={() => {
+            if (cancelTarget) cancelRequest(cancelTarget, { id: userId, name: userName });
+            setCancelTarget(null);
+          }}
+          locale={isTh ? 'th' : 'en'}
+          fields={{
+            typeLabel: (isTh ? cancelReqDef?.nameTh : cancelReqDef?.nameEn) ?? cancelReq.leaveType,
+            period:
+              cancelReq.endDate !== cancelReq.startDate
+                ? `${formatDate(cancelReq.startDate, 'medium', locale)} – ${formatDate(cancelReq.endDate, 'medium', locale)}`
+                : formatDate(cancelReq.startDate, 'medium', locale),
+            reason: cancelReq.reason || undefined,
+            currentStep: leaveStageLabel(cancelReq.status, cancelReq.awaitingNext, isTh),
+            currentStatus: leaveStageLabel(cancelReq.status, cancelReq.awaitingNext, isTh),
+          }}
+        />
+      )}
 
       {/* Legacy seeded history */}
       {history.length > 0 && (
