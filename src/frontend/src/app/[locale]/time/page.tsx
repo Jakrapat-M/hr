@@ -90,7 +90,7 @@ export default function TimeLandingPage() {
   const canReview = hasAnyRole(roles, ['manager', 'hrbp', 'spd', 'hr_admin', 'hr_manager']);
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8">
+    <div className="p-6 space-y-8">
       {/* Hero */}
       <div className="rounded-[var(--radius-md)] bg-canvas-soft border border-hairline p-6">
         <p className="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-1">

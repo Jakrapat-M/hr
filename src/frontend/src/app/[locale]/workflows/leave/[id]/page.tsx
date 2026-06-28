@@ -162,7 +162,7 @@ export default function LeaveDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="px-4 py-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1 text-xs text-ink-muted mb-4" aria-label="breadcrumb">
         <Link href={`/${locale}/quick-approve`} className="hover:text-ink transition">

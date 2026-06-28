@@ -103,10 +103,6 @@ export function LetterGeneratorModal({ open, onClose, employee }: LetterGenerato
           </p>
         ) : (
           <>
-            <p className="mb-4 text-small text-ink-muted" data-testid="generator-boundary">
-              {t('boundary')}
-            </p>
-
             {/* For: <self> — no picker, own data only */}
             <div className="mb-5 flex flex-wrap items-center gap-2 text-small">
               <span className="text-ink-muted">{t('forEmployee')}</span>

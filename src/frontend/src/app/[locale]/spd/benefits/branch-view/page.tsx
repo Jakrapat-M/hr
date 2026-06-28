@@ -40,7 +40,7 @@ export default function SpdBenefitsBranchViewRoute() {
   );
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8">
       {/* Breadcrumb */}
       <nav className="mb-4 flex items-center gap-1 text-xs text-ink-muted">
         <Link href={`/${locale}/spd-management`} className="hover:text-ink hover:underline">

@@ -72,7 +72,7 @@ export default function HrbpDocReviewPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="px-4 py-8">
       {/* Page header */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="flex-1">
@@ -83,9 +83,6 @@ export default function HrbpDocReviewPage() {
             {t('title')}
           </h1>
           <p className="mt-1 text-sm text-ink-muted">{t('subtitle')}</p>
-          <p className="mt-2 max-w-2xl text-small text-ink-muted" data-testid="doc-review-boundary">
-            {t('boundary')}
-          </p>
         </div>
         {outstanding.length > 0 && (
           <span
