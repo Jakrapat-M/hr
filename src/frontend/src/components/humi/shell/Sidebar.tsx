@@ -79,6 +79,10 @@ type Leaf = {
   badge?: string;
   /** Visible only to these personas. Omit → visible to everyone. */
   show?: PersonaId[];
+  /** Extra path prefixes that should also light up this leaf — for detail/sub
+   *  routes that have no dedicated menu entry (e.g. an approval detail page
+   *  belongs under "Approvals"). Matched as exact or prefix + "/". */
+  aliasPaths?: string[];
 };
 
 type ModuleGroup = {
@@ -121,7 +125,7 @@ export const MODULES: ModuleGroup[] = [
     labelTh: 'การจัดการทีม',
     icon: Network,
     leaves: [
-      { id: 'approvals', label: 'Team Inbox · Approvals', labelTh: 'กล่องงาน · อนุมัติ', href: '/quick-approve', badge: '12', show: ['manager', 'hrbp', 'hradmin', 'hris', 'spd'] }, // merged inbox+approvals; HRBP added 2026-05-28 (People Partner approval surface)
+      { id: 'approvals', label: 'Team Inbox · Approvals', labelTh: 'กล่องงาน · อนุมัติ', href: '/quick-approve', badge: '12', show: ['manager', 'hrbp', 'hradmin', 'hris', 'spd'], aliasPaths: ['/workflows/leave', '/workflows/ot', '/workflows/pay-rate', '/workflows/resignation', '/workflows/tax-planning', '/workflows/time-correction', '/workflows/benefit-claim'] }, // merged inbox+approvals; HRBP added 2026-05-28. aliasPaths: approval-detail routes light up Approvals (sub-pages have no own leaf)
       { id: 'my-team', label: 'My Team', labelTh: 'ทีมของฉัน', href: '/manager/team', show: ['manager', 'hradmin', 'hris'] }, // P2: Manager direct-reports read-only directory — restores the /admin/employees?scope=team affordance PR-3 cut from manager-dashboard
       { id: 'roster', label: 'Roster & Shifts', labelTh: 'ตารางกะ', href: '/roster', show: ['manager', 'hradmin', 'hris'] }, // repointed → real /roster page
       { id: 'perf', label: 'Team Performance', labelTh: 'ผลงานทีม', href: '/performance-form', show: ['manager', 'hrbp', 'hradmin', 'hris'] },
@@ -139,7 +143,7 @@ export const MODULES: ModuleGroup[] = [
       { id: 'employees', label: 'Employees', labelTh: 'ทะเบียนพนักงาน', href: '/admin/employees', show: ['hradmin', 'hris'] }, // P1 Item 2: dropped hrbp+spd — admin/layout admits neither; People-Partner BU view is P2
       { id: 'employees-bu', label: 'Employees · My BU', labelTh: 'ทะเบียนพนักงาน · หน่วยงานของฉัน', href: '/hrbp/employees', show: ['hrbp', 'spd'] }, // P2 Item 1: BU-scoped read-only registry for People Partners — replaces the dead /admin/employees leaf PR-3 cut from hrbp/spd
       { id: 'talent-search', label: 'Talent Search', labelTh: 'ค้นหาคนเก่ง', href: '/hrbp/talent-search', show: ['hrbp'] }, // P4 Item 3: surface existing-but-orphan /hrbp/talent-search (was reachable only via hrbp/dashboard shortcut). Route Capability-gated talentSearch. SPD excluded — capabilities.ts SPD bundle has no talentSearch (SF baseline §3: 'No Background/Talent'); page is Capability-gated so showing it to SPD = NotAuthorized dead-end (remove-not-hide).
-      { id: 'benefits-reports', label: 'Benefits · Reports', labelTh: 'สวัสดิการ · รายงาน', href: '/hrbp/benefits/reports', show: ['hrbp', 'spd'] }, // P4 Item 3: surface existing-but-orphan /hrbp/benefits reports (no /hrbp/benefits index page → point at the real reports subroute). People-Partner only; menu removal is the gate (open route, no contradicting guard).
+      { id: 'benefits-reports', label: 'Benefits · Reports', labelTh: 'สวัสดิการ · รายงาน', href: '/hrbp/benefits/reports', show: ['hrbp', 'spd'], aliasPaths: ['/spd/benefits'] }, // P4 Item 3: surface existing-but-orphan /hrbp/benefits reports. aliasPaths: SPD branch-view (/spd/benefits/*) has no own leaf → light up the SPD benefits section.
       { id: 'hire', label: 'Hire & Onboard', labelTh: 'จ้างงาน', href: '/admin/hire', show: ['hradmin', 'hris'] }, // merges lifecycle/onboarding
       { id: 'recruit', label: 'Recruitment', labelTh: 'สรรหา', href: '/recruiting', show: ['hradmin', 'hris'] },
       { id: 'benefits-admin', label: 'Benefits Admin', labelTh: 'จัดการสวัสดิการ', href: '/admin/benefits', badge: '2', show: ['hradmin', 'hris'] }, // merges welfare+claims; P2 Item 3: dropped hrbp+spd — admin/layout gates hr_admin+ → People Partners dead-ended in AccessDenied
@@ -248,6 +252,13 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
   const isActive = (bareHref: string): boolean =>
     barePath === bareHref || barePath.startsWith(bareHref + '/');
 
+  // A leaf is active when the current path matches its own route OR any of its
+  // aliasPaths — so detail/sub pages (e.g. /workflows/leave/[id]) still light up
+  // the section they belong to in the sidebar.
+  const isLeafActive = (leaf: Leaf): boolean =>
+    isActive(leafBareHref(leaf)) ||
+    (leaf.aliasPaths?.some((a) => barePath === a || barePath.startsWith(a + '/')) ?? false);
+
   // ── Master-detail rail + panel (wireframe 2026-05-25) ───────────────────────
   // The rail (col 1) selects which group's leaves render in the panel (col 2).
   // Default selection follows the active route's group; a rail click overrides
@@ -261,7 +272,7 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
     shownLeaves: m.leaves.filter((l) => leafVisible(l, userRoles)),
   })).filter((g) => g.shownLeaves.length > 0);
   const activeGroupId = visibleGroups.find((g) =>
-    g.shownLeaves.some((l) => isActive(leafBareHref(l))),
+    g.shownLeaves.some((l) => isLeafActive(l)),
   )?.id;
   const firstUnlockedId = visibleGroups.find((g) => g.shownLeaves.length > 0)?.id ?? null;
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
@@ -493,7 +504,7 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
           {shownGroup?.shownLeaves.map((l) => {
             const bareHref = leafBareHref(l);
             const href = `/${currentLocale}${bareHref}${leafSuffix(l)}`;
-            const active = isActive(bareHref);
+            const active = isLeafActive(l);
             // STA-128: the `approvals` leaf badge is LIVE — the persona-aware
             // actionable count (hidden when 0); every other leaf keeps its
             // static MODULES badge.
