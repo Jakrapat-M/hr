@@ -14,6 +14,7 @@ import type { LucideIcon } from 'lucide-react';
 import { UserCog, HeartHandshake } from 'lucide-react';
 import type { ModuleImportConfig } from '@/components/admin/import/ModuleImportWizard';
 import { useEmployeeChangeImportConfig } from '@/components/admin/import/subjects/employeeChangeConfig';
+import { useBenefitPlanImportConfig } from '@/components/admin/import/subjects/benefitPlanConfig';
 
 export interface ImportSubject {
   /** stable key used by ?subject=<key> deep-links and lookups */
@@ -41,12 +42,12 @@ export const IMPORT_SUBJECTS: ImportSubject[] = [
   },
   {
     key: 'benefit-plan',
-    labelTh: 'เพิ่มแผนสวัสดิการ',
-    labelEn: 'Add benefit plan',
-    descTh: 'นำเข้าข้อมูลการลงทะเบียนแผนสวัสดิการแบบกลุ่ม',
-    descEn: 'Bulk-add benefit plan enrolment data.',
+    labelTh: 'เพิ่ม/ปรับสิทธิสวัสดิการ',
+    labelEn: 'Add / adjust benefit',
+    descTh: 'นำเข้า CSV เพื่อกำหนดหรือปรับวงเงินสิทธิสวัสดิการให้พนักงานหลายคนพร้อมกัน',
+    descEn: 'Bulk-assign or adjust benefit entitlements for many employees at once.',
     icon: HeartHandshake,
-    disabled: true, // deferred until the benefit-import data contract lands; no config authored
+    useConfig: useBenefitPlanImportConfig as () => ModuleImportConfig<unknown>,
   },
 ];
 

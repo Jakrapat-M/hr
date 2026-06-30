@@ -49,3 +49,9 @@ export type { LeaveRangeCalendarProps } from './LeaveRangeCalendar';
 
 export { ClaimStepper } from './ClaimStepper';
 export type { ClaimStepperProps } from './ClaimStepper';
+
+export { CancelRequestModal } from './CancelRequestModal';
+export type {
+  CancelRequestModalProps,
+  CancelRequestModalFields,
+} from './CancelRequestModal';

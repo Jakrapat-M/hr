@@ -541,7 +541,8 @@ describe('Inbox table', () => {
     render(<QuickApprovePage />);
 
     expect(screen.getByTestId('attachment-indicator-WF-2026-002')).toHaveTextContent('1');
-    expect(screen.getByTestId('attachment-indicator-WF-2026-004')).toHaveTextContent('2');
+    // STA-147 req-1: WF-2026-004 now carries 3 sample claim PDFs.
+    expect(screen.getByTestId('attachment-indicator-WF-2026-004')).toHaveTextContent('3');
     expect(screen.queryByTestId('attachment-indicator-WF-2026-001')).not.toBeInTheDocument();
   });
 });

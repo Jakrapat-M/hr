@@ -367,6 +367,8 @@
   },
   "benefits": {
     "title": "Benefits",
+    "claimDetailTitle": "Claim detail",
+    "moreDetail": "More detail",
     "overview": "Benefits Overview",
     "activeEnrollments": "My Active Enrollments",
     "benefitPlan": "Benefit Plan",
@@ -406,7 +408,12 @@
       "dependentName": "Dependent Name",
       "dependentDob": "Date of Birth",
       "dependentRelationship": "Relationship Type",
-      "realMonthDate": "Claim month"
+      "realMonthDate": "Claim month",
+      "admittedStart": "Admitted start date",
+      "admittedEnd": "Admitted end date",
+      "medicalHospitalName": "Hospital Name",
+      "hospitalOthers": "Others (specify hospital)",
+      "diseaseDetailsDetail": "Details"
     }
   },
   "profileDetails": {
@@ -1027,8 +1034,7 @@
       "exceedsBalance": "Request exceeds available balance",
       "hrApprovalRequired": "HR approval required for leaves over 5 consecutive days",
       "medicalCertNeeded": "Medical certificate required for sick leave over 3 days",
-      "overlapping": "Leave dates overlap with existing request",
-      "pastDate": "Cannot request leave for past dates"
+      "overlapping": "Leave dates overlap with existing request"
     },
     "submit": "Submit Request",
     "cancel": "Cancel Request",
@@ -4452,14 +4458,15 @@
         "nextPool": "Next year — medical budget"
       },
       "log": {
-        "title": "Reallocation log",
+        "title": "Adjust entitlement amount history",
         "empty": "No reallocation for this employee yet",
         "colDate": "Date",
         "colPlan": "Plan",
         "colAdjusted": "Adjusted entitle amount",
         "colYear": "Year",
         "colEntitle": "Entitle amount",
-        "colReason": "Reason"
+        "colReason": "Reason",
+        "colMoreDetail": "More detail"
       },
       "validation": {
         "reasonRequired": "Reason is required",
@@ -5015,6 +5022,16 @@
     "waiting": "Waiting",
     "days": "days",
     "requestDetails": "Request Details",
+    "selectedBenefit": "Selected Benefit",
+    "claimDate": "Claim Date",
+    "attachmentsTitle": "Attachment View",
+    "attachmentsView": "View",
+    "attachmentsHide": "Hide",
+    "attachmentsDownload": "Download",
+    "attachmentsEmpty": "No attachments",
+    "noteTitle": "Note",
+    "notePlaceholder": "Add a note for this request…",
+    "sendBackCommentTitle": "Send Back Comment",
     "approvalHistory": "Approval History",
     "step": "Step",
     "status_approved": "Approved",

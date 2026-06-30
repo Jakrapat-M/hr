@@ -133,8 +133,9 @@ describe('QuickApproveDetailPage', () => {
   it('renders request summary for a known ID', async () => {
     await renderPage('WF-001');
     expect(screen.getByText('สมชาย ใจดี')).toBeInTheDocument();
-    // The runtime approval-history pill row (ApprovalTimelineChain) still renders.
-    expect(screen.getByTestId('approval-chain')).toBeInTheDocument();
+    // STA-147 req-4: the HRBP→SPD header chip (ApprovalTimelineChain) is removed —
+    // the detail page no longer mounts it.
+    expect(screen.queryByTestId('approval-chain')).not.toBeInTheDocument();
   });
 
   it('does not render the Approval-route block (routing chain) any more', async () => {
@@ -168,19 +169,22 @@ describe('QuickApproveDetailPage', () => {
     expect(screen.getByText('quick_approve_detail.receiptAmount')).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.totalClaimAmount')).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.remark')).toBeInTheDocument();
-    expect(screen.getByText(/SPD.*Ben/)).toBeInTheDocument();
-    expect(screen.getByText(/HRBP.*Peter/)).toBeInTheDocument();
+    // STA-147 req-3: WF-2026-004 history steps relabeled to the demo content.
+    expect(screen.getByText(/HR send back/)).toBeInTheDocument();
+    expect(screen.getByText(/employee request claim/)).toBeInTheDocument();
     expect(screen.queryByText('quick_approve_detail.waiting')).not.toBeInTheDocument();
     expect(screen.queryByText('quick_approve_detail.reject')).not.toBeInTheDocument();
     expect(screen.queryByText('quick_approve_detail.reroute')).not.toBeInTheDocument();
     expect(screen.queryByText('quick_approve_detail.override')).not.toBeInTheDocument();
+    // STA-147 FU-2: the Merchant row is removed (Hospital Name supersedes it).
+    expect(screen.queryByText('quick_approve_detail.merchant')).not.toBeInTheDocument();
   });
 
   it('renders STA-79 claim approval timeline latest-first', async () => {
     await renderPage('WF-2026-004');
 
-    const latestStep = screen.getByText(/quick_approve_detail\.step 2: SPD.*Ben/);
-    const previousStep = screen.getByText(/quick_approve_detail\.step 1: HRBP.*Peter/);
+    const latestStep = screen.getByText(/quick_approve_detail\.step 2: HR send back/);
+    const previousStep = screen.getByText(/quick_approve_detail\.step 1: employee request claim/);
 
     expect(latestStep.compareDocumentPosition(previousStep) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });

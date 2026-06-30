@@ -15,9 +15,18 @@ import type { PendingRequest, RequestType, Urgency } from '@/lib/quick-approve-a
 import type { ProbationCase } from '@/hooks/use-probation';
 import {
   useBenefitClaimsStore,
+  BENEFIT_STATUS_LABEL,
+  BENEFIT_TYPE_LABEL,
   type BenefitClaimRequest,
 } from '@/stores/benefit-claims';
-import { useLeaveApprovals } from '@/stores/leave-approvals';
+import {
+  useLeaveApprovals,
+  leaveStageLabel,
+  LEAVE_TYPE_LABEL,
+  type LeaveRequest,
+} from '@/stores/leave-approvals';
+import { getLeaveType } from '@/lib/time/leave-types';
+import { formatDate } from '@/lib/date';
 import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useProbationApprovals } from '@/stores/probation-approvals';
 import { useTransferApprovals } from '@/stores/transfer-approvals';
@@ -30,11 +39,13 @@ import {
   useTimeCorrections,
   type TimeCorrectionRequest,
   CORRECTION_TYPE_LABEL,
+  TIME_CORRECTION_STEP_LABEL,
 } from '@/stores/time-corrections';
 import { getCorrectionReason } from '@/lib/time/correction-reasons';
 import {
   useOvertimeRequests,
   queueRowToOTRequest,
+  OT_STATUS_LABEL,
   type OTRequest,
 } from '@/stores/overtime-requests';
 import { OT_TYPES, type OtTypeCode } from '@/lib/time/ot-types';
@@ -68,6 +79,16 @@ export interface ApprovalAdapter<Record_ = unknown> {
    */
   seed: (fixtures?: PendingRequest[]) => void;
   labels: { th: string; en: string };
+  /**
+   * STA-175 — employee self-cancel before first approval. Absent ⇒ this type is
+   * NOT self-cancellable (admin-initiated types omit it). Never throws.
+   */
+  cancel?: (id: string, actor: ApprovalActor) => void | Promise<void>;
+  /**
+   * STA-175 — true when `record` is still at its first approval stage with no
+   * approver acted (so the employee may self-cancel). Absent ⇒ not cancellable.
+   */
+  isCancellable?: (record: Record_) => boolean;
 }
 
 // ── Lifted helpers (from quick-approve-page.tsx) ───────────────────────────────
@@ -252,7 +273,12 @@ export function timeCorrectionToPendingRequest(r: TimeCorrectionRequest): Pendin
       position: reasonLabel,
       department: r.department,
     },
-    description: `แก้ไขเวลา (${typeLabel}) — ${r.date} · ${r.correctedTime}`,
+    // Convention X (multi-day): when the request carries days 1..n, summarize the
+    // N-day span (N = 1 + days.length) as ONE queue item. A single-day request
+    // (no `days`) keeps the EXACT original string (byte-identical).
+    description: r.days?.length
+      ? `แก้ไขเวลา (${typeLabel}) — ${r.date} +${r.days.length} วัน`
+      : `แก้ไขเวลา (${typeLabel}) — ${r.date} · ${r.correctedTime}`,
     submittedAt: r.submittedAt,
     urgency,
     waitingDays,
@@ -371,6 +397,12 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
       useLeaveApprovals.getState().reject(id, { id: actor.id ?? '', name: actor.name }, reason),
     seed: (fixtures = []) => useLeaveApprovals.getState().seedFromQueue(fixtures),
     labels: { th: 'ลา', en: 'Leave' },
+    cancel: (id, actor) =>
+      useLeaveApprovals.getState().cancel(id, { id: actor.id ?? '', name: actor.name }),
+    isCancellable: (record) => {
+      const r = record as LeaveRequest;
+      return r.status === 'pending' && !r.awaitingNext;
+    },
   },
 
   // overtime → overtime-requests (single-step manager). Group B: OT now has its
@@ -385,6 +417,9 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     seed: (fixtures = []) =>
       useOvertimeRequests.getState().seedFromQueue(fixtures.map(queueRowToOTRequest)),
     labels: { th: 'โอที', en: 'Overtime' },
+    cancel: (id, actor) =>
+      useOvertimeRequests.getState().cancel(id, { id: actor.id, name: actor.name }),
+    isCancellable: (record) => (record as OTRequest).status === 'pending',
   },
 
   // claim → benefit-claims: managerApprove/managerSendBack return Promises — the
@@ -396,6 +431,12 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
       useBenefitClaimsStore.getState().managerSendBack(id, actor.name, reason),
     seed: (fixtures = []) => useBenefitClaimsStore.getState().seedQueueClaims(fixtures),
     labels: { th: 'เบิก', en: 'Claim' },
+    cancel: (id, actor) => useBenefitClaimsStore.getState().cancel(id, actor.name),
+    isCancellable: (record) => {
+      const c = record as BenefitClaimRequest;
+      // First-approval (pre-manager) OR send_back (returned to the employee).
+      return c.status === 'pending_manager_approval' || c.status === 'send_back';
+    },
   },
 
   // transfer → dedicated `transfer-approvals` terminal-marker slice (plan R2). No
@@ -516,6 +557,9 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
       // form (/time/corrections). No demo rows are seeded into the unified queue.
     },
     labels: { th: 'แก้ไขเวลา', en: 'Time correction' },
+    cancel: (id, actor) => useTimeCorrections.getState().cancel(id, { name: actor.name }),
+    isCancellable: (record) =>
+      (record as TimeCorrectionRequest).status === 'pending_manager',
   },
 
   // probation → probation-approvals: approveEvaluation(id,{name}) / rejectEvaluation.
@@ -571,6 +615,15 @@ export function collapseQueueStatus(raw: string | undefined): QueueStatus {
 }
 
 /**
+ * STA-175 — a request the employee cancelled is terminal; it must drop out of the
+ * approver queue. collapseQueueStatus's catch-all would otherwise re-tag a
+ * 'cancelled' status as 'pending' and keep the row actionable in the inbox.
+ * Centralizing the predicate keeps "miss one loop → that type's cancelled rows
+ * silently stay in the inbox" to ONE site (invoked in every self-cancellable loop).
+ */
+const isCancelledStatus = (s: string | undefined): boolean => s === 'cancelled';
+
+/**
  * Fan IN from the seeded source stores into the queue's PendingRequest view.
  * Pure read — pass the store states in (caller subscribes via hooks/getState) so
  * this stays testable and SSR-safe. Returns the canonical 20 rows (or fewer if a
@@ -606,6 +659,10 @@ export function selectPendingApprovals(input: {
   // it stays collapsed-`pending` but is now awaiting the HR step (currentStepIndex
   // reads awaitingNext to advance the chain — same idiom as the claim flow).
   for (const r of input.leave) {
+    // STA-157 — a request the employee cancelled is terminal; drop it from the
+    // approver queue (collapseQueueStatus's catch-all would otherwise re-tag it
+    // 'pending' and keep it actionable).
+    if (r.status === 'cancelled') continue;
     if (r.queueSnapshot)
       out.push({
         row: r.queueSnapshot,
@@ -621,6 +678,7 @@ export function selectPendingApprovals(input: {
   // moves pending_manager_approval → pending_spd once the manager approves: it
   // stays collapsed-`pending`, but is now awaiting the NEXT approver (AC-1c.2).
   for (const r of input.claims) {
+    if (isCancelledStatus(r.status)) continue;
     if (r.queueSnapshot) {
       out.push({
         row: r.queueSnapshot,
@@ -654,6 +712,7 @@ export function selectPendingApprovals(input: {
   // time_correction rows derive natively from the time-corrections store. Status
   // maps cleanly: pending_manager → pending, approved/rejected passthrough.
   for (const r of input.timeCorrections ?? []) {
+    if (isCancelledStatus(r.status)) continue;
     out.push({
       row: APPROVAL_REGISTRY.time_correction.toQueueItem(r),
       status: collapseQueueStatus(r.status),
@@ -663,6 +722,7 @@ export function selectPendingApprovals(input: {
   // overtime rows derive natively from the overtime-requests store (Group B).
   // Status maps cleanly: pending → pending, approved/rejected passthrough.
   for (const r of input.overtime ?? []) {
+    if (isCancelledStatus(r.status)) continue;
     out.push({
       row: APPROVAL_REGISTRY.overtime.toQueueItem(r),
       status: collapseQueueStatus(r.status),
@@ -720,6 +780,102 @@ export function getPendingApprovals(): QueueApproval[] {
   });
 }
 
+// ── STA-175: self-cancel modal field sourcing ──────────────────────────────────
+// The /requests tracker projects a FLAT row (label + sub string) — insufficient
+// for the cancel modal's 5 fields (period/reason/step/status live ONLY in the
+// source stores). On cancel-click the page re-reads the source record by id via
+// these thin per-type switches and builds the modal payload with exact, current
+// values. Self-cancellable types only (leave / overtime / claim / time_correction).
+
+/** The 5 modal fields, mirroring CancelRequestModalFields (kept decoupled here). */
+export interface CancelModalFields {
+  typeLabel: string;
+  period: string;
+  reason?: string;
+  currentStep: string;
+  currentStatus: string;
+}
+
+/**
+ * Build the cancel-confirm modal payload by re-reading the source store by id.
+ * Returns null when the id is not found in the type's store (already gone / wrong
+ * type) so the caller can abort opening the modal. BE-formatted dates via formatDate.
+ */
+export function buildCancelModalFields(
+  type: RequestType,
+  id: string,
+  locale: 'th' | 'en',
+): CancelModalFields | null {
+  const isTh = locale === 'th';
+  const fmt = (d?: string) => formatDate(d, 'medium', locale);
+
+  if (type === 'leave') {
+    const r = useLeaveApprovals.getState().requests.find((x) => x.id === id);
+    if (!r) return null;
+    const def = getLeaveType(r.leaveCode ?? '');
+    const typeLabel =
+      (isTh ? def?.nameTh : def?.nameEn) ?? LEAVE_TYPE_LABEL[r.leaveType] ?? r.leaveType;
+    const period =
+      r.endDate && r.endDate !== r.startDate ? `${fmt(r.startDate)} – ${fmt(r.endDate)}` : fmt(r.startDate);
+    return {
+      typeLabel,
+      period,
+      reason: r.reason || undefined,
+      currentStep: leaveStageLabel(r.status, r.awaitingNext, isTh),
+      currentStatus: leaveStageLabel(r.status, r.awaitingNext, isTh),
+    };
+  }
+
+  if (type === 'overtime') {
+    const r = useOvertimeRequests.getState().requests.find((x) => x.id === id);
+    if (!r) return null;
+    const day = (r.startAt ?? '').slice(0, 10);
+    const period = day ? `${fmt(day)} · ${r.hours} ${isTh ? 'ชม.' : 'h'}` : `${r.hours} ${isTh ? 'ชม.' : 'h'}`;
+    const stepLabel = OT_STATUS_LABEL[r.status]?.[locale] ?? r.status;
+    return {
+      typeLabel: APPROVAL_REGISTRY.overtime.labels[locale],
+      period,
+      reason: r.reason || undefined,
+      currentStep: stepLabel,
+      currentStatus: stepLabel,
+    };
+  }
+
+  if (type === 'time_correction') {
+    const r = useTimeCorrections.getState().requests.find((x) => x.id === id);
+    if (!r) return null;
+    const span = r.days?.length
+      ? `${fmt(r.date)} +${r.days.length} ${isTh ? 'วัน' : 'd'}`
+      : fmt(r.date);
+    const stepLabel = TIME_CORRECTION_STEP_LABEL[r.status]?.[locale] ?? r.status;
+    return {
+      typeLabel: APPROVAL_REGISTRY.time_correction.labels[locale],
+      period: span,
+      reason: r.reason || undefined,
+      currentStep: stepLabel,
+      currentStatus: stepLabel,
+    };
+  }
+
+  if (type === 'claim') {
+    const c = useBenefitClaimsStore.getState().claims.find((x) => x.id === id);
+    if (!c) return null;
+    const typeLabel = `${APPROVAL_REGISTRY.claim.labels[locale]} · ${BENEFIT_TYPE_LABEL[c.benefitType]}`;
+    const amount = `฿${c.totalClaimAmount.toLocaleString('th-TH')}`;
+    const period = `${fmt(c.claimDate || c.receiptDate)} · ${amount}`;
+    const statusLabel = BENEFIT_STATUS_LABEL[c.status] ?? c.status;
+    return {
+      typeLabel,
+      period,
+      reason: c.remark || undefined,
+      currentStep: statusLabel,
+      currentStatus: statusLabel,
+    };
+  }
+
+  return null;
+}
+
 // ── PR-2: cross-persona projections ────────────────────────────────────────────
 // The unified queue is the canonical truth: when a manager approves/rejects in
 // /quick-approve the source store flips, `selectPendingApprovals()` re-derives, and
@@ -742,7 +898,15 @@ function queueTypeLabel(type: RequestType, locale: 'th' | 'en'): string {
  */
 export interface QueueRequestRow {
   id: string;
+  /** Localized display label (e.g. "ลา" / "Leave"). */
   type: string;
+  /** STA-175 — raw RequestType, needed to look the source record up by id. */
+  requestType: RequestType;
+  /** STA-175 — owner of the request; the ownership gate compares it to the
+   *  current user so Cancel never renders on another employee's pending row. */
+  requesterId: string;
+  /** STA-175 — true when the row is at its first approval stage (self-cancellable). */
+  cancellable: boolean;
   sub: string;
   submitted: string;
   status: QueueStatus;
@@ -775,6 +939,12 @@ export function queueApprovalToRequestRow(q: QueueApproval, locale: 'th' | 'en' 
   return {
     id: q.row.id,
     type: queueTypeLabel(q.row.type, locale),
+    requestType: q.row.type,
+    requesterId: q.row.requester.id,
+    // First-approval signal: pending AND no later step has started. Equivalent to
+    // APPROVAL_REGISTRY[q.row.type].isCancellable?.(...) but derived from the queue
+    // projection (the source record is re-read at cancel-click for the modal).
+    cancellable: q.status === 'pending' && !q.awaitingNext,
     sub: q.row.description,
     submitted,
     status: q.status,

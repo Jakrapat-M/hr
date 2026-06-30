@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { useLocale } from 'next-intl';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput, Textarea } from '@/components/humi';
+import { Modal } from '@/components/humi/Modal';
 import { FileUploadField } from '@/components/humi/FileUploadField';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import {
   bucketsForPlan,
   getConditionalFields,
+  isClaimFieldRequired,
   type ClaimFieldKey,
 } from '@/data/benefits/claim-field-config';
 import { ConditionalClaimFields } from './ConditionalClaimFields';
@@ -61,10 +63,15 @@ const CLAIM_LABELS: Record<string, { th: string; en: string }> = {
   remark: { th: 'หมายเหตุ', en: 'Remark' },
   medicalDental: { th: 'การแพทย์ / ทันตกรรม', en: 'Medical / Dental' },
   opdIpd: { th: 'OPD / IPD', en: 'OPD / IPD' },
+  admittedStart: { th: 'วันที่เริ่มเข้ารักษา (ผู้ป่วยใน)', en: 'Admitted start date' },
+  admittedEnd: { th: 'วันที่สิ้นสุดการรักษา (ผู้ป่วยใน)', en: 'Admitted end date' },
   hospitalType: { th: 'ประเภทสถานพยาบาล', en: 'Type of Hospital' },
   hospitalName: { th: 'ชื่อสถานพยาบาล', en: 'Hospital Name' },
+  medicalHospitalName: { th: 'ชื่อสถานพยาบาล', en: 'Hospital Name' },
+  hospitalOthers: { th: 'ระบุสถานพยาบาลอื่นๆ', en: 'Others (specify hospital)' },
   patientTransferDoc: { th: 'ใช้เอกสารส่งตัวหรือไม่', en: 'Use patient transfer document?' },
   diseaseDetails: { th: 'รายละเอียดอาการ/โรค', en: 'Disease Details' },
+  diseaseDetailsDetail: { th: 'ระบุรายละเอียดเพิ่มเติม', en: 'Details' },
   gasolineClaimType: { th: 'ประเภทการเบิก', en: 'Claim Type' },
   physicalInvoice: { th: 'ใบแจ้งหนี้จากโรงพยาบาล', en: 'Invoice from hospital' },
   dependentName: { th: 'ชื่อผู้รับสิทธิ์', en: 'Dependent Name' },
@@ -109,6 +116,25 @@ export function SimpleClaimForm({
   const [dynamic, setDynamic] = useState<Partial<Record<ClaimFieldKey, string>>>(emptyDynamic);
   const [errors, setErrors] = useState<string[]>([]);
   const [lastWorkflowId, setLastWorkflowId] = useState<string | null>(null);
+  // STA-145 Phase B — patient-transfer "Yes" opens an error popup that asks the
+  // claimant to close + cancel (E-patient reconciles outside Humi).
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  // STA-148 req-2 — selecting Type of Hospital = Clinic opens a not-allowed notice.
+  const [clinicModalOpen, setClinicModalOpen] = useState(false);
+
+  const resetForm = () => {
+    setForm({
+      claimDate: todayIsoDate(),
+      receiptDate: '',
+      receiptNo: '',
+      receiptAmount: '',
+      claimAmount: '',
+      remark: '',
+      attachmentName: '',
+    });
+    setDynamic(emptyDynamic());
+    setErrors([]);
+  };
 
   // Reset conditional values whenever the selected benefit (plan) changes.
   const [planKey, setPlanKey] = useState(plan.id);
@@ -153,6 +179,21 @@ export function SimpleClaimForm({
   const setDynamicField = (key: ClaimFieldKey, value: string) => {
     setDynamic((prev) => ({ ...prev, [key]: value }));
     clearTransient();
+    // STA-145 Phase B — selecting patient-transfer = Yes pops the E-patient notice.
+    if (key === 'patientTransferDoc' && value === 'yes') {
+      setTransferModalOpen(true);
+    }
+    // STA-148 req-2 — selecting Type of Hospital = Clinic is not claimable.
+    if (key === 'hospitalType' && value === 'clinic') {
+      setClinicModalOpen(true);
+    }
+  };
+
+  // STA-148 req-2 — on closing the clinic notice, clear the Clinic selection so
+  // the user must pick a valid hospital type.
+  const closeClinicModal = () => {
+    setClinicModalOpen(false);
+    setDynamic((prev) => ({ ...prev, hospitalType: '' }));
   };
 
   const totalCapped =
@@ -176,9 +217,13 @@ export function SimpleClaimForm({
     if (!Number.isFinite(claimAmount) || claimAmount <= 0) {
       nextErrors.push(isTh ? 'กรุณาระบุยอดเบิกสุทธิ' : 'Total claim amount is required');
     }
-    // Required conditional fields.
+    // Required conditional fields (STA-145 Phase B — honor requiredIf + skip
+    // hidden showIf===false fields so conditional-required fields gate submit).
     conditionalFields.forEach((f) => {
-      if (f.required && !String(dynamic[f.key as ClaimFieldKey] ?? '').trim()) {
+      if (
+        isClaimFieldRequired(f, dynamic) &&
+        !String(dynamic[f.key as ClaimFieldKey] ?? '').trim()
+      ) {
         nextErrors.push((isTh ? 'กรุณาระบุ' : 'Required: ') + tc(f.labelKey));
       }
     });
@@ -326,7 +371,17 @@ export function SimpleClaimForm({
           )}
         </FormField>
 
-        <FormField id={`${plan.id}-remark`} label={tc('remark')}>
+        {/* ── Conditional groups (config-driven, shared renderer) ────────── */}
+        <ConditionalClaimFields
+          fields={conditionalFields}
+          values={dynamic}
+          onChange={setDynamicField}
+          idPrefix={plan.id}
+          isTh={isTh}
+        />
+
+        {/* STA-148 req-3 — Remark relocated to the last field before Attachments. */}
+        <FormField id={`${plan.id}-remark`} label={tc('remark')} className="sm:col-span-2">
           {(controlProps) => (
             <Textarea
               {...controlProps}
@@ -337,14 +392,14 @@ export function SimpleClaimForm({
           )}
         </FormField>
 
-        {/* ── Conditional groups (config-driven, shared renderer) ────────── */}
-        <ConditionalClaimFields
-          fields={conditionalFields}
-          values={dynamic}
-          onChange={setDynamicField}
-          idPrefix={plan.id}
-          isTh={isTh}
-        />
+        {/* STA-148 req-1 — Certification notice above Attachments, all claim types.
+            NO-RED: Tan asked for "red"; rendered in pumpkin --color-danger per the
+            design system (flagged to BA). */}
+        <p className="sm:col-span-2 text-small font-medium text-[var(--color-danger)]">
+          {isTh
+            ? 'ข้าพเจ้าขอรับรองว่าข้อมูลข้างต้นถูกต้องและครบถ้วน'
+            : 'I hereby certify that the above information is accurate and complete'}
+        </p>
 
         <FileUploadField
           label={isTh ? 'เอกสารแนบ' : 'Attachments'}
@@ -373,6 +428,65 @@ export function SimpleClaimForm({
           {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
         </Button>
       </div>
+
+      {/* STA-145 Phase B — patient-transfer (E-patient) notice. NO-RED: pumpkin
+          --color-danger accent, never red. */}
+      <Modal
+        open={transferModalOpen}
+        onClose={() => setTransferModalOpen(false)}
+        title={isTh ? 'ข้อผิดพลาด' : 'Error'}
+      >
+        {/* Flush pumpkin accent bar (NO-RED danger token), breaks out of the
+            Modal body padding. */}
+        <div className="-mx-6 -mt-5 mb-4 h-1 bg-[var(--color-danger)]" aria-hidden />
+        <div className="space-y-3 text-body text-ink">
+          <p>
+            {isTh
+              ? 'กรณีใช้สิทธิ E-patient ไม่ต้องเบิกผ่าน Humi ยอดวงเงินค่ารักษาพยาบาลของคุณจะถูกปรับปรุงหลังกระทบยอดกับใบเสร็จจากโรงพยาบาล'
+              : 'In case of using E-patient, reimbursement via Humi is not required. Your medical balance will be updated after reconciliation with the receipt from hospital.'}
+          </p>
+          <p>
+            {isTh
+              ? "กรุณากด 'ปิด' แล้ว 'ยกเลิก' คำขอนี้"
+              : "Please press 'Close' and 'Cancel' this claim."}
+          </p>
+          <div className="mt-2 flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setTransferModalOpen(false)}>
+              {isTh ? 'ปิด' : 'Close'}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                setTransferModalOpen(false);
+                resetForm();
+              }}
+            >
+              {isTh ? 'ยกเลิกคำขอนี้' : 'Cancel this claim'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* STA-148 req-2 — Clinic not-allowed notice. NO-RED: pumpkin accent. */}
+      <Modal
+        open={clinicModalOpen}
+        onClose={closeClinicModal}
+        title={isTh ? 'ข้อผิดพลาด' : 'Error'}
+      >
+        <div className="-mx-6 -mt-5 mb-4 h-1 bg-[var(--color-danger)]" aria-hidden />
+        <div className="space-y-3 text-body text-ink">
+          <p>
+            {isTh
+              ? 'ไม่สามารถเบิกค่าใช้จ่ายจากคลินิก (Clinic) ได้ กรุณาติดต่อผู้ดูแลระบบ'
+              : 'You are not allowed to claim receipt from คลินิค(Clinic). Please contact you administrator'}
+          </p>
+          <div className="mt-2 flex justify-end">
+            <Button variant="ghost" onClick={closeClinicModal}>
+              {isTh ? 'ปิด' : 'Close'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </Card>
   );
 }

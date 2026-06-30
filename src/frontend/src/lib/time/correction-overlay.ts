@@ -18,16 +18,19 @@ export function approvedCorrectionDates(
   empId: string,
   periodDates: Set<string>,
 ): Set<string> {
-  return new Set(
-    requests
-      .filter(
-        (r) =>
-          r.employeeId === empId &&
-          r.status === 'approved' &&
-          periodDates.has(r.date),
-      )
-      .map((r) => r.date),
-  );
+  // Convention X (multi-day): a request can cover several days — day 0 lives in
+  // the top-level `date`, days 1..n in `days[]`. Collect EVERY covered date so an
+  // approved multi-day correction resolves the hero exception/late on each one,
+  // not just day 0 (MF-3). Intersect with periodDates so stale localStorage
+  // corrections outside the current period never leak in.
+  const covered = new Set<string>();
+  for (const r of requests) {
+    if (r.employeeId !== empId || r.status !== 'approved') continue;
+    for (const date of [r.date, ...(r.days?.map((d) => d.date) ?? [])]) {
+      if (periodDates.has(date)) covered.add(date);
+    }
+  }
+  return covered;
 }
 
 /**

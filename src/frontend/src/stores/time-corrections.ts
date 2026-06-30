@@ -18,16 +18,43 @@ import { getCorrectionReason } from '@/lib/time/correction-reasons';
 //
 // Phase: UI mockup. No backend. setTimeout-free synchronous mock dispatch.
 
-export type TimeCorrectionStep = 'pending_manager' | 'approved' | 'rejected';
+export type TimeCorrectionStep = 'pending_manager' | 'approved' | 'rejected' | 'cancelled';
 
 /** Which punch the correction targets: in (missing-in) / out (missing-out) / both. */
 export type CorrectionType = 'in' | 'out' | 'both';
 
 export type TimeCorrectionAuditEntry = {
   actorName: string;
-  action: 'submit' | 'approve' | 'reject';
+  action: 'submit' | 'approve' | 'reject' | 'cancel';
   comment?: string;
   at: string; // ISO timestamp
+};
+
+/**
+ * One additional correction day (days 1..n) carried by a multi-day request.
+ *
+ * First-day-mirror invariant (Convention X — PINNED): `days[]` holds days 1..n
+ * ONLY; day 0 is the top-level TimeCorrectionRequest fields. The full day-set of
+ * a request is `[{day0 from top-level}, ...(days ?? [])]`; the day count is
+ * `1 + (days?.length ?? 0)`. A single-day request leaves `days` undefined → it is
+ * byte-identical to the pre-multi-day shape. Any `r.date`-keyed consumer that asks
+ * "is there a correction for THIS date?" must consult the full set, never `r.date`
+ * alone (see latestCorrectionForDate, correction-overlay, the detail page, the
+ * registry mapper, the status row, and the form's validate).
+ */
+export type CorrectionDay = {
+  id?: string;
+  /** Working day this entry applies to (ISO date YYYY-MM-DD). */
+  date: string;
+  correctionType: CorrectionType;
+  reasonCode: string;
+  /** System-recorded time (blank for missing punches). */
+  originalTime?: string;
+  /** Time the employee says is correct (HH:mm). */
+  correctedTime: string;
+  reason: string;
+  /** Optional attachment filenames (mock — names only). */
+  docs?: string[];
 };
 
 export type TimeCorrectionRequest = {
@@ -51,6 +78,13 @@ export type TimeCorrectionRequest = {
   reason: string;
   /** Optional attachment filenames (mock — names only). */
   docs?: string[];
+  /**
+   * Additional correction days (days 1..n) when one submission corrects several
+   * days. Convention X: day 0 lives in the top-level fields above; `days[]` is
+   * days 1..n ONLY and NEVER duplicates day 0. Undefined for single-day requests.
+   * Full set = `[{day0}, ...(days ?? [])]`; count = `1 + (days?.length ?? 0)`.
+   */
+  days?: CorrectionDay[];
   status: TimeCorrectionStep;
   submittedAt: string; // ISO timestamp
   audit: TimeCorrectionAuditEntry[];
@@ -60,6 +94,7 @@ export const TIME_CORRECTION_STEP_LABEL: Record<TimeCorrectionStep, { th: string
   pending_manager: { th: 'รอหัวหน้าอนุมัติ', en: 'Awaiting manager' },
   approved: { th: 'อนุมัติแล้ว', en: 'Approved' },
   rejected: { th: 'ถูกปฏิเสธ', en: 'Rejected' },
+  cancelled: { th: 'ยกเลิกแล้ว', en: 'Cancelled' },
 };
 
 /** Bilingual labels for the in/out/both punch selector + detail display. */
@@ -76,6 +111,13 @@ interface TimeCorrectionsState {
   ) => string;
   approve: (id: string, by: { name: string }, comment?: string) => void;
   reject: (id: string, by: { name: string }, reason: string) => void;
+  /**
+   * STA-175 — employee cancels their OWN pending correction while it is still at
+   * the first-line manager step. Sets status 'cancelled' + appends a 'cancel'
+   * audit entry. Drops out of the unified inbox via the selector's cancelled
+   * guard. No-op once approved/rejected/cancelled.
+   */
+  cancel: (id: string, by: { name: string }) => void;
   clear: () => void;
 }
 
@@ -84,15 +126,95 @@ interface TimeCorrectionsState {
  * (drives the inline row chip + the approved-overlay). This is deliberately
  * SEPARATE from the form's submit-time conflict guard (corrections/page.tsx),
  * which is left untouched. Pure over a passed-in list so it stays unit-testable.
+ *
+ * Convention X (multi-day): a request covers `date` when its top-level `date`
+ * (day 0) matches OR any `days[]` entry (days 1..n) matches. The returned object
+ * is PROJECTED onto the matching day — when a `days[]` entry matches, its
+ * date/type/reason/time fields override the top-level (day-0) fields so the chip
+ * reflects the right day — while keeping the request-level `id`/`status`/
+ * `submittedAt`/`employee*` so callers read the same shape as before.
  */
 export function latestCorrectionForDate(
   requests: TimeCorrectionRequest[],
   empId: string,
   date: string,
 ): TimeCorrectionRequest | undefined {
-  return requests
-    .filter((r) => r.employeeId === empId && r.date === date && r.status !== 'rejected')
+  const match = requests
+    .filter(
+      (r) =>
+        r.employeeId === empId &&
+        r.status !== 'rejected' &&
+        (r.date === date || (r.days ?? []).some((d) => d.date === date)),
+    )
     .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))[0];
+  if (!match) return undefined;
+  if (match.date === date) return match;
+  // A days[] entry matched — project the request onto that day for display.
+  const day = (match.days ?? []).find((d) => d.date === date)!;
+  return {
+    ...match,
+    date: day.date,
+    correctionType: day.correctionType,
+    reasonCode: day.reasonCode,
+    originalTime: day.originalTime,
+    correctedTime: day.correctedTime,
+    reason: day.reason,
+    docs: day.docs,
+  };
+}
+
+/** The minimal projection of one correction day used by collision checks. */
+export type CorrectionDayKey = {
+  date: string;
+  correctionType: CorrectionType;
+  correctedTime: string;
+};
+
+/**
+ * Materialize a stored request's FULL day-set, DAY-0-INCLUSIVE (Convention X):
+ * `[{day0 from top-level}, ...days]`. NEVER `(r.days ?? [single])` — that returns
+ * days 1..n for a multi-day request and silently drops day 0 from any check built
+ * on it. Used by the form's submit-time collision guard (MF-5).
+ */
+export function materializeCorrectionDays(r: TimeCorrectionRequest): CorrectionDayKey[] {
+  return [
+    { date: r.date, correctionType: r.correctionType, correctedTime: r.correctedTime },
+    ...(r.days ?? []).map((d) => ({
+      date: d.date,
+      correctionType: d.correctionType,
+      correctedTime: d.correctedTime,
+    })),
+  ];
+}
+
+/** A new row collides with a stored day on (date+type) OR (date+same corrected time). */
+export type CorrectionConflict = 'duplicate' | 'time_clash';
+
+/**
+ * Does the candidate day conflict with any day in `storedDays` (MF-5)? Returns the
+ * conflict KIND so the caller can surface the right bilingual message, or null.
+ * `storedDays` must be the materialized full day-set of every non-rejected request
+ * (via materializeCorrectionDays) — day-0-inclusive so collisions are never missed.
+ */
+export function findCorrectionConflict(
+  candidate: CorrectionDayKey,
+  storedDays: CorrectionDayKey[],
+): CorrectionConflict | null {
+  if (
+    storedDays.some(
+      (sd) => sd.date === candidate.date && sd.correctionType === candidate.correctionType,
+    )
+  ) {
+    return 'duplicate';
+  }
+  if (
+    storedDays.some(
+      (sd) => sd.date === candidate.date && sd.correctedTime === candidate.correctedTime,
+    )
+  ) {
+    return 'time_clash';
+  }
+  return null;
 }
 
 function generateTimeCorrectionId(): string {
@@ -162,6 +284,25 @@ export const useTimeCorrections = create<TimeCorrectionsState>()(
                       actorName: by.name,
                       action: 'reject' as const,
                       comment: reason,
+                      at: new Date().toISOString(),
+                    },
+                  ],
+                },
+          ),
+        })),
+      cancel: (id, by) =>
+        set((state) => ({
+          requests: state.requests.map((r) =>
+            r.id !== id || r.status !== 'pending_manager'
+              ? r
+              : {
+                  ...r,
+                  status: 'cancelled' as TimeCorrectionStep,
+                  audit: [
+                    ...r.audit,
+                    {
+                      actorName: by.name,
+                      action: 'cancel' as const,
                       at: new Date().toISOString(),
                     },
                   ],

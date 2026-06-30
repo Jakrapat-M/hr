@@ -120,22 +120,39 @@ export const MOCK_PENDING_REQUESTS: PendingRequest[] = [
     submitDate: '2026-04-23T10:05:00',
     urgency: 'normal',
     waitingDays: 7,
-    attachments: ['opd-receipt.pdf', 'doctor-note.pdf'],
+    attachments: ['opd-receipt.pdf', 'doctor-note.pdf', 'hospital-invoice.pdf'],
     assignedApprover: { id: 'SPD001', name: 'ดารณี ล. (SPD)', assignedAt: '2026-04-25T15:00:00' },
     details: claim({
       amount: 2500,
-      category: 'medical',
+      category: 'ค่ารักษาพยาบาล (Medical)',
+      benefitType: 'medical',
       merchant: 'Samitivej Hospital',
       remainingAmount: 17500,
+      claimDate: '2026-04-26',
       receiptDate: '2026-04-26',
       receiptNo: 'RCPT-OPD-2026-004',
       receiptAmount: 2500,
       totalClaimAmount: 2500,
       remark: 'OPD reimbursement claim with original receipt attached',
+      // STA-147 req-5: full gold field matrix. Select values are stored as option
+      // ids (lowercase per picklist; OPD/IPD is uppercase) so resolveClaimDisplayValue
+      // resolves each to its TH/EN label. selectedBenefit + claimDate live here too.
+      dynamicFields: {
+        selectedBenefit: 'ค่ารักษาพยาบาล (Medical)',
+        claimDate: '2026-04-26',
+        medicalDental: 'medical',
+        opdIpd: 'IPD',
+        admittedStart: '2026-04-26',
+        admittedEnd: '2026-04-30',
+        hospitalType: 'private',
+        medicalHospitalName: 'bnh',
+        patientTransferDoc: 'no',
+        diseaseDetails: 'cold_fever',
+      },
     }),
     approvalTimeline: [
-      { step: 1, approver: 'HRBP – Peter', status: 'approved', date: '2026-04-26', comment: 'Checked employee benefit eligibility' },
-      { step: 2, approver: 'SPD – Ben', status: 'pending', date: '2026-04-27' },
+      { step: 1, approver: 'employee request claim', status: 'approved', date: '2026-04-26T15:00' },
+      { step: 2, approver: 'HR send back', status: 'rejected', date: '2026-04-27T12:00', comment: 'เอกสารไม่ครบ กรุณาแนบใบเสร็จตัวจริง' },
     ],
   },
   {

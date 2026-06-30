@@ -22,7 +22,7 @@ import {
   type RecordType,
   isV2Plan,
 } from '@/data/benefits/plan-registry';
-import { Tab1IdentityFields, type Tab1IdentityValues } from '@/components/benefits/Tab1IdentityFields';
+import { Tab1IdentityFields, INSERT_EDITABLE_KEYS, type Tab1IdentityValues } from '@/components/benefits/Tab1IdentityFields';
 import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar';
 import { ActionTagChip, type ActionTagMode } from '@/components/benefits/ActionTagChip';
 import { InsertChangePopup } from '@/components/benefits/InsertChangePopup';
@@ -60,6 +60,7 @@ const CATEGORY_LABELS_TH: Record<PlanCategory, string> = {
   wreath:      'พวงหรีด',
   beneficiary: 'ผู้รับผลประโยชน์',
   lifecycle:   'วงจรสวัสดิการ',
+  mobile:      'ค่าโทรศัพท์',
 };
 
 const CATEGORY_LABELS_EN: Record<PlanCategory, string> = {
@@ -75,6 +76,7 @@ const CATEGORY_LABELS_EN: Record<PlanCategory, string> = {
   wreath:      'Wreath',
   beneficiary: 'Beneficiary',
   lifecycle:   'Lifecycle',
+  mobile:      'Mobile',
 };
 
 const RECORD_TYPE_CHIP: Record<RecordType, { label: string; labelTh: string; className: string }> = {
@@ -196,6 +198,9 @@ function PlanFormModal({
       mode="edit"
       isTh={isTh}
       showSchemaVersion={false}
+      // STA-146: Insert mode locks every identity field except Status + Company.
+      // Correction mode passes undefined → nothing locked (unchanged).
+      lockExceptKeys={mode === 'insert' ? INSERT_EDITABLE_KEYS : undefined}
     />
   );
 

@@ -27,7 +27,7 @@ import { OT_TYPES } from '@/lib/time/ot-types';
 import { APPROVAL_REGISTRY, type QueueApproval } from '@/lib/approval-registry';
 import { appliedChainFor } from '@/lib/time/approval-rules';
 import { currentStep, rolesActAtCurrentStep } from '@/lib/approval-routing';
-import { computeOtHours } from '@/lib/time/ot-math';
+import { otDisplayHours } from '@/lib/time/ot-math';
 import { formatDate } from '@/lib/date';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
@@ -55,15 +55,17 @@ function toQueueApproval(req: OTRequest): QueueApproval {
   return { row: APPROVAL_REGISTRY.overtime.toQueueItem(req), status };
 }
 
-function formatDateTime(iso: string, locale: string): string {
-  const d = new Date(iso);
-  const date = formatDate(iso, 'medium', locale);
-  const time = d.toLocaleTimeString(locale === 'en' ? 'en-US' : 'th-TH', {
+function formatTime(iso: string, locale: string): string {
+  return new Date(iso).toLocaleTimeString(locale === 'en' ? 'en-US' : 'th-TH', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   });
-  return `${date} · ${time}`;
+}
+
+function formatDateTime(iso: string, locale: string): string {
+  const date = formatDate(iso, 'medium', locale);
+  return `${date} · ${formatTime(iso, locale)}`;
 }
 
 export default function OTDetailPage({ params }: PageProps) {
@@ -106,9 +108,10 @@ export default function OTDetailPage({ params }: PageProps) {
 
   const isPending = request.status === 'pending';
   const stepLabel = OT_STATUS_LABEL[request.status];
-  // Recompute hours from the stored window so the detail always reflects the
-  // cross-midnight-aware math (not a stale stored value).
-  const computedHours = computeOtHours(request.startAt, request.endAt);
+  // Display hours via the centralized read: the stored TOTAL for a multi-day
+  // request (startAt..endAt is the span, not a duration), else recomputed from
+  // the single-day window. Drives the Hours field, approve toast, confirm modal.
+  const computedHours = otDisplayHours(request);
   const decidedSteps = request.audit.filter((a) => a.action === 'approve').length;
 
   function confirm() {
@@ -176,6 +179,26 @@ export default function OTDetailPage({ params }: PageProps) {
             label={isTh ? 'จำนวนชั่วโมง' : 'Hours'}
             value={<span className="font-semibold">{computedHours} {isTh ? 'ชม.' : 'h'}</span>}
           />
+          {request.days && request.days.length > 0 && (
+            <div className="flex gap-2 py-1.5 border-b border-hairline">
+              <span className="w-44 shrink-0 text-xs text-ink-muted">
+                {isTh ? 'รายวัน OT' : 'OT days'}
+              </span>
+              <ul className="flex flex-col gap-1 text-sm text-ink">
+                {request.days.map((day, i) => (
+                  <li key={`${day.date}-${i}`} className="flex flex-wrap items-baseline gap-x-2">
+                    <span className="font-medium">
+                      {isTh ? `วัน OT ${i + 1}` : `OT Day ${i + 1}`}
+                    </span>
+                    <span className="text-ink-muted">
+                      {formatTime(day.startAt, locale)}–{formatTime(day.endAt, locale)} · {day.hours}{' '}
+                      {isTh ? 'ชม.' : 'h'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <FieldRow label={isTh ? 'เหตุผล' : 'Reason'} value={request.reason} />
           <FieldRow
             label={isTh ? 'วันที่ส่ง' : 'Submitted'}

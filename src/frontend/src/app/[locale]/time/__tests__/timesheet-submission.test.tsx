@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import thMessages from '../../../../../messages/th.json';
 
@@ -51,25 +51,23 @@ beforeEach(() => {
 });
 
 describe('STA-65 timesheet submission', () => {
-  it('(a) editing hours + adding a project then Save persists a submitted record', () => {
-    renderTh(<TimesheetPage />);
+  it('(a) editing hours + adding a project then submitting persists a submitted record', () => {
+    // STA-155 removed the "Weekly hours" tab from the TimesheetPage UI, but the
+    // submission store + review surface + import path are retained. This locks the
+    // persistence contract the (now headless) weekly flow still feeds.
+    const rows: TimesheetSubmissionRow[] = [
+      { project: 'Project Alpha', mon: 6, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 },
+      { project: 'STA-65 QA', mon: 2, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 },
+    ];
+    expect(validateTimesheet(rows)).toEqual({ valid: true });
 
-    // The weekly project-hours grid now lives under its own tab (the page leads
-    // with the WFS Time Entry / Schedule / Late tabs). Switch to it first.
-    fireEvent.click(screen.getByRole('tab', { name: 'ชั่วโมงรายสัปดาห์' }));
-
-    // Edit an existing hour cell (first number input → Project Alpha / Mon).
-    const numberInputs = screen.getAllByRole('spinbutton');
-    fireEvent.change(numberInputs[0], { target: { value: '6' } });
-
-    // Add a new project row.
-    const projectInput = screen.getByPlaceholderText('ชื่อโครงการใหม่');
-    fireEvent.change(projectInput, { target: { value: 'STA-65 QA' } });
-    fireEvent.click(screen.getByRole('button', { name: /เพิ่มโครงการ/ }));
-    expect(screen.getByText('STA-65 QA')).toBeInTheDocument();
-
-    // Save → submits to the store.
-    fireEvent.click(screen.getByRole('button', { name: 'บันทึก' }));
+    useTimesheetSubmissions.getState().submit({
+      employeeId: 'EMP501',
+      employeeName: 'ทดสอบ พนักงาน',
+      weekStart: '2026-05-11',
+      rows,
+      totalHours: 8,
+    });
 
     const submissions = useTimesheetSubmissions.getState().submissions;
     expect(submissions).toHaveLength(1);
@@ -78,9 +76,13 @@ describe('STA-65 timesheet submission', () => {
     expect(submissions[0].totalHours).toBeGreaterThan(0);
     // The added project is carried in the snapshot.
     expect(submissions[0].rows.some((r) => r.project === 'STA-65 QA')).toBe(true);
+  });
 
-    // Success confirmation status renders (not an error).
-    expect(screen.getByText(/ส่งใบบันทึกเวลาแล้ว/)).toBeInTheDocument();
+  it('(a1) the Weekly hours tab is removed from the timesheet tab navigation (STA-155)', () => {
+    renderTh(<TimesheetPage />);
+    expect(screen.queryByRole('tab', { name: 'ชั่วโมงรายสัปดาห์' })).toBeNull();
+    // The retained WFS attendance tabs still render.
+    expect(screen.getByRole('tab', { name: 'บันทึกเวลา' })).toBeInTheDocument();
   });
 
   it('(a2) rejects an over-24h day with a pumpkin error status and persists nothing', () => {

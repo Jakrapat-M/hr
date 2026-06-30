@@ -125,8 +125,10 @@ describe('benefit claim journey canonical route', () => {
     await user.type(screen.getByLabelText(/เลขที่ใบเสร็จ\/เอกสาร/), 'MOB-2026-001');
     // STA-120: typing Receipt amount auto-mirrors into Total Claim Amount.
     await user.type(screen.getByLabelText(/จำนวนเงินตามใบเสร็จ \(บาท\)/), '799');
-    // STA-119: synthetic BE-MOB-001 inherits category 'gasoline' → required Claim Type.
-    await user.selectOptions(screen.getByLabelText(/ประเภทการเบิก/), 'gasoline');
+    // STA-145: BE-MOB-001 now routes to category 'mobile' → the MOBILE bucket
+    // renders the Usage-month LOV (Jan–Dec), NOT the gasoline Claim Type.
+    expect(screen.queryByLabelText(/ประเภทการเบิก/)).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText(/เดือนที่ขอเบิก/), 'may');
     await user.type(screen.getByLabelText('หมายเหตุ'), 'ค่าโทรศัพท์เดือนพฤษภาคม');
     await user.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
 
@@ -138,6 +140,7 @@ describe('benefit claim journey canonical route', () => {
     expect(claim.receiptAmount).toBe(799);
     expect(claim.totalClaimAmount).toBe(799);
     expect(claim.remainingAmount).toBe(4800);
+    expect(claim.dynamicFields).toMatchObject({ realMonthDate: 'may' });
   });
 
   it('/benefits-hub presents a Benefits Hub service catalog with benefit-owned service routes', async () => {

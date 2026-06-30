@@ -18,15 +18,18 @@ import type { OtTypeCode } from '@/lib/time/ot-types';
 //
 // Phase: UI mockup. No backend. Synchronous mock dispatch.
 
-export type OTStatus = 'pending' | 'approved' | 'rejected';
+export type OTStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
 export type OTAuditEntry = {
   actorId: string;
   actorName: string;
-  action: 'submit' | 'approve' | 'reject';
+  action: 'submit' | 'approve' | 'reject' | 'cancel';
   comment?: string;
   at: string; // ISO timestamp
 };
+
+/** One day's OT window inside a multi-day request (STA-164). */
+export type OtDay = { date: string; startAt: string; endAt: string; hours: number };
 
 export type OTRequest = {
   id: string; // OT-YYYYMMDDHHMMSS-<rand> (or a stable demo id)
@@ -36,7 +39,14 @@ export type OTRequest = {
   otType: OtTypeCode;
   startAt: string; // ISO datetime
   endAt: string; // ISO datetime
+  /** Authoritative TOTAL OT hours. For a multi-day request (days?.length),
+   *  startAt..endAt is the SPAN (earliest start … latest end), NOT the duration —
+   *  never derive hours from the span; read display hours via otDisplayHours()
+   *  from lib/time/ot-math. */
   hours: number; // computed OT hours (cross-midnight aware)
+  /** Per-day breakdown for a multi-day OT request (STA-164). Undefined for a
+   *  single-day request → byte-identical to the legacy single-window shape. */
+  days?: OtDay[];
   reason: string;
   docs: string[];
   status: OTStatus;
@@ -48,6 +58,7 @@ export const OT_STATUS_LABEL: Record<OTStatus, { th: string; en: string }> = {
   pending: { th: 'รอหัวหน้าอนุมัติ', en: 'Awaiting manager' },
   approved: { th: 'อนุมัติแล้ว', en: 'Approved' },
   rejected: { th: 'ถูกปฏิเสธ', en: 'Rejected' },
+  cancelled: { th: 'ยกเลิกแล้ว', en: 'Cancelled' },
 };
 
 interface OvertimeRequestsState {
@@ -60,6 +71,13 @@ interface OvertimeRequestsState {
   ) => string;
   approve: (id: string, by: { id?: string; name: string }, comment?: string) => void;
   reject: (id: string, by: { id?: string; name: string }, reason: string) => void;
+  /**
+   * STA-175 — employee cancels their OWN pending OT request while it is still at
+   * the first (single) approval stage. Sets status 'cancelled' + appends a
+   * 'cancel' audit entry. Drops out of the unified inbox via the selector's
+   * cancelled guard. No-op once approved/rejected/cancelled.
+   */
+  cancel: (id: string, by: { id?: string; name: string }) => void;
   /** Seed deterministic demo rows, preserving row.id (idempotent per id). */
   seedFromQueue: (rows: OTRequest[]) => void;
   clear: () => void;
@@ -135,6 +153,26 @@ export const useOvertimeRequests = create<OvertimeRequestsState>()(
                       actorName: by.name,
                       action: 'reject' as const,
                       comment: reason,
+                      at: new Date().toISOString(),
+                    },
+                  ],
+                },
+          ),
+        })),
+      cancel: (id, by) =>
+        set((state) => ({
+          requests: state.requests.map((r) =>
+            r.id !== id || r.status !== 'pending'
+              ? r
+              : {
+                  ...r,
+                  status: 'cancelled' as OTStatus,
+                  audit: [
+                    ...r.audit,
+                    {
+                      actorId: by.id ?? '',
+                      actorName: by.name,
+                      action: 'cancel' as const,
                       at: new Date().toISOString(),
                     },
                   ],

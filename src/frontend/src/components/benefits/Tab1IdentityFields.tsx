@@ -52,7 +52,18 @@ export interface Tab1IdentityFieldsProps {
    *  contract is unchanged; the legacy plan Create/Edit modals pass false
    *  (the value still persists as 'v2', only the input control is hidden). */
   showSchemaVersion?: boolean;
+  /** STA-146: when set, every identity control is disabled EXCEPT the keys
+   *  listed here (the Insert plan modal passes INSERT_EDITABLE_KEYS). Omitted
+   *  (default) = nothing locked → create/correction byte-for-byte unchanged.
+   *  Locking is view-only; it never fires onChange. Fail-safe: any key NOT in
+   *  this list is LOCKED, so a newly added identity field defaults to locked. */
+  lockExceptKeys?: ReadonlyArray<keyof Tab1IdentityValues>;
 }
+
+/** STA-146: the ONLY identity keys that stay editable in Insert mode — everything
+ *  else is locked deny-by-default. Imported by PlanFormModal (call site) AND the
+ *  Vitest regression (to derive the locked set) — single source of truth. */
+export const INSERT_EDITABLE_KEYS = ['status', 'company'] as const;
 
 const CATEGORY_LABELS_TH: Record<PlanCategory, string> = {
   medical:     'การรักษาพยาบาล',
@@ -67,6 +78,7 @@ const CATEGORY_LABELS_TH: Record<PlanCategory, string> = {
   wreath:      'พวงหรีด',
   beneficiary: 'ผู้รับผลประโยชน์',
   lifecycle:   'วงจรสวัสดิการ',
+  mobile:      'ค่าโทรศัพท์',
 };
 
 const CATEGORY_LABELS_EN: Record<PlanCategory, string> = {
@@ -82,12 +94,13 @@ const CATEGORY_LABELS_EN: Record<PlanCategory, string> = {
   wreath:      'Wreath',
   beneficiary: 'Beneficiary',
   lifecycle:   'Lifecycle',
+  mobile:      'Mobile',
 };
 
 const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS_EN) as PlanCategory[];
 
 const selectClass =
-  'h-10 w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
+  'h-10 w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas disabled:bg-canvas-soft disabled:text-ink-muted disabled:cursor-not-allowed';
 
 const RECORD_TYPE_CHIP: Record<string, { label: string; labelTh: string; className: string }> = {
   records:  { label: 'records',   labelTh: 'records',   className: 'bg-canvas-soft text-ink-muted border border-hairline' },
@@ -117,7 +130,14 @@ export function Tab1IdentityFields({
   mode,
   isTh,
   showSchemaVersion = true,
+  lockExceptKeys,
 }: Tab1IdentityFieldsProps) {
+  // STA-146: deny-by-default lock. With a truthy lockExceptKeys, any key NOT in
+  // it is locked (disabled, view-only); undefined → nothing locked (create/
+  // correction unchanged). Locking never fires onChange.
+  const isLocked = (key: keyof Tab1IdentityValues) =>
+    !!lockExceptKeys && !lockExceptKeys.includes(key);
+
   // STA-70: recordType is derived from the Benefit type/group — the manual
   // "Plan name prefix" radio was removed. No useEffect; pure derivation.
   const derivedRecordType = deriveRecordTypeFromBenefitTypeGroup(values.benefitTypeGroup);
@@ -161,6 +181,7 @@ export function Tab1IdentityFields({
                 {...cp}
                 value={values.country}
                 onChange={(e) => onChange('country', e.target.value as CountryCode)}
+                disabled={isLocked('country')}
                 className={selectClass}
               >
                 <option value="TH">{isTh ? 'ไทย (TH)' : 'Thailand (TH)'}</option>
@@ -180,11 +201,21 @@ export function Tab1IdentityFields({
                 {...cp}
                 value={values.status}
                 onChange={(e) => onChange('status', e.target.value as PlanStatus)}
+                disabled={isLocked('status')}
                 className={selectClass}
               >
+                {/* STA-146 FU (Tan): the editable Status select offers only
+                    Active/Inactive — "user does not use draft status in benefit
+                    plan/benefit rule". The 'draft' PlanStatus value is kept (the
+                    STA-98 Save-as-Draft button + status filter still use it). */}
                 <option value="active">{isTh ? 'ใช้งาน (Active)' : 'Active'}</option>
                 <option value="inactive">{isTh ? 'ไม่ใช้งาน (Inactive)' : 'Inactive'}</option>
-                <option value="draft">{isTh ? 'ฉบับร่าง (Draft)' : 'Draft'}</option>
+                {/* A plan saved as Draft keeps showing its true status here (a
+                    DISABLED option) instead of silently coercing to Active — but
+                    Draft stays non-selectable for new edits. */}
+                {values.status === 'draft' && (
+                  <option value="draft" disabled>{isTh ? 'ฉบับร่าง (Draft)' : 'Draft'}</option>
+                )}
               </select>
             )}
           </FormField>
@@ -201,6 +232,7 @@ export function Tab1IdentityFields({
             {...cp}
             value={values.ttt}
             onChange={(e) => onChange('ttt', e.target.value)}
+            disabled={isLocked('ttt')}
             placeholder="BE_06"
           />
         )}
@@ -218,6 +250,7 @@ export function Tab1IdentityFields({
             {...cp}
             value={values.planKey}
             onChange={mode === 'edit' ? undefined : (e) => onChange('planKey', e.target.value)}
+            disabled={isLocked('planKey')}
             readOnly={mode === 'edit'}
             className={mode === 'edit' ? 'bg-canvas-soft text-ink-muted' : undefined}
             placeholder="BE-MED-005"
@@ -236,6 +269,7 @@ export function Tab1IdentityFields({
             {...cp}
             value={values.nameTh}
             onChange={(e) => onChange('nameTh', e.target.value)}
+            disabled={isLocked('nameTh')}
           />
         )}
       </FormField>
@@ -251,6 +285,7 @@ export function Tab1IdentityFields({
             {...cp}
             value={values.nameEn}
             onChange={(e) => onChange('nameEn', e.target.value)}
+            disabled={isLocked('nameEn')}
           />
         )}
       </FormField>
@@ -266,6 +301,7 @@ export function Tab1IdentityFields({
             {...cp}
             value={values.category}
             onChange={(e) => onChange('category', e.target.value as PlanCategory)}
+            disabled={isLocked('category')}
             className={selectClass}
           >
             {ALL_CATEGORIES.map((cat) => (
@@ -315,6 +351,7 @@ export function Tab1IdentityFields({
             {...cp}
             value={values.template}
             onChange={(e) => onChange('template', e.target.value as WorkflowTemplate)}
+            disabled={isLocked('template')}
             className={selectClass}
           >
             {TEMPLATE_OPTIONS.map((tpl) => (
@@ -336,6 +373,7 @@ export function Tab1IdentityFields({
               type="date"
               value={values.effectiveFrom}
               onChange={(e) => onChange('effectiveFrom', e.target.value)}
+              disabled={isLocked('effectiveFrom')}
             />
           )}
         </FormField>
@@ -350,6 +388,7 @@ export function Tab1IdentityFields({
               type="date"
               value={values.effectiveTo}
               onChange={(e) => onChange('effectiveTo', e.target.value)}
+              disabled={isLocked('effectiveTo')}
             />
           )}
         </FormField>
@@ -372,6 +411,7 @@ export function Tab1IdentityFields({
               {...cp}
               value={values.benefitTypeGroup}
               onChange={(e) => onChange('benefitTypeGroup', e.target.value as BenefitTypeGroup)}
+              disabled={isLocked('benefitTypeGroup')}
               className={selectClass}
             >
               <option value="reimbursement-employee-hr">
@@ -415,6 +455,7 @@ export function Tab1IdentityFields({
               {...cp}
               value={values.enrolment}
               onChange={(e) => onChange('enrolment', e.target.value as EnrolmentMode)}
+              disabled={isLocked('enrolment')}
               className={selectClass}
             >
               <option value="auto">{isTh ? 'Auto Enrolment (อัตโนมัติ)' : 'Auto Enrolment'}</option>
@@ -442,6 +483,7 @@ export function Tab1IdentityFields({
                 {...cp}
                 value={values.claimPeriod}
                 onChange={(e) => onChange('claimPeriod', e.target.value as ClaimPeriod)}
+                disabled={isLocked('claimPeriod')}
                 className={selectClass}
               >
                 <option value="year">{isTh ? 'รายปี (Year)' : 'Year'}</option>
@@ -464,6 +506,7 @@ export function Tab1IdentityFields({
                 {...cp}
                 value={values.entitlementCalcMethod}
                 onChange={(e) => onChange('entitlementCalcMethod', e.target.value as EntitlementCalcMethod)}
+                disabled={isLocked('entitlementCalcMethod')}
                 className={selectClass}
               >
                 <option value="full">{isTh ? 'เต็มจำนวน (Full)' : 'Full'}</option>

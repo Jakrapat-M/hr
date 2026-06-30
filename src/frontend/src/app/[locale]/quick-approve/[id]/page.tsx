@@ -1,14 +1,15 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/humi';
-import { ApprovalTimelineChain } from '@/components/quick-approve/ApprovalChain';
 import { RequestSummary } from '@/components/quick-approve/detail/RequestSummary';
 import { RequestPayload } from '@/components/quick-approve/detail/RequestPayload';
+import { AttachmentViewPanel } from '@/components/quick-approve/detail/AttachmentViewPanel';
 import { HistoryTimeline } from '@/components/quick-approve/detail/HistoryTimeline';
+import { ApproverNotesPanel } from '@/components/quick-approve/detail/ApproverNotesPanel';
 import { ActionPanel } from '@/components/quick-approve/detail/ActionPanel';
 import { RejectReturnDrawer, type DrawerMode } from '@/components/quick-approve/detail/RejectReturnDrawer';
 import { APPROVAL_REGISTRY, useSelectPendingApprovals, type QueueApproval, type QueueStatus } from '@/lib/approval-registry';
@@ -457,6 +458,13 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>('reject');
   const [toast, setToast] = useState<string | null>(null);
+  // STA-147 FU-1 — capture the send-back reason in session for IMMEDIATE reflection
+  // in the read-only Send Back Comment box after Confirm. (managerSendBack also
+  // writes queueSnapshot.sendBackComment, but behind a ~300ms mock-async delay, so
+  // local state avoids a flash of '-'.) Reset per request id so the reason from one
+  // request never bleeds into another on client-side navigation (same mounted page).
+  const [sentBackReason, setSentBackReason] = useState<string | null>(null);
+  useEffect(() => { setSentBackReason(null); }, [id]);
 
   function openDrawer(mode: DrawerMode) {
     setDrawerMode(mode);
@@ -498,6 +506,7 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
   function handleDrawerConfirm(requestId: string, reason: string, _comment: string) {
     if (!request) return;
     void APPROVAL_REGISTRY[request.type].reject(requestId, { name: MANAGER_NAME }, reason);
+    setSentBackReason(reason); // FU-1: reflect the reason in the read-only Send Back Comment box
     setDrawerOpen(false);
     showToast(drawerMode === 'return' ? t('toastReturned') : t('toastRejected'));
   }
@@ -515,8 +524,12 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
     );
   }
 
+  // STA-147 req-1: claims with attachments use the 2-col grid, so widen the page
+  // container to give the Attachment View panel room; other types stay narrow.
+  const wide = request.type === 'claim' && (request.attachments?.length ?? 0) > 0;
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className={`mx-auto px-4 py-6 ${wide ? 'max-w-5xl' : 'max-w-3xl'}`}>
       {/* Back nav */}
       <Button
         variant="ghost"
@@ -536,16 +549,22 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
         <p className="text-small text-ink-muted capitalize">{t(`type_${request.type}`)}</p>
       </div>
 
-      {/* Approval chain quick view (runtime timeline steps) */}
-      <div className="mb-4">
-        <ApprovalTimelineChain steps={request.approvalTimeline} size="md" />
-      </div>
-
       {/* Content stack */}
       <div className="flex flex-col gap-4">
         <RequestSummary request={request} />
-        <RequestPayload request={request} />
+        {/* STA-147 req-1: Attachment View sits beside Request Details for claims
+            with attachments; this is the ONLY row wrapped in the 2-col grid. */}
+        {request.type === 'claim' && (request.attachments?.length ?? 0) > 0 ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <RequestPayload request={request} />
+            <AttachmentViewPanel attachments={request.attachments ?? []} />
+          </div>
+        ) : (
+          <RequestPayload request={request} />
+        )}
         <HistoryTimeline steps={request.approvalTimeline} />
+        {/* STA-147 req-2: Note + read-only Send Back Comment below the history. */}
+        <ApproverNotesPanel sendBackComment={sentBackReason ?? request.sendBackComment} />
       </div>
 
       {/* Sticky action panel */}

@@ -350,15 +350,28 @@ function deriveInPeriodLeaveDate(empId: string): string | null {
   return firstWorkingDay(anchor.toISOString().slice(0, 10)) ?? firstWorkingDay(period.start);
 }
 
-const DEMO_LEAVE_BALANCE_SEEDS: Array<{ kind: string; initial: number }> = [
-  { kind: 'sick_leave', initial: 30 },
-  { kind: 'annual_leave', initial: 10 },
-  { kind: 'personnel_leave', initial: 3 },
-  { kind: 'maternity_leave', initial: 98 },
+// Shared leave-balance seed row. `debits` lights up the "Used" figure; the
+// "Pending" figure comes from `reserved`, set ONLY via the guarded reserve() loop
+// below (sick & annual), never on this row. NEVER add `reserved` here: seedBalances
+// merges field-by-field (`reserved: seed.reserved ?? next[key]?.reserved ?? 0`),
+// so seeding `reserved` would force-reset the persisted value every reload and
+// re-arm the reserve loop — drifting the numbers across reloads.
+// Canonical table sample (Total/Pending/Used/Remaining): sick 30/1/5/24,
+// annual 10/1/3/6, personnel 3/0/1/2, maternity ×4 initial-only.
+const DEMO_LEAVE_BALANCE_SEEDS: Array<{ kind: string; initial: number; debits?: number }> = [
+  { kind: 'sick_leave', initial: 30, debits: 5 },     // Used 5 (+ guarded reserved 1 = Pending 1) → Remaining 24
+  { kind: 'annual_leave', initial: 10, debits: 3 },   // Used 3 (+ guarded reserved 1 = Pending 1) → Remaining 6
+  { kind: 'personnel_leave', initial: 3, debits: 1 }, // Used 1, no reserve → Pending 0 → Remaining 2
+  { kind: 'maternity_leave', initial: 98 },           // maternity rows: initial only, no debits
   { kind: 'maternity_leave_unpaid', initial: 90 },
   { kind: 'maternity_risk_case', initial: 90 },
   { kind: 'maternity_spouse', initial: 15 },
 ];
+
+// Clean exact-assertable demo viewer (Tier-A HR Admin; id matches demo-users.ts ADM001).
+// Excluded from the EMP001 annual deduct, so its table/cards read EXACTLY the
+// canonical sample: sick 30/1/5/24, annual 10/1/3/6, personnel 3/0/1/2.
+const DEMO_ADMIN_EMPLOYEE = { id: 'ADM001' };
 
 /** Build a pending ESS leave row carrying its canonical queue snapshot. */
 function buildDemoLeaveRow(args: {
@@ -458,7 +471,7 @@ const DEMO_PENDING_OT: OTRequest[] = [
     employeeId: DEMO_OT_EMPLOYEE.id,
     employeeName: DEMO_OT_EMPLOYEE.name,
     department: DEMO_OT_EMPLOYEE.department,
-    otType: 'OT_BREAK',
+    otType: 'OT', // OT-type selector removed: every request is 'OT', so no seed should render a different label
     startAt: '2026-06-01T23:00:00',
     endAt: '2026-06-02T02:00:00',
     hours: 3,
@@ -570,16 +583,23 @@ export function ensureDemoSeed(): void {
     .seedBalances([
       ...DEMO_LEAVE_BALANCE_SEEDS.map((s) => ({ employeeId: DEMO_LEAVE_EMPLOYEE.id, ...s })),
       ...DEMO_LEAVE_BALANCE_SEEDS.map((s) => ({ employeeId: DEMO_ESS_EMPLOYEE.id, ...s })),
+      ...DEMO_LEAVE_BALANCE_SEEDS.map((s) => ({ employeeId: DEMO_ADMIN_EMPLOYEE.id, ...s })), // ADM001 (clean exact viewer)
     ]);
 
-  // Demo: one in-flight ลากิจ (personnel_leave) so the Time-Off ledger shows a
-  // non-zero "รออนุมัติ / Pending" column. IDEMPOTENT — the balances store
-  // persists to localStorage and this seed re-runs every load, so only reserve
-  // when the bucket has no pending yet (else it would climb 1→2→3 on reload).
+  // Demo: in-flight "รออนุมัติ / Pending" so the Time-Off ledger's Pending column is
+  // non-zero for SICK & ANNUAL (canonical sample: both Pending 1; personnel Pending 0).
+  // IDEMPOTENT — the balances store persists to localStorage and this seed re-runs every
+  // load, so only reserve when the bucket has no pending yet (a bare reserve() would climb
+  // 1→2→3). Seed the tab persona (EMP001) AND the clean admin viewer (ADM001) so the
+  // /time/timesheet table AND the /timeoff cards read the canonical numbers; EMP-0301 is
+  // kept for the pending OT/TC demo identity. Personnel has NO reserve (Pending 0).
   const lb = useLeaveBalances.getState();
-  for (const empId of [DEMO_ESS_EMPLOYEE.id, DEMO_LEAVE_EMPLOYEE.id]) {
-    if ((lb.balances[`${empId}:personnel_leave`]?.reserved ?? 0) === 0) {
-      lb.reserve(empId, 'personnel_leave', 1);
+  for (const empId of [DEMO_ESS_EMPLOYEE.id, DEMO_ADMIN_EMPLOYEE.id, DEMO_LEAVE_EMPLOYEE.id]) {
+    if ((lb.balances[`${empId}:sick_leave`]?.reserved ?? 0) === 0) {
+      lb.reserve(empId, 'sick_leave', 1);
+    }
+    if ((lb.balances[`${empId}:annual_leave`]?.reserved ?? 0) === 0) {
+      lb.reserve(empId, 'annual_leave', 1);
     }
   }
 

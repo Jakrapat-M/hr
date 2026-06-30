@@ -52,10 +52,11 @@ import { calcAge, calcGeneration, calcYearOfService, calcYearsInJob, calcYearsIn
 import type { LifecycleEvent } from '@/lib/calculations'
 import { mapEmplStatusCode } from '@/lib/employee/empStatus'
 import CompensationHistory from '@/components/profile/CompensationHistory'
-import { formatCurrency, formatDate } from '@/lib/date'
+import { formatDate } from '@/lib/date'
 import { getPlan, getPlansByTemplate, isV2Plan, type BenefitPlan } from '@/data/benefits/plan-registry'
 import { SimpleClaimForm, type SimpleClaimSubmission } from '@/components/benefits/templates'
 import { InsertChangePopup } from '@/components/benefits/InsertChangePopup'
+import { ClaimDetailModal } from '@/components/benefits/ClaimDetailModal'
 import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar'
 import { useBenefitHistoryStore } from '@/stores/benefit-history-store'
 import { inactiveEndDate } from '@/lib/date'
@@ -456,6 +457,7 @@ const CLAIM_STATUS_RANK: Record<BenefitClaimStatus, number> = {
   pending_spd: 1,
   approved: 2,
   rejected: 3,
+  cancelled: 3,
 }
 
 export function claimStatusRank(status: BenefitClaimStatus): number {
@@ -488,6 +490,7 @@ const CLAIM_STATUS_CHIP: Record<BenefitClaimStatus, { labelTh: string; className
   send_back: { labelTh: 'ส่งคืน', className: 'bg-accent-soft text-accent border border-accent/30' },
   approved: { labelTh: 'อนุมัติแล้ว', className: 'bg-success-soft text-success border border-success/30' },
   rejected: { labelTh: 'ปฏิเสธ', className: 'bg-danger-soft text-danger border border-danger/30' },
+  cancelled: { labelTh: 'ยกเลิกแล้ว', className: 'bg-canvas-soft text-ink-muted border border-hairline' },
 }
 
 function ClaimStatusChip({ status, isTh }: { status: BenefitClaimStatus; isTh: boolean }) {
@@ -510,6 +513,7 @@ const CURRENT_BENEFIT_TO_PLAN_ID: Record<string, string> = {
   TH_DEN_001: 'BE-DEN-001',
   TH_GAS_001: 'BE-GAS-001',
   TH_ORD_001: 'BE-GIF-002',
+  TH_MOB_005: 'BE-MOB-001', // STA-145
 }
 // Resolve a Current-Benefits row to a claimable BenefitPlan for the claim form.
 // Falls back to a safe simple-claim plan so we never spread undefined; overrides
@@ -535,6 +539,8 @@ function claimTypeForPlan(plan: BenefitPlan): BenefitClaimType {
       return 'gasoline'
     case 'physical':
       return 'physical_checkup'
+    case 'mobile':
+      return 'mobile'
     case 'medical':
     case 'dental':
     default:
@@ -896,17 +902,17 @@ export default function EmployeeDetailPage() {
   const tReallocate = useTranslations('admin.reallocateBudget')
   // STA-141 — reuse STA-139's shipped delete-confirm copy (single source of truth).
   const tPlans = useTranslations('admin_benefits_plans')
+  // STA-159 — benefits namespace for the claim-detail "more detail" affordance.
+  const tBenefits = useTranslations('benefits')
   const reallocations = useBudgetReallocationStore(
     useShallow(selectReallocationsForEmployee(empId)),
   )
   const nextYearBases = useBudgetReallocationStore(useShallow((s) => s.nextYearBases))
-  const { reallocRows, currentPool, nextPool, hasReallocData } = useMemo(() => {
+  const { reallocRows, hasReallocData } = useMemo(() => {
     const regBase = (pid: string) => {
       const plan = getPlan(pid)
       return plan && isV2Plan(plan) ? plan.coverage.entitlementAmount ?? 0 : 0
     }
-    const nextBaseOf = (pid: string) =>
-      nextYearBases.find((b) => b.employeeId === empId && b.planId === pid)?.nextYearBase ?? 0
     // STA-133 (Part 3.1) — display the plan name WITHOUT the "(OPD)" suffix.
     const planLabel = (pid: string) => {
       const plan = getPlan(pid)
@@ -930,14 +936,10 @@ export default function EmployeeDetailPage() {
       nextYearBases.filter((b) => b.employeeId === empId).map((b) => b.planId),
     )
     reallocations.forEach((r) => plans.add(r.planId))
-    let current = 0
-    let next = 0
-    plans.forEach((p) => {
-      const moved = reallocations.filter((r) => r.planId === p).reduce((s, r) => s + r.amount, 0)
-      current += regBase(p) // annual entitlement — unchanged by transfers
-      next += nextBaseOf(p) - moved
-    })
-    return { reallocRows: rows, currentPool: current, nextPool: next, hasReallocData: plans.size > 0 || rows.length > 0 }
+    // STA-142: the This-year / Next-year summary cards were removed, so the
+    // current/next medical-pool aggregation is no longer needed — only the
+    // history rows + a presence flag remain.
+    return { reallocRows: rows, hasReallocData: plans.size > 0 || rows.length > 0 }
   }, [reallocations, nextYearBases, empId, locale])
 
   // Collapsible section state (BA: page collapsible + Current Benefits default-closed).
@@ -976,6 +978,8 @@ export default function EmployeeDetailPage() {
   const [benefitsCollapsed, setBenefitsCollapsed] = useState(true)
   // STA-103: which Current Benefit row's "more detail" modal is open (null = closed)
   const [benefitDetail, setBenefitDetail] = useState<CurrentBenefit | null>(null)
+  // STA-142: read-only "More detail" modal for an Adjust-entitlement-history row.
+  const [reallocDetail, setReallocDetail] = useState<ReallocRow | null>(null)
   // STA-132 (1.3) — Insert flow: row → effective-date popup → editable detail.
   const [insertTarget, setInsertTarget] = useState<CurrentBenefit | null>(null)
   const [insertSeedDate, setInsertSeedDate] = useState<string | null>(null)
@@ -1035,6 +1039,46 @@ export default function EmployeeDetailPage() {
   const handleDelete = (b: CurrentBenefit) => {
     setBenefitRows((prev) => prev.filter((r) => r.benefitPlanId !== b.benefitPlanId))
     setDeleteTarget(null)
+  }
+  // STA-159 (Part A) — which claim's read-only detail modal is open (null = closed).
+  const [claimDetail, setClaimDetail] = useState<BenefitClaimRequest | null>(null)
+  // STA-159 (Part B) — map an enrollable benefit onto a Current Benefits row.
+  // Mockup: fields unknown at enroll-time stay blank ("-"); amounts default to 0.
+  const enrollableToCurrentBenefit = (b: EnrollableBenefit): CurrentBenefit => ({
+    benefitName: b.benefitName,
+    benefitPlanId: b.benefitPlanId,
+    type: 'Standard',
+    status: 'Active',
+    amountUsed: 0,
+    entitleAmount: parseInt(b.entitlementAmount.replace(/[^\d]/g, ''), 10) || 0,
+    currency: 'THB',
+    effectiveStartDate: '2026-06-12',
+    effectiveEndDate: '2026-12-31',
+    reimbursedAmount: 0,
+    country: 'TH',
+    benefitCategory: '',
+    benefitType: '',
+    benefitSubType: '',
+    enrollment: '',
+    claimPeriod: '',
+    entitlementCalcMethod: '',
+    eligibleClaimDate: '',
+    specialClaimCondition: '',
+    ruleId: '',
+    ruleName: '',
+    effectiveType: '',
+    waitingPeriod: '',
+    originalEntitlementBeforeProrate: null,
+    originalEntitlementAfterProrate: null,
+    adjustedEntitlementAmount: null,
+    finalEntitlementAmount: null,
+    maximumAmountPerClaim: null,
+  })
+  // STA-159 (Part B) — append the enrolled plan to the in-session Current
+  // Benefits shadow so the new row appears immediately with working actions.
+  const handleEnrollSubmit = (b: EnrollableBenefit) => {
+    setBenefitRows((prev) => [...prev, enrollableToCurrentBenefit(b)])
+    setEnrollTarget(null)
   }
   // STA-141 (Change 3) — shared close for the Insert detail modal (X + Cancel).
   const closeDetail = () => {
@@ -2017,6 +2061,9 @@ export default function EmployeeDetailPage() {
                   <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{isTh ? 'จำนวนเงินเบิก' : 'Claim Amount'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'วันที่ส่ง' : 'Submission Date'}</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>{isTh ? 'สถานะ' : 'Status'}</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>
+                    <span className="sr-only">{tBenefits('moreDetail')}</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -2029,6 +2076,16 @@ export default function EmployeeDetailPage() {
                     <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`฿${c.totalClaimAmount.toLocaleString('th-TH')}`}</td>
                     <td className="text-ink-muted tabular-nums" style={{ padding: '8px 12px' }}>{new Date(c.submittedAt).toLocaleDateString(isTh ? 'th-TH' : 'en-GB')}</td>
                     <td style={{ padding: '8px 12px' }}><ClaimStatusChip status={c.status} isTh={isTh} /></td>
+                    <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={tBenefits('moreDetail')}
+                        onClick={() => setClaimDetail(c)}
+                      >
+                        <FileText size={16} aria-hidden />
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -2063,17 +2120,8 @@ export default function EmployeeDetailPage() {
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {/* Live medical pool tiles */}
-            <div className="humi-row" style={{ gap: 12, flexWrap: 'wrap' }}>
-              <div className="humi-card humi-card--cream" style={{ flex: '1 1 200px', minWidth: 180 }}>
-                <div className="humi-eyebrow">{tReallocate('totals.currentPool')}</div>
-                <div className="font-display text-2xl font-semibold text-ink tabular-nums">{formatCurrency(currentPool)}</div>
-              </div>
-              <div className="humi-card humi-card--cream" style={{ flex: '1 1 200px', minWidth: 180 }}>
-                <div className="humi-eyebrow">{tReallocate('totals.nextPool')}</div>
-                <div className={`font-display text-2xl font-semibold tabular-nums ${nextPool < 0 ? 'text-danger' : 'text-ink'}`}>{formatCurrency(nextPool)}</div>
-              </div>
-            </div>
+            {/* STA-142: the This-year / Next-year medical-budget summary cards were
+                removed per BA — the section now shows only the history table. */}
             {/* STA-133 (Part 3.2) — change log: date · plan · adjusted entitle
                 amount · year · entitle amount · reason (newest first). */}
             <div style={{ overflowX: 'auto' }}>
@@ -2086,6 +2134,7 @@ export default function EmployeeDetailPage() {
                     <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{tReallocate('log.colYear')}</th>
                     <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{tReallocate('log.colEntitle')}</th>
                     <th style={{ padding: '8px 12px', fontWeight: 600 }}>{tReallocate('log.colReason')}</th>
+                    <th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>{tReallocate('log.colMoreDetail')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2099,6 +2148,18 @@ export default function EmployeeDetailPage() {
                         <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{r.year}</td>
                         <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`${r.entitleAmount.toLocaleString('en-US')} THB`}</td>
                         <td className="text-ink-muted" style={{ padding: '8px 12px' }}>{r.reason}</td>
+                        {/* STA-142 — More detail (document icon), mirrors Current Benefits */}
+                        <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label={isTh ? 'ดูรายละเอียด' : 'More detail'}
+                            title={isTh ? 'ดูรายละเอียด' : 'More detail'}
+                            onClick={() => setReallocDetail(r)}
+                          >
+                            <FileText size={16} aria-hidden />
+                          </Button>
+                        </td>
                       </tr>
                     )
                   })}
@@ -2108,7 +2169,7 @@ export default function EmployeeDetailPage() {
                     reallocation event. */}
                 <tbody style={{ borderTop: '1px solid var(--color-hairline)' }}>
                   <tr>
-                    <td colSpan={6} style={{ padding: '8px 12px 0' }}>
+                    <td colSpan={7} style={{ padding: '8px 12px 0' }}>
                       <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.08em] text-ink-muted">
                         {isTh ? 'การโอนระหว่างปี' : 'Borrow between years'}
                       </span>
@@ -2133,7 +2194,19 @@ export default function EmployeeDetailPage() {
                         <td className={`tabular-nums ${adj.className}`} style={{ ...cellStyle, textAlign: 'right' }}>{adj.text}</td>
                         <td className="text-ink tabular-nums" style={{ ...cellStyle, textAlign: 'right' }}>{r.year}</td>
                         <td className="text-ink tabular-nums" style={{ ...cellStyle, textAlign: 'right' }}>{`${r.entitleAmount.toLocaleString('en-US')} THB`}</td>
-                        <td className="text-ink-muted" style={lastCellStyle}>{r.reason}</td>
+                        <td className="text-ink-muted" style={cellStyle}>{r.reason}</td>
+                        {/* STA-142 — More detail; accent border moves to this last cell */}
+                        <td style={{ ...lastCellStyle, textAlign: 'right' }}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label={isTh ? 'ดูรายละเอียด' : 'More detail'}
+                            title={isTh ? 'ดูรายละเอียด' : 'More detail'}
+                            onClick={() => setReallocDetail(r)}
+                          >
+                            <FileText size={16} aria-hidden />
+                          </Button>
+                        </td>
                       </tr>
                     )
                   })}
@@ -2228,6 +2301,38 @@ export default function EmployeeDetailPage() {
         )}
       </Modal>
 
+      {/* STA-142: read-only "More detail" modal for an adjust-entitlement-history
+          row. Formatters mirror the table cells (Adjusted via formatAdjustedAmount —
+          a SIGNED value; never plain-rendered) so nothing shows a stray "-". */}
+      <Modal
+        open={reallocDetail !== null}
+        onClose={() => setReallocDetail(null)}
+        title={reallocDetail ? `${reallocDetail.planLabel} · ${tReallocate('log.colMoreDetail')}` : ''}
+        widthClass="max-w-lg"
+      >
+        {reallocDetail && (() => {
+          const adj = formatAdjustedAmount(reallocDetail.adjusted, 'THB')
+          const rows: Array<{ label: string; value: string | number; className?: string }> = [
+            { label: tReallocate('log.colDate'), value: formatDate(reallocDetail.date, 'medium', locale) },
+            { label: tReallocate('log.colPlan'), value: reallocDetail.planLabel },
+            { label: tReallocate('log.colAdjusted'), value: adj.text, className: adj.className },
+            { label: tReallocate('log.colYear'), value: reallocDetail.year },
+            { label: tReallocate('log.colEntitle'), value: `${reallocDetail.entitleAmount.toLocaleString('en-US')} THB` },
+            { label: tReallocate('log.colReason'), value: reallocDetail.reason },
+          ]
+          return (
+            <div className="flex flex-col gap-3">
+              {rows.map((row) => (
+                <div key={row.label} className="flex items-start justify-between gap-6 border-b border-hairline pb-2 last:border-b-0">
+                  <span className="text-small text-ink-muted">{row.label}</span>
+                  <span className={`text-small text-ink text-right tabular-nums ${row.className ?? ''}`}>{row.value}</span>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
+      </Modal>
+
       {/* STA-104: per-row "Enroll now" modal — 8-field enrollment form. Mockup only. */}
       <Modal
         open={enrollTarget !== null}
@@ -2239,11 +2344,18 @@ export default function EmployeeDetailPage() {
           <EnrollmentFormBody
             benefit={enrollTarget}
             isTh={isTh}
-            onSubmit={() => setEnrollTarget(null)}
+            onSubmit={() => handleEnrollSubmit(enrollTarget)}
             onCancel={() => setEnrollTarget(null)}
           />
         )}
       </Modal>
+
+      {/* STA-159 — read-only claim-detail modal (Option C: unwrapped ClaimPayload). */}
+      <ClaimDetailModal
+        claim={claimDetail}
+        open={claimDetail !== null}
+        onClose={() => setClaimDetail(null)}
+      />
 
       {/* STA-106 / STA-119: per-row "Start a claim" modal — reuses the employee
           SimpleClaimForm verbatim so HR files a claim identically, and persists it

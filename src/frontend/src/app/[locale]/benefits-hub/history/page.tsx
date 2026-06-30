@@ -1,12 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
-import { ArrowLeft } from 'lucide-react';
-import { Card, CardEyebrow, CardTitle, DataTable, buttonVariants } from '@/components/humi';
+import { useLocale, useTranslations } from 'next-intl';
+import { ArrowLeft, FileText } from 'lucide-react';
+import { Button, Card, CardEyebrow, CardTitle, DataTable, buttonVariants } from '@/components/humi';
 import type { DataTableColumn } from '@/components/humi/DataTable';
 import { useBenefitClaimsStore, BENEFIT_STATUS_LABEL, BENEFIT_TYPE_LABEL } from '@/stores/benefit-claims';
 import type { BenefitClaimRequest, BenefitClaimStatus } from '@/stores/benefit-claims';
+import { ClaimDetailModal } from '@/components/benefits/ClaimDetailModal';
 import { benefitsHubRoute } from '@/lib/benefit-routes';
 
 // ── Claim history — own claims only ──────────────────────────────────────────
@@ -17,6 +19,7 @@ const STATUS_CHIP: Record<BenefitClaimStatus, { labelTh: string; className: stri
   send_back:   { labelTh: 'ส่งคืน',      className: 'bg-accent-soft text-accent border border-accent/30' },
   approved:    { labelTh: 'อนุมัติแล้ว', className: 'bg-success-soft text-success border border-success/30' },
   rejected:    { labelTh: 'ปฏิเสธ',      className: 'bg-danger-soft text-danger border border-danger/30' },
+  cancelled:   { labelTh: 'ยกเลิกแล้ว',  className: 'bg-canvas-soft text-ink-muted border border-hairline' },
 };
 
 function StatusChip({ status, isTh }: { status: BenefitClaimStatus; isTh: boolean }) {
@@ -33,6 +36,9 @@ const MOCK_CURRENT_EMPLOYEE_ID = 'EMP001';
 export default function ClaimHistoryPage() {
   const locale = useLocale();
   const isTh = locale !== 'en';
+  const t = useTranslations('benefits');
+  // STA-159 — which own-claim's read-only detail modal is open (null = closed).
+  const [detailTarget, setDetailTarget] = useState<BenefitClaimRequest | null>(null);
 
   const allClaims = useBenefitClaimsStore((s) => s.claims);
   const ownClaims = allClaims.filter((c) => c.employeeId === MOCK_CURRENT_EMPLOYEE_ID);
@@ -106,6 +112,23 @@ export default function ClaimHistoryPage() {
       ),
       sortAccessor: (c) => c.submittedAt,
       className: 'w-32',
+    },
+    {
+      id: 'actions',
+      header: t('moreDetail'),
+      headerVisuallyHidden: true,
+      cell: (c) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={t('moreDetail')}
+          onClick={() => setDetailTarget(c)}
+        >
+          <FileText size={16} aria-hidden />
+        </Button>
+      ),
+      align: 'right',
+      className: 'w-12',
     },
   ];
 
@@ -196,6 +219,13 @@ export default function ClaimHistoryPage() {
           </div>
         </Card>
       )}
+
+      {/* STA-159 — read-only claim-detail modal (Option C: unwrapped ClaimPayload). */}
+      <ClaimDetailModal
+        claim={detailTarget}
+        open={detailTarget !== null}
+        onClose={() => setDetailTarget(null)}
+      />
     </div>
   );
 }

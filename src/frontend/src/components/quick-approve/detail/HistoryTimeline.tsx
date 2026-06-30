@@ -21,6 +21,24 @@ const STATUS_LINE: Record<ApprovalStep['status'], string> = {
   rejected: 'bg-danger',
 };
 
+/**
+ * STA-147 req-3: render the approval-step date in Thai BE, appending the HH:mm
+ * time only when the stored value carries a time component (an ISO string with a
+ * `T`, e.g. `2026-04-26T15:00`). Date-only seeds (`2026-04-26`) keep rendering the
+ * date alone, so existing rows are unaffected.
+ */
+export function formatStepDate(value: string): string {
+  const hasTime = value.includes('T');
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('th-TH', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    ...(hasTime ? { hour: '2-digit', minute: '2-digit' } : {}),
+  });
+}
+
 export function HistoryTimeline({ steps }: HistoryTimelineProps) {
   const t = useTranslations('quick_approve_detail');
   const latestFirst = [...steps].sort((a, b) => {
@@ -53,11 +71,7 @@ export function HistoryTimeline({ steps }: HistoryTimelineProps) {
               <p className="text-xs text-ink-muted capitalize">{t(`status_${step.status}`)}</p>
               {step.date && (
                 <p className="text-xs text-ink-muted mt-0.5">
-                  {new Date(step.date).toLocaleDateString('th-TH', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
+                  {formatStepDate(step.date)}
                 </p>
               )}
               {step.comment && (

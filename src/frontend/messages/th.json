@@ -367,6 +367,8 @@
   },
   "benefits": {
     "title": "สวัสดิการ",
+    "claimDetailTitle": "รายละเอียดการเบิก",
+    "moreDetail": "ดูรายละเอียด",
     "overview": "ภาพรวมสวัสดิการ",
     "activeEnrollments": "สวัสดิการที่ลงทะเบียน",
     "benefitPlan": "แผนสวัสดิการ",
@@ -406,7 +408,12 @@
       "dependentName": "ชื่อผู้รับสิทธิ์",
       "dependentDob": "วันเกิด",
       "dependentRelationship": "ความสัมพันธ์",
-      "realMonthDate": "เดือนที่ขอเบิก"
+      "realMonthDate": "เดือนที่ขอเบิก",
+      "admittedStart": "วันที่เริ่มเข้ารักษา (ผู้ป่วยใน)",
+      "admittedEnd": "วันที่สิ้นสุดการรักษา (ผู้ป่วยใน)",
+      "medicalHospitalName": "ชื่อสถานพยาบาล",
+      "hospitalOthers": "ระบุสถานพยาบาลอื่นๆ",
+      "diseaseDetailsDetail": "ระบุรายละเอียดเพิ่มเติม"
     }
   },
   "profileDetails": {
@@ -1027,8 +1034,7 @@
       "exceedsBalance": "คำขอเกินจำนวนวันลาคงเหลือ",
       "hrApprovalRequired": "ต้องได้รับการอนุมัติจาก HR สำหรับการลาเกิน 5 วันทำการติดต่อกัน",
       "medicalCertNeeded": "ต้องแนบใบรับรองแพทย์สำหรับลาป่วยเกิน 3 วัน",
-      "overlapping": "วันที่ลาซ้ำซ้อนกับคำขอที่มีอยู่",
-      "pastDate": "ไม่สามารถขอลาวันที่ผ่านมาแล้วได้"
+      "overlapping": "วันที่ลาซ้ำซ้อนกับคำขอที่มีอยู่"
     },
     "submit": "ยื่นคำขอ",
     "cancel": "ยกเลิกคำขอ",
@@ -4331,14 +4337,15 @@
         "nextPool": "งบค่ารักษาพยาบาล ปีหน้า"
       },
       "log": {
-        "title": "ประวัติการโอนงบ",
+        "title": "ประวัติการปรับสิทธิ์ที่ได้รับ",
         "empty": "ยังไม่มีการโอนงบของพนักงานคนนี้",
         "colDate": "วันที่",
         "colPlan": "แผน",
         "colAdjusted": "สิทธิ์ที่ปรับแล้ว",
         "colYear": "ปี",
         "colEntitle": "สิทธิ์ทั้งหมด",
-        "colReason": "เหตุผล"
+        "colReason": "เหตุผล",
+        "colMoreDetail": "ดูรายละเอียด"
       },
       "validation": {
         "reasonRequired": "กรุณาระบุเหตุผล",
@@ -4894,6 +4901,16 @@
     "waiting": "รอนาน",
     "days": "วัน",
     "requestDetails": "รายละเอียดคำขอ",
+    "selectedBenefit": "สวัสดิการที่เลือก",
+    "claimDate": "วันที่ขอเบิก",
+    "attachmentsTitle": "เอกสารแนบ",
+    "attachmentsView": "ดู",
+    "attachmentsHide": "ซ่อน",
+    "attachmentsDownload": "ดาวน์โหลด",
+    "attachmentsEmpty": "ไม่มีเอกสารแนบ",
+    "noteTitle": "บันทึกเพิ่มเติม",
+    "notePlaceholder": "เพิ่มบันทึกสำหรับคำขอนี้…",
+    "sendBackCommentTitle": "ความคิดเห็นการส่งกลับ",
     "approvalHistory": "ประวัติการอนุมัติ",
     "step": "ขั้นตอน",
     "status_approved": "อนุมัติแล้ว",

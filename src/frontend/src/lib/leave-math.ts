@@ -78,6 +78,98 @@ export function countLeaveDays(
   return Math.max(0, base - holidayWeekdays);
 }
 
+// ── Hourly leave (STA-151) ────────────────────────────────────────────────
+// Computed ALONGSIDE countLeaveDays (its 4-arg signature is intentionally NOT
+// extended, so the existing leave.test.ts assertions stay green). Sick-only.
+
+/**
+ * Default working-hours-per-day basis for converting an hourly leave span into a
+ * fractional day. BA-Q: confirm 8h vs 7.5h. 8h ⇒ a 4h max span = 0.5 day.
+ */
+export const WORKDAY_HOURS = 8;
+
+/** Min / max hourly-leave span (BA: minimum 30 minutes, maximum 4 hours). */
+export const HOURLY_MIN_MINUTES = 30;
+export const HOURLY_MAX_MINUTES = 240;
+
+/** Minutes since midnight for an `HH:MM` 24h string; `null` if unparseable. */
+export function timeToMinutes(hhmm: string): number | null {
+  const m = /^(\d{2}):(\d{2})$/.exec(hhmm?.trim() ?? '');
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return h * 60 + min;
+}
+
+/** Span in minutes between two `HH:MM` strings; `null` if either is invalid. */
+export function durationMinutes(start: string, end: string): number | null {
+  const s = timeToMinutes(start);
+  const e = timeToMinutes(end);
+  if (s === null || e === null) return null;
+  return e - s;
+}
+
+/**
+ * Fractional leave-day for an hourly span: `minutes / (WORKDAY_HOURS × 60)`.
+ * e.g. 2h @ 8h = 0.25 day, 4h @ 8h = 0.5 day. No rounding — the balance/quota
+ * helpers already tolerate decimals.
+ */
+export function hourlyLeaveFraction(minutes: number, workdayHours = WORKDAY_HOURS): number {
+  if (!Number.isFinite(minutes) || minutes <= 0) return 0;
+  return minutes / (workdayHours * 60);
+}
+
+/** True when `minutes` is a valid hourly-leave span (30 ≤ m ≤ 240, inclusive). */
+export function isValidHourlySpan(minutes: number | null): boolean {
+  return (
+    minutes !== null &&
+    minutes >= HOURLY_MIN_MINUTES &&
+    minutes <= HOURLY_MAX_MINUTES
+  );
+}
+
+/**
+ * 30-min-increment `HH:MM` options across an inclusive window (default the
+ * 08:00–18:00 workday). BA-Q: confirm the selectable window.
+ */
+export function timeOptions(
+  startHour = 8,
+  endHour = 18,
+  stepMinutes = 30,
+): string[] {
+  const out: string[] = [];
+  for (let m = startHour * 60; m <= endHour * 60; m += stepMinutes) {
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    out.push(`${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`);
+  }
+  return out;
+}
+
+/**
+ * End-time options for a chosen start: only values where
+ * `start + 30min ≤ end ≤ start + 4h` (enforces min 30 / max 240 / end > start at
+ * the option level). Empty when `start` is unset/invalid.
+ */
+export function endTimeOptions(
+  start: string,
+  windowEndHour = 18,
+  stepMinutes = 30,
+): string[] {
+  const s = timeToMinutes(start);
+  if (s === null) return [];
+  const lo = s + HOURLY_MIN_MINUTES;
+  const hi = Math.min(s + HOURLY_MAX_MINUTES, windowEndHour * 60);
+  const out: string[] = [];
+  for (let m = lo; m <= hi; m += stepMinutes) {
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    out.push(`${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`);
+  }
+  return out;
+}
+
 /**
  * Parse the string leave balance (e.g. `'8.5'`, `'ไม่จำกัด'`) and return the
  * balance remaining after `days`. Unlimited (`'ไม่จำกัด'`) → `null` (no quota).

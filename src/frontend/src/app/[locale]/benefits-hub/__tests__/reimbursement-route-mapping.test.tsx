@@ -52,10 +52,11 @@ describe('benefits-hub reimbursement route mapping', () => {
 
     render(<ReimbursementPage />);
 
-    expect(screen.getByLabelText(/สวัสดิการที่เลือก/)).toHaveValue('ค่ารักษาพยาบาล (ผู้ป่วยนอก)');
+    // STA-148 req-4 — BE-MED-001 renamed "Medical Reimbursement" (dropped OPD suffix).
+    expect(screen.getByLabelText(/สวัสดิการที่เลือก/)).toHaveValue('ค่ารักษาพยาบาล');
   });
 
-  it('maps ca-phone allowance to synthetic BE-MOB-001 and submits with mobile benefitType', async () => {
+  it('maps ca-phone allowance to canonical BE-MOB-001 and submits with mobile benefitType', async () => {
     navigationMocks.useSearchParams.mockReturnValue(new URLSearchParams('allowance=ca-phone'));
     const user = userEvent.setup();
     const { default: ReimbursementPage } = await import('@/app/[locale]/benefits-hub/reimbursement/page');
@@ -67,9 +68,10 @@ describe('benefits-hub reimbursement route mapping', () => {
     await user.type(screen.getByLabelText(/วันที่ใบเสร็จ/), '2026-05-19');
     // STA-120: typing Receipt amount auto-mirrors into Total Claim Amount (no separate type).
     await user.type(screen.getByLabelText(/จำนวนเงินตามใบเสร็จ/), '1000');
-    // STA-119: synthetic BE-MOB-001 inherits category 'gasoline' (OQ-6 provisional),
-    // so the editable form shows the required gasoline Claim Type select.
-    await user.selectOptions(screen.getByLabelText(/ประเภทการเบิก/), 'gasoline');
+    // STA-145: BE-MOB-001 now resolves to category 'mobile' → the MOBILE bucket
+    // renders the Usage-month LOV (Jan–Dec), NOT the gasoline Claim Type.
+    expect(screen.queryByLabelText(/ประเภทการเบิก/)).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText(/เดือนที่ขอเบิก/), 'may');
     await user.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
 
     expect(submitClaim).toHaveBeenCalledWith(
@@ -81,7 +83,7 @@ describe('benefits-hub reimbursement route mapping', () => {
         receiptAmount: 1000,
         totalClaimAmount: 1000,
         claimDate: expect.any(String),
-        dynamicFields: expect.objectContaining({ gasolineClaimType: 'gasoline' }),
+        dynamicFields: expect.objectContaining({ realMonthDate: 'may' }),
       }),
     );
   });

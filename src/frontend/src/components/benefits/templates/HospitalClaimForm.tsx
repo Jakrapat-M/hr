@@ -9,6 +9,7 @@ import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import {
   bucketsForPlan,
   getConditionalFields,
+  isClaimFieldRequired,
   type ClaimFieldKey,
 } from '@/data/benefits/claim-field-config';
 import type { BenefitTemplateProps, SimpleClaimSubmission } from './SimpleClaimForm';
@@ -42,11 +43,28 @@ export function HospitalClaimForm({
   // STA-119: same config-driven conditional groups as SimpleClaimForm, keyed on
   // the plan's category bucket (medical: Medical/Dental, OPD/IPD, hospital type,
   // hospital name, patient-transfer, disease details, etc.).
-  // hospitalName is excluded from the rendered conditional set because HospitalClaimForm
-  // owns that field natively (form.hospitalName / "ชื่อโรงพยาบาล"). The native value
-  // is mapped into dynamicFields.hospitalName at submit so the approval mirror sees it.
+  // HospitalClaimForm owns hospital-name + dependent natively (form.hospitalName /
+  // "ชื่อโรงพยาบาล" + the dependent picker), so those conditional descriptors are
+  // excluded from the shared renderer to avoid duplicate fields. The native values
+  // are mapped into dynamicFields at submit so the approval mirror still sees them.
+  // STA-145 Phase B: this template keeps its NATIVE hospital free-text + dependent
+  // picker (it is the hospital/IPD/referral surface, not the gold "Start a claim"
+  // SimpleClaimForm surface the ticket targets). So the master-list select
+  // (medicalHospitalName) and its dependent "Others" field (hospitalOthers) are
+  // owned/suppressed here; the dependent descriptor group is owned by the native
+  // dependent picker. Admitted dates + patient-transfer + disease cascade DO render
+  // via the shared renderer (see effectiveDynamic for the OPD/IPD bridge).
+  const NATIVELY_OWNED_KEYS: ReadonlySet<string> = new Set([
+    'opdIpd', // owned by the native Admission-type control; bridged via effectiveDynamic
+    'hospitalName',
+    'medicalHospitalName',
+    'hospitalOthers',
+    'dependentName',
+    'dependentDob',
+    'dependentRelationship',
+  ]);
   const conditionalFields = getConditionalFields(bucketsForPlan(plan)).filter(
-    (f) => f.key !== 'hospitalName',
+    (f) => !NATIVELY_OWNED_KEYS.has(f.key),
   );
 
   const emptyDynamic = (): Partial<Record<ClaimFieldKey, string>> => ({});
@@ -65,6 +83,15 @@ export function HospitalClaimForm({
   const [dynamic, setDynamic] = useState<Partial<Record<ClaimFieldKey, string>>>(emptyDynamic);
   const [errors, setErrors] = useState<string[]>([]);
   const [lastWorkflowId, setLastWorkflowId] = useState<string | null>(null);
+
+  // STA-145 Phase B — OPD/IPD is owned natively (form.admissionType, lowercase).
+  // Bridge it into the conditional values (uppercase, matching OPD_IPD_OPTIONS) so
+  // the shared show-if/required-if predicates (Admitted dates show only on IPD)
+  // fire on this template too.
+  const effectiveDynamic: Partial<Record<ClaimFieldKey, string>> = {
+    ...dynamic,
+    opdIpd: form.admissionType === 'ipd' ? 'IPD' : 'OPD',
+  };
 
   const clearTransient = () => {
     if (errors.length > 0) setErrors([]);
@@ -103,7 +130,10 @@ export function HospitalClaimForm({
     }
     // Required config-driven conditional fields (STA-119), same as SimpleClaimForm.
     conditionalFields.forEach((f) => {
-      if (f.required && !String(dynamic[f.key as ClaimFieldKey] ?? '').trim()) {
+      if (
+        isClaimFieldRequired(f, effectiveDynamic) &&
+        !String(dynamic[f.key as ClaimFieldKey] ?? '').trim()
+      ) {
         const lbl = CONDITIONAL_CLAIM_LABELS[f.key];
         const label = lbl ? (isTh ? lbl.th : lbl.en) : f.key;
         nextErrors.push((isTh ? 'กรุณาระบุ' : 'Required: ') + label);
@@ -129,7 +159,12 @@ export function HospitalClaimForm({
       currency: 'THB',
       // hospitalName is owned by the native field; map it into dynamicFields so the
       // approval mirror (bucketsForType resolver) can display it alongside the others.
-      dynamicFields: { ...dynamic, hospitalName: form.hospitalName.trim() },
+      // opdIpd is bridged from the native admissionType (Phase B) for the same reason.
+      dynamicFields: {
+        ...dynamic,
+        opdIpd: form.admissionType === 'ipd' ? 'IPD' : 'OPD',
+        hospitalName: form.hospitalName.trim(),
+      },
     };
     setForm({ admissionType: 'ipd', hospitalName: '', transferDocNo: '', dependentId: '', receiptNo: '', receiptDate: '', receiptAmount: '', attachmentName: '' });
     setDynamic(emptyDynamic());
@@ -253,7 +288,7 @@ export function HospitalClaimForm({
         {/* ── Conditional groups (config-driven, shared renderer — STA-119) ── */}
         <ConditionalClaimFields
           fields={conditionalFields}
-          values={dynamic}
+          values={effectiveDynamic}
           onChange={setDynamicField}
           idPrefix={plan.id}
           isTh={isTh}

@@ -50,6 +50,12 @@ export interface PendingRequest {
  };
  details: LeaveDetails | OvertimeDetails | ClaimDetails | TransferDetails | Record<string, unknown>;
  approvalTimeline: ApprovalStep[];
+ /**
+  * STA-147 req-2: the send-back reason captured when an approver returns the
+  * request. Read-only on the detail page's "Send Back Comment" box; defaults to
+  * undefined (rendered as "-") until a send-back is confirmed.
+  */
+ sendBackComment?: string;
 }
 
 export interface LeaveDetails {

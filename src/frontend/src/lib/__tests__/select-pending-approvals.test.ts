@@ -224,4 +224,21 @@ describe('selectPendingApprovals — pure fan-in', () => {
     expect(out).toHaveLength(1);
     expect(out[0].status).toBe('approved');
   });
+
+  // STA-157 — a leave request the employee cancelled must NOT appear in the
+  // approver queue (collapseQueueStatus's catch-all would otherwise tag it pending).
+  it('a cancelled leave row is dropped from the pending queue', () => {
+    const snap = APPROVAL_SEED_ROWS.find((r) => r.type === 'leave')!;
+    const out = selectPendingApprovals({
+      leave: [
+        { id: 'L-PENDING', status: 'pending', queueSnapshot: snap },
+        { id: 'L-CANCELLED', status: 'cancelled', queueSnapshot: snap },
+      ],
+      workflow: [],
+      claims: [],
+      transfers: [],
+    });
+    expect(out).toHaveLength(1); // only the pending row survives
+    expect(out[0].status).toBe('pending');
+  });
 });

@@ -1,9 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import {
   currentPeriod,
+  previousPeriod,
   isWithinCurrentPeriod,
   isTimesheetLocked,
   isBookableLeaveDate,
+  LEAVE_BACKDATE_MIN,
   LEAVE_BOOKING_HORIZON_DAYS,
 } from '@/lib/time/period';
 
@@ -75,8 +77,37 @@ describe('isBookableLeaveDate (today..+90d advance window)', () => {
     expect(isBookableLeaveDate(isoPlusDays(REF, LEAVE_BOOKING_HORIZON_DAYS + 1), REF)).toBe(false);
   });
 
-  test('past dates are not bookable', () => {
-    expect(isBookableLeaveDate('2026-06-06', REF)).toBe(false);
+  // STA-156 — backdated leave is allowed down to the PREVIOUS payroll cycle
+  // (floor = previousPeriod start). For ref 06-07: current cycle = 05-21..06-20,
+  // previous cycle = 04-21..05-20 → floor = 2026-04-21.
+  test('a past date in the current cycle IS bookable', () => {
+    expect(isBookableLeaveDate('2026-06-06', REF)).toBe(true); // current cycle
+    expect(isBookableLeaveDate('2026-05-21', REF)).toBe(true); // current-cycle start
+  });
+
+  test('a past date in the previous cycle IS bookable (STA-156 extends 1 cycle back)', () => {
+    expect(isBookableLeaveDate('2026-05-20', REF)).toBe(true); // previous-cycle end — blocked under STA-130, allowed now
+    expect(isBookableLeaveDate('2026-04-21', REF)).toBe(true); // the floor itself (previous-cycle start)
+  });
+
+  test('a date before the previous cycle is NOT bookable (the 1-cycle cap)', () => {
+    expect(isBookableLeaveDate('2026-04-20', REF)).toBe(false); // one day before the floor
+  });
+
+  test('LEAVE_BACKDATE_MIN returns the previous payroll-cycle start', () => {
+    expect(LEAVE_BACKDATE_MIN(REF)).toBe('2026-04-21');
+  });
+
+  test('previousPeriod is the 21→20 cycle immediately before the current one', () => {
+    expect(previousPeriod(REF)).toEqual({ start: '2026-04-21', end: '2026-05-20' });
+  });
+
+  // The ticket's canonical AC example: today 25 Jun 2026 → earliest = 21 May 2026.
+  test('STA-156 AC example: ref 2026-06-25 → floor 2026-05-21', () => {
+    const REF25 = new Date(Date.UTC(2026, 5, 25)); // 2026-06-25
+    expect(LEAVE_BACKDATE_MIN(REF25)).toBe('2026-05-21');
+    expect(isBookableLeaveDate('2026-05-21', REF25)).toBe(true);  // earliest selectable
+    expect(isBookableLeaveDate('2026-05-20', REF25)).toBe(false); // before previous cycle
   });
 
   test('empty string is not bookable', () => {

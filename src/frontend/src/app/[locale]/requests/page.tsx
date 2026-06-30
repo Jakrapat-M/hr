@@ -23,6 +23,7 @@ import {
 import {
   Avatar,
   Button,
+  CancelRequestModal,
   Card,
   CardEyebrow,
   CardTitle,
@@ -46,9 +47,10 @@ import {
 import { selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { selectTaxPlanningRequestSummaries, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
-import { useQueueRequestRows } from '@/lib/approval-registry';
+import { useQueueRequestRows, buildCancelModalFields, APPROVAL_REGISTRY } from '@/lib/approval-registry';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
+import type { RequestType } from '@/lib/quick-approve-api';
 
 // ════════════════════════════════════════════════════════════
 // /requests — Forms/requests tracker
@@ -118,6 +120,10 @@ export default function HumiRequestsPage() {
   const locale = pathname.startsWith('/th') ? 'th' : 'en';
   const roles = useAuthStore((s) => s.roles);
   const canApprove = roles.some((r) => APPROVAL_ROLES.includes(r));
+  // STA-175 — ownership gate: Cancel renders only on the current user's OWN rows.
+  // The tracker is a manager-inbox fan-in with no owner filter, so this is required.
+  const currentUserId = useAuthStore((s) => s.userId) ?? '';
+  const currentUserName = useAuthStore((s) => s.username) ?? '';
 
   const [tab, setTab] = useState<TabKey>('mine');
   const { toast, show: showToast } = useToast();
@@ -132,7 +138,7 @@ export default function HumiRequestsPage() {
   // the legacy REQ-/benefit rows, so no de-dup is needed.
   const queueRows = useQueueRequestRows('th');
 
-  const allMine = useMemo(() => {
+  const allMine = useMemo<MineRow[]>(() => {
     const base = HUMI_MY_REQUESTS.map((r) => ({ ...r }));
     const store = submissions.map((s) => ({
       id: s.id,
@@ -151,6 +157,10 @@ export default function HumiRequestsPage() {
       submitted: q.submitted,
       status: q.status as RequestStatus,
       approvalChain: q.approvalChain satisfies HumiApprovalStep[],
+      // STA-175 — only self-cancellable types carry a cancel adapter; others stay false.
+      requestType: q.requestType,
+      requesterId: q.requesterId,
+      cancellable: q.cancellable && !!APPROVAL_REGISTRY[q.requestType].cancel,
     }));
     const benefitRows = selectBenefitRequestSummaries(benefitClaims);
     const referralRows = selectBenefitReferralRequestSummaries(benefitReferrals);
@@ -255,7 +265,16 @@ export default function HumiRequestsPage() {
       </div>
 
       {tab === 'mine' && (
-        <MineTab summary={summary} filtered={filtered} />
+        <MineTab
+          summary={summary}
+          filtered={filtered}
+          locale={locale}
+          currentUserId={currentUserId}
+          currentUserName={currentUserName}
+          onCancelled={() =>
+            showToast(locale === 'th' ? 'ยกเลิกคำขอแล้ว' : 'Request cancelled successfully.')
+          }
+        />
       )}
       {tab === 'catalog' && (
         <CatalogTab onSubmitted={(msg) => { showToast(msg); setTab('mine'); }} />
@@ -269,17 +288,57 @@ export default function HumiRequestsPage() {
 // Tab: Mine — with filter chips
 // ────────────────────────────────────────────────────────────
 
-type MineRow = { id: string; type: string; sub: string; submitted: string; status: RequestStatus; approvalChain: HumiApprovalStep[]; href?: string };
+type MineRow = {
+  id: string;
+  type: string;
+  sub: string;
+  submitted: string;
+  status: RequestStatus;
+  approvalChain: HumiApprovalStep[];
+  href?: string;
+  // STA-175 — self-cancel plumbing (present only on queue-projected rows).
+  requestType?: RequestType;
+  requesterId?: string;
+  cancellable?: boolean;
+};
 
 function MineTab({
   summary,
   filtered,
+  locale,
+  currentUserId,
+  currentUserName,
+  onCancelled,
 }: {
   summary: { total: number; pending: number; approved: number; rejected: number; info: number };
   filtered: MineRow[];
+  locale: 'th' | 'en';
+  currentUserId: string;
+  currentUserName: string;
+  onCancelled: () => void;
 }) {
   const { filter, setFilter } = useRequestsStore();
   const [selected, setSelected] = useState<MineRow | null>(null);
+  // STA-175 — self-cancel: the row being cancelled + its resolved modal fields.
+  const [cancelRow, setCancelRow] = useState<MineRow | null>(null);
+  const cancelFields = useMemo(
+    () =>
+      cancelRow?.requestType
+        ? buildCancelModalFields(cancelRow.requestType, cancelRow.id, locale)
+        : null,
+    [cancelRow, locale],
+  );
+
+  function handleConfirmCancel() {
+    if (!cancelRow?.requestType) return;
+    const adapter = APPROVAL_REGISTRY[cancelRow.requestType];
+    void Promise.resolve(
+      adapter.cancel?.(cancelRow.id, { id: currentUserId, name: currentUserName }),
+    ).then(() => {
+      onCancelled();
+    });
+    setCancelRow(null);
+  }
 
   const summaryCards: Array<{ l: string; n: number; tone: 'accent' | 'warn' | 'sage' | 'butter' }> = [
     { l: 'ส่งทั้งหมด', n: summary.total, tone: 'accent' },
@@ -381,6 +440,16 @@ function MineTab({
                     >
                       {meta.label}
                     </span>
+                    {/* STA-175 — self-cancel: only the employee's OWN first-approval row. */}
+                    {r.cancellable && r.requesterId === currentUserId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCancelRow(r)}
+                      >
+                        {locale === 'th' ? 'ยกเลิก' : 'Cancel'}
+                      </Button>
+                    )}
                     <button
                       type="button"
                       aria-label={`ดูรายละเอียดการอนุมัติ ${r.id}`}
@@ -405,6 +474,17 @@ function MineTab({
       </Card>
 
       <RequestDetailModal open={selected !== null} request={selected} onClose={() => setSelected(null)} />
+
+      {/* STA-175 — shared self-cancel confirm modal. */}
+      {cancelFields && (
+        <CancelRequestModal
+          open={cancelRow !== null}
+          onClose={() => setCancelRow(null)}
+          onConfirm={handleConfirmCancel}
+          locale={locale}
+          fields={cancelFields}
+        />
+      )}
     </>
   );
 }

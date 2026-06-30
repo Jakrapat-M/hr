@@ -8,6 +8,7 @@ import { Check, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight, Sun, X 
 import {
   Avatar,
   Button,
+  CancelRequestModal,
   Card,
   CardEyebrow,
   CardTitle,
@@ -16,7 +17,14 @@ import {
 } from '@/components/humi';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/date';
-import { countLeaveDays } from '@/lib/leave-math';
+import {
+  countLeaveDays,
+  durationMinutes as spanMinutes,
+  hourlyLeaveFraction,
+  isValidHourlySpan,
+  timeOptions,
+  endTimeOptions,
+} from '@/lib/leave-math';
 import { DOCUMENT_UPLOAD_HELPER_TH, DOCUMENT_UPLOAD_HELPER_EN } from '@/lib/document-boundary';
 import {
   HUMI_TH_HOLIDAYS,
@@ -168,17 +176,31 @@ function useEssEmployeeId(): string {
 // STA-117 — curated top-3 leave types (by registry code, not array index): Sick → Annual → Personal.
 const TOP_LEAVE_CODES = ['sick_leave', 'annual_leave', 'personnel_leave'] as const;
 
+// STA-151/STA-152 — leave types that get the Full/Half/Hourly duration cards
+// (sick types only). 'sick_leave_unpaid' is quotaTracked:false, so its hourly
+// fractional amount is display-only and never decrements a balance.
+const HOURLY_DURATION_CODES = ['sick_leave', 'sick_leave_unpaid'] as const;
+
 function QuotaCards({ isTh }: { isTh: boolean }) {
   const employeeId = useEssEmployeeId();
   const balances = useLeaveBalances((s) => s.balances);
   const quotaTypes = useMemo(() => quotaTrackedTypes(), []);
+  // STA-150 — default to the curated top-3 (Sick → Annual → Personal); the rest
+  // live behind a View All / Show Less toggle (mirrors the RequestTab pattern).
+  const [showAllBalances, setShowAllBalances] = useState(false);
+  const topCodes = TOP_LEAVE_CODES as readonly string[];
+  const visible = showAllBalances
+    ? quotaTypes
+    : quotaTypes.filter((t) => topCodes.includes(t.code));
+  const hasMore = quotaTypes.length > topCodes.length;
 
   return (
+    <>
     <section
       aria-label={isTh ? 'ยอดวันลาคงเหลือ' : 'Leave balances'}
-      className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3"
+      className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3"
     >
-      {quotaTypes.map((t, i) => {
+      {visible.map((t, i) => {
         const kind = LEAVE_CODE_TO_BALANCE_KIND[t.code] ?? t.code;
         const bucket = balances[`${employeeId}:${kind}`];
         const initial = bucket ? bucket.initial + bucket.credits : 0;
@@ -224,7 +246,7 @@ function QuotaCards({ isTh }: { isTh: boolean }) {
                 className="humi-progress mt-3"
               >
                 <div
-                  className={cn('h-full rounded-full', QUOTA_BAR_CLASSES[i % QUOTA_BAR_CLASSES.length])}
+                  className={cn('h-full rounded-full', QUOTA_BAR_CLASSES[quotaTypes.indexOf(t) % QUOTA_BAR_CLASSES.length])}
                   style={{ width: `${percentUsed}%` }}
                 />
               </div>
@@ -258,6 +280,24 @@ function QuotaCards({ isTh }: { isTh: boolean }) {
         );
       })}
     </section>
+    {hasMore && (
+      <div className="mb-8 flex justify-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-expanded={showAllBalances}
+          aria-label={
+            showAllBalances
+              ? (isTh ? 'แสดงยอดวันลาน้อยลง' : 'Show fewer leave balances')
+              : (isTh ? 'ดูยอดวันลาทั้งหมด' : 'View all leave balances')
+          }
+          onClick={() => setShowAllBalances((v) => !v)}
+        >
+          {showAllBalances ? (isTh ? 'แสดงน้อยลง' : 'Show less') : (isTh ? 'ดูทั้งหมด' : 'View all')}
+        </Button>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -515,8 +555,13 @@ function RequestTab({
   const def = getLeaveType(code);
   const [fromISO, setFromISO] = useState('');
   const [toISO, setToISO] = useState('');
-  const [halfDay, setHalfDay] = useState(false);
+  // STA-151 — single source of truth for leave duration. Replaces the old
+  // `halfDay` bool so `half` and `hourly` can never both be truthy.
+  const [durationMode, setDurationMode] = useState<'full' | 'half' | 'hourly'>('full');
   const [halfSlot, setHalfSlot] = useState<'morning' | 'afternoon'>('morning');
+  // STA-151 — hourly window (Sick only). 30-min increments, default 08:00–18:00.
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [reason, setReason] = useState('');
   // Mock attachments — the names the employee "attached". The doc-rule check
   // matches required-doc names against this list.
@@ -525,12 +570,35 @@ function RequestTab({
 
   const isHalfUnit = def?.minUnit === 'half-day';
   const isSingleDay = !!fromISO && (!toISO || toISO === fromISO);
-  const useHalf = isHalfUnit && isSingleDay && halfDay;
+  // STA-151/STA-152 — Sick (paid + unpaid) is minUnit '1-day' in the registry,
+  // so Half is dead for it. Enable Half + Hourly via a Sick-specific override
+  // (NOT a minUnit change, which would ripple into quota/docs/the registry).
+  // Both 'sick_leave' (paid) and 'sick_leave_unpaid' get Full/Half/Hourly; the
+  // unpaid type is quotaTracked:false so its fractional amount is display-only.
+  // Half is available when the type allows it OR it's a sick type; Hourly is
+  // sick-only.
+  const isSick = (HOURLY_DURATION_CODES as readonly string[]).includes(code);
+  const halfEnabled = isHalfUnit || isSick;
+  const hourlyEnabled = isSick;
+  const useHalf = durationMode === 'half' && halfEnabled && isSingleDay;
+  const useHourly = durationMode === 'hourly' && hourlyEnabled && isSingleDay;
+
+  // STA-151 — hourly span → fractional day (Sick only, single day).
+  const hourlyMinutes = useHourly ? spanMinutes(startTime, endTime) : null;
+  const hourlySpanValid = isValidHourlySpan(hourlyMinutes);
+  // End-time options are gated by the chosen start (min 30 / max 4h / end>start).
+  const endTimeChoices = useMemo(() => endTimeOptions(startTime), [startTime]);
 
   // Day count honors the type's dayCountMode (CalendarDay incl. holidays vs
-  // WorkingDay excl.). Half-day collapses a single working day to 0.5.
+  // WorkingDay excl.). Half-day collapses a single working day to 0.5. Hourly
+  // (Sick only) bypasses countLeaveDays and uses a fractional-day amount.
   const totalDays = useMemo(() => {
     if (!fromISO) return 0;
+    if (useHourly) {
+      return hourlySpanValid && hourlyMinutes !== null
+        ? hourlyLeaveFraction(hourlyMinutes)
+        : 0;
+    }
     const end = toISO || fromISO;
     if (def?.dayCountMode === 'CalendarDay') {
       return calendarDayCount(fromISO, end);
@@ -539,7 +607,7 @@ function RequestTab({
       holidays: HUMI_TH_HOLIDAYS,
       halfDay: useHalf ? halfSlot : 'none',
     });
-  }, [fromISO, toISO, def?.dayCountMode, useHalf, halfSlot]);
+  }, [fromISO, toISO, def?.dayCountMode, useHalf, halfSlot, useHourly, hourlySpanValid, hourlyMinutes]);
 
   // Quota: only quotaTracked types draw a balance bucket.
   const balanceKind = def?.quotaTracked ? LEAVE_CODE_TO_BALANCE_KIND[code] : undefined;
@@ -560,9 +628,11 @@ function RequestTab({
   // Entitlement: the selected type must be in the persona's selectable set.
   const hasEntitlement = selectableTypes.some((t) => t.code === code);
 
-  // Bookable window: leave supports SF-style advance booking (today..+90d), so it
-  // is NOT gated by the payroll period (21→20) — that lock is for time corrections.
-  // Both ends of the selected range must fall inside the bookable window.
+  // Bookable window (STA-156): from the start of the PREVIOUS payroll cycle
+  // (the backdate floor — retroactive leave is allowed up to 1 previous cycle,
+  // cycle = 21st→20th) through +90d advance booking. Both ends of the selected
+  // range must fall inside it. (The timesheet-correction lock is separate, see
+  // period.ts.)
   const outsideBookable =
     (!!fromISO && !isBookableLeaveDate(fromISO)) ||
     (!!toISO && !isBookableLeaveDate(toISO));
@@ -576,6 +646,7 @@ function RequestTab({
           (r) =>
             r.employeeId === employeeId &&
             r.status !== 'rejected' &&
+            r.status !== 'cancelled' &&
             !!r.startDate &&
             !!r.endDate,
         )
@@ -612,6 +683,7 @@ function RequestTab({
         (r) =>
           r.employeeId === employeeId &&
           r.status !== 'rejected' &&
+          r.status !== 'cancelled' &&
           // Match on the canonical 23-registry code only. `leaveType` is a coarse
           // enum label (sick/other), a different namespace — never use it as a
           // fallback here or the one-time check silently mis-fires/no-ops.
@@ -658,9 +730,13 @@ function RequestTab({
   function validate(): Record<string, string> {
     const errs: Record<string, string> = {};
     if (!fromISO) errs.fromDate = isTh ? 'กรุณาเลือกวันที่เริ่มลา' : 'Select a start date';
-    if (!reason.trim()) errs.reason = isTh ? 'กรุณาระบุเหตุผล' : 'Reason is required';
-    else if (reason.trim().length < 5)
-      errs.reason = isTh ? 'เหตุผลต้องมีอย่างน้อย 5 ตัวอักษร' : 'At least 5 characters';
+    // STA-176 — reason is OPTIONAL for sick leave (visible but not required).
+    // Non-sick types keep the existing reason-required rule.
+    if (!isSick) {
+      if (!reason.trim()) errs.reason = isTh ? 'กรุณาระบุเหตุผล' : 'Reason is required';
+      else if (reason.trim().length < 5)
+        errs.reason = isTh ? 'เหตุผลต้องมีอย่างน้อย 5 ตัวอักษร' : 'At least 5 characters';
+    }
     if (!hasEntitlement)
       errs.entitlement = isTh
         ? 'คุณไม่มีสิทธิ์ลาประเภทนี้'
@@ -675,12 +751,18 @@ function RequestTab({
         : 'This range overlaps a pending/approved leave';
     if (outsideBookable)
       errs.period = isTh
-        ? `จองล่วงหน้าได้ไม่เกิน ${LEAVE_BOOKING_HORIZON_DAYS} วัน และต้องไม่ใช่วันที่ผ่านมาแล้ว`
-        : `Bookable only from today up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead (no past dates)`;
+        ? `จองย้อนหลังได้ถึงต้นรอบจ่ายเงินเดือนก่อนหน้า (1 รอบ) จนถึงล่วงหน้า ${LEAVE_BOOKING_HORIZON_DAYS} วัน`
+        : `Bookable from the start of the previous payroll cycle (1 cycle back) up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead`;
     if (missingDocs.length > 0)
       errs.docs = isTh
         ? `ต้องแนบเอกสาร: ${missingDocs.join(', ')}`
         : `Attach required document(s): ${missingDocs.join(', ')}`;
+    // STA-151 — hourly span gate (distinct from STA-130's errs.period). Require
+    // both times; span must be 30 ≤ minutes ≤ 240 (inclusive), end > start.
+    if (useHourly && (!startTime || !endTime || !hourlySpanValid))
+      errs.hourly = isTh
+        ? 'เลือกเวลาเริ่มและสิ้นสุด — ลารายชั่วโมงต้องไม่ต่ำกว่า 30 นาที และไม่เกิน 4 ชั่วโมง'
+        : 'Pick a start and end time — hourly leave must be 30 minutes to 4 hours';
     return errs;
   }
 
@@ -693,7 +775,13 @@ function RequestTab({
     const fromLabel = formatDate(fromISO, 'medium', 'th');
     const toLabel = formatDate(endISO, 'medium', 'th');
     const levels = levelsForLeaveType(code);
-    const unit: '30min' | 'half-day' | '1-day' = useHalf ? 'half-day' : def?.minUnit ?? '1-day';
+    // STA-151 — derive unit from durationMode (overrides def.minUnit for the
+    // Sick half/hourly cases that minUnit can't express). hourly → '30min'.
+    const unit: '30min' | 'half-day' | '1-day' = useHourly
+      ? '30min'
+      : useHalf
+        ? 'half-day'
+        : def?.minUnit ?? '1-day';
 
     // Build the canonical queue snapshot so the request surfaces in the unified
     // /quick-approve inbox with the correct (sliced) approval chain.
@@ -733,6 +821,10 @@ function RequestTab({
       unit,
       days: totalDays,
       halfDay: useHalf,
+      // STA-151 — carry the hourly span on the payload (Sick only).
+      ...(useHourly && hourlyMinutes !== null
+        ? { startTime, endTime, durationMinutes: hourlyMinutes }
+        : {}),
       docs: attachments,
       queueSnapshot: { ...queueSnapshot, id: '' },
     });
@@ -754,7 +846,9 @@ function RequestTab({
 
     setFromISO('');
     setToISO('');
-    setHalfDay(false);
+    setDurationMode('full');
+    setStartTime('');
+    setEndTime('');
     setReason('');
     setAttachments([]);
     setErrors({});
@@ -809,8 +903,8 @@ function RequestTab({
     liveBlocks.push({
       key: 'period',
       msg: isTh
-        ? `จองล่วงหน้าได้ไม่เกิน ${LEAVE_BOOKING_HORIZON_DAYS} วัน และต้องไม่ใช่วันที่ผ่านมาแล้ว — เลือกวันในช่วงที่จองได้`
-        : `Bookable only from today up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead (no past dates) — pick a date in range`,
+        ? `จองย้อนหลังได้ถึงต้นรอบจ่ายเงินเดือนก่อนหน้า (1 รอบ) จนถึงล่วงหน้า ${LEAVE_BOOKING_HORIZON_DAYS} วัน — เลือกวันในช่วงที่จองได้`
+        : `Bookable from the start of the previous payroll cycle (1 cycle back) up to ${LEAVE_BOOKING_HORIZON_DAYS} days ahead — pick a date in range`,
     });
   if (missingDocs.length > 0)
     liveBlocks.push({
@@ -858,7 +952,9 @@ function RequestTab({
               onClick={() => {
                 setCode(opt.code);
                 setAttachments([]);
-                setHalfDay(false);
+                setDurationMode('full');
+                setStartTime('');
+                setEndTime('');
               }}
               className={cn(
                 'flex items-start gap-3 rounded-[var(--radius-md)] border p-3 text-left transition-colors',
@@ -929,58 +1025,63 @@ function RequestTab({
           onChange={({ from, to }) => {
             setFromISO(from);
             setToISO(to);
-            if (halfDay && from && to && from !== to) setHalfDay(false);
+            // Half / hourly only apply to a single day — drop them on a range.
+            if (durationMode !== 'full' && from && to && from !== to) {
+              setDurationMode('full');
+            }
           }}
         />
         {errors.fromDate && <InlineError msg={errors.fromDate} />}
 
-        {/* Duration — explicit full-day / half-day choice on every single-day leave.
-            Half-day is enabled only for types whose minUnit allows it; 1-day-min
-            types show the choice with half-day disabled + a hint. */}
+        {/* Duration — Full / Half / Hourly cards on every single-day leave.
+            STA-151: Half is enabled for half-day types OR Sick (Sick-specific
+            override). Hourly is Sick-only. Full is always available. */}
         {isSingleDay && fromISO && (
           <div className="mt-3 flex flex-col gap-2">
             <p className="text-small font-medium text-ink-soft">
               {isTh ? 'ระยะเวลา *' : 'Duration *'}
             </p>
-            <div role="radiogroup" aria-label={isTh ? 'ระยะเวลาการลา' : 'Leave duration'} className="flex gap-2">
-              <button
-                type="button"
-                role="radio"
-                aria-checked={!halfDay}
-                onClick={() => setHalfDay(false)}
-                className={cn(
-                  'rounded-[var(--radius-sm)] border px-4 py-1.5 text-small font-medium transition-colors',
-                  !halfDay
-                    ? 'border-accent bg-accent-soft text-accent'
-                    : 'border-hairline bg-surface text-ink-muted hover:border-ink-faint',
-                )}
-              >
-                {isTh ? 'เต็มวัน' : 'Full day'}
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={halfDay}
-                disabled={!isHalfUnit}
-                onClick={() => isHalfUnit && setHalfDay(true)}
-                title={!isHalfUnit ? (isTh ? 'ประเภทนี้ลาขั้นต่ำ 1 วัน' : 'This type has a 1-day minimum') : undefined}
-                className={cn(
-                  'rounded-[var(--radius-sm)] border px-4 py-1.5 text-small font-medium transition-colors',
-                  halfDay
-                    ? 'border-accent bg-accent-soft text-accent'
-                    : 'border-hairline bg-surface text-ink-muted hover:border-ink-faint',
-                  !isHalfUnit && 'cursor-not-allowed opacity-50',
-                )}
-              >
-                {isTh ? 'ครึ่งวัน' : 'Half day'}
-              </button>
+            <div
+              role="radiogroup"
+              aria-label={isTh ? 'ระยะเวลาการลา' : 'Leave duration'}
+              className="flex flex-wrap gap-2"
+            >
+              {([
+                { mode: 'full', enabled: true, labelTh: 'เต็มวัน', labelEn: 'Full day' },
+                { mode: 'half', enabled: halfEnabled, labelTh: 'ครึ่งวัน', labelEn: 'Half day' },
+                { mode: 'hourly', enabled: hourlyEnabled, labelTh: 'รายชั่วโมง', labelEn: 'Hourly' },
+              ] as const).map((opt) => {
+                const active = durationMode === opt.mode;
+                const disabledHint = !opt.enabled
+                  ? opt.mode === 'hourly'
+                    ? isTh ? 'ลารายชั่วโมงรองรับเฉพาะลาป่วย' : 'Hourly is available for Sick Leave only'
+                    : isTh ? 'ประเภทนี้ลาขั้นต่ำ 1 วัน' : 'This type has a 1-day minimum'
+                  : undefined;
+                return (
+                  <button
+                    key={opt.mode}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    disabled={!opt.enabled}
+                    onClick={() => opt.enabled && setDurationMode(opt.mode)}
+                    title={disabledHint}
+                    className={cn(
+                      'rounded-[var(--radius-sm)] border px-4 py-1.5 text-small font-medium transition-colors',
+                      active
+                        ? 'border-accent bg-accent-soft text-accent'
+                        : 'border-hairline bg-surface text-ink-muted hover:border-ink-faint',
+                      !opt.enabled && 'cursor-not-allowed opacity-50',
+                    )}
+                  >
+                    {isTh ? opt.labelTh : opt.labelEn}
+                  </button>
+                );
+              })}
             </div>
-            {!isHalfUnit && (
-              <p className="text-small text-ink-muted">
-                {isTh ? 'ประเภทการลานี้ลาขั้นต่ำ 1 วัน (นับเป็นเต็มวัน)' : 'This leave type has a 1-day minimum (counts as full day)'}
-              </p>
-            )}
-            {halfDay && isHalfUnit && (
+
+            {/* AM/PM slot — Half day only */}
+            {durationMode === 'half' && halfEnabled && (
               <div role="radiogroup" aria-label={isTh ? 'ช่วงครึ่งวัน' : 'Half-day slot'} className="flex gap-2">
                 {(['morning', 'afternoon'] as const).map((slot) => (
                   <button
@@ -1001,6 +1102,63 @@ function RequestTab({
                       : isTh ? 'ครึ่งบ่าย' : 'Afternoon'}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Hourly — Start + End selects. End options gated by start
+                (min 30 min / max 4 hr / end > start). */}
+            {durationMode === 'hourly' && hourlyEnabled && (
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-end gap-3">
+                  <label className="flex flex-col gap-1">
+                    <span className="text-small font-medium text-ink-soft">
+                      {isTh ? 'เวลาเริ่ม' : 'Start time'}
+                    </span>
+                    <select
+                      value={startTime}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        setStartTime(next);
+                        // Drop a now-invalid end so the gate stays consistent.
+                        if (endTime && !endTimeOptions(next).includes(endTime)) {
+                          setEndTime('');
+                        }
+                      }}
+                      className="rounded-[var(--radius-sm)] border border-hairline bg-surface px-3 py-1.5 text-small text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    >
+                      <option value="">{isTh ? 'เลือกเวลา' : 'Select'}</option>
+                      {/* cap last start at 17:30 so every start admits a valid ≥30min end ≤18:00 */}
+                      {timeOptions(8, 17.5).map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-small font-medium text-ink-soft">
+                      {isTh ? 'เวลาสิ้นสุด' : 'End time'}
+                    </span>
+                    <select
+                      value={endTime}
+                      disabled={!startTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className={cn(
+                        'rounded-[var(--radius-sm)] border border-hairline bg-surface px-3 py-1.5 text-small text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                        !startTime && 'cursor-not-allowed opacity-50',
+                      )}
+                    >
+                      <option value="">{isTh ? 'เลือกเวลา' : 'Select'}</option>
+                      {endTimeChoices.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <p className="text-small text-ink-muted">
+                  {isTh
+                    ? 'ลารายชั่วโมง: ขั้นต่ำ 30 นาที สูงสุด 4 ชั่วโมง'
+                    : 'Hourly leave: minimum 30 minutes, maximum 4 hours'}
+                </p>
+                {errors.hourly && <InlineError msg={errors.hourly} />}
               </div>
             )}
           </div>
@@ -1042,7 +1200,7 @@ function RequestTab({
 
       {/* Reason */}
       <Field
-        label={isTh ? 'เหตุผล *' : 'Reason *'}
+        label={`${isTh ? 'เหตุผล' : 'Reason'}${isSick ? '' : ' *'}`}
         htmlFor="leave-reason"
         className="mt-3"
         error={errors.reason}
@@ -1052,7 +1210,15 @@ function RequestTab({
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
-          placeholder={isTh ? 'อธิบายเหตุผลการลา (อย่างน้อย 5 ตัวอักษร)' : 'Describe the reason (min 5 chars)'}
+          placeholder={
+            isSick
+              ? isTh
+                ? 'อธิบายเหตุผลการลา (ถ้ามี)'
+                : 'Describe the reason (optional)'
+              : isTh
+                ? 'อธิบายเหตุผลการลา (อย่างน้อย 5 ตัวอักษร)'
+                : 'Describe the reason (min 5 chars)'
+          }
           aria-invalid={!!errors.reason}
           aria-describedby={errors.reason ? 'err-reason' : undefined}
           className={cn(inputClass, 'min-h-[80px] resize-y', errors.reason && 'border-[color:var(--color-warning)]')}
@@ -1200,7 +1366,10 @@ function InlineError({ msg }: { msg: string }) {
 // seeded history. Shows pending → (awaiting HR) → approved | rejected.
 // ────────────────────────────────────────────────────────────
 
-const APPROVAL_STATUS_TONE: Record<ApprovalLeaveStatus, string> = HISTORY_TONE;
+const APPROVAL_STATUS_TONE: Record<ApprovalLeaveStatus, string> = {
+  ...HISTORY_TONE,
+  cancelled: 'bg-canvas-soft text-ink-muted',
+};
 
 function liveStatusLabel(r: LeaveRequest, isTh: boolean): { label: string; tone: string } {
   const tone =
@@ -1208,7 +1377,9 @@ function liveStatusLabel(r: LeaveRequest, isTh: boolean): { label: string; tone:
       ? HISTORY_TONE.approved
       : r.status === 'rejected'
         ? HISTORY_TONE.rejected
-        : HISTORY_TONE.pending;
+        : r.status === 'cancelled'
+          ? 'bg-canvas-soft text-ink-muted'
+          : HISTORY_TONE.pending;
   // Single source of truth — narrates the manager → HR stage on 2-level chains.
   return { label: leaveStageLabel(r.status, r.awaitingNext, isTh), tone };
 }
@@ -1311,6 +1482,10 @@ function HistoryTab({
   const isTh = locale !== 'en';
   const history = useTimeoffStore((s) => s.history);
   const userId = useAuthStore((s) => s.userId) ?? DEMO_EMPLOYEE.id;
+  const userName = useAuthStore((s) => s.username) ?? DEMO_EMPLOYEE.name;
+  // STA-157 — employee cancel of a first-approval pending leave request.
+  const cancelRequest = useLeaveApprovals((s) => s.cancel);
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
 
   // Post-submit highlight: ring the new row, then fade it after ~2.4s. Clearing
   // the parent's flag prevents the ring from re-applying on later re-renders.
@@ -1334,6 +1509,11 @@ function HistoryTab({
       ),
     [allRequests, userId],
   );
+
+  // STA-157 — the request being cancelled, surfaced in the confirm modal so the
+  // employee sees WHICH leave (type + dates) they are cancelling before confirming.
+  const cancelReq = cancelTarget ? liveRequests.find((r) => r.id === cancelTarget) ?? null : null;
+  const cancelReqDef = cancelReq ? getLeaveType(cancelReq.leaveCode ?? '') : null;
 
   if (history.length === 0 && liveRequests.length === 0) {
     return (
@@ -1390,11 +1570,44 @@ function HistoryTab({
                       {isTh ? `จองสิทธิ์ ${r.reservedDays} วัน` : `Reserved ${r.reservedDays}d`}
                     </span>
                   )}
+                  {/* STA-157 — cancel a first-approval pending request only. */}
+                  {r.status === 'pending' && !r.awaitingNext && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCancelTarget(r.id)}
+                    >
+                      {isTh ? 'ยกเลิกคำขอ' : 'Cancel'}
+                    </Button>
+                  )}
                 </div>
               </li>
             );
           })}
         </ul>
+      )}
+
+      {/* STA-157 / STA-175 — cancel confirmation via the shared CancelRequestModal. */}
+      {cancelReq && (
+        <CancelRequestModal
+          open={cancelTarget !== null}
+          onClose={() => setCancelTarget(null)}
+          onConfirm={() => {
+            if (cancelTarget) cancelRequest(cancelTarget, { id: userId, name: userName });
+            setCancelTarget(null);
+          }}
+          locale={isTh ? 'th' : 'en'}
+          fields={{
+            typeLabel: (isTh ? cancelReqDef?.nameTh : cancelReqDef?.nameEn) ?? cancelReq.leaveType,
+            period:
+              cancelReq.endDate !== cancelReq.startDate
+                ? `${formatDate(cancelReq.startDate, 'medium', locale)} – ${formatDate(cancelReq.endDate, 'medium', locale)}`
+                : formatDate(cancelReq.startDate, 'medium', locale),
+            reason: cancelReq.reason || undefined,
+            currentStep: leaveStageLabel(cancelReq.status, cancelReq.awaitingNext, isTh),
+            currentStatus: leaveStageLabel(cancelReq.status, cancelReq.awaitingNext, isTh),
+          }}
+        />
       )}
 
       {/* Legacy seeded history */}
