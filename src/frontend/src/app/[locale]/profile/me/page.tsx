@@ -25,16 +25,8 @@ import {
 } from '@/lib/benefit-routes';
 import { Button } from '@/components/humi';
 import {
-  BENEFIT_STATUS_LABEL,
-  selectBenefitRequestSummaries,
-  useBenefitClaimsStore,
-} from '@/stores/benefit-claims';
-import {
   CLAIM_STATUS_META,
   DEPENDENT_RELATION_LABELS,
-  HUMI_BENEFIT_PLANS,
-  HUMI_CLAIM_ALLOWANCES,
-  HUMI_CLAIM_HISTORY,
   HUMI_MY_PROFILE,
   type HumiEmployee,
 } from '@/lib/humi-mock-data';
@@ -458,7 +450,6 @@ export default function HumiProfileMePage({
   const [sectionDraft, setSectionDraft] = useState<EditFormValues>(initialFormValues);
   const [sectionDate, setSectionDate] = useState<string>('');
   const [sectionAttachmentIds, setSectionAttachmentIds] = useState<string[]>([]);
-  const benefitClaims = useBenefitClaimsStore((state) => state.claims);
   const lastAppliedProfileSearchRef = useRef<string | null>(null);
 
   // Derive panel key from slice activeTab
@@ -620,15 +611,11 @@ export default function HumiProfileMePage({
     activeEditField !== null && ATTACHMENT_REQUIRED_FIELDS.has(activeEditField);
   const saveDisabled = !modalDate || (attachmentRequired && pendingAttachmentIds.length === 0);
 
-  const employeeBenefitClaims = benefitClaims.filter((claim) => claim.employeeId === 'EMP001');
-  const benefitRequestRows = selectBenefitRequestSummaries(employeeBenefitClaims);
-  const sendBackClaims = employeeBenefitClaims.filter((claim) => claim.status === 'send_back');
 
   const tabs: Array<[ProfileTab, string]> = [
     ['personal', t('tabPersonal')],
     ['employment', t('tabJob')],
     ['compensation', t('tabEmergency')],
-    ['benefits', t('tabBenefits')],
     ['documents', t('tabDocs')],
     ['activity', t('tabTax')],
   ];
@@ -1185,30 +1172,32 @@ export default function HumiProfileMePage({
       </div>
 
       {/* Pending-tasks callout — N change requests still awaiting the employee */}
-      <div
-        className={cn(
-          'mb-5 flex items-center gap-3 rounded-[var(--radius-md)] border border-hairline px-4 py-3',
-          pendingTaskCount > 0 ? 'bg-warning-soft' : 'bg-canvas-soft',
-        )}
-        data-testid="profile-tasks-callout"
-      >
-        <span
-          aria-hidden
+      {pendingTaskCount > 0 && (
+        <div
           className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-            pendingTaskCount > 0
-              ? 'bg-[color:var(--color-warning)] text-white'
-              : 'bg-hairline text-ink-muted',
+            'mb-5 flex items-center gap-3 rounded-[var(--radius-md)] border border-hairline px-4 py-3',
+            pendingTaskCount > 0 ? 'bg-warning-soft' : 'bg-canvas-soft',
           )}
+          data-testid="profile-tasks-callout"
         >
-          {pendingTaskCount > 0 ? <FileText size={15} /> : <Check size={15} />}
-        </span>
-        <p className="text-body text-ink">
-          {pendingTaskCount > 0
-            ? t('tasksPending', { count: pendingTaskCount })
-            : t('tasksNone')}
-        </p>
-      </div>
+          <span
+            aria-hidden
+            className={cn(
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+              pendingTaskCount > 0
+                ? 'bg-[color:var(--color-warning)] text-white'
+                : 'bg-hairline text-ink-muted',
+            )}
+          >
+            {pendingTaskCount > 0 ? <FileText size={15} /> : <Check size={15} />}
+          </span>
+          <p className="text-body text-ink">
+            {pendingTaskCount > 0
+              ? t('tasksPending', { count: pendingTaskCount })
+              : t('tasksNone')}
+          </p>
+        </div>
+      )}
 
       {/* Tabs — controlled by Zustand slice */}
       <div className="mb-5 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -1759,321 +1748,6 @@ export default function HumiProfileMePage({
         </>
       )}
 
-      {/* ── Benefits tab — canonical benefits surface inside profile ─────── */}
-      {panelKey === 'benefits' && (
-        <div className="grid gap-4">
-          <div className="humi-card">
-            <div
-              className="humi-row"
-              style={{ justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}
-            >
-              <div>
-                <div className="humi-eyebrow">{t('tabBenefits')}</div>
-                <h3 className="mt-2 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
-                  {t('benefitsTitle')}
-                </h3>
-                <p style={{ color: 'var(--color-ink-muted)', fontSize: 13, marginTop: 6 }}>
-                  {t('benefitsHelp')}
-                </p>
-              </div>
-              <Link
-                href={benefitsHubRoute(locale)}
-                className="humi-tag"
-                style={{
-                  padding: '6px 12px',
-                  color: 'var(--color-accent)',
-                  textDecoration: 'underline',
-                  fontSize: 13,
-                }}
-              >
-                {t('benefitsHubLink')}
-              </Link>
-            </div>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="humi-card lg:col-span-2">
-              <div
-                className="humi-row"
-                style={{
-                  justifyContent: 'space-between',
-                  gap: 16,
-                  alignItems: 'flex-start',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <div>
-                  <div className="humi-eyebrow">Entitlement summary</div>
-                  <h4 className="mt-2 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
-                    ภาพรวมสิทธิ์สวัสดิการ
-                  </h4>
-                  <p className="mt-1 text-small text-ink-muted">
-                    โปรไฟล์แสดงเฉพาะสิทธิ์ วงเงิน ผู้รับสิทธิ์ร่วม และสถานะล่าสุด
-                    เริ่มบริการจากงานสวัสดิการเท่านั้น
-                  </p>
-                </div>
-                <Link
-                  href={benefitsHubRoute(locale)}
-                  className="humi-tag"
-                  style={{
-                    padding: '6px 12px',
-                    color: 'var(--color-accent)',
-                    textDecoration: 'underline',
-                    fontSize: 13,
-                  }}
-                >
-                  ไปที่งานสวัสดิการ
-                </Link>
-              </div>
-              {sendBackClaims.length > 0 && (
-                <div className="mt-4 rounded-md bg-canvas-soft p-3">
-                  <div className="text-small font-semibold text-ink">
-                    รายการที่ SPD ส่งกลับให้แก้ไข
-                  </div>
-                  {sendBackClaims.map((claim) => (
-                    <div key={claim.id} className="mt-2 text-small text-ink-muted">
-                      {claim.workflowRequestId} · {claim.benefitName} · {claim.correctionReason}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="humi-card">
-              <h4 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
-                {t('benefitsPlansTitle')}
-              </h4>
-              <div className="grid gap-3 md:grid-cols-3" style={{ marginTop: 16 }}>
-                {HUMI_BENEFIT_PLANS.map((plan) => (
-                  <div
-                    key={plan.id}
-                    className="humi-card humi-card--tight"
-                    style={{ background: 'var(--color-canvas-soft)' }}
-                  >
-                    <div className="humi-col" style={{ gap: 8 }}>
-                      <div>
-                        <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
-                          {plan.title}
-                        </div>
-                        <div
-                          style={{ fontSize: 12, color: 'var(--color-ink-muted)', marginTop: 2 }}
-                        >
-                          {plan.plan}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          height: 8,
-                          borderRadius: 999,
-                          background: 'var(--color-hairline-soft)',
-                          overflow: 'hidden',
-                        }}
-                        aria-hidden
-                      >
-                        <div
-                          className={plan.barClass}
-                          style={{ width: `${plan.percent}%`, height: '100%', borderRadius: 999 }}
-                        />
-                      </div>
-                      <div className="humi-row" style={{ justifyContent: 'space-between', gap: 8 }}>
-                        <span style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-                          {plan.items[0]}
-                        </span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-ink)' }}>
-                          {plan.cost}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="humi-card">
-              <h4 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
-                {t('benefitsAllowancesTitle')}
-              </h4>
-              <div className="humi-col" style={{ gap: 12, marginTop: 16 }}>
-                {HUMI_CLAIM_ALLOWANCES.map((allowance) => {
-                  const percent = Math.min(
-                    100,
-                    Math.round((allowance.used / allowance.limit) * 100),
-                  );
-                  return (
-                    <div key={allowance.id}>
-                      <div
-                        className="humi-row"
-                        style={{ justifyContent: 'space-between', gap: 10 }}
-                      >
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-ink)' }}>
-                            {allowance.label}
-                          </div>
-                          <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-                            {allowance.sub}
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            color: 'var(--color-ink-soft)',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          ฿{allowance.used.toLocaleString('th-TH')} / ฿
-                          {allowance.limit.toLocaleString('th-TH')}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          height: 6,
-                          borderRadius: 999,
-                          background: 'var(--color-hairline-soft)',
-                          overflow: 'hidden',
-                          marginTop: 8,
-                        }}
-                        aria-hidden
-                      >
-                        <div
-                          className="bg-accent"
-                          style={{ width: `${percent}%`, height: '100%', borderRadius: 999 }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-            <div className="humi-card">
-              <h4 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
-                {t('benefitsDependentsTitle')}
-              </h4>
-              <div className="humi-col" style={{ gap: 10, marginTop: 16 }}>
-                {(saved.dependents ?? []).map((dep) => (
-                  <div key={dep.id} className="humi-row-item">
-                    {dep.tone && dep.initials ? (
-                      <span className={AVATAR_TONE_MAP[dep.tone]} aria-hidden>
-                        {dep.initials}
-                      </span>
-                    ) : null}
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
-                        {dep.fullNameTh}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-                        {DEPENDENT_RELATION_LABELS[dep.relation]} ·{' '}
-                        {dep.hasInsurance ? t('benefitsCovered') : t('benefitsNotCovered')}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="humi-card">
-              <h4 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
-                {t('benefitsClaimsTitle')}
-              </h4>
-              <ul className="humi-list mt-2.5" role="list">
-                {benefitRequestRows.slice(0, 4).map((row) => (
-                  <li key={row.id} className="humi-row-item">
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
-                        {row.type}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-                        {row.sub} · ส่ง {row.submitted}
-                      </div>
-                    </div>
-                    <div
-                      className="humi-col"
-                      style={{ gap: 6, alignItems: 'flex-end', marginLeft: 'auto' }}
-                    >
-                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
-                        ฿{row.claim.totalClaimAmount.toLocaleString('th-TH')}
-                      </span>
-                      <span className="humi-tag">{BENEFIT_STATUS_LABEL[row.claim.status]}</span>
-                    </div>
-                  </li>
-                ))}
-                {HUMI_CLAIM_HISTORY.slice(0, Math.max(0, 4 - benefitRequestRows.length)).map(
-                  (claim) => {
-                    const status = CLAIM_STATUS_META[claim.status];
-                    return (
-                      <li key={claim.id} className="humi-row-item">
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
-                            {claim.type}
-                          </div>
-                          <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
-                            {claim.date} · {claim.desc}
-                          </div>
-                        </div>
-                        <div
-                          className="humi-col"
-                          style={{ gap: 6, alignItems: 'flex-end', marginLeft: 'auto' }}
-                        >
-                          <span
-                            style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}
-                          >
-                            {claim.amount}
-                          </span>
-                          <span className={cn('humi-tag', status.toneClass)}>{status.label}</span>
-                        </div>
-                      </li>
-                    );
-                  },
-                )}
-              </ul>
-            </div>
-
-            {/* STA-90: Special Privilege flag (BE-03) — additive, demo seam EMP-0005 */}
-            {specialPrivileges.length > 0 && (
-              <div className="humi-card lg:col-span-2">
-                <div
-                  className="humi-row"
-                  style={{ justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
-                >
-                  <h4 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
-                    {tSpecialPrivilege('panelHeading')}
-                  </h4>
-                  <span className="humi-tag humi-tag--accent">
-                    {tSpecialPrivilege('flag')}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
-                  {specialPrivileges.map((rec) => {
-                    const plan = getPlan(rec.planId);
-                    const planName = plan
-                      ? (locale === 'th' ? plan.nameTh : plan.nameEn)
-                      : rec.planId;
-                    return (
-                      <div
-                        key={rec.id}
-                        className="rounded-md bg-canvas-soft p-3"
-                      >
-                        <div className="humi-row" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-                          <span className="text-body font-medium text-ink">{planName}</span>
-                          <span className="text-body font-semibold text-ink">
-                            {formatCurrency(rec.benefitEntitlementAmount)}
-                          </span>
-                        </div>
-                        <div className="text-small text-ink-muted" style={{ marginTop: 2 }}>
-                          {formatDate(rec.effectiveStartDate, 'medium', locale)}
-                          {' — '}
-                          {formatDate(rec.effectiveEndDate, 'medium', locale)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ── Docs tab ─────────────────────────────────────────────────────── */}
       {panelKey === 'docs' && (

@@ -124,6 +124,19 @@ export interface MockEmployee {
   country_of_birth?: string
   /** PerPersonal.nativePreferredLang — customString5 code in SF QAS */
   native_preferred_lang?: string
+
+  /** Personal email (non-work). Seeded deterministically. */
+  personal_email?: string
+  /** Personal mobile phone (Thai format). Seeded deterministically. */
+  personal_phone?: string
+  /** Address line 1 (house no + village/soi). */
+  address_line1?: string
+  /** Address district (เขต/อำเภอ). */
+  address_district?: string
+  /** Address province (จังหวัด). */
+  address_province?: string
+  /** Address postal code (5 digits). */
+  address_postal_code?: string
 }
 
 // ──────────────────────────────────────────────
@@ -178,6 +191,15 @@ const HR_DISTRICTS = [
   'D-CNX-N',   // Chiang Mai / North
   'D-UPC-N',   // Upcountry North
   'D-EAS-E',   // Eastern Seaboard
+] as const
+
+const BANGKOK_DISTRICTS = [
+  'คลองเตย', 'วัฒนา', 'ห้วยขวาง', 'พญาไท', 'บางรัก',
+  'ปทุมวัน', 'ราชเทวี', 'ดินแดง', 'สาทร', 'ลาดพร้าว',
+] as const
+
+const BANGKOK_PROVINCES = [
+  'กรุงเทพมหานคร', 'นนทบุรี', 'สมุทรปราการ', 'ปทุมธานี', 'นครปฐม',
 ] as const
 
 const JOB_GRADES = ['JG-02', 'JG-04', 'JG-06', 'JG-08', 'JG-10']
@@ -456,6 +478,12 @@ function generateEmployees(count: number): MockEmployee[] {
       special_benefit_group,
       job_grade_history,
       bu_history,
+      personal_email: `${first_name_en.toLowerCase()}.${last_name_en.toLowerCase()}@example.com`,
+      personal_phone: `08${String(rndInt(rnd, 10000000, 99999999))}`,
+      address_line1: `${rndInt(rnd, 1, 999)}/${rndInt(rnd, 1, 99)} ${pick(rnd, ['หมู่บ้าน', 'ซอย', 'ถนน'])} ${pick(rnd, GIVEN_TH)}`,
+      address_district: pick(rnd, BANGKOK_DISTRICTS as unknown as string[]),
+      address_province: pick(rnd, BANGKOK_PROVINCES as unknown as string[]),
+      address_postal_code: String(rndInt(rnd, 10100, 10900)),
     })
   }
 
