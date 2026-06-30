@@ -53,6 +53,14 @@ export interface DataTableProps<Row> {
   emptyState?: React.ReactNode;
   /** Fire when a row is clicked. Renders row as interactive (keyboard + cursor). */
   onRowClick?: (row: Row, index: number) => void;
+  /**
+   * Mockup "less is more": cap visible rows and show a "Showing N of M · View all"
+   * footer when there are more. Default 8. Tables with rows.length <= previewRows
+   * render normally with no footer.
+   */
+  previewRows?: number;
+  /** Opt out of the preview cap and render every row. */
+  showAllRows?: boolean;
 }
 
 const alignClass: Record<NonNullable<DataTableColumn<unknown>['align']>, string> = {
@@ -70,6 +78,8 @@ export function DataTable<Row>({
   captionVisuallyHidden = true,
   emptyState,
   onRowClick,
+  previewRows = 8,
+  showAllRows = false,
 }: DataTableProps<Row>) {
   const [sortState, setSortState] = useState<
     { columnId: string; direction: SortDirection } | null
@@ -91,6 +101,10 @@ export function DataTable<Row>({
       return 0;
     });
   }, [rows, sortState, columns]);
+
+  const cap = showAllRows ? sortedRows.length : Math.max(0, previewRows);
+  const visibleRows = sortedRows.slice(0, cap);
+  const hiddenCount = sortedRows.length - visibleRows.length;
 
   const toggleSort = (columnId: string) => {
     setSortState((prev) => {
@@ -182,7 +196,7 @@ export function DataTable<Row>({
           </tr>
         </thead>
         <tbody>
-          {sortedRows.map((row, idx) => {
+          {visibleRows.map((row, idx) => {
             const key = rowKey ? rowKey(row, idx) : String(idx);
             const interactive = Boolean(onRowClick);
             return (
@@ -229,6 +243,24 @@ export function DataTable<Row>({
             );
           })}
         </tbody>
+        {hiddenCount > 0 && (
+          <tfoot>
+            <tr>
+              <td
+                colSpan={columns.length}
+                className={cn(cellPad, 'border-t border-hairline bg-canvas-soft/60 text-small text-ink-muted')}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <span>
+                    Showing {visibleRows.length} of {sortedRows.length}
+                  </span>
+                  <span aria-hidden className="text-ink-faint">·</span>
+                  <span className="font-medium text-accent">View all</span>
+                </span>
+              </td>
+            </tr>
+          </tfoot>
+        )}
       </table>
     </div>
   );

@@ -16,7 +16,7 @@ const POLICY_ROWS: PolicyRow[] = [
   { id: 'sick',        labelTh: 'ลาป่วย / ปี',                       labelEn: 'Sick leave / year',                 value: '30' },
   { id: 'medcert',     labelTh: 'ต้องมีใบรับรองแพทย์เมื่อลา ≥',        labelEn: 'Medical certificate required from',  value: '3' },
   { id: 'annual',      labelTh: 'ลาพักร้อน / ปี',                     labelEn: 'Annual leave / year',               value: '10' },
-  { id: 'carryover',   labelTh: 'สะสมวันลาพักร้อนข้ามปี',              labelEn: 'Annual leave carry-over',           value: 'ได้สูงสุด 5 วัน / Up to 5 days' },
+  { id: 'carryover',   labelTh: 'สะสมวันลาพักร้อนข้ามปี',              labelEn: 'Annual leave carry-over',           value: 'ไม่ยกยอด / None' },
   { id: 'clockin',     labelTh: 'เวลาเข้างานมาตรฐาน',                 labelEn: 'Standard clock-in time',            value: '09:00' },
   { id: 'late',        labelTh: 'ถือว่าสายเมื่อเกิน',                  labelEn: 'Marked late after',                 value: '09:15' },
 ];

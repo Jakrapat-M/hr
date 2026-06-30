@@ -12,10 +12,13 @@
 import { useState, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { FileText, ClipboardCheck, Clock, CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/humi';
+import { Button, Modal } from '@/components/humi';
 import { useToast } from '@/components/ui/toast';
 import {
   DOCUMENT_TEMPLATES,
+  GENERATABLE_LETTERS,
+  LETTER_COMPANY_TH,
+  LETTER_COMPANY_EN,
   MOCK_DOC_REQUESTS,
   type DocRequest,
 } from '@/data/documents/templates';
@@ -39,6 +42,40 @@ function formatDate(iso: string, locale: string): string {
   });
 }
 
+// Merge the request's employee data into the matching letter template body so the
+// reviewer previews the actual document that will be issued. Returns null when the
+// request type has no generatable letter (issued from a standard form instead).
+function mergeBody(req: DocRequest, locale: string): string | null {
+  const letter = GENERATABLE_LETTERS.find((l) => l.id === req.templateId);
+  if (!letter) return null;
+  const isTh = locale === 'th';
+  const vals: Record<string, string> = {
+    fullName: req.employeeName,
+    firstName: req.employeeName.split(' ')[0] ?? req.employeeName,
+    lastName: req.employeeName.split(' ').slice(1).join(' '),
+    employeeCode: req.employeeId,
+    department: req.employeeDept,
+    position: isTh ? 'พนักงาน' : 'Staff',
+    startDate: isTh ? '1 ตุลาคม 2566' : '1 Oct 2023',
+    salary: isTh ? '45,000 บาท/เดือน' : 'THB 45,000/month',
+    today: formatDate(req.submittedAt, locale),
+    company: isTh ? LETTER_COMPANY_TH : LETTER_COMPANY_EN,
+  };
+  return (isTh ? letter.bodyTh : letter.bodyEn).replace(
+    /\{\{(\w+)\}\}/g,
+    (_, k: string) => vals[k] ?? '—',
+  );
+}
+
+function DetailField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wide text-ink-muted">{label}</p>
+      <p className="mt-0.5 text-sm font-medium text-ink">{value}</p>
+    </div>
+  );
+}
+
 export default function HrbpDocReviewPage() {
   const locale = useLocale();
   const t = useTranslations('doc_review');
@@ -46,6 +83,8 @@ export default function HrbpDocReviewPage() {
 
   // Mock-only review state: ids the reviewer has marked reviewed this session.
   const [reviewed, setReviewed] = useState<Set<string>>(new Set());
+  // Request whose review-detail panel is open (click a row to inspect).
+  const [detail, setDetail] = useState<DocRequest | null>(null);
 
   const queue = useMemo<DocRequest[]>(
     () =>
@@ -124,7 +163,8 @@ export default function HrbpDocReviewPage() {
                   <tr
                     key={req.id}
                     data-testid={`doc-review-row-${req.id}`}
-                    className="border-t border-ink-faint"
+                    onClick={() => setDetail(req)}
+                    className="cursor-pointer border-t border-ink-faint transition-colors hover:bg-canvas-soft"
                   >
                     <td className="px-3.5 py-3 font-mono text-xs text-ink-muted">{req.id}</td>
                     <td className="px-3.5 py-3">
@@ -164,7 +204,7 @@ export default function HrbpDocReviewPage() {
                           variant="secondary"
                           size="sm"
                           leadingIcon={<FileText size={14} />}
-                          onClick={() => handleMarkReviewed(req)}
+                          onClick={(e) => { e.stopPropagation(); handleMarkReviewed(req); }}
                           data-testid={`doc-review-action-${req.id}`}
                         >
                           {t('markReviewed')}
@@ -178,6 +218,64 @@ export default function HrbpDocReviewPage() {
           </table>
         </div>
       )}
+
+      {/* Review-detail panel — the document HR verifies before issuing. */}
+      {detail && (() => {
+        const isTh = locale === 'th';
+        const body = mergeBody(detail, locale);
+        const isReviewed = reviewed.has(detail.id);
+        return (
+          <Modal
+            open
+            onClose={() => setDetail(null)}
+            widthClass="max-w-3xl"
+            title={isTh ? `ตรวจเอกสาร · ${detail.id}` : `Review · ${detail.id}`}
+          >
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+                <DetailField label={isTh ? 'พนักงาน' : 'Employee'} value={detail.employeeName} />
+                <DetailField label={isTh ? 'แผนก' : 'Department'} value={detail.employeeDept} />
+                <DetailField label={isTh ? 'รหัสพนักงาน' : 'Employee ID'} value={detail.employeeId} />
+                <DetailField label={isTh ? 'ประเภทเอกสาร' : 'Document type'} value={templateName(detail.templateId, locale)} />
+                <DetailField label={isTh ? 'วัตถุประสงค์' : 'Purpose'} value={detail.purpose} />
+                <DetailField label={isTh ? 'วันที่ยื่น' : 'Submitted'} value={formatDate(detail.submittedAt, locale)} />
+              </div>
+
+              <div>
+                <p className="mb-2 text-small font-semibold uppercase tracking-wide text-ink-muted">
+                  {isTh ? 'เอกสารที่จะออก' : 'Document to be issued'}
+                </p>
+                <div className="max-h-[42vh] overflow-auto rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-6">
+                  {body ? (
+                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-ink">{body}</pre>
+                  ) : (
+                    <p className="text-sm text-ink-muted">
+                      {isTh
+                        ? 'เอกสารนี้ออกตามแบบฟอร์มมาตรฐาน — ตรวจสอบข้อมูลพนักงานและวัตถุประสงค์ก่อนอนุมัติ'
+                        : 'Issued from a standard form — verify the employee details and purpose before approving.'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3 border-t border-hairline pt-4">
+              <Button variant="secondary" onClick={() => setDetail(null)}>
+                {isTh ? 'ตีกลับ' : 'Send back'}
+              </Button>
+              {!isReviewed && (
+                <Button
+                  variant="primary"
+                  leadingIcon={<FileText size={16} />}
+                  onClick={() => { handleMarkReviewed(detail); setDetail(null); }}
+                >
+                  {isTh ? 'ตรวจแล้ว · ออกเอกสาร' : 'Mark reviewed · issue'}
+                </Button>
+              )}
+            </div>
+          </Modal>
+        );
+      })()}
     </div>
   );
 }

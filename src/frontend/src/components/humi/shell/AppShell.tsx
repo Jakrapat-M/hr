@@ -163,18 +163,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const drawerRef = useRef<HTMLDivElement | null>(null);
   const triggerSnapshotRef = useRef<HTMLElement | null>(null);
 
-  const isLoginPage = pathname === '/th/login' || pathname === '/en/login';
+  const isPublicPage = pathname === '/th/login' || pathname === '/en/login' || pathname === '/th/leave/balance' || pathname === '/en/leave/balance';
   const locale = pathname.startsWith('/en') ? 'en' : 'th';
 
-  // Global auth gate — every route except /login requires a session.
+  // Global auth gate — every route except /login and explicit public pages requires a session.
   // Role check for /admin/* lives in app/[locale]/admin/layout.tsx.
   useEffect(() => {
     // wait for Zustand persist rehydration before redirecting
     if (!hasHydrated) return;
-    if (!isLoginPage && !isAuthenticated) {
+    if (!isPublicPage && !isAuthenticated) {
       router.replace(`/${locale}/login`);
     }
-  }, [hasHydrated, isLoginPage, isAuthenticated, locale, router]);
+  }, [hasHydrated, isPublicPage, isAuthenticated, locale, router]);
 
   // Demo seeding — idempotent. Populates SPD inbox with 2 pending + 1
   // approved request on first mount so personas land on populated data.
@@ -254,7 +254,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   // ── Conditional returns (safe — all hooks above ran unconditionally) ──
-  if (isLoginPage) {
+  if (isPublicPage) {
     return <>{children}</>;
   }
 

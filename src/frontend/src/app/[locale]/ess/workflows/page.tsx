@@ -501,9 +501,16 @@ export default function MyWorkflowsPage() {
         />
       ) : (
         <ul style={{ display: 'flex', flexDirection: 'column', gap: 12 }} aria-label={locale === 'th' ? 'รายการคำขอของฉัน' : 'My requests'}>
-          {displayRequests.map((req) => (
+          {displayRequests.slice(0, 8).map((req) => (
             <RequestRow key={req.id} req={req} locale={locale} />
           ))}
+          {displayRequests.length > 8 && (
+            <li style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 4px', fontSize: 12, color: 'var(--color-ink-muted)' }}>
+              <span>Showing 8 of {displayRequests.length}</span>
+              <span aria-hidden style={{ color: 'var(--color-ink-faint)' }}>·</span>
+              <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>View all</span>
+            </li>
+          )}
         </ul>
       )}
     </div>

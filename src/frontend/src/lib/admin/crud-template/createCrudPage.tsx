@@ -56,6 +56,11 @@ export function createCrudPage<TItem extends { id: string }>(
       [items, query],
     )
 
+    // Mockup "less is more": show a preview of rows; the count footer keeps the true total.
+    const PREVIEW_CAP = 8
+    const visible = filtered.slice(0, PREVIEW_CAP)
+    const hiddenCount = filtered.length - visible.length
+
     const openCreate = useCallback(() => {
       setEditing(config.createEmpty())
       setMode('create')
@@ -140,7 +145,7 @@ export function createCrudPage<TItem extends { id: string }>(
               )}
             </div>
           ) : (
-            filtered.map((item) => (
+            visible.map((item) => (
               <div
                 key={item.id}
                 role="row"
@@ -178,6 +183,16 @@ export function createCrudPage<TItem extends { id: string }>(
                 </div>
               </div>
             ))
+          )}
+          {hiddenCount > 0 && (
+            <div
+              role="row"
+              style={{ display: 'flex', alignItems: 'center', height: 44, padding: '0 12px', gap: 8, background: 'var(--color-canvas)', borderTop: '1px solid var(--color-hairline)', fontSize: 12, color: 'var(--color-ink-muted)' }}
+            >
+              <span>Showing {visible.length} of {filtered.length.toLocaleString('en-US')}</span>
+              <span aria-hidden style={{ color: 'var(--color-ink-faint)' }}>·</span>
+              <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>View all</span>
+            </div>
           )}
         </div>
 

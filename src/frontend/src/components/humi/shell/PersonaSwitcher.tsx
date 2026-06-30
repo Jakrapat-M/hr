@@ -12,7 +12,9 @@
 //   - Modal header copy = "Take Action on Behalf of" / "สวมบทบาทแทน".
 //   - Search input filters by name, email, and role label (case-insensitive).
 //   - Each row shows a secondary line of {jobTitle} · {department}.
-//   - Tier chips (A/B/C/D) retained.
+//   - Tier letter chips (A/B/C/D) removed (di-proxy-no-tiers-2026-06-29):
+//     they forced viewers to memorize an A–D code; each row already names the
+//     role plainly (badge.label), so the letters were redundant noise.
 //   - Switching still calls auth-store.switchPersona + routes to the persona's
 //     landing. Exit (when proxying) calls exitPersona + routes to /home.
 
@@ -27,7 +29,6 @@ import {
   PERSONA_BADGE,
   landingForDemoUser,
 } from '@/lib/demo-users';
-import { personaTiers } from '@/lib/persona-tiers';
 import { Modal } from '@/components/humi/Modal';
 import { cn } from '@/lib/utils';
 
@@ -89,7 +90,7 @@ export function PersonaSwitcher() {
       onClose={close}
       title={isTh ? 'สวมบทบาทแทน' : 'Take Action on Behalf of'}
     >
-      <div className="humi-eyebrow mb-3">{isTh ? 'สิทธิ์ตามบทบาท · 4 ระดับ' : 'Role access · 4 tiers'}</div>
+      <div className="humi-eyebrow mb-3">{isTh ? 'เลือกบทบาทที่จะสวม' : 'Choose a role to act as'}</div>
 
       <label className="mb-3 block">
         <span className="sr-only">
@@ -115,7 +116,6 @@ export function PersonaSwitcher() {
           const user = DEMO_USERS[email];
           const badge = PERSONA_BADGE[email];
           const isActive = email === currentEmail;
-          const tiers = personaTiers(user.roles);
           const initials = user.name.trim().slice(0, 2);
           const secondary =
             user.jobTitle && user.department
@@ -148,16 +148,6 @@ export function PersonaSwitcher() {
                   {badge?.label} · {user.id}
                 </span>
                 <span className="block truncate text-sm text-ink-muted">{secondary}</span>
-              </span>
-              <span className="flex flex-shrink-0 items-center gap-1" aria-hidden>
-                {tiers.map((t) => (
-                  <span
-                    key={t}
-                    className="flex h-6 w-6 items-center justify-center rounded-full bg-canvas-soft text-xs font-semibold text-ink-muted"
-                  >
-                    {t}
-                  </span>
-                ))}
               </span>
               {isActive && (
                 <span className="flex-shrink-0 text-small font-medium text-accent">

@@ -18,6 +18,7 @@ import { useHireAudit } from '@/stores/hire-audit'
 import { useAuthStore } from '@/stores/auth-store'
 import { useRecruitment } from '@/hooks/use-recruitment'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
+import type { MockEmployee } from '@/mocks/employees'
 import { nextEmployeeCode } from '@/lib/admin/utils/employeeCode'
 import ClusterWho from './clusters/ClusterWho'
 import ClusterJob from './clusters/ClusterJob'
@@ -57,6 +58,7 @@ export default function HirePage() {
   const [draftSaved, setDraftSaved] = useState(false)
   const { candidates, loading: recruitmentLoading } = useRecruitment()
   const allEmployees = useEmployees((s) => s.all)
+  const importEmployees = useEmployees((s) => s.importEmployees)
 
   const appendHireAudit = useHireAudit((s) => s.append)
   const hrAdminId = useAuthStore((s) => s.userId) ?? 'ADM001'
@@ -235,6 +237,34 @@ export default function HirePage() {
       hrAdminName,
       hrAdminId,
     })
+
+    // Mockup persistence: insert the new hire into the in-memory employee store
+    // so the "ดูรายละเอียดพนักงาน" link resolves (useEmployees.getById) instead of
+    // landing on "ไม่พบพนักงาน". Ephemeral by design (store is not persisted).
+    const job = formData.job
+    importEmployees([
+      {
+        employee_id: employeeId,
+        first_name_th: firstNameTh,
+        last_name_th: lastNameTh,
+        first_name_en: formData.identity?.firstNameEn?.trim() || '',
+        last_name_en: formData.identity?.lastNameEn?.trim() || '',
+        employee_class: state.employeeClassToggle === 'PARTIME' ? 'PARTIME' : 'PERMANENT',
+        date_of_birth: formData.identity?.dateOfBirth ?? '',
+        hire_date: hireDate,
+        original_start_date: hireDate,
+        seniority_start_date: hireDate,
+        company: (company as MockEmployee['company']) ?? 'CEN',
+        position_title: job?.jobLabel?.trim() || position,
+        corporate_title: job?.corporateTitle ?? '',
+        org_unit: job?.department ?? '',
+        probation_status: 'in_probation',
+        status: 'active',
+        store_branch_code: job?.storeBranchCode ?? null,
+        hr_district: job?.hrDistrict ?? null,
+        job_grade: job?.jobGrade ?? '',
+      },
+    ])
 
     // DEF-01: show confirmation instead of silently resetting
     setSubmittedEmployeeId(employeeId)

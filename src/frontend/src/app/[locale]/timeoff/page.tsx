@@ -19,7 +19,6 @@ import { formatDate } from '@/lib/date';
 import { countLeaveDays } from '@/lib/leave-math';
 import { DOCUMENT_UPLOAD_HELPER_TH, DOCUMENT_UPLOAD_HELPER_EN } from '@/lib/document-boundary';
 import {
-  HUMI_LEAVE_COVERAGE,
   HUMI_TH_HOLIDAYS,
   HUMI_MY_PROFILE,
   type LeaveKind,
@@ -382,40 +381,6 @@ export default function HumiTimeoffPage() {
 
         {/* Right column */}
         <aside className="flex flex-col gap-6">
-          {/* Team coverage */}
-          <Card variant="raised" size="lg">
-            <CardEyebrow>{isTh ? 'ใครลาเดือนนี้' : 'Who is off this month'}</CardEyebrow>
-            <CardTitle className="mt-1">{isTh ? 'การครอบคลุมของทีม' : 'Team coverage'}</CardTitle>
-
-            <ul role="list" className="mt-4 flex flex-col gap-3">
-              {HUMI_LEAVE_COVERAGE.map((c) => (
-                <li key={c.id} className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3">
-                    <Avatar name={c.name} tone={c.tone} size="sm" />
-                    <p className="flex-1 truncate text-small text-ink">
-                      {c.name}
-                    </p>
-                    <p className="shrink-0 text-small text-ink-muted">
-                      {c.dateLabel}
-                    </p>
-                  </div>
-                  <div
-                    aria-hidden
-                    className="relative h-1.5 overflow-hidden rounded-full bg-hairline-soft"
-                  >
-                    <div
-                      className="absolute h-full rounded-full bg-accent"
-                      style={{
-                        left: `${c.offsetPct}%`,
-                        width: '12%',
-                      }}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </Card>
-
           {/* Policy callout */}
           <Card
             variant="raised"
@@ -434,12 +399,12 @@ export default function HumiTimeoffPage() {
                 'text-canvas'
               )}
             >
-              {isTh ? 'การยกยอดวันลา' : 'Leave carryover'}
+              {isTh ? 'นโยบายวันลา' : 'Leave policy'}
             </h3>
             <p className="relative mt-2 text-small text-canvas/70 leading-relaxed">
               {isTh
-                ? 'วันลาพักร้อนที่ไม่ได้ใช้ สูงสุด 5 วัน สามารถยกยอดไปปีถัดไปได้ ส่วนที่เกินจะจ่ายเป็นเงินในเช็คเงินเดือนวันที่ 15 ธันวาคม'
-                : 'Up to 5 unused annual-leave days can be carried over to next year. The remainder is paid out in the December 15 payslip.'}
+                ? 'วันลาพักร้อนที่ไม่ได้ใช้จะไม่ยกยอดไปปีถัดไป — สิทธิ์รีเซ็ตเป็นโควตาใหม่ทุกต้นปี กรุณาใช้ให้ครบภายในปีปฏิทิน'
+                : 'Unused annual leave does not carry over to the next year — entitlement resets to a fresh quota each year, so use it within the calendar year.'}
             </p>
             <div className="relative mt-4">
               <Button variant="primary" onClick={() => setPolicyOpen(true)}>
@@ -454,35 +419,33 @@ export default function HumiTimeoffPage() {
       <Modal
         open={policyOpen}
         onClose={() => setPolicyOpen(false)}
-        title={isTh ? 'นโยบายการยกยอดวันลา · ฉบับเต็ม' : 'Leave carryover policy · Full text'}
+        title={isTh ? 'นโยบายวันลา · ฉบับเต็ม' : 'Leave policy · Full text'}
       >
         <div className="space-y-4 text-body text-ink-soft leading-relaxed">
           {isTh ? (
             <p>
-              วันลาพักร้อนที่ไม่ได้ใช้ภายในปีปฏิทิน สามารถยกยอดไปใช้ในปีถัดไปได้
-              สูงสุด <strong className="text-ink">5 วัน</strong> โดยจะต้องใช้ให้หมดภายในไตรมาสแรกของปีถัดไป
+              วันลาพักร้อนที่ไม่ได้ใช้ภายในปีปฏิทิน <strong className="text-ink">จะไม่ยกยอดไปปีถัดไป</strong>
+              {' '}สิทธิ์จะถูกรีเซ็ตเป็นโควตาใหม่เมื่อขึ้นปีใหม่ จึงควรวางแผนใช้สิทธิ์ให้ครบภายในปี
             </p>
           ) : (
             <p>
-              Unused annual leave within the calendar year can be carried over to the
-              next year, up to <strong className="text-ink">5 days</strong>, and must be
-              used within the first quarter of the following year.
+              Unused annual leave within the calendar year{' '}
+              <strong className="text-ink">does not carry over</strong> to the next year.
+              Entitlement resets to a fresh quota at the start of each year, so plan to use it within the year.
             </p>
           )}
           <ul className="list-disc space-y-2 pl-5">
             {isTh ? (
               <>
-                <li>วันลาส่วนที่เกิน 5 วันจะถูกจ่ายเป็นเงินในเช็คเงินเดือนวันที่ 15 ธันวาคม</li>
-                <li>ลาป่วยและลากิจไม่สามารถยกยอดได้ และจะถูกรีเซ็ตต้นปี</li>
-                <li>การยกยอดจะคำนวณอัตโนมัติเมื่อปิดรอบปลายปี ไม่ต้องยื่นคำขอ</li>
-                <li>กรณีลาออกระหว่างปี วันลาคงเหลือจะถูกจ่ายตามสัดส่วนในงวดสุดท้าย</li>
+                <li>วันลาทุกประเภทรีเซ็ตเป็นโควตาใหม่ทุกต้นปี (ไม่ยกยอด)</li>
+                <li>ควรวางแผนใช้สิทธิ์ให้ครบก่อนสิ้นปีปฏิทิน</li>
+                <li>ดูยอดคงเหลือของแต่ละประเภทได้จากการ์ดด้านบนของหน้านี้</li>
               </>
             ) : (
               <>
-                <li>Days beyond the 5-day cap are paid out in the December 15 payslip.</li>
-                <li>Sick and personal leave cannot be carried over and reset at year start.</li>
-                <li>Carryover is calculated automatically at year-end close — no request needed.</li>
-                <li>On mid-year resignation, the remaining balance is paid out pro rata in the final period.</li>
+                <li>All leave types reset to a fresh quota at the start of each year (no carryover).</li>
+                <li>Plan to use your entitlement before the calendar year ends.</li>
+                <li>Check the remaining balance for each type from the cards at the top of this page.</li>
               </>
             )}
           </ul>

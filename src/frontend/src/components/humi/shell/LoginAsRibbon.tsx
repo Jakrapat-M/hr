@@ -11,7 +11,9 @@
 //     while staying 100% on-brand (navy is a core Humi token). NO red/orange.
 //   - Identity FLOW: "Admin {adminName} → กำลังสวมบทบาทเป็น {username}" with an
 //     initial avatar, so the proxy relationship reads at a glance.
-//   - Tier chip (A/B/C/D) shows which persona tier the admin is now viewing as.
+//   - Role chip shows which role the admin is now viewing as, by plain name
+//     (di-proxy-no-tiers-2026-06-29: dropped the A/B/C/D letter prefix — it made
+//     viewers memorize a code; the readable role label stands on its own).
 //   - A pulsing teal dot signals a live, special session without alarm.
 //   - Clear cream "End Proxy" button with a LogOut icon on the right.
 //   - Tokens only (no hardcoded hex); bilingual TH/EN; NO-RED guardrail intact.
@@ -94,7 +96,7 @@ export function LoginAsRibbon() {
         </span>
         {tier && (
           <span className="ml-1 hidden flex-shrink-0 items-center rounded-[var(--radius-sm)] border border-canvas/25 bg-canvas/10 px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-wide md:inline-flex">
-            {tier} · {isTh ? TIER_LABEL[tier].th : TIER_LABEL[tier].en}
+            {isTh ? TIER_LABEL[tier].th : TIER_LABEL[tier].en}
           </span>
         )}
       </div>

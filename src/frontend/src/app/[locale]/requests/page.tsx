@@ -346,7 +346,7 @@ function MineTab({
           <p className="py-8 text-center text-small text-ink-muted">ไม่มีคำร้องในสถานะนี้</p>
         ) : (
           <ul role="list" className="divide-y divide-hairline">
-            {filtered.map((r) => {
+            {filtered.slice(0, 8).map((r) => {
               const meta = REQUEST_STATUS_META[r.status];
               return (
                 <li
@@ -393,6 +393,13 @@ function MineTab({
                 </li>
               );
             })}
+            {filtered.length > 8 && (
+              <li className="flex items-center gap-2 py-3 text-small text-ink-muted">
+                <span>Showing 8 of {filtered.length}</span>
+                <span aria-hidden className="text-ink-faint">·</span>
+                <span className="font-medium text-accent">View all</span>
+              </li>
+            )}
           </ul>
         )}
       </Card>
