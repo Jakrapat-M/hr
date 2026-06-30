@@ -11,12 +11,13 @@
 // Actor-shape divergence ({id,name} vs {role,name} vs {name}) is handled inside
 // each adapter via a small per-adapter actor adapter — call sites stay dumb.
 
-import type { PendingRequest, RequestType, Urgency } from '@/lib/quick-approve-api';
+import type { ClaimDetails, PendingRequest, RequestType, Urgency } from '@/lib/quick-approve-api';
 import type { ProbationCase } from '@/hooks/use-probation';
 import {
   useBenefitClaimsStore,
   BENEFIT_STATUS_LABEL,
   BENEFIT_TYPE_LABEL,
+  isSeededQueueClaim,
   type BenefitClaimRequest,
 } from '@/stores/benefit-claims';
 import {
@@ -623,6 +624,68 @@ export function collapseQueueStatus(raw: string | undefined): QueueStatus {
  */
 const isCancelledStatus = (s: string | undefined): boolean => s === 'cancelled';
 
+function claimAttachmentNames(claim: BenefitClaimRequest): string[] {
+  return claim.attachments
+    .map((file) => file.filename ?? file.name ?? '')
+    .filter(Boolean);
+}
+
+function currentClaimDynamicFields(claim: BenefitClaimRequest, snapshotDetails: ClaimDetails) {
+  return {
+    ...(snapshotDetails.dynamicFields ?? {}),
+    ...(claim.opdIpd ? { opdIpd: claim.opdIpd } : {}),
+    ...(claim.hospitalType ? { hospitalType: claim.hospitalType } : {}),
+    ...(claim.hospitalName ? { medicalHospitalName: claim.hospitalName } : {}),
+    ...(claim.diseaseDetails ? { diseaseDetails: claim.diseaseDetails } : {}),
+    ...(claim.dynamicFields ?? {}),
+  };
+}
+
+function currentClaimDetails(claim: BenefitClaimRequest, snapshotDetails: ClaimDetails): ClaimDetails {
+  return {
+    ...snapshotDetails,
+    amount: claim.totalClaimAmount,
+    currency: claim.currency,
+    category: claim.benefitName,
+    merchant: claim.hospitalName ?? snapshotDetails.merchant,
+    remainingAmount: claim.remainingAmount,
+    receiptDate: claim.receiptDate,
+    receiptNo: claim.receiptNo,
+    receiptAmount: claim.receiptAmount,
+    totalClaimAmount: claim.totalClaimAmount,
+    remark: claim.remark,
+    claimDate: claim.claimDate,
+    benefitType: claim.benefitType,
+    dynamicFields: currentClaimDynamicFields(claim, snapshotDetails),
+  };
+}
+
+function claimQueueRow(claim: BenefitClaimRequest): PendingRequest | null {
+  if (!claim.queueSnapshot) return null;
+  const snapshotDetails = claim.queueSnapshot.details as ClaimDetails;
+  const overlayCurrentFields = !isSeededQueueClaim(claim) || claim.version > 1;
+  const attachments = claimAttachmentNames(claim);
+  if (!overlayCurrentFields) return claim.queueSnapshot;
+  const row: PendingRequest = {
+    ...claim.queueSnapshot,
+    requester: {
+      ...claim.queueSnapshot.requester,
+      id: claim.employeeId,
+      employeeId: claim.employeeId,
+      name: claim.employeeName,
+      position: claim.personalGrade,
+      department: claim.businessUnit,
+      businessUnit: claim.businessUnit,
+      company: claim.company,
+      payGrade: claim.personalGrade,
+    },
+    submittedAt: claim.submittedAt,
+    details: currentClaimDetails(claim, snapshotDetails),
+    attachments: attachments.length > 0 ? attachments : claim.queueSnapshot.attachments,
+  };
+  return row;
+}
+
 /**
  * Fan IN from the seeded source stores into the queue's PendingRequest view.
  * Pure read — pass the store states in (caller subscribes via hooks/getState) so
@@ -643,7 +706,7 @@ function collapseTaxPlanStatus(raw: string): QueueStatus {
 export function selectPendingApprovals(input: {
   leave: { id: string; status: string; queueSnapshot?: PendingRequest; awaitingNext?: boolean }[];
   workflow: { id: string; status: string; queueSnapshot?: PendingRequest }[];
-  claims: { id: string; status: string; queueSnapshot?: PendingRequest }[];
+  claims: BenefitClaimRequest[];
   transfers: { id: string; terminalStatus?: QueueStatus; snapshot: PendingRequest }[];
   payRates?: PayRateRequest[];
   taxPlans?: TaxPlanningDraft[];
@@ -679,9 +742,10 @@ export function selectPendingApprovals(input: {
   // stays collapsed-`pending`, but is now awaiting the NEXT approver (AC-1c.2).
   for (const r of input.claims) {
     if (isCancelledStatus(r.status)) continue;
-    if (r.queueSnapshot) {
+    const row = claimQueueRow(r);
+    if (row) {
       out.push({
-        row: r.queueSnapshot,
+        row,
         status: collapseQueueStatus(r.status),
         awaitingNext: r.status === 'pending_spd',
       });
