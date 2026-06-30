@@ -84,6 +84,7 @@ export function DataTable<Row>({
   const [sortState, setSortState] = useState<
     { columnId: string; direction: SortDirection } | null
   >(null);
+  const [previewExpanded, setPreviewExpanded] = useState(false);
 
   const sortedRows = useMemo(() => {
     if (!sortState) return rows;
@@ -102,7 +103,7 @@ export function DataTable<Row>({
     });
   }, [rows, sortState, columns]);
 
-  const cap = showAllRows ? sortedRows.length : Math.max(0, previewRows);
+  const cap = showAllRows || previewExpanded ? sortedRows.length : Math.max(0, previewRows);
   const visibleRows = sortedRows.slice(0, cap);
   const hiddenCount = sortedRows.length - visibleRows.length;
 
@@ -255,7 +256,17 @@ export function DataTable<Row>({
                     Showing {visibleRows.length} of {sortedRows.length}
                   </span>
                   <span aria-hidden className="text-ink-faint">·</span>
-                  <span className="font-medium text-accent">View all</span>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewExpanded(true)}
+                    className={cn(
+                      'rounded-[var(--radius-sm)] font-medium text-accent transition-colors',
+                      'hover:text-accent-ink hover:underline',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1'
+                    )}
+                  >
+                    View all
+                  </button>
                 </span>
               </td>
             </tr>

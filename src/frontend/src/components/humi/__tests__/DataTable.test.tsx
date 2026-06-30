@@ -136,6 +136,34 @@ describe('DataTable — rows render (AC-8)', () => {
     );
     expect(screen.getByText('฿0')).toBeInTheDocument();
   });
+
+  it('expands the preview rows when View all is clicked', async () => {
+    const rows: SampleRow[] = Array.from({ length: 9 }, (_, index) => ({
+      id: `r${index + 1}`,
+      name: index === 8 ? 'สมชาย ใจดี' : `พนักงาน ${index + 1}`,
+      department: 'HR',
+      salary: 50000 + index,
+    }));
+
+    render(
+      <DataTable
+        columns={SAMPLE_COLUMNS}
+        rows={rows}
+        rowKey={(row) => row.id}
+        caption="ตาราง"
+      />
+    );
+
+    const tbody = document.querySelector('tbody')!;
+    expect(within(tbody).getAllByRole('row')).toHaveLength(8);
+    expect(screen.queryByText('สมชาย ใจดี')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'View all' }));
+
+    expect(within(tbody).getAllByRole('row')).toHaveLength(9);
+    expect(screen.getByText('สมชาย ใจดี')).toBeInTheDocument();
+    expect(screen.queryByText(/Showing 8 of 9/)).not.toBeInTheDocument();
+  });
 });
 
 // ────────────────────────────────────────────────────────────
