@@ -72,6 +72,11 @@ interface EmployeeEditFormData {
     postalCode: string            // 5-digit numeric
     country: string               // PICKLIST_COUNTRY_ISO
   }
+  emergencyContact: {
+    name: string                  // optional
+    relationship: string          // optional
+    phone: string                 // optional, phone format
+  }
 }
 
 // ─── Validation helpers ───────────────────────────────────────
@@ -250,12 +255,17 @@ export default function EmployeeEditPage() {
       militaryStatus: '',
     },
     contact: {
-      phone: '',
-      email: '',
-      addressLine1: '',
+      phone: employee?.personal_phone ?? '',
+      email: employee?.personal_email ?? '',
+      addressLine1: employee?.address_line1 ?? '',
       addressLine2: '',
-      postalCode: '',
+      postalCode: employee?.address_postal_code ?? '',
       country: 'TH',
+    },
+    emergencyContact: {
+      name: employee?.emergency_contact_name ?? '',
+      relationship: employee?.emergency_contact_relationship ?? '',
+      phone: employee?.emergency_contact_phone ?? '',
     },
   }), [employee])
 
@@ -303,6 +313,7 @@ export default function EmployeeEditPage() {
   const [namesEn]                        = useState(formData.namesEn)      // read-only, no setter
   const [attributes, setAttributesLocal] = useState(formData.attributes)
   const [contact,    setContactLocal]    = useState(formData.contact)
+  const [emergencyContact, setEmergencyContactLocal] = useState(formData.emergencyContact)
 
   // ── Touched state ─────────────────────────────────────────────
   const allTouchedRef = useRef(false)
@@ -317,8 +328,8 @@ export default function EmployeeEditPage() {
 
   // ── Validation errors (derived) ───────────────────────────────
   const errors = useMemo(
-    () => validateForm({ names, namesEn, attributes, contact }),
-    [names, namesEn, attributes, contact],
+    () => validateForm({ names, namesEn, attributes, contact, emergencyContact }),
+    [names, namesEn, attributes, contact, emergencyContact],
   )
 
   const isFormValid = Object.keys(errors).length === 0
@@ -344,6 +355,11 @@ export default function EmployeeEditPage() {
       last_name_th:  names.lastNameLocal,
       first_name_en: namesEn.firstNameEn,
       last_name_en:  namesEn.lastNameEn,
+      personal_phone: contact.phone,
+      personal_email: contact.email,
+      emergency_contact_name: emergencyContact.name,
+      emergency_contact_relationship: emergencyContact.relationship,
+      emergency_contact_phone: emergencyContact.phone,
       // effectiveDate is passed through to the API when backend implements it
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(effectiveDate ? { effectiveDate } as any : {}),
@@ -728,6 +744,35 @@ export default function EmployeeEditPage() {
                 onChange={(v) => setContactLocal((p) => ({ ...p, country: v }))}
                 onBlur={() => touch('country')}
                 options={PICKLIST_COUNTRY_ISO}
+              />
+            </div>
+          </section>
+
+          {/* ── Group 5: Emergency Contact ── */}
+          <section className="humi-card" style={{ padding: 24 }}>
+            <SectionLabel title="ผู้ติดต่อฉุกเฉิน" />
+            <div className="grid gap-4 md:grid-cols-2">
+              <TextInput
+                id="ec-name"
+                label="ชื่อ"
+                value={emergencyContact.name}
+                onChange={(v) => setEmergencyContactLocal((p) => ({ ...p, name: v }))}
+                onBlur={() => touch('ec-name')}
+              />
+              <TextInput
+                id="ec-relationship"
+                label="ความสัมพันธ์"
+                value={emergencyContact.relationship}
+                onChange={(v) => setEmergencyContactLocal((p) => ({ ...p, relationship: v }))}
+                onBlur={() => touch('ec-relationship')}
+              />
+              <TextInput
+                id="ec-phone"
+                label="เบอร์โทรศัพท์"
+                type="tel"
+                value={emergencyContact.phone}
+                onChange={(v) => setEmergencyContactLocal((p) => ({ ...p, phone: v }))}
+                onBlur={() => touch('ec-phone')}
               />
             </div>
           </section>

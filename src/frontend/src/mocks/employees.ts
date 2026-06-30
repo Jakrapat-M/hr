@@ -137,6 +137,12 @@ export interface MockEmployee {
   address_province?: string
   /** Address postal code (5 digits). */
   address_postal_code?: string
+  /** Emergency contact name. */
+  emergency_contact_name?: string
+  /** Emergency contact relationship (e.g. พ่อ, แม่, ภรรยา, สามี). */
+  emergency_contact_relationship?: string
+  /** Emergency contact phone (Thai format). */
+  emergency_contact_phone?: string
 }
 
 // ──────────────────────────────────────────────
@@ -484,6 +490,9 @@ function generateEmployees(count: number): MockEmployee[] {
       address_district: pick(rnd, BANGKOK_DISTRICTS as unknown as string[]),
       address_province: pick(rnd, BANGKOK_PROVINCES as unknown as string[]),
       address_postal_code: String(rndInt(rnd, 10100, 10900)),
+      emergency_contact_name: `${pick(rnd, SURNAME_TH)} ${pick(rnd, GIVEN_TH)}`,
+      emergency_contact_relationship: pick(rnd, ['พ่อ', 'แม่', 'ภรรยา', 'สามี', 'พี่ชาย', 'น้องสาว']),
+      emergency_contact_phone: `08${String(rndInt(rnd, 10000000, 99999999))}`,
     })
   }
 
