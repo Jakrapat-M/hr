@@ -974,6 +974,7 @@ export default function EmployeeDetailPage() {
   }
   // BA: every collapsible section starts COLLAPSED — the admin opens only what they need.
   const [employmentCollapsed, setEmploymentCollapsed] = useState(true)
+  const [personalContactCollapsed, setPersonalContactCollapsed] = useState(false)
   const [reallocCollapsed, setReallocCollapsed] = useState(true)
   const [benefitsCollapsed, setBenefitsCollapsed] = useState(true)
   // STA-103: which Current Benefit row's "more detail" modal is open (null = closed)
@@ -1401,6 +1402,47 @@ export default function EmployeeDetailPage() {
           </>
         )}
       </div>
+
+      <CollapsibleSectionCard
+        id="emp-personal-contact"
+        icon={MapPin}
+        eyebrow={isTh ? 'ข้อมูลส่วนบุคคล' : 'Personal'}
+        title={isTh ? 'ข้อมูลการติดต่อส่วนบุคคล' : 'Personal Contact'}
+        sub=""
+        collapsed={personalContactCollapsed}
+        onToggle={() => setPersonalContactCollapsed((v) => !v)}
+        expandLabel={expandLabel}
+        collapseLabel={collapseLabel}
+        dense
+      >
+        <div className="grid gap-3 md:grid-cols-2">
+          <div>
+            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'อีเมลส่วนตัว' : 'Personal Email'}</div>
+            <div className="text-body text-ink">{employee.personal_email ?? '—'}</div>
+          </div>
+          <div>
+            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'โทรศัพท์มือถือ' : 'Mobile Phone'}</div>
+            <div className="text-body text-ink">{employee.personal_phone ?? '—'}</div>
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'ที่อยู่' : 'Address'}</div>
+            <div className="text-body text-ink">
+              {employee.address_line1 ? (
+                <>
+                  <div>{employee.address_line1}</div>
+                  <div className="text-small text-ink-muted">
+                    {[
+                      employee.address_district,
+                      employee.address_province,
+                      employee.address_postal_code,
+                    ].filter(Boolean).join(' ')}
+                  </div>
+                </>
+              ) : '—'}
+            </div>
+          </div>
+        </div>
+      </CollapsibleSectionCard>
 
       {/* ── Section A2: ข้อมูลการจ้างงาน (Employment-level — A3 split) ──── */}
       <CollapsibleSectionCard

@@ -110,20 +110,13 @@ describe('benefit deferred services profile launchpad', () => {
     useBenefitTaxPlanningStore.getState().clear();
   });
 
-  it('keeps Profile Benefits as a summary surface with a งานสวัสดิการ CTA', async () => {
-    const { default: Page } = await import('@/app/[locale]/profile/me/page');
-    render(<Page />);
-
-    expect(await screen.findByText('ภาพรวมสิทธิ์สวัสดิการ')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'ไปที่งานสวัสดิการ' })).toHaveAttribute(
-      'href',
-      '/th/benefits-hub',
-    );
-    expect(screen.queryByText('บริการสวัสดิการของฉัน', { selector: 'h3' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'เบิกสวัสดิการ' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'ขอใบส่งตัว' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'วางแผนภาษี' })).not.toBeInTheDocument();
-  });
+  // STA-180 (2026-06-30): the in-profile Benefits summary surface and its
+  // งานสวัสดิการ CTA were removed from /profile/me per EC feedback — benefits
+  // have their own dedicated page (/benefits-hub). The previous test case that
+  // asserted the CTA presence is intentionally deleted; the negative-assertion
+  // coverage it provided (no เบิกสวัสดิการ / ขอใบส่งตัว / วางแผนภาษี buttons on
+  // /profile/me) is preserved by the redirect test below and by
+  // profile-me.sta180-removals.test.tsx.
 
   it('redirects legacy profile referral deep links to the dedicated referral route', async () => {
     navigationMocks.searchParams = new URLSearchParams('tab=benefits&service=referral');
