@@ -27,6 +27,9 @@ import { ArrowLeft, Check } from 'lucide-react'
 import { buttonVariants } from '@/components/humi'
 import { createClusterWizard } from '@/lib/admin/wizard-template/createClusterWizard'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
+import type { MockEmployee } from '@/mocks/employees'
+import { Sta181ExtendedFields } from './_components/Sta181ExtendedFields'
+import { buildSta181InitialValues, type Sta181FieldValues } from './_lib/sta181Fields'
 import {
   PICKLIST_SALUTATION_EN,
   PICKLIST_GENDER,
@@ -314,17 +317,26 @@ export default function EmployeeEditPage() {
   const [attributes, setAttributesLocal] = useState(formData.attributes)
   const [contact,    setContactLocal]    = useState(formData.contact)
   const [emergencyContact, setEmergencyContactLocal] = useState(formData.emergencyContact)
+  const [sta181Fields, setSta181Fields] = useState<Sta181FieldValues>(() =>
+    employee ? buildSta181InitialValues(employee) : {},
+  )
 
   // ── Touched state ─────────────────────────────────────────────
   const allTouchedRef = useRef(false)
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set())
   const touch = useCallback((field: string) =>
     setTouchedFields((prev) => new Set([...prev, field])), [])
+  const updateSta181Field = useCallback((key: string, value: string) => {
+    setSta181Fields((prev) => ({ ...prev, [key]: value }))
+  }, [])
 
   // ── Sync local → store on every change ───────────────────────
   useEffect(() => { setStepData('names',      names)      }, [names,      setStepData])
   useEffect(() => { setStepData('attributes', attributes) }, [attributes, setStepData])
   useEffect(() => { setStepData('contact',    contact)    }, [contact,    setStepData])
+  useEffect(() => {
+    if (employee) setSta181Fields(buildSta181InitialValues(employee))
+  }, [employee])
 
   // ── Validation errors (derived) ───────────────────────────────
   const errors = useMemo(
@@ -349,21 +361,22 @@ export default function EmployeeEditPage() {
 
     if (!isFormValid) return
 
-    // Patch in-memory store (S2 owner); effectiveDate threaded into payload (J7)
-    updateEmployee(empId, {
+    const patch: Partial<MockEmployee> = {
       first_name_th: names.firstNameLocal,
       last_name_th:  names.lastNameLocal,
       first_name_en: namesEn.firstNameEn,
       last_name_en:  namesEn.lastNameEn,
       personal_phone: contact.phone,
       personal_email: contact.email,
+      address_line1: contact.addressLine1,
+      address_postal_code: contact.postalCode,
       emergency_contact_name: emergencyContact.name,
       emergency_contact_relationship: emergencyContact.relationship,
       emergency_contact_phone: emergencyContact.phone,
-      // effectiveDate is passed through to the API when backend implements it
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(effectiveDate ? { effectiveDate } as any : {}),
-    })
+      sta181_profile_fields: sta181Fields,
+    }
+    if (effectiveDate) patch.effective_date = effectiveDate
+    updateEmployee(empId, patch)
 
     setShowBanner(true)
     // Navigate back to detail hub after 1.4s so user sees banner
@@ -394,9 +407,9 @@ export default function EmployeeEditPage() {
   const nameTh = `${employee.first_name_th} ${employee.last_name_th}`
 
   // ── Helper: field error if touched ───────────────────────────
-  const errMsg = (field: keyof EditErrors) => {
+  const errMsg = (field: keyof EditErrors): string | null => {
     if (!touchedFields.has(field) || !errors[field]) return null
-    return <p role="alert" className="mt-1 text-xs text-warning">{errors[field]}</p>
+    return errors[field] ?? null
   }
 
   return (
@@ -776,6 +789,8 @@ export default function EmployeeEditPage() {
               />
             </div>
           </section>
+
+          <Sta181ExtendedFields values={sta181Fields} onChange={updateSta181Field} />
 
           {/* Required note */}
           <p className="text-xs text-ink-soft">

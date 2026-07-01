@@ -143,6 +143,8 @@ export interface MockEmployee {
   emergency_contact_relationship?: string
   /** Emergency contact phone (Thai format). */
   emergency_contact_phone?: string
+  sta181_profile_fields?: Record<string, string>
+  effective_date?: string
 }
 
 // ──────────────────────────────────────────────

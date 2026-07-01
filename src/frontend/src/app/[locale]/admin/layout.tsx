@@ -9,7 +9,7 @@
 // once /api/auth/[...nextauth] is activated.
 
 import { useEffect, type ReactNode } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasRole } from '@/lib/rbac';
 import { AccessDenied } from '@/components/shared/access-denied';
@@ -17,9 +17,11 @@ import { AccessDenied } from '@/components/shared/access-denied';
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const params = useParams<{ locale: string }>();
+  const pathname = usePathname();
   const locale = params?.locale ?? 'th';
   const { isAuthenticated, roles, _hasHydrated } = useAuthStore();
   const isAdmin = hasRole(roles, 'hr_admin');
+  const canUseEmployeeAdmin = hasRole(roles, 'spd') && pathname.includes('/admin/employees');
 
   useEffect(() => {
     // Wait for Zustand persist rehydration before redirecting — otherwise
@@ -37,11 +39,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (!isAuthenticated) return null;
 
   // Signed in but not admin → explicit denial surface in place (no redirect).
-  if (!isAdmin) {
+  if (!isAdmin && !canUseEmployeeAdmin) {
     return (
       <AccessDenied
-        reasonTh="ต้องมีสิทธิ์ HR Admin ขึ้นไป"
-        reason="Requires HR Admin or above"
+        reasonTh="ต้องมีสิทธิ์ HR Admin หรือ SPD สำหรับข้อมูลพนักงาน"
+        reason="Requires HR Admin, or SPD for employee data"
       />
     );
   }
