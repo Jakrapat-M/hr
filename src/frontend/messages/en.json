@@ -5871,5 +5871,43 @@
     "panelTitle": "Exit Feedback",
     "panelEmpty": "No exit feedback captured yet.",
     "panelRankWord": "Rank"
+  },
+  "shiftAssign": {
+    "title": "Shift Assignment",
+    "monthPicker": "Month",
+    "reviewBanner": "Review mode — read-only. Approve the grid or return it for revision.",
+    "viewingAs": "Viewing as",
+    "submissionProgress": "Submission progress",
+    "selectAllMonth": "Select whole month",
+    "selectMonthMyTeam": "Select whole month for my team",
+    "clearSelection": "Clear selection",
+    "selectedCount": "{count} selected",
+    "working": "Working",
+    "dayOff": "Day off",
+    "startTime": "Start time",
+    "addOt": "Add OT",
+    "otStart": "OT start",
+    "otEnd": "OT end",
+    "chooseShift": "Choose shift",
+    "clear": "Clear",
+    "applyToN": "Apply to {count}",
+    "submit": "Submit for review",
+    "approve": "Approve",
+    "returnForRevision": "Return for revision",
+    "lockApproveAll": "Lock & approve all",
+    "export": "Export",
+    "publicHoliday": "Public holiday",
+    "readOnly": "Read-only",
+    "returnNoteLabel": "Return note",
+    "notePlaceholder": "Leave a note explaining what needs to be fixed",
+    "status": {
+      "draft": "Draft",
+      "pending": "Submitted",
+      "approved": "Approved",
+      "returned": "Returned"
+    },
+    "submittedToast": "Shift assignment submitted for review",
+    "approvedToast": "Shift assignment approved",
+    "returnedToast": "Returned to the manager for revision"
   }
 }

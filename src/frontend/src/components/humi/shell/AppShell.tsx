@@ -117,6 +117,8 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/en/manager-dashboard', title: 'การจัดการทีม' },
   { prefix: '/th/roster', title: 'ตารางกะ' },
   { prefix: '/en/roster', title: 'Roster & Shifts' },
+  { prefix: '/th/team/shift-assign', title: 'จัดกะให้พนักงาน' },
+  { prefix: '/en/team/shift-assign', title: 'Shift Assignment' },
   { prefix: '/th/payroll/import', title: 'นำเข้าเงินเดือน' },
   { prefix: '/en/payroll/import', title: 'Import Payroll' },
   { prefix: '/th/payroll', title: 'ค่าตอบแทน' },
