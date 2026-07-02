@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { levelsForLeaveType } from '@/lib/time/approval-rules';
+import { isCancellableByCycle, demoToday } from '@/lib/time/period';
 import { getLeaveType, LEAVE_CODE_TO_BALANCE_KIND } from '@/lib/time/leave-types';
 import { useLeaveBalances } from '@/stores/leave-balances';
 
@@ -140,12 +141,12 @@ interface LeaveApprovalsState {
   approve: (id: string, by: { id: string; name: string }, comment?: string) => void;
   reject: (id: string, by: { id: string; name: string }, reason: string) => void;
   /**
-   * STA-157 — employee cancels their OWN pending leave request while it is still
-   * at the FIRST approval stage (pending && !awaitingNext). Sets status
-   * 'cancelled', releases any reserved quota immediately, and records the audit
-   * entry. Drops out of the approver queue automatically (selectPendingApprovals
-   * filters status==='pending'). No-op once approved/rejected/cancelled or past
-   * the first stage.
+   * STA-183 — employee cancels their OWN leave request under the cycle-window
+   * rule: allowed while not terminal (rejected/cancelled) AND the start date is in
+   * the current or immediately-previous payroll cycle — no longer limited to the
+   * first approval stage. Sets status 'cancelled', reverses quota by prior status
+   * (pending → release reserved; approved → reverseApproved debits), and records
+   * the audit entry. Cancelled rows drop out of the approver queue automatically.
    */
   cancel: (id: string, by: { id: string; name: string }) => void;
   /** PR-1b: init-overwrite-empties seed from the canonical queue rows (R1). */
@@ -322,12 +323,23 @@ export const useLeaveApprovals = create<LeaveApprovalsState>()(
       cancel: (id, by) =>
         set((state) => {
           const target = state.requests.find((r) => r.id === id);
-          // Only a first-approval pending request can be cancelled by the employee.
-          if (!target || target.status !== 'pending' || target.awaitingNext) return state;
-          // Restore any reserved quota immediately.
+          if (!target) return state;
+          // STA-183 — cycle-window rule (supersedes the STA-157 first-approval gate):
+          // cancellable iff not already terminal AND the start date is in the current
+          // or immediately-previous payroll cycle. Enforced here as defence-in-depth
+          // (the UI already hides the button) via the SAME helper the UI uses.
+          if (target.status === 'rejected' || target.status === 'cancelled') return state;
+          if (!isCancellableByCycle(target.startDate, demoToday())) return state;
+          // Reverse the quota by PRIOR status (never by approval level): a still-
+          // pending row (incl. awaitingNext) only reserved the days → release them;
+          // an approved row already moved reserved → debits → reverse the debits.
           const bucket = quotaBucketFor(target);
           if (bucket) {
-            useLeaveBalances.getState().release(target.employeeId, bucket.kind, bucket.days);
+            if (target.status === 'approved') {
+              useLeaveBalances.getState().reverseApproved(target.employeeId, bucket.kind, bucket.days);
+            } else {
+              useLeaveBalances.getState().release(target.employeeId, bucket.kind, bucket.days);
+            }
           }
           return {
             requests: state.requests.map((r) =>

@@ -27,6 +27,7 @@ import {
   type LeaveRequest,
 } from '@/stores/leave-approvals';
 import { getLeaveType } from '@/lib/time/leave-types';
+import { isCancellableByCycle, demoToday } from '@/lib/time/period';
 import { formatDate } from '@/lib/date';
 import { useWorkflowApprovals } from '@/stores/workflow-approvals';
 import { useProbationApprovals } from '@/stores/probation-approvals';
@@ -404,7 +405,9 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
       useLeaveApprovals.getState().cancel(id, { id: actor.id ?? '', name: actor.name }),
     isCancellable: (record) => {
       const r = record as LeaveRequest;
-      return r.status === 'pending' && !r.awaitingNext;
+      // STA-183 — cycle-window rule (supersedes STA-157 first-approval gate).
+      if (r.status === 'rejected' || r.status === 'cancelled') return false;
+      return isCancellableByCycle(r.startDate, demoToday());
     },
   },
 
@@ -422,7 +425,12 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     labels: { th: 'โอที', en: 'Overtime' },
     cancel: (id, actor) =>
       useOvertimeRequests.getState().cancel(id, { id: actor.id, name: actor.name }),
-    isCancellable: (record) => (record as OTRequest).status === 'pending',
+    isCancellable: (record) => {
+      const r = record as OTRequest;
+      // STA-183 — cycle-window rule (supersedes the pending-only gate).
+      if (r.status === 'rejected' || r.status === 'cancelled') return false;
+      return isCancellableByCycle((r.startAt ?? '').slice(0, 10), demoToday());
+    },
   },
 
   // claim → benefit-claims: managerApprove/managerSendBack return Promises — the
@@ -561,8 +569,12 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     },
     labels: { th: 'แก้ไขเวลา', en: 'Time correction' },
     cancel: (id, actor) => useTimeCorrections.getState().cancel(id, { name: actor.name }),
-    isCancellable: (record) =>
-      (record as TimeCorrectionRequest).status === 'pending_manager',
+    isCancellable: (record) => {
+      const r = record as TimeCorrectionRequest;
+      // STA-183 — cycle-window rule (supersedes the pending_manager-only gate).
+      if (r.status === 'rejected' || r.status === 'cancelled') return false;
+      return isCancellableByCycle(r.date, demoToday());
+    },
   },
 
   // probation → probation-approvals: approveEvaluation(id,{name}) / rejectEvaluation.
@@ -994,6 +1006,36 @@ function initialsOf(name: string): string {
   return (parts[0][0] ?? '') + (parts[1][0] ?? '');
 }
 
+/**
+ * STA-183 — cancellable flag for a queue row, aligned to the SAME cycle-window
+ * rule the registry `isCancellable` uses. Re-reads the source record by type+id
+ * (the queue projection alone carries no start date) and defers to the type's
+ * `isCancellable` predicate so the /requests tracker and the My-Requests page can
+ * never drift. Only the self-cancellable types resolve a record; others → false.
+ */
+function queueRowCancellable(type: RequestType, id: string): boolean {
+  const adapter = APPROVAL_REGISTRY[type];
+  if (!adapter.isCancellable) return false;
+  let record: unknown;
+  switch (type) {
+    case 'leave':
+      record = useLeaveApprovals.getState().requests.find((r) => r.id === id);
+      break;
+    case 'overtime':
+      record = useOvertimeRequests.getState().requests.find((r) => r.id === id);
+      break;
+    case 'time_correction':
+      record = useTimeCorrections.getState().requests.find((r) => r.id === id);
+      break;
+    case 'claim':
+      record = useBenefitClaimsStore.getState().claims.find((c) => c.id === id);
+      break;
+    default:
+      record = undefined;
+  }
+  return record ? adapter.isCancellable(record) : false;
+}
+
 /** Map a QueueApproval → /requests MineRow projection. */
 export function queueApprovalToRequestRow(q: QueueApproval, locale: 'th' | 'en' = 'th'): QueueRequestRow {
   const submitted = new Date(q.row.submittedAt).toLocaleDateString(
@@ -1007,10 +1049,9 @@ export function queueApprovalToRequestRow(q: QueueApproval, locale: 'th' | 'en' 
     type: queueTypeLabel(q.row.type, locale),
     requestType: q.row.type,
     requesterId: q.row.requester.id,
-    // First-approval signal: pending AND no later step has started. Equivalent to
-    // APPROVAL_REGISTRY[q.row.type].isCancellable?.(...) but derived from the queue
-    // projection (the source record is re-read at cancel-click for the modal).
-    cancellable: q.status === 'pending' && !q.awaitingNext,
+    // STA-183 — cycle-window cancellability, aligned to the registry rule by
+    // re-reading the source record (the queue projection carries no start date).
+    cancellable: queueRowCancellable(q.row.type, q.row.id),
     sub: q.row.description,
     submitted,
     status: q.status,
