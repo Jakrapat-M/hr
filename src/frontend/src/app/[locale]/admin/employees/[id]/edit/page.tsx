@@ -213,10 +213,12 @@ function TextInput({ id, label, required, readOnly, type = 'text', placeholder, 
 // ─── Section header ───────────────────────────────────────────
 
 function SectionLabel({ title }: { title: string }) {
+  // STA-181 — my-profile section-card header, replacing the flat eyebrow. h2 keeps
+  // a clean hierarchy under the single page <h1> (Sta181 subsections stay h3).
   return (
-    <div className="humi-eyebrow pb-1 border-b border-[color:var(--color-hairline-soft)]" style={{ marginBottom: 16 }}>
+    <h2 className="font-display text-xl font-semibold text-ink pb-2 mb-4 border-b border-[color:var(--color-hairline-soft)]">
       {title}
-    </div>
+    </h2>
   )
 }
 
@@ -458,18 +460,47 @@ export default function EmployeeEditPage() {
 
       {/* Personal Info edit = direct-edit method per SF DOC-F2B0E487 + audit #22.
           EffectiveDateGate removed — Pattern 2 reserves effective-dating for state
-          changes (transfer/probation/terminate), not personal-info corrections. */}
-      <div className="humi-card">
-        <div style={{ marginBottom: 24 }}>
-          <h1 className="font-display text-xl font-semibold text-ink">
-            แก้ไขข้อมูลส่วนตัว
-          </h1>
-        </div>
+          changes (transfer/probation/terminate), not personal-info corrections.
+          STA-181 — my-profile layout: page title, actions moved to a sticky bar at
+          the TOP, and each section rendered as its own card below. */}
+      <h1 className="font-display text-2xl font-semibold text-ink">
+        แก้ไขข้อมูลส่วนตัว
+      </h1>
 
-        <div className="space-y-8">
+      {/* STA-181 — action bar relocated to the top (sticky while scrolling). */}
+      <div
+        className="humi-row"
+        style={{
+          // Sit BELOW the global sticky topbar (~76px) and keep a lower z so the
+          // topbar always wins any overlap during scroll.
+          position: 'sticky', top: 84, zIndex: 5,
+          justifyContent: 'flex-end', gap: 12, padding: '12px 16px',
+          borderRadius: 'var(--radius-md)', background: 'var(--color-surface)',
+          border: '1px solid var(--color-hairline)', boxShadow: 'var(--shadow-sm)',
+        }}
+      >
+        <Link
+          href={`/${locale}/admin/employees/${empId}`}
+          className="humi-btn-secondary"
+        >
+          ยกเลิก
+        </Link>
+        <button
+          type="button"
+          onClick={() => handleSubmit('')}
+          disabled={showBanner}
+          className={buttonVariants({ variant: 'primary' })}
+          aria-disabled={showBanner}
+        >
+          บันทึกข้อมูล
+        </button>
+      </div>
+
+      {/* Sections — each its own card (my-profile visual rhythm). */}
+      <div className="space-y-5">
 
           {/* ── Group 1: Names (Local) ── */}
-          <section aria-labelledby="section-names">
+          <section aria-labelledby="section-names" className="humi-card">
             <SectionLabel title="ชื่อ (ภาษาท้องถิ่น)" />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
@@ -542,7 +573,7 @@ export default function EmployeeEditPage() {
           </section>
 
           {/* ── Group 2: Localized Names (EN) — read-only mirror ── */}
-          <section aria-labelledby="section-names-en">
+          <section aria-labelledby="section-names-en" className="humi-card">
             <SectionLabel title="ชื่อ (ภาษาอังกฤษ)" />
             <p className="text-small text-ink-muted mb-4">
               ข้อมูลนี้ถูกกำหนดตอน Hire ไม่สามารถแก้ไขได้ที่นี่
@@ -589,7 +620,7 @@ export default function EmployeeEditPage() {
           </section>
 
           {/* ── Group 3: Personal Attributes ── */}
-          <section aria-labelledby="section-attributes">
+          <section aria-labelledby="section-attributes" className="humi-card">
             <SectionLabel title="ข้อมูลส่วนตัว" />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
@@ -682,7 +713,7 @@ export default function EmployeeEditPage() {
           </section>
 
           {/* ── Group 4: Contact ── */}
-          <section aria-labelledby="section-contact">
+          <section aria-labelledby="section-contact" className="humi-card">
             <SectionLabel title="ข้อมูลติดต่อ" />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
@@ -762,7 +793,7 @@ export default function EmployeeEditPage() {
           </section>
 
           {/* ── Group 5: Emergency Contact ── */}
-          <section className="humi-card" style={{ padding: 24 }}>
+          <section className="humi-card">
             <SectionLabel title="ผู้ติดต่อฉุกเฉิน" />
             <div className="grid gap-4 md:grid-cols-2">
               <TextInput
@@ -790,36 +821,15 @@ export default function EmployeeEditPage() {
             </div>
           </section>
 
-          <Sta181ExtendedFields values={sta181Fields} onChange={updateSta181Field} />
+          <div className="humi-card">
+            <Sta181ExtendedFields values={sta181Fields} onChange={updateSta181Field} />
+          </div>
 
           {/* Required note */}
           <p className="text-xs text-ink-soft">
             <span className="humi-asterisk">*</span> ช่องที่บังคับกรอก
           </p>
         </div>
-
-        {/* ── Footer actions ── */}
-        <div
-          className="humi-row"
-          style={{ justifyContent: 'flex-end', gap: 12, marginTop: 32, paddingTop: 20, borderTop: '1px solid var(--color-hairline-soft)' }}
-        >
-          <Link
-            href={`/${locale}/admin/employees/${empId}`}
-            className="humi-btn-secondary"
-          >
-            ยกเลิก
-          </Link>
-          <button
-            type="button"
-            onClick={() => handleSubmit('')}
-            disabled={showBanner}
-            className={buttonVariants({ variant: 'primary' })}
-            aria-disabled={showBanner}
-          >
-            บันทึกข้อมูล
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
