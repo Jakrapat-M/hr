@@ -36,4 +36,7 @@ export const APPROVAL_SEED_BY_TYPE: Record<RequestType, PendingRequest[]> = {
   // time_correction records originate from the employee /time/corrections form;
   // they are not part of the canonical 20-row seed (adapter seed() is a no-op).
   time_correction: APPROVAL_SEED_ROWS.filter((r) => r.type === 'time_correction'),
+  // shift_assignment ShiftGroups originate from the shift-assignment store's own
+  // seed (SHIFT_GROUP_SEED); they are not part of the canonical 20-row seed.
+  shift_assignment: APPROVAL_SEED_ROWS.filter((r) => r.type === 'shift_assignment'),
 };

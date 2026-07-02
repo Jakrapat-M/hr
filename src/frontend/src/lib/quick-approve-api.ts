@@ -2,7 +2,7 @@ import { api } from './api';
 
 // --- Types ---
 
-export type RequestType ='leave' |'overtime' |'claim' |'transfer' |'change_request' |'probation' |'pay_rate' |'tax_planning' |'time_correction';
+export type RequestType ='leave' |'overtime' |'claim' |'transfer' |'change_request' |'probation' |'pay_rate' |'tax_planning' |'time_correction' |'shift_assignment';
 export type Urgency ='urgent' |'normal' |'low';
 
 export interface PendingRequest {
