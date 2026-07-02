@@ -150,7 +150,21 @@ export const MOCK_PENDING_REQUESTS: PendingRequest[] = [
     }),
     approvalTimeline: [
       { step: 1, approver: 'employee request claim', status: 'approved', date: '2026-04-26T15:00' },
-      { step: 2, approver: 'HR send back', status: 'rejected', date: '2026-04-27T12:00', comment: 'เอกสารไม่ครบ กรุณาแนบใบเสร็จตัวจริง' },
+      {
+        step: 2,
+        approver: 'HR send back',
+        status: 'rejected',
+        date: '2026-04-27T12:00',
+        comment: 'เลขที่บนใบเสร็จไม่ตรงกับภาพที่แนบ, ยอดเงินที่ต้องการเบิกจ่ายไม่ตรงกับใบเสร็จในภาพ, Send back comment demo, Send back comment demo',
+      },
+      { step: 3, approver: 'employee edited claim', status: 'approved', date: '2026-04-28T13:00' },
+      {
+        step: 4,
+        approver: 'HR send back',
+        status: 'rejected',
+        date: '2026-04-29T13:00',
+        comment: 'Send back comment demo, Send back comment demo, Send back comment demo, Send back comment demo',
+      },
     ],
   },
   {

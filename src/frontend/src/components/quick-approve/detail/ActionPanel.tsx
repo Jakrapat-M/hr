@@ -18,6 +18,14 @@ interface ActionPanelProps {
    * `true` so legacy callers that don't thread the gate keep their controls.
    */
   actable?: boolean;
+  /**
+   * STA-185: the shared "Approve / Send Back Comment" value owned by the page.
+   * For the approve & return actions the confirm popup shows this read-only and
+   * dispatches it (single-source), and the required-gate is driven by it (NOT the
+   * internal editable inputValue). reject/reroute/override keep their own editable
+   * textarea + inputValue path.
+   */
+  comment?: string;
   onApprove?: (id: string, comment: string) => void;
   onReject?: (id: string, reason: string) => void;
   onReturn?: (id: string, reason: string) => void;
@@ -31,6 +39,7 @@ export function ActionPanel({
   requestId,
   requestType,
   actable = true,
+  comment,
   onApprove,
   onReject,
   onReturn,
@@ -57,14 +66,15 @@ export function ActionPanel({
     setSubmitting(true);
     try {
       switch (activeAction) {
+        // STA-185: approve & return single-source the shared page comment.
         case 'approve':
-          onApprove?.(requestId, inputValue);
+          onApprove?.(requestId, sharedComment);
+          break;
+        case 'return':
+          onReturn?.(requestId, sharedComment);
           break;
         case 'reject':
           onReject?.(requestId, inputValue);
-          break;
-        case 'return':
-          onReturn?.(requestId, inputValue);
           break;
         case 'reroute':
           onReroute?.(requestId, inputValue);
@@ -103,8 +113,13 @@ export function ActionPanel({
     override: true,
   };
 
+  // STA-185: approve & return read the shared page comment (read-only in the
+  // popup); reject/reroute/override keep their editable in-modal textarea.
+  const usesSharedComment = activeAction === 'approve' || activeAction === 'return';
+  const sharedComment = comment ?? '';
+  const effectiveValue = usesSharedComment ? sharedComment : inputValue;
   const canSubmit = activeAction
-    ? !inputRequired[activeAction] || inputValue.trim().length > 0
+    ? !inputRequired[activeAction] || effectiveValue.trim().length > 0
     : false;
   const isClaim = requestType === 'claim';
 
@@ -200,21 +215,35 @@ export function ActionPanel({
           title={modalTitle[activeAction]}
         >
           <div className="flex flex-col gap-4 p-4">
-            <FormField
-              label={inputLabel[activeAction]}
-              required={inputRequired[activeAction]}
-            >
-              {(controlProps) => (
-                <textarea
-                  {...controlProps}
-                  rows={3}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder={inputRequired[activeAction] ? t('required') : t('optional')}
-                  className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
-                />
-              )}
-            </FormField>
+            {usesSharedComment ? (
+              // STA-185: approve/return show the shared page comment READ-ONLY —
+              // it is single-sourced and dispatched as-is (no in-popup editing).
+              <div className="flex flex-col gap-2">
+                <p className="text-small text-ink-muted">
+                  {activeAction === 'approve' ? t('confirmApproveBody') : t('confirmReturnBody')}
+                </p>
+                <p className="text-base font-semibold text-ink">{t('approveSendBackCommentTitle')}</p>
+                <div className="min-h-[3rem] w-full whitespace-pre-wrap break-words rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-3 py-2 text-body text-ink-secondary">
+                  {sharedComment.trim() !== '' ? sharedComment : '-'}
+                </div>
+              </div>
+            ) : (
+              <FormField
+                label={inputLabel[activeAction]}
+                required={inputRequired[activeAction]}
+              >
+                {(controlProps) => (
+                  <textarea
+                    {...controlProps}
+                    rows={3}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder={inputRequired[activeAction] ? t('required') : t('optional')}
+                    className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+                  />
+                )}
+              </FormField>
+            )}
             <div className="flex justify-end gap-3">
               <Button variant="ghost" size="md" onClick={handleClose} disabled={submitting}>
                 {t('cancel')}
