@@ -16,7 +16,7 @@ let mockRoles: string[] = []
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ locale: 'th' }),
-  useSearchParams: () => ({ get: () => null }),
+  useRouter: () => ({ push: vi.fn() }),
 }))
 
 vi.mock('@/stores/auth-store', () => ({

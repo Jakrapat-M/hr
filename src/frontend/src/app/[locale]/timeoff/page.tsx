@@ -1,18 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
-import { Check, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight, Sun, X, LogOut } from 'lucide-react';
+import { Check, Paperclip, AlertCircle, ChevronRight, Sun, X } from 'lucide-react';
 import {
-  Avatar,
   Button,
-  CancelRequestModal,
   Card,
   CardEyebrow,
   CardTitle,
-  Modal,
   LeaveRangeCalendar,
 } from '@/components/humi';
 import { cn } from '@/lib/utils';
@@ -31,7 +28,7 @@ import {
   HUMI_MY_PROFILE,
   type LeaveKind,
 } from '@/lib/humi-mock-data';
-import { useTimeoffStore, type TimeoffHistoryItem } from '@/stores/humi-timeoff-slice';
+import { useTimeoffStore } from '@/stores/humi-timeoff-slice';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
 import type { ApproverStage } from '@/data/benefits/plan-registry';
 import {
@@ -47,24 +44,16 @@ import { deriveEmployeeEligibility } from '@/lib/time/employee-eligibility';
 import { levelsForLeaveType, appliedChainFor } from '@/lib/time/approval-rules';
 import { isBookableLeaveDate, LEAVE_BOOKING_HORIZON_DAYS } from '@/lib/time/period';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
-import {
-  useLeaveApprovals,
-  leaveStageLabel,
-  type LeaveRequest,
-  type LeaveStatus as ApprovalLeaveStatus,
-} from '@/stores/leave-approvals';
+import { useLeaveApprovals } from '@/stores/leave-approvals';
 import { useRemainingFor, useLeaveBalances } from '@/stores/leave-balances';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { routingStagesFor } from '@/lib/approval-routing';
-
-// Timeoff approval chain pills: manager → hr_admin (2-step max for the preview).
-const TIMEOFF_CHAIN: ApproverStage[] = ['manager', 'hr_admin'];
 
 // Demo employee identity for the ESS request portal (Tier D persona).
 const DEMO_EMPLOYEE = { id: 'EMP001', name: 'สมชาย ใจดี' };
 
 // Project a registry leave `code` (23 types) onto the legacy history `LeaveKind`
-// union (8 buckets), so the History tab shows the right icon/category per type
+// union (8 buckets), so the My Request list shows the right icon/category per type
 // instead of always 'vacation'. Substring matching keeps paid/unpaid variants on
 // the same bucket; anything unmatched falls back to 'unpaid' (the neutral bucket).
 export function leaveCodeToHistoryKind(code: string): LeaveKind {
@@ -78,85 +67,12 @@ export function leaveCodeToHistoryKind(code: string): LeaveKind {
   return 'unpaid';
 }
 
-// Extended history item with audit + submittedAt as ISO for days-waiting
-type HistoryItemExtended = TimeoffHistoryItem & {
-  isoSubmittedAt?: string;
-  audit?: Array<{ actorName: string; action: string; comment?: string; at: string }>;
-};
-
-// Seed mock audit data for initial history items
-const AUDIT_MAP: Record<string, HistoryItemExtended['audit']> = {
-  'lh-1': [
-    { actorName: 'สมชาย สุขใจ', action: 'submit', at: '2026-03-10T09:00:00Z' },
-    { actorName: 'กฤตนัย อินทรเดช', action: 'approve', comment: 'อนุมัติ', at: '2026-03-11T10:00:00Z' },
-    { actorName: 'วรินทร์ HR Admin', action: 'approve', at: '2026-03-12T11:00:00Z' },
-  ],
-  'lh-2': [
-    { actorName: 'สมชาย สุขใจ', action: 'submit', at: '2026-02-02T08:00:00Z' },
-    { actorName: 'กฤตนัย อินทรเดช', action: 'approve', at: '2026-02-02T09:30:00Z' },
-    { actorName: 'วรินทร์ HR Admin', action: 'approve', at: '2026-02-02T10:00:00Z' },
-  ],
-  'lh-3': [
-    { actorName: 'สมชาย สุขใจ', action: 'submit', at: '2025-11-05T08:00:00Z' },
-    { actorName: 'กฤตนัย อินทรเดช', action: 'reject', comment: 'ติดประชุมสำคัญ ขอเลื่อนวัน', at: '2025-11-05T14:00:00Z' },
-  ],
-};
-
-const ISO_MAP: Record<string, string> = {
-  'lh-1': '2026-03-10T09:00:00Z',
-  'lh-2': '2026-02-02T08:00:00Z',
-  'lh-3': '2025-11-05T08:00:00Z',
-};
-
-function daysWaiting(isoDate?: string): number {
-  if (!isoDate) return 0;
-  return Math.floor((Date.now() - new Date(isoDate).getTime()) / 86400000);
-}
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleDateString('th-TH', {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
-
-function dotColor(action: string) {
-  if (action === 'approve') return 'bg-success';
-  if (action === 'reject') return 'bg-danger';
-  return 'bg-accent-soft';
-}
-
-function activeStageForStatus(status: 'pending' | 'approved' | 'rejected'): ApproverStage | undefined {
-  if (status === 'pending') return 'manager';
-  return undefined;
-}
-
 // ════════════════════════════════════════════════════════════
 // /timeoff — Leave request portal (Group A reconcile)
-// ESS submit + status tracking ONLY. Approval happens in /quick-approve +
-// /workflows/leave/[id] (no inline approve/reject here).
+// Create-only: ESS submit a new leave request. Status/history lives on
+// /time/my-requests; approval happens in /quick-approve + /workflows/leave/[id].
 // Drives the 23-type registry, doc rules, quota reserve, and validation.
 // ════════════════════════════════════════════════════════════
-
-type TabKey = 'request' | 'history';
-
-const HISTORY_TONE: Record<'approved' | 'rejected' | 'pending', string> = {
-  approved: 'bg-[color:var(--color-success-soft)] text-[color:var(--color-success)]',
-  rejected: 'bg-warning-soft text-[color:var(--color-warning)]',
-  pending: 'bg-accent-soft text-[color:var(--color-accent-ink)]',
-} as const;
-
-const HISTORY_LABEL_TH: Record<'approved' | 'rejected' | 'pending', string> = {
-  approved: 'อนุมัติแล้ว',
-  rejected: 'ไม่อนุมัติ',
-  pending: 'รออนุมัติ',
-} as const;
-
-const HISTORY_LABEL_EN: Record<'approved' | 'rejected' | 'pending', string> = {
-  approved: 'Approved',
-  rejected: 'Rejected',
-  pending: 'Pending',
-} as const;
 
 // Bar colors cycled across the quota cards (token-only — teal / indigo / sage).
 const QUOTA_BAR_CLASSES = [
@@ -315,17 +231,8 @@ export default function HumiTimeoffPage() {
   const params = useParams();
   const locale = (params?.locale as string) ?? 'th';
   const isTh = locale !== 'en';
-  const searchParams = useSearchParams();
-  // ?tab=approve is no longer a valid surface here (approval moved to
-  // /quick-approve). Any deep-link to it falls back to the request tab.
-  const requestedTab = searchParams.get('tab');
-  const initialTab: TabKey = requestedTab === 'history' ? 'history' : 'request';
-  const [tab, setTab] = useState<TabKey>(initialTab);
+  const router = useRouter();
   const { toast, show: showToast } = useToast();
-  const [policyOpen, setPolicyOpen] = useState(false);
-  // Post-submit feedback: the id of the just-created request, so the status tab
-  // can briefly ring-highlight its new row. Cleared once it fades / on next tab.
-  const [highlightId, setHighlightId] = useState<string | null>(null);
 
   return (
     <>
@@ -364,167 +271,30 @@ export default function HumiTimeoffPage() {
               'text-[length:var(--text-display-h1)] leading-[var(--text-display-h1--line-height)]'
             )}
           >
-            {isTh ? 'ยื่นคำขอ · ติดตามสถานะ' : 'Request · Track status'}
+            {isTh ? 'ยื่นคำขอลางาน' : 'Request time off'}
           </h1>
         </div>
-        <div className="humi-spacer" />
-        <Button
-          variant="primary"
-          leadingIcon={<Plus size={16} />}
-          onClick={() => setTab('request')}
-        >
-          {isTh ? 'สร้างคำขอใหม่' : 'New request'}
-        </Button>
       </header>
 
       {/* Balance KPIs — read the SAME leave-balances store the submit gate uses,
           so the cards never contradict the form's remaining-quota check. */}
       <QuotaCards isTh={isTh} />
 
-      {/* Main grid: form (1.2fr) + right column (1fr) */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_1fr]">
-        {/* Left — tabs + panel */}
+      {/* Create-only: single centered column. Status + history live on
+          /time/my-requests, so this page just submits a new request. */}
+      <div className="mx-auto w-full max-w-3xl">
         <Card variant="raised" size="lg">
-          <div
-            role="tablist"
-            aria-label={isTh ? 'มุมมองคำขอลางาน' : 'Leave request views'}
-            className="flex flex-wrap gap-1 border-b border-hairline"
-          >
-            <TabButton active={tab === 'request'} onClick={() => setTab('request')}>
-              {isTh ? 'คำขอใหม่' : 'New request'}
-            </TabButton>
-            <TabButton active={tab === 'history'} onClick={() => setTab('history')}>
-              {isTh ? 'สถานะคำขอของฉัน' : 'My request status'}
-            </TabButton>
-          </div>
-
-          {tab === 'request' && (
-            <RequestTab
-              onSubmitted={(msg, newId) => {
-                // Close the loop: surface the toast, jump to the status tab, and
-                // flag the new row so it ring-highlights on first render.
-                showToast(msg);
-                setHighlightId(newId);
-                setTab('history');
-              }}
-              onSavedDraft={(msg) => showToast(msg)}
-            />
-          )}
-
-          {tab === 'history' && (
-            <HistoryTab
-              highlightId={highlightId}
-              onHighlightClear={() => setHighlightId(null)}
-            />
-          )}
+          <RequestTab
+            onSubmitted={(msg, newId) => {
+              // Surface the toast, then hand off to the status list where the
+              // newly-created request now lives.
+              showToast(msg);
+              router.push(`/${locale}/time/my-requests?new=${newId}`);
+            }}
+            onSavedDraft={(msg) => showToast(msg)}
+          />
         </Card>
-
-        {/* Right column */}
-        <aside className="flex flex-col gap-6">
-          {/* Policy callout */}
-          <Card
-            variant="raised"
-            size="lg"
-            className="relative overflow-hidden bg-ink text-canvas"
-          >
-            <div
-              aria-hidden
-              className="absolute -right-10 -top-10 h-36 w-28 rounded-full bg-accent opacity-40 blur-2xl"
-            />
-            <CardEyebrow className="relative text-accent">{isTh ? 'นโยบาย' : 'Policy'}</CardEyebrow>
-            <h3
-              className={cn(
-                'relative mt-1 font-display font-semibold tracking-tight',
-                'text-[length:var(--text-display-h3)] leading-[var(--text-display-h3--line-height)]',
-                'text-canvas'
-              )}
-            >
-              {isTh ? 'นโยบายวันลา' : 'Leave policy'}
-            </h3>
-            <p className="relative mt-2 text-small text-canvas/70 leading-relaxed">
-              {isTh
-                ? 'วันลาพักร้อนที่ไม่ได้ใช้จะไม่ยกยอดไปปีถัดไป — สิทธิ์รีเซ็ตเป็นโควตาใหม่ทุกต้นปี กรุณาใช้ให้ครบภายในปีปฏิทิน'
-                : 'Unused annual leave does not carry over to the next year — entitlement resets to a fresh quota each year, so use it within the calendar year.'}
-            </p>
-            <div className="relative mt-4">
-              <Button variant="primary" onClick={() => setPolicyOpen(true)}>
-                {isTh ? 'อ่านนโยบายฉบับเต็ม' : 'Read the full policy'}
-              </Button>
-            </div>
-          </Card>
-
-          {/* Resignation self-service entry (STA-188): relocated here from the
-              profile Employment tab so the resignation request lives alongside
-              the other ESS leave/time-off actions. Flow itself is unchanged. */}
-          <Card variant="raised" size="lg">
-            <CardEyebrow>{isTh ? 'การลาออก' : 'Resignation'}</CardEyebrow>
-            <h3
-              className={cn(
-                'mt-1 font-display font-semibold tracking-tight text-ink',
-                'text-[length:var(--text-display-h3)] leading-[var(--text-display-h3--line-height)]'
-              )}
-            >
-              {isTh ? 'ยื่นคำขอลาออก' : 'Resign'}
-            </h3>
-            <p className="mt-2 text-small text-ink-muted leading-relaxed">
-              {isTh
-                ? 'ยื่นคำขอลาออกและติดตามสถานะการดำเนินการ'
-                : 'Submit your resignation request and track its status.'}
-            </p>
-            <div className="mt-4">
-              <Link
-                href={`/${locale}/resignation`}
-                className="inline-flex items-center gap-2 text-body font-medium text-accent hover:underline"
-              >
-                <LogOut size={16} aria-hidden />
-                {isTh ? 'ดูคำขอลาออก' : 'View resignation request'}
-              </Link>
-            </div>
-          </Card>
-        </aside>
       </div>
-
-      {/* Policy modal — full leave-carryover policy text */}
-      <Modal
-        open={policyOpen}
-        onClose={() => setPolicyOpen(false)}
-        title={isTh ? 'นโยบายวันลา · ฉบับเต็ม' : 'Leave policy · Full text'}
-      >
-        <div className="space-y-4 text-body text-ink-soft leading-relaxed">
-          {isTh ? (
-            <p>
-              วันลาพักร้อนที่ไม่ได้ใช้ภายในปีปฏิทิน <strong className="text-ink">จะไม่ยกยอดไปปีถัดไป</strong>
-              {' '}สิทธิ์จะถูกรีเซ็ตเป็นโควตาใหม่เมื่อขึ้นปีใหม่ จึงควรวางแผนใช้สิทธิ์ให้ครบภายในปี
-            </p>
-          ) : (
-            <p>
-              Unused annual leave within the calendar year{' '}
-              <strong className="text-ink">does not carry over</strong> to the next year.
-              Entitlement resets to a fresh quota at the start of each year, so plan to use it within the year.
-            </p>
-          )}
-          <ul className="list-disc space-y-2 pl-5">
-            {isTh ? (
-              <>
-                <li>วันลาทุกประเภทรีเซ็ตเป็นโควตาใหม่ทุกต้นปี (ไม่ยกยอด)</li>
-                <li>ควรวางแผนใช้สิทธิ์ให้ครบก่อนสิ้นปีปฏิทิน</li>
-                <li>ดูยอดคงเหลือของแต่ละประเภทได้จากการ์ดด้านบนของหน้านี้</li>
-              </>
-            ) : (
-              <>
-                <li>All leave types reset to a fresh quota at the start of each year (no carryover).</li>
-                <li>Plan to use your entitlement before the calendar year ends.</li>
-                <li>Check the remaining balance for each type from the cards at the top of this page.</li>
-              </>
-            )}
-          </ul>
-          <p className="text-small text-ink-muted">
-            {isTh
-              ? 'อ้างอิงระเบียบบริษัทว่าด้วยการลา · ฉบับปรับปรุง 2569'
-              : 'Per the company leave policy · 2026 revision'}
-          </p>
-        </div>
-      </Modal>
     </>
   );
 }
@@ -864,7 +634,7 @@ function RequestTab({
       ),
     }));
 
-    // Mirror into the legacy history list so the History tab shows it too.
+    // Mirror into the legacy history list so the My Request list (/time/my-requests) shows it too.
     submitHistory({
       kind: leaveCodeToHistoryKind(code),
       kindLabel: isTh ? (def?.nameTh ?? code) : (def?.nameEn ?? code),
@@ -1390,267 +1160,6 @@ function InlineError({ msg }: { msg: string }) {
   );
 }
 
-// ────────────────────────────────────────────────────────────
-// History / status tab — live status from leave-approvals, plus the legacy
-// seeded history. Shows pending → (awaiting HR) → approved | rejected.
-// ────────────────────────────────────────────────────────────
-
-const APPROVAL_STATUS_TONE: Record<ApprovalLeaveStatus, string> = {
-  ...HISTORY_TONE,
-  cancelled: 'bg-canvas-soft text-ink-muted',
-};
-
-function liveStatusLabel(r: LeaveRequest, isTh: boolean): { label: string; tone: string } {
-  const tone =
-    r.status === 'approved'
-      ? HISTORY_TONE.approved
-      : r.status === 'rejected'
-        ? HISTORY_TONE.rejected
-        : r.status === 'cancelled'
-          ? 'bg-canvas-soft text-ink-muted'
-          : HISTORY_TONE.pending;
-  // Single source of truth — narrates the manager → HR stage on 2-level chains.
-  return { label: leaveStageLabel(r.status, r.awaitingNext, isTh), tone };
-}
-
-function HistoryRow({ h, locale }: { h: TimeoffHistoryItem; locale: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const isoSubmittedAt = ISO_MAP[h.id];
-  const audit = AUDIT_MAP[h.id];
-  const days = daysWaiting(isoSubmittedAt);
-  const activeStage = activeStageForStatus(h.status);
-
-  const actionLabel = (action: string) => {
-    if (action === 'submit') return locale === 'th' ? 'ส่งคำขอ' : 'Submitted';
-    if (action === 'approve') return locale === 'th' ? 'อนุมัติ' : 'Approved';
-    if (action === 'reject') return locale === 'th' ? 'ปฏิเสธ' : 'Rejected';
-    return action;
-  };
-
-  return (
-    <li className="flex flex-col gap-3 py-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <Avatar name={h.kindLabel} tone="teal" size="sm" />
-          <div className="min-w-0 flex-1">
-            <p className="text-body font-semibold text-ink">
-              {h.fromDate}
-              {h.toDate !== h.fromDate ? ` – ${h.toDate}` : ''}
-            </p>
-            <p className="text-small text-ink-muted">
-              {h.kindLabel} · {h.reason}
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-col items-start gap-1 sm:items-end shrink-0">
-          <span
-            className={cn(
-              'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
-              APPROVAL_STATUS_TONE[h.status]
-            )}
-          >
-            {(locale === 'th' ? HISTORY_LABEL_TH : HISTORY_LABEL_EN)[h.status]}
-          </span>
-          {h.status === 'pending' && isoSubmittedAt && (
-            <span className={`text-xs font-mono ${days > 3 ? 'text-amber-600 font-semibold' : 'text-ink-muted'}`}>
-              {days} {locale === 'th' ? 'ด. รอ' : 'd. waiting'}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Approval chain */}
-      <div className="pl-0">
-        <ApprovalChain chain={TIMEOFF_CHAIN} locale={locale} activeStage={activeStage} size="sm" />
-      </div>
-
-      {/* Audit timeline toggle */}
-      {audit && audit.length > 0 && (
-        <>
-          <button
-            className="flex items-center gap-1 text-xs text-ink-muted hover:text-ink transition-colors"
-            onClick={() => setExpanded((v) => !v)}
-            aria-expanded={expanded}
-          >
-            {expanded ? <ChevronDown size={12} aria-hidden /> : <ChevronRight size={12} aria-hidden />}
-            {locale === 'th' ? 'ประวัติการดำเนินการ' : 'Audit history'}
-          </button>
-          {expanded && (
-            <ol className="space-y-2 pl-2">
-              {audit.map((entry, idx) => (
-                <li key={idx} className="flex gap-3 text-xs">
-                  <span className={`w-1.5 h-1.5 rounded-full ${dotColor(entry.action)} mt-1.5 shrink-0`} />
-                  <div>
-                    <span className="font-medium text-ink">{entry.actorName}</span>
-                    {' '}
-                    <span className="text-ink-muted">{actionLabel(entry.action)}</span>
-                    <span className="ml-2 text-ink-faint">{formatDateTime(entry.at)}</span>
-                    {entry.comment && (
-                      <p className="text-ink-muted mt-0.5 italic">&ldquo;{entry.comment}&rdquo;</p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
-        </>
-      )}
-    </li>
-  );
-}
-
-function HistoryTab({
-  highlightId,
-  onHighlightClear,
-}: {
-  highlightId?: string | null;
-  onHighlightClear?: () => void;
-} = {}) {
-  const params = useParams();
-  const locale = (params?.locale as string) ?? 'th';
-  const isTh = locale !== 'en';
-  const history = useTimeoffStore((s) => s.history);
-  const userId = useAuthStore((s) => s.userId) ?? DEMO_EMPLOYEE.id;
-  const userName = useAuthStore((s) => s.username) ?? DEMO_EMPLOYEE.name;
-  // STA-157 — employee cancel of a first-approval pending leave request.
-  const cancelRequest = useLeaveApprovals((s) => s.cancel);
-  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
-
-  // Post-submit highlight: ring the new row, then fade it after ~2.4s. Clearing
-  // the parent's flag prevents the ring from re-applying on later re-renders.
-  const [ringActive, setRingActive] = useState(false);
-  useEffect(() => {
-    if (!highlightId) return;
-    setRingActive(true);
-    const t = setTimeout(() => {
-      setRingActive(false);
-      onHighlightClear?.();
-    }, 2400);
-    return () => clearTimeout(t);
-  }, [highlightId, onHighlightClear]);
-  // Select raw array — filtering inside the selector returns a new reference every snapshot,
-  // triggering the "getSnapshot should be cached" infinite-loop crash. Filter via useMemo instead.
-  const allRequests = useLeaveApprovals((s) => s.requests);
-  const liveRequests = useMemo(
-    () =>
-      allRequests.filter(
-        (r) => r.employeeId === userId && r.queueSnapshot?.type === 'leave' && !!r.leaveCode,
-      ),
-    [allRequests, userId],
-  );
-
-  // STA-157 — the request being cancelled, surfaced in the confirm modal so the
-  // employee sees WHICH leave (type + dates) they are cancelling before confirming.
-  const cancelReq = cancelTarget ? liveRequests.find((r) => r.id === cancelTarget) ?? null : null;
-  const cancelReqDef = cancelReq ? getLeaveType(cancelReq.leaveCode ?? '') : null;
-
-  if (history.length === 0 && liveRequests.length === 0) {
-    return (
-      <div className="py-12 text-center text-small text-ink-muted">
-        {isTh ? 'ยังไม่มีคำขอลา' : 'No leave requests yet'}
-      </div>
-    );
-  }
-
-  return (
-    <div className="pt-2">
-      {/* Live (this-session) requests with reserved/awaiting status */}
-      {liveRequests.length > 0 && (
-        <ul role="list" className="divide-y divide-hairline">
-          {liveRequests.map((r) => {
-            const def = getLeaveType(r.leaveCode ?? '');
-            const { label, tone } = liveStatusLabel(r, isTh);
-            const isHighlighted = ringActive && r.id === highlightId;
-            return (
-              <li
-                key={r.id}
-                data-testid={isHighlighted ? 'timeoff-new-row-highlight' : undefined}
-                className={cn(
-                  'flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:gap-3',
-                  isHighlighted &&
-                    'rounded-[var(--radius-md)] px-3 ring-2 ring-accent-soft bg-accent-soft/30 transition-all duration-500',
-                )}
-              >
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <Avatar name={(isTh ? def?.nameTh : def?.nameEn) ?? r.leaveType} tone="teal" size="sm" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-body font-semibold text-ink">
-                      {formatDate(r.startDate, 'medium', locale)}
-                      {r.endDate !== r.startDate ? ` – ${formatDate(r.endDate, 'medium', locale)}` : ''}
-                    </p>
-                    <p className="text-small text-ink-muted">
-                      {(isTh ? def?.nameTh : def?.nameEn) ?? r.leaveType} · {r.days ?? 0} {isTh ? 'วัน' : 'd'}
-                      {' · '}
-                      {r.reason}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col items-start gap-1 sm:items-end shrink-0">
-                  <span
-                    className={cn(
-                      'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
-                      tone,
-                    )}
-                  >
-                    {label}
-                  </span>
-                  {r.status === 'pending' && (r.reservedDays ?? 0) > 0 && (
-                    <span className="text-[length:var(--text-eyebrow)] text-ink-muted">
-                      {isTh ? `จองสิทธิ์ ${r.reservedDays} วัน` : `Reserved ${r.reservedDays}d`}
-                    </span>
-                  )}
-                  {/* STA-157 — cancel a first-approval pending request only. */}
-                  {r.status === 'pending' && !r.awaitingNext && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setCancelTarget(r.id)}
-                    >
-                      {isTh ? 'ยกเลิกคำขอ' : 'Cancel'}
-                    </Button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
-      {/* STA-157 / STA-175 — cancel confirmation via the shared CancelRequestModal. */}
-      {cancelReq && (
-        <CancelRequestModal
-          open={cancelTarget !== null}
-          onClose={() => setCancelTarget(null)}
-          onConfirm={() => {
-            if (cancelTarget) cancelRequest(cancelTarget, { id: userId, name: userName });
-            setCancelTarget(null);
-          }}
-          locale={isTh ? 'th' : 'en'}
-          fields={{
-            typeLabel: (isTh ? cancelReqDef?.nameTh : cancelReqDef?.nameEn) ?? cancelReq.leaveType,
-            period:
-              cancelReq.endDate !== cancelReq.startDate
-                ? `${formatDate(cancelReq.startDate, 'medium', locale)} – ${formatDate(cancelReq.endDate, 'medium', locale)}`
-                : formatDate(cancelReq.startDate, 'medium', locale),
-            reason: cancelReq.reason || undefined,
-            currentStep: leaveStageLabel(cancelReq.status, cancelReq.awaitingNext, isTh),
-            currentStatus: leaveStageLabel(cancelReq.status, cancelReq.awaitingNext, isTh),
-          }}
-        />
-      )}
-
-      {/* Legacy seeded history */}
-      {history.length > 0 && (
-        <ul role="list" className="divide-y divide-hairline">
-          {history.map((h: TimeoffHistoryItem) => (
-            <HistoryRow key={h.id} h={h} locale={locale} />
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 // ──────── helpers (co-located) ────────
 
 const inputClass = cn(
@@ -1658,34 +1167,6 @@ const inputClass = cn(
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
   'placeholder:text-ink-faint'
 );
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={cn(
-        '-mb-px border-b-2 px-4 py-3 text-body font-medium transition-colors whitespace-nowrap',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
-        active
-          ? 'border-accent text-ink'
-          : 'border-transparent text-ink-muted hover:text-ink'
-      )}
-    >
-      {children}
-    </button>
-  );
-}
 
 function Field({
   label,
