@@ -27,10 +27,12 @@ import { currentPeriod, previousPeriod, demoToday } from '@/lib/time/period';
 import { formatDate } from '@/lib/date';
 import { useTranslations } from 'next-intl';
 
+// View Detail opens the EMPLOYEE-ONLY, read-only status detail — never the
+// approval surface. All three types resolve to /time/my-requests/[id].
 const DETAIL_ROUTE: Record<MyRequestType, string> = {
-  leave: 'workflows/leave',
-  ot: 'workflows/ot',
-  time_correction: 'workflows/time-correction',
+  leave: 'time/my-requests',
+  ot: 'time/my-requests',
+  time_correction: 'time/my-requests',
 };
 
 const TYPE_VARIANT: Record<MyRequestType, 'success' | 'info' | 'neutral'> = {

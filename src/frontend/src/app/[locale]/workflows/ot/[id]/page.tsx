@@ -76,6 +76,7 @@ export default function OTDetailPage({ params }: PageProps) {
 
   const request = useOvertimeRequests((s) => s.requests.find((r) => r.id === id));
   const roles = useAuthStore((s) => s.roles) as Role[];
+  const currentEmpId = useAuthStore((s) => s.userId);
 
   const [mode, setMode] = useState<'approve' | 'reject' | null>(null);
   const [reason, setReason] = useState('');
@@ -105,6 +106,9 @@ export default function OTDetailPage({ params }: PageProps) {
   const chain = appliedChainFor('overtime');
   const step = currentStep(queueItem);
   const canAct = rolesActAtCurrentStep(queueItem, roles);
+  // The request owner never sees the approver action surface here — they view
+  // their own status read-only via /time/my-requests.
+  const isOwner = !!currentEmpId && currentEmpId === request.employeeId;
 
   const isPending = request.status === 'pending';
   const stepLabel = OT_STATUS_LABEL[request.status];
@@ -292,8 +296,9 @@ export default function OTDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Action surface — only the CURRENT step's routed approver can decide */}
-      {isPending && canAct && (
+      {/* Action surface — only the CURRENT step's routed approver can decide
+          (never the request owner, who has a read-only view of their own status) */}
+      {isPending && canAct && !isOwner && (
         <div className="sticky bottom-4 z-30 mt-6">
           <div className="rounded-[var(--radius-lg)] border border-hairline bg-surface shadow-[var(--shadow-card)] px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
             <p className="text-sm text-ink-muted">
@@ -314,7 +319,7 @@ export default function OTDetailPage({ params }: PageProps) {
           </div>
         </div>
       )}
-      {isPending && !canAct && (
+      {isPending && (!canAct || isOwner) && (
         <div className="mt-6 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-4 py-3 text-sm text-ink-muted">
           {isTh
             ? 'ดูได้อย่างเดียว — คำขอนี้รอผู้อนุมัติในขั้นปัจจุบัน'

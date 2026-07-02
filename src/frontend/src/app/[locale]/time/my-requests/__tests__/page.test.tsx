@@ -81,6 +81,18 @@ describe('/time/my-requests page (STA-183)', () => {
     expect(within(table).getAllByText('ยกเลิกแล้ว').length).toBeGreaterThanOrEqual(2); // cancelled OT + TC
   });
 
+  it('View Detail links to the read-only /time/my-requests/[id] detail (never the approval workflows route)', () => {
+    renderPage();
+    const table = screen.getByRole('table');
+    const links = within(table).getAllByRole('link', { name: 'ดูรายละเอียด' });
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      const href = link.getAttribute('href') ?? '';
+      expect(href).toMatch(/^\/th\/time\/my-requests\/.+/);
+      expect(href).not.toContain('/workflows/');
+    }
+  });
+
   it('the type filter narrows the table to a single request type', () => {
     renderPage();
     const typeSelect = screen.getByLabelText('ประเภทคำขอ');
