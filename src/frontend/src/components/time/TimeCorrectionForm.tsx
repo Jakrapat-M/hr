@@ -15,7 +15,7 @@
 // fields (row 0), days 1..n ride `days?: CorrectionDay[]`. A single row leaves
 // `days` undefined → byte-identical to the original single-day request.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { ChevronRight, Paperclip, X, Trash2 } from 'lucide-react';
 import { Card, Button, FormField, FormInput, Textarea } from '@/components/humi';
@@ -31,7 +31,7 @@ import { CORRECTION_REASONS } from '@/lib/time/correction-reasons';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
 import { isTimesheetLocked } from '@/lib/time/period';
 import { getAttendanceForPeriod } from '@/lib/time/attendance-seed';
-import { computeLateMinutes, formatLate } from '@/lib/time/attendance-math';
+import { computeLateMinutes, formatLate, type AttendanceDay } from '@/lib/time/attendance-math';
 import { useAuthStore } from '@/stores/auth-store';
 
 const CORRECTION_TYPES: CorrectionType[] = ['in', 'out', 'both'];
@@ -95,6 +95,29 @@ export function validateBothCorrectionTimes(
   return null;
 }
 
+/**
+ * STA-174 — the "Original" clock time is a PURE function of the seeded attendance
+ * record + the correction type. It is never user-editable and never written via an
+ * effect; render, summary and submit all call THIS one helper so they can't diverge.
+ *   'in'  → actualIn      'out' → actualOut
+ *   'both'→ dual: { clockIn: actualIn, clockOut: actualOut }  (STA-171's two read-only fields)
+ * A null punch (forgot / day-off) → '' (blank read-only field; spec "(ถ้ามี)/if any").
+ */
+export function deriveOriginal(
+  attendance: AttendanceDay[],
+  date: string,
+  type: CorrectionType,
+): { single: string; clockIn: string; clockOut: string } {
+  const di = date ? (attendance.find((d) => d.date === date) ?? null) : null;
+  const inT = di?.actualIn ?? '';
+  const outT = di?.actualOut ?? '';
+  return {
+    single: type === 'out' ? outT : inT, // 'in' (and fallthrough) → in; 'out' → out
+    clockIn: inT, // 'both' read-only Original Clock In
+    clockOut: outT, // 'both' read-only Original Clock Out
+  };
+}
+
 export interface TimeCorrectionFormProps {
   /** Employee whose timesheet this correction applies to. */
   subjectEmpId: string;
@@ -143,18 +166,6 @@ export function TimeCorrectionForm({
     () => allRequests.filter((r) => r.employeeId === subjectEmpId),
     [allRequests, subjectEmpId],
   );
-
-  // Auto-fill each row's original time from the seeded attendance for that date
-  // (display convenience — the user can still override it).
-  useEffect(() => {
-    setRows((rs) =>
-      rs.map((r) => {
-        if (r.originalTime || !r.date) return r;
-        const di = attendance.find((d) => d.date === r.date);
-        return di?.actualIn ? { ...r, originalTime: di.actualIn } : r;
-      }),
-    );
-  }, [attendance]);
 
   // SINGLE validate point — generalized over the full row-set (MF-5). Returns the
   // FIRST failing row's bilingual error. Compares each new row against the FULL
@@ -259,6 +270,9 @@ export function TimeCorrectionForm({
   }
 
   function toCorrectionDay(r: CorrectionRow): CorrectionDay {
+    // STA-174: derive the Original(s) from the SAME helper the render uses so the
+    // payload can never diverge from what the read-only fields showed.
+    const o = deriveOriginal(attendance, r.date, r.correctionType);
     // 'both' (STA-171): emit the four dual fields + mirror the clock-IN half onto the
     // legacy originalTime/correctedTime so the conflict guard + legacy readers stay
     // coherent. in/out leave the four dual fields undefined (byte-identical).
@@ -268,11 +282,11 @@ export function TimeCorrectionForm({
         date: r.date,
         correctionType: r.correctionType,
         reasonCode: r.reasonCode,
-        originalTime: r.originalClockIn.trim() || undefined,
+        originalTime: o.clockIn || undefined,
         correctedTime: r.correctedClockIn,
-        originalClockIn: r.originalClockIn.trim() || undefined,
+        originalClockIn: o.clockIn || undefined,
         correctedClockIn: r.correctedClockIn,
-        originalClockOut: r.originalClockOut.trim() || undefined,
+        originalClockOut: o.clockOut || undefined,
         correctedClockOut: r.correctedClockOut,
         reason: r.reason,
         docs: r.docs.length > 0 ? r.docs : undefined,
@@ -283,7 +297,7 @@ export function TimeCorrectionForm({
       date: r.date,
       correctionType: r.correctionType,
       reasonCode: r.reasonCode,
-      originalTime: r.originalTime.trim() || undefined,
+      originalTime: o.single || undefined,
       correctedTime: r.correctedTime,
       reason: r.reason,
       docs: r.docs.length > 0 ? r.docs : undefined,
@@ -295,6 +309,8 @@ export function TimeCorrectionForm({
     // Convention X: row 0 = top-level (day 0); days 1..n ride `days` ONLY.
     const day0 = rows[0];
     const day0IsBoth = day0.correctionType === 'both';
+    // STA-174: derive day-0's Original(s) from the SAME helper (single source of truth).
+    const day0Orig = deriveOriginal(attendance, day0.date, day0.correctionType);
     const days = rows.slice(1).map(toCorrectionDay);
     const id = addRequest({
       employeeId: subjectEmpId,
@@ -304,11 +320,11 @@ export function TimeCorrectionForm({
       correctionType: day0.correctionType,
       reasonCode: day0.reasonCode,
       // 'both': mirror the clock-IN half onto the legacy single fields.
-      originalTime: (day0IsBoth ? day0.originalClockIn : day0.originalTime).trim() || undefined,
+      originalTime: (day0IsBoth ? day0Orig.clockIn : day0Orig.single) || undefined,
       correctedTime: day0IsBoth ? day0.correctedClockIn : day0.correctedTime,
-      originalClockIn: day0IsBoth ? day0.originalClockIn.trim() || undefined : undefined,
+      originalClockIn: day0IsBoth ? day0Orig.clockIn || undefined : undefined,
       correctedClockIn: day0IsBoth ? day0.correctedClockIn : undefined,
-      originalClockOut: day0IsBoth ? day0.originalClockOut.trim() || undefined : undefined,
+      originalClockOut: day0IsBoth ? day0Orig.clockOut || undefined : undefined,
       correctedClockOut: day0IsBoth ? day0.correctedClockOut : undefined,
       reason: day0.reason,
       docs: day0.docs.length > 0 ? day0.docs : undefined,
@@ -335,6 +351,9 @@ export function TimeCorrectionForm({
       <div className="flex flex-col gap-4">
         {rows.map((row, idx) => {
           const dayInfo = attendance.find((d) => d.date === row.date) ?? null;
+          // STA-174: the read-only Original(s), derived fresh each render (loop-safe,
+          // re-derives on any date/type change). Same helper feeds summary + submit.
+          const orig = deriveOriginal(attendance, row.date, row.correctionType);
           const originalLate = dayInfo
             ? computeLateMinutes(dayInfo.scheduledIn, dayInfo.actualIn)
             : null;
@@ -430,20 +449,40 @@ export function TimeCorrectionForm({
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField
-                        label={isTh ? 'เวลาเดิม (ถ้ามี)' : 'Original time (if any)'}
-                        help={isTh ? 'เวลาที่ระบบบันทึกไว้' : 'Time the system recorded'}
+                        label={
+                          row.correctionType === 'out'
+                            ? isTh
+                              ? 'เวลาออกเดิม'
+                              : 'Original Clock Out Time'
+                            : isTh
+                              ? 'เวลาเข้าเดิม'
+                              : 'Original Clock In Time'
+                        }
+                        help={isTh ? 'ระบบดึงจากบันทึกเวลาจริง' : 'Pulled from the actual clock record'}
                       >
                         {(controlProps) => (
                           <FormInput
                             {...controlProps}
                             type="time"
-                            value={row.originalTime}
-                            onChange={(e) => updateRow(row.id, { originalTime: e.target.value })}
+                            value={orig.single}
+                            disabled
+                            readOnly
                           />
                         )}
                       </FormField>
 
-                      <FormField label={isTh ? 'เวลาที่ถูกต้อง' : 'Corrected time'} required>
+                      <FormField
+                        label={
+                          row.correctionType === 'out'
+                            ? isTh
+                              ? 'เวลาออกที่ถูกต้อง'
+                              : 'Correct Clock Out Time'
+                            : isTh
+                              ? 'เวลาเข้าที่ถูกต้อง'
+                              : 'Correct Clock In Time'
+                        }
+                        required
+                      >
                         {(controlProps) => (
                           <FormInput
                             {...controlProps}
@@ -455,10 +494,10 @@ export function TimeCorrectionForm({
                       </FormField>
                     </div>
 
-                    {(row.originalTime || row.correctedTime) && (
+                    {(orig.single || row.correctedTime) && (
                       <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-3 py-2 text-sm">
                         <span className="text-ink-muted">{isTh ? 'เวลาเดิม' : 'Original'}</span>
-                        <span className="font-medium text-ink">{row.originalTime || '—'}</span>
+                        <span className="font-medium text-ink">{orig.single || '—'}</span>
                         <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden />
                         <span className="text-ink-muted">{isTh ? 'แก้เป็น' : 'Corrected'}</span>
                         <span className="font-semibold text-accent">{row.correctedTime || '—'}</span>
@@ -477,9 +516,9 @@ export function TimeCorrectionForm({
                           <FormInput
                             {...controlProps}
                             type="time"
-                            value={row.originalClockIn}
+                            value={orig.clockIn}
                             disabled
-                            onChange={(e) => updateRow(row.id, { originalClockIn: e.target.value })}
+                            readOnly
                           />
                         )}
                       </FormField>
@@ -505,9 +544,9 @@ export function TimeCorrectionForm({
                           <FormInput
                             {...controlProps}
                             type="time"
-                            value={row.originalClockOut}
+                            value={orig.clockOut}
                             disabled
-                            onChange={(e) => updateRow(row.id, { originalClockOut: e.target.value })}
+                            readOnly
                           />
                         )}
                       </FormField>
@@ -524,19 +563,19 @@ export function TimeCorrectionForm({
                       </FormField>
                     </div>
 
-                    {(row.originalClockIn || row.correctedClockIn) && (
+                    {(orig.clockIn || row.correctedClockIn) && (
                       <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-3 py-2 text-sm">
                         <span className="text-ink-muted">{isTh ? 'เวลาเข้า' : 'Clock In'}</span>
-                        <span className="font-medium text-ink">{row.originalClockIn || '—'}</span>
+                        <span className="font-medium text-ink">{orig.clockIn || '—'}</span>
                         <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden />
                         <span className="text-ink-muted">{isTh ? 'แก้เป็น' : 'Corrected'}</span>
                         <span className="font-semibold text-accent">{row.correctedClockIn || '—'}</span>
                       </div>
                     )}
-                    {(row.originalClockOut || row.correctedClockOut) && (
+                    {(orig.clockOut || row.correctedClockOut) && (
                       <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-3 py-2 text-sm">
                         <span className="text-ink-muted">{isTh ? 'เวลาออก' : 'Clock Out'}</span>
-                        <span className="font-medium text-ink">{row.originalClockOut || '—'}</span>
+                        <span className="font-medium text-ink">{orig.clockOut || '—'}</span>
                         <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden />
                         <span className="text-ink-muted">{isTh ? 'แก้เป็น' : 'Corrected'}</span>
                         <span className="font-semibold text-accent">{row.correctedClockOut || '—'}</span>
