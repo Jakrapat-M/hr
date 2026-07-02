@@ -112,7 +112,7 @@ describe('AC-1 — sidebar element present on all routes', () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AC-2: Wordmark brand mark present on every route
-// (Updated: logo is now next/image PNG with alt="Humi", no raw text "Hum")
+// (Updated: logo is now next/image PNG with alt="CneXt", no raw text "Hum")
 // ─────────────────────────────────────────────────────────────────────────────
 describe('AC-2 — wordmark "Hum" present on all routes', () => {
   beforeEach(() => {
@@ -126,10 +126,10 @@ describe('AC-2 — wordmark "Hum" present on all routes', () => {
       // now lives in .bp-rail-brand (the icon-rail col-1 brand cell), not .humi-wordmark.
       const wordmarkEl = container.querySelector('.bp-rail-brand');
       expect(wordmarkEl).toBeTruthy();
-      // Brand mark = img with alt matching "Humi"
+      // Brand mark = img with alt matching "CneXt"
       const img = wordmarkEl?.querySelector('img');
       expect(img).toBeTruthy();
-      expect(img?.alt).toMatch(/humi/i);
+      expect(img?.alt).toMatch(/cnext/i);
       unmount();
     });
   }

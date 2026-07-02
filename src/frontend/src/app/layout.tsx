@@ -8,8 +8,8 @@ import { cpnSans, cpnCondensed, anuphan, geistMono } from './fonts';
 // Ref: specs/humi-frontend-redesign.md — Task 2 design system.
 
 export const metadata: Metadata = {
- title:'Humi — Central Group HR',
- description:'ระบบบริหารทรัพยากรบุคคล Central Group (Humi)',
+ title:'CneXt — Central Group HR',
+ description:'ระบบบริหารทรัพยากรบุคคล Central Group (CneXt)',
 };
 
 export default function RootLayout({
