@@ -3162,7 +3162,15 @@
     },
     "simple": {
       "breadcrumb": "HUMI · การจัดการทีม · อนุมัติ",
-      "title": "คิวอนุมัติ",
+      "title": "จัดการคำขอเวิร์กโฟลว์",
+      "moduleFilter": {
+        "label": "กรองตามโมดูล",
+        "all": "ทุกโมดูล",
+        "ec": "EC",
+        "be": "BE",
+        "tm": "TM",
+        "py": "PY"
+      },
       "subtitlePending": "{n} รายการรอการตัดสินใจ",
       "filter": {
         "all": "ทั้งหมด",

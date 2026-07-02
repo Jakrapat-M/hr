@@ -258,8 +258,8 @@ describe('Blueprint sidebar — role-gated views', () => {
     navigationMocks.pathname = '/th/quick-approve'; // open team group
     render(<Sidebar />);
     // Req5 dedupe: the former standalone "อนุมัติ" leaf merged into the unified
-    // "กล่องงาน · อนุมัติ" inbox leaf, still resolving to /quick-approve.
-    expect(screen.getByText('กล่องงาน · อนุมัติ').closest('a')).toHaveAttribute(
+    // "จัดการคำขอเวิร์กโฟลว์" inbox leaf, still resolving to /quick-approve.
+    expect(screen.getByText('จัดการคำขอเวิร์กโฟลว์').closest('a')).toHaveAttribute(
       'href',
       '/th/quick-approve',
     );
@@ -352,7 +352,7 @@ describe('Blueprint sidebar — master-detail rail selection', () => {
     render(<Sidebar />);
     clickGroup(GROUP_TEAM);
     expect(railTab(GROUP_TEAM)).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByText('กล่องงาน · อนุมัติ')).toBeInTheDocument();
+    expect(screen.getByText('จัดการคำขอเวิร์กโฟลว์')).toBeInTheDocument();
   });
 });
 

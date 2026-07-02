@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { CheckCircle2, XCircle, RotateCcw, Route, ShieldAlert, Eye } from 'lucide-react';
 import { Button, Modal, FormField, Capability } from '@/components/humi';
 import { cn } from '@/lib/utils';
-import type { RequestType } from '@/lib/quick-approve-api';
+import { moduleOf, type RequestType } from '@/lib/quick-approve-api';
 
 interface ActionPanelProps {
   requestId: string;
@@ -122,6 +122,9 @@ export function ActionPanel({
     ? !inputRequired[activeAction] || effectiveValue.trim().length > 0
     : false;
   const isClaim = requestType === 'claim';
+  // STA-178 — EC-module requests (change_request / probation / transfer): HR can
+  // only Approve or Send back (Return). Reject / Reroute / Override are withheld.
+  const isEc = requestType ? moduleOf(requestType) === 'EC' : false;
 
   // DEFAULT-SCOPE view-only state (P2): persona is NOT the routed approver for this
   // row. Mirror the list (quick-approve-simple) — the row stays fully visible, but
@@ -156,7 +159,7 @@ export function ActionPanel({
             <CheckCircle2 className="h-4 w-4" aria-hidden />
             {t('approve')}
           </Button>
-          {!isClaim && (
+          {!isClaim && !isEc && (
             <Button
               variant="danger"
               size="md"
@@ -178,7 +181,7 @@ export function ActionPanel({
           </Button>
         </Capability>
 
-        {!isClaim && (
+        {!isClaim && !isEc && (
           <>
             <Capability action="reroute">
               <Button

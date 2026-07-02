@@ -5,7 +5,7 @@
  * The Blueprint MODULES IA originally had several leaves collapsing onto the same
  * route (inbox+approvals → /quick-approve, welfare+claims → /admin/benefits,
  * policy/workflows/notifs/branding → /integrations, …). PR-1 dedupes them:
- *  - inbox + approvals merged into ONE "กล่องงาน · อนุมัติ" leaf (badge 12);
+ *  - inbox + approvals merged into ONE "จัดการคำขอเวิร์กโฟลว์" leaf (badge 12);
  *  - intentionally-shared destinations split by a ?section= / #tab deep-link so
  *    each leaf is honestly distinct while still landing on a real screen.
  *
@@ -249,7 +249,7 @@ describe('AC5.3 — unified approval inbox', () => {
     authMock.roles = PERSONA_ROLES.manager;
     navigationMocks.pathname = '/th/quick-approve'; // team group open by default
     render(<Sidebar />);
-    const inbox = screen.getByText('กล่องงาน · อนุมัติ').closest('a')!;
+    const inbox = screen.getByText('จัดการคำขอเวิร์กโฟลว์').closest('a')!;
     expect(inbox).toHaveAttribute('href', '/th/quick-approve');
     expect(inbox.querySelector('.bp-badge')?.textContent).toBe('12');
   });
