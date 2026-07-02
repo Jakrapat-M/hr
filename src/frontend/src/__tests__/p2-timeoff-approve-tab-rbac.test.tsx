@@ -5,7 +5,7 @@
  * Framework: Vitest + jsdom + React Testing Library
  *
  * This file used to assert a manager-only "รออนุมัติ" tab. That surface was
- * removed: /timeoff is now submit + status-tracking ONLY for everyone. These
+ * removed: /timeoff is now a create-only submit surface for everyone. These
  * tests lock in the removal so the inline approve tab cannot silently return.
  */
 
@@ -13,11 +13,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
 
 let mockRoles: string[] = []
-let mockTab: string | null = null
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ locale: 'th' }),
-  useSearchParams: () => ({ get: (k: string) => (k === 'tab' ? mockTab : null) }),
+  useRouter: () => ({ push: vi.fn() }),
 }))
 
 vi.mock('@/stores/auth-store', () => ({
@@ -40,16 +39,15 @@ import HumiTimeoffPage from '@/app/[locale]/timeoff/page'
 
 beforeEach(() => {
   mockRoles = []
-  mockTab = null
 })
 afterEach(() => cleanup())
 
 describe('/timeoff — no inline approve surface (approval lives in /quick-approve)', () => {
-  it('employee does NOT see an approve tab', () => {
+  it('employee sees the create form and no approve tab', () => {
     mockRoles = ['employee']
     render(<HumiTimeoffPage />)
     expect(screen.queryByRole('tab', { name: /รออนุมัติ/ })).toBeNull()
-    expect(screen.getByRole('tab', { name: /คำขอใหม่/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'ส่งคำขอ' })).toBeInTheDocument()
   })
 
   it('manager also does NOT see an inline approve tab (moved to /quick-approve)', () => {
@@ -58,11 +56,10 @@ describe('/timeoff — no inline approve surface (approval lives in /quick-appro
     expect(screen.queryByRole('tab', { name: /รออนุมัติ/ })).toBeNull()
   })
 
-  it('a deep-link to ?tab=approve falls back to the request tab', () => {
+  it('renders no tablist at all — the page is create-only', () => {
     mockRoles = ['employee']
-    mockTab = 'approve'
     render(<HumiTimeoffPage />)
-    const requestTab = screen.getByRole('tab', { name: /คำขอใหม่/ })
-    expect(requestTab.getAttribute('aria-selected')).toBe('true')
+    expect(screen.queryByRole('tablist')).toBeNull()
+    expect(screen.queryByRole('tab')).toBeNull()
   })
 })

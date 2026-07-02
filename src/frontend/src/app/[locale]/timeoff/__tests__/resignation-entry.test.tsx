@@ -1,8 +1,8 @@
 /**
- * resignation-entry.test.tsx — STA-188: the "คำขอลาออก / Resignation" entry now
- * lives on the Time Off / Leave self-service hub (relocated from the profile
- * Employment tab). This suite asserts the hub renders a link to /resignation
- * that preserves the active locale.
+ * resignation-entry.test.tsx — the Time Off / Leave self-service hub is now
+ * create-only. The resignation ("คำขอลาออก / Resignation") entry no longer
+ * lives here — it belongs on Profile → Employment. This suite asserts the hub
+ * renders NO link to /resignation and none of the resignation entry copy.
  * Framework: Vitest + jsdom + React Testing Library
  */
 
@@ -13,7 +13,7 @@ let mockRoles: string[] = []
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ locale: 'th' }),
-  useSearchParams: () => ({ get: () => null }),
+  useRouter: () => ({ push: vi.fn() }),
 }))
 
 vi.mock('@/stores/auth-store', () => ({
@@ -56,12 +56,19 @@ beforeEach(() => {
 })
 afterEach(() => cleanup())
 
-describe('STA-188 — Time Off hub resignation entry', () => {
-  it('renders a link whose href points at /resignation and preserves the locale', () => {
+describe('Time Off hub — no resignation entry', () => {
+  it('renders no /resignation link', () => {
     render(<HumiTimeoffPage />)
 
-    const resignLink = screen.getByRole('link', { name: /ดูคำขอลาออก/i })
-    expect(resignLink).toBeInTheDocument()
-    expect(resignLink.getAttribute('href')).toBe('/th/resignation')
+    const resignLinks = screen
+      .queryAllByRole('link')
+      .filter((a) => (a.getAttribute('href') ?? '').includes('/resignation'))
+    expect(resignLinks).toHaveLength(0)
+  })
+
+  it('renders no resignation entry copy', () => {
+    render(<HumiTimeoffPage />)
+
+    expect(screen.queryByText(/ดูคำขอลาออก/i)).not.toBeInTheDocument()
   })
 })
