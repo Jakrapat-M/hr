@@ -15,7 +15,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Check, FileText, Download, Pencil, X, FileX } from 'lucide-react';
+import { Check, FileText, Download, Pencil, FileX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import {
@@ -29,6 +29,7 @@ import {
   DEPENDENT_RELATION_LABELS,
   HUMI_MY_PROFILE,
   type HumiEmployee,
+  type HumiDependent,
 } from '@/lib/humi-mock-data';
 import { calcYearOfService } from '@/lib/calculations/calcYearOfService';
 import {
@@ -50,6 +51,7 @@ import {
   type ProfileTab,
   type PendingChange,
   type SectionKey,
+  type EmergencyContactRow,
 } from '@/stores/humi-profile-slice';
 import { FileUploadField } from '@/components/humi/FileUploadField';
 import { Modal } from '@/components/humi';
@@ -450,6 +452,14 @@ export default function HumiProfileMePage({
   const [sectionDraft, setSectionDraft] = useState<EditFormValues>(initialFormValues);
   const [sectionDate, setSectionDate] = useState<string>('');
   const [sectionAttachmentIds, setSectionAttachmentIds] = useState<string[]>([]);
+  // STA-186 — emergency tab converges to STA-82 per-section pencils. Two array-editor
+  // sections (emergency contacts, dependents) toggle independently over the shared draft.
+  const [editingEmergency, setEditingEmergency] = useState(false);
+  const [editingDependents, setEditingDependents] = useState(false);
+  // Open-time snapshots so a per-section Cancel reverts ONLY its own slice (store
+  // cancelEdit() would revert the whole draft).
+  const [emergencySnapshot, setEmergencySnapshot] = useState<EmergencyContactRow[]>([]);
+  const [dependentsSnapshot, setDependentsSnapshot] = useState<HumiDependent[]>([]);
   const lastAppliedProfileSearchRef = useRef<string | null>(null);
 
   // Derive panel key from slice activeTab
@@ -506,10 +516,39 @@ export default function HumiProfileMePage({
     }
   }, [panelKey, isEditing, cancelEdit]);
 
-  // Show success toast after save
-  function handleSave() {
-    save();
-    showToast('บันทึกเรียบร้อย');
+  // STA-186 — collapse per-section emergency edits when leaving the emergency panel.
+  useEffect(() => {
+    if (panelKey !== 'emergency') {
+      setEditingEmergency(false);
+      setEditingDependents(false);
+    }
+  }, [panelKey]);
+
+  // STA-186 — section-scoped open/cancel for the emergency-tab array editors.
+  // Open seeds the draft slice from saved (no stale rows from a prior cancelled
+  // edit); Cancel reverts ONLY this slice via updateDraft — never store
+  // cancelEdit(), which would revert the WHOLE draft (both sections + other tabs).
+  function openEmergencyEdit() {
+    const current = saved.emergencyContacts ?? [];
+    setEmergencySnapshot(current);
+    updateDraft({ emergencyContacts: current });
+    setEditingEmergency(true);
+    setEditingDependents(false); // one-open-at-a-time — avoids a Save flushing the other's rows
+  }
+  function cancelEmergencyEdit() {
+    updateDraft({ emergencyContacts: emergencySnapshot });
+    setEditingEmergency(false);
+  }
+  function openDependentsEdit() {
+    const current = saved.dependents ?? [];
+    setDependentsSnapshot(current);
+    updateDraft({ dependents: current });
+    setEditingDependents(true);
+    setEditingEmergency(false); // one-open-at-a-time — avoids a Save flushing the other's rows
+  }
+  function cancelDependentsEdit() {
+    updateDraft({ dependents: dependentsSnapshot });
+    setEditingDependents(false);
   }
 
   // ── Gate handlers ─────────────────────────────────────────────────────────
@@ -626,7 +665,13 @@ export default function HumiProfileMePage({
   // sub-components are plain function objects, not React components — they are
   // called via JSX only inside the return block, so no conditional hooks issue.
 
-  function EmergencyContactSectionEditor() {
+  function EmergencyContactSectionEditor({
+    onClose,
+    onCancel,
+  }: {
+    onClose: () => void;
+    onCancel: () => void;
+  }) {
     const rows = draft.emergencyContacts ?? [];
     const today = new Date().toISOString().slice(0, 10);
 
@@ -641,6 +686,7 @@ export default function HumiProfileMePage({
       });
       save();
       showToast(tEss('changeRequest.submit'));
+      onClose();
     }
 
     return (
@@ -649,7 +695,10 @@ export default function HumiProfileMePage({
           value={rows}
           onChange={(updated) => updateDraft({ emergencyContacts: updated })}
         />
-        <div style={{ marginTop: 12 }}>
+        <div className="humi-row" style={{ marginTop: 12, justifyContent: 'flex-end', gap: 8 }}>
+          <Button variant="ghost" size="sm" onClick={onCancel}>
+            {t('profileCancelEdit')}
+          </Button>
           <Button
             variant="primary"
             size="sm"
@@ -663,7 +712,13 @@ export default function HumiProfileMePage({
     );
   }
 
-  function DependentsSectionEditor() {
+  function DependentsSectionEditor({
+    onClose,
+    onCancel,
+  }: {
+    onClose: () => void;
+    onCancel: () => void;
+  }) {
     const rows = draft.dependents ?? [];
     const today = new Date().toISOString().slice(0, 10);
 
@@ -678,6 +733,7 @@ export default function HumiProfileMePage({
       });
       save();
       showToast(tEss('changeRequest.submit'));
+      onClose();
     }
 
     return (
@@ -686,7 +742,10 @@ export default function HumiProfileMePage({
           value={rows}
           onChange={(updated) => updateDraft({ dependents: updated })}
         />
-        <div style={{ marginTop: 12 }}>
+        <div className="humi-row" style={{ marginTop: 12, justifyContent: 'flex-end', gap: 8 }}>
+          <Button variant="ghost" size="sm" onClick={onCancel}>
+            {t('profileCancelEdit')}
+          </Button>
           <Button
             variant="primary"
             size="sm"
@@ -1057,51 +1116,6 @@ export default function HumiProfileMePage({
           </div>
         )}
       </Modal>
-
-      {/* Top action bar — Edit controls only on personal panel (tab guard
-          prevents stranded Save/Cancel on other tabs). Buttons container uses
-          fixed min-width to reserve space for 2-button state so toggling
-          Edit↔(Cancel+Save) doesn't jump layout (Ken UAT 2026-04-22 "กระตุก"). */}
-      {/* STA-82: personal panel is 100% section-level — every section has its own
-          Edit button. The global Edit/Save/Cancel bar is only needed for panels
-          that still use the isEditing pattern (emergency tab: Emergency Contacts +
-          Dependents). Suppress it on 'personal' to avoid confusion. */}
-      <div className="mb-5 flex items-center justify-end gap-3 flex-wrap">
-        {panelKey === 'emergency' && (
-          // Render all 3 buttons always, toggle visibility via CSS — avoids
-          // React mount/unmount flash. Container reserves 2-button width so
-          // layout doesn't jump when swapping (Ken UAT 2026-04-22 "กระตุก").
-          <div className="humi-row justify-end" style={{ gap: 8, minWidth: 260 }}>
-            <Button
-              variant="primary"
-              size="md"
-              leadingIcon={<Pencil size={14} />}
-              onClick={startEdit}
-              className={isEditing ? 'hidden' : ''}
-            >
-              {t('profileEdit')}
-            </Button>
-            <Button
-              variant="ghost"
-              size="md"
-              leadingIcon={<X size={14} />}
-              onClick={cancelEdit}
-              className={isEditing ? '' : 'hidden'}
-            >
-              {t('profileCancelEdit')}
-            </Button>
-            <Button
-              variant="primary"
-              size="md"
-              leadingIcon={<Check size={14} />}
-              onClick={handleSave}
-              className={isEditing ? '' : 'hidden'}
-            >
-              {t('save')}
-            </Button>
-          </div>
-        )}
-      </div>
 
       {/* Page h1 — visually hidden; the hero h2 carries the visible name */}
       <h1 className="sr-only">{locale === 'en' ? 'My Profile' : 'โปรไฟล์ของฉัน'}</h1>
@@ -1663,15 +1677,34 @@ export default function HumiProfileMePage({
       {panelKey === 'emergency' && (
         <>
           <div className="humi-card">
-            <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
-              {t('emergencyTitle')}
-              <PendingSectionBadge section="emergencyContact" />
-            </h3>
+            <div
+              className="humi-row"
+              style={{ alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
+            >
+              <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
+                {t('emergencyTitle')}
+                <PendingSectionBadge section="emergencyContact" />
+              </h3>
+              {!editingEmergency && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  leadingIcon={<Pencil size={13} />}
+                  onClick={openEmergencyEdit}
+                  aria-label={t('profileEdit')}
+                >
+                  {t('profileEdit')}
+                </Button>
+              )}
+            </div>
             <p style={{ color: 'var(--color-ink-muted)', fontSize: 13, marginTop: 6 }}>
               {t('emergencyHelp')}
             </p>
-            {isEditing ? (
-              <EmergencyContactSectionEditor />
+            {editingEmergency ? (
+              <EmergencyContactSectionEditor
+                onClose={() => setEditingEmergency(false)}
+                onCancel={cancelEmergencyEdit}
+              />
             ) : (
               <div className="grid gap-3.5 md:grid-cols-2" style={{ marginTop: 16 }}>
                 {p.emergency.map((c) => (
@@ -1699,15 +1732,34 @@ export default function HumiProfileMePage({
 
           {/* ── ผู้อุปการะ (BRD #20) ────────────────────────────────────────── */}
           <div className="humi-card" style={{ marginTop: 16 }}>
-            <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
-              ผู้อุปการะ
-              <PendingSectionBadge section="dependents" />
-            </h3>
+            <div
+              className="humi-row"
+              style={{ alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
+            >
+              <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
+                ผู้อุปการะ
+                <PendingSectionBadge section="dependents" />
+              </h3>
+              {!editingDependents && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  leadingIcon={<Pencil size={13} />}
+                  onClick={openDependentsEdit}
+                  aria-label={t('profileEdit')}
+                >
+                  {t('profileEdit')}
+                </Button>
+              )}
+            </div>
             <p style={{ color: 'var(--color-ink-muted)', fontSize: 13, marginTop: 6 }}>
               สมาชิกในครอบครัวที่ได้รับสวัสดิการ
             </p>
-            {isEditing ? (
-              <DependentsSectionEditor />
+            {editingDependents ? (
+              <DependentsSectionEditor
+                onClose={() => setEditingDependents(false)}
+                onCancel={cancelDependentsEdit}
+              />
             ) : (
               <div className="grid gap-3.5 md:grid-cols-2" style={{ marginTop: 16 }}>
                 {(saved.dependents ?? []).map((dep) => (
