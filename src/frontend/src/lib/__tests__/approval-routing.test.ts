@@ -43,6 +43,7 @@ const ALL_TYPES: RequestType[] = [
   'pay_rate',
   'tax_planning',
   'time_correction',
+  'shift_assignment',
 ];
 
 function makeRow(

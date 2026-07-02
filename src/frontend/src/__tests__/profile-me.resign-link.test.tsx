@@ -1,7 +1,9 @@
 /**
  * profile-me.resign-link.test.tsx
- * AC-5: /profile/me Employment tab มี Link ไปยัง /resignation พร้อม Thai label
- *       ตรวจ href pattern + visible Thai label "ดูคำขอลาออก"
+ * STA-188: the "คำขอลาออก / Resignation" entry moved OFF the /profile/me
+ *          Employment tab and onto the Time Off / Leave self-service hub.
+ *          This suite asserts the profile Employment tab no longer links to
+ *          /resignation (single entry point after the move).
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -142,33 +144,23 @@ afterEach(() => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// AC-5: Link ไปยัง /resignation ต้องปรากฏใน Employment tab
+// STA-188: the resignation entry moved to the Time Off hub — it must NOT appear
+// on the profile/me Employment tab anymore (single entry point after the move).
 // ════════════════════════════════════════════════════════════════════════════
 
-describe('AC-5: profile/me Employment tab มี link ไปยัง /resignation', () => {
-  it('AC-5: ต้องมี <a> ที่ href ประกอบด้วย "resignation"', async () => {
+describe('STA-188: profile/me Employment tab no longer links to /resignation', () => {
+  it('has NO <a> whose href contains "resignation"', async () => {
     await renderProfileMePage();
 
-    // AC-5: ค้นหา link ที่ href มี "resignation" path
-    const links = screen.getAllByRole('link');
-    const resignLink = links.find((l) =>
-      (l.getAttribute('href') ?? '').includes('resignation'),
-    );
-    expect(resignLink).toBeDefined();
+    const resignLink = screen
+      .queryAllByRole('link')
+      .find((l) => (l.getAttribute('href') ?? '').includes('resignation'));
+    expect(resignLink).toBeUndefined();
   });
 
-  it('AC-5: resignation link ต้องมี Thai label (ดูคำขอลาออก)', async () => {
+  it('does not render the "ดูคำขอลาออก" resignation link', async () => {
     await renderProfileMePage();
 
-    // AC-5: getByRole('link') + Thai label text (Ken U1: visible Thai label)
-    const resignLink = screen.getByRole('link', { name: /ดูคำขอลาออก/i });
-    expect(resignLink).toBeInTheDocument();
-  });
-
-  it('AC-5: resignation link href ต้องมี path "/resignation"', async () => {
-    await renderProfileMePage();
-
-    const resignLink = screen.getByRole('link', { name: /ดูคำขอลาออก/i });
-    expect(resignLink.getAttribute('href')).toMatch(/resignation/);
+    expect(screen.queryByRole('link', { name: /ดูคำขอลาออก/i })).toBeNull();
   });
 });

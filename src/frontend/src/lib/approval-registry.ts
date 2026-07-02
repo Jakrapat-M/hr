@@ -55,6 +55,14 @@ import {
   useTerminationApprovals,
   type TerminationRequest,
 } from '@/stores/termination-approvals';
+import { useShiftAssignment } from '@/stores/shift-assignment';
+import {
+  assignedMemberCount,
+  filledCellCount,
+  formatMonthLabel,
+  resolveEmpName,
+  type ShiftGroup,
+} from '@/lib/shift-groups';
 
 // ── Actor (caller-facing) ─────────────────────────────────────────────────────
 // Call sites pass one neutral actor shape; each adapter maps it to the store's
@@ -365,6 +373,40 @@ export function isTerminationId(id: string): boolean {
   return useTerminationApprovals.getState().requests.some((r) => r.id === id);
 }
 
+// STA-168 — shift_assignment → shift-assignment store. A manager's submitted
+// month-grid ShiftGroup collapses into ONE queue row exactly as the
+// time_correction adapter collapses a multi-day correction into one row: the
+// summary reads the group's month + member/shift counts (the "list of cells" at
+// larger N). The routed approver is HRBP/HR, so the timeline's first step reads
+// `ฝ่ายบุคคล (HRBP)`. Drill-in is special-cased (detailHref) to the review grid
+// at /team/shift-assign?group=<id>&review=1.
+export function shiftGroupToPendingRequest(g: ShiftGroup): PendingRequest {
+  const submittedAt = g.submittedAt ?? g.createdAt;
+  const elapsedMs = Date.now() - new Date(submittedAt).getTime();
+  const slaHours = elapsedMs / (1000 * 60 * 60);
+  const urgency: Urgency = slaHours > 48 ? 'urgent' : slaHours > 24 ? 'normal' : 'low';
+  const waitingDays = Math.max(0, Math.floor(elapsedMs / 86400000));
+  const managerId = g.managerIds[0] ?? '';
+  return {
+    id: g.id,
+    type: 'shift_assignment',
+    requester: {
+      id: managerId,
+      employeeId: managerId,
+      name: resolveEmpName(managerId),
+      position: 'จัดกะให้พนักงาน',
+      department: '',
+    },
+    // Collapse the whole month grid into one summary line (month + N members · M shifts).
+    description: `จัดกะ (${formatMonthLabel(g.month, 'th')}) — ${assignedMemberCount(g)} คน · ${filledCellCount(g)} กะ`,
+    submittedAt,
+    urgency,
+    waitingDays,
+    details: {},
+    approvalTimeline: [{ step: 1, approver: 'ฝ่ายบุคคล (HRBP)', status: 'pending' }],
+  };
+}
+
 // ── Shared queue-item shape for store records lacking a bespoke bridge ─────────
 // leave / overtime / change_request stores expose simpler records; map them to a
 // minimal PendingRequest so they interleave in the queue. (Full field mapping is
@@ -592,6 +634,21 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     },
     labels: { th: 'ทดลองงาน', en: 'Probation' },
   },
+
+  // shift_assignment → shift-assignment: a manager's submitted month-grid. Mirrors
+  // time_correction (multi-record → one row). approve flips the group pending →
+  // approved; reject uses the `sent_back`-style returnForRevision(note). Seed is a
+  // no-op: ShiftGroups originate from the store's own seed.
+  shift_assignment: {
+    toQueueItem: (record) => shiftGroupToPendingRequest(record as ShiftGroup),
+    approve: (id) => useShiftAssignment.getState().approve(id, { name: '' }),
+    reject: (id, _actor, reason) =>
+      useShiftAssignment.getState().returnForRevision(id, reason || 'ส่งกลับเพื่อแก้ไข'),
+    seed: () => {
+      // No-op: ShiftGroups are seeded by the store itself (SHIFT_GROUP_SEED).
+    },
+    labels: { th: 'จัดกะ', en: 'Shift assignment' },
+  },
 };
 
 // ── selectPendingApprovals — fan-IN from the seeded stores → queue view ─────────
@@ -727,6 +784,7 @@ export function selectPendingApprovals(input: {
   timeCorrections?: TimeCorrectionRequest[];
   overtime?: OTRequest[];
   terminations?: TerminationRequest[];
+  shiftGroups?: ShiftGroup[];
 }): QueueApproval[] {
   const out: QueueApproval[] = [];
 
@@ -821,6 +879,19 @@ export function selectPendingApprovals(input: {
     });
   }
 
+  // shift_assignment rows derive from the shift-assignment store. Only SUBMITTED
+  // groups are queue-eligible: draft (not yet submitted) and returned (sent back
+  // to the owning manager) stay off the approver's inbox — the same eligibility
+  // rule tax-planning uses for draft/estimated. pending → pending; approved
+  // passes through.
+  for (const g of input.shiftGroups ?? []) {
+    if (g.status === 'draft' || g.status === 'returned') continue;
+    out.push({
+      row: shiftGroupToPendingRequest(g),
+      status: g.status === 'approved' ? 'approved' : 'pending',
+    });
+  }
+
   // Stable order by submittedAt desc, then id, so the inbox renders deterministically.
   out.sort((a, b) => {
     const t = new Date(b.row.submittedAt).getTime() - new Date(a.row.submittedAt).getTime();
@@ -840,7 +911,8 @@ export function useSelectPendingApprovals(): QueueApproval[] {
   const timeCorrections = useTimeCorrections((s) => s.requests);
   const overtime = useOvertimeRequests((s) => s.requests);
   const terminations = useTerminationApprovals((s) => s.requests);
-  return selectPendingApprovals({ leave, workflow, claims, transfers, payRates, taxPlans, timeCorrections, overtime, terminations });
+  const shiftGroups = useShiftAssignment((s) => s.groups);
+  return selectPendingApprovals({ leave, workflow, claims, transfers, payRates, taxPlans, timeCorrections, overtime, terminations, shiftGroups });
 }
 
 /** Non-reactive read (getState) — for one-shot lookups (e.g. detail route). */
@@ -855,6 +927,7 @@ export function getPendingApprovals(): QueueApproval[] {
     timeCorrections: useTimeCorrections.getState().requests,
     overtime: useOvertimeRequests.getState().requests,
     terminations: useTerminationApprovals.getState().requests,
+    shiftGroups: useShiftAssignment.getState().groups,
   });
 }
 
@@ -1085,7 +1158,14 @@ export function useQueueRequestRows(locale: 'th' | 'en' = 'th'): QueueRequestRow
   // (selectTaxPlanningRequestSummaries). Exclude both here so the employee request
   // tracker neither double-renders the tax row nor surfaces an admin pay-rate row.
   return queue
-    .filter((q) => q.row.type !== 'pay_rate' && q.row.type !== 'tax_planning')
+    .filter(
+      (q) =>
+        q.row.type !== 'pay_rate' &&
+        q.row.type !== 'tax_planning' &&
+        // shift_assignment is a MANAGER-initiated group, not an employee self-
+        // service request — keep it off the employee request tracker.
+        q.row.type !== 'shift_assignment',
+    )
     .map((q) => queueApprovalToRequestRow(q, locale));
 }
 

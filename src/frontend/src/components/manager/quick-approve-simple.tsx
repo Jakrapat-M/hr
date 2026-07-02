@@ -50,6 +50,7 @@ function typeLabel(type: PendingRequest['type']): string {
     pay_rate: 'ปรับเงินเดือน',
     tax_planning: 'วางแผนภาษี',
     time_correction: 'แก้ไขเวลา',
+    shift_assignment: 'จัดกะ',
   };
   return map[type] ?? type;
 }
@@ -68,6 +69,10 @@ function detailHref(locale: string, row: PendingRequest): string {
   if (row.type === 'leave') return `/${locale}/workflows/leave/${row.id}`;
   if (row.type === 'overtime') return `/${locale}/workflows/ot/${row.id}`;
   if (row.type === 'probation') return `/${locale}/workflows/probation/${row.id}`;
+  // STA-168 — a submitted shift-assignment group deep-links into its OWN review
+  // grid (the deliberate per-type convention break, D3). Read-only is enforced at
+  // the renderer, NOT by this `&review=1` param (which is forgeable).
+  if (row.type === 'shift_assignment') return `/${locale}/team/shift-assign?group=${row.id}&review=1`;
   return `/${locale}/quick-approve/${row.id}`;
 }
 

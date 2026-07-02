@@ -83,6 +83,10 @@ export const APPROVAL_ROUTING: Record<RequestType, RoutingStep[]> = {
     { roles: ['hrbp'], labelTh: 'HRBP', labelEn: 'HRBP', stage: 'hrbp' },
     { roles: ['spd'], labelTh: 'SPD', labelEn: 'SPD', stage: 'spd' },
   ],
+  // shift_assignment → manager submits a month grid; HRBP/HR admin reviews it.
+  shift_assignment: [
+    { roles: ['hrbp', 'hr_admin'], labelTh: 'ฝ่ายบุคคล (HRBP)', labelEn: 'HR / HRBP', stage: 'hrbp' },
+  ],
 };
 
 /** The ordered routing chain for a request type (empty-safe). */

@@ -28,6 +28,7 @@ import {
   OT_DEMO_COUNT,
   TC_DEMO_COUNT,
   TERMINATION_DEMO_COUNT,
+  SHIFT_ASSIGN_DEMO_COUNT,
 } from '../demo-seed';
 
 // Ids of the canonical (1-level, code-less) leave seed rows — used to pick a
@@ -49,7 +50,7 @@ import { useOvertimeRequests } from '@/stores/overtime-requests';
 // the P2 pay-rate + tax-planning demo rows, the Group A demo ESS leave rows AND
 // the Group B demo ESS OT rows, all injected by ensureDemoSeed.
 const TOTAL_SEED_COUNT =
-  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT + OT_DEMO_COUNT + TC_DEMO_COUNT + TERMINATION_DEMO_COUNT;
+  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT + OT_DEMO_COUNT + TC_DEMO_COUNT + TERMINATION_DEMO_COUNT + SHIFT_ASSIGN_DEMO_COUNT;
 
 function clearAll() {
   useLeaveApprovals.getState().clear();

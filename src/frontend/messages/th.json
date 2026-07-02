@@ -5928,5 +5928,43 @@
     "panelTitle": "ความคิดเห็นก่อนลาออก",
     "panelEmpty": "ยังไม่มีความคิดเห็นก่อนลาออกที่บันทึกไว้",
     "panelRankWord": "อันดับ"
+  },
+  "shiftAssign": {
+    "title": "จัดกะให้พนักงาน",
+    "monthPicker": "เดือน",
+    "reviewBanner": "โหมดตรวจสอบ — อ่านอย่างเดียว อนุมัติตารางกะหรือส่งกลับเพื่อแก้ไข",
+    "viewingAs": "กำลังดูในฐานะ",
+    "submissionProgress": "ความคืบหน้าการส่ง",
+    "selectAllMonth": "เลือกทั้งเดือน",
+    "selectMonthMyTeam": "เลือกทั้งเดือนของทีมฉัน",
+    "clearSelection": "ยกเลิกการเลือกทั้งหมด",
+    "selectedCount": "เลือกแล้ว {count} ช่อง",
+    "working": "ทำงาน",
+    "dayOff": "วันหยุด",
+    "startTime": "เวลาเริ่ม",
+    "addOt": "เพิ่ม OT",
+    "otStart": "เริ่ม OT",
+    "otEnd": "สิ้นสุด OT",
+    "chooseShift": "เลือกกะ",
+    "clear": "ล้าง",
+    "applyToN": "นำไปใช้กับ {count}",
+    "submit": "ส่งตรวจ",
+    "approve": "อนุมัติ",
+    "returnForRevision": "ส่งกลับแก้ไข",
+    "lockApproveAll": "ล็อกและอนุมัติทั้งหมด",
+    "export": "ส่งออก",
+    "publicHoliday": "วันหยุดนักขัตฤกษ์",
+    "readOnly": "อ่านอย่างเดียว",
+    "returnNoteLabel": "หมายเหตุการส่งกลับ",
+    "notePlaceholder": "ใส่หมายเหตุอธิบายสิ่งที่ต้องแก้ไข",
+    "status": {
+      "draft": "ฉบับร่าง",
+      "pending": "ส่งแล้ว",
+      "approved": "อนุมัติแล้ว",
+      "returned": "ส่งกลับ"
+    },
+    "submittedToast": "ส่งตารางกะเพื่อตรวจสอบแล้ว",
+    "approvedToast": "อนุมัติตารางกะแล้ว",
+    "returnedToast": "ส่งกลับให้หัวหน้างานแก้ไขแล้ว"
   }
 }

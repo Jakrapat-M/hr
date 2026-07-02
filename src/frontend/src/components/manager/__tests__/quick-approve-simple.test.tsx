@@ -29,6 +29,7 @@ import {
   OT_DEMO_COUNT,
   TC_DEMO_COUNT,
   TERMINATION_DEMO_COUNT,
+  SHIFT_ASSIGN_DEMO_COUNT,
 } from '@/lib/demo-seed';
 import { useOvertimeRequests } from '@/stores/overtime-requests';
 
@@ -37,7 +38,7 @@ import { useOvertimeRequests } from '@/stores/overtime-requests';
 // couple of demo ESS leave rows (LEAVE_DEMO_COUNT); Group B adds demo ESS OT rows
 // (OT_DEMO_COUNT) so the OT tab is non-zero.
 const TOTAL_SEED_COUNT =
-  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT + OT_DEMO_COUNT + TC_DEMO_COUNT + TERMINATION_DEMO_COUNT;
+  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT + OT_DEMO_COUNT + TC_DEMO_COUNT + TERMINATION_DEMO_COUNT + SHIFT_ASSIGN_DEMO_COUNT;
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
 
