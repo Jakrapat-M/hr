@@ -108,15 +108,17 @@ export const MODULES: ModuleGroup[] = [
       { id: 'home', label: 'Home', labelTh: 'หน้าหลัก', href: '/home', show: ALL6 },
       { id: 'profile', label: 'My Profile', labelTh: 'โปรไฟล์ของฉัน', href: '/profile/me', show: ALL6 },
       { id: 'orgchart', label: 'Org Chart', labelTh: 'ผังองค์กร', href: '/org-chart', show: ALL6 }, // self-service: every persona can view org structure / their reporting line
-      { id: 'time', label: 'Time & Attendance', labelTh: 'เวลาและการเข้างาน', href: '/time', show: ALL6 }, // labelTh changed ลงเวลา → เวลาและการเข้างาน (distinguish from Team "ตารางกะ")
-      { id: 'leaves', label: 'Leaves', labelTh: 'ใบลา', href: '/timeoff', badge: '3', show: ALL6 },
+      { id: 'time', label: 'Time & Attendance', labelTh: 'เวลาและการเข้างาน', href: '/time', show: ALL6, aliasPaths: ['/timeoff', '/overtime'] }, // labelTh changed ลงเวลา → เวลาและการเข้างาน (distinguish from Team "ตารางกะ"). STA-190: aliasPaths reparent Leave (/timeoff) + OT (/overtime) highlight here — neither has its own leaf now; both reached via tiles on /time
       { id: 'payslips', label: 'Payslips', labelTh: 'สลิปเงินเดือน', href: '/payslip', show: ALL6 },
       { id: 'benefits', label: 'Benefits', labelTh: 'สวัสดิการ', href: '__BENEFITS__', show: ALL6 },
       { id: 'documents', label: 'Documents', labelTh: 'เอกสาร', href: '/me/documents', show: ALL6 },
       { id: 'announce', label: 'Announcements', labelTh: 'ประกาศ', href: '/announcements', show: ALL6 },
+      // STA-190 — 'leaves' (/timeoff) leaf removed: Leave has no top-level entry now;
+      // it is reached one level down via Time & Attendance > Leave request tile on /time.
+      // The Time & Attendance leaf's aliasPaths keep /timeoff highlighting this section.
       // STA-188 FU — 'resign' leaf removed: resignation now lives solely on the Time Off hub
       // (single entry point; the old /profile Employment-tab section was moved there).
-      // CUT: requests (/requests) — folds into leaves/documents. Page stays URL-only.
+      // CUT: requests (/requests) — folds into Documents + the Time & Attendance tiles. Page stays URL-only.
     ],
   },
   {

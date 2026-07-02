@@ -11,7 +11,7 @@
  * selected group's leaves); the assertions below are IA intent, not just API shape.
  *
  * The 4 macro groups (reduced IA):
- *   A. พื้นที่ทำงานของฉัน (workspace) — 8 ESS leaves, visible to everyone (requests CUT)
+ *   A. พื้นที่ทำงานของฉัน (workspace) — 7 ESS leaves, visible to everyone (requests + Leave CUT; Leave folds under Time & Attendance per STA-190)
  *   B. การจัดการทีม (team)            — 5 manager/HR/SPD tools (role-gated; swap CUT)
  *   C. งานบุคคล (hr)                  — 8 HR-admin destinations (role-gated; comp/assets cut)
  *   D. ตั้งค่าระบบ (system)            — 4 settings: Roles, Master Catalog, Document Review, Audit & System
@@ -35,7 +35,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 const navigationMocks = vi.hoisted(() => ({
   pathname: '/th/home',
@@ -196,27 +196,28 @@ describe('Blueprint sidebar — workspace leaves (ESS, all personas)', () => {
     navigationMocks.pathname = '/th/home'; // active route lives in workspace → group open
   });
 
-  it('surfaces all 8 ESS workspace leaves', () => {
+  it('surfaces all 7 ESS workspace leaves', () => {
     render(<Sidebar />);
     [
       'หน้าหลัก',
       'โปรไฟล์ของฉัน',
       'เวลาและการเข้างาน',
-      'ใบลา',
       'สลิปเงินเดือน',
       'สวัสดิการ',
       'เอกสาร',
       'ประกาศ',
     ].forEach((label) => expect(screen.getByText(label)).toBeInTheDocument());
-    // requests leaf was CUT (folds into Leaves + Documents); /requests stays URL-only
+    // requests leaf was CUT (folds into Documents + Time & Attendance tiles); /requests stays URL-only
     expect(screen.queryByText('ใบคำขอ')).not.toBeInTheDocument();
+    // STA-190: the standalone Leave (ใบลา) leaf was removed — Leave is reached via
+    // Time & Attendance > Leave request, not a top-level sidebar entry.
+    expect(screen.queryByText('ใบลา')).not.toBeInTheDocument();
   });
 
   it('maps leaves to the expected app routes', () => {
     render(<Sidebar />);
     expect(screen.getByText('หน้าหลัก').closest('a')).toHaveAttribute('href', '/th/home');
     expect(screen.getByText('โปรไฟล์ของฉัน').closest('a')).toHaveAttribute('href', '/th/profile/me');
-    expect(screen.getByText('ใบลา').closest('a')).toHaveAttribute('href', '/th/timeoff');
     expect(screen.getByText('สลิปเงินเดือน').closest('a')).toHaveAttribute('href', '/th/payslip');
     expect(screen.getByText('เอกสาร').closest('a')).toHaveAttribute('href', '/th/me/documents');
     expect(screen.getByText('ประกาศ').closest('a')).toHaveAttribute('href', '/th/announcements');
@@ -225,12 +226,6 @@ describe('Blueprint sidebar — workspace leaves (ESS, all personas)', () => {
   it('benefits leaf points at the Benefits Hub', () => {
     render(<Sidebar />);
     expect(screen.getByText('สวัสดิการ').closest('a')).toHaveAttribute('href', '/th/benefits-hub');
-  });
-
-  it('renders the "ใบลา" badge (Blueprint badge=3)', () => {
-    render(<Sidebar />);
-    const leaveLink = screen.getByText('ใบลา').closest('a')!;
-    expect(within(leaveLink).getByText('3')).toBeInTheDocument();
   });
 
   it('plain employee cannot reach HR-admin leaves (employees register hidden)', () => {
@@ -370,6 +365,18 @@ describe('Blueprint sidebar — active leaf highlight', () => {
     navigationMocks.pathname = '/th/benefits-hub/referral';
     render(<Sidebar />);
     expect(screen.getByText('สวัสดิการ').closest('a')).toHaveClass('is-active');
+  });
+
+  it('STA-190: /timeoff (Leave, no own leaf) highlights Time & Attendance via aliasPaths', () => {
+    navigationMocks.pathname = '/th/timeoff';
+    render(<Sidebar />);
+    expect(screen.getByText('เวลาและการเข้างาน').closest('a')).toHaveClass('is-active');
+  });
+
+  it('STA-190: /overtime (OT, no own leaf) also highlights Time & Attendance', () => {
+    navigationMocks.pathname = '/th/overtime';
+    render(<Sidebar />);
+    expect(screen.getByText('เวลาและการเข้างาน').closest('a')).toHaveClass('is-active');
   });
 
   it('locale-agnostic: /en/home activates the home leaf with EN label', () => {
