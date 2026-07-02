@@ -73,6 +73,9 @@ export interface ClaimFieldDescriptor {
   requiredIf?: (values: ClaimFieldValues) => boolean;
   /** STA-145 Phase B — input maxLength (Others / Details = 100, names = 50). */
   maxLength?: number;
+  /** STA-184 — render each select option as "labelTh / labelEn" (bilingual),
+   *  e.g. the Hospital Name LOV, so both languages show regardless of locale. */
+  bilingualLabel?: boolean;
 }
 
 // ── General group (every claim) ───────────────────────────────────────────────
@@ -112,7 +115,7 @@ const MEDICAL_GROUP: ClaimFieldDescriptor[] = [
   { key: 'admittedStart', labelKey: 'admittedStart', type: 'date', required: false, showIf: isIpd, requiredIf: isIpd },
   { key: 'admittedEnd', labelKey: 'admittedEnd', type: 'date', required: false, showIf: isIpd, requiredIf: isIpd },
   { key: 'hospitalType', labelKey: 'hospitalType', type: 'select', required: true, lov: HOSPITAL_NAME_TYPE_OPTIONS },
-  { key: 'medicalHospitalName', labelKey: 'medicalHospitalName', type: 'select', required: true, lov: HOSPITAL_MASTER_OPTIONS },
+  { key: 'medicalHospitalName', labelKey: 'medicalHospitalName', type: 'select', required: true, lov: HOSPITAL_MASTER_OPTIONS, bilingualLabel: true },
   { key: 'hospitalOthers', labelKey: 'hospitalOthers', type: 'text', required: false, maxLength: 100, showIf: isHospitalOthers, requiredIf: isHospitalOthers },
   { key: 'patientTransferDoc', labelKey: 'patientTransferDoc', type: 'select', required: true, lov: YES_NO_TRANSFER_DOC_OPTIONS },
   { key: 'diseaseDetails', labelKey: 'diseaseDetails', type: 'select', required: true, lov: DISEASE_DETAILS_OPTIONS },
@@ -132,7 +135,9 @@ const GASOLINE_GROUP: ClaimFieldDescriptor[] = [
 
 const PHYSICAL_GROUP: ClaimFieldDescriptor[] = [
   { key: 'physicalInvoice', labelKey: 'physicalInvoice', type: 'text', required: true }, // STA-145
-  { key: 'hospitalName', labelKey: 'hospitalName', type: 'select', required: true, lov: HOSPITAL_NAME_TYPE_OPTIONS },
+  // STA-184 — Hospital Name must list hospitals, not the clinic/public/private
+  // TYPE values it previously (mis)used; render both languages.
+  { key: 'hospitalName', labelKey: 'hospitalName', type: 'select', required: true, lov: HOSPITAL_MASTER_OPTIONS, bilingualLabel: true },
 ];
 
 // PROVISIONAL — pending BA OQ-1/OQ-3 (no category/type/entry path). Defined so the

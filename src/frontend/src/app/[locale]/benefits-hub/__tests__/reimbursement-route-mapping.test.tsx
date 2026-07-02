@@ -44,6 +44,8 @@ describe('benefits-hub reimbursement route mapping', () => {
     submitClaim.mockClear();
     submitClaim.mockReturnValue({ id: 'claim-test-1', workflowRequestId: 'workflow-test-1' });
     navigationMocks.useSearchParams.mockReturnValue(new URLSearchParams());
+    // Fresh router each test so push assertions don't leak across cases (STA-184).
+    navigationMocks.useRouter.mockReturnValue({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: vi.fn() });
   });
 
   it('maps ca-medical allowance to BE-MED-001 and preselects medical plan', async () => {
@@ -72,7 +74,9 @@ describe('benefits-hub reimbursement route mapping', () => {
     // renders the Usage-month LOV (Jan–Dec), NOT the gasoline Claim Type.
     expect(screen.queryByLabelText(/ประเภทการเบิก/)).not.toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText(/เดือนที่ขอเบิก/), 'may');
+    // STA-184 — Submit now opens a preview; confirm to dispatch the claim.
     await user.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
+    await user.click(await screen.findByRole('button', { name: 'ยืนยันส่งคำขอ' }));
 
     expect(submitClaim).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -86,6 +90,27 @@ describe('benefits-hub reimbursement route mapping', () => {
         dynamicFields: expect.objectContaining({ realMonthDate: 'may' }),
       }),
     );
+  });
+
+  it('STA-184 — Submit opens a preview and only dispatches + redirects on Confirm', async () => {
+    navigationMocks.useSearchParams.mockReturnValue(new URLSearchParams('allowance=ca-phone'));
+    const user = userEvent.setup();
+    const { default: ReimbursementPage } = await import('@/app/[locale]/benefits-hub/reimbursement/page');
+
+    render(<ReimbursementPage />);
+
+    await user.type(await screen.findByLabelText(/เลขที่ใบเสร็จ/), 'RC-0184');
+    await user.type(screen.getByLabelText(/จำนวนเงินตามใบเสร็จ/), '500');
+    await user.selectOptions(screen.getByLabelText(/เดือนที่ขอเบิก/), 'may');
+
+    await user.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
+    // Preview is shown; nothing submitted yet.
+    expect(screen.getByText('ตรวจสอบก่อนส่งคำขอ')).toBeInTheDocument();
+    expect(submitClaim).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'ยืนยันส่งคำขอ' }));
+    expect(submitClaim).toHaveBeenCalledTimes(1);
+    expect(navigationMocks.useRouter().push).toHaveBeenCalledWith('/th/benefits-hub');
   });
 
   it('renders required reimbursement-visible fields', async () => {
