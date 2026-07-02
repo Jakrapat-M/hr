@@ -3201,7 +3201,15 @@
     },
     "simple": {
       "breadcrumb": "HUMI · TEAM MANAGEMENT · APPROVALS",
-      "title": "Approvals queue",
+      "title": "Manage workflow request",
+      "moduleFilter": {
+        "label": "Filter by module",
+        "all": "All modules",
+        "ec": "EC",
+        "be": "BE",
+        "tm": "TM",
+        "py": "PY"
+      },
       "subtitlePending": "{n} items pending your decision",
       "filter": {
         "all": "All",

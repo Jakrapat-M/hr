@@ -5,6 +5,30 @@ import { api } from './api';
 export type RequestType ='leave' |'overtime' |'claim' |'transfer' |'change_request' |'probation' |'pay_rate' |'tax_planning' |'time_correction' |'shift_assignment';
 export type Urgency ='urgent' |'normal' |'low';
 
+// STA-178 — the 4 HR workflow modules used by the "Manage workflow request" filter.
+export type WorkflowModule = 'EC' | 'BE' | 'TM' | 'PY';
+
+// Maps a RequestType to its owning module. Exhaustive switch, NO default clause —
+// adding a new RequestType is a compile-time error until it is mapped here.
+export function moduleOf(type: RequestType): WorkflowModule {
+  switch (type) {
+    case 'change_request':
+    case 'probation':
+    case 'transfer':
+      return 'EC'; // Employee Central — employee-lifecycle changes
+    case 'claim':
+      return 'BE'; // Benefit
+    case 'leave':
+    case 'overtime':
+    case 'time_correction':
+    case 'shift_assignment':
+      return 'TM'; // Time
+    case 'pay_rate':
+    case 'tax_planning':
+      return 'PY'; // Payroll
+  }
+}
+
 export interface PendingRequest {
  id: string;
  type: RequestType;

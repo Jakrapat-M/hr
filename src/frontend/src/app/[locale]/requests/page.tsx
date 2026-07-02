@@ -780,12 +780,12 @@ function ApprovalsTab({ locale }: { locale: string }) {
           {locale === 'th' ? 'คิวอนุมัติทั้งหมด' : 'Full Approval Queue'}
         </CardEyebrow>
         <CardTitle className="mt-1">
-          {locale === 'th' ? 'ดูและดำเนินการอนุมัติได้ที่กล่องงาน' : 'Review and action approvals in the Team Inbox'}
+          {locale === 'th' ? 'ดูและดำเนินการอนุมัติได้ที่จัดการคำขอเวิร์กโฟลว์' : 'Review and action approvals in Manage workflow request'}
         </CardTitle>
         <p className="mt-2 text-small text-ink-muted">
           {locale === 'th'
-            ? 'คำร้องทุกประเภทรวมอยู่ที่กล่องงาน สามารถอนุมัติ ปฏิเสธ หรือส่งคืนได้ครบในที่เดียว'
-            : 'All pending requests are consolidated in the Team Inbox where you can approve, reject, or send back in one place.'}
+            ? 'คำร้องทุกประเภทรวมอยู่ที่จัดการคำขอเวิร์กโฟลว์ สามารถอนุมัติ ปฏิเสธ หรือส่งคืนได้ครบในที่เดียว'
+            : 'All pending requests are consolidated in Manage workflow request where you can approve, reject, or send back in one place.'}
         </p>
       </div>
       <Link
@@ -796,7 +796,7 @@ function ApprovalsTab({ locale }: { locale: string }) {
           'hover:bg-ink/90 transition-colors'
         )}
       >
-        {locale === 'th' ? 'ไปที่กล่องงาน · อนุมัติ' : 'Go to Team Inbox · Approvals'}
+        {locale === 'th' ? 'ไปที่จัดการคำขอเวิร์กโฟลว์' : 'Go to Manage workflow request'}
         <ArrowRight size={14} aria-hidden />
       </Link>
     </Card>

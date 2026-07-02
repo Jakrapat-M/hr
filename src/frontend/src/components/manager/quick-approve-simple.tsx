@@ -16,7 +16,7 @@ import { Card } from '@/components/humi';
 import { Button } from '@/components/humi';
 import { DataTable, type DataTableColumn } from '@/components/humi';
 import { isTerminationId, useSelectPendingApprovals, type QueueApproval } from '@/lib/approval-registry';
-import type { PendingRequest, ClaimDetails } from '@/lib/quick-approve-api';
+import { moduleOf, type PendingRequest, type ClaimDetails, type WorkflowModule } from '@/lib/quick-approve-api';
 import { useAuthStore } from '@/stores/auth-store';
 import { useQuickApproveAssignments, type Assignee } from '@/stores/quick-approve-assignments';
 import { canActOn, countActionable } from '@/lib/claim-permissions';
@@ -29,6 +29,9 @@ const MANAGER_NAME = 'ผู้จัดการ / Manager';
 // ── Types ────────────────────────────────────────────────────
 
 type FilterTab = 'all' | 'pending' | 'approved' | 'rejected';
+// STA-178 — module filter dimension ('ALL' + the 4 workflow modules).
+type ModuleFilter = WorkflowModule | 'ALL';
+const MODULE_FILTERS: ModuleFilter[] = ['ALL', 'EC', 'BE', 'TM', 'PY'];
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -139,6 +142,8 @@ export function QuickApproveSimple() {
   }
 
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  // STA-178 — module scope filter (broader than the status tabs). Default 'ALL'.
+  const [activeModule, setActiveModule] = useState<ModuleFilter>('ALL');
 
   // STA-172 — the request-detail POPUP. Clicking a row selects it; the modal
   // mounts the generic detail + Approve / Cancel / Open-full-page.
@@ -154,8 +159,9 @@ export function QuickApproveSimple() {
   const approvedCount = rows.filter((r) => effectiveStatus(r) === 'approved').length;
   const rejectedCount = rows.filter((r) => effectiveStatus(r) === 'rejected').length;
 
-  // Filtered rows.
+  // Filtered rows — module scope (STA-178) intersected with the status tab.
   const visibleRows = rows.filter((r) => {
+    if (activeModule !== 'ALL' && moduleOf(r.type) !== activeModule) return false;
     const status = effectiveStatus(r);
     if (activeTab === 'all')      return true;
     if (activeTab === 'pending')  return status === 'pending';
@@ -408,6 +414,15 @@ export function QuickApproveSimple() {
     { key: 'rejected', count: rejectedCount },
   ];
 
+  // STA-178 — per-module row counts for the module filter strip.
+  const moduleCounts = MODULE_FILTERS.reduce<Record<ModuleFilter, number>>((acc, m) => {
+    acc[m] = m === 'ALL' ? rows.length : rows.filter((r) => moduleOf(r.type) === m).length;
+    return acc;
+  }, {} as Record<ModuleFilter, number>);
+  const moduleLabelKey: Record<ModuleFilter, string> = {
+    ALL: 'moduleFilter.all', EC: 'moduleFilter.ec', BE: 'moduleFilter.be', TM: 'moduleFilter.tm', PY: 'moduleFilter.py',
+  };
+
   return (
     <div className="pb-8">
       {/* Breadcrumb */}
@@ -424,6 +439,53 @@ export function QuickApproveSimple() {
       <p style={{ fontSize: 14, color: 'var(--color-ink-muted)', marginBottom: 20 }}>
         {t('subtitleActionable', { actionable: actionableCount, total: pendingCount })}
       </p>
+
+      {/* STA-178 — module filter strip (broader scope, sits above the status tabs).
+          Uses aria-pressed toggle buttons (not role=tab) so it doesn't collide with
+          the status tablist. */}
+      <div
+        role="group"
+        aria-label={t('moduleFilter.label')}
+        data-testid="module-filter"
+        style={{ display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' }}
+      >
+        {MODULE_FILTERS.map((m) => (
+          <button
+            key={m}
+            type="button"
+            data-module={m}
+            aria-pressed={activeModule === m}
+            onClick={() => setActiveModule(m)}
+            style={{
+              padding: '6px 14px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--color-hairline)',
+              background: activeModule === m ? 'var(--color-accent-soft)' : 'var(--color-canvas-soft)',
+              color: activeModule === m ? 'var(--color-accent)' : 'var(--color-ink-soft)',
+              fontWeight: activeModule === m ? 600 : 400,
+              fontSize: 13,
+              cursor: 'pointer',
+              transition: 'background var(--dur-base)',
+              display: 'flex',
+              gap: 6,
+              alignItems: 'center',
+            }}
+          >
+            {t(moduleLabelKey[m])}
+            <span
+              style={{
+                background: 'var(--color-hairline)',
+                borderRadius: 99,
+                fontSize: 11,
+                padding: '0 6px',
+                lineHeight: '18px',
+              }}
+            >
+              {moduleCounts[m]}
+            </span>
+          </button>
+        ))}
+      </div>
 
       {/* Segmented filter tabs */}
       <div
