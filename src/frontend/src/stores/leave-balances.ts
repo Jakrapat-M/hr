@@ -43,6 +43,14 @@ interface LeaveBalancesState {
   release: (employeeId: string, kind: string, days: number) => void;
   /** Move reserved `days` → debits (on final approval). */
   deduct: (employeeId: string, kind: string, days: number) => void;
+  /**
+   * STA-183 — reverse an ALREADY-APPROVED draw-down (on cancelling an approved
+   * leave): mirror of `deduct` for the debits side, `debits -= days` (clamp ≥ 0).
+   * Restores `remaining` to its pre-approval value so a cancelled approved leave
+   * no longer shows depleted quota on the /timeoff cards. Only for prior-status
+   * 'approved'; a still-pending (reserved) cancel uses `release`.
+   */
+  reverseApproved: (employeeId: string, kind: string, days: number) => void;
   /** Seed/overwrite buckets. Each entry is keyed by employeeId × kind. */
   seedBalances: (
     seeds: Array<{ employeeId: string; kind: string } & Partial<LeaveBalanceBucket>>,
@@ -85,6 +93,13 @@ export const useLeaveBalances = create<LeaveBalancesState>()(
             ...b,
             reserved: Math.max(0, b.reserved - days),
             debits: b.debits + days,
+          })),
+        })),
+      reverseApproved: (employeeId, kind, days) =>
+        set((state) => ({
+          balances: mutateBucket(state, employeeId, kind, (b) => ({
+            ...b,
+            debits: Math.max(0, b.debits - days),
           })),
         })),
       seedBalances: (seeds) =>

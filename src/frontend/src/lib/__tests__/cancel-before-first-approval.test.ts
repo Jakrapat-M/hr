@@ -84,20 +84,28 @@ describe('selectPendingApprovals drops cancelled rows — STA-175 AC-3 (per loop
   });
 });
 
-// ── AC-1 / AC-4 — per-type first-approval predicate ──────────────────────────
-describe('isCancellable — STA-175 AC-1 / AC-4 (honest per-type stage model)', () => {
-  it('overtime: cancellable only while pending (single stage)', () => {
+// ── AC-1 / AC-4 — per-type cycle-window predicate (STA-183 supersedes STA-157) ─
+// demoToday() = 2026-06-07 → current cycle [2026-05-21 … 06-20], previous cycle
+// starts 2026-04-21. Cancellable iff status ∉ {rejected,cancelled} AND the start
+// date is in the current or previous cycle (no longer first-approval-only).
+const IN_CYCLE = '2026-06-01'; // inside the current cycle
+const OLD = '2026-03-01'; // before the previous cycle → not cancellable
+describe('isCancellable — STA-183 cycle-window rule (per type)', () => {
+  it('overtime: cancellable for any non-terminal row whose OT date is in-cycle', () => {
     const c = APPROVAL_REGISTRY.overtime.isCancellable!;
-    expect(c({ status: 'pending' } as never)).toBe(true);
-    expect(c({ status: 'approved' } as never)).toBe(false);
-    expect(c({ status: 'rejected' } as never)).toBe(false);
-    expect(c({ status: 'cancelled' } as never)).toBe(false);
+    expect(c({ status: 'pending', startAt: `${IN_CYCLE}T18:00:00` } as never)).toBe(true);
+    expect(c({ status: 'approved', startAt: `${IN_CYCLE}T18:00:00` } as never)).toBe(true);
+    expect(c({ status: 'pending', startAt: `${OLD}T18:00:00` } as never)).toBe(false); // out of cycle
+    expect(c({ status: 'rejected', startAt: `${IN_CYCLE}T18:00:00` } as never)).toBe(false);
+    expect(c({ status: 'cancelled', startAt: `${IN_CYCLE}T18:00:00` } as never)).toBe(false);
   });
 
-  it('time_correction: cancellable only at pending_manager', () => {
+  it('time_correction: cancellable for any non-terminal row whose day is in-cycle', () => {
     const c = APPROVAL_REGISTRY.time_correction.isCancellable!;
-    expect(c({ status: 'pending_manager' } as never)).toBe(true);
-    expect(c({ status: 'approved' } as never)).toBe(false);
+    expect(c({ status: 'pending_manager', date: IN_CYCLE } as never)).toBe(true);
+    expect(c({ status: 'approved', date: IN_CYCLE } as never)).toBe(true);
+    expect(c({ status: 'pending_manager', date: OLD } as never)).toBe(false);
+    expect(c({ status: 'cancelled', date: IN_CYCLE } as never)).toBe(false);
   });
 
   it('claim: cancellable at pending_manager_approval OR send_back; NOT pending_spd', () => {
@@ -108,11 +116,14 @@ describe('isCancellable — STA-175 AC-1 / AC-4 (honest per-type stage model)', 
     expect(c({ status: 'approved' } as never)).toBe(false);
   });
 
-  it('leave: cancellable only at first stage (pending && !awaitingNext)', () => {
+  it('leave: cancellable for any non-terminal in-cycle row (incl. awaitingNext + approved)', () => {
     const c = APPROVAL_REGISTRY.leave.isCancellable!;
-    expect(c({ status: 'pending', awaitingNext: false } as never)).toBe(true);
-    expect(c({ status: 'pending', awaitingNext: true } as never)).toBe(false); // advanced past stage 1
-    expect(c({ status: 'approved' } as never)).toBe(false);
+    expect(c({ status: 'pending', awaitingNext: false, startDate: IN_CYCLE } as never)).toBe(true);
+    expect(c({ status: 'pending', awaitingNext: true, startDate: IN_CYCLE } as never)).toBe(true);
+    expect(c({ status: 'approved', startDate: IN_CYCLE } as never)).toBe(true);
+    expect(c({ status: 'pending', startDate: OLD } as never)).toBe(false); // out of cycle
+    expect(c({ status: 'rejected', startDate: IN_CYCLE } as never)).toBe(false);
+    expect(c({ status: 'cancelled', startDate: IN_CYCLE } as never)).toBe(false);
   });
 
   it('admin-initiated types are NOT self-cancellable (no capability wired)', () => {

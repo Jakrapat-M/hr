@@ -31,7 +31,7 @@ import { useTimeCorrections, type TimeCorrectionRequest } from '@/stores/time-co
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { appliedChainFor } from '@/lib/time/approval-rules';
 import { getLeaveType } from '@/lib/time/leave-types';
-import { currentPeriod, demoToday } from '@/lib/time/period';
+import { currentPeriod, previousPeriod, demoToday } from '@/lib/time/period';
 import { getHolidaysForPeriod } from '@/lib/time/holiday-calendar';
 import { getAttendanceForPeriod } from '@/lib/time/attendance-seed';
 
@@ -488,6 +488,32 @@ const DEMO_PENDING_OT: OTRequest[] = [
 /** Number of demo ESS OT rows seeded into the unified queue (Group B). */
 export const OT_DEMO_COUNT = DEMO_PENDING_OT.length;
 
+// STA-183 — self-service persona (EMP001) OT row for the My-Requests page.
+// Seeded SEPARATELY (not in DEMO_PENDING_OT / OT_DEMO_COUNT): this row is
+// `cancelled`, so the unified-queue selector's cancelled guard drops it — it is
+// never counted and never collides with the approver-inbox fixtures, while still
+// giving the self-service page an Overtime row.
+const DEMO_EMP001_OT: OTRequest[] = [
+  {
+    id: 'OT-DEMO-EMP001-CANCELLED',
+    employeeId: 'EMP001',
+    employeeName: 'สมชาย ใจดี',
+    department: 'Store',
+    otType: 'OT',
+    startAt: '2026-05-04T18:00:00',
+    endAt: '2026-05-04T21:00:00',
+    hours: 3,
+    reason: 'ปิดงบสิ้นรอบ',
+    docs: [],
+    status: 'cancelled',
+    submittedAt: '2026-05-05T08:00:00+07:00',
+    audit: [
+      { actorId: 'EMP001', actorName: 'สมชาย ใจดี', action: 'submit', at: '2026-05-05T08:00:00+07:00' },
+      { actorId: 'EMP001', actorName: 'สมชาย ใจดี', action: 'cancel', at: '2026-05-06T08:00:00+07:00' },
+    ],
+  },
+];
+
 // ── Group D: pending ESS Time-Correction rows ──────────────────────────────────
 // time-corrections is plain-persist (no rehydrate-wipe), so STABLE ids survive a
 // full reload and the /workflows/time-correction/[id] detail resolves them. Two
@@ -539,6 +565,34 @@ const DEMO_PENDING_TC: TimeCorrectionRequest[] = [
 /** Number of demo ESS Time-Correction rows seeded into the unified queue (Group D). */
 export const TC_DEMO_COUNT = DEMO_PENDING_TC.length;
 
+// STA-183 — self-service persona (EMP001) correction rows for the My-Requests
+// page. Seeded SEPARATELY from DEMO_PENDING_TC (which feeds TC_DEMO_COUNT +
+// the unified queue): this row is `cancelled`, so it is queue-invisible (the
+// selector's cancelled guard drops it) and therefore never counted — proving the
+// "cancelled → not cancellable" matrix cell without perturbing the queue totals.
+const DEMO_EMP001_TC: TimeCorrectionRequest[] = [
+  {
+    id: 'TCR-DEMO-EMP001-CANCELLED',
+    employeeId: 'EMP001',
+    employeeName: 'สมชาย ใจดี',
+    department: 'Store',
+    date: '2026-06-02',
+    correctionType: 'in',
+    reasonCode: 'FORGET_ID_TYPE',
+    payCode: 'FORGET_ID_TYPE',
+    originalTime: '',
+    correctedTime: '08:00',
+    reason: 'ลืมแตะบัตรเข้า ขอแก้ไข',
+    docs: [],
+    status: 'cancelled',
+    submittedAt: '2026-06-02T09:00:00+07:00',
+    audit: [
+      { actorName: 'สมชาย ใจดี', action: 'submit', at: '2026-06-02T09:00:00+07:00' },
+      { actorName: 'สมชาย ใจดี', action: 'cancel', at: '2026-06-02T10:00:00+07:00' },
+    ],
+  },
+];
+
 let seeded = false;
 
 /** Reset the once-per-session guard. Test-only — lets a suite re-run the single
@@ -566,11 +620,16 @@ export function ensureDemoSeed(): void {
   // Add the 2 demo ESS OT rows (incl. one cross-midnight) with stable ids so the
   // /workflows/ot/[id] detail route resolves them across a full reload.
   useOvertimeRequests.getState().seedFromQueue(DEMO_PENDING_OT);
+  // STA-183 — append the EMP001 cancelled OT row (queue-invisible) for the
+  // self-service My-Requests page.
+  useOvertimeRequests.getState().seedFromQueue(DEMO_EMP001_OT);
   // Group D: seed the demo Time-Correction rows (init-overwrite-empties) so the
   // unified queue shows a non-zero time_correction count. Plain-persist store, so
   // a user-submitted correction (length > 0) is preserved on reload, not clobbered.
   if (useTimeCorrections.getState().requests.length === 0) {
-    useTimeCorrections.setState({ requests: DEMO_PENDING_TC });
+    // STA-183 — append the EMP001 cancelled correction (queue-invisible) so the
+    // self-service persona's My-Requests page has a Time-Correction row.
+    useTimeCorrections.setState({ requests: [...DEMO_PENDING_TC, ...DEMO_EMP001_TC] });
   }
   // Group A: seed the demo employee's quota buckets BEFORE adding leave rows so
   // the reserve() on each addRequest draws against a real balance. Seed BOTH the
@@ -662,6 +721,50 @@ export function ensureDemoSeed(): void {
     useLeaveApprovals
       .getState()
       .approve(ESS_APPROVED_LEAVE_ID, { id: 'MGR-DEMO', name: 'สมชาย หัวหน้าทีม' });
+  }
+
+  // ── STA-183: My-Requests demo rows for the self-service persona (EMP001) ─────
+  // A PENDING leave (start in the current cycle → cancellable) and a REJECTED
+  // leave (terminal → not cancellable). Both use NON-quota leave codes so they do
+  // NOT reserve/debit against EMP001's canonical quota buckets (keeping the
+  // /timeoff cards + /time/timesheet ledger reading the exact canonical numbers),
+  // and both are seeded WITHOUT a queueSnapshot so they stay out of the approver
+  // inbox — the approved-annual row above already exercises the quota-restore path.
+  const emp001LeaveStore = useLeaveApprovals.getState();
+  const EMP001_PENDING_LEAVE_ID = 'LV-DEMO-EMP001-PENDING';
+  const EMP001_REJECTED_LEAVE_ID = 'LV-DEMO-EMP001-REJECTED';
+  const pendingStart = currentPeriod(demoToday()).start; // in-cycle → cancellable
+  if (!emp001LeaveStore.requests.some((r) => r.id === EMP001_PENDING_LEAVE_ID)) {
+    useLeaveApprovals.getState().addRequest({
+      id: EMP001_PENDING_LEAVE_ID,
+      employeeId: DEMO_ESS_EMPLOYEE.id,
+      employeeName: DEMO_ESS_EMPLOYEE.name,
+      leaveType: 'marriage_leave',
+      leaveCode: 'marriage_leave',
+      startDate: pendingStart,
+      endDate: pendingStart,
+      reason: 'ลาสมรส',
+      days: 1,
+      unit: '1-day',
+    });
+  }
+  if (!emp001LeaveStore.requests.some((r) => r.id === EMP001_REJECTED_LEAVE_ID)) {
+    const prevStart = previousPeriod(demoToday()).start;
+    useLeaveApprovals.getState().addRequest({
+      id: EMP001_REJECTED_LEAVE_ID,
+      employeeId: DEMO_ESS_EMPLOYEE.id,
+      employeeName: DEMO_ESS_EMPLOYEE.name,
+      leaveType: 'funeral_relatives',
+      leaveCode: 'funeral_relatives',
+      startDate: prevStart,
+      endDate: prevStart,
+      reason: 'ลาพิธีศพญาติ',
+      days: 1,
+      unit: '1-day',
+    });
+    useLeaveApprovals
+      .getState()
+      .reject(EMP001_REJECTED_LEAVE_ID, { id: 'MGR-DEMO', name: 'สมชาย หัวหน้าทีม' }, 'เอกสารไม่ครบ');
   }
 
   APPROVAL_REGISTRY.change_request.seed(APPROVAL_SEED_BY_TYPE.change_request);

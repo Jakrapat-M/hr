@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { getCorrectionReason } from '@/lib/time/correction-reasons';
+import { isCancellableByCycle, demoToday } from '@/lib/time/period';
 
 // time-corrections — P3 Zustand+persist store for employee timesheet/attendance
 // correction requests, surfaced as a NEW row type in the unified /quick-approve
@@ -112,10 +113,11 @@ interface TimeCorrectionsState {
   approve: (id: string, by: { name: string }, comment?: string) => void;
   reject: (id: string, by: { name: string }, reason: string) => void;
   /**
-   * STA-175 — employee cancels their OWN pending correction while it is still at
-   * the first-line manager step. Sets status 'cancelled' + appends a 'cancel'
-   * audit entry. Drops out of the unified inbox via the selector's cancelled
-   * guard. No-op once approved/rejected/cancelled.
+   * STA-183 — employee cancels their OWN correction under the cycle-window rule:
+   * allowed while not terminal (rejected/cancelled) AND the correction day is in
+   * the current or immediately-previous payroll cycle. Sets status 'cancelled' +
+   * appends a 'cancel' audit entry. Drops out of the unified inbox via the
+   * selector's cancelled guard.
    */
   cancel: (id: string, by: { name: string }) => void;
   clear: () => void;
@@ -293,7 +295,13 @@ export const useTimeCorrections = create<TimeCorrectionsState>()(
       cancel: (id, by) =>
         set((state) => ({
           requests: state.requests.map((r) =>
-            r.id !== id || r.status !== 'pending_manager'
+            // STA-183 — cycle-window rule (supersedes the pending_manager-only gate):
+            // any non-terminal correction whose working day is in the current or
+            // previous payroll cycle is self-cancellable, via the shared helper.
+            r.id !== id ||
+            r.status === 'rejected' ||
+            r.status === 'cancelled' ||
+            !isCancellableByCycle(r.date, demoToday())
               ? r
               : {
                   ...r,

@@ -103,6 +103,20 @@ export function previousPeriod(refDate?: Date): { start: string; end: string } {
 }
 
 /**
+ * STA-183 — a request whose start date is cancellable iff it falls in the CURRENT
+ * or the immediately-PREVIOUS payroll cycle (21st → 20th). One cycle back is the
+ * self-service cancel window: anything before the previous cycle's start has been
+ * processed and can no longer be self-cancelled. Pure + ref-injectable (pass
+ * `demoToday()` on the demo surfaces so the window tracks the frozen demo day).
+ * Empty/absent dates are never cancellable. Lower-bound only — a future-booked
+ * start date stays cancellable (BA open question, intentional for the mockup).
+ */
+export function isCancellableByCycle(startDateISO: string, refDate?: Date): boolean {
+  if (!startDateISO) return false;
+  return startDateISO >= previousPeriod(refDate).start;
+}
+
+/**
  * STA-156 (BA, 2026-06-25) — earliest backdate allowed for a leave request: the
  * start of the PREVIOUS payroll cycle (1 cycle back). Backdated leave is permitted
  * for up to one previous attendance/payroll cycle (cycle = 21st → 20th); anything

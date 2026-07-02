@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Clock, CalendarOff, Timer, ClipboardList, PencilLine, CalendarDays, LogIn } from 'lucide-react';
+import { Clock, CalendarOff, Timer, ClipboardList, PencilLine, CalendarDays, LogIn, ListChecks } from 'lucide-react';
 import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
@@ -52,6 +52,15 @@ const TILES = [
     descEn: 'Fix a mis-recorded clock-in / clock-out',
     descTh: 'ขอแก้ไขเวลาเข้า-ออกงานที่บันทึกผิดพลาด',
     href: 'time/corrections',
+  },
+  {
+    key: 'my-requests',
+    icon: ListChecks,
+    titleEn: 'My Request',
+    titleTh: 'คำขอของฉัน',
+    descEn: 'Track your leave, overtime & time-correction requests',
+    descTh: 'ติดตามคำขอลา ล่วงเวลา และแก้ไขเวลาของคุณ',
+    href: 'time/my-requests',
   },
 ];
 
