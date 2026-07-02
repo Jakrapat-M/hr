@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 
 const capabilityMock = vi.hoisted(() => ({
   canSeeBenefitEmployeeClaim: true,
@@ -26,8 +26,18 @@ vi.mock('@/hooks/use-capabilities', () => ({
 }));
 
 vi.mock('@/components/humi', () => ({
-  Button: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
-    <button onClick={onClick}>{children}</button>
+  Button: ({
+    children,
+    onClick,
+    disabled,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+  }) => (
+    <button onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
   ),
   Avatar: ({ fallback }: { fallback: string }) => <span data-testid="avatar">{fallback}</span>,
   Modal: ({ open, children, title }: { open: boolean; children: React.ReactNode; title: string }) =>
@@ -78,6 +88,7 @@ import { useTransferApprovals } from '@/stores/transfer-approvals';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
 import { ensureDemoSeed, resetEnsureDemoSeedForTests } from '@/lib/demo-seed';
+import { APPROVAL_REGISTRY } from '@/lib/approval-registry';
 
 // P2: the detail ActionPanel gates approve/reject via canActOn(row, roles). Tests
 // must seed the acting persona's roles into the real auth-store. A senior approver
@@ -169,9 +180,12 @@ describe('QuickApproveDetailPage', () => {
     expect(screen.getByText('quick_approve_detail.receiptAmount')).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.totalClaimAmount')).toBeInTheDocument();
     expect(screen.getByText('quick_approve_detail.remark')).toBeInTheDocument();
-    // STA-147 req-3: WF-2026-004 history steps relabeled to the demo content.
-    expect(screen.getByText(/HR send back/)).toBeInTheDocument();
-    expect(screen.getByText(/employee request claim/)).toBeInTheDocument();
+    // STA-185: WF-2026-004 history now has 4 demo steps; "HR send back" appears
+    // twice (step 2 & 4) so queries MUST be step-scoped to avoid a multi-match throw.
+    expect(screen.getByText(/step 1: employee request claim/)).toBeInTheDocument();
+    expect(screen.getByText(/step 2: HR send back/)).toBeInTheDocument();
+    expect(screen.getByText(/step 3: employee edited claim/)).toBeInTheDocument();
+    expect(screen.getByText(/step 4: HR send back/)).toBeInTheDocument();
     expect(screen.queryByText('quick_approve_detail.waiting')).not.toBeInTheDocument();
     expect(screen.queryByText('quick_approve_detail.reject')).not.toBeInTheDocument();
     expect(screen.queryByText('quick_approve_detail.reroute')).not.toBeInTheDocument();
@@ -183,7 +197,7 @@ describe('QuickApproveDetailPage', () => {
   it('renders STA-79 claim approval timeline latest-first', async () => {
     await renderPage('WF-2026-004');
 
-    const latestStep = screen.getByText(/quick_approve_detail\.step 2: HR send back/);
+    const latestStep = screen.getByText(/quick_approve_detail\.step 4: HR send back/);
     const previousStep = screen.getByText(/quick_approve_detail\.step 1: employee request claim/);
 
     expect(latestStep.compareDocumentPosition(previousStep) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -260,5 +274,83 @@ describe('QuickApproveDetailPage', () => {
     expect(screen.getByText(/Manager view shows only what is needed/)).toBeInTheDocument();
     expect(screen.getAllByText(/ก่อน/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/masked/).length).toBeGreaterThan(0);
+  });
+
+  // ── STA-185: 3-col layout + shared comment + confirm popups ───────────────────
+
+  it('renders the 3-col layout (Detail | Attachment | History) for WF-2026-004', async () => {
+    const { container } = await renderPage('WF-2026-004');
+    expect(screen.getByText('quick_approve_detail.requestDetails')).toBeInTheDocument();
+    expect(screen.getByText('quick_approve_detail.attachmentsTitle')).toBeInTheDocument();
+    expect(screen.getByText('quick_approve_detail.approvalHistory')).toBeInTheDocument();
+    // The grid wrapper carries the 3-track template (Attachment column = 1.5fr).
+    expect(container.querySelector('[class*="1.5fr"]')).toBeTruthy();
+  });
+
+  it('renders the History scroll region', async () => {
+    await renderPage('WF-2026-004');
+    expect(screen.getByTestId('history-scroll')).toBeInTheDocument();
+  });
+
+  it('renders the renamed single Approve/Send Back Comment field (no read-only box)', async () => {
+    await renderPage('WF-2026-004');
+    expect(screen.getByText('quick_approve_detail.approveSendBackCommentTitle')).toBeInTheDocument();
+    expect(screen.queryByText('quick_approve_detail.sendBackCommentTitle')).not.toBeInTheDocument();
+  });
+
+  it('Approve → confirm popup → dispatches registry approve + toast', async () => {
+    const approveSpy = vi
+      .spyOn(APPROVAL_REGISTRY.claim, 'approve')
+      .mockImplementation(() => {});
+    await renderPage('WF-2026-004');
+
+    await act(async () => {
+      screen.getByText('quick_approve_detail.approve').click();
+    });
+    expect(screen.getByRole('dialog', { name: 'quick_approve_detail.confirmApprove' })).toBeInTheDocument();
+
+    await act(async () => {
+      screen.getByText('quick_approve_detail.confirm').click();
+    });
+    expect(approveSpy).toHaveBeenCalledWith('WF-2026-004', expect.anything());
+    expect(screen.getByText('quick_approve_detail.toastApproved')).toBeInTheDocument();
+    approveSpy.mockRestore();
+  });
+
+  it('Send Back → typed comment flows through confirm popup as the reject reason + toast', async () => {
+    const rejectSpy = vi
+      .spyOn(APPROVAL_REGISTRY.claim, 'reject')
+      .mockImplementation(() => {});
+    await renderPage('WF-2026-004');
+
+    const field = screen.getByPlaceholderText(
+      'quick_approve_detail.approveSendBackCommentPlaceholder',
+    );
+    fireEvent.change(field, { target: { value: 'ยอดเงินไม่ตรงกับใบเสร็จ' } });
+
+    await act(async () => {
+      screen.getByText('quick_approve_detail.return').click();
+    });
+    expect(screen.getByRole('dialog', { name: 'quick_approve_detail.confirmReturn' })).toBeInTheDocument();
+
+    await act(async () => {
+      screen.getByText('quick_approve_detail.confirm').click();
+    });
+    expect(rejectSpy).toHaveBeenCalledWith(
+      'WF-2026-004',
+      expect.anything(),
+      'ยอดเงินไม่ตรงกับใบเสร็จ',
+    );
+    expect(screen.getByText('quick_approve_detail.toastReturned')).toBeInTheDocument();
+    rejectSpy.mockRestore();
+  });
+
+  it('Send Back confirm is disabled while the shared comment is empty', async () => {
+    await renderPage('WF-2026-004');
+    await act(async () => {
+      screen.getByText('quick_approve_detail.return').click();
+    });
+    const confirmBtn = screen.getByText('quick_approve_detail.confirm') as HTMLButtonElement;
+    expect(confirmBtn.disabled).toBe(true);
   });
 });

@@ -51,8 +51,13 @@ export function HistoryTimeline({ steps }: HistoryTimelineProps) {
   if (latestFirst.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-0 rounded-[var(--radius-lg)] border border-hairline bg-surface p-5">
-      <h3 className="mb-4 text-base font-semibold text-ink">{t('approvalHistory')}</h3>
+    <div
+      className="flex flex-col gap-0 rounded-[var(--radius-lg)] border border-hairline bg-surface p-5 lg:max-h-[640px] lg:overflow-y-auto"
+      data-testid="history-scroll"
+    >
+      <h3 className="sticky top-0 z-10 -mx-5 -mt-5 mb-4 bg-surface px-5 pt-5 pb-2 text-base font-semibold text-ink">
+        {t('approvalHistory')}
+      </h3>
       <ol className="space-y-0">
         {latestFirst.map((step, index) => (
           <li key={step.step} className="flex gap-3">
@@ -75,7 +80,7 @@ export function HistoryTimeline({ steps }: HistoryTimelineProps) {
                 </p>
               )}
               {step.comment && (
-                <p className="mt-1 text-small text-ink-secondary rounded-[var(--radius-sm)] bg-accent-soft px-2 py-1">
+                <p className="mt-1 text-small text-ink-secondary rounded-[var(--radius-sm)] bg-accent-soft px-2 py-1 break-words whitespace-pre-wrap">
                   {step.comment}
                 </p>
               )}
