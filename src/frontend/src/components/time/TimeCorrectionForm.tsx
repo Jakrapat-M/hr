@@ -4,9 +4,10 @@
 // standalone /time/corrections page AND the inline modal on /time/timesheet
 // (SF-parity: edit attendance in the same place you see the schedule). ALL
 // safety-critical validation lives here so neither surface can drift:
-//   • non-clocking gate · timesheet locked (isTimesheetLocked) · conflicting
-//     correction (same date + type already pending/approved) · same-date-same-time
-//     clash · intra-submission duplicate → single blockReason.
+//   • non-clocking gate · backdate floor (previous payroll cycle, STA-156
+//     leave-parity) · conflicting correction (same date + type already
+//     pending/approved) · same-date-same-time clash · intra-submission
+//     duplicate → single blockReason.
 // The caller passes the SUBJECT employee id (whose timesheet is shown) + an
 // optional prefill (date + detected punch type). No backend.
 //
@@ -29,7 +30,7 @@ import {
 } from '@/stores/time-corrections';
 import { CORRECTION_REASONS } from '@/lib/time/correction-reasons';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
-import { isTimesheetLocked } from '@/lib/time/period';
+import { previousPeriod } from '@/lib/time/period';
 import { getAttendanceForPeriod } from '@/lib/time/attendance-seed';
 import { computeLateMinutes, formatLate, type AttendanceDay } from '@/lib/time/attendance-math';
 import { useAuthStore } from '@/stores/auth-store';
@@ -147,6 +148,11 @@ export function TimeCorrectionForm({
   const attrs = getEmployeeTimeAttrs(subjectEmpId);
   const attendance = useMemo(() => getAttendanceForPeriod(subjectEmpId), [subjectEmpId]);
 
+  // Earliest correctable date = start of the PREVIOUS payroll cycle, wall-clock —
+  // identical to the leave backdate floor (LEAVE_BACKDATE_MIN), so the two backdate
+  // surfaces stay in lock-step. Not demo-anchored: mirrors the shipped leave rule.
+  const correctionMinDate = useMemo(() => previousPeriod().start, []);
+
   const [rows, setRows] = useState<CorrectionRow[]>(() => [
     newRow({ date: prefill?.date, correctionType: prefill?.correctionType }),
   ]);
@@ -209,11 +215,11 @@ export function TimeCorrectionForm({
         );
         if (bothError) return bothError;
       }
-      // Per-row locked-period gate.
-      if (isTimesheetLocked(row.date)) {
+      // Per-row backdate floor: previous payroll cycle onward (STA-170 retroactive rule).
+      if (row.date && row.date < correctionMinDate) {
         return isTh
-          ? 'รอบเวลานี้ถูกล็อกแล้ว (ปิดงวดเงินเดือน) ไม่สามารถแก้ไขได้'
-          : 'This timesheet period is locked (payroll closed)';
+          ? 'เลือกย้อนหลังได้ถึงต้นรอบเวลาก่อนหน้าเท่านั้น'
+          : 'You can only backdate to the start of the previous time period';
       }
       // For 'both', key the conflict guard on the corrected clock-IN (the mirror
       // anchor) so findCorrectionConflict receives a valid "HH:mm" value.
@@ -387,6 +393,7 @@ export function TimeCorrectionForm({
                       {...controlProps}
                       type="date"
                       value={row.date}
+                      min={correctionMinDate}
                       onChange={(e) => updateRow(row.id, { date: e.target.value })}
                     />
                   )}
