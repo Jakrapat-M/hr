@@ -431,7 +431,7 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
         <div className="bp-rail-brand">
           <Image
             src="/humi-logo-final-2.png"
-            alt="Humi"
+            alt="CneXt"
             width={40}
             height={44}
             priority

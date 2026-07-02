@@ -104,7 +104,7 @@ export function AdminSidebar({ onNavigate, onClose, className }: AdminSidebarPro
         <div className="humi-wordmark">
           <Image
             src="/humi-logo-final-2.png"
-            alt="Humi"
+            alt="CneXt"
             width={72}
             height={78}
             priority

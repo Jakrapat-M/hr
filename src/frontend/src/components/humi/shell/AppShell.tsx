@@ -145,7 +145,7 @@ type ReadonlyURLSearchParamsLike = {
 
 function resolveTitle(pathname: string, searchParams?: ReadonlyURLSearchParamsLike | null): string {
   const hit = TITLE_MAP.find((m) => pathname === m.prefix || pathname.startsWith(m.prefix + '/'));
-  return hit?.title ?? 'Humi';
+  return hit?.title ?? 'CneXt';
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {

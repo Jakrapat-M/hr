@@ -3660,7 +3660,7 @@
     }
   },
   "humiHome": {
-    "eyebrow": "Humi HR",
+    "eyebrow": "CneXt HR",
     "title": "ภาพรวม",
     "subtitle": "สรุปกิจกรรมและคำขอที่ต้องดำเนินการ",
     "kpiLabel": "ตัวชี้วัดหลัก",
@@ -3683,7 +3683,7 @@
     "viewAll": "ดูทั้งหมด"
   },
   "humiEmployees": {
-    "eyebrow": "Humi HR",
+    "eyebrow": "CneXt HR",
     "title": "พนักงาน",
     "subtitle": "ทั้งหมด {count} คนในองค์กร",
     "addEmployee": "เพิ่มพนักงาน",
@@ -3882,7 +3882,7 @@
     "unpinPost": "เลิกปักหมุด"
   },
   "humiLogin": {
-    "brand": "Humi",
+    "brand": "CneXt",
     "eyebrow": "จัดการเรื่องคนให้เป็นเรื่องง่าย",
     "headlineLine1": "ผ่านระบบเบื้องหลังที่",
     "headlineLine2": "ทีมของคุณคู่ควร",
@@ -3897,7 +3897,7 @@
     "submit": "เข้าสู่ระบบ",
     "divider": "หรือ",
     "ssoMicrosoft": "เข้าสู่ระบบด้วย Microsoft",
-    "brandLogoAlt": "โลโก้ Humi",
+    "brandLogoAlt": "โลโก้ CneXt",
     "errorTitle": "เข้าสู่ระบบไม่สำเร็จ",
     "errorUnknownUser": "ไม่พบบัญชีนี้ในระบบ",
     "errorBadPassword": "รหัสผ่านไม่ถูกต้อง"

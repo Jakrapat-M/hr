@@ -3636,7 +3636,7 @@
     "pending": "Pending approval"
   },
   "humiHome": {
-    "eyebrow": "Humi HR",
+    "eyebrow": "CneXt HR",
     "title": "Overview",
     "subtitle": "Activity and pending actions at a glance",
     "kpiLabel": "Key indicators",
@@ -3659,7 +3659,7 @@
     "viewAll": "View all"
   },
   "humiEmployees": {
-    "eyebrow": "Humi HR",
+    "eyebrow": "CneXt HR",
     "title": "Employees",
     "subtitle": "{count} people in the organization",
     "addEmployee": "Add employee",
@@ -4003,7 +4003,7 @@
     "unpinPost": "Unpin post"
   },
   "humiLogin": {
-    "brand": "Humi",
+    "brand": "CneXt",
     "eyebrow": "HR for Thai enterprises",
     "headlineLine1": "The back-office",
     "headlineLine2": "your team deserves",
@@ -4018,7 +4018,7 @@
     "submit": "Sign in",
     "divider": "or",
     "ssoMicrosoft": "Sign in with Microsoft",
-    "brandLogoAlt": "Humi logo",
+    "brandLogoAlt": "CneXt logo",
     "errorTitle": "Sign-in failed",
     "errorUnknownUser": "Account not found.",
     "errorBadPassword": "Incorrect password"

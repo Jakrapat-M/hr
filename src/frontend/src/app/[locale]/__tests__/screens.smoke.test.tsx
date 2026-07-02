@@ -53,7 +53,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('next-intl', () => {
   const translations: Record<string, Record<string, string>> = {
     humiHome: {
-      eyebrow: 'Humi HR',
+      eyebrow: 'CneXt HR',
       title: 'ภาพรวม',
       subtitle: 'สรุปกิจกรรมและคำขอที่ต้องดำเนินการ',
       kpiLabel: 'ตัวชี้วัดหลัก',
