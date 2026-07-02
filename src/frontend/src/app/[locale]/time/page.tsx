@@ -1,102 +1,144 @@
 'use client';
 
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Clock, CalendarOff, Timer, ClipboardList, PencilLine, CalendarDays, LogIn, ListChecks } from 'lucide-react';
+import { Clock, CalendarOff, Timer, PencilLine, LogIn, ListChecks, BarChart3 } from 'lucide-react';
 import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
-import { hasAnyRole } from '@/lib/rbac';
+import { useLeaveApprovals } from '@/stores/leave-approvals';
+import { useOvertimeRequests } from '@/stores/overtime-requests';
+import { useTimeCorrections } from '@/stores/time-corrections';
+import { buildMyRequests } from '@/lib/time/my-requests';
+import { demoToday } from '@/lib/time/period';
 
-const TILES = [
+interface TimeTileDef {
+  key: string;
+  icon: typeof Clock;
+  titleEn: string;
+  titleTh: string;
+  descEn: string;
+  descTh: string;
+  href: string;
+  /** When set, the tile shows this store-backed count as a badge. */
+  badgeKey?: 'pending-requests';
+}
+
+interface TileGroup {
+  key: string;
+  labelEn: string;
+  labelTh: string;
+  tiles: TimeTileDef[];
+}
+
+// Self-service tiles, grouped by intent (Daily / Requests / Reports). Every tile
+// maps to an existing employee route — no reviewer-gated surfaces live here.
+const GROUPS: TileGroup[] = [
   {
-    key: 'clock',
-    icon: LogIn,
-    titleEn: 'Clock In / Out',
-    titleTh: 'ลงเวลาเข้า-ออก',
-    descEn: 'Punch in and out for today',
-    descTh: 'ลงเวลาเข้า-ออกงานสำหรับวันนี้',
-    href: 'time/clock',
+    key: 'daily',
+    labelEn: 'Daily',
+    labelTh: 'รายวัน',
+    tiles: [
+      {
+        key: 'clock',
+        icon: LogIn,
+        titleEn: 'Clock in/out',
+        titleTh: 'ลงเวลาเข้า-ออก',
+        descEn: 'Mark attendance',
+        descTh: 'บันทึกการเข้างาน',
+        href: 'time/clock',
+      },
+      {
+        key: 'timesheet',
+        icon: Clock,
+        titleEn: 'My timesheet',
+        titleTh: 'ตารางเวลาของฉัน',
+        descEn: 'View monthly record',
+        descTh: 'ดูบันทึกรายเดือน',
+        href: 'time/timesheet',
+      },
+    ],
   },
   {
-    key: 'timesheet',
-    icon: Clock,
-    titleEn: 'Timesheet',
-    titleTh: 'บันทึกเวลางาน',
-    descEn: 'Log weekly hours per project',
-    descTh: 'บันทึกชั่วโมงทำงานรายสัปดาห์ตามโครงการ',
-    href: 'time/timesheet',
+    key: 'requests',
+    labelEn: 'Requests',
+    labelTh: 'คำขอ',
+    tiles: [
+      {
+        key: 'my-requests',
+        icon: ListChecks,
+        titleEn: 'My requests',
+        titleTh: 'คำขอของฉัน',
+        descEn: 'Track all requests',
+        descTh: 'ติดตามคำขอทั้งหมด',
+        href: 'time/my-requests',
+        badgeKey: 'pending-requests',
+      },
+      {
+        key: 'time-off',
+        icon: CalendarOff,
+        titleEn: 'Leave request',
+        titleTh: 'ขอลา',
+        descEn: 'Apply for leave',
+        descTh: 'ยื่นคำขอลา',
+        href: 'timeoff',
+      },
+      {
+        key: 'overtime',
+        icon: Timer,
+        titleEn: 'OT request',
+        titleTh: 'ขอทำโอที',
+        descEn: 'Request overtime',
+        descTh: 'ขอทำงานล่วงเวลา',
+        href: 'overtime',
+      },
+      {
+        key: 'corrections',
+        icon: PencilLine,
+        titleEn: 'Time correction',
+        titleTh: 'แก้ไขเวลา',
+        descEn: 'Fix missing punch',
+        descTh: 'แก้ไขเวลาที่บันทึกผิด',
+        href: 'time/corrections',
+      },
+    ],
   },
   {
-    key: 'time-off',
-    icon: CalendarOff,
-    titleEn: 'Time Off',
-    titleTh: 'การลา',
-    descEn: 'Request and track leave',
-    descTh: 'ยื่นคำขอลาและติดตามสถานะ',
-    href: 'timeoff',
-  },
-  {
-    key: 'overtime',
-    icon: Timer,
-    titleEn: 'Overtime',
-    titleTh: 'ล่วงเวลา',
-    descEn: 'Submit OT requests (Thai Labor Law)',
-    descTh: 'ยื่นขอทำงานล่วงเวลาตามกฎหมายแรงงานไทย',
-    href: 'overtime',
-  },
-  {
-    key: 'corrections',
-    icon: PencilLine,
-    titleEn: 'Time Correction',
-    titleTh: 'แก้ไขเวลา',
-    descEn: 'Fix a mis-recorded clock-in / clock-out',
-    descTh: 'ขอแก้ไขเวลาเข้า-ออกงานที่บันทึกผิดพลาด',
-    href: 'time/corrections',
-  },
-  {
-    key: 'my-requests',
-    icon: ListChecks,
-    titleEn: 'My Request',
-    titleTh: 'คำขอของฉัน',
-    descEn: 'Track your leave, overtime & time-correction requests',
-    descTh: 'ติดตามคำขอลา ล่วงเวลา และแก้ไขเวลาของคุณ',
-    href: 'time/my-requests',
+    key: 'reports',
+    labelEn: 'Reports',
+    labelTh: 'รายงาน',
+    tiles: [
+      {
+        key: 'report',
+        icon: BarChart3,
+        titleEn: 'Report',
+        titleTh: 'รายงาน',
+        descEn: 'Attendance history',
+        descTh: 'ประวัติการเข้างาน',
+        href: 'reports',
+      },
+    ],
   },
 ];
-
-// Manager/HR-only tiles (remove-not-hide). Both the approval inbox and the
-// timesheet-review surface require reviewer rights; their routes guard
-// server-side (/quick-approve → canAccessModule, /time/review → reviewer roles),
-// so rendering these tiles to an employee would dead-end them in AccessDenied.
-// They live here — gated by `canReview` — never in the self-service TILES list.
-const MANAGER_TILES = [
-  {
-    key: 'timesheet-review',
-    icon: ClipboardList,
-    titleEn: 'Timesheet Review',
-    titleTh: 'ตรวจสอบใบบันทึกเวลา',
-    descEn: 'Read-only view of timesheets submitted by your team',
-    descTh: 'มุมมองแบบอ่านอย่างเดียวของใบบันทึกเวลาที่ทีมส่ง',
-    href: 'time/review',
-  },
-  {
-    key: 'shift-schedule',
-    icon: CalendarDays,
-    titleEn: 'Team Shift Schedule',
-    titleTh: 'ตารางกะทีม',
-    descEn: 'Assign and validate team shifts from the working pattern',
-    descTh: 'กำหนดและตรวจสอบตารางกะของทีมจากรูปแบบเวลาทำงาน',
-    href: 'time/shift-schedule',
-  },
-] as const;
 
 export default function TimeLandingPage() {
   const params = useParams();
   const locale = params?.locale as string ?? 'th';
   const isTh = locale === 'th';
 
-  const roles = useAuthStore((s) => s.roles);
-  const canReview = hasAnyRole(roles, ['manager', 'hrbp', 'spd', 'hr_admin', 'hr_manager']);
+  // Pending-request count for the "My requests" badge — unified from the same
+  // three stores the /time/my-requests view reads, so the number always agrees.
+  const userId = useAuthStore((s) => s.userId) ?? 'EMP001';
+  const leave = useLeaveApprovals((s) => s.requests);
+  const ot = useOvertimeRequests((s) => s.requests);
+  const tc = useTimeCorrections((s) => s.requests);
+  const pendingRequests = useMemo(
+    () => buildMyRequests(userId, { leave, ot, tc }, demoToday()).filter((r) => r.status === 'pending').length,
+    [userId, leave, ot, tc],
+  );
+
+  const badgeFor = (tile: TimeTileDef) =>
+    tile.badgeKey === 'pending-requests' ? pendingRequests : undefined;
 
   return (
     <div className="p-6 space-y-8">
@@ -117,33 +159,22 @@ export default function TimeLandingPage() {
 
       <DemoValuesDisclaimer />
 
-      {/* Employee surface — self time view (open to everyone) */}
-      <section aria-labelledby="time-self-heading" className="space-y-3">
-        <h2 id="time-self-heading" className="text-xs font-semibold uppercase tracking-widest text-ink-muted">
-          {isTh ? 'ของฉัน' : 'My Time'}
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {TILES.map((tile) => (
-            <TimeTile key={tile.key} tile={tile} locale={locale} isTh={isTh} />
-          ))}
-        </div>
-      </section>
-
-      {/* Manager/HR surface — approvals + review (remove-not-hide). The routes
-          themselves also guard server-side; we simply never render a dead-end
-          tile for non-reviewers. */}
-      {canReview && (
-        <section aria-labelledby="time-review-heading" className="space-y-3">
-          <h2 id="time-review-heading" className="text-xs font-semibold uppercase tracking-widest text-ink-muted">
-            {isTh ? 'สำหรับผู้จัดการ' : 'For Managers'}
+      {/* Self-service surface, grouped Daily / Requests / Reports (open to everyone) */}
+      {GROUPS.map((group) => (
+        <section key={group.key} aria-labelledby={`time-${group.key}-heading`} className="space-y-3">
+          <h2
+            id={`time-${group.key}-heading`}
+            className="text-xs font-semibold uppercase tracking-widest text-ink-muted"
+          >
+            {isTh ? group.labelTh : group.labelEn}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {MANAGER_TILES.map((tile) => (
-              <TimeTile key={tile.key} tile={tile} locale={locale} isTh={isTh} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {group.tiles.map((tile) => (
+              <TimeTile key={tile.key} tile={tile} locale={locale} isTh={isTh} badge={badgeFor(tile)} />
             ))}
           </div>
         </section>
-      )}
+      ))}
     </div>
   );
 }
@@ -152,23 +183,26 @@ function TimeTile({
   tile,
   locale,
   isTh,
+  badge,
 }: {
-  tile: {
-    key: string;
-    icon: typeof Clock;
-    titleEn: string;
-    titleTh: string;
-    descEn: string;
-    descTh: string;
-    href: string;
-  };
+  tile: TimeTileDef;
   locale: string;
   isTh: boolean;
+  badge?: number;
 }) {
   const { icon: Icon, titleEn, titleTh, descEn, descTh, href } = tile;
   return (
     <Link href={`/${locale}/${href}`} className="group block no-underline">
-      <Card className="h-full hover:shadow-[var(--shadow-card)] transition-shadow">
+      <Card className="relative h-full hover:shadow-[var(--shadow-card)] transition-shadow">
+        {typeof badge === 'number' && badge > 0 && (
+          <span
+            className="absolute right-3 top-3 flex items-center justify-center rounded-full bg-danger text-white text-xs font-semibold"
+            style={{ minWidth: 20, height: 20, padding: '0 6px' }}
+            aria-label={isTh ? `${badge} คำขอที่รออนุมัติ` : `${badge} pending requests`}
+          >
+            {badge}
+          </span>
+        )}
         <div className="flex items-start gap-4 p-5">
           <span
             className="flex items-center justify-center rounded-full shrink-0"

@@ -1,14 +1,12 @@
 /**
- * STA-66 — Time module role-specific discoverability.
+ * STA-189 — Time hub grouped self-service layout.
  *
- * The /time hub surfaces the self-service tiles (timesheet/time-off/overtime/
- * correction) to everyone, and the manager/HR tiles — "Team Approvals"
- * (/quick-approve) and "Timesheet Review" (/time/review) — only to manager/hrbp+
- * tiers (remove-not-hide). The approval inbox is reviewer-gated server-side, so
- * showing its tile to an employee would dead-end them in AccessDenied; it lives
- * in the manager section, never in the base list. These tests lock that
- * role-specific visibility per the ticket's "navigation tests cover role-specific
- * visibility" acceptance criterion.
+ * The /time hub now presents the employee's self-service tiles in three labeled
+ * groups — Daily / Requests / Reports (รายวัน / คำขอ / รายงาน) — with no
+ * role-gated "For Managers" section. Every tile is open to everyone and maps to
+ * an existing route. The manager review/shift tiles were removed from this hub;
+ * their canonical entry points live under /quick-approve and the reviewer routes
+ * themselves. These tests lock the grouped structure and the removal.
  */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
@@ -25,46 +23,72 @@ vi.mock('next/link', () => ({
 
 const h = vi.hoisted(() => ({ roles: [] as string[] }));
 vi.mock('@/stores/auth-store', () => ({
-  useAuthStore: (selector: (s: { roles: string[] }) => unknown) => selector({ roles: h.roles }),
+  useAuthStore: (selector: (s: { roles: string[]; userId: string }) => unknown) =>
+    selector({ roles: h.roles, userId: 'EMP001' }),
+}));
+vi.mock('@/stores/leave-approvals', () => ({
+  useLeaveApprovals: (selector: (s: { requests: unknown[] }) => unknown) => selector({ requests: [] }),
+}));
+vi.mock('@/stores/overtime-requests', () => ({
+  useOvertimeRequests: (selector: (s: { requests: unknown[] }) => unknown) => selector({ requests: [] }),
+}));
+vi.mock('@/stores/time-corrections', () => ({
+  useTimeCorrections: (selector: (s: { requests: unknown[] }) => unknown) => selector({ requests: [] }),
 }));
 
 import TimeLandingPage from '../page';
 
+const GROUP_HEADINGS = ['รายวัน', 'คำขอ', 'รายงาน'];
+const MANAGER_HEADING = 'สำหรับผู้จัดการ';
 const REVIEW_TILE = 'ตรวจสอบใบบันทึกเวลา';
-const APPROVALS_TILE = 'อนุมัติทีม';
-const TIMESHEET_TILE = 'บันทึกเวลางาน';
+const SHIFT_TILE = 'ตารางกะทีม';
 
-describe('STA-66 — /time hub role-specific visibility', () => {
-  it('employee sees the self-service tiles but NOT the manager approvals/review tiles', () => {
+describe('STA-189 — /time hub grouped self-service layout', () => {
+  it('renders the three group headings (Daily / Requests / Reports)', () => {
     h.roles = ['employee'];
     render(<TimeLandingPage />);
-    expect(screen.getByText(TIMESHEET_TILE)).toBeInTheDocument();
-    // remove-not-hide: the reviewer-gated tiles must not render for an employee
-    // (clicking them would dead-end in AccessDenied at /quick-approve & /time/review).
-    expect(screen.queryByText(REVIEW_TILE)).not.toBeInTheDocument();
-    expect(screen.queryByText(APPROVALS_TILE)).not.toBeInTheDocument();
+    // Group headings are <h2>; tile titles are <h3>, so level pins the heading.
+    for (const heading of GROUP_HEADINGS) {
+      expect(screen.getByRole('heading', { level: 2, name: heading })).toBeInTheDocument();
+    }
   });
 
-  it('manager no longer sees the Team Approvals tile (approval lives only in /quick-approve)', () => {
+  it('maps each card to its existing route', () => {
+    h.roles = ['employee'];
+    render(<TimeLandingPage />);
+    // Tile titles are <h3> inside the card's <a>; level 3 avoids colliding with
+    // the "รายงาน" group heading (<h2>).
+    const hrefOf = (label: string) =>
+      screen.getByRole('heading', { level: 3, name: label }).closest('a')?.getAttribute('href');
+    // Daily
+    expect(hrefOf('ลงเวลาเข้า-ออก')).toBe('/th/time/clock');
+    expect(hrefOf('ตารางเวลาของฉัน')).toBe('/th/time/timesheet');
+    // Requests
+    expect(hrefOf('คำขอของฉัน')).toBe('/th/time/my-requests');
+    expect(hrefOf('ขอลา')).toBe('/th/timeoff');
+    expect(hrefOf('ขอทำโอที')).toBe('/th/overtime');
+    expect(hrefOf('แก้ไขเวลา')).toBe('/th/time/corrections');
+    // Reports — "Attendance history" reuses the existing workforce /reports route
+    expect(hrefOf('รายงาน')).toBe('/th/reports');
+  });
+
+  it('no longer renders the "For Managers" section or its reviewer tiles, for any role', () => {
+    for (const role of ['employee', 'manager', 'hr_admin']) {
+      h.roles = [role];
+      const { unmount } = render(<TimeLandingPage />);
+      expect(screen.queryByText(MANAGER_HEADING)).not.toBeInTheDocument();
+      expect(screen.queryByText(REVIEW_TILE)).not.toBeInTheDocument();
+      expect(screen.queryByText(SHIFT_TILE)).not.toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it('shows the same self-service tiles regardless of role (no role gating)', () => {
     h.roles = ['manager'];
     render(<TimeLandingPage />);
-    // STA-129: the duplicate อนุมัติทีม shortcut was removed from the Time hub;
-    // the canonical approval entry point is the /quick-approve umbrella module.
-    expect(screen.queryByText(APPROVALS_TILE)).not.toBeInTheDocument();
-  });
-
-  it('manager sees the Timesheet Review reporting tile linking to /time/review', () => {
-    h.roles = ['manager'];
-    render(<TimeLandingPage />);
-    const tile = screen.getByText(REVIEW_TILE);
-    expect(tile).toBeInTheDocument();
-    expect(tile.closest('a')?.getAttribute('href')).toBe('/th/time/review');
-  });
-
-  it('hr_admin sees the review tile but NOT the removed approvals tile (manager/hrbp+ tiers)', () => {
-    h.roles = ['hr_admin'];
-    render(<TimeLandingPage />);
-    expect(screen.queryByText(APPROVALS_TILE)).not.toBeInTheDocument();
-    expect(screen.getByText(REVIEW_TILE)).toBeInTheDocument();
+    // A manager sees exactly the self-service set — including the leave/OT tiles.
+    expect(screen.getByText('ขอลา')).toBeInTheDocument();
+    expect(screen.getByText('ขอทำโอที')).toBeInTheDocument();
+    expect(screen.getByText('คำขอของฉัน')).toBeInTheDocument();
   });
 });
