@@ -144,6 +144,9 @@ function editPlanDefaultIdentity(plan: BenefitPlan, isTh: boolean): Tab1Identity
     claimPeriod: plan.claimPeriod ?? 'year',
     entitlementCalcMethod: plan.entitlementCalcMethod ?? 'full',
     eligibleClaimDate: plan.eligibleClaimDate ?? '30',
+    // STA-179 — default to '' (empty/No) for existing plans without the field
+    specialClaimCondition: plan.specialClaimCondition ?? '',
+    specialClaimConditionType: plan.specialClaimConditionType ?? '',
     company: plan.company ?? '',
   };
 }
@@ -323,6 +326,9 @@ function CreatePlanModal({
     claimPeriod: 'year',
     entitlementCalcMethod: 'full',
     eligibleClaimDate: '30',
+    // STA-179 — new plans default Special claim condition to empty (No)
+    specialClaimCondition: '',
+    specialClaimConditionType: '',
     company: '',
   };
 

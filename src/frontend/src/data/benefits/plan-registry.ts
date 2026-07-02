@@ -159,6 +159,9 @@ export interface BenefitPlanV1 {
   entitlementCalcMethod?: 'full' | 'prorate';
   /** STA-70 follow-up — Eligible-claim-date threshold. */
   eligibleClaimDate?: '30' | '60' | '90' | 'none';
+  /** STA-179 — Special claim condition toggle + revealed condition type. */
+  specialClaimCondition?: 'yes' | 'no' | '';
+  specialClaimConditionType?: string;
   /** STA-70 follow-up — Legal-entity company (free text). */
   company?: string;
 }
@@ -209,6 +212,9 @@ export interface BenefitPlanV2 {
   entitlementCalcMethod?: 'full' | 'prorate';
   /** STA-70 follow-up — Eligible-claim-date threshold. */
   eligibleClaimDate?: '30' | '60' | '90' | 'none';
+  /** STA-179 — Special claim condition toggle + revealed condition type. */
+  specialClaimCondition?: 'yes' | 'no' | '';
+  specialClaimConditionType?: string;
   /** STA-70 follow-up — Legal-entity company (free text). */
   company?: string;
 }

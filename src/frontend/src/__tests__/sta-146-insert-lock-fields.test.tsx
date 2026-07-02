@@ -30,6 +30,8 @@ const baseValues: Tab1IdentityValues = {
   claimPeriod: 'year',
   entitlementCalcMethod: 'full',
   eligibleClaimDate: '30',
+  specialClaimCondition: '',
+  specialClaimConditionType: '',
   company: 'CG',
 }
 
@@ -39,7 +41,7 @@ const baseValues: Tab1IdentityValues = {
 const RENDERED_KEYS = [
   'ttt', 'planKey', 'nameTh', 'nameEn', 'category', 'template',
   'effectiveFrom', 'effectiveTo', 'country', 'status', 'benefitTypeGroup',
-  'enrolment', 'claimPeriod', 'entitlementCalcMethod', 'company',
+  'enrolment', 'claimPeriod', 'entitlementCalcMethod', 'specialClaimCondition', 'company',
 ] as const
 
 // Derived complement — a newly added rendered key auto-joins this locked set

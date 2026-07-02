@@ -39,9 +39,20 @@ export interface Tab1IdentityValues {
   claimPeriod: ClaimPeriod;
   entitlementCalcMethod: EntitlementCalcMethod;
   eligibleClaimDate: EligibleClaimDate;
+  // STA-179 — Special claim condition (Yes/No) + revealed condition type
+  specialClaimCondition: 'yes' | 'no' | '';
+  specialClaimConditionType: string;
   // STA-70 follow-up — Legal entity
   company: string;
 }
+
+// STA-179 — the 4 fixed condition options revealed when Special claim condition = Yes.
+const SPECIAL_CLAIM_CONDITION_OPTIONS: { value: string; labelTh: string; labelEn: string }[] = [
+  { value: 'ePatient',              labelTh: 'ePatient',              labelEn: 'ePatient' },
+  { value: 'Tops care',            labelTh: 'Tops care',            labelEn: 'Tops care' },
+  { value: 'Non-IPD employee list', labelTh: 'รายชื่อพนักงาน Non-IPD', labelEn: 'Non-IPD employee list' },
+  { value: 'Fleet card',           labelTh: 'Fleet card',           labelEn: 'Fleet card' },
+];
 
 export interface Tab1IdentityFieldsProps {
   values: Tab1IdentityValues;
@@ -514,6 +525,53 @@ export function Tab1IdentityFields({
               </select>
             )}
           </FormField>
+        </div>
+
+        {/* 16. Special claim condition (STA-179) — Yes/No; "Yes" reveals a fixed
+            4-option condition dropdown. Both keys are absent from
+            INSERT_EDITABLE_KEYS, so they auto-lock (disabled) in Insert mode. */}
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField
+            id="tab1-specialClaimCondition"
+            label={isTh ? 'เงื่อนไขการเบิกพิเศษ (Special claim condition)' : 'Special claim condition'}
+          >
+            {(cp) => (
+              <select
+                {...cp}
+                value={values.specialClaimCondition}
+                onChange={(e) => onChange('specialClaimCondition', e.target.value as Tab1IdentityValues['specialClaimCondition'])}
+                disabled={isLocked('specialClaimCondition')}
+                className={selectClass}
+              >
+                <option value="no">{isTh ? 'ไม่ใช่ (No)' : 'No'}</option>
+                <option value="yes">{isTh ? 'ใช่ (Yes)' : 'Yes'}</option>
+              </select>
+            )}
+          </FormField>
+
+          {values.specialClaimCondition === 'yes' && (
+            <FormField
+              id="tab1-specialClaimConditionType"
+              label={isTh ? 'เงื่อนไข (Condition)' : 'Condition'}
+            >
+              {(cp) => (
+                <select
+                  {...cp}
+                  value={values.specialClaimConditionType}
+                  onChange={(e) => onChange('specialClaimConditionType', e.target.value)}
+                  disabled={isLocked('specialClaimConditionType')}
+                  className={selectClass}
+                >
+                  <option value="">{isTh ? '— เลือกเงื่อนไข —' : '— Select condition —'}</option>
+                  {SPECIAL_CLAIM_CONDITION_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {isTh ? opt.labelTh : opt.labelEn}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </FormField>
+          )}
         </div>
 
       </div>
