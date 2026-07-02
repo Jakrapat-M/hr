@@ -12,7 +12,6 @@
 // ════════════════════════════════════════════════════════════
 
 import { useState, type FormEvent } from 'react';
-import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ArrowRight, Check } from 'lucide-react';
@@ -70,14 +69,14 @@ export default function HumiLoginPage() {
         />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <Image
-            src="/humi-logo-final-2.png"
-            alt={t('brandLogoAlt')}
-            width={96}
-            height={104}
-            priority
-            style={{ height: 104, width: 'auto', display: 'block', objectFit: 'contain' }}
-          />
+          {/* STA-187 FU — CneXt text wordmark (no logo asset yet; swap in an image later) */}
+          <span
+            className="font-display text-white"
+            aria-label={t('brandLogoAlt')}
+            style={{ fontSize: 46, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, display: 'block' }}
+          >
+            Cne<span className="text-accent">X</span>t
+          </span>
         </div>
 
         <div style={{ marginTop: 'auto', marginBottom: 'auto', position: 'relative', zIndex: 1, maxWidth: 460 }}>

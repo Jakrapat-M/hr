@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -102,14 +101,14 @@ export function AdminSidebar({ onNavigate, onClose, className }: AdminSidebarPro
     <aside className={cn('humi-sidebar', className)} aria-label="เมนู Admin">
       <div className="humi-brand">
         <div className="humi-wordmark">
-          <Image
-            src="/humi-logo-final-2.png"
-            alt="CneXt"
-            width={72}
-            height={78}
-            priority
-            style={{ height: 78, width: 'auto', objectFit: 'contain' }}
-          />
+          {/* STA-187 FU — CneXt text wordmark */}
+          <span
+            className="font-display text-white"
+            aria-label="CneXt"
+            style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}
+          >
+            Cne<span className="text-accent">X</span>t
+          </span>
         </div>
         {onClose && (
           <button

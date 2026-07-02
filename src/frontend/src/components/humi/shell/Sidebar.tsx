@@ -37,7 +37,6 @@
 // ════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
@@ -115,7 +114,8 @@ export const MODULES: ModuleGroup[] = [
       { id: 'benefits', label: 'Benefits', labelTh: 'สวัสดิการ', href: '__BENEFITS__', show: ALL6 },
       { id: 'documents', label: 'Documents', labelTh: 'เอกสาร', href: '/me/documents', show: ALL6 },
       { id: 'announce', label: 'Announcements', labelTh: 'ประกาศ', href: '/announcements', show: ALL6 },
-      { id: 'resign', label: 'Resign', labelTh: 'ลาออก', href: '/resignation', show: ALL6 }, // employee SELF-SERVICE (BRD #172) — lives in "ฉัน", not HR group (user 2026-05-27)
+      // STA-188 FU — 'resign' leaf removed: resignation now lives solely on the Time Off hub
+      // (single entry point; the old /profile Employment-tab section was moved there).
       // CUT: requests (/requests) — folds into leaves/documents. Page stays URL-only.
     ],
   },
@@ -429,14 +429,14 @@ export function Sidebar({ onNavigate, onClose, className }: SidebarProps = {}) {
       {/* ── Col 1: macro-group icon rail ── */}
       <div className="bp-rail">
         <div className="bp-rail-brand">
-          <Image
-            src="/humi-logo-final-2.png"
-            alt="CneXt"
-            width={40}
-            height={44}
-            priority
-            style={{ height: 34, width: 'auto', objectFit: 'contain' }}
-          />
+          {/* STA-187 FU — CneXt text wordmark */}
+          <span
+            className="font-display text-white"
+            aria-label="CneXt"
+            style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1 }}
+          >
+            Cne<span className="text-accent">X</span>t
+          </span>
         </div>
         {!isDrawer && (
           <button
