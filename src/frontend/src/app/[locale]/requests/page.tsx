@@ -28,6 +28,7 @@ import {
   CardEyebrow,
   CardTitle,
   Modal,
+  Textarea,
 } from '@/components/humi';
 import { cn } from '@/lib/utils';
 import {
@@ -44,6 +45,7 @@ import {
   useRequestsStore,
   type RequestFilterKey,
 } from '@/stores/humi-requests-slice';
+import { useEssRequestActions } from '@/stores/ess-request-actions';
 import { selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { selectTaxPlanningRequestSummaries, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
@@ -137,6 +139,9 @@ export default function HumiRequestsPage() {
   // live, no refresh (AC-2.1). queueSnapshot ids (WF-2026-NNN) are distinct from
   // the legacy REQ-/benefit rows, so no de-dup is needed.
   const queueRows = useQueueRequestRows('th');
+  // STA-193 — employee self-service overrides on sent-back ('info') rows:
+  // 'withdrawn' drops the row, 'resubmitted' flips it back to 'pending'.
+  const essActions = useEssRequestActions((s) => s.actions);
 
   const allMine = useMemo<MineRow[]>(() => {
     const base = HUMI_MY_REQUESTS.map((r) => ({ ...r }));
@@ -170,14 +175,21 @@ export default function HumiRequestsPage() {
     // dedup causes React duplicate-key warnings. First occurrence wins (domain
     // selectors come first so their richer shape takes priority).
     const seen = new Set<string>();
-    return [...referralRows, ...taxRows, ...benefitRows, ...queue, ...store, ...base].filter(
+    const deduped = [...referralRows, ...taxRows, ...benefitRows, ...queue, ...store, ...base].filter(
       (r) => {
         if (seen.has(r.id)) return false;
         seen.add(r.id);
         return true;
       },
     );
-  }, [benefitClaims, benefitReferrals, taxPlanningDrafts, submissions, queueRows]);
+    // STA-193 — apply the employee's self-service overrides: withdrawn rows leave
+    // the list; resubmitted rows return to 'pending' (รออนุมัติ).
+    return deduped
+      .filter((r) => essActions[r.id] !== 'withdrawn')
+      .map((r) =>
+        essActions[r.id] === 'resubmitted' ? { ...r, status: 'pending' as RequestStatus } : r,
+      );
+  }, [benefitClaims, benefitReferrals, taxPlanningDrafts, submissions, queueRows, essActions]);
 
   const filtered = useMemo(() => {
     if (filter === 'all') return allMine;
@@ -274,6 +286,12 @@ export default function HumiRequestsPage() {
           onCancelled={() =>
             showToast(locale === 'th' ? 'ยกเลิกคำขอแล้ว' : 'Request cancelled successfully.')
           }
+          onWithdrawn={() =>
+            showToast(locale === 'th' ? 'ถอนคำขอแล้ว' : 'Request withdrawn.')
+          }
+          onResubmitted={() =>
+            showToast(locale === 'th' ? 'ส่งคำขออีกครั้งแล้ว' : 'Request re-submitted.')
+          }
         />
       )}
       {tab === 'catalog' && (
@@ -309,6 +327,8 @@ function MineTab({
   currentUserId,
   currentUserName,
   onCancelled,
+  onWithdrawn,
+  onResubmitted,
 }: {
   summary: { total: number; pending: number; approved: number; rejected: number; info: number };
   filtered: MineRow[];
@@ -316,11 +336,40 @@ function MineTab({
   currentUserId: string;
   currentUserName: string;
   onCancelled: () => void;
+  onWithdrawn: () => void;
+  onResubmitted: () => void;
 }) {
   const { filter, setFilter } = useRequestsStore();
   const [selected, setSelected] = useState<MineRow | null>(null);
   // STA-175 — self-cancel: the row being cancelled + its resolved modal fields.
   const [cancelRow, setCancelRow] = useState<MineRow | null>(null);
+  // STA-193 — employee self-service on sent-back ('info') rows.
+  const withdrawRequest = useEssRequestActions((s) => s.withdraw);
+  const resubmitRequest = useEssRequestActions((s) => s.resubmit);
+  const [withdrawRow, setWithdrawRow] = useState<MineRow | null>(null);
+  const [reviseRow, setReviseRow] = useState<MineRow | null>(null);
+  const [reviseNote, setReviseNote] = useState('');
+
+  // A sent-back row the current employee may act on. The "คำร้องของฉัน" tab is a
+  // fan-in list; static mock rows carry no requesterId, so treat those (and rows
+  // the user owns) as actionable. Mockup phase — ownership is not IAM-enforced.
+  const canSelfService = (r: MineRow) =>
+    r.status === 'info' && (!r.requesterId || r.requesterId === currentUserId);
+
+  function handleConfirmWithdraw() {
+    if (!withdrawRow) return;
+    withdrawRequest(withdrawRow.id);
+    setWithdrawRow(null);
+    onWithdrawn();
+  }
+
+  function handleConfirmRevise() {
+    if (!reviseRow) return;
+    resubmitRequest(reviseRow.id);
+    setReviseRow(null);
+    setReviseNote('');
+    onResubmitted();
+  }
   const cancelFields = useMemo(
     () =>
       cancelRow?.requestType
@@ -450,6 +499,25 @@ function MineTab({
                         {locale === 'th' ? 'ยกเลิก' : 'Cancel'}
                       </Button>
                     )}
+                    {/* STA-193 — sent-back ('info') rows: withdraw OR revise & resubmit. */}
+                    {canSelfService(r) && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setWithdrawRow(r)}
+                        >
+                          {locale === 'th' ? 'ถอนคำขอ' : 'Withdraw'}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => { setReviseRow(r); setReviseNote(''); }}
+                        >
+                          {locale === 'th' ? 'แก้ไขและส่งใหม่' : 'Revise & resubmit'}
+                        </Button>
+                      </>
+                    )}
                     <button
                       type="button"
                       aria-label={`ดูรายละเอียดการอนุมัติ ${r.id}`}
@@ -485,6 +553,78 @@ function MineTab({
           fields={cancelFields}
         />
       )}
+
+      {/* STA-193 — withdraw a sent-back request. */}
+      <Modal
+        open={withdrawRow !== null}
+        onClose={() => setWithdrawRow(null)}
+        title={locale === 'th' ? 'ถอนคำขอ' : 'Withdraw request'}
+      >
+        <div className="flex flex-col gap-5">
+          <p className="text-small text-ink-muted">
+            {locale === 'th'
+              ? 'คำขอนี้ถูกส่งกลับมาให้แก้ไข หากถอนคำขอ รายการจะถูกยกเลิกและออกจากรายการติดตาม'
+              : 'This request was sent back for changes. Withdrawing it cancels the request and removes it from your tracker.'}
+          </p>
+          {withdrawRow && (
+            <p className="text-small font-semibold text-ink">
+              {withdrawRow.type}{' '}
+              <span className="font-mono font-normal text-ink-muted">· {withdrawRow.id}</span>
+            </p>
+          )}
+          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-hairline pt-4">
+            <Button variant="ghost" size="md" onClick={() => setWithdrawRow(null)}>
+              {locale === 'th' ? 'ยกเลิก' : 'Cancel'}
+            </Button>
+            <Button variant="primary" size="md" onClick={handleConfirmWithdraw}>
+              {locale === 'th' ? 'ยืนยันถอนคำขอ' : 'Confirm withdraw'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* STA-193 — revise & re-submit a sent-back request. */}
+      <Modal
+        open={reviseRow !== null}
+        onClose={() => setReviseRow(null)}
+        title={locale === 'th' ? 'แก้ไขและส่งใหม่' : 'Revise & resubmit'}
+      >
+        <div className="flex flex-col gap-5">
+          <p className="text-small text-ink-muted">
+            {locale === 'th'
+              ? 'ปรับแก้ข้อมูลตามที่ผู้อนุมัติขอเพิ่ม แล้วส่งคำขอนี้กลับเข้าสู่การอนุมัติอีกครั้ง'
+              : 'Update the details the approver asked for, then send this request back into the approval queue.'}
+          </p>
+          {reviseRow && (
+            <p className="text-small font-semibold text-ink">
+              {reviseRow.type}{' '}
+              <span className="font-mono font-normal text-ink-muted">· {reviseRow.id}</span>
+            </p>
+          )}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="revise-note" className="text-small font-medium text-ink">
+              {locale === 'th' ? 'บันทึกการแก้ไข (ไม่บังคับ)' : 'Revision note (optional)'}
+            </label>
+            <Textarea
+              id="revise-note"
+              value={reviseNote}
+              onChange={(e) => setReviseNote(e.target.value)}
+              rows={3}
+              placeholder={
+                locale === 'th' ? 'ระบุสิ่งที่แก้ไข…' : 'Describe what you changed…'
+              }
+            />
+          </div>
+          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-hairline pt-4">
+            <Button variant="ghost" size="md" onClick={() => setReviseRow(null)}>
+              {locale === 'th' ? 'ยกเลิก' : 'Cancel'}
+            </Button>
+            <Button variant="primary" size="md" onClick={handleConfirmRevise}>
+              {locale === 'th' ? 'ส่งใหม่อีกครั้ง' : 'Resubmit'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }
