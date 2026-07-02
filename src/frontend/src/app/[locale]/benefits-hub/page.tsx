@@ -8,7 +8,6 @@ import {
   ArrowRight,
   Clock,
   Download,
-  Eye,
   FileText,
   Heart,
   Hospital,
@@ -30,10 +29,11 @@ import {
   DemoValuesDisclaimer,
   FormField,
   FormInput,
-  Modal,
   buttonVariants,
 } from '@/components/humi';
 import type { DataTableColumn } from '@/components/humi';
+import { ClaimDetailModal } from '@/components/benefits/ClaimDetailModal';
+import { humiClaimHistoryToClaimRequest } from '@/lib/humi-claim-history-to-claim';
 import { cn } from '@/lib/utils';
 import { claimPipeline, type ClaimPipeline } from '@/lib/benefit-claim-steps';
 import {
@@ -697,7 +697,7 @@ function ClaimHistorySection() {
           title="ดูรายละเอียด / More detail"
           className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] border border-hairline bg-surface text-ink-muted transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-canvas"
         >
-          <Eye size={15} aria-hidden />
+          <FileText size={15} aria-hidden />
         </button>
       ),
     },
@@ -797,50 +797,14 @@ function ClaimHistorySection() {
         />
       </Card>
 
-      {/* STA-182 — read-only detail modal for a claim-history row */}
-      {detailRow && (
-        <Modal
-          open
-          onClose={() => setDetailRow(null)}
-          title="รายละเอียดการเบิก / Claim detail"
-          widthClass="max-w-lg"
-        >
-          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-[10rem_1fr]">
-            <dt className="text-small font-medium text-ink-muted">รหัสรายการ / Ref.</dt>
-            <dd className="text-body font-mono text-ink">{detailRow.id}</dd>
-
-            <dt className="text-small font-medium text-ink-muted">ชื่อสวัสดิการ / Benefit</dt>
-            <dd className="text-body font-semibold text-ink">{detailRow.type}</dd>
-
-            <dt className="text-small font-medium text-ink-muted">รายละเอียด / Description</dt>
-            <dd className="text-body text-ink">{detailRow.desc}</dd>
-
-            <dt className="text-small font-medium text-ink-muted">จำนวนเงิน / Amount</dt>
-            <dd className="text-body font-semibold text-ink tabular-nums">{detailRow.amount}</dd>
-
-            <dt className="text-small font-medium text-ink-muted">วันที่ส่ง / Submitted</dt>
-            <dd className="text-body text-ink tabular-nums">{detailRow.date}</dd>
-
-            <dt className="text-small font-medium text-ink-muted">สถานะ / Status</dt>
-            <dd>
-              <span
-                className={cn(
-                  'rounded-full px-2.5 py-1 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
-                  CLAIM_STATUS_META[detailRow.status].toneClass,
-                )}
-              >
-                {CLAIM_STATUS_META[detailRow.status].label}
-              </span>
-            </dd>
-          </dl>
-
-          <div className="mt-6 flex justify-end">
-            <Button variant="secondary" onClick={() => setDetailRow(null)}>
-              ปิด / Close
-            </Button>
-          </div>
-        </Modal>
-      )}
+      {/* STA-182 — reuse the read-only ClaimDetailModal (STA-159): request detail +
+          approval history + attachment view. The hub preview row is adapted into a
+          BenefitClaimRequest for the shared modal. */}
+      <ClaimDetailModal
+        claim={detailRow ? humiClaimHistoryToClaimRequest(detailRow) : null}
+        open={detailRow !== null}
+        onClose={() => setDetailRow(null)}
+      />
     </section>
   );
 }
