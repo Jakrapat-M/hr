@@ -11,11 +11,11 @@ Zero-Touch-Engineer implement loop for the HR project. Pick an **approved plan**
 
 ## Inputs
 
-- `plan`: `$1` — path to a plan under `src/frontend/.omc/plans/` (or a ticket ID). If omitted, list available approved plans and pick the oldest unimplemented one, or ask which to run.
+- `plan`: `$1` — a **ticket ID** (preferred) or a local plan path. The **canonical plan is the `📋 Implementation plan (… APPROVED)` Linear comment on the ticket** — the plan-only `/linear-loop` session posts it there because the repo-root `.omc/plans/` is git-ignored + worktree-local and does **not** travel to this session's fresh worktree. Read the plan from the ticket's comments (`mcp__linear__list_comments`); a local `.omc/plans/*.md` is a bonus only if you share the plan session's checkout — never assume it exists. If omitted, scan Linear for tickets carrying an APPROVED plan comment, cross-check each `STA-<n>` against merged PRs + Linear status (skip Done/merged/in-flight-worktree), and pick the oldest unimplemented one, or ask which to run.
 
 ## Loop (per ticket)
 
-1. **Validate in Linear** — read the ticket ACs; download any attachments/embeds (signed URLs expire ~5 min). Confirm the plan matches the ticket; flag mismatches before coding. Cite the ticket ID in the commit + PR.
+1. **Validate in Linear** — read the ticket ACs AND the **APPROVED implementation-plan comment** (posted by the plan-only loop) — that comment is your build spec. Download any attachments/embeds (signed URLs expire ~5 min). Confirm the plan matches the ticket; flag mismatches before coding. Cite the ticket ID in the commit + PR.
 2. **Fresh worktree off origin/master**
    - `git fetch origin`
    - `git worktree add ../hr-<slug> -b feat/<TICKET>-<slug> origin/master`

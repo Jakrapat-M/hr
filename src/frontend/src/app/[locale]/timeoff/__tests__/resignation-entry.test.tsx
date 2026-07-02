@@ -1,8 +1,8 @@
 /**
- * resignation-entry.test.tsx — STA-188: the "คำขอลาออก / Resignation" entry now
- * lives on the Time Off / Leave self-service hub (relocated from the profile
- * Employment tab). This suite asserts the hub renders a link to /resignation
- * that preserves the active locale.
+ * resignation-entry.test.tsx — the Time Off / Leave self-service hub must NOT
+ * surface a resignation entry. Resigning is a distinct lifecycle action (not a
+ * type of leave) and is intentionally kept low-prominence on the profile
+ * Employment tab instead. This suite guards against re-adding it to the hub.
  * Framework: Vitest + jsdom + React Testing Library
  */
 
@@ -56,12 +56,13 @@ beforeEach(() => {
 })
 afterEach(() => cleanup())
 
-describe('STA-188 — Time Off hub resignation entry', () => {
-  it('renders a link whose href points at /resignation and preserves the locale', () => {
+describe('Time Off hub does NOT surface the resignation entry', () => {
+  it('renders no link pointing at /resignation (kept off the Leave hub)', () => {
     render(<HumiTimeoffPage />)
 
-    const resignLink = screen.getByRole('link', { name: /ดูคำขอลาออก/i })
-    expect(resignLink).toBeInTheDocument()
-    expect(resignLink.getAttribute('href')).toBe('/th/resignation')
+    const resignLink = screen
+      .queryAllByRole('link')
+      .find((l) => (l.getAttribute('href') ?? '').includes('resignation'))
+    expect(resignLink).toBeUndefined()
   })
 })

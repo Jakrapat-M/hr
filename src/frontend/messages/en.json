@@ -3200,7 +3200,7 @@
       "clearSelection": "Clear Selection"
     },
     "simple": {
-      "breadcrumb": "HUMI · TEAM MANAGEMENT · APPROVALS",
+      "breadcrumb": "CneXt · TEAM MANAGEMENT · APPROVALS",
       "title": "Manage workflow request",
       "moduleFilter": {
         "label": "Filter by module",
@@ -4875,7 +4875,7 @@
       "summaryNotSelected": "— Not selected —",
       "salarySuffix": "THB/month",
       "notifyHrbpLabel": "Notify HRBP via email when submitted",
-      "jobDetailsSectionTitle": "Job & Organisation Details (STA-82)",
+      "jobDetailsSectionTitle": "Job & Organisation Details",
       "jobDetailsSectionSub": "Review additional job, organisation, and employment details — click a step on the left to go back and edit.",
       "summaryValidationIssue": "Needs attention",
       "summaryPersonnelGrade": "Personnel Grade",
@@ -5219,8 +5219,8 @@
     "colActions": "Actions",
     "empty": "No plans match the selected filters.",
     "disclaimerEyebrow": "Note",
-    "disclaimerTitle": "Mock data",
-    "disclaimerBody": "Plan edits on this page are mockup only. No backend connection is wired.",
+    "disclaimerTitle": "Sample data",
+    "disclaimerBody": "Changes on this page are for preview only.",
     "filterStatus": "Status:",
     "filterStatusActive": "Active",
     "filterStatusInactive": "Inactive",
@@ -5398,7 +5398,7 @@
     "viewSwitchLabel": "Switch view",
     "viewQueue": "Requests",
     "viewGenerate": "Generate",
-    "generateNote": "Document preview — generated from employee data (demo data)."
+    "generateNote": "Document preview — generated from your employee data."
   },
   "doc_generate": {
     "ctaTitle": "Generate now",
@@ -5414,7 +5414,7 @@
     "download": "Download",
     "print": "Print",
     "close": "Close",
-    "boundary": "Mockup: the letter is generated instantly from your own data — no approval and no request queue.",
+    "boundary": "The letter is generated instantly from your own data — no approval needed.",
     "selfBadge": "Self-service",
     "employeeLabel": "Employee",
     "employeePlaceholder": "Search by name, code, position…",
@@ -5430,7 +5430,7 @@
     "eyebrow": "SPD · Documents",
     "title": "Document Review Queue",
     "subtitle": "Documents awaiting your review before they are issued.",
-    "boundary": "Mockup: review actions update this screen only — no document is generated or sent.",
+    "boundary": "Review actions update this screen only.",
     "colRequestId": "Request ID",
     "colEmployee": "Employee",
     "colDocType": "Document Type",
@@ -5716,7 +5716,7 @@
       "swap": "Request swap",
       "bulkAssign": "Bulk assign"
     },
-    "breadcrumb": "HUMI • TEAM MANAGEMENT • ROSTER & SHIFTS",
+    "breadcrumb": "CneXt • TEAM MANAGEMENT • ROSTER & SHIFTS",
     "subtitle": "Click a shift to override times.",
     "hourlySchedule": "Hourly schedule",
     "footerHint": "Click a shift to override",
@@ -5731,7 +5731,7 @@
     "cardDesc": "Enrol an individual employee in an annual benefit plan",
     "pageTitle": "Enrol Benefits",
     "backToEmployee": "Back to employee record",
-    "demoNote": "Mockup screen for HR review — no backend wiring; does not post payroll or run a real workflow.",
+    "demoNote": "Preview screen for HR review.",
     "activeEnrolments": "Active enrolments",
     "eligiblePlans": "Eligible plans",
     "entitlement": "Entitlement",

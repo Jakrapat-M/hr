@@ -15,7 +15,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Check, FileText, Download, Pencil } from 'lucide-react';
+import { Check, FileText, Download, Pencil, FileX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import {
@@ -1508,7 +1508,32 @@ export default function HumiProfileMePage({
             </div>
           </div>
 
-          {/* ── BRD #168: disabilityStatus on employment tab ──────────────────
+          {/* ── การลาออก link — intentionally low-prominence on the Employment tab
+              (not a sidebar leaf, not on the Time Off / Leave hub): resigning is a
+              sensitive lifecycle action, so it stays discoverable-but-not-prominent
+              here rather than one click away. Reverts STA-188's relocation. ── */}
+          <div className="humi-card" style={{ marginTop: 16 }}>
+            <div className="humi-eyebrow">{t('resignationSectionEyebrow')}</div>
+            <div
+              className="humi-row"
+              style={{ marginTop: 10, justifyContent: 'space-between', alignItems: 'center' }}
+            >
+              <div className="humi-row" style={{ gap: 10 }}>
+                <FileX className="h-5 w-5 text-ink-muted" aria-hidden />
+                <span style={{ fontSize: 14, color: 'var(--color-ink)' }}>
+                  {t('resignationSectionDesc')}
+                </span>
+              </div>
+              <Link
+                href={`/${locale}/resignation`}
+                className="text-sm font-medium text-accent hover:underline"
+              >
+                {t('resignationSectionLink')}
+              </Link>
+            </div>
+          </div>
+
+          {/* ── BRD-168: disabilityStatus on employment tab ──────────────────
             SF cite: PerPersonal.customString9 disability code
             sf-extract/qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json */}
           <div className="humi-card" style={{ marginTop: 16 }}>

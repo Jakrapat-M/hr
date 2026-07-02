@@ -114,8 +114,9 @@ export const MODULES: ModuleGroup[] = [
       { id: 'benefits', label: 'Benefits', labelTh: 'สวัสดิการ', href: '__BENEFITS__', show: ALL6 },
       { id: 'documents', label: 'Documents', labelTh: 'เอกสาร', href: '/me/documents', show: ALL6 },
       { id: 'announce', label: 'Announcements', labelTh: 'ประกาศ', href: '/announcements', show: ALL6 },
-      // STA-188 FU — 'resign' leaf removed: resignation now lives solely on the Time Off hub
-      // (single entry point; the old /profile Employment-tab section was moved there).
+      // No 'resign' leaf by design: resigning is a sensitive lifecycle action kept
+      // low-prominence on the profile Employment tab — intentionally NOT a top-level
+      // nav leaf and NOT on the Time Off / Leave hub (leave ≠ leaving the company).
       // CUT: requests (/requests) — folds into leaves/documents. Page stays URL-only.
     ],
   },

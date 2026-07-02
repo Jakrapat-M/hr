@@ -16,8 +16,9 @@ Plan-only discovery loop for the HR project. Scan Linear for new tickets + BA fe
    - BA feedback / comments on already-shipped tickets.
    - Validate each against its ticket description + ACs before planning; download attachments (signed URLs expire ~5 min).
 2. **Plan** — run `ralplan` (auto-loop Planner→Architect→Critic until APPROVE or 5-cap; don't pause to ask mid-loop unless `--interactive`).
-3. **Write** the consensus plan to `src/frontend/.omc/plans/` — one file per ticket, ready for the implement session to consume.
-4. Report which plans were produced; do NOT implement them.
+3. **Write** the consensus plan to `.omc/plans/` (repo-root state dir) — one file per ticket, `Status: pending approval`. ⚠️ This copy is **session-local**: `.omc/` is git-ignored and worktree-local, so the implement session's fresh worktree (off `origin/master`) will **not** see this file.
+4. **Persist for cross-session handoff (REQUIRED — the plan is useless if the implement session can't find it).** Post the full plan as a **Linear comment** on the ticket via `mcp__linear__save_comment` (header `## 📋 Implementation plan (ralplan consensus — APPROVED)`), containing: the exact edit set (file:line), AC checklist, verification steps, and any execution-order / cross-plan-collision / ship-order constraints the loop surfaced. **The Linear ticket is the portable source of truth** the implement loop reads in its step 1 — the local `.omc/plans/*.md` is only a convenience for this checkout. Do this for every APPROVED plan before finishing.
+5. Report which plans were produced — cite both the local path AND the Linear comment link; do NOT implement them.
 
 ## Guardrails
 

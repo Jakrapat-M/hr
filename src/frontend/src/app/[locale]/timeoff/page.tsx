@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
-import { Check, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight, Sun, X, LogOut } from 'lucide-react';
+import { Check, Plus, Paperclip, AlertCircle, ChevronDown, ChevronRight, Sun, X } from 'lucide-react';
 import {
   Avatar,
   Button,
@@ -453,34 +453,6 @@ export default function HumiTimeoffPage() {
             </div>
           </Card>
 
-          {/* Resignation self-service entry (STA-188): relocated here from the
-              profile Employment tab so the resignation request lives alongside
-              the other ESS leave/time-off actions. Flow itself is unchanged. */}
-          <Card variant="raised" size="lg">
-            <CardEyebrow>{isTh ? 'การลาออก' : 'Resignation'}</CardEyebrow>
-            <h3
-              className={cn(
-                'mt-1 font-display font-semibold tracking-tight text-ink',
-                'text-[length:var(--text-display-h3)] leading-[var(--text-display-h3--line-height)]'
-              )}
-            >
-              {isTh ? 'ยื่นคำขอลาออก' : 'Resign'}
-            </h3>
-            <p className="mt-2 text-small text-ink-muted leading-relaxed">
-              {isTh
-                ? 'ยื่นคำขอลาออกและติดตามสถานะการดำเนินการ'
-                : 'Submit your resignation request and track its status.'}
-            </p>
-            <div className="mt-4">
-              <Link
-                href={`/${locale}/resignation`}
-                className="inline-flex items-center gap-2 text-body font-medium text-accent hover:underline"
-              >
-                <LogOut size={16} aria-hidden />
-                {isTh ? 'ดูคำขอลาออก' : 'View resignation request'}
-              </Link>
-            </div>
-          </Card>
         </aside>
       </div>
 

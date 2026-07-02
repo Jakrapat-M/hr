@@ -152,13 +152,6 @@ export default function ChangeTypePage() {
 
       <EmployeeSnapshot employee={employee} />
 
-      <div className="humi-card humi-card--cream">
-        <div className="humi-eyebrow" style={{ marginBottom: 6 }}>Demo boundary</div>
-        <p className="text-small text-ink-soft">
-          หน้านี้อัปเดตประเภทพนักงานใน mock store เพื่อให้ demo ไม่ตก 404; การสร้าง workflow approval และ timeline event สำหรับ change-type ยังไม่มีชนิด event ใน shared TimelineEvent union จึงไม่เขียน timeline ปลอม
-        </p>
-      </div>
-
       <div className="humi-card ring-1 ring-accent-soft">
         <div className="humi-eyebrow" style={{ marginBottom: 16 }}>Employment Type Change</div>
 
