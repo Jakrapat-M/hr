@@ -105,6 +105,9 @@ vi.mock('next-intl', () => ({
     };
     return map[key] ?? key;
   },
+  // STA-182 — the benefits-hub claim-history "more detail" action mounts the shared
+  // ClaimDetailModal, which reads useLocale(); expose it on the mock.
+  useLocale: () => 'th',
 }));
 
 vi.mock('next/link', () => ({

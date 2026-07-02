@@ -32,6 +32,8 @@ import {
   buttonVariants,
 } from '@/components/humi';
 import type { DataTableColumn } from '@/components/humi';
+import { ClaimDetailModal } from '@/components/benefits/ClaimDetailModal';
+import { humiClaimHistoryToClaimRequest } from '@/lib/humi-claim-history-to-claim';
 import { cn } from '@/lib/utils';
 import { claimPipeline, type ClaimPipeline } from '@/lib/benefit-claim-steps';
 import {
@@ -610,6 +612,8 @@ function ClaimHistorySection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  // STA-182 — "more detail" row action opens a read-only detail modal.
+  const [detailRow, setDetailRow] = useState<HumiClaimHistoryItem | null>(null);
 
   const filteredClaimHistory = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLocaleLowerCase('th-TH');
@@ -677,6 +681,25 @@ function ClaimHistorySection() {
       },
       sortAccessor: (row) => CLAIM_STATUS_META[row.status].label,
       className: 'w-40',
+    },
+    // STA-182 — "more detail" row action (last column). Opens a read-only modal.
+    {
+      id: 'detail',
+      header: 'รายละเอียด / Detail',
+      headerVisuallyHidden: true,
+      align: 'right',
+      className: 'w-16',
+      cell: (row) => (
+        <button
+          type="button"
+          onClick={() => setDetailRow(row)}
+          aria-label={`ดูรายละเอียด / more detail — ${row.type}`}
+          title="ดูรายละเอียด / More detail"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] border border-hairline bg-surface text-ink-muted transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-canvas"
+        >
+          <FileText size={15} aria-hidden />
+        </button>
+      ),
     },
   ], []);
 
@@ -773,6 +796,15 @@ function ClaimHistorySection() {
           }
         />
       </Card>
+
+      {/* STA-182 — reuse the read-only ClaimDetailModal (STA-159): request detail +
+          approval history + attachment view. The hub preview row is adapted into a
+          BenefitClaimRequest for the shared modal. */}
+      <ClaimDetailModal
+        claim={detailRow ? humiClaimHistoryToClaimRequest(detailRow) : null}
+        open={detailRow !== null}
+        onClose={() => setDetailRow(null)}
+      />
     </section>
   );
 }

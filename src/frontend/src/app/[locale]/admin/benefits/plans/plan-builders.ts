@@ -30,6 +30,8 @@ export function applyIdentityToPlan(
     claimPeriod: values.claimPeriod,
     entitlementCalcMethod: values.entitlementCalcMethod,
     eligibleClaimDate: values.eligibleClaimDate,
+    specialClaimCondition: values.specialClaimCondition,
+    specialClaimConditionType: values.specialClaimConditionType,
     company: values.company,
   } as BenefitPlan;
 }
@@ -93,6 +95,8 @@ export function buildPlanFromCreate(values: Tab1IdentityValues): BenefitPlan {
     claimPeriod: values.claimPeriod,
     entitlementCalcMethod: values.entitlementCalcMethod,
     eligibleClaimDate: values.eligibleClaimDate,
+    specialClaimCondition: values.specialClaimCondition,
+    specialClaimConditionType: values.specialClaimConditionType,
     company: values.company,
   };
 }

@@ -22,6 +22,8 @@ const baseValues: Tab1IdentityValues = {
   claimPeriod: 'year',
   entitlementCalcMethod: 'full',
   eligibleClaimDate: '30',
+  specialClaimCondition: '',
+  specialClaimConditionType: '',
   company: '',
 }
 
