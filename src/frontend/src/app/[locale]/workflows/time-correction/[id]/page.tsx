@@ -51,8 +51,12 @@ export default function TimeCorrectionDetailPage({ params }: PageProps) {
 
   const request = useTimeCorrections((s) => s.requests.find((r) => r.id === id));
   const roles = useAuthStore((s) => s.roles);
+  const currentEmpId = useAuthStore((s) => s.userId);
   // Manager+ (first-line approver chain) can act; everyone else view-only.
   const canAct = hasRole(roles, 'manager');
+  // The request owner never sees the approver action surface here (even a
+  // manager viewing their OWN correction) — they view status via /time/my-requests.
+  const isOwner = !!currentEmpId && currentEmpId === request?.employeeId;
 
   const [mode, setMode] = useState<'approve' | 'reject' | null>(null);
   const [reason, setReason] = useState('');
@@ -275,8 +279,9 @@ export default function TimeCorrectionDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Action surface — only the routed approver (manager+) can decide */}
-      {isPending && canAct && (
+      {/* Action surface — only the routed approver (manager+) can decide
+          (never the request owner, who has a read-only view of their own status) */}
+      {isPending && canAct && !isOwner && (
         <div className="sticky bottom-4 z-30 mt-6">
           <div className="rounded-[var(--radius-lg)] border border-hairline bg-surface shadow-[var(--shadow-card)] px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
             <p className="text-sm text-ink-muted">
@@ -293,7 +298,7 @@ export default function TimeCorrectionDetailPage({ params }: PageProps) {
           </div>
         </div>
       )}
-      {isPending && !canAct && (
+      {isPending && (!canAct || isOwner) && (
         <div className="mt-6 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-4 py-3 text-sm text-ink-muted">
           {isTh
             ? 'ดูได้อย่างเดียว — คำขอนี้รอการอนุมัติของหัวหน้างาน'

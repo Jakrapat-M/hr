@@ -63,6 +63,7 @@ export default function LeaveDetailPage({ params }: PageProps) {
   const allRequests = useLeaveApprovals((s) => s.requests);
   const request = useMemo(() => allRequests.find((r) => r.id === id), [allRequests, id]);
   const roles = useAuthStore((s) => s.roles) as Role[];
+  const currentEmpId = useAuthStore((s) => s.userId);
 
   // Decision context — what the manager needs without leaving the page.
   // (1) Team absence overlap: other employees with a non-rejected request whose
@@ -131,6 +132,10 @@ export default function LeaveDetailPage({ params }: PageProps) {
   const chain = appliedChainFor('leave', request.leaveCode);
   const step = currentStep(queueItem);
   const canAct = rolesActAtCurrentStep(queueItem, roles);
+  // The request owner NEVER sees the approver action surface here, even if their
+  // persona would otherwise be routed to act — owners view their own status via
+  // /time/my-requests. A non-owner routed approver still decides normally.
+  const isOwner = !!currentEmpId && currentEmpId === request.employeeId;
 
   const isPending = request.status === 'pending';
   // Shared stage label — narrates manager → HR progress on 2-level chains.
@@ -167,8 +172,13 @@ export default function LeaveDetailPage({ params }: PageProps) {
     <div className="px-4 py-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1 text-xs text-ink-muted mb-4" aria-label="breadcrumb">
-        <Link href={`/${locale}/quick-approve`} className="hover:text-ink transition">
-          {isTh ? 'คิวอนุมัติ' : 'Approvals'}
+        <Link
+          href={`/${locale}/${isOwner ? 'time/my-requests' : 'quick-approve'}`}
+          className="hover:text-ink transition"
+        >
+          {isOwner
+            ? isTh ? 'คำขอของฉัน' : 'My Request'
+            : isTh ? 'คิวอนุมัติ' : 'Approvals'}
         </Link>
         <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
         <span className="text-ink font-medium">{request.id}</span>
@@ -393,8 +403,9 @@ export default function LeaveDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Action surface — only the CURRENT step's routed approver can decide */}
-      {isPending && canAct && (
+      {/* Action surface — only the CURRENT step's routed approver can decide
+          (never the request owner, who has a read-only view of their own status) */}
+      {isPending && canAct && !isOwner && (
         <div className="sticky bottom-4 z-30 mt-6">
           <div className="rounded-[var(--radius-lg)] border border-hairline bg-surface shadow-[var(--shadow-card)] px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
             <p className="text-sm text-ink-muted">
@@ -415,7 +426,7 @@ export default function LeaveDetailPage({ params }: PageProps) {
           </div>
         </div>
       )}
-      {isPending && !canAct && (
+      {isPending && (!canAct || isOwner) && (
         <div className="mt-6 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-4 py-3 text-sm text-ink-muted">
           {isTh
             ? 'ดูได้อย่างเดียว — คำขอนี้รอผู้อนุมัติในขั้นปัจจุบัน'
