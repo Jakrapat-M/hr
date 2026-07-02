@@ -1,0 +1,5 @@
+# Local secrets — never commit the real API key
+.env
+
+# Edit-script backups of overwritten images
+backup/
