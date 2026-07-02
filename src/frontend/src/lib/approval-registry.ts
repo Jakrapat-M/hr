@@ -279,7 +279,9 @@ export function timeCorrectionToPendingRequest(r: TimeCorrectionRequest): Pendin
     // (no `days`) keeps the EXACT original string (byte-identical).
     description: r.days?.length
       ? `แก้ไขเวลา (${typeLabel}) — ${r.date} +${r.days.length} วัน`
-      : `แก้ไขเวลา (${typeLabel}) — ${r.date} · ${r.correctedTime}`,
+      : r.correctionType === 'both'
+        ? `แก้ไขเวลา (เข้า-ออก) — ${r.date} · เข้า ${r.originalClockIn ?? r.originalTime ?? '—'}→${r.correctedClockIn ?? r.correctedTime} · ออก ${r.originalClockOut ?? '—'}→${r.correctedClockOut ?? '—'}`
+        : `แก้ไขเวลา (${typeLabel}) — ${r.date} · ${r.correctedTime}`,
     submittedAt: r.submittedAt,
     urgency,
     waitingDays,

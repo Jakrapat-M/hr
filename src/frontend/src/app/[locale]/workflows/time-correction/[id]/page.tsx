@@ -112,6 +112,10 @@ export default function TimeCorrectionDetailPage({ params }: PageProps) {
       reasonCode: request.reasonCode,
       originalTime: request.originalTime,
       correctedTime: request.correctedTime,
+      originalClockIn: request.originalClockIn,
+      correctedClockIn: request.correctedClockIn,
+      originalClockOut: request.originalClockOut,
+      correctedClockOut: request.correctedClockOut,
     },
     ...(request.days ?? []),
   ];
@@ -171,17 +175,44 @@ export default function TimeCorrectionDetailPage({ params }: PageProps) {
                   label={isTh ? 'วันที่' : 'Date'}
                   value={formatDate(day.date, 'medium', locale)}
                 />
-                {/* Before → After (C2) — original time mapped to the corrected time. */}
-                <FieldRow
-                  label={isTh ? 'ก่อน → หลัง' : 'Before → After'}
-                  value={
-                    <span className="inline-flex items-center gap-2">
-                      <span className="text-ink-muted">{day.originalTime ?? '—'}</span>
-                      <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden />
-                      <span className="font-semibold text-accent">{day.correctedTime}</span>
-                    </span>
-                  }
-                />
+                {/* Before → After. STA-171: a 'both' day shows EXACTLY two dual rows
+                    (Clock In + Clock Out) INSTEAD of the generic row (no triple-render);
+                    in/out/single keep the single generic row byte-identically. */}
+                {day.correctionType === 'both' ? (
+                  <>
+                    <FieldRow
+                      label={isTh ? 'เวลาเข้า (ก่อน → หลัง)' : 'Clock In (before → after)'}
+                      value={
+                        <span className="inline-flex items-center gap-2">
+                          <span className="text-ink-muted">{day.originalClockIn ?? '—'}</span>
+                          <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden />
+                          <span className="font-semibold text-accent">{day.correctedClockIn ?? '—'}</span>
+                        </span>
+                      }
+                    />
+                    <FieldRow
+                      label={isTh ? 'เวลาออก (ก่อน → หลัง)' : 'Clock Out (before → after)'}
+                      value={
+                        <span className="inline-flex items-center gap-2">
+                          <span className="text-ink-muted">{day.originalClockOut ?? '—'}</span>
+                          <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden />
+                          <span className="font-semibold text-accent">{day.correctedClockOut ?? '—'}</span>
+                        </span>
+                      }
+                    />
+                  </>
+                ) : (
+                  <FieldRow
+                    label={isTh ? 'ก่อน → หลัง' : 'Before → After'}
+                    value={
+                      <span className="inline-flex items-center gap-2">
+                        <span className="text-ink-muted">{day.originalTime ?? '—'}</span>
+                        <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden />
+                        <span className="font-semibold text-accent">{day.correctedTime}</span>
+                      </span>
+                    }
+                  />
+                )}
                 <FieldRow label={isTh ? 'เหตุผล' : 'Reason'} value={dayReasonLabel} />
               </Fragment>
             );
