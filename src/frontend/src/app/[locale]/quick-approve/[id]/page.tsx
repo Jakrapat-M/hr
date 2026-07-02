@@ -11,7 +11,6 @@ import { AttachmentViewPanel } from '@/components/quick-approve/detail/Attachmen
 import { HistoryTimeline } from '@/components/quick-approve/detail/HistoryTimeline';
 import { ApproverNotesPanel } from '@/components/quick-approve/detail/ApproverNotesPanel';
 import { ActionPanel } from '@/components/quick-approve/detail/ActionPanel';
-import { RejectReturnDrawer, type DrawerMode } from '@/components/quick-approve/detail/RejectReturnDrawer';
 import { APPROVAL_REGISTRY, useSelectPendingApprovals, type QueueApproval, type QueueStatus } from '@/lib/approval-registry';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { canActOn } from '@/lib/claim-permissions';
@@ -455,21 +454,12 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
   const router = useRouter();
   const { id } = use(params);
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<DrawerMode>('reject');
   const [toast, setToast] = useState<string | null>(null);
-  // STA-147 FU-1 — capture the send-back reason in session for IMMEDIATE reflection
-  // in the read-only Send Back Comment box after Confirm. (managerSendBack also
-  // writes queueSnapshot.sendBackComment, but behind a ~300ms mock-async delay, so
-  // local state avoids a flash of '-'.) Reset per request id so the reason from one
-  // request never bleeds into another on client-side navigation (same mounted page).
-  const [sentBackReason, setSentBackReason] = useState<string | null>(null);
-  useEffect(() => { setSentBackReason(null); }, [id]);
-
-  function openDrawer(mode: DrawerMode) {
-    setDrawerMode(mode);
-    setDrawerOpen(true);
-  }
+  // STA-185: single shared "Approve / Send Back Comment" — page-owned so the same
+  // value feeds BOTH the Approve and Send Back confirm popups. Reset per request id
+  // so one request's comment never bleeds into another on client-side navigation.
+  const [comment, setComment] = useState('');
+  useEffect(() => { setComment(''); }, [id]);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -499,16 +489,24 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
   // re-renders from the subscribed selector once the store settles.
   function handleApprove() {
     if (!request) return;
+    // STA-185: approve-note is DISPLAY-ONLY — managerApprove takes no note param.
     void APPROVAL_REGISTRY[request.type].approve(request.id, { name: MANAGER_NAME });
     showToast(t('toastApproved'));
   }
 
-  function handleDrawerConfirm(requestId: string, reason: string, _comment: string) {
+  // STA-185: Send Back routes ALL types through the registry reject, seeding the
+  // reason from the shared page comment (single-sourced via ActionPanel).
+  function handleSendBack() {
     if (!request) return;
-    void APPROVAL_REGISTRY[request.type].reject(requestId, { name: MANAGER_NAME }, reason);
-    setSentBackReason(reason); // FU-1: reflect the reason in the read-only Send Back Comment box
-    setDrawerOpen(false);
-    showToast(drawerMode === 'return' ? t('toastReturned') : t('toastRejected'));
+    void APPROVAL_REGISTRY[request.type].reject(request.id, { name: MANAGER_NAME }, comment);
+    showToast(t('toastReturned'));
+  }
+
+  // Reject (non-claim only) keeps ActionPanel's own editable in-modal reason.
+  function handleReject(_id: string, reason: string) {
+    if (!request) return;
+    void APPROVAL_REGISTRY[request.type].reject(request.id, { name: MANAGER_NAME }, reason);
+    showToast(t('toastRejected'));
   }
 
   if (!request) {
@@ -524,12 +522,13 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
     );
   }
 
-  // STA-147 req-1: claims with attachments use the 2-col grid, so widen the page
-  // container to give the Attachment View panel room; other types stay narrow.
+  // STA-147/STA-185 req-1: claims with attachments use the 3-col grid, so the page
+  // container goes flush-left full-width (no mx-auto/max-width cap) to give the
+  // Attachment View column room; other types stay narrow and centered.
   const wide = request.type === 'claim' && (request.attachments?.length ?? 0) > 0;
 
   return (
-    <div className={`mx-auto px-4 py-6 ${wide ? 'max-w-5xl' : 'max-w-3xl'}`}>
+    <div className={`px-4 py-6 ${wide ? 'w-full' : 'mx-auto max-w-3xl'}`}>
       {/* Back nav */}
       <Button
         variant="ghost"
@@ -552,19 +551,23 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
       {/* Content stack */}
       <div className="flex flex-col gap-4">
         <RequestSummary request={request} />
-        {/* STA-147 req-1: Attachment View sits beside Request Details for claims
-            with attachments; this is the ONLY row wrapped in the 2-col grid. */}
-        {request.type === 'claim' && (request.attachments?.length ?? 0) > 0 ? (
-          <div className="grid gap-4 lg:grid-cols-2">
+        {/* STA-185 req-2/3: for claims with attachments, Request Details | Attachment
+            View (×1.5) | scrollable Approval History sit in one top-aligned 3-col row.
+            Other types keep Request Details full-width with history below. */}
+        {wide ? (
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start">
             <RequestPayload request={request} />
             <AttachmentViewPanel attachments={request.attachments ?? []} />
+            <HistoryTimeline steps={request.approvalTimeline} />
           </div>
         ) : (
-          <RequestPayload request={request} />
+          <>
+            <RequestPayload request={request} />
+            <HistoryTimeline steps={request.approvalTimeline} />
+          </>
         )}
-        <HistoryTimeline steps={request.approvalTimeline} />
-        {/* STA-147 req-2: Note + read-only Send Back Comment below the history. */}
-        <ApproverNotesPanel sendBackComment={sentBackReason ?? request.sendBackComment} />
+        {/* STA-185 req-8: single shared Approve / Send Back Comment field. */}
+        <ApproverNotesPanel value={comment} onChange={setComment} />
       </div>
 
       {/* Sticky action panel */}
@@ -573,19 +576,12 @@ export default function QuickApproveDetailPage({ params }: PageProps) {
           requestId={request.id}
           requestType={request.type}
           actable={actable}
+          comment={comment}
           onApprove={handleApprove}
-          onReject={() => openDrawer('reject')}
-          onReturn={() => openDrawer('return')}
+          onReject={handleReject}
+          onReturn={handleSendBack}
         />
       </div>
-
-      <RejectReturnDrawer
-        open={drawerOpen}
-        mode={drawerMode}
-        requestId={request.id}
-        onClose={() => setDrawerOpen(false)}
-        onConfirm={handleDrawerConfirm}
-      />
 
       {/* Toast */}
       {toast && (

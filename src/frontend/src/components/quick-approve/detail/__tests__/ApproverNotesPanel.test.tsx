@@ -1,41 +1,49 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { ApproverNotesPanel } from '../ApproverNotesPanel';
 
 const messages = {
   quick_approve_detail: {
-    noteTitle: 'Note',
-    notePlaceholder: 'Add a note…',
-    sendBackCommentTitle: 'Send Back Comment',
+    approveSendBackCommentTitle: 'Approve / Send Back Comment',
+    approveSendBackCommentPlaceholder: 'Add a comment for approval or send back…',
   },
 };
 
-function renderPanel(sendBackComment?: string) {
-  return render(
+function renderPanel(value = '', onChange = vi.fn()) {
+  const utils = render(
     <NextIntlClientProvider locale="en" messages={messages}>
-      <ApproverNotesPanel sendBackComment={sendBackComment} />
+      <ApproverNotesPanel value={value} onChange={onChange} />
     </NextIntlClientProvider>,
   );
+  return { onChange, ...utils };
 }
 
 describe('ApproverNotesPanel', () => {
-  it('renders an editable Note textarea', () => {
+  it('renders the renamed Approve / Send Back Comment field', () => {
     renderPanel();
-    const note = screen.getByPlaceholderText('Add a note…') as HTMLTextAreaElement;
-    fireEvent.change(note, { target: { value: 'check eligibility' } });
-    expect(note.value).toBe('check eligibility');
+    expect(screen.getByText('Approve / Send Back Comment')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Add a comment for approval or send back…')).toBeInTheDocument();
   });
 
-  it('shows "-" in the read-only Send Back Comment box when none is set', () => {
-    renderPanel();
-    const readOnly = screen.getByDisplayValue('-') as HTMLTextAreaElement;
-    expect(readOnly.readOnly).toBe(true);
+  it('reflects the controlled value', () => {
+    renderPanel('check eligibility');
+    const field = screen.getByPlaceholderText(
+      'Add a comment for approval or send back…',
+    ) as HTMLTextAreaElement;
+    expect(field.value).toBe('check eligibility');
   });
 
-  it('fills the read-only Send Back Comment box with the persisted reason', () => {
-    renderPanel('เอกสารไม่ครบ');
-    const readOnly = screen.getByDisplayValue('เอกสารไม่ครบ') as HTMLTextAreaElement;
-    expect(readOnly.readOnly).toBe(true);
+  it('calls onChange when the approver types', () => {
+    const { onChange } = renderPanel();
+    const field = screen.getByPlaceholderText('Add a comment for approval or send back…');
+    fireEvent.change(field, { target: { value: 'needs receipt' } });
+    expect(onChange).toHaveBeenCalledWith('needs receipt');
+  });
+
+  it('no longer renders a read-only Send Back Comment box', () => {
+    renderPanel();
+    expect(screen.queryByText('Send Back Comment')).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('-')).not.toBeInTheDocument();
   });
 });
