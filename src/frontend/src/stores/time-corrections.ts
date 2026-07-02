@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { getCorrectionReason } from '@/lib/time/correction-reasons';
+import { isCancellableByCycle, demoToday } from '@/lib/time/period';
 
 // time-corrections — P3 Zustand+persist store for employee timesheet/attendance
 // correction requests, surfaced as a NEW row type in the unified /quick-approve
@@ -48,10 +49,22 @@ export type CorrectionDay = {
   date: string;
   correctionType: CorrectionType;
   reasonCode: string;
-  /** System-recorded time (blank for missing punches). */
+  /** System-recorded time (blank for missing punches). OVERLOAD: for
+   *  correctionType==='both' this MIRRORS originalClockIn. */
   originalTime?: string;
-  /** Time the employee says is correct (HH:mm). */
+  /** Time the employee says is correct (HH:mm). OVERLOAD: for correctionType==='both'
+   *  this MIRRORS correctedClockIn; the authoritative dual values are correctedClockIn/
+   *  correctedClockOut. Display consumers MUST branch on correctionType==='both' and read
+   *  the dual fields — never treat correctedTime as THE correction for a 'both' day. */
   correctedTime: string;
+  /** 'both' only: system clock-IN (blank if missing). */
+  originalClockIn?: string;
+  /** 'both' only: corrected clock-IN (HH:mm), required. */
+  correctedClockIn?: string;
+  /** 'both' only: system clock-OUT (blank if missing). */
+  originalClockOut?: string;
+  /** 'both' only: corrected clock-OUT (HH:mm), required. */
+  correctedClockOut?: string;
   reason: string;
   /** Optional attachment filenames (mock — names only). */
   docs?: string[];
@@ -70,10 +83,22 @@ export type TimeCorrectionRequest = {
   reasonCode: string;
   /** Derived from reasonCode — the payroll pay-code the correction posts under. */
   payCode: string;
-  /** System-recorded time (blank for missing punches). */
+  /** System-recorded time (blank for missing punches). OVERLOAD: for
+   *  correctionType==='both' this MIRRORS originalClockIn. */
   originalTime?: string;
-  /** Time the employee says is correct (HH:mm). */
+  /** Time the employee says is correct (HH:mm). OVERLOAD: for correctionType==='both'
+   *  this MIRRORS correctedClockIn; the authoritative dual values are correctedClockIn/
+   *  correctedClockOut. Display consumers MUST branch on correctionType==='both' and read
+   *  the dual fields — never treat correctedTime as THE correction for a 'both' day. */
   correctedTime: string;
+  /** 'both' only: system clock-IN (blank if missing). */
+  originalClockIn?: string;
+  /** 'both' only: corrected clock-IN (HH:mm), required. */
+  correctedClockIn?: string;
+  /** 'both' only: system clock-OUT (blank if missing). */
+  originalClockOut?: string;
+  /** 'both' only: corrected clock-OUT (HH:mm), required. */
+  correctedClockOut?: string;
   /** Free-text note from the employee. */
   reason: string;
   /** Optional attachment filenames (mock — names only). */
@@ -112,10 +137,11 @@ interface TimeCorrectionsState {
   approve: (id: string, by: { name: string }, comment?: string) => void;
   reject: (id: string, by: { name: string }, reason: string) => void;
   /**
-   * STA-175 — employee cancels their OWN pending correction while it is still at
-   * the first-line manager step. Sets status 'cancelled' + appends a 'cancel'
-   * audit entry. Drops out of the unified inbox via the selector's cancelled
-   * guard. No-op once approved/rejected/cancelled.
+   * STA-183 — employee cancels their OWN correction under the cycle-window rule:
+   * allowed while not terminal (rejected/cancelled) AND the correction day is in
+   * the current or immediately-previous payroll cycle. Sets status 'cancelled' +
+   * appends a 'cancel' audit entry. Drops out of the unified inbox via the
+   * selector's cancelled guard.
    */
   cancel: (id: string, by: { name: string }) => void;
   clear: () => void;
@@ -158,6 +184,12 @@ export function latestCorrectionForDate(
     reasonCode: day.reasonCode,
     originalTime: day.originalTime,
     correctedTime: day.correctedTime,
+    // STA-171 — project the dual clock-in/out fields so a 'both' day surfaces its
+    // real pair, not the stale day-0 values inherited via ...match.
+    originalClockIn: day.originalClockIn,
+    correctedClockIn: day.correctedClockIn,
+    originalClockOut: day.originalClockOut,
+    correctedClockOut: day.correctedClockOut,
     reason: day.reason,
     docs: day.docs,
   };
@@ -293,7 +325,13 @@ export const useTimeCorrections = create<TimeCorrectionsState>()(
       cancel: (id, by) =>
         set((state) => ({
           requests: state.requests.map((r) =>
-            r.id !== id || r.status !== 'pending_manager'
+            // STA-183 — cycle-window rule (supersedes the pending_manager-only gate):
+            // any non-terminal correction whose working day is in the current or
+            // previous payroll cycle is self-cancellable, via the shared helper.
+            r.id !== id ||
+            r.status === 'rejected' ||
+            r.status === 'cancelled' ||
+            !isCancellableByCycle(r.date, demoToday())
               ? r
               : {
                   ...r,

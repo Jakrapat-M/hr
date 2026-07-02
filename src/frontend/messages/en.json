@@ -5544,6 +5544,63 @@
       "save": "Save",
       "addProject": "Add project",
       "newProjectPlaceholder": "New project name"
+    },
+    "myRequests": {
+      "card": {
+        "title": "My Request",
+        "desc": "Track your leave, overtime & time-correction requests"
+      },
+      "page": {
+        "title": "My Request",
+        "subtitle": "Your leave, overtime, and time-correction requests in one place."
+      },
+      "col": {
+        "type": "Request type",
+        "submitted": "Submitted",
+        "start": "Start",
+        "end": "End",
+        "detail": "Detail",
+        "status": "Status",
+        "action": "Action"
+      },
+      "type": {
+        "all": "All types",
+        "leave": "Leave",
+        "ot": "Overtime",
+        "timeCorrection": "Time correction"
+      },
+      "status": {
+        "all": "All statuses",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled"
+      },
+      "cycle": {
+        "all": "All cycles",
+        "current": "Current cycle",
+        "previous": "Previous cycle"
+      },
+      "filter": {
+        "type": "Request type",
+        "status": "Status",
+        "cycle": "Cycle"
+      },
+      "action": {
+        "viewDetail": "View detail",
+        "cancel": "Cancel"
+      },
+      "cancel": {
+        "confirmTitle": "Cancel this request?",
+        "confirmBody": "This will withdraw the request. This action cannot be undone.",
+        "confirmYes": "Cancel request",
+        "confirmNo": "Keep request"
+      },
+      "periodNote": "Only requests starting within the current ({currentRange}) or previous ({prevRange}) payroll cycle can be cancelled.",
+      "empty": {
+        "title": "No requests yet",
+        "desc": "Your leave, overtime, and time-correction requests will appear here."
+      }
     }
   },
   "spdReports": {

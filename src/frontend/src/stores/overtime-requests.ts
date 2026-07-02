@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import type { OtTypeCode } from '@/lib/time/ot-types';
+import { isCancellableByCycle, demoToday } from '@/lib/time/period';
 
 // overtime-requests — Group B Zustand+persist store for employee OT (overtime)
 // requests, surfaced as the 'overtime' row type in the unified /quick-approve
@@ -72,10 +73,11 @@ interface OvertimeRequestsState {
   approve: (id: string, by: { id?: string; name: string }, comment?: string) => void;
   reject: (id: string, by: { id?: string; name: string }, reason: string) => void;
   /**
-   * STA-175 — employee cancels their OWN pending OT request while it is still at
-   * the first (single) approval stage. Sets status 'cancelled' + appends a
-   * 'cancel' audit entry. Drops out of the unified inbox via the selector's
-   * cancelled guard. No-op once approved/rejected/cancelled.
+   * STA-183 — employee cancels their OWN OT request under the cycle-window rule:
+   * allowed while not terminal (rejected/cancelled) AND the OT date is in the
+   * current or immediately-previous payroll cycle. Sets status 'cancelled' +
+   * appends a 'cancel' audit entry. Drops out of the unified inbox via the
+   * selector's cancelled guard.
    */
   cancel: (id: string, by: { id?: string; name: string }) => void;
   /** Seed deterministic demo rows, preserving row.id (idempotent per id). */
@@ -162,7 +164,13 @@ export const useOvertimeRequests = create<OvertimeRequestsState>()(
       cancel: (id, by) =>
         set((state) => ({
           requests: state.requests.map((r) =>
-            r.id !== id || r.status !== 'pending'
+            // STA-183 — cycle-window rule (supersedes the pending-only gate): any
+            // non-terminal row whose OT date is in the current or previous payroll
+            // cycle is self-cancellable, enforced via the shared helper.
+            r.id !== id ||
+            r.status === 'rejected' ||
+            r.status === 'cancelled' ||
+            !isCancellableByCycle((r.startAt ?? '').slice(0, 10), demoToday())
               ? r
               : {
                   ...r,
