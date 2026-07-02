@@ -422,3 +422,90 @@ describe('STA-148 req-4 — merged Medical Reimbursement', () => {
     expect(medicalChips.map((p) => p.id)).toEqual(['BE-MED-001']);
   });
 });
+
+// ── STA-184 — bilingual Hospital Name LOV + submit preview ────────────────────
+const MOBILE_PLAN = getPlan('BE-MOB-001')!; // simple-claim, category mobile (only realMonthDate required)
+
+describe('STA-184 — bilingual Hospital Name LOV', () => {
+  it('renders each hospital option as "Thai / English" with the corrected Sikarin spelling', () => {
+    render(<SimpleClaimForm plan={OPD_PLAN} />);
+    const hospital = screen.getByLabelText(/ชื่อสถานพยาบาล/) as HTMLSelectElement;
+    const optText = Array.from(hospital.options).map((o) => o.textContent ?? '');
+    // 16 hospital options + the "— Select —" placeholder.
+    expect(hospital.options).toHaveLength(17);
+    expect(optText).toContain('โรงพยาบาลวิภาราม ปากเกร็ด / Vibharam Pakkred Hospital');
+    // Corrected TH spelling (ศิครินทร์) shown alongside its English name.
+    expect(optText.some((t) => t.includes('ศิครินทร์') && t.includes('Sikarin Hat Yai Hospital'))).toBe(true);
+    // STA-184 BA update (2026-07-02) — trimmed EN, only the final "Hospital" kept.
+    expect(optText).toContain('โรงพยาบาลไทยอินเตอร์ / Thai International Samui Hospital');
+    expect(optText).toContain('โรงพยาบาลกรุงเทพอุดร / Bangkok Udon Hospital');
+    expect(optText).toContain('โรงพยาบาลไทยอินเตอร์เนชั่นแนล เกาะพงัน / Thai International Phangan Hospital');
+  });
+
+  it('reveals the Others free-text field when Hospital Name = others', () => {
+    render(<SimpleClaimForm plan={OPD_PLAN} />);
+    const hospital = screen.getByLabelText(/ชื่อสถานพยาบาล/) as HTMLSelectElement;
+    expect(screen.queryByLabelText(/ระบุสถานพยาบาลอื่นๆ/)).not.toBeInTheDocument();
+    fireEvent.change(hospital, { target: { value: 'others' } });
+    expect(screen.getByLabelText(/ระบุสถานพยาบาลอื่นๆ/)).toBeInTheDocument();
+    fireEvent.change(hospital, { target: { value: 'bnh' } });
+    expect(screen.queryByLabelText(/ระบุสถานพยาบาลอื่นๆ/)).not.toBeInTheDocument();
+  });
+});
+
+describe('STA-184 — SimpleClaimForm submit preview (confirmBeforeSubmit)', () => {
+  const fillMobileRequired = () => {
+    fireEvent.change(screen.getByLabelText(/เลขที่ใบเสร็จ/), { target: { value: 'RC-184' } });
+    fireEvent.change(screen.getByLabelText(/จำนวนเงินตามใบเสร็จ/), { target: { value: '300' } });
+    fireEvent.change(screen.getByLabelText(/เดือนที่ขอเบิก/), { target: { value: 'may' } });
+  };
+
+  it('opens the preview modal instead of submitting when confirmBeforeSubmit is set', () => {
+    const onSubmitted = vi.fn();
+    render(<SimpleClaimForm plan={MOBILE_PLAN} confirmBeforeSubmit onSubmitted={onSubmitted} />);
+    fillMobileRequired();
+    fireEvent.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
+    expect(screen.getByText('ตรวจสอบก่อนส่งคำขอ')).toBeInTheDocument();
+    // Preview echoes entered values (receipt no + resolved bilingual month).
+    expect(screen.getByText('RC-184')).toBeInTheDocument();
+    expect(onSubmitted).not.toHaveBeenCalled();
+  });
+
+  it('dispatches the submit exactly once when the preview is confirmed', () => {
+    const onSubmitted = vi.fn();
+    render(<SimpleClaimForm plan={MOBILE_PLAN} confirmBeforeSubmit onSubmitted={onSubmitted} />);
+    fillMobileRequired();
+    fireEvent.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
+    fireEvent.click(screen.getByRole('button', { name: 'ยืนยันส่งคำขอ' }));
+    expect(onSubmitted).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('ตรวจสอบก่อนส่งคำขอ')).not.toBeInTheDocument();
+  });
+
+  it('closes the preview without submitting when Edit is clicked', () => {
+    const onSubmitted = vi.fn();
+    render(<SimpleClaimForm plan={MOBILE_PLAN} confirmBeforeSubmit onSubmitted={onSubmitted} />);
+    fillMobileRequired();
+    fireEvent.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
+    fireEvent.click(screen.getByRole('button', { name: 'แก้ไข' }));
+    expect(screen.queryByText('ตรวจสอบก่อนส่งคำขอ')).not.toBeInTheDocument();
+    expect(onSubmitted).not.toHaveBeenCalled();
+  });
+
+  it('does not open the preview on invalid input', () => {
+    const onSubmitted = vi.fn();
+    render(<SimpleClaimForm plan={MOBILE_PLAN} confirmBeforeSubmit onSubmitted={onSubmitted} />);
+    fireEvent.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
+    expect(screen.queryByText('ตรวจสอบก่อนส่งคำขอ')).not.toBeInTheDocument();
+    expect(onSubmitted).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
+  it('submits directly (no preview) when confirmBeforeSubmit is omitted', () => {
+    const onSubmitted = vi.fn();
+    render(<SimpleClaimForm plan={MOBILE_PLAN} onSubmitted={onSubmitted} />);
+    fillMobileRequired();
+    fireEvent.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
+    expect(screen.queryByText('ตรวจสอบก่อนส่งคำขอ')).not.toBeInTheDocument();
+    expect(onSubmitted).toHaveBeenCalledTimes(1);
+  });
+});

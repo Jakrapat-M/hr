@@ -413,7 +413,11 @@
       "admittedEnd": "Admitted end date",
       "medicalHospitalName": "Hospital Name",
       "hospitalOthers": "Others (specify hospital)",
-      "diseaseDetailsDetail": "Details"
+      "diseaseDetailsDetail": "Details",
+      "previewTitle": "Review before submitting",
+      "confirmSubmit": "Confirm submit claim",
+      "previewEdit": "Edit",
+      "attachment": "Attachment"
     }
   },
   "profileDetails": {

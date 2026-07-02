@@ -131,6 +131,8 @@ describe('benefit claim journey canonical route', () => {
     await user.selectOptions(screen.getByLabelText(/เดือนที่ขอเบิก/), 'may');
     await user.type(screen.getByLabelText('หมายเหตุ'), 'ค่าโทรศัพท์เดือนพฤษภาคม');
     await user.click(screen.getByRole('button', { name: 'ส่งคำขอเบิกสวัสดิการ' }));
+    // STA-184 — Submit opens a preview; confirm to dispatch the claim.
+    await user.click(await screen.findByRole('button', { name: 'ยืนยันส่งคำขอ' }));
 
     const [claim] = useBenefitClaimsStore.getState().claims;
     expect(claim.benefitType).toBe('mobile');

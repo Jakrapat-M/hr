@@ -87,7 +87,10 @@ function renderField(
             <option value="">{isTh ? '— เลือก —' : '— Select —'}</option>
             {f.lov!.map((opt) => (
               <option key={opt.id} value={opt.id} disabled={infoOnly.includes(opt.id)}>
-                {pickLabel(opt, isTh ? 'th' : 'en')}
+                {/* STA-184 — bilingual LOVs (Hospital Name) show "Thai / English". */}
+                {f.bilingualLabel
+                  ? `${opt.labelTh} / ${opt.labelEn}`
+                  : pickLabel(opt, isTh ? 'th' : 'en')}
               </option>
             ))}
           </select>

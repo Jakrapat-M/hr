@@ -10,6 +10,8 @@ import {
   bucketsForPlan,
   getConditionalFields,
   isClaimFieldRequired,
+  isClaimFieldVisible,
+  type ClaimFieldDescriptor,
   type ClaimFieldKey,
 } from '@/data/benefits/claim-field-config';
 import { ConditionalClaimFields } from './ConditionalClaimFields';
@@ -25,6 +27,10 @@ export interface BenefitTemplateProps {
   remainingAmount?: number;
   /** Popup-local monthly limit (STA-120) — shown below the annual-limit line when present. */
   monthlyLimitThb?: number;
+  /** STA-184 — when set, "Submit claim" opens a read-only preview modal first;
+   *  the actual submit fires only on "Confirm submit claim". Default off so the
+   *  admin "Start a claim" + physical-checkup consumers keep direct submit. */
+  confirmBeforeSubmit?: boolean;
 }
 
 export interface SimpleClaimSubmission {
@@ -78,6 +84,11 @@ const CLAIM_LABELS: Record<string, { th: string; en: string }> = {
   dependentDob: { th: 'วันเกิด', en: 'Date of Birth' },
   dependentRelationship: { th: 'ความสัมพันธ์', en: 'Relationship Type' },
   realMonthDate: { th: 'เดือนที่ขอเบิก', en: 'Claim month' },
+  // STA-184 — submit preview modal (mirrors messages/{th,en}.json benefits.claim.*).
+  previewTitle: { th: 'ตรวจสอบก่อนส่งคำขอ', en: 'Review before submitting' },
+  confirmSubmit: { th: 'ยืนยันส่งคำขอ', en: 'Confirm submit claim' },
+  previewEdit: { th: 'แก้ไข', en: 'Edit' },
+  attachment: { th: 'เอกสารแนบ', en: 'Attachment' },
 };
 
 export function SimpleClaimForm({
@@ -87,6 +98,7 @@ export function SimpleClaimForm({
   selectedBenefitLabel,
   remainingAmount,
   monthlyLimitThb,
+  confirmBeforeSubmit,
 }: BenefitTemplateProps) {
   const locale = useLocale();
   const isTh = locale !== 'en';
@@ -121,6 +133,9 @@ export function SimpleClaimForm({
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   // STA-148 req-2 — selecting Type of Hospital = Clinic opens a not-allowed notice.
   const [clinicModalOpen, setClinicModalOpen] = useState(false);
+  // STA-184 — submit preview modal (confirmBeforeSubmit) + double-submit guard.
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const resetForm = () => {
     setForm({
@@ -201,7 +216,9 @@ export function SimpleClaimForm({
     Number(form.claimAmount) === visibleRemainingAmount &&
     Number(form.receiptAmount) > visibleRemainingAmount;
 
-  const submit = () => {
+  // STA-184 — validate first. When confirmBeforeSubmit is set, open the preview
+  // modal instead of submitting; otherwise submit directly (default consumers).
+  const validateAndMaybePreview = () => {
     const nextErrors: string[] = [];
     if (!form.receiptNo.trim()) {
       nextErrors.push(isTh ? 'กรุณาระบุเลขที่ใบเสร็จ' : 'Receipt number is required');
@@ -231,11 +248,28 @@ export function SimpleClaimForm({
       setErrors(nextErrors);
       return;
     }
+    setErrors([]);
+    if (confirmBeforeSubmit) {
+      setPreviewOpen(true);
+      return;
+    }
+    doSubmit();
+  };
+
+  // STA-184 — sole caller of onSubmitted. Snapshots the live (pre-reset) values,
+  // resets the form, then dispatches. Guarded against a double click.
+  const doSubmit = () => {
+    if (submitting) return;
+    setSubmitting(true);
+    const amount = Number(form.receiptAmount);
+    const claimAmount = Number(form.claimAmount || form.receiptAmount);
     const wfId = `WF-${Date.now()}`;
     setLastWorkflowId(wfId);
     const submittedDynamic = { ...dynamic } as Partial<Record<ClaimFieldKey, string | number>>;
     const submittedClaimDate = form.claimDate;
     const submittedReceiptDate = form.receiptDate || undefined;
+    const submittedReceiptNo = form.receiptNo.trim();
+    const submittedRemark = form.remark.trim();
     setForm({
       claimDate: todayIsoDate(),
       receiptDate: '',
@@ -253,14 +287,45 @@ export function SimpleClaimForm({
       claimDate: submittedClaimDate,
       receiptDate: submittedReceiptDate,
       remainingAmount: visibleRemainingAmount,
-      receiptNo: form.receiptNo.trim(),
+      receiptNo: submittedReceiptNo,
       receiptAmount: amount,
       totalClaimAmount: claimAmount,
-      remark: form.remark.trim(),
+      remark: submittedRemark,
       currency: 'THB',
       dynamicFields: submittedDynamic,
     });
+    setSubmitting(false);
   };
+
+  // STA-184 — read-only preview rows sourced from the LIVE (pre-reset) values.
+  const resolveConditional = (f: ClaimFieldDescriptor): string | undefined => {
+    const raw = String(dynamic[f.key as ClaimFieldKey] ?? '').trim();
+    if (!raw) return undefined;
+    if (f.type === 'select' && f.lov) {
+      const opt = f.lov.find((o) => o.id === raw);
+      if (!opt) return raw;
+      return f.bilingualLabel ? `${opt.labelTh} / ${opt.labelEn}` : (isTh ? opt.labelTh : opt.labelEn);
+    }
+    return raw;
+  };
+
+  const previewRows: Array<{ label: string; value: string }> = [
+    { label: tc('selectedBenefit'), value: planName },
+    { label: tc('claimDate'), value: form.claimDate },
+    ...(visibleRemainingAmount !== undefined
+      ? [{ label: tc('remainingAmount'), value: `฿${visibleRemainingAmount.toLocaleString('th-TH')}` }]
+      : []),
+    { label: tc('receiptNo'), value: form.receiptNo.trim() },
+    ...(form.receiptDate ? [{ label: tc('receiptDate'), value: form.receiptDate }] : []),
+    { label: tc('receiptAmount'), value: form.receiptAmount },
+    { label: tc('totalClaimAmount'), value: form.claimAmount || form.receiptAmount },
+    ...conditionalFields
+      .filter((f) => isClaimFieldVisible(f, dynamic))
+      .map((f) => ({ label: tc(f.labelKey), value: resolveConditional(f) }))
+      .filter((row): row is { label: string; value: string } => Boolean(row.value)),
+    ...(form.remark.trim() ? [{ label: tc('remark'), value: form.remark.trim() }] : []),
+    ...(form.attachmentName ? [{ label: tc('attachment'), value: form.attachmentName }] : []),
+  ];
 
   return (
     <Card variant="raised" size="lg" className={className}>
@@ -424,10 +489,42 @@ export function SimpleClaimForm({
       )}
 
       <div className="mt-4 flex justify-end">
-        <Button variant="primary" onClick={submit}>
+        <Button variant="primary" onClick={validateAndMaybePreview}>
           {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
         </Button>
       </div>
+
+      {/* STA-184 — read-only submit preview. Confirm dispatches the existing
+          submit once; Edit closes without submitting. NO-RED (primary teal). */}
+      <Modal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title={tc('previewTitle')}
+      >
+        <dl className="divide-y divide-hairline text-body text-ink">
+          {previewRows.map((row) => (
+            <div key={row.label} className="flex justify-between gap-4 py-2">
+              <dt className="text-ink-muted">{row.label}</dt>
+              <dd className="text-right font-medium">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setPreviewOpen(false)}>
+            {tc('previewEdit')}
+          </Button>
+          <Button
+            variant="primary"
+            disabled={submitting}
+            onClick={() => {
+              setPreviewOpen(false);
+              doSubmit();
+            }}
+          >
+            {tc('confirmSubmit')}
+          </Button>
+        </div>
+      </Modal>
 
       {/* STA-145 Phase B — patient-transfer (E-patient) notice. NO-RED: pumpkin
           --color-danger accent, never red. */}

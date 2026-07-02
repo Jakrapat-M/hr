@@ -413,7 +413,11 @@
       "admittedEnd": "วันที่สิ้นสุดการรักษา (ผู้ป่วยใน)",
       "medicalHospitalName": "ชื่อสถานพยาบาล",
       "hospitalOthers": "ระบุสถานพยาบาลอื่นๆ",
-      "diseaseDetailsDetail": "ระบุรายละเอียดเพิ่มเติม"
+      "diseaseDetailsDetail": "ระบุรายละเอียดเพิ่มเติม",
+      "previewTitle": "ตรวจสอบก่อนส่งคำขอ",
+      "confirmSubmit": "ยืนยันส่งคำขอ",
+      "previewEdit": "แก้ไข",
+      "attachment": "เอกสารแนบ"
     }
   },
   "profileDetails": {
