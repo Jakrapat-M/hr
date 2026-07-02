@@ -34,6 +34,7 @@ const ALL_REQUEST_TYPES: RequestType[] = [
   'pay_rate',
   'tax_planning',
   'time_correction',
+  'shift_assignment',
 ];
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

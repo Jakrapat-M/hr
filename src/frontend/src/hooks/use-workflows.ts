@@ -67,6 +67,10 @@ const QUEUE_TYPE_TO_WORKFLOW_TYPE: Record<QueueWorkflowRow['type'], WorkflowType
   pay_rate: 'payroll_change',
   tax_planning: 'payroll_change',
   time_correction: 'time_correction',
+  // STA-168 — no dedicated WorkflowType; the shift-assignment grid drills into its
+  // own /team/shift-assign review surface, so this generic /workflows projection
+  // just borrows the closest time-domain type.
+  shift_assignment: 'time_correction',
 };
 
 function queueRowToWorkflowItem(row: QueueWorkflowRow): WorkflowItem {

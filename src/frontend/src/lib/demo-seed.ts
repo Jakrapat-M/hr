@@ -28,6 +28,8 @@ import { useLeaveBalances } from '@/stores/leave-balances';
 import { useLeaveApprovals } from '@/stores/leave-approvals';
 import { useOvertimeRequests, type OTRequest } from '@/stores/overtime-requests';
 import { useTimeCorrections, type TimeCorrectionRequest } from '@/stores/time-corrections';
+import { useShiftAssignment } from '@/stores/shift-assignment';
+import { SHIFT_GROUP_SEED } from '@/lib/shift-groups';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import { appliedChainFor } from '@/lib/time/approval-rules';
 import { getLeaveType } from '@/lib/time/leave-types';
@@ -142,6 +144,12 @@ const MOCK_TERMINATION_REQUESTS: TerminationRequest[] = [
 // part of TOTAL_SEED_COUNT (mirrors the other *_DEMO_COUNT seed-count exports).
 export const TERMINATION_DEMO_COUNT = MOCK_TERMINATION_REQUESTS.filter(
   (r) => r.status !== 'approved' && r.status !== 'rejected',
+).length;
+
+// STA-168 — queue-eligible shift-assignment seed groups (submitted/approved
+// surface in the unified queue; draft/returned do not). Part of TOTAL_SEED_COUNT.
+export const SHIFT_ASSIGN_DEMO_COUNT = SHIFT_GROUP_SEED.filter(
+  (g) => g.status === 'pending' || g.status === 'approved',
 ).length;
 
 const MOCK_PROMOTION_REQUESTS: PromotionRequest[] = [
@@ -607,6 +615,7 @@ export function resetEnsureDemoSeedForTests(): void {
   useLeaveBalances.getState().clear();
   useOvertimeRequests.getState().clear();
   useTimeCorrections.getState().clear();
+  useShiftAssignment.getState().clear();
 }
 
 /** Seed all workflow stores once per browser session if stores are empty.
@@ -635,6 +644,12 @@ export function ensureDemoSeed(): void {
     // STA-183 — append the EMP001 cancelled correction (queue-invisible) so the
     // self-service persona's My-Requests page has a Time-Correction row.
     useTimeCorrections.setState({ requests: [...DEMO_PENDING_TC, ...DEMO_EMP001_TC] });
+  }
+  // STA-168: seed the shift-assignment demo groups (init-overwrite-empties) so
+  // the submitted group surfaces as ONE row in the unified queue. Persisted, so a
+  // manager's live edits survive a reload (length > 0 → not clobbered).
+  if (useShiftAssignment.getState().groups.length === 0) {
+    useShiftAssignment.setState({ groups: SHIFT_GROUP_SEED });
   }
   // Group A: seed the demo employee's quota buckets BEFORE adding leave rows so
   // the reserve() on each addRequest draws against a real balance. Seed BOTH the

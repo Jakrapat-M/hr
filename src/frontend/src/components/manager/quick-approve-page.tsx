@@ -77,6 +77,7 @@ const TYPE_LABELS_TH: Record<RequestType | 'all', string> = {
   pay_rate: 'ปรับเงินเดือน',
   tax_planning: 'วางแผนภาษี',
   time_correction: 'แก้ไขเวลา',
+  shift_assignment: 'จัดกะ',
 };
 
 const TYPE_LABELS_EN: Record<RequestType | 'all', string> = {
@@ -90,6 +91,7 @@ const TYPE_LABELS_EN: Record<RequestType | 'all', string> = {
   pay_rate: 'Pay rate',
   tax_planning: 'Tax planning',
   time_correction: 'Time correction',
+  shift_assignment: 'Shift assignment',
 };
 
 const URGENCY_LABELS_TH: Record<Urgency | 'all', string> = {
@@ -653,6 +655,7 @@ export function QuickApprovePage() {
     pay_rate: allItems.filter((i) => i.type === 'pay_rate').length,
     tax_planning: allItems.filter((i) => i.type === 'tax_planning').length,
     time_correction: allItems.filter((i) => i.type === 'time_correction').length,
+    shift_assignment: allItems.filter((i) => i.type === 'shift_assignment').length,
   }), [allItems]);
 
   // DataTable columns
