@@ -6,15 +6,16 @@
  * Vitest + jsdom + RTL, real next-intl messages (th).
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, cleanup, act } from '@testing-library/react';
+import { render, screen, cleanup, act, fireEvent } from '@testing-library/react';
 import React, { Suspense } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import thMessages from '../../../../../../../messages/th.json';
 
 let mockUserId = 'EMP001';
+const mockPush = vi.fn();
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: mockPush }),
 }));
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: (selector: (s: { roles: string[]; userId: string | null; username: string | null }) => unknown) =>
@@ -64,6 +65,7 @@ function seedOwnedLeave(id: string) {
 
 beforeEach(() => {
   mockUserId = 'EMP001';
+  mockPush.mockClear();
   useLeaveApprovals.getState().clear();
   useOvertimeRequests.getState().clear();
   useTimeCorrections.getState().clear();
@@ -84,6 +86,16 @@ describe('/time/my-requests/[id] read-only detail (STA-192)', () => {
     // No approve/reject BUTTONS anywhere on this employee-only surface.
     expect(screen.queryByRole('button', { name: /อนุมัติ|Approve/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /ปฏิเสธ|Reject/ })).toBeNull();
+  });
+
+  it('STA-197 — shows a Back-to-My-Request button that routes to the list', async () => {
+    seedOwnedLeave('LV-OWN-3');
+    await renderDetail('LV-OWN-3');
+
+    const backBtn = screen.getByRole('button', { name: /กลับไปหน้าคำขอของฉัน/ });
+    expect(backBtn).toBeInTheDocument();
+    fireEvent.click(backBtn);
+    expect(mockPush).toHaveBeenCalledWith('/th/time/my-requests');
   });
 
   it('a non-owner userId resolves to not-found (never another employee data)', async () => {

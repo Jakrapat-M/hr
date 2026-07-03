@@ -5623,6 +5623,7 @@
       },
       "detail": {
         "back": "My Request",
+        "backButton": "Back to My Request",
         "reason": "Reason",
         "attachments": "Attachments",
         "viewDownload": "View / download",
