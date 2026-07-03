@@ -58,14 +58,24 @@ export interface HumiClaimFilterState {
  * matches every row.
  */
 export function filterHumiClaimHistory<
-  T extends { type: string; claimType?: string; status: ClaimStatus; submittedAt: string },
+  T extends {
+    type: string;
+    desc?: string;
+    claimType?: string;
+    status: ClaimStatus;
+    submittedAt: string;
+  },
 >(
   rows: readonly T[],
   { benefit, claimType, status, dateFrom, dateTo }: HumiClaimFilterState,
 ): T[] {
   return rows.filter((row) => {
+    // Free-text search covers the benefit NAME + description + claim-type label
+    // (TH/EN), so typing a benefit name OR a claim-type term (e.g. "ทางด่วน")
+    // both match — the fuel rows all share the name "ค่าน้ำมันรถ" and differ
+    // only by claim type/description.
     const okBenefit = benefit
-      ? row.type.toLowerCase().includes(benefit.trim().toLowerCase())
+      ? claimRowSearchText(row).includes(benefit.trim().toLowerCase())
       : true;
     const okClaimType = claimType ? row.claimType === claimType : true;
     const okStatus = status ? row.status === status : true;
@@ -108,6 +118,26 @@ export const CLAIM_TYPE_OPTIONS: ClaimHistoryOption[] = [
   { value: 'toll', labelTh: 'ค่าทางด่วน', labelEn: 'Expressway Toll' },
   { value: 'parking', labelTh: 'ค่าที่จอดรถ', labelEn: 'Car Parking Fee' },
 ];
+
+/** Lowercased "TH EN" label for a claim-type value (empty if unknown/undefined). */
+export function claimTypeSearchText(claimType?: string): string {
+  if (!claimType) return '';
+  const opt = CLAIM_TYPE_OPTIONS.find((o) => o.value === claimType);
+  return opt ? `${opt.labelTh} ${opt.labelEn}`.toLowerCase() : '';
+}
+
+/**
+ * The lowercased free-text haystack for a claim row: benefit name + description
+ * + claim-type label. Used by the benefit-name search box so it matches the
+ * benefit name AND the claim type / detail, not only one field.
+ */
+export function claimRowSearchText(row: {
+  type: string;
+  desc?: string;
+  claimType?: string;
+}): string {
+  return `${row.type} ${row.desc ?? ''} ${claimTypeSearchText(row.claimType)}`.toLowerCase();
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // Status buckets — the 3 ticket buckets exposed by the Status filter on both

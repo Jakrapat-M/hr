@@ -64,6 +64,7 @@ import {
   CLAIM_STATUS_BUCKET_OPTIONS,
   benefitClaimStatusToBucket,
   deriveAdminClaimType,
+  claimTypeSearchText,
   formatClaimDate,
 } from '@/lib/claim-history-filter'
 import {
@@ -1155,8 +1156,11 @@ export default function EmployeeDetailPage() {
   const filteredClaims = useMemo(() => {
     // employeeClaims is already status-sorted (sortClaimHistory); filtering keeps order.
     return employeeClaims.filter((c) => {
+      // Search covers the benefit NAME + claim-type label, not only one field.
       const okBenefit = claimBenefitFilter
-        ? c.benefitName?.toLowerCase().includes(claimBenefitFilter.trim().toLowerCase())
+        ? `${c.benefitName ?? ''} ${claimTypeSearchText(deriveAdminClaimType(c.benefitType))}`
+            .toLowerCase()
+            .includes(claimBenefitFilter.trim().toLowerCase())
         : true
       const okType = claimTypeFilter ? deriveAdminClaimType(c.benefitType) === claimTypeFilter : true
       const okStatus = claimStatusFilter ? benefitClaimStatusToBucket(c.status) === claimStatusFilter : true

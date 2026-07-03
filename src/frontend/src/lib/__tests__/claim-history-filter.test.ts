@@ -81,6 +81,24 @@ describe('filterHumiClaimHistory', () => {
     expect(out[0].type).toBe('Medical Reimbursement');
   });
 
+  it('benefit search ALSO matches the claim-type label (not only the name)', () => {
+    // The three fuel rows all share the name "ค่าน้ำมันรถ"; typing a claim-type
+    // term must still find the matching row via its claim-type label.
+    const toll = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { benefit: 'ทางด่วน' });
+    expect(toll.length).toBe(1);
+    expect(toll[0].claimType).toBe('toll');
+    const parking = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { benefit: 'parking' });
+    expect(parking.length).toBe(1);
+    expect(parking[0].claimType).toBe('parking');
+  });
+
+  it('benefit search matches the row description too', () => {
+    // e.g. "AIS" appears only in the ค่าโทรศัพท์ row's description.
+    const out = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { benefit: 'ais' });
+    expect(out.length).toBe(1);
+    expect(out[0].type).toBe('ค่าโทรศัพท์');
+  });
+
   it('filters by claim type (toll)', () => {
     const out = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { claimType: 'toll' });
     expect(out.every((r) => r.claimType === 'toll')).toBe(true);
