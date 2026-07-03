@@ -4,11 +4,13 @@ import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, CheckCircle2, XCircle, ShieldOff, Square, CheckSquare } from 'lucide-react';
-import { Button, DataTable, Modal, FormField, Capability } from '@/components/humi';
+import { Button, DataTable, Capability } from '@/components/humi';
 import { UrgencyBadge } from '@/components/quick-approve/UrgencyBadge';
 import type { DataTableColumn } from '@/components/humi';
-import { APPROVAL_REGISTRY, useSelectPendingApprovals } from '@/lib/approval-registry';
+import { useSelectPendingApprovals } from '@/lib/approval-registry';
 import type { PendingRequest } from '@/lib/quick-approve-api';
+import { useBulkApproveDispatch } from '@/components/quick-approve/useBulkApproveDispatch';
+import { BulkActionModal } from '@/components/quick-approve/BulkActionModal';
 
 // Demo manager actor for mock dispatch (mirrors quick-approve-simple).
 const MANAGER_NAME = 'ผู้จัดการ / Manager';
@@ -46,28 +48,12 @@ function BulkApproveInner() {
     [queue],
   );
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkAction, setBulkAction] = useState<'approve' | 'reject' | null>(null);
-  const [reason, setReason] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  // Shared selection + dispatch engine (also powers the inline inbox multi-select).
+  const bulk = useBulkApproveDispatch({ name: MANAGER_NAME });
+  // Bulk page keeps its full-page success takeover.
   const [done, setDone] = useState<{ action: 'approve' | 'reject'; count: number } | null>(null);
 
-  const toggleRow = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleAll = () => {
-    if (selectedIds.size === rows.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(rows.map((r) => r.id)));
-    }
-  };
+  const allIds = useMemo(() => rows.map((r) => r.id), [rows]);
 
   const columns: DataTableColumn<PendingRequest>[] = [
     {
@@ -75,11 +61,11 @@ function BulkApproveInner() {
       header: (
         <button
           type="button"
-          onClick={toggleAll}
+          onClick={() => bulk.toggleAll(allIds)}
           aria-label="Select all"
           className="flex items-center"
         >
-          {rows.length > 0 && selectedIds.size === rows.length ? (
+          {rows.length > 0 && bulk.selectedIds.size === rows.length ? (
             <CheckSquare className="h-4 w-4 text-accent" />
           ) : (
             <Square className="h-4 w-4 text-ink-muted" />
@@ -89,11 +75,11 @@ function BulkApproveInner() {
       cell: (row) => (
         <button
           type="button"
-          onClick={() => toggleRow(row.id)}
+          onClick={() => bulk.toggle(row.id)}
           aria-label={`Select ${row.id}`}
           className="flex items-center"
         >
-          {selectedIds.has(row.id) ? (
+          {bulk.isSelected(row.id) ? (
             <CheckSquare className="h-4 w-4 text-accent" />
           ) : (
             <Square className="h-4 w-4 text-ink-muted" />
@@ -147,39 +133,10 @@ function BulkApproveInner() {
     },
   ];
 
-  const handleBulkAction = (action: 'approve' | 'reject') => {
-    setBulkAction(action);
-    setReason('');
-  };
-
   const handleConfirm = async () => {
-    if (!bulkAction) return;
-    setSubmitting(true);
-    const count = selectedIds.size;
-    // AC-1c.3: dispatch every selected row to its correct source store by type so
-    // each ends in a terminal/next-pending state — no invisible/indeterminate row.
-    // Await the async benefit adapter so claims reach pending_spd before we close.
-    const byId = new Map(rows.map((r) => [r.id, r]));
-    await Promise.all(
-      Array.from(selectedIds).map((id) => {
-        const row = byId.get(id);
-        if (!row) return Promise.resolve();
-        const adapter = APPROVAL_REGISTRY[row.type];
-        const result =
-          bulkAction === 'approve'
-            ? adapter.approve(id, { name: MANAGER_NAME })
-            : adapter.reject(id, { name: MANAGER_NAME }, reason);
-        return Promise.resolve(result);
-      }),
-    );
-    setDone({ action: bulkAction, count });
-    setSelectedIds(new Set());
-    setBulkAction(null);
-    setReason('');
-    setSubmitting(false);
+    const result = await bulk.dispatch(rows);
+    if (result) setDone(result);
   };
-
-  const canConfirm = bulkAction === 'approve' || reason.trim().length > 0;
 
   if (done) {
     return (
@@ -216,9 +173,9 @@ function BulkApproveInner() {
       </div>
 
       {/* Selection info bar */}
-      {selectedIds.size > 0 && (
+      {bulk.selectedIds.size > 0 && (
         <div className="mb-3 flex items-center gap-2 rounded-[var(--radius-md)] bg-accent-soft px-4 py-2 text-small text-accent">
-          <span>{t('selected', { count: selectedIds.size })}</span>
+          <span>{t('selected', { count: bulk.selectedIds.size })}</span>
         </div>
       )}
 
@@ -237,14 +194,14 @@ function BulkApproveInner() {
       {/* Sticky bottom action bar */}
       <div className="sticky bottom-0 z-10 mt-4 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] border border-hairline bg-surface px-5 py-3 shadow-[var(--shadow-md)]">
         <span className="text-small text-ink-muted">
-          {t('selectedCount', { count: selectedIds.size, total: rows.length })}
+          {t('selectedCount', { count: bulk.selectedIds.size, total: rows.length })}
         </span>
         <div className="flex gap-3">
           <Button
             variant="danger"
             size="md"
-            disabled={selectedIds.size === 0}
-            onClick={() => handleBulkAction('reject')}
+            disabled={bulk.selectedIds.size === 0}
+            onClick={() => bulk.openAction('reject')}
             className="flex items-center gap-2"
           >
             <XCircle className="h-4 w-4" aria-hidden />
@@ -253,8 +210,8 @@ function BulkApproveInner() {
           <Button
             variant="primary"
             size="md"
-            disabled={selectedIds.size === 0}
-            onClick={() => handleBulkAction('approve')}
+            disabled={bulk.selectedIds.size === 0}
+            onClick={() => bulk.openAction('approve')}
             className="flex items-center gap-2"
           >
             <CheckCircle2 className="h-4 w-4" aria-hidden />
@@ -263,57 +220,27 @@ function BulkApproveInner() {
         </div>
       </div>
 
-      {/* Confirmation modal */}
-      {bulkAction && (
-        <Modal
-          open
-          onClose={() => setBulkAction(null)}
-          title={
-            bulkAction === 'approve'
-              ? t('confirmApproveTitle', { count: selectedIds.size })
-              : t('confirmRejectTitle', { count: selectedIds.size })
-          }
-        >
-          <div className="flex flex-col gap-4 p-4">
-            {bulkAction === 'reject' && (
-              <FormField label={t('rejectReason')} required>
-                {(controlProps) => (
-                  <textarea
-                    {...controlProps}
-                    rows={3}
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder={t('rejectReasonPlaceholder')}
-                    className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
-                  />
-                )}
-              </FormField>
-            )}
-            {bulkAction === 'approve' && (
-              <p className="text-small text-ink-secondary">
-                {t('approveConfirmDesc', { count: selectedIds.size })}
-              </p>
-            )}
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={() => setBulkAction(null)}
-                disabled={submitting}
-              >
-                {t('cancel')}
-              </Button>
-              <Button
-                variant={bulkAction === 'approve' ? 'primary' : 'danger'}
-                size="md"
-                onClick={handleConfirm}
-                disabled={!canConfirm || submitting}
-              >
-                {submitting ? t('submitting') : t('confirm')}
-              </Button>
-            </div>
-          </div>
-        </Modal>
+      {/* Confirmation modal (shared with the inline inbox) */}
+      {bulk.pendingAction && (
+        <BulkActionModal
+          action={bulk.pendingAction}
+          reason={bulk.reason}
+          onReasonChange={bulk.setReason}
+          onConfirm={handleConfirm}
+          onClose={bulk.closeAction}
+          submitting={bulk.submitting}
+          canConfirm={bulk.canConfirm}
+          labels={{
+            approveTitle: t('confirmApproveTitle', { count: bulk.selectedIds.size }),
+            rejectTitle: t('confirmRejectTitle', { count: bulk.selectedIds.size }),
+            approveDesc: t('approveConfirmDesc', { count: bulk.selectedIds.size }),
+            reasonLabel: t('rejectReason'),
+            reasonPlaceholder: t('rejectReasonPlaceholder'),
+            cancel: t('cancel'),
+            confirm: t('confirm'),
+            submitting: t('submitting'),
+          }}
+        />
       )}
     </div>
   );

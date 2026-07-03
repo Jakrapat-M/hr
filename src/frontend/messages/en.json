@@ -3258,7 +3258,25 @@
         "awaitingNext": "Awaiting next approver"
       },
       "subtitleActionable": "{actionable} of {total} pending items you can decide",
-      "nextApprover": "Next: {approver}"
+      "nextApprover": "Next: {approver}",
+      "bulk": {
+        "selectAll": "Select all",
+        "selectRow": "Select {ref}",
+        "selectedCount": "{count} selected",
+        "clear": "Clear",
+        "reject": "Reject",
+        "approveSelected": "Approve {count} selected",
+        "confirmApproveTitle": "Approve {count} requests?",
+        "confirmRejectTitle": "Reject {count} requests?",
+        "approveConfirmDesc": "This approves {count} selected requests. Each moves to its next approval step.",
+        "rejectReason": "Reason for rejection",
+        "rejectReasonPlaceholder": "Explain why these requests are being rejected...",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "submitting": "Processing...",
+        "approveSuccess": "{count} requests approved",
+        "rejectSuccess": "{count} requests rejected"
+      }
     },
     "slideOver": {
       "title": "Request Details",
