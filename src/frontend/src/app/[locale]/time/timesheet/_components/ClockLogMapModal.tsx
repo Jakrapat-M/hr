@@ -128,7 +128,7 @@ export function ClockLogMapModal({
           {/* Legend */}
           <div className="flex flex-wrap gap-4 text-xs text-ink">
             <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: 'var(--color-info)' }} />Work Location</span>
-            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full border border-[var(--color-info)] bg-info-soft" />{isTh ? 'รัศมี Geofence (200 ม.)' : 'Geofence (200 m)'}</span>
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full border border-[var(--color-info)] bg-info-soft" />{isTh ? `รัศมี Geofence (${GEOFENCE_RADIUS_M} ม.)` : `Geofence (${GEOFENCE_RADIUS_M} m)`}</span>
             <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: ok ? 'var(--color-accent)' : 'var(--color-danger)' }} />{typeLabel} {ok ? (isTh ? '(ในรัศมี)' : '(in radius)') : (isTh ? '(นอกรัศมี)' : '(out of radius)')}</span>
           </div>
           {/* Info row */}
@@ -139,7 +139,7 @@ export function ClockLogMapModal({
             </div>
             <div>
               <p className="text-xs text-ink-muted">{isTh ? 'รัศมี Geofence' : 'Geofence radius'}</p>
-              <p className="text-base font-semibold text-[var(--color-info)]">200 {isTh ? 'เมตร' : 'm'}</p>
+              <p className="text-base font-semibold text-[var(--color-info)]">{GEOFENCE_RADIUS_M} {isTh ? 'เมตร' : 'm'}</p>
             </div>
             <div>
               <p className="text-xs text-ink-muted">{isTh ? 'สถานะ' : 'Status'}</p>
