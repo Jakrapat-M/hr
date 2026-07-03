@@ -81,8 +81,9 @@ describe('STA-65 timesheet submission', () => {
   it('(a1) the Weekly hours tab is removed from the timesheet tab navigation (STA-155)', () => {
     renderTh(<TimesheetPage />);
     expect(screen.queryByRole('tab', { name: 'ชั่วโมงรายสัปดาห์' })).toBeNull();
-    // The retained WFS attendance tabs still render.
-    expect(screen.getByRole('tab', { name: 'บันทึกเวลา' })).toBeInTheDocument();
+    // STA-195 rebuilt the timesheet into 5 tabs (Schedule/Summary/Time Result/
+    // Clock Log/Messages); the Schedule tab is the surviving default entry.
+    expect(screen.getByRole('tab', { name: 'ตารางกะ' })).toBeInTheDocument();
   });
 
   it('(a2) rejects an over-24h day with a pumpkin error status and persists nothing', () => {

@@ -11,6 +11,7 @@ import { useOvertimeRequests } from '@/stores/overtime-requests';
 import { useTimeCorrections } from '@/stores/time-corrections';
 import { buildMyRequests } from '@/lib/time/my-requests';
 import { demoToday } from '@/lib/time/period';
+import { TimeOffBalanceCard } from '@/components/time/TimeOffBalanceCard';
 
 interface TimeTileDef {
   key: string;
@@ -173,6 +174,12 @@ export default function TimeLandingPage() {
               <TimeTile key={tile.key} tile={tile} locale={locale} isTh={isTh} badge={badgeFor(tile)} />
             ))}
           </div>
+          {/* The Time-Off balance ledger lives here on the hub (moved off the My
+              Timesheet tabs, STA-195) — inside the Reports group so it adds no
+              heading that collides with the group/tile headings. */}
+          {group.key === 'reports' && (
+            <TimeOffBalanceCard empId={userId} isTh={isTh} />
+          )}
         </section>
       ))}
     </div>

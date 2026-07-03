@@ -65,6 +65,12 @@
   --color-info:           #5B6CE0;  /* indigo */
   --color-info-soft:      #E1E4FB;
 
+  /* ── Synthetic clock-log map (STA-195) — neutral tile/grid colours for the
+     canvas geofence map. Not semantic UI tokens; used only by ClockLogMapModal. ── */
+  --map-canvas-bg:        #E8EDE8;
+  --map-grid:             #D4D8D0;
+  --map-road:             #C8CEC4;
+
   /* ── Brand legacy alias → teal (was legacy Central retail red) ── */
   --color-brand:          #1FA8A0;
   --color-brand-tint:     #D6EEEC;
