@@ -217,8 +217,10 @@ export function Tab1IdentityFields({
               >
                 {/* STA-146 FU (Tan): the editable Status select offers only
                     Active/Inactive — "user does not use draft status in benefit
-                    plan/benefit rule". The 'draft' PlanStatus value is kept (the
-                    STA-98 Save-as-Draft button + status filter still use it). */}
+                    plan/benefit rule". Draft can no longer be created (the
+                    Save-as-Draft button + status filter were retired); the
+                    'draft' PlanStatus value is kept ONLY defensively, so a legacy
+                    draft plan still shows its true status below instead of coercing. */}
                 <option value="active">{isTh ? 'ใช้งาน (Active)' : 'Active'}</option>
                 <option value="inactive">{isTh ? 'ไม่ใช้งาน (Inactive)' : 'Inactive'}</option>
                 {/* A plan saved as Draft keeps showing its true status here (a
