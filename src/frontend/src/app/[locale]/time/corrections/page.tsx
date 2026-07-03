@@ -7,18 +7,14 @@
 // 'time_correction' row in /quick-approve (detail at /workflows/time-correction/[id]).
 // No backend.
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { ChevronRight, Clock3 } from 'lucide-react';
-import { Card, DemoValuesDisclaimer } from '@/components/humi';
+import { DemoValuesDisclaimer } from '@/components/humi';
 import { TimeCorrectionForm } from '@/components/time/TimeCorrectionForm';
-import {
-  useTimeCorrections,
-  CORRECTION_TYPE_LABEL,
-  type CorrectionType,
-} from '@/stores/time-corrections';
+import { type CorrectionType } from '@/stores/time-corrections';
 import { useAuthStore } from '@/stores/auth-store';
 import { resolveCurrentEmpId } from '@/lib/scope-filter';
 
@@ -28,7 +24,6 @@ export default function TimeCorrectionsPage() {
   const locale = useLocale();
   const isTh = locale !== 'en';
 
-  const allRequests = useTimeCorrections((s) => s.requests);
   const username = useAuthStore((s) => s.username);
   const userId = useAuthStore((s) => s.userId);
   const email = useAuthStore((s) => s.email);
@@ -42,16 +37,11 @@ export default function TimeCorrectionsPage() {
     : undefined;
 
   const [toast, setToast] = useState<string | null>(null);
-  const [lastId, setLastId] = useState<string | null>(null);
 
-  const myRequests = useMemo(
-    () => allRequests.filter((r) => r.employeeId === empId),
-    [allRequests, empId],
-  );
-
-  function handleSubmitted(id: string) {
-    setLastId(id);
-    setToast(isTh ? 'ส่งคำขอแก้ไขเวลาแล้ว — รอหัวหน้าอนุมัติ' : 'Correction submitted — awaiting manager');
+  function handleSubmitted() {
+    setToast(
+      isTh ? 'ส่งคำขอแก้ไขเวลาเรียบร้อยแล้ว' : 'Time correction request submitted successfully.',
+    );
     setTimeout(() => setToast(null), 3500);
   }
 
@@ -94,65 +84,6 @@ export default function TimeCorrectionsPage() {
           onCancel={undefined}
         />
       </div>
-
-      {/* Confirmation link to the just-submitted row */}
-      {lastId && (
-        <div className="mt-4 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-4 py-3 text-sm text-ink-muted">
-          {isTh ? 'ส่งคำขอแล้ว — ' : 'Submitted — '}
-          <Link
-            href={`/${locale}/workflows/time-correction/${lastId}`}
-            className="text-accent font-medium hover:underline"
-          >
-            {isTh ? 'ดูคำขอ' : 'View request'}
-          </Link>
-        </div>
-      )}
-
-      {/* My recent corrections */}
-      {myRequests.length > 0 && (
-        <div className="mt-6">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-widest text-ink-muted">
-            {isTh ? 'คำขอล่าสุดของฉัน' : 'My recent requests'}
-          </h2>
-          <Card>
-            <ul className="divide-y divide-hairline">
-              {myRequests.slice(0, 5).map((r) => (
-                <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <div className="min-w-0">
-                    <Link
-                      href={`/${locale}/workflows/time-correction/${r.id}`}
-                      className="text-sm font-medium text-ink hover:text-accent transition"
-                    >
-                      {r.date}
-                      {r.days?.length
-                        ? ` +${r.days.length} ${isTh ? 'วัน' : 'days'}`
-                        : ''}{' '}
-                      · {isTh ? CORRECTION_TYPE_LABEL[r.correctionType].th : CORRECTION_TYPE_LABEL[r.correctionType].en}
-                    </Link>
-                    <div className="text-xs text-ink-muted truncate">{r.reason}</div>
-                  </div>
-                  <span
-                    className={
-                      r.status === 'approved'
-                        ? 'humi-tag humi-tag--accent'
-                        : r.status === 'rejected'
-                          ? 'humi-tag'
-                          : 'humi-tag humi-tag--butter'
-                    }
-                    style={{ fontSize: 12 }}
-                  >
-                    {r.status === 'approved'
-                      ? isTh ? 'อนุมัติแล้ว' : 'Approved'
-                      : r.status === 'rejected'
-                        ? isTh ? 'ปฏิเสธ' : 'Rejected'
-                        : isTh ? 'รออนุมัติ' : 'Pending'}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </div>
-      )}
 
       {/* Toast */}
       {toast && (
