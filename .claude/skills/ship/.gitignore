@@ -1,0 +1,4 @@
+# Local ship workflow state and secrets
+.state/
+.env
+

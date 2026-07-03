@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cnext.local/schemas/ship-status.schema.json",
+  "title": "ShipStatus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ticket",
+    "branch",
+    "prNumber",
+    "prUrl",
+    "previewUrl",
+    "previewVerified",
+    "baseSha",
+    "baseMoved",
+    "merged",
+    "ticketState",
+    "gate",
+    "errors"
+  ],
+  "properties": {
+    "ticket": { "type": ["string", "null"], "pattern": "^[A-Z]+-[0-9]+$" },
+    "branch": { "type": ["string", "null"], "minLength": 1 },
+    "prNumber": { "type": ["integer", "null"], "minimum": 1 },
+    "prUrl": { "type": ["string", "null"], "format": "uri" },
+    "previewUrl": { "type": ["string", "null"], "format": "uri" },
+    "previewVerified": { "type": "boolean" },
+    "baseSha": { "type": ["string", "null"], "pattern": "^[a-f0-9]{40}$" },
+    "baseMoved": { "type": "boolean" },
+    "merged": { "type": "boolean" },
+    "ticketState": { "type": ["string", "null"] },
+    "gate": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "preflight",
+        "preview-review",
+        "confirm-merge",
+        "screenshot-review",
+        "linear-report",
+        "complete",
+        "failed"
+      ]
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "message"],
+        "properties": {
+          "code": { "type": "string", "pattern": "^[A-Z0-9_]+$" },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}
+

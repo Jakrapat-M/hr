@@ -29,13 +29,8 @@ Zero-Touch-Engineer implement loop for the HR project. Pick an **approved plan**
    - Playwright smoke — **verify RENDERED output**, not just green tests; capture screenshots.
    - Sweep changed files for dev-internal copy (STA-XX / "post-backend" phrases) and fake-completion (`test.skip`/`.only`, TODO stubs).
 6. **Separate code-review lane** — spawn `oh-my-claudecode:code-reviewer`; get an explicit **APPROVE** (ask again if the verdict is vague). Never self-approve.
-7. **Ship**
-   - `gh pr create --base master ...` (cite ticket).
-   - Wait for the **Vercel preview** to be live; verify the URL renders.
-   - `gh pr merge --merge --delete-branch` once CI/Vercel is CLEAN.
-   - Sync master. Rebase + re-build first if `origin/master` moved (a stale base silently reverts sibling tickets).
-   - If GitHub auto-moved the ticket to Done, pull it back to **In Review**.
-8. **Report on Linear** — BA-friendly comment (short, non-technical) + localhost/Vercel screenshots. Move ticket to **In Review**.
+7. **Ship** — run `/ship <TICKET>` from the ticket worktree. The skill creates or reuses the PR, waits for a live Vercel preview, enforces the preview review gate, blocks stale-base merges, merges only when safe, and never moves Linear to Done.
+8. **Report on Linear** — continue `/ship <TICKET>` through screenshot review, BA-friendly Linear comment, and ticket transition to **In Review**.
 9. **Clean up** the worktree (`git worktree remove`).
 
 ## Cadence
