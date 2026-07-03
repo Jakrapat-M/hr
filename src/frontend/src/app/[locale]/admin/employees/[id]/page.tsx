@@ -78,6 +78,7 @@ import {
 import { EmptyState, Modal, Button, FormField, FormInput } from '@/components/humi'
 import { FileUploadField } from '@/components/humi/FileUploadField'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
+import { EmployeePersonalSections } from '@/components/admin/EmployeePersonalSections'
 import {
   useBudgetReallocationStore,
   selectReallocationsForEmployee,
@@ -1464,6 +1465,12 @@ export default function EmployeeDetailPage() {
           </div>
         </div>
       </CollapsibleSectionCard>
+
+      {/* ── STA-181: read-only PERSONAL parity sections (mirror /profile/me) ──
+          Marital · Bank · Emergency · Dependents · Contact/Address · Advanced
+          (P1) then Work history · Certs · Assessments · Memberships · Projects ·
+          Documents (P2). Fed by the seeded by-id resolver; RBAC-gated inside. */}
+      <EmployeePersonalSections employeeId={empId} isTh={isTh} roles={authRoles} />
 
       {/* ── Section A2: ข้อมูลการจ้างงาน (Employment-level — A3 split) ──── */}
       <CollapsibleSectionCard
