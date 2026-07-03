@@ -64,6 +64,7 @@ import {
   CLAIM_STATUS_BUCKET_OPTIONS,
   benefitClaimStatusToBucket,
   deriveAdminClaimType,
+  formatClaimDate,
 } from '@/lib/claim-history-filter'
 import {
   useBenefitClaimsStore,
@@ -1149,21 +1150,29 @@ export default function EmployeeDetailPage() {
   const [claimBenefitFilter, setClaimBenefitFilter] = useState('')
   const [claimTypeFilter, setClaimTypeFilter] = useState('')
   const [claimStatusFilter, setClaimStatusFilter] = useState('')
-  // Benefit-name options come from the data present (distinct benefit names).
-  const claimBenefitOptions = useMemo(
-    () => Array.from(new Set(employeeClaims.map((c) => c.benefitName))),
-    [employeeClaims],
-  )
+  const [claimDateFromFilter, setClaimDateFromFilter] = useState('')
+  const [claimDateToFilter, setClaimDateToFilter] = useState('')
   const filteredClaims = useMemo(() => {
     // employeeClaims is already status-sorted (sortClaimHistory); filtering keeps order.
     return employeeClaims.filter((c) => {
-      const okBenefit = claimBenefitFilter ? c.benefitName === claimBenefitFilter : true
+      const okBenefit = claimBenefitFilter
+        ? c.benefitName?.toLowerCase().includes(claimBenefitFilter.trim().toLowerCase())
+        : true
       const okType = claimTypeFilter ? deriveAdminClaimType(c.benefitType) === claimTypeFilter : true
       const okStatus = claimStatusFilter ? benefitClaimStatusToBucket(c.status) === claimStatusFilter : true
-      return okBenefit && okType && okStatus
+      const iso = c.submittedAt.slice(0, 10)
+      const okFrom = claimDateFromFilter ? iso >= claimDateFromFilter : true
+      const okTo = claimDateToFilter ? iso <= claimDateToFilter : true
+      return okBenefit && okType && okStatus && okFrom && okTo
     })
-  }, [employeeClaims, claimBenefitFilter, claimTypeFilter, claimStatusFilter])
-  const resetClaimFilters = () => { setClaimBenefitFilter(''); setClaimTypeFilter(''); setClaimStatusFilter('') }
+  }, [employeeClaims, claimBenefitFilter, claimTypeFilter, claimStatusFilter, claimDateFromFilter, claimDateToFilter])
+  const resetClaimFilters = () => {
+    setClaimBenefitFilter('')
+    setClaimTypeFilter('')
+    setClaimStatusFilter('')
+    setClaimDateFromFilter('')
+    setClaimDateToFilter('')
+  }
   // STA-106: per-row "Start a claim" modal (HR files a claim on behalf of employee).
   const [claimTarget, setClaimTarget] = useState<CurrentBenefit | null>(null)
   // STA-119: persist the admin-filed claim into the store so it surfaces in
@@ -2057,22 +2066,19 @@ export default function EmployeeDetailPage() {
           className="rounded-[var(--radius-md)] border border-hairline bg-canvas-soft"
           style={{
             display: 'grid', gap: 12, padding: 16, marginBottom: 16,
-            gridTemplateColumns: 'minmax(180px,1fr) minmax(180px,1fr) minmax(180px,1fr) auto', alignItems: 'end',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', alignItems: 'end',
           }}
         >
           <FormField id="emp-claim-benefit" label={isTh ? 'ชื่อสวัสดิการ' : 'Benefit Name'}>
             {(cp) => (
-              <select
+              <input
                 {...cp}
+                type="text"
                 value={claimBenefitFilter}
                 onChange={(e) => setClaimBenefitFilter(e.target.value)}
+                placeholder={isTh ? 'ค้นหาชื่อสวัสดิการ' : 'Search benefit name'}
                 className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas focus:border-accent"
-              >
-                <option value="">{isTh ? 'ทั้งหมด' : 'All'}</option>
-                {claimBenefitOptions.map((name) => (
-                  <option key={name} value={name}>{name}</option>
-                ))}
-              </select>
+              />
             )}
           </FormField>
           <FormField id="emp-claim-type" label={isTh ? 'ประเภทการเบิก' : 'Claim Type'}>
@@ -2105,6 +2111,42 @@ export default function EmployeeDetailPage() {
               </select>
             )}
           </FormField>
+          <FormField id="emp-claim-date-from" label={isTh ? 'วันที่เริ่ม' : 'Start date'}>
+            {(cp) => (
+              <>
+                <input
+                  {...cp}
+                  type="date"
+                  value={claimDateFromFilter}
+                  onChange={(e) => setClaimDateFromFilter(e.target.value)}
+                  className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas focus:border-accent"
+                />
+                {claimDateFromFilter ? (
+                  <p className="text-small tabular-nums text-ink-muted" style={{ marginTop: 4 }}>
+                    {formatClaimDate(claimDateFromFilter)}
+                  </p>
+                ) : null}
+              </>
+            )}
+          </FormField>
+          <FormField id="emp-claim-date-to" label={isTh ? 'วันที่สิ้นสุด' : 'End date'}>
+            {(cp) => (
+              <>
+                <input
+                  {...cp}
+                  type="date"
+                  value={claimDateToFilter}
+                  onChange={(e) => setClaimDateToFilter(e.target.value)}
+                  className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas focus:border-accent"
+                />
+                {claimDateToFilter ? (
+                  <p className="text-small tabular-nums text-ink-muted" style={{ marginTop: 4 }}>
+                    {formatClaimDate(claimDateToFilter)}
+                  </p>
+                ) : null}
+              </>
+            )}
+          </FormField>
           <Button type="button" variant="ghost" size="sm" className="min-h-[44px] justify-center" onClick={resetClaimFilters}>
             {isTh ? 'ล้างตัวกรอง' : 'Clear'}
           </Button>
@@ -2119,7 +2161,7 @@ export default function EmployeeDetailPage() {
             descEn="Try adjusting the benefit, claim type, or status filter"
           />
         ) : (
-          <div style={{ overflowX: 'auto', maxHeight: '28rem', overflowY: 'auto' }}>
+          <div style={{ overflowX: 'auto', maxHeight: '28rem', overflowY: 'scroll' }}>
             <table className="w-full text-small" style={{ borderCollapse: 'collapse' }}>
               <thead>
                 <tr className="text-ink-muted" style={{ textAlign: 'left' }}>
@@ -2140,7 +2182,7 @@ export default function EmployeeDetailPage() {
                       <p className="text-ink-muted">{BENEFIT_TYPE_LABEL[c.benefitType] ?? ''}</p>
                     </td>
                     <td className="text-ink tabular-nums" style={{ padding: '8px 12px', textAlign: 'right' }}>{`฿${c.totalClaimAmount.toLocaleString('th-TH')}`}</td>
-                    <td className="text-ink-muted tabular-nums" style={{ padding: '8px 12px' }}>{new Date(c.submittedAt).toLocaleDateString(isTh ? 'th-TH' : 'en-GB')}</td>
+                    <td className="text-ink-muted tabular-nums" style={{ padding: '8px 12px' }}>{formatClaimDate(c.submittedAt)}</td>
                     <td style={{ padding: '8px 12px' }}><ClaimStatusChip status={c.status} isTh={isTh} /></td>
                     <td style={{ padding: '8px 12px', textAlign: 'right' }}>
                       <Button

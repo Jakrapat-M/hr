@@ -44,21 +44,53 @@ export interface HumiClaimFilterState {
   benefit?: string;
   claimType?: string;
   status?: string;
+  /** ISO `YYYY-MM-DD` inclusive lower bound on `submittedAt`; empty = open. */
+  dateFrom?: string;
+  /** ISO `YYYY-MM-DD` inclusive upper bound on `submittedAt`; empty = open. */
+  dateTo?: string;
 }
 
 /**
- * AND the 3 ME claim-history filters (benefit name, claim type, status). An
- * empty/omitted value for any dimension matches every row.
+ * AND the ME claim-history filters (benefit name, claim type, status, date
+ * range). Benefit name is a case-insensitive substring match; claim type and
+ * status are exact. Date range is inclusive on the ISO `submittedAt` date, with
+ * either bound open when empty. An empty/omitted value for any dimension
+ * matches every row.
  */
 export function filterHumiClaimHistory<
-  T extends { type: string; claimType?: string; status: ClaimStatus },
->(rows: readonly T[], { benefit, claimType, status }: HumiClaimFilterState): T[] {
+  T extends { type: string; claimType?: string; status: ClaimStatus; submittedAt: string },
+>(
+  rows: readonly T[],
+  { benefit, claimType, status, dateFrom, dateTo }: HumiClaimFilterState,
+): T[] {
   return rows.filter((row) => {
-    const okBenefit = benefit ? row.type === benefit : true;
+    const okBenefit = benefit
+      ? row.type.toLowerCase().includes(benefit.trim().toLowerCase())
+      : true;
     const okClaimType = claimType ? row.claimType === claimType : true;
     const okStatus = status ? row.status === status : true;
-    return okBenefit && okClaimType && okStatus;
+    const iso = row.submittedAt.slice(0, 10);
+    const okFrom = dateFrom ? iso >= dateFrom : true;
+    const okTo = dateTo ? iso <= dateTo : true;
+    return okBenefit && okClaimType && okStatus && okFrom && okTo;
   });
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Date display — uppercase DD-MMM-YYYY (e.g. 2026-06-26 → 26-JUN-2026). Pure &
+// deterministic: the month array is built literally so no locale API varies.
+// ────────────────────────────────────────────────────────────────────────────
+
+const CLAIM_DATE_MONTHS = [
+  'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+  'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+] as const;
+
+/** Format an ISO `YYYY-MM-DD` (or ISO timestamp) as uppercase `DD-MMM-YYYY`. */
+export function formatClaimDate(iso: string): string {
+  const [year, month, day] = iso.slice(0, 10).split('-');
+  const monthLabel = CLAIM_DATE_MONTHS[Number(month) - 1] ?? '';
+  return `${day.padStart(2, '0')}-${monthLabel}-${year}`;
 }
 
 // ────────────────────────────────────────────────────────────────────────────

@@ -4,6 +4,7 @@ import {
   claimStatusSortRank,
   sortByClaimStatus,
   filterHumiClaimHistory,
+  formatClaimDate,
   CLAIM_TYPE_OPTIONS,
   CLAIM_STATUS_BUCKET_OPTIONS,
   benefitClaimStatusToBucket,
@@ -57,10 +58,27 @@ describe('filterHumiClaimHistory', () => {
     expect(filterHumiClaimHistory(HUMI_CLAIM_HISTORY, {})).toHaveLength(HUMI_CLAIM_HISTORY.length);
   });
 
-  it('filters by benefit name', () => {
+  it('filters by benefit name (exact)', () => {
     const out = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { benefit: 'ค่าน้ำมันรถ' });
     expect(out.length).toBeGreaterThan(0);
     expect(out.every((r) => r.type === 'ค่าน้ำมันรถ')).toBe(true);
+  });
+
+  it('filters by benefit name as a partial substring match', () => {
+    // "น้ำมัน" is a substring of "ค่าน้ำมันรถ" → matches all three fuel claims.
+    const out = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { benefit: 'น้ำมัน' });
+    expect(out.length).toBe(3);
+    expect(out.every((r) => r.type.includes('น้ำมัน'))).toBe(true);
+  });
+
+  it('matches benefit name case-insensitively (with surrounding whitespace)', () => {
+    const rows = [
+      { type: 'Medical Reimbursement', status: 'approved' as const, submittedAt: '2026-04-01' },
+      { type: 'Mobile Allowance', status: 'approved' as const, submittedAt: '2026-04-02' },
+    ];
+    const out = filterHumiClaimHistory(rows, { benefit: '  MEDICAL  ' });
+    expect(out).toHaveLength(1);
+    expect(out[0].type).toBe('Medical Reimbursement');
   });
 
   it('filters by claim type (toll)', () => {
@@ -88,6 +106,57 @@ describe('filterHumiClaimHistory', () => {
     expect(
       filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { claimType: 'parking', status: 'approved' }),
     ).toHaveLength(0);
+  });
+});
+
+// STA-194 FU — Start/End date range filter over the ISO `submittedAt`. Bounds are
+// inclusive; an empty bound is open. String compare of `YYYY-MM-DD` is ordered.
+describe('filterHumiClaimHistory — date range', () => {
+  const rows = [
+    { type: 'A', status: 'approved' as const, submittedAt: '2026-04-01' },
+    { type: 'B', status: 'approved' as const, submittedAt: '2026-04-15' },
+    { type: 'C', status: 'approved' as const, submittedAt: '2026-04-28' },
+    { type: 'D', status: 'approved' as const, submittedAt: '2026-05-10T08:30:00.000Z' },
+  ];
+
+  it('open range (both empty) matches every row', () => {
+    expect(filterHumiClaimHistory(rows, { dateFrom: '', dateTo: '' })).toHaveLength(4);
+  });
+
+  it('filters on an inclusive lower bound (dateFrom)', () => {
+    const out = filterHumiClaimHistory(rows, { dateFrom: '2026-04-15' });
+    expect(out.map((r) => r.type)).toEqual(['B', 'C', 'D']);
+  });
+
+  it('filters on an inclusive upper bound (dateTo)', () => {
+    const out = filterHumiClaimHistory(rows, { dateTo: '2026-04-28' });
+    expect(out.map((r) => r.type)).toEqual(['A', 'B', 'C']);
+  });
+
+  it('filters on a closed inclusive range and compares the ISO date only', () => {
+    const out = filterHumiClaimHistory(rows, { dateFrom: '2026-04-15', dateTo: '2026-05-10' });
+    // The 2026-05-10 timestamp row is included because only the date part is compared.
+    expect(out.map((r) => r.type)).toEqual(['B', 'C', 'D']);
+  });
+});
+
+// STA-194 FU — DD-MMM-YYYY display format (uppercase month, zero-padded day).
+describe('formatClaimDate', () => {
+  it('formats a two-digit day/month ISO date', () => {
+    expect(formatClaimDate('2026-06-26')).toBe('26-JUN-2026');
+  });
+
+  it('zero-pads a single-digit day', () => {
+    expect(formatClaimDate('2026-04-02')).toBe('02-APR-2026');
+  });
+
+  it('maps January and December correctly', () => {
+    expect(formatClaimDate('2026-01-01')).toBe('01-JAN-2026');
+    expect(formatClaimDate('2026-12-31')).toBe('31-DEC-2026');
+  });
+
+  it('accepts an ISO timestamp and uses only the date part', () => {
+    expect(formatClaimDate('2026-05-10T08:30:00.000Z')).toBe('10-MAY-2026');
   });
 });
 

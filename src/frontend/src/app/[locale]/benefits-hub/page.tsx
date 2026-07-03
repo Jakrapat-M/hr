@@ -33,6 +33,7 @@ import {
   CLAIM_TYPE_OPTIONS,
   CLAIM_STATUS_BUCKET_OPTIONS,
   filterHumiClaimHistory,
+  formatClaimDate,
   sortByClaimStatus,
 } from '@/lib/claim-history-filter';
 import {
@@ -471,23 +472,21 @@ function ClaimHistorySection() {
   const [benefitFilter, setBenefitFilter] = useState('');
   const [claimTypeFilter, setClaimTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [dateFromFilter, setDateFromFilter] = useState('');
+  const [dateToFilter, setDateToFilter] = useState('');
   // STA-182 — "more detail" row action opens a read-only detail modal.
   const [detailRow, setDetailRow] = useState<HumiClaimHistoryItem | null>(null);
-
-  // Benefit-name options come from the data present (distinct benefit names).
-  const benefitNameOptions = useMemo(
-    () => Array.from(new Set(HUMI_CLAIM_HISTORY.map((row) => row.type))),
-    [],
-  );
 
   const filteredClaimHistory = useMemo(() => {
     const rows = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, {
       benefit: benefitFilter,
       claimType: claimTypeFilter,
       status: statusFilter,
+      dateFrom: dateFromFilter,
+      dateTo: dateToFilter,
     });
     return sortByClaimStatus(rows);
-  }, [benefitFilter, claimTypeFilter, statusFilter]);
+  }, [benefitFilter, claimTypeFilter, statusFilter, dateFromFilter, dateToFilter]);
 
   const claimHistoryColumns = useMemo<DataTableColumn<HumiClaimHistoryItem>[]>(() => [
     {
@@ -517,7 +516,9 @@ function ClaimHistorySection() {
       id: 'submissionDate',
       header: 'วันที่ส่ง / Submission Date',
       cell: (row) => (
-        <span className="text-small tabular-nums text-ink-muted">{row.date}</span>
+        <span className="text-small tabular-nums text-ink-muted">
+          {formatClaimDate(row.submittedAt)}
+        </span>
       ),
       sortAccessor: (row) => row.submittedAt,
       className: 'w-44',
@@ -566,6 +567,8 @@ function ClaimHistorySection() {
     setBenefitFilter('');
     setClaimTypeFilter('');
     setStatusFilter('');
+    setDateFromFilter('');
+    setDateToFilter('');
   };
 
   const filterSelectClass =
@@ -588,22 +591,17 @@ function ClaimHistorySection() {
           </Button>
         </div>
 
-        <div className="mb-4 grid gap-3 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-4 lg:grid-cols-[minmax(200px,1fr)_minmax(200px,1fr)_minmax(200px,1fr)_auto] lg:items-end">
+        <div className="mb-4 grid gap-3 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(5,minmax(150px,1fr))_auto] lg:items-end">
           <FormField id="claim-history-benefit" label="ชื่อสวัสดิการ / Benefit Name">
             {(controlProps) => (
-              <select
+              <input
                 {...controlProps}
+                type="text"
                 value={benefitFilter}
                 onChange={(event) => setBenefitFilter(event.target.value)}
+                placeholder="ค้นหาชื่อสวัสดิการ / Search benefit name"
                 className={filterSelectClass}
-              >
-                <option value="">ทั้งหมด / All</option>
-                {benefitNameOptions.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
+              />
             )}
           </FormField>
           <FormField id="claim-history-claim-type" label="ประเภทการเบิก / Claim Type">
@@ -640,6 +638,42 @@ function ClaimHistorySection() {
               </select>
             )}
           </FormField>
+          <FormField id="claim-history-date-from" label="วันที่เริ่ม / Start date">
+            {(controlProps) => (
+              <>
+                <input
+                  {...controlProps}
+                  type="date"
+                  value={dateFromFilter}
+                  onChange={(event) => setDateFromFilter(event.target.value)}
+                  className={filterSelectClass}
+                />
+                {dateFromFilter ? (
+                  <p className="mt-1 text-small tabular-nums text-ink-muted">
+                    {formatClaimDate(dateFromFilter)}
+                  </p>
+                ) : null}
+              </>
+            )}
+          </FormField>
+          <FormField id="claim-history-date-to" label="วันที่สิ้นสุด / End date">
+            {(controlProps) => (
+              <>
+                <input
+                  {...controlProps}
+                  type="date"
+                  value={dateToFilter}
+                  onChange={(event) => setDateToFilter(event.target.value)}
+                  className={filterSelectClass}
+                />
+                {dateToFilter ? (
+                  <p className="mt-1 text-small tabular-nums text-ink-muted">
+                    {formatClaimDate(dateToFilter)}
+                  </p>
+                ) : null}
+              </>
+            )}
+          </FormField>
           <Button
             type="button"
             variant="ghost"
@@ -650,7 +684,7 @@ function ClaimHistorySection() {
           </Button>
         </div>
 
-        <div className="max-h-[28rem] overflow-y-auto rounded-[var(--radius-md)]">
+        <div className="max-h-[28rem] overflow-y-scroll rounded-[var(--radius-md)]">
           <DataTable
             caption="ประวัติการเบิกค่าใช้จ่าย"
             columns={claimHistoryColumns}
