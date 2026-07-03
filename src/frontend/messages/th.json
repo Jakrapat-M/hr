@@ -5546,6 +5546,7 @@
       },
       "detail": {
         "back": "คำขอของฉัน",
+        "backButton": "กลับไปหน้าคำขอของฉัน",
         "reason": "เหตุผล",
         "attachments": "เอกสารแนบ",
         "viewDownload": "ดู/ดาวน์โหลด",

@@ -152,6 +152,16 @@ export default function MyRequestDetailPage({ params }: PageProps) {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
+      {/* STA-197 — prominent Back button (breadcrumb below keeps orientation). */}
+      <Button
+        variant="secondary"
+        size="sm"
+        className="mb-3"
+        onClick={() => router.push(`/${locale}/time/my-requests`)}
+      >
+        <ChevronLeft className="h-4 w-4 mr-1" aria-hidden />
+        {t('detail.backButton')}
+      </Button>
       {/* Breadcrumb → back to My Request (NOT the approval queue). */}
       <nav className="flex items-center gap-1 text-xs text-ink-muted mb-4" aria-label="breadcrumb">
         <Link href={`/${locale}/time/my-requests`} className="hover:text-ink transition">
