@@ -1,4 +1,18 @@
 {
+  "clock": {
+    "successInTitle": "Clocked in",
+    "successOutTitle": "Clocked out",
+    "withinLabel": "Within the work area",
+    "warningTitle": "Time recorded — outside the work area",
+    "outsideLabel": "Outside the work area",
+    "notified": "Your supervisor has been notified",
+    "errorTitle": "Can't record your time",
+    "errorBody": "Please turn on GPS or allow location access, then try again.",
+    "timeLabel": "Time",
+    "distanceUnit": "m",
+    "tryAgain": "Try again",
+    "close": "Close"
+  },
   "timesheet": {
     "title": "My Timesheet",
     "eyebrow": "Time & Attendance",
