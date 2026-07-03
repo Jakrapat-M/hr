@@ -384,6 +384,11 @@ export default function HumiBenefitsHubPage() {
                     / {formatThb(b.limit)}
                   </span>
                 </p>
+                {b.remainingNoteTh && (
+                  <p className="mt-1 text-small text-ink-muted">
+                    {locale === 'en' ? b.remainingNoteEn : b.remainingNoteTh}
+                  </p>
+                )}
                 <div
                   role="progressbar"
                   aria-valuenow={pct}
