@@ -36,7 +36,6 @@ import {
   Network,
   Star,
   Layers,
-  Search,
   Download,
   Trash2,
   Gift,
@@ -60,6 +59,12 @@ import { ClaimDetailModal } from '@/components/benefits/ClaimDetailModal'
 import { BenefitHistorySidebar } from '@/components/benefits/BenefitHistorySidebar'
 import { useBenefitHistoryStore } from '@/stores/benefit-history-store'
 import { inactiveEndDate } from '@/lib/date'
+import {
+  CLAIM_TYPE_OPTIONS,
+  CLAIM_STATUS_BUCKET_OPTIONS,
+  benefitClaimStatusToBucket,
+  deriveAdminClaimType,
+} from '@/lib/claim-history-filter'
 import {
   useBenefitClaimsStore,
   BENEFIT_STATUS_LABEL,
@@ -1139,23 +1144,26 @@ export default function EmployeeDetailPage() {
     () => sortClaimHistory(allClaims.filter((c) => c.employeeId === claimEmployeeId)),
     [allClaims, claimEmployeeId],
   )
-  // STA-132 (Part 5, revised) — claim-history search + date-range filters, mirroring
+  // STA-194 — claim-history Benefit name / Claim Type / Status filters, mirroring
   // the /benefits-hub "Me" claim history so the admin view matches the reference.
-  const [claimSearch, setClaimSearch] = useState('')
-  const [claimStart, setClaimStart] = useState('')
-  const [claimEnd, setClaimEnd] = useState('')
+  const [claimBenefitFilter, setClaimBenefitFilter] = useState('')
+  const [claimTypeFilter, setClaimTypeFilter] = useState('')
+  const [claimStatusFilter, setClaimStatusFilter] = useState('')
+  // Benefit-name options come from the data present (distinct benefit names).
+  const claimBenefitOptions = useMemo(
+    () => Array.from(new Set(employeeClaims.map((c) => c.benefitName))),
+    [employeeClaims],
+  )
   const filteredClaims = useMemo(() => {
-    const q = claimSearch.trim().toLocaleLowerCase('th-TH')
+    // employeeClaims is already status-sorted (sortClaimHistory); filtering keeps order.
     return employeeClaims.filter((c) => {
-      const day = c.submittedAt.slice(0, 10)
-      const hay = `${c.benefitName} ${BENEFIT_TYPE_LABEL[c.benefitType] ?? ''} ${c.status}`.toLocaleLowerCase('th-TH')
-      const okSearch = q ? hay.includes(q) : true
-      const okStart = claimStart ? day >= claimStart : true
-      const okEnd = claimEnd ? day <= claimEnd : true
-      return okSearch && okStart && okEnd
+      const okBenefit = claimBenefitFilter ? c.benefitName === claimBenefitFilter : true
+      const okType = claimTypeFilter ? deriveAdminClaimType(c.benefitType) === claimTypeFilter : true
+      const okStatus = claimStatusFilter ? benefitClaimStatusToBucket(c.status) === claimStatusFilter : true
+      return okBenefit && okType && okStatus
     })
-  }, [employeeClaims, claimSearch, claimStart, claimEnd])
-  const resetClaimFilters = () => { setClaimSearch(''); setClaimStart(''); setClaimEnd('') }
+  }, [employeeClaims, claimBenefitFilter, claimTypeFilter, claimStatusFilter])
+  const resetClaimFilters = () => { setClaimBenefitFilter(''); setClaimTypeFilter(''); setClaimStatusFilter('') }
   // STA-106: per-row "Start a claim" modal (HR files a claim on behalf of employee).
   const [claimTarget, setClaimTarget] = useState<CurrentBenefit | null>(null)
   // STA-119: persist the admin-filed claim into the store so it surfaces in
@@ -2044,41 +2052,57 @@ export default function EmployeeDetailPage() {
           </Button>
         </div>
 
-        {/* Search + start/end date filter row */}
+        {/* Benefit name / Claim Type / Status filter row */}
         <div
           className="rounded-[var(--radius-md)] border border-hairline bg-canvas-soft"
           style={{
             display: 'grid', gap: 12, padding: 16, marginBottom: 16,
-            gridTemplateColumns: 'minmax(200px,1fr) 170px 170px auto', alignItems: 'end',
+            gridTemplateColumns: 'minmax(180px,1fr) minmax(180px,1fr) minmax(180px,1fr) auto', alignItems: 'end',
           }}
         >
-          <FormField id="emp-claim-search" label={isTh ? 'ค้นหา' : 'Search'}>
+          <FormField id="emp-claim-benefit" label={isTh ? 'ชื่อสวัสดิการ' : 'Benefit Name'}>
             {(cp) => (
-              <div style={{ position: 'relative' }}>
-                <Search
-                  size={16}
-                  aria-hidden
-                  style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ink-faint)', pointerEvents: 'none' }}
-                />
-                <FormInput
-                  {...cp}
-                  type="search"
-                  value={claimSearch}
-                  onChange={(e) => setClaimSearch(e.target.value)}
-                  placeholder={isTh ? 'ชื่อสวัสดิการ หรือสถานะ' : 'Benefit name or status'}
-                  style={{ paddingLeft: 32 }}
-                />
-              </div>
+              <select
+                {...cp}
+                value={claimBenefitFilter}
+                onChange={(e) => setClaimBenefitFilter(e.target.value)}
+                className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas focus:border-accent"
+              >
+                <option value="">{isTh ? 'ทั้งหมด' : 'All'}</option>
+                {claimBenefitOptions.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
             )}
           </FormField>
-          <FormField id="emp-claim-start" label={isTh ? 'วันที่เริ่มต้น' : 'Start Date'}>
+          <FormField id="emp-claim-type" label={isTh ? 'ประเภทการเบิก' : 'Claim Type'}>
             {(cp) => (
-              <FormInput {...cp} type="date" value={claimStart} max={claimEnd || undefined} onChange={(e) => setClaimStart(e.target.value)} />
+              <select
+                {...cp}
+                value={claimTypeFilter}
+                onChange={(e) => setClaimTypeFilter(e.target.value)}
+                className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas focus:border-accent"
+              >
+                <option value="">{isTh ? 'ทั้งหมด' : 'All'}</option>
+                {CLAIM_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{isTh ? opt.labelTh : opt.labelEn}</option>
+                ))}
+              </select>
             )}
           </FormField>
-          <FormField id="emp-claim-end" label={isTh ? 'วันที่สิ้นสุด' : 'End Date'}>
+          <FormField id="emp-claim-status" label={isTh ? 'สถานะ' : 'Status'}>
             {(cp) => (
-              <FormInput {...cp} type="date" value={claimEnd} min={claimStart || undefined} onChange={(e) => setClaimEnd(e.target.value)} />
+              <select
+                {...cp}
+                value={claimStatusFilter}
+                onChange={(e) => setClaimStatusFilter(e.target.value)}
+                className="h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas focus:border-accent"
+              >
+                <option value="">{isTh ? 'ทั้งหมด' : 'All'}</option>
+                {CLAIM_STATUS_BUCKET_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{isTh ? opt.labelTh : opt.labelEn}</option>
+                ))}
+              </select>
             )}
           </FormField>
           <Button type="button" variant="ghost" size="sm" className="min-h-[44px] justify-center" onClick={resetClaimFilters}>
@@ -2091,11 +2115,11 @@ export default function EmployeeDetailPage() {
             icon={FileText}
             titleTh="ไม่พบประวัติการเบิก"
             titleEn="No claims found"
-            descTh="ลองปรับคำค้นหา หรือช่วงวันที่"
-            descEn="Try adjusting the search or date range"
+            descTh="ลองปรับตัวกรองชื่อสวัสดิการ ประเภทการเบิก หรือสถานะ"
+            descEn="Try adjusting the benefit, claim type, or status filter"
           />
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto', maxHeight: '28rem', overflowY: 'auto' }}>
             <table className="w-full text-small" style={{ borderCollapse: 'collapse' }}>
               <thead>
                 <tr className="text-ink-muted" style={{ textAlign: 'left' }}>

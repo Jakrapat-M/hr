@@ -4,16 +4,12 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
-  AlertCircle,
   ArrowRight,
-  Clock,
   Download,
   FileText,
-  Heart,
   Hospital,
   HeartPulse,
   ReceiptText,
-  Search,
   ShieldCheck,
   Stethoscope,
   Users,
@@ -24,18 +20,21 @@ import {
   Card,
   CardEyebrow,
   CardTitle,
-  ClaimStepper,
   DataTable,
   DemoValuesDisclaimer,
   FormField,
-  FormInput,
   buttonVariants,
 } from '@/components/humi';
 import type { DataTableColumn } from '@/components/humi';
 import { ClaimDetailModal } from '@/components/benefits/ClaimDetailModal';
 import { humiClaimHistoryToClaimRequest } from '@/lib/humi-claim-history-to-claim';
 import { cn } from '@/lib/utils';
-import { claimPipeline, type ClaimPipeline } from '@/lib/benefit-claim-steps';
+import {
+  CLAIM_TYPE_OPTIONS,
+  CLAIM_STATUS_BUCKET_OPTIONS,
+  filterHumiClaimHistory,
+  sortByClaimStatus,
+} from '@/lib/claim-history-filter';
 import {
   benefitHospitalClaimRoute,
   benefitProfileRoute,
@@ -180,25 +179,8 @@ const POLICIES = [
 // Helpers
 // ────────────────────────────────────────────────────────────────────────────
 
-function daysSince(iso: string): number {
-  return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-}
-
 function formatThb(n: number): string {
   return `฿${n.toLocaleString()}`;
-}
-
-function claimHistorySearchText(row: HumiClaimHistoryItem) {
-  return [
-    row.id,
-    row.type,
-    row.desc,
-    row.amount,
-    row.date,
-    CLAIM_STATUS_META[row.status].label,
-  ]
-    .join(' ')
-    .toLocaleLowerCase('th-TH');
 }
 
 function claimAmountValue(amount: string) {
@@ -233,56 +215,6 @@ export default function HumiBenefitsHubPage() {
   const pendingTotal = pendingClaimsCount + pendingReferralCount;
 
   const docsToSign = DOCS.filter((d) => d.action === 'sign').length;
-
-  // Combine in-flight items across services for the side tracker
-  type InFlightItem = {
-    key: string;
-    icon: typeof Hospital;
-    title: string;
-    sub: string;
-    days: number;
-    statusLabel: string;
-    statusTone: string;
-    href: string;
-    pipeline: ClaimPipeline;
-  };
-  const inFlight: InFlightItem[] = useMemo(() => {
-    const fromReferrals: InFlightItem[] = referrals
-      .filter((r) => ['pending_spd', 'spd_reviewing', 'approved', 'send_back'].includes(r.status))
-      .slice(0, 4)
-      .map((r) => ({
-        key: r.id,
-        icon: Hospital,
-        title: r.serviceReason,
-        sub: r.hospital.name,
-        days: daysSince(r.submittedAt ?? r.updatedAt),
-        statusLabel: r.status === 'pending_spd' ? 'รอ HRBP' : r.status === 'spd_reviewing' ? 'SPD ตรวจ' : r.status === 'approved' ? 'รอออกใบ' : 'ส่งกลับแก้',
-        statusTone: 'bg-warning-soft text-[color:var(--color-warning)]',
-        href: benefitReferralRoute(locale),
-        pipeline: claimPipeline('referral', r.status),
-      }));
-
-    const fromClaims: InFlightItem[] = HUMI_CLAIM_HISTORY.filter(
-      (r) => CLAIM_STATUS_META[r.status]?.label !== 'Approved',
-    )
-      .slice(0, 4)
-      .map((r) => {
-        const meta = CLAIM_STATUS_META[r.status];
-        return {
-          key: r.id,
-          icon: ReceiptText,
-          title: r.type,
-          sub: r.desc,
-          days: 0,
-          statusLabel: meta.label,
-          statusTone: meta.toneClass,
-          href: benefitReimbursementRoute(locale),
-          pipeline: claimPipeline('claim', r.status),
-        };
-      });
-
-    return [...fromReferrals, ...fromClaims].slice(0, 6);
-  }, [referrals, locale]);
 
   return (
     <>
@@ -356,16 +288,14 @@ export default function HumiBenefitsHubPage() {
         </Card>
       </section>
 
-      {/* Main: services (2/3) + in-flight tracker (1/3) */}
-      <div className="mb-6 grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        {/* Service catalog */}
-        <section aria-labelledby="services-heading">
-          <h2
-            id="services-heading"
-            className="mb-3 font-display text-[length:var(--text-display-h3)] font-semibold text-ink"
-          >
-            บริการสวัสดิการ
-          </h2>
+      {/* Service catalog — full width */}
+      <section aria-labelledby="services-heading" className="mb-6">
+        <h2
+          id="services-heading"
+          className="mb-3 font-display text-[length:var(--text-display-h3)] font-semibold text-ink"
+        >
+          บริการสวัสดิการ
+        </h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {SERVICES.map((svc) => {
               const Icon = svc.icon;
@@ -416,84 +346,7 @@ export default function HumiBenefitsHubPage() {
               );
             })}
           </div>
-        </section>
-
-        {/* In-flight tracker */}
-        <aside aria-labelledby="inflight-heading">
-          <h2
-            id="inflight-heading"
-            className="mb-3 font-display text-[length:var(--text-display-h3)] font-semibold text-ink"
-          >
-            กำลังดำเนินการ
-          </h2>
-          <Card variant="raised" size="md">
-            {inFlight.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-center">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas-soft">
-                  <Heart size={18} className="text-ink-muted" aria-hidden />
-                </span>
-                <p className="text-small text-ink-muted">ไม่มีคำขอที่รอดำเนินการ</p>
-              </div>
-            ) : (
-              <ul role="list" className="divide-y divide-hairline-soft">
-                {inFlight.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <li key={item.key} className="py-3 first:pt-0 last:pb-0">
-                      <Link
-                        href={item.href}
-                        className="flex items-start gap-3 -m-1 p-1 rounded-[var(--radius-sm)] hover:bg-canvas-soft transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
-                      >
-                        <span
-                          aria-hidden
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-canvas-soft text-ink-muted"
-                        >
-                          <Icon size={14} />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-small font-semibold text-ink truncate">{item.title}</p>
-                          <p className="text-small text-ink-muted truncate">{item.sub}</p>
-                          <div className="mt-1 flex items-center gap-2 flex-wrap">
-                            <span
-                              className={cn(
-                                'rounded-full px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] whitespace-nowrap',
-                                item.statusTone,
-                              )}
-                            >
-                              {item.statusLabel}
-                            </span>
-                            {item.days > 0 && (
-                              <span className="inline-flex items-center gap-1 text-[length:var(--text-eyebrow)] font-mono text-ink-faint">
-                                <Clock size={10} aria-hidden />
-                                {item.days}ด.
-                              </span>
-                            )}
-                          </div>
-                          {/* Status-faithful stepper (rework → chip, never a node) */}
-                          <div className="mt-2">
-                            {item.pipeline.rework ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--color-danger-soft)] px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold text-[color:var(--color-danger)]">
-                                <AlertCircle size={11} aria-hidden />
-                                ส่งกลับแก้
-                              </span>
-                            ) : (
-                              <ClaimStepper
-                                steps={item.pipeline.steps}
-                                activeIndex={item.pipeline.activeIndex}
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-
-            )}
-          </Card>
-        </aside>
-      </div>
+      </section>
 
       {/* Allowance breakdown */}
       <section aria-labelledby="allowance-heading" className="mb-6">
@@ -607,28 +460,29 @@ export default function HumiBenefitsHubPage() {
 // Sub-sections
 // ────────────────────────────────────────────────────────────────────────────
 
-// STA-75 — Claim history with search + start/end date filters over HUMI_CLAIM_HISTORY.
+// STA-194 — Claim history with Benefit name / Claim Type / Status filters over
+// HUMI_CLAIM_HISTORY, sorted by status group (ขอข้อมูลเพิ่ม → รออนุมัติ → อนุมัติแล้ว).
 function ClaimHistorySection() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [benefitFilter, setBenefitFilter] = useState('');
+  const [claimTypeFilter, setClaimTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   // STA-182 — "more detail" row action opens a read-only detail modal.
   const [detailRow, setDetailRow] = useState<HumiClaimHistoryItem | null>(null);
 
+  // Benefit-name options come from the data present (distinct benefit names).
+  const benefitNameOptions = useMemo(
+    () => Array.from(new Set(HUMI_CLAIM_HISTORY.map((row) => row.type))),
+    [],
+  );
+
   const filteredClaimHistory = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLocaleLowerCase('th-TH');
-
-    return HUMI_CLAIM_HISTORY.filter((row) => {
-      const submissionDate = row.submittedAt.slice(0, 10);
-      const matchesSearch = normalizedQuery
-        ? claimHistorySearchText(row).includes(normalizedQuery)
-        : true;
-      const matchesStartDate = startDate ? submissionDate >= startDate : true;
-      const matchesEndDate = endDate ? submissionDate <= endDate : true;
-
-      return matchesSearch && matchesStartDate && matchesEndDate;
+    const rows = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, {
+      benefit: benefitFilter,
+      claimType: claimTypeFilter,
+      status: statusFilter,
     });
-  }, [endDate, searchQuery, startDate]);
+    return sortByClaimStatus(rows);
+  }, [benefitFilter, claimTypeFilter, statusFilter]);
 
   const claimHistoryColumns = useMemo<DataTableColumn<HumiClaimHistoryItem>[]>(() => [
     {
@@ -704,10 +558,15 @@ function ClaimHistorySection() {
   ], []);
 
   const resetClaimFilters = () => {
-    setSearchQuery('');
-    setStartDate('');
-    setEndDate('');
+    setBenefitFilter('');
+    setClaimTypeFilter('');
+    setStatusFilter('');
   };
+
+  const filterSelectClass =
+    'h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink ' +
+    'transition-[border-color,box-shadow] duration-[var(--dur-fast)] ' +
+    'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas focus:border-accent';
 
   return (
     <section aria-labelledby="claim-history-heading" className="mb-6">
@@ -724,50 +583,56 @@ function ClaimHistorySection() {
           </Button>
         </div>
 
-        <div className="mb-4 grid gap-3 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-4 lg:grid-cols-[minmax(220px,1fr)_180px_180px_auto] lg:items-end">
-          <FormField
-            id="claim-history-search"
-            label="ค้นหา / Search bar"
-            help="ค้นหาจากชื่อสวัสดิการ รายละเอียด จำนวนเงิน หรือสถานะ"
-          >
+        <div className="mb-4 grid gap-3 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-4 lg:grid-cols-[minmax(200px,1fr)_minmax(200px,1fr)_minmax(200px,1fr)_auto] lg:items-end">
+          <FormField id="claim-history-benefit" label="ชื่อสวัสดิการ / Benefit Name">
             {(controlProps) => (
-              <div className="relative">
-                <Search
-                  size={16}
-                  aria-hidden
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
-                />
-                <FormInput
-                  {...controlProps}
-                  type="search"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="เช่น ค่าทันตกรรม หรือ อนุมัติแล้ว"
-                  className="pl-9"
-                />
-              </div>
+              <select
+                {...controlProps}
+                value={benefitFilter}
+                onChange={(event) => setBenefitFilter(event.target.value)}
+                className={filterSelectClass}
+              >
+                <option value="">ทั้งหมด / All</option>
+                {benefitNameOptions.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
             )}
           </FormField>
-          <FormField id="claim-history-start-date" label="วันที่เริ่มต้น / Start Date">
+          <FormField id="claim-history-claim-type" label="ประเภทการเบิก / Claim Type">
             {(controlProps) => (
-              <FormInput
+              <select
                 {...controlProps}
-                type="date"
-                value={startDate}
-                max={endDate || undefined}
-                onChange={(event) => setStartDate(event.target.value)}
-              />
+                value={claimTypeFilter}
+                onChange={(event) => setClaimTypeFilter(event.target.value)}
+                className={filterSelectClass}
+              >
+                <option value="">ทั้งหมด / All</option>
+                {CLAIM_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.labelTh} / {opt.labelEn}
+                  </option>
+                ))}
+              </select>
             )}
           </FormField>
-          <FormField id="claim-history-end-date" label="วันที่สิ้นสุด / End Date">
+          <FormField id="claim-history-status" label="สถานะ / Status">
             {(controlProps) => (
-              <FormInput
+              <select
                 {...controlProps}
-                type="date"
-                value={endDate}
-                min={startDate || undefined}
-                onChange={(event) => setEndDate(event.target.value)}
-              />
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+                className={filterSelectClass}
+              >
+                <option value="">ทั้งหมด / All</option>
+                {CLAIM_STATUS_BUCKET_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.labelTh} / {opt.labelEn}
+                  </option>
+                ))}
+              </select>
             )}
           </FormField>
           <Button
@@ -780,21 +645,23 @@ function ClaimHistorySection() {
           </Button>
         </div>
 
-        <DataTable
-          caption="ประวัติการเบิกค่าใช้จ่าย"
-          columns={claimHistoryColumns}
-          rows={filteredClaimHistory}
-          rowKey={(row) => row.id}
-          dense
-          emptyState={
-            <div className="text-center">
-              <p className="text-body font-semibold text-ink">ไม่พบประวัติการเบิก</p>
-              <p className="mt-1 text-small text-ink-muted">
-                ลองปรับคำค้นหา วันที่เริ่มต้น หรือวันที่สิ้นสุด
-              </p>
-            </div>
-          }
-        />
+        <div className="max-h-[28rem] overflow-y-auto rounded-[var(--radius-md)]">
+          <DataTable
+            caption="ประวัติการเบิกค่าใช้จ่าย"
+            columns={claimHistoryColumns}
+            rows={filteredClaimHistory}
+            rowKey={(row) => row.id}
+            dense
+            emptyState={
+              <div className="text-center">
+                <p className="text-body font-semibold text-ink">ไม่พบประวัติการเบิก</p>
+                <p className="mt-1 text-small text-ink-muted">
+                  ลองปรับตัวกรองชื่อสวัสดิการ ประเภทการเบิก หรือสถานะ
+                </p>
+              </div>
+            }
+          />
+        </div>
       </Card>
 
       {/* STA-182 — reuse the read-only ClaimDetailModal (STA-159): request detail +
