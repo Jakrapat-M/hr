@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
+import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry';
+
+const planNameTh = (planId: string) =>
+  BENEFIT_PLAN_REGISTRY.find((p) => p.id === planId)?.nameTh ?? '';
 
 const submitClaim = vi.fn();
 const navigationMocks = vi.hoisted(() => ({
@@ -111,6 +115,20 @@ describe('benefits-hub reimbursement route mapping', () => {
     await user.click(screen.getByRole('button', { name: 'ยืนยันส่งคำขอ' }));
     expect(submitClaim).toHaveBeenCalledTimes(1);
     expect(navigationMocks.useRouter().push).toHaveBeenCalledWith('/th/benefits-hub');
+  });
+
+  it.each([
+    ['ca-tollway', 'BE-TOL-001'],
+    ['ca-parking', 'BE-PAR-001'],
+    ['ca-checkup', 'BE-PHY-001'],
+    ['ca-checkup-b', 'BE-PHY-002'],
+  ])('STA-196 — maps new allowance %s to plan %s', async (allowanceId, planId) => {
+    navigationMocks.useSearchParams.mockReturnValue(new URLSearchParams(`allowance=${allowanceId}`));
+    const { default: ReimbursementPage } = await import('@/app/[locale]/benefits-hub/reimbursement/page');
+
+    render(<ReimbursementPage />);
+
+    expect(screen.getByLabelText(/สวัสดิการที่เลือก/)).toHaveValue(planNameTh(planId));
   });
 
   it('renders required reimbursement-visible fields', async () => {

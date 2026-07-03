@@ -1576,13 +1576,24 @@ export interface HumiClaimAllowance {
   limit: number;
   sub: string;
   accent: 'accent' | 'alt' | 'sage' | 'butter';
+  /** Optional helper note under the amount line (medical box only). */
+  remainingNoteTh?: string;
+  remainingNoteEn?: string;
 }
 
 export const HUMI_CLAIM_ALLOWANCES: HumiClaimAllowance[] = [
-  { id: 'ca-medical', label: 'ค่ารักษาพยาบาล', used: 12400, limit: 38000, sub: 'ต่อปี · รวมผู้อุปการะ', accent: 'accent' },
+  {
+    id: 'ca-medical', label: 'ค่ารักษาพยาบาล', used: 12400, limit: 38000, sub: 'ต่อปี · รวมผู้อุปการะ', accent: 'accent',
+    remainingNoteTh: 'ยอดคงเหลือยังไม่รวมใบส่งตัว 2 เดือนล่าสุด',
+    remainingNoteEn: 'Remaining balance excludes referral letters from the last 2 months',
+  },
   { id: 'ca-dental', label: 'ค่าทันตกรรม', used: 0, limit: 2000, sub: 'ต่อปี · รวมชุดเคลือบฟัน', accent: 'alt' },
   { id: 'ca-phone', label: 'ค่าโทรศัพท์', used: 4800, limit: 9600, sub: 'เดือนละ ฿800', accent: 'sage' },
   { id: 'ca-fuel', label: 'ค่าน้ำมันรถ', used: 2000, limit: 10000, sub: 'ไปราชการ · ยื่นรายเดือน', accent: 'butter' },
+  { id: 'ca-tollway', label: 'ค่าผ่านทาง', used: 640, limit: 3600, sub: 'ทางด่วน · ยื่นรายเดือน', accent: 'accent' },
+  { id: 'ca-parking', label: 'ค่าจอดรถ', used: 900, limit: 6000, sub: 'อาคารสำนักงาน · ยื่นรายเดือน', accent: 'alt' },
+  { id: 'ca-checkup', label: 'ตรวจสุขภาพประจำปี', used: 0, limit: 5000, sub: 'ปีละครั้ง · แพ็กเกจ A', accent: 'sage' },
+  { id: 'ca-checkup-b', label: 'ตรวจสุขภาพ (แพ็กเกจ B)', used: 0, limit: 8000, sub: 'ปีละครั้ง · แพ็กเกจ B', accent: 'butter' },
 ];
 
 export type ClaimStatus = 'approved' | 'pending' | 'info';

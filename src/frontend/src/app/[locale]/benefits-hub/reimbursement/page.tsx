@@ -36,6 +36,10 @@ const ALLOWANCE_TO_PLAN: Record<string, {
   'ca-dental': { planId: 'BE-DEN-001', benefitType: 'medical', remainingAmount: allowanceRemaining('ca-dental') },
   'ca-phone': { planId: 'BE-MOB-001', benefitType: 'mobile', remainingAmount: allowanceRemaining('ca-phone') },
   'ca-fuel': { planId: 'BE-GAS-001', benefitType: 'gasoline', remainingAmount: allowanceRemaining('ca-fuel') },
+  'ca-tollway': { planId: 'BE-TOL-001', benefitType: 'gasoline', remainingAmount: allowanceRemaining('ca-tollway') },
+  'ca-parking': { planId: 'BE-PAR-001', benefitType: 'gasoline', remainingAmount: allowanceRemaining('ca-parking') },
+  'ca-checkup': { planId: 'BE-PHY-001', benefitType: 'physical_checkup', remainingAmount: allowanceRemaining('ca-checkup') },
+  'ca-checkup-b': { planId: 'BE-PHY-002', benefitType: 'physical_checkup', remainingAmount: allowanceRemaining('ca-checkup-b') },
 };
 
 const PLAN_TYPE_FALLBACK: Partial<Record<string, BenefitClaimType>> = {
