@@ -1,4 +1,16 @@
 {
+  "timesheet": {
+    "title": "My Timesheet",
+    "eyebrow": "Time & Attendance",
+    "nonClocking": "This employee is not a clocking type — no time entries.",
+    "tabs": {
+      "schedule": "Schedule",
+      "summary": "Summary",
+      "result": "Time Result",
+      "gps": "Clock Log",
+      "messages": "Messages"
+    }
+  },
   "saveDraft": {
     "button": "Save Draft",
     "disabledHint": "Enter a first name to save a draft",
