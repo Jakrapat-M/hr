@@ -96,7 +96,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
 
 const ALL_CATEGORIES = ['all', ...Object.keys(CATEGORY_LABELS_EN)] as const;
 const ALL_RECORD_TYPES = ['all', 'records', 'info', 'claimable'] as const;
-const ALL_STATUSES = ['all', 'active', 'inactive', 'draft'] as const;
+const ALL_STATUSES = ['all', 'active', 'inactive'] as const;
 
 type FilterCategory = typeof ALL_CATEGORIES[number];
 type FilterRecordType = typeof ALL_RECORD_TYPES[number];
@@ -345,8 +345,6 @@ function CreatePlanModal({
   };
 
   const isValid = tab1Values.planKey.trim() && tab1Values.nameTh.trim() && tab1Values.nameEn.trim();
-  // STA-98 R1 — a draft only needs a planKey (row key + dup check); name/category may stay empty.
-  const draftValid = Boolean(tab1Values.planKey.trim());
 
   const handleSave = () => {
     if (!isValid) return;
@@ -359,22 +357,6 @@ function CreatePlanModal({
     setSaving(true);
     // In-session mutation only — no backend POST in this mockup phase.
     onSubmit(buildPlanFromCreate(tab1Values));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(onClose, 1200);
-  };
-
-  // STA-98 R1 — save the in-progress plan as a draft without the full required-field gate.
-  const handleSaveDraft = () => {
-    if (!draftValid) return;
-    setError(null);
-    const key = tab1Values.planKey.trim();
-    if (existingIds.has(key)) {
-      setError(isTh ? `รหัสแผน "${key}" มีอยู่แล้ว` : `Plan ID "${key}" already exists`);
-      return;
-    }
-    setSaving(true);
-    onSubmit({ ...buildPlanFromCreate(tab1Values), status: 'draft' });
     setSaving(false);
     setSaved(true);
     setTimeout(onClose, 1200);
@@ -415,15 +397,10 @@ function CreatePlanModal({
           </div>
         )}
 
-        {/* STA-113 — Create keeps Save-as-Draft (documented STA-98 carve-out);
-            Make Correction + Insert popups are strictly Save | Cancel. */}
+        {/* Draft retired from the benefit-plan surface (Draft status no longer
+            used). Footer is Cancel | Create. */}
         <div className="flex justify-end gap-2 pt-2 border-t border-hairline">
           <Button variant="ghost" onClick={onClose}>{t('cancel')}</Button>
-          <Capability action="edit">
-            <Button variant="secondary" onClick={handleSaveDraft} disabled={saving || !draftValid}>
-              {isTh ? 'บันทึกฉบับร่าง' : 'Save as Draft'}
-            </Button>
-          </Capability>
           <Capability action="edit" fallback={
             <Button variant="primary" disabled>{t('createPlan')}</Button>
           }>
@@ -612,11 +589,6 @@ export default function BenefitPlansPage() {
       cell: (p: BenefitPlan) => (
         <span className="inline-flex items-center gap-2 text-ink">
           {isTh ? p.nameTh : p.nameEn}
-          {p.status === 'draft' && (
-            <span className="rounded-full bg-canvas-soft px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.06em] text-ink-muted">
-              {t('filterStatusDraft')}
-            </span>
-          )}
           {p.status === 'inactive' && (
             <span className="rounded-full bg-canvas-soft px-2 py-0.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.06em] text-ink-muted">
               {t('filterStatusInactive')}
@@ -787,7 +759,6 @@ export default function BenefitPlansPage() {
             <option value="all">{t('filterAll')}</option>
             <option value="active">{t('filterStatusActive')}</option>
             <option value="inactive">{t('filterStatusInactive')}</option>
-            <option value="draft">{t('filterStatusDraft')}</option>
           </select>
         </div>
 
