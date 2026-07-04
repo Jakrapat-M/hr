@@ -78,6 +78,7 @@ import {
 import { EmptyState, Modal, Button, FormField, FormInput } from '@/components/humi'
 import { FileUploadField } from '@/components/humi/FileUploadField'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
+import { SectionJumpNav, type JumpItem } from '@/components/admin/employees/SectionJumpNav'
 import { EmployeePersonalSections } from '@/components/admin/EmployeePersonalSections'
 import {
   useBudgetReallocationStore,
@@ -1344,7 +1345,18 @@ export default function EmployeeDetailPage() {
   ]
 
   return (
-    <div className="pb-8" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div
+      className="pb-8"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 20,
+        // --jumpnav-anchor ≈ --jumpnav-top + strip height + gap — tune together.
+        // Seed guesses; measure the (untokenized) topbar height live when verifying.
+        '--jumpnav-top': '64px',
+        '--jumpnav-anchor': '132px',
+      } as React.CSSProperties}
+    >
       {/* Back nav */}
       <div>
         <Link
@@ -1425,8 +1437,27 @@ export default function EmployeeDetailPage() {
         )}
       </div>
 
+      {/* ── STA-229: sticky "jump to section" nav (Option A) ──────────────── */}
+      <div className="sticky top-[var(--jumpnav-top)] z-[9] -mx-1 border-b border-hairline bg-canvas/85 px-1 py-2 backdrop-blur">
+        <SectionJumpNav
+          ariaLabel={isTh ? 'ไปยังส่วน' : 'Jump to section'}
+          items={[
+            { id: 'emp-personal-contact', label: isTh ? 'ข้อมูลติดต่อ' : 'Personal', onActivate: () => setPersonalContactCollapsed(false) },
+            { id: 'emp-employment', label: isTh ? 'การจ้างงาน' : 'Employment', onActivate: () => setEmploymentCollapsed(false) },
+            { id: 'emp-current-benefits', label: isTh ? 'สวัสดิการ' : 'Benefits', onActivate: () => setBenefitsCollapsed(false) },
+            { id: 'emp-benefit-enrollment', label: isTh ? 'การลงทะเบียน' : 'Enrollment', onActivate: () => setEnrollmentCollapsed(false) },
+            { id: 'emp-claim-history', label: isTh ? 'ประวัติการเบิก' : 'Claims', onActivate: () => setClaimHistoryCollapsed(false) },
+            { id: 'emp-budget-reallocation', label: isTh ? 'จัดสรรงบประมาณ' : 'Budget', onActivate: () => setReallocCollapsed(false) },
+            { id: 'emp-timeline', label: isTh ? 'ประวัติการเปลี่ยนแปลง' : 'Timeline' },
+            { id: 'emp-compensation-history', label: isTh ? 'ประวัติค่าตอบแทน' : 'Compensation' },
+            { id: 'emp-actions', label: isTh ? 'การดำเนินการ' : 'Actions', emphasis: true },
+          ] satisfies JumpItem[]}
+        />
+      </div>
+
       <CollapsibleSectionCard
         id="emp-personal-contact"
+        className="scroll-mt-[var(--jumpnav-anchor)]"
         icon={MapPin}
         eyebrow={isTh ? 'ข้อมูลส่วนบุคคล' : 'Personal'}
         title={isTh ? 'ข้อมูลการติดต่อส่วนบุคคล' : 'Personal Contact'}
@@ -1475,6 +1506,7 @@ export default function EmployeeDetailPage() {
       {/* ── Section A2: ข้อมูลการจ้างงาน (Employment-level — A3 split) ──── */}
       <CollapsibleSectionCard
         id="emp-employment"
+        className="scroll-mt-[var(--jumpnav-anchor)]"
         icon={Briefcase}
         eyebrow={isTh ? 'การจ้างงาน' : 'Employment'}
         title={isTh ? 'ข้อมูลการจ้างงาน' : 'Employment information'}
@@ -1868,6 +1900,7 @@ export default function EmployeeDetailPage() {
       {/* ── Current Benefits (default-collapsed; illustrative roll-up) ──────── */}
       <CollapsibleSectionCard
         id="emp-current-benefits"
+        className="scroll-mt-[var(--jumpnav-anchor)]"
         icon={Gift}
         eyebrow={isTh ? 'สวัสดิการ' : 'Benefits'}
         title={isTh ? 'สวัสดิการปัจจุบัน' : 'Current Benefits'}
@@ -2016,6 +2049,7 @@ export default function EmployeeDetailPage() {
       {/* ── STA-104: Benefit enrollment (default-collapsed; below Current Benefits) ── */}
       <CollapsibleSectionCard
         id="emp-benefit-enrollment"
+        className="scroll-mt-[var(--jumpnav-anchor)]"
         icon={Gift}
         eyebrow={isTh ? 'สวัสดิการ' : 'Benefits'}
         title={isTh ? 'ลงทะเบียนสวัสดิการ' : 'Benefit enrollment'}
@@ -2054,6 +2088,7 @@ export default function EmployeeDetailPage() {
             default-collapsed; id normalized EMP-0002 → EMP002 so rows render) ── */}
       <CollapsibleSectionCard
         id="emp-claim-history"
+        className="scroll-mt-[var(--jumpnav-anchor)]"
         icon={FileText}
         eyebrow={isTh ? 'สวัสดิการ' : 'Benefits'}
         title={isTh ? 'ประวัติการเบิกสวัสดิการ' : 'Claim history'}
@@ -2219,6 +2254,7 @@ export default function EmployeeDetailPage() {
       {/* ── STA-95: Reallocate Next Year Budget — change log + medical pools ── */}
       <CollapsibleSectionCard
         id="emp-budget-reallocation"
+        className="scroll-mt-[var(--jumpnav-anchor)]"
         icon={ArrowLeftRight}
         eyebrow={tReallocate('flag')}
         title={tReallocate('log.title')}
@@ -2594,7 +2630,7 @@ export default function EmployeeDetailPage() {
       )}
 
       {/* ── Section B: Timeline event log ─────────────────── */}
-      <div className="humi-card">
+      <div id="emp-timeline" className="humi-card scroll-mt-[var(--jumpnav-anchor)]">
         <div className="humi-row" style={{ marginBottom: 16 }}>
           <div>
             <div className="humi-eyebrow">ประวัติการเปลี่ยนแปลง</div>
@@ -2632,10 +2668,12 @@ export default function EmployeeDetailPage() {
       </div>
 
       {/* ── P3 read-only Compensation History (admin/HRBP cross-user view) ── */}
-      <CompensationHistory employeeId={employee.employee_id} viewerIsOwner={false} />
+      <div id="emp-compensation-history" className="scroll-mt-[var(--jumpnav-anchor)]">
+        <CompensationHistory employeeId={employee.employee_id} viewerIsOwner={false} />
+      </div>
 
       {/* ── Section C: Action menu (see ACTION_CARDS, C8 guardrail) ── */}
-      <div className="humi-card">
+      <div id="emp-actions" className="humi-card scroll-mt-[var(--jumpnav-anchor)]">
         <div className="humi-eyebrow" style={{ marginBottom: 14 }}>
           การดำเนินการ
         </div>
