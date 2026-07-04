@@ -1,4 +1,18 @@
 {
+  "clock": {
+    "successInTitle": "ลงเวลาเข้าสำเร็จ",
+    "successOutTitle": "ลงเวลาออกสำเร็จ",
+    "withinLabel": "อยู่ในพื้นที่ที่กำหนด",
+    "warningTitle": "ลงเวลาสำเร็จ — อยู่นอกพื้นที่ที่กำหนด",
+    "outsideLabel": "อยู่นอกพื้นที่ที่กำหนด",
+    "notified": "ระบบได้แจ้งหัวหน้างานแล้ว",
+    "errorTitle": "ไม่สามารถลงเวลาได้",
+    "errorBody": "กรุณาเปิด GPS หรืออนุญาตการเข้าถึงตำแหน่ง แล้วลองใหม่",
+    "timeLabel": "เวลา",
+    "distanceUnit": "ม.",
+    "tryAgain": "ลองอีกครั้ง",
+    "close": "ปิด"
+  },
   "timesheet": {
     "title": "My Timesheet",
     "eyebrow": "เวลาและการเข้างาน",

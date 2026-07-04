@@ -2,15 +2,21 @@
 
 // /time/clock — mobile-first clock-in/out widget. A big tap target records an
 // IN then an OUT punch for today (clock-punches store), with a live clock and
-// today's punch list. Mockup: no backend / geofence. Humi tokens; success =
-// teal, no red. Non-clocking employees see a gate (they have no punches).
+// today's punch list. Multiple in/out pairs per day are allowed.
+//
+// Geofence is SIMULATED (mockup — no real GPS / notification / backend). A
+// deterministic default (within) drives the result; an admin-only demo selector
+// can flip it to outside / disabled to demo the 3 cases. Humi tokens; success =
+// teal, warning = amber, error = pumpkin (NO RED). Non-clocking employees see a
+// gate (they have no punches).
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ChevronRight, Clock, LogIn, LogOut, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, Clock, LogIn, LogOut } from 'lucide-react';
 import { Card } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
+import { personaTiers } from '@/lib/persona-tiers';
 import { resolveCurrentEmpId } from '@/lib/scope-filter';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
 import {
@@ -19,6 +25,15 @@ import {
   nextPunchType,
   localDateKey,
 } from '@/stores/clock-punches';
+import {
+  evaluateGeofence,
+  defaultGeoSim,
+  type GeoResult,
+} from '@/lib/time/geofence-sim';
+import {
+  ClockResultModal,
+  type ClockResultVariant,
+} from './_components/ClockResultModal';
 
 function fmtClock(d: Date, isTh: boolean): string {
   return d.toLocaleTimeString(isTh ? 'th-TH' : 'en-GB', {
@@ -44,6 +59,15 @@ function fmtPunchTime(iso: string, isTh: boolean): string {
   });
 }
 
+const SIM_OPTIONS: GeoResult[] = ['within', 'outside', 'disabled'];
+
+interface ClockResultState {
+  variant: ClockResultVariant;
+  punchType: 'in' | 'out';
+  time: string;
+  distanceM: number | null;
+}
+
 export default function ClockInOutPage() {
   const params = useParams();
   const locale = (params?.locale as string) ?? 'th';
@@ -51,12 +75,21 @@ export default function ClockInOutPage() {
 
   const userId = useAuthStore((s) => s.userId);
   const email = useAuthStore((s) => s.email);
+  const roles = useAuthStore((s) => s.roles);
   const empId = resolveCurrentEmpId(email) ?? userId ?? 'EMP001';
   const attrs = getEmployeeTimeAttrs(empId);
   const isClocking = attrs.employeeType === 'clocking';
 
+  // Demo geofence selector is admin-only (Tier A). RBAC "remove, not hide":
+  // employees/managers/partners never see it at all.
+  const isAdmin = personaTiers(roles).includes('A');
+
   const punches = useClockPunches((s) => s.punches);
   const doPunch = useClockPunches((s) => s.punch);
+
+  // Simulated geofence source — deterministic default; the admin selector flips it.
+  const [sim, setSim] = useState<GeoResult>(() => defaultGeoSim());
+  const [result, setResult] = useState<ClockResultState | null>(null);
 
   // Live clock — tick every second. Initialised after mount to avoid an SSR/CSR
   // hydration mismatch on the time string.
@@ -73,14 +106,44 @@ export default function ClockInOutPage() {
     [punches, empId, todayKey],
   );
   const next = nextPunchType(todayPunches);
-  const inPunch = todayPunches.find((p) => p.type === 'in');
-  const outPunch = todayPunches.find((p) => p.type === 'out');
+  // Latest in/out of the day — with multiple pairs the status must reflect the
+  // CURRENT pair, not the first (todayPunches is oldest-first, so take the last).
+  const inPunch = todayPunches.filter((p) => p.type === 'in').at(-1);
+  const outPunch = todayPunches.filter((p) => p.type === 'out').at(-1);
 
   const statusLabel = !inPunch
     ? isTh ? 'ยังไม่ลงเวลาเข้า' : 'Not clocked in yet'
-    : !outPunch
+    : next === 'out'
       ? isTh ? `เข้างานแล้ว · ${fmtPunchTime(inPunch.at, isTh)}` : `Clocked in · ${fmtPunchTime(inPunch.at, isTh)}`
-      : isTh ? 'ลงเวลาครบแล้ววันนี้' : 'All clocked out for today';
+      : isTh ? `ออกงานแล้ว · ${outPunch ? fmtPunchTime(outPunch.at, isTh) : ''}` : `Clocked out · ${outPunch ? fmtPunchTime(outPunch.at, isTh) : ''}`;
+
+  function handlePunch() {
+    const evalResult = evaluateGeofence(sim);
+    // Case 3 — GPS disabled/denied: block, no punch, error popup.
+    if (evalResult.result === 'disabled') {
+      setResult({
+        variant: 'error',
+        punchType: next,
+        time: now ? fmtClock(now, isTh) : '',
+        distanceM: null,
+      });
+      return;
+    }
+    // Cases 1 & 2 — record the punch, then show success / warning.
+    const outside = evalResult.result === 'outside';
+    const created = doPunch(empId, next, {
+      withinRadius: !outside,
+      distanceM: evalResult.distanceM ?? 0,
+      notifiedSupervisor: outside,
+    });
+    if (!created) return; // illegal transition guard (no-op)
+    setResult({
+      variant: outside ? 'warning' : 'success',
+      punchType: created.type,
+      time: fmtPunchTime(created.at, isTh),
+      distanceM: evalResult.distanceM,
+    });
+  }
 
   return (
     <div className="mx-auto max-w-sm px-4 py-6">
@@ -120,37 +183,63 @@ export default function ClockInOutPage() {
             <div
               data-testid="clock-status"
               className={`w-full rounded-[var(--radius-md)] px-4 py-2.5 text-sm font-medium ${
-                !inPunch
-                  ? 'bg-canvas-soft text-ink-muted'
-                  : !outPunch
-                    ? 'bg-accent-soft text-accent'
-                    : 'bg-canvas-soft text-ink-muted'
+                inPunch && next === 'out' ? 'bg-accent-soft text-accent' : 'bg-canvas-soft text-ink-muted'
               }`}
             >
               {statusLabel}
             </div>
 
-            {/* Big punch button */}
-            {next === 'done' ? (
-              <div className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-accent bg-accent-soft py-4 text-accent">
-                <CheckCircle2 size={20} aria-hidden />
-                <span className="font-semibold">{isTh ? 'ลงเวลาแล้ววันนี้' : 'Done for today'}</span>
+            {/* Admin-only demo geofence selector (RBAC: absent for non-admins). */}
+            {isAdmin && (
+              <div className="w-full text-left" data-testid="geo-sim-selector">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-ink-muted">
+                  {isTh ? 'จำลองตำแหน่ง (เดโม)' : 'Simulate location (demo)'}
+                </p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {SIM_OPTIONS.map((opt) => {
+                    const label =
+                      opt === 'within'
+                        ? isTh ? 'ในพื้นที่' : 'Within'
+                        : opt === 'outside'
+                          ? isTh ? 'นอกพื้นที่' : 'Outside'
+                          : isTh ? 'ปิด GPS' : 'GPS off';
+                    const active = sim === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        data-testid={`geo-sim-${opt}`}
+                        aria-pressed={active}
+                        onClick={() => setSim(opt)}
+                        className={`rounded-[var(--radius-sm)] border px-2 py-1.5 text-xs font-medium transition ${
+                          active
+                            ? 'border-accent bg-accent-soft text-accent'
+                            : 'border-hairline text-ink-muted hover:bg-canvas-soft'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            ) : (
-              <button
-                type="button"
-                data-testid="punch-button"
-                onClick={() => doPunch(empId, next)}
-                className={`flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] py-4 text-base font-semibold text-white transition active:scale-[0.99] ${
-                  next === 'in' ? 'bg-accent hover:opacity-90' : 'bg-ink hover:opacity-90'
-                }`}
-              >
-                {next === 'in' ? <LogIn size={20} aria-hidden /> : <LogOut size={20} aria-hidden />}
-                {next === 'in'
-                  ? isTh ? 'ลงเวลาเข้า' : 'Clock in'
-                  : isTh ? 'ลงเวลาออก' : 'Clock out'}
-              </button>
             )}
+
+            {/* Big punch button — always the single legal action (in or out). */}
+            <button
+              type="button"
+              data-testid="punch-button"
+              disabled={result !== null}
+              onClick={handlePunch}
+              className={`flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] py-4 text-base font-semibold text-white transition active:scale-[0.99] disabled:opacity-50 ${
+                next === 'in' ? 'bg-accent hover:opacity-90' : 'bg-ink hover:opacity-90'
+              }`}
+            >
+              {next === 'in' ? <LogIn size={20} aria-hidden /> : <LogOut size={20} aria-hidden />}
+              {next === 'in'
+                ? isTh ? 'ลงเวลาเข้า' : 'Clock in'
+                : isTh ? 'ลงเวลาออก' : 'Clock out'}
+            </button>
 
             {/* Today's punches */}
             <div className="w-full">
@@ -161,24 +250,46 @@ export default function ClockInOutPage() {
                 <p className="py-4 text-sm text-ink-muted">{isTh ? 'ยังไม่มีรายการ' : 'No punches yet'}</p>
               ) : (
                 <ul className="divide-y divide-hairline">
-                  {todayPunches.map((p) => (
-                    <li key={p.id} className="flex items-center justify-between py-2.5 text-sm">
-                      <span className="inline-flex items-center gap-2">
-                        {p.type === 'in' ? (
-                          <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">{isTh ? 'เข้า' : 'IN'}</span>
-                        ) : (
-                          <span className="rounded-full bg-canvas-soft px-2 py-0.5 text-xs font-medium text-ink-muted">{isTh ? 'ออก' : 'OUT'}</span>
-                        )}
-                      </span>
-                      <span className="tabular-nums font-medium text-ink">{fmtPunchTime(p.at, isTh)}</span>
-                    </li>
-                  ))}
+                  {todayPunches.map((p) => {
+                    const outside = p.geo ? !p.geo.withinRadius : false;
+                    return (
+                      <li key={p.id} className="flex items-center justify-between py-2.5 text-sm">
+                        <span className="inline-flex items-center gap-2">
+                          {p.type === 'in' ? (
+                            <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">{isTh ? 'เข้า' : 'IN'}</span>
+                          ) : (
+                            <span className="rounded-full bg-canvas-soft px-2 py-0.5 text-xs font-medium text-ink-muted">{isTh ? 'ออก' : 'OUT'}</span>
+                          )}
+                          {outside && (
+                            <span
+                              data-testid="punch-outside-tag"
+                              className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning"
+                            >
+                              {isTh ? 'นอกพื้นที่ · แจ้งหัวหน้าแล้ว' : 'Outside · supervisor notified'}
+                            </span>
+                          )}
+                        </span>
+                        <span className="tabular-nums font-medium text-ink">{fmtPunchTime(p.at, isTh)}</span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
           </div>
         </Card>
       )}
+
+      {/* Result popups (success / warning / error+retry) */}
+      <ClockResultModal
+        open={result !== null}
+        variant={result?.variant ?? 'success'}
+        punchType={result?.punchType ?? 'in'}
+        time={result?.time ?? ''}
+        distanceM={result?.distanceM ?? null}
+        onClose={() => setResult(null)}
+        onRetry={() => setResult(null)}
+      />
     </div>
   );
 }
