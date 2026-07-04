@@ -1,9 +1,10 @@
 /**
  * profile-me.resign-link.test.tsx
- * STA-188: the "คำขอลาออก / Resignation" entry moved OFF the /profile/me
- *          Employment tab and onto the Time Off / Leave self-service hub.
- *          This suite asserts the profile Employment tab no longer links to
- *          /resignation (single entry point after the move).
+ * The "คำขอลาออก / Resignation" entry lives on the /profile/me Employment tab
+ * as a low-prominence link (NOT a sidebar leaf, NOT on the Time Off / Leave hub):
+ * resigning is a sensitive lifecycle action, kept discoverable-but-not-prominent.
+ * This suite asserts the Employment tab links to /resignation with the locale
+ * preserved. (Reverts STA-188's relocation to the Time Off hub.)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -144,23 +145,24 @@ afterEach(() => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// STA-188: the resignation entry moved to the Time Off hub — it must NOT appear
-// on the profile/me Employment tab anymore (single entry point after the move).
+// The resignation entry is a low-prominence link on the profile/me Employment
+// tab (not a sidebar leaf, not on the Time Off hub) — it must be present here.
 // ════════════════════════════════════════════════════════════════════════════
 
-describe('STA-188: profile/me Employment tab no longer links to /resignation', () => {
-  it('has NO <a> whose href contains "resignation"', async () => {
+describe('profile/me Employment tab links to /resignation (low-prominence entry)', () => {
+  it('has an <a> whose href points at /resignation with the locale preserved', async () => {
     await renderProfileMePage();
 
     const resignLink = screen
       .queryAllByRole('link')
       .find((l) => (l.getAttribute('href') ?? '').includes('resignation'));
-    expect(resignLink).toBeUndefined();
+    expect(resignLink).toBeDefined();
+    expect(resignLink!.getAttribute('href')).toBe('/th/resignation');
   });
 
-  it('does not render the "ดูคำขอลาออก" resignation link', async () => {
+  it('renders the "ดูคำขอลาออก" resignation link', async () => {
     await renderProfileMePage();
 
-    expect(screen.queryByRole('link', { name: /ดูคำขอลาออก/i })).toBeNull();
+    expect(screen.queryByRole('link', { name: /ดูคำขอลาออก/i })).not.toBeNull();
   });
 });
