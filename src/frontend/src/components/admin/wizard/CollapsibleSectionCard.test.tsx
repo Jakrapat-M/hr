@@ -98,6 +98,33 @@ describe('CollapsibleSectionCard', () => {
     expect(screen.getByRole('button', { name: 'ขยาย' })).toBeInTheDocument()
   })
 
+  it('merges an optional className onto the root <section>', () => {
+    render(
+      <CollapsibleSectionCard
+        id="cls" icon={User2} eyebrow="E" title="T" sub="S"
+        onToggle={() => {}} className="scroll-mt-[var(--jumpnav-anchor)]"
+      >
+        <StatefulChild />
+      </CollapsibleSectionCard>,
+    )
+    const section = document.getElementById('cls')
+    expect(section?.tagName).toBe('SECTION')
+    expect(section?.className).toContain('scroll-mt-[var(--jumpnav-anchor)]')
+    // base classes preserved
+    expect(section?.className).toContain('humi-card')
+  })
+
+  it('renders without a className unchanged (back-compat)', () => {
+    render(
+      <CollapsibleSectionCard id="nocls" icon={User2} eyebrow="E" title="T" sub="S" onToggle={() => {}}>
+        <StatefulChild />
+      </CollapsibleSectionCard>,
+    )
+    const section = document.getElementById('nocls')
+    expect(section?.className).toContain('humi-card')
+    expect(section?.className).not.toContain('scroll-mt-')
+  })
+
   it('does not introduce forbidden red utility classes or hardcoded hex colors', () => {
     const source = fs.readFileSync(path.resolve(__dirname, 'CollapsibleSectionCard.tsx'), 'utf8')
 

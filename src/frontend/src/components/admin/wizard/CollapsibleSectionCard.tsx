@@ -23,6 +23,8 @@ interface CollapsibleSectionCardProps {
   dense?: boolean
   /** Optional action node rendered to the LEFT of the Expand button. */
   headerAction?: React.ReactNode
+  /** Optional extra classes merged onto the root <section> (e.g. scroll-margin). */
+  className?: string
 }
 
 export function CollapsibleSectionCard({
@@ -39,13 +41,17 @@ export function CollapsibleSectionCard({
   collapseLabel = 'ย่อ',
   dense = false,
   headerAction,
+  className,
 }: CollapsibleSectionCardProps) {
   const contentId = `${id}-content`
 
   return (
     <section
       id={id}
-      className={`humi-card rounded-[22px] px-[22px] ${dense ? 'py-[14px]' : 'py-[22px]'} shadow-[0_1px_0_rgba(14,27,44,0.03)]`}
+      className={cn(
+        `humi-card rounded-[22px] px-[22px] ${dense ? 'py-[14px]' : 'py-[22px]'} shadow-[0_1px_0_rgba(14,27,44,0.03)]`,
+        className,
+      )}
       aria-labelledby={`${id}-title`}
     >
       <div className="flex items-start justify-between gap-4">

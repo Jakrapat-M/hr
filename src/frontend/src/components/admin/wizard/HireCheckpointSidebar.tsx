@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useHireWizard, type StepValidity } from '@/lib/admin/store/useHireWizard'
 import { cn } from '@/lib/utils'
+import { scrollToSection } from '@/lib/scroll-to-section'
 import {
   shouldShowDependentsSection,
   shouldShowWorkPermitSection,
@@ -60,19 +61,6 @@ const CHECKPOINT_GROUPS: StepGroup[] = [
   },
 ]
 
-// Retry scroll via rAF until element mounts (handles cross-step navigation where
-// the new cluster renders asynchronously after jumpTo triggers a state update).
-function tryScroll(sectionId: string, attempts = 0): void {
-  const el = document.getElementById(sectionId)
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    return
-  }
-  if (attempts < 10) {
-    requestAnimationFrame(() => tryScroll(sectionId, attempts + 1))
-  }
-}
-
 export function HireCheckpointSidebar() {
   const router = useRouter()
   const pathname = usePathname()
@@ -96,7 +84,7 @@ export function HireCheckpointSidebar() {
     if (step !== 3) {
       setSectionCollapsed(sectionId, false)
     }
-    requestAnimationFrame(() => tryScroll(sectionId))
+    requestAnimationFrame(() => scrollToSection(sectionId))
   }
 
   return (
