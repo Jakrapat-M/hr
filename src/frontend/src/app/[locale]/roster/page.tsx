@@ -39,11 +39,13 @@ import {
   WeeklyTimesheetGrid,
   type TimesheetRow,
   type ClockFilter,
+  type ShiftEditContext,
 } from '@/components/roster/WeeklyTimesheetGrid';
 import { TimesheetLegend } from '@/components/roster/TimesheetLegend';
 import { RosterGantt } from '@/components/roster/RosterGantt';
 import { CoverageStrip } from '@/components/roster/CoverageStrip';
 import { ShiftEditorDrawer } from '@/components/roster/ShiftEditorDrawer';
+import { ShiftTimeEditModal } from '@/components/roster/ShiftTimeEditModal';
 import { ShiftSwapModal } from '@/components/roster/ShiftSwapModal';
 import { BulkAssignModal } from '@/components/roster/BulkAssignModal';
 import {
@@ -90,7 +92,15 @@ function toTimesheetRow(e: HumiEmployee, isTh: boolean): TimesheetRow {
   };
 }
 
-const CLOCK_FILTERS: ClockFilter[] = ['all', 'late', 'mismatch', 'absent'];
+// STA-235 Draft 2 — attendance filter reduced to exactly: all / absent / leave / late.
+const CLOCK_FILTERS: ClockFilter[] = ['all', 'absent', 'leave', 'late'];
+
+const CLOCK_FILTER_LABEL: Record<ClockFilter, { th: string; en: string }> = {
+  all: { th: 'ทั้งหมด', en: 'All' },
+  absent: { th: 'ขาด', en: 'Absent' },
+  leave: { th: 'ลา', en: 'On leave' },
+  late: { th: 'มาสาย', en: 'Late' },
+};
 
 export default function RosterPage() {
   const locale = useLocale();
@@ -147,6 +157,8 @@ export default function RosterPage() {
 
   // ── Drawer + modal local state (mockup only) ──
   const [editor, setEditor] = useState<{ shift: RosterShift | null; employee: string } | null>(null);
+  // STA-235 — weekly-grid shift-time modal (manager edits shift TIME only).
+  const [shiftTimeCtx, setShiftTimeCtx] = useState<ShiftEditContext | null>(null);
   const [swapOpen, setSwapOpen] = useState(() => searchParams?.get('panel') === 'swap');
   const [bulkOpen, setBulkOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -163,6 +175,10 @@ export default function RosterPage() {
   const handleEditorSave = () => {
     setEditor(null);
     flash(isTh ? 'บันทึกกะแล้ว (ตัวอย่าง)' : 'Shift saved (demo)');
+  };
+  const handleShiftTimeSave = () => {
+    setShiftTimeCtx(null);
+    flash(isTh ? 'บันทึกเวลากะแล้ว (ตัวอย่าง)' : 'Shift time saved (demo)');
   };
   const handleSwapSubmit = () => {
     setSwapOpen(false);
@@ -322,13 +338,7 @@ export default function RosterPage() {
               >
                 {CLOCK_FILTERS.map((f) => (
                   <option key={f} value={f}>
-                    {f === 'all'
-                      ? isTh ? 'ทุกสถานะ' : 'All clock states'
-                      : f === 'late'
-                        ? isTh ? 'เฉพาะมาสาย' : 'Late only'
-                        : f === 'mismatch'
-                          ? isTh ? 'เฉพาะไม่ตรงเวลา' : 'Mismatch only'
-                          : isTh ? 'เฉพาะขาดงาน' : 'Absent only'}
+                    {isTh ? CLOCK_FILTER_LABEL[f].th : CLOCK_FILTER_LABEL[f].en}
                   </option>
                 ))}
               </select>
@@ -344,6 +354,7 @@ export default function RosterPage() {
                 cutoffISO={DEMO_TODAY}
                 clockFilter={clockFilter}
                 isTh={isTh}
+                onEditShift={setShiftTimeCtx}
               />
               <TimesheetLegend isTh={isTh} />
             </Card>
@@ -367,6 +378,23 @@ export default function RosterPage() {
         onClose={() => setEditor(null)}
         onSave={handleEditorSave}
       />
+
+      {/* STA-235 — weekly-grid shift-time edit modal (manager edits shift TIME only) */}
+      {shiftTimeCtx && (
+        <ShiftTimeEditModal
+          key={`${shiftTimeCtx.employeeName}-${shiftTimeCtx.date}`}
+          open
+          employeeName={shiftTimeCtx.employeeName}
+          date={shiftTimeCtx.date}
+          scheduledIn={shiftTimeCtx.scheduledIn}
+          scheduledOut={shiftTimeCtx.scheduledOut}
+          breakStart={shiftTimeCtx.breakStart}
+          breakEnd={shiftTimeCtx.breakEnd}
+          isTh={isTh}
+          onClose={() => setShiftTimeCtx(null)}
+          onSave={handleShiftTimeSave}
+        />
+      )}
 
       {/* Swap modal — TOP-LEVEL, rendered regardless of view (?panel=swap deep-link) */}
       <ShiftSwapModal open={swapVisible} onClose={() => setSwapOpen(false)} onSubmit={handleSwapSubmit} />

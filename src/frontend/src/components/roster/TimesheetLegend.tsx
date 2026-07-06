@@ -17,6 +17,7 @@ const LEGEND_ENTRIES: LegendEntry[] = [
   { kind: 'clockMismatch', th: 'ตอก: ไม่ตรงเวลา', en: 'Clock: mismatch' },
   { kind: 'clockAbsent', th: 'ตอก: ขาดงาน', en: 'Clock: absent' },
   { kind: 'ot', th: 'OT', en: 'OT' },
+  { kind: 'leave', th: 'ลา (ช่วงเวลา)', en: 'Leave (range)' },
   { kind: 'dayOff', th: 'วันหยุดประจำ', en: 'Day off' },
   { kind: 'holiday', th: 'วันหยุดนักขัตฤกษ์', en: 'Holiday' },
 ];

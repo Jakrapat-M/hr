@@ -48,6 +48,7 @@
   /* ── Secondary palette (warm, NO red family) ────────────── */
   --color-sage:           #9BB5A0;
   --color-sage-soft:      #DDE7DE;
+  --color-sage-ink:       #2F5840; /* readable ink on sage-soft (matches .humi-tag--sage) */
   --color-butter:         #E8C46B;
   --color-butter-soft:    #F4E4B8;
 

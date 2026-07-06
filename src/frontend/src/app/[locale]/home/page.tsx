@@ -37,7 +37,9 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isManager } from '@/lib/rbac';
 import { Button } from '@/components/humi';
+import { AttendanceKpiCards } from '@/components/home/AttendanceKpiCards';
 import { QuickActionsTile, DEFAULT_ESS_ACTIONS, type QuickAction } from '@/components/humi/QuickActionsTile';
 import { useAdminSelfService } from '@/lib/admin/store/useAdminSelfService';
 import type { QuickActionSize } from '@/lib/admin/types/adminSelfService';
@@ -117,6 +119,7 @@ export default function HumiHomePage() {
   const t = useTranslations('humiHero');
   const router = useRouter();
   const username = useAuthStore((s) => s.username);
+  const roles = useAuthStore((s) => s.roles);
   const greeting = getTimeGreeting();
 
   // BRD #182 — Quick Actions from admin config bus.
@@ -144,6 +147,13 @@ export default function HumiHomePage() {
           {t('newRequest')}
         </Button>
       </div>
+
+      {/* STA-235 — manager attendance KPIs (relocated from the Team Timesheet page) */}
+      {isManager(roles) && (
+        <div className="mb-5">
+          <AttendanceKpiCards />
+        </div>
+      )}
 
       {/* Row 1 — hero greeting + today presence */}
       <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
