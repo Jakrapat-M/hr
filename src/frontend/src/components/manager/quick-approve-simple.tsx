@@ -10,24 +10,19 @@
 // Danger = --color-danger (pumpkin). No Tailwind red/rose/pink. No hex.
 // ════════════════════════════════════════════════════════════
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { Square, CheckSquare, MinusSquare, CheckCircle2, XCircle } from 'lucide-react';
 import { Card } from '@/components/humi';
 import { Button } from '@/components/humi';
-import { Capability } from '@/components/humi';
 import { DataTable, type DataTableColumn } from '@/components/humi';
 import { isTerminationId, useSelectPendingApprovals, type QueueApproval } from '@/lib/approval-registry';
 import { moduleOf, type PendingRequest, type ClaimDetails, type WorkflowModule } from '@/lib/quick-approve-api';
 import { useAuthStore } from '@/stores/auth-store';
-import { useCapabilities } from '@/hooks/use-capabilities';
 import { useQuickApproveAssignments, type Assignee } from '@/stores/quick-approve-assignments';
 import { canActOn, countActionable } from '@/lib/claim-permissions';
 import { nextApproverLabel } from '@/lib/approval-routing';
 import { RequestDetailModal } from '@/components/quick-approve/RequestDetailModal';
-import { useBulkApproveDispatch } from '@/components/quick-approve/useBulkApproveDispatch';
-import { BulkActionModal } from '@/components/quick-approve/BulkActionModal';
 
 // Demo manager actor for mock dispatch (mirrors workflows/benefit-claim/[id]).
 const MANAGER_NAME = 'ผู้จัดการ / Manager';
@@ -146,21 +141,6 @@ export function QuickApproveSimple() {
   const assignToMe = useQuickApproveAssignments((s) => s.assignToMe);
   const unassign = useQuickApproveAssignments((s) => s.unassign);
 
-  // ── Inline bulk multi-select (restored; shared engine with /quick-approve/bulk).
-  // Gated by the bulkApprove capability (RBAC remove-not-hide: personas without it
-  // see the classic single-row inbox — no checkboxes at all).
-  const canBulk = useCapabilities().canDo('bulkApprove');
-  const bulk = useBulkApproveDispatch({ name: username ?? MANAGER_NAME });
-  const [bulkDone, setBulkDone] = useState<{ action: 'approve' | 'reject'; count: number } | null>(
-    null,
-  );
-  // Auto-dismiss the success toast.
-  useEffect(() => {
-    if (!bulkDone) return;
-    const timer = setTimeout(() => setBulkDone(null), 3200);
-    return () => clearTimeout(timer);
-  }, [bulkDone]);
-
   function assigneeOf(row: PendingRequest): Assignee | null {
     if (Object.prototype.hasOwnProperty.call(assignmentOverrides, row.id)) {
       return assignmentOverrides[row.id];
@@ -173,14 +153,6 @@ export function QuickApproveSimple() {
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   // STA-178 — module scope filter (broader than the status tabs). Default 'ALL'.
   const [activeModule, setActiveModule] = useState<ModuleFilter>('ALL');
-
-  // Clear the bulk selection whenever the tab/module filter changes so a
-  // selection made under one filter can't silently act on now-hidden rows (the
-  // action-bar count is global). Keeps "N selected" honest to what's on screen.
-  useEffect(() => {
-    bulk.clear();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- clear only on filter change
-  }, [activeTab, activeModule]);
 
   // STA-172 — the request-detail POPUP. Clicking a row selects it; the modal
   // mounts the generic detail + Approve / Cancel / Open-full-page.
@@ -206,34 +178,6 @@ export function QuickApproveSimple() {
     if (activeTab === 'rejected') return status === 'rejected';
     return true;
   });
-
-  // Bulk affordance shows only on tabs that can contain pending rows; on the
-  // approved/rejected tabs the whole multi-select UI hides.
-  const bulkTabActive = activeTab !== 'approved' && activeTab !== 'rejected';
-  const bulkEnabled = canBulk && bulkTabActive;
-  // Selectable = only actionable pending rows for THIS viewer, using the SAME
-  // predicate the per-row Approve uses (canActOn) — no self-approval leak. Select-
-  // all respects the active filters (only the currently visibleRows).
-  const selectableIds = bulkEnabled
-    ? visibleRows
-        .filter((r) => {
-          if (effectiveStatus(r) !== 'pending') return false;
-          const item = queueById[r.id];
-          return item ? canActOn(item, roles) : false;
-        })
-        .map((r) => r.id)
-    : [];
-  const selectableIdSet = new Set(selectableIds);
-  const allSelectableSelected =
-    selectableIds.length > 0 && selectableIds.every((id) => bulk.isSelected(id));
-  const someSelectableSelected = selectableIds.some((id) => bulk.isSelected(id));
-
-  async function handleBulkConfirm() {
-    // Pass the full row set so every selected id resolves to its type even if the
-    // active filter changed after selection.
-    const result = await bulk.dispatch(rows);
-    if (result) setBulkDone(result);
-  }
 
   // ── Columns ──────────────────────────────────────────────
 
@@ -468,58 +412,6 @@ export function QuickApproveSimple() {
     },
   ];
 
-  // Leading checkbox column (only when bulk is enabled for this persona/tab).
-  // The cell renders a checkbox ONLY for selectable rows; clicking it must not
-  // open the row detail popup (stopPropagation).
-  const selectColumn: DataTableColumn<PendingRequest> = {
-    id: 'bulkSelect',
-    header: (
-      <button
-        type="button"
-        onClick={() => bulk.toggleAll(selectableIds)}
-        disabled={selectableIds.length === 0}
-        aria-label={t('bulk.selectAll')}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          cursor: selectableIds.length ? 'pointer' : 'default',
-        }}
-      >
-        {allSelectableSelected ? (
-          <CheckSquare className="h-4 w-4" style={{ color: 'var(--color-accent)' }} aria-hidden />
-        ) : someSelectableSelected ? (
-          <MinusSquare className="h-4 w-4" style={{ color: 'var(--color-accent)' }} aria-hidden />
-        ) : (
-          <Square className="h-4 w-4" style={{ color: 'var(--color-ink-muted)' }} aria-hidden />
-        )}
-      </button>
-    ),
-    headerVisuallyHidden: false,
-    cell: (row) => {
-      if (!selectableIdSet.has(row.id)) return null;
-      return (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            bulk.toggle(row.id);
-          }}
-          aria-label={t('bulk.selectRow', { ref: displayRef(row.id) })}
-          style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-        >
-          {bulk.isSelected(row.id) ? (
-            <CheckSquare className="h-4 w-4" style={{ color: 'var(--color-accent)' }} aria-hidden />
-          ) : (
-            <Square className="h-4 w-4" style={{ color: 'var(--color-ink-muted)' }} aria-hidden />
-          )}
-        </button>
-      );
-    },
-    className: 'w-10',
-  };
-
-  const displayColumns = bulkEnabled ? [selectColumn, ...columns] : columns;
-
   // ── Render ───────────────────────────────────────────────
 
   // HONEST COUNT on the Pending tab: show what THIS persona can act on, not the
@@ -653,7 +545,7 @@ export function QuickApproveSimple() {
         <DataTable<PendingRequest>
           caption={t('title')}
           captionVisuallyHidden
-          columns={displayColumns}
+          columns={columns}
           rows={visibleRows}
           rowKey={(row) => row.id}
           onRowClick={(row) =>
@@ -662,106 +554,6 @@ export function QuickApproveSimple() {
           dense
         />
       </Card>
-
-      {/* Inline bulk affordance — gated by bulkApprove capability (RBAC remove). */}
-      <Capability action="bulkApprove">
-        {bulkTabActive && bulk.selectedIds.size > 0 && (
-          <div
-            style={{
-              position: 'sticky',
-              bottom: 0,
-              zIndex: 10,
-              marginTop: 16,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 12,
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--color-hairline)',
-              background: 'var(--color-surface)',
-              padding: '12px 20px',
-              boxShadow: 'var(--shadow-md)',
-            }}
-          >
-            <span style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>
-              {t('bulk.selectedCount', { count: bulk.selectedIds.size })}
-            </span>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <Button variant="ghost" size="sm" onClick={bulk.clear}>
-                {t('bulk.clear')}
-              </Button>
-              <Button
-                variant="danger"
-                size="md"
-                onClick={() => bulk.openAction('reject')}
-                className="flex items-center gap-2"
-              >
-                <XCircle className="h-4 w-4" aria-hidden />
-                {t('bulk.reject')}
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => bulk.openAction('approve')}
-                className="flex items-center gap-2"
-              >
-                <CheckCircle2 className="h-4 w-4" aria-hidden />
-                {t('bulk.approveSelected', { count: bulk.selectedIds.size })}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {bulk.pendingAction && (
-          <BulkActionModal
-            action={bulk.pendingAction}
-            reason={bulk.reason}
-            onReasonChange={bulk.setReason}
-            onConfirm={handleBulkConfirm}
-            onClose={bulk.closeAction}
-            submitting={bulk.submitting}
-            canConfirm={bulk.canConfirm}
-            labels={{
-              approveTitle: t('bulk.confirmApproveTitle', { count: bulk.selectedIds.size }),
-              rejectTitle: t('bulk.confirmRejectTitle', { count: bulk.selectedIds.size }),
-              approveDesc: t('bulk.approveConfirmDesc', { count: bulk.selectedIds.size }),
-              reasonLabel: t('bulk.rejectReason'),
-              reasonPlaceholder: t('bulk.rejectReasonPlaceholder'),
-              cancel: t('bulk.cancel'),
-              confirm: t('bulk.confirm'),
-              submitting: t('bulk.submitting'),
-            }}
-          />
-        )}
-
-        {bulkDone && (
-          <div
-            role="status"
-            style={{
-              position: 'fixed',
-              bottom: 24,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 50,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--color-hairline)',
-              background: 'var(--color-surface)',
-              padding: '10px 18px',
-              boxShadow: 'var(--shadow-md)',
-              fontSize: 13,
-              color: 'var(--color-ink)',
-            }}
-          >
-            <CheckCircle2 className="h-4 w-4" style={{ color: 'var(--color-accent)' }} aria-hidden />
-            {bulkDone.action === 'approve'
-              ? t('bulk.approveSuccess', { count: bulkDone.count })
-              : t('bulk.rejectSuccess', { count: bulkDone.count })}
-          </div>
-        )}
-      </Capability>
 
       {/* STA-172 — per-row detail POPUP (Approve / Cancel / Open full page). */}
       <RequestDetailModal

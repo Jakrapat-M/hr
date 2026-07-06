@@ -36,6 +36,7 @@ function formatDateTh(iso: string): string {
 
 export function ResignationPage() {
   const t = useTranslations('resignation');
+  const tf = useTranslations('terminationFeedback');
   const addRequest = useTerminationApprovals((s) => s.addRequest);
   const requests = useTerminationApprovals((s) => s.requests);
   const userId = useAuthStore((s) => s.userId) ?? 'EMP001';
@@ -48,6 +49,10 @@ export function ResignationPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // STA-238 — the Exit Interview is now a post-submit popup (Skip/Save) on the
+  // employee's own resignation flow, NOT an inline section and NOT on the SPD
+  // approver page (which shows only the submitted info + attachments).
+  const [showExitModal, setShowExitModal] = useState(false);
 
   // Optional Exit Interview (STA-124 follow-up — BA: the form belongs on the
   // employee's resignation submit page, not the admin terminate form). Reuses
@@ -96,9 +101,26 @@ export function ResignationPage() {
       attachments: attachmentName ? [attachmentName] : undefined,
       submittedBy: { id: userId, name: userName, role: 'employee' },
     });
-    // Optional Exit Interview — persist only if the employee filled anything;
-    // surfaces read-only on the HRBP dashboard (same store as admin terminate).
-    if (!isExitInterviewEmpty(exitInterview)) {
+    // STA-238 — the resignation is submitted here; the OPTIONAL Exit Interview
+    // now opens as a post-submit popup (Skip/Save) instead of the old inline
+    // section. Recording + the success view are deferred to the popup handlers.
+    setConfirmOpen(false);
+    setSubmittedId(id);
+    setShowExitModal(true);
+  };
+
+  // Post-submit Exit Interview popup handlers. Skip = finish with no record;
+  // Save = persist the answers (if any) then finish. Both close the popup and
+  // flip to the success view.
+  const finishSubmit = () => {
+    setShowExitModal(false);
+    setSubmitted(true);
+  };
+  const handleExitSkip = () => finishSubmit();
+  const handleExitSave = () => {
+    // Persist only if the employee filled anything; surfaces read-only on the
+    // HRBP dashboard (same store as admin terminate).
+    if (!isExitInterviewEmpty(exitInterview) && reasonCode) {
       recordExitFeedback({
         employeeId: userId,
         employeeNameTh: userName,
@@ -110,9 +132,7 @@ export function ResignationPage() {
         record: exitInterview,
       });
     }
-    setConfirmOpen(false);
-    setSubmittedId(id);
-    setSubmitted(true);
+    finishSubmit();
   };
 
   // Only show the post-submit success view on a FRESH in-session submit.
@@ -312,9 +332,6 @@ export function ResignationPage() {
         </div>
       </div>
 
-      {/* Optional Exit Interview — flows to HRBP on submit */}
-      <ExitInterviewSection value={exitInterview} onChange={patchExit} />
-
       {/* Actions */}
       <div className="flex justify-end gap-2">
         <Button
@@ -374,6 +391,25 @@ export function ResignationPage() {
               {t('submitResignation')}
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      {/* STA-238 — post-submit Exit Interview popup (Skip/Save); Esc/backdrop = Skip.
+          Same pattern as the admin terminate popup (STA-236). */}
+      <Modal
+        open={showExitModal}
+        onClose={handleExitSkip}
+        title={tf('modalTitle')}
+        widthClass="max-w-3xl"
+      >
+        <ExitInterviewSection value={exitInterview} onChange={patchExit} />
+        <div className="sticky bottom-0 flex justify-end gap-3 border-t border-hairline bg-surface px-6 py-4">
+          <button type="button" className="humi-btn humi-btn--ghost" onClick={handleExitSkip}>
+            {tf('skip')}
+          </button>
+          <button type="button" className="humi-btn humi-btn--primary" onClick={handleExitSave}>
+            {tf('save')}
+          </button>
         </div>
       </Modal>
     </div>

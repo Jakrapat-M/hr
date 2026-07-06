@@ -12,7 +12,10 @@
 // each adapter via a small per-adapter actor adapter — call sites stay dumb.
 
 import type { ClaimDetails, PendingRequest, RequestType, Urgency } from '@/lib/quick-approve-api';
+// ProbationCase stays TYPE-ONLY (no runtime cycle). The probation accessors are a
+// safe value import: use-probation imports nothing from this module (one-way edge).
 import type { ProbationCase } from '@/hooks/use-probation';
+import { useProbationCases, getProbationCases } from '@/hooks/use-probation';
 import {
   useBenefitClaimsStore,
   BENEFIT_STATUS_LABEL,
@@ -108,6 +111,20 @@ export interface ApprovalAdapter<Record_ = unknown> {
 // Probation cases live in their own mock store (PR #135) — adapt the pending
 // ones into PendingRequest shape so they interleave with the other workflow
 // approvals. Drill-in is special-cased to /workflows/probation/<id>.
+//
+// STA-238 — relocated from the legacy (unrouted) quick-approve-page.tsx so the
+// registry owns the queue-eligibility rule. A probation case is queue-pending when
+// it is awaiting the manager or HR (incl. a CEO escalation). `sent_back` maps to
+// pending at the manager step but is intentionally NOT surfaced here (mirrors the
+// prior behavior).
+export function isProbationPending(c: ProbationCase): boolean {
+  return (
+    c.status === 'pending_manager' ||
+    c.status === 'pending_hr' ||
+    c.status === 'escalated_ceo'
+  );
+}
+
 export function probationToPendingRequest(c: ProbationCase): PendingRequest {
   const slaMs = new Date(c.slaDeadline).getTime() - Date.now();
   const slaHours = slaMs / (1000 * 60 * 60);
@@ -785,6 +802,7 @@ export function selectPendingApprovals(input: {
   overtime?: OTRequest[];
   terminations?: TerminationRequest[];
   shiftGroups?: ShiftGroup[];
+  probationCases?: ProbationCase[];
 }): QueueApproval[] {
   const out: QueueApproval[] = [];
 
@@ -892,6 +910,22 @@ export function selectPendingApprovals(input: {
     });
   }
 
+  // probation rows derive from the use-probation MOCK_CASES (surfaced via the
+  // reactive useProbationCases hook / non-reactive getProbationCases accessor).
+  // Only cases awaiting the manager/HR are queue-eligible (isProbationPending).
+  //
+  // MOCKUP LIMITATION (STA-238): deciding a probation case on its review page
+  // (/workflows/probation/[id]) mutates that page's EPHEMERAL local `useState`
+  // (use-probation.ts useProbationCase) — NOT MOCK_CASES and NOT a shared store.
+  // So an approved probation task will NOT reactively clear from this queue this
+  // phase (3-store split, out of scope). Probation here = deep-link + review only;
+  // demo the case-by-case CLEAR beat on a resignation row (its detail dispatches
+  // approveByManager → useTerminationApprovals → the selector re-derives live).
+  for (const c of input.probationCases ?? []) {
+    if (!isProbationPending(c)) continue;
+    out.push({ row: probationToPendingRequest(c), status: 'pending' });
+  }
+
   // Stable order by submittedAt desc, then id, so the inbox renders deterministically.
   out.sort((a, b) => {
     const t = new Date(b.row.submittedAt).getTime() - new Date(a.row.submittedAt).getTime();
@@ -912,7 +946,10 @@ export function useSelectPendingApprovals(): QueueApproval[] {
   const overtime = useOvertimeRequests((s) => s.requests);
   const terminations = useTerminationApprovals((s) => s.requests);
   const shiftGroups = useShiftAssignment((s) => s.groups);
-  return selectPendingApprovals({ leave, workflow, claims, transfers, payRates, taxPlans, timeCorrections, overtime, terminations, shiftGroups });
+  // Probation cases fill one render after mount (useProbationCases's setTimeout),
+  // so the queue picks them up reactively as soon as they load.
+  const { cases: probationCases } = useProbationCases();
+  return selectPendingApprovals({ leave, workflow, claims, transfers, payRates, taxPlans, timeCorrections, overtime, terminations, shiftGroups, probationCases });
 }
 
 /** Non-reactive read (getState) — for one-shot lookups (e.g. detail route). */
@@ -928,6 +965,7 @@ export function getPendingApprovals(): QueueApproval[] {
     overtime: useOvertimeRequests.getState().requests,
     terminations: useTerminationApprovals.getState().requests,
     shiftGroups: useShiftAssignment.getState().groups,
+    probationCases: getProbationCases(),
   });
 }
 

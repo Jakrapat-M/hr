@@ -22,7 +22,9 @@ import {
   type TaxPlanningDraft,
 } from '@/stores/benefit-tax-planning';
 import { calculateThaiPitEstimate } from '@/lib/tax-planning';
-import { APPROVAL_REGISTRY } from '@/lib/approval-registry';
+import { APPROVAL_REGISTRY, isProbationPending } from '@/lib/approval-registry';
+import { getProbationCases } from '@/hooks/use-probation';
+import { useExitFeedback } from '@/stores/exit-feedback';
 import { APPROVAL_SEED_BY_TYPE } from '@/lib/approval-seed-fixtures';
 import { useLeaveBalances } from '@/stores/leave-balances';
 import { useLeaveApprovals } from '@/stores/leave-approvals';
@@ -153,6 +155,12 @@ export const TERMINATION_DEMO_COUNT = MOCK_TERMINATION_REQUESTS.filter(
 export const SHIFT_ASSIGN_DEMO_COUNT = SHIFT_GROUP_SEED.filter(
   (g) => g.status === 'pending' || g.status === 'approved',
 ).length;
+
+// STA-238 — probation cases awaiting the manager/HR now surface in the unified
+// queue (via the reactive useProbationCases hook / getProbationCases accessor).
+// Derived from the SAME queue-eligibility predicate the selector uses so the count
+// can never drift. Part of TOTAL_SEED_COUNT (the selector fills these in).
+export const PROBATION_DEMO_COUNT = getProbationCases().filter(isProbationPending).length;
 
 const MOCK_PROMOTION_REQUESTS: PromotionRequest[] = [
   {
@@ -799,6 +807,32 @@ export function ensureDemoSeed(): void {
   const terminationState = useTerminationApprovals.getState();
   if (terminationState.requests.length === 0) {
     useTerminationApprovals.setState({ requests: MOCK_TERMINATION_REQUESTS });
+  }
+
+  // STA-238 — seed a captured exit-interview record for one pending resignation
+  // (EMP-0055) so the HRBP exit-feedback panel (ExitFeedbackPanel) has sample
+  // data to show. The employee submits this via the ESS resignation popup; the
+  // SPD approver page does NOT display it. Only seed when this employee has no
+  // record yet (persisted store).
+  const exitStore = useExitFeedback.getState();
+  if (!exitStore.byEmployee['EMP-0055']) {
+    exitStore.record({
+      employeeId: 'EMP-0055',
+      employeeNameTh: 'ประเสริฐ วัฒนชัย',
+      employeeNameEn: 'Prasert Wattanachai',
+      positionTitle: 'Sales Associate',
+      reasonCode: 'TERM_RESIGN',
+      resignedDate: '2026-05-31',
+      recordedAt: '2026-04-24T08:05:00+07:00',
+      record: {
+        job: { rank1: 'job_overload', rank2: 'job_no_progress', rank3: '', comment: '' },
+        compensation: { rank1: 'comp_low_income', rank2: '', rank3: '', comment: '' },
+        workRelationship: { rank1: '', rank2: '', rank3: '', comment: '' },
+        personalReason: { value: 'personal_commute' },
+        newJob: { value: 'newjob_yes', newJobType: 'newjobtype_better_pay' },
+        overallComment: 'ขอบคุณสำหรับโอกาสและประสบการณ์ที่ดีตลอดการทำงาน',
+      },
+    });
   }
 
   const promotionState = usePromotionApprovals.getState();

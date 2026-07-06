@@ -29,7 +29,9 @@ import {
   TC_DEMO_COUNT,
   TERMINATION_DEMO_COUNT,
   SHIFT_ASSIGN_DEMO_COUNT,
+  PROBATION_DEMO_COUNT,
 } from '../demo-seed';
+import { getProbationCases } from '@/hooks/use-probation';
 
 // Ids of the canonical (1-level, code-less) leave seed rows — used to pick a
 // single-step leave row in the generic approve tests so they finalize on the
@@ -49,8 +51,11 @@ import { useOvertimeRequests } from '@/stores/overtime-requests';
 // Total rows the unified inbox seeds: the 20 registry-owned canonical rows PLUS
 // the P2 pay-rate + tax-planning demo rows, the Group A demo ESS leave rows AND
 // the Group B demo ESS OT rows, all injected by ensureDemoSeed.
+// STA-238 — probation cases awaiting the manager/HR now also surface (sourced by
+// the non-reactive getProbationCases() accessor, so getPendingApprovals() includes
+// them synchronously — no async fill for the pure selector path).
 const TOTAL_SEED_COUNT =
-  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT + OT_DEMO_COUNT + TC_DEMO_COUNT + TERMINATION_DEMO_COUNT + SHIFT_ASSIGN_DEMO_COUNT;
+  APPROVAL_SEED_COUNT + PAY_RATE_DEMO_COUNT + TAX_PLANNING_DEMO_COUNT + LEAVE_DEMO_COUNT + OT_DEMO_COUNT + TC_DEMO_COUNT + TERMINATION_DEMO_COUNT + SHIFT_ASSIGN_DEMO_COUNT + PROBATION_DEMO_COUNT;
 
 function clearAll() {
   useLeaveApprovals.getState().clear();
@@ -241,5 +246,35 @@ describe('selectPendingApprovals — pure fan-in', () => {
     });
     expect(out).toHaveLength(1); // only the pending row survives
     expect(out[0].status).toBe('pending');
+  });
+
+  // STA-238 — probation cases thread through the optional probationCases input;
+  // only those awaiting the manager/HR (isProbationPending) surface, all pending.
+  it('threads probationCases and surfaces only the pending ones', () => {
+    const out = selectPendingApprovals({
+      leave: [],
+      workflow: [],
+      claims: [],
+      transfers: [],
+      probationCases: getProbationCases(),
+    });
+    expect(out).toHaveLength(PROBATION_DEMO_COUNT);
+    expect(out.every((q) => q.row.type === 'probation' && q.status === 'pending')).toBe(true);
+  });
+
+  // Without the probationCases key the loop is skipped (optional param undefined).
+  it('omits probation rows when probationCases is not threaded', () => {
+    const out = selectPendingApprovals({ leave: [], workflow: [], claims: [], transfers: [] });
+    expect(out).toHaveLength(0);
+  });
+});
+
+// ── STA-238: probation surfaces in the seeded queue ──────────────────────────
+describe('probation in the unified queue — STA-238', () => {
+  it('getPendingApprovals includes the pending probation rows', () => {
+    const queue = getPendingApprovals();
+    const probation = queue.filter((q) => q.row.type === 'probation');
+    expect(probation).toHaveLength(PROBATION_DEMO_COUNT);
+    expect(probation.every((q) => q.status === 'pending')).toBe(true);
   });
 });
