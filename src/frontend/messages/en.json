@@ -4259,6 +4259,17 @@
     "attachments": "Attachments",
     "preview": "Preview"
   },
+  "ecMaintain": {
+    "cardinality": {
+      "single": "Single entry",
+      "repeatable": "Multiple entries"
+    },
+    "requiredDocs": "Required documents",
+    "requiredDocsHint": "Attach the required document before submitting.",
+    "doc": {
+      "identityProof": "Identity proof"
+    }
+  },
   "ess": {
     "sections": {
       "emergencyContact": "Emergency Contact",

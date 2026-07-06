@@ -4138,6 +4138,17 @@
     "attachments": "เอกสารแนบ",
     "preview": "ดูเอกสาร"
   },
+  "ecMaintain": {
+    "cardinality": {
+      "single": "รายการเดียว",
+      "repeatable": "หลายรายการ"
+    },
+    "requiredDocs": "เอกสารที่ต้องแนบ",
+    "requiredDocsHint": "แนบเอกสารที่กำหนดก่อนส่งคำขอ",
+    "doc": {
+      "identityProof": "หลักฐานยืนยันตัวตน"
+    }
+  },
   "ess": {
     "sections": {
       "emergencyContact": "ผู้ติดต่อฉุกเฉิน",
