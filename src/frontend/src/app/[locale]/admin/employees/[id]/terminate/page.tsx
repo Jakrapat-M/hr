@@ -575,7 +575,7 @@ export default function TerminatePage() {
       <Modal
         open={showExitModal}
         onClose={handleExitSkip}
-        title={t('sectionTitle')}
+        title={t('modalTitle')}
         widthClass="max-w-3xl"
       >
         <ExitInterviewSection

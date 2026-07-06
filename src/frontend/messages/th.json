@@ -5928,6 +5928,7 @@
   "terminationFeedback": {
     "eyebrow": "สัมภาษณ์ก่อนลาออก",
     "sectionTitle": "แบบสัมภาษณ์ก่อนลาออก",
+    "modalTitle": "สัมภาษณ์ก่อนลาออก",
     "optional": "ไม่บังคับ",
     "skip": "ข้าม",
     "save": "บันทึก",

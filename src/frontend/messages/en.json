@@ -5928,6 +5928,7 @@
   "terminationFeedback": {
     "eyebrow": "Exit interview",
     "sectionTitle": "Exit Interview",
+    "modalTitle": "Employee Exit Interview",
     "optional": "optional",
     "skip": "Skip",
     "save": "Save",
