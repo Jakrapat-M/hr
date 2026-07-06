@@ -12,6 +12,7 @@ export type TimelineEventKind =
   | 'promotion'
   | 'acting_start'
   | 'acting_end'
+  | 'revert_termination'
 
 export interface TimelineEventBase {
   id: string
@@ -72,6 +73,12 @@ export interface ActingEvent extends TimelineEventBase {
   isPrimary?: boolean   // default false — acting = secondary unless flagged
 }
 
+// STA-237 carveout: revert_termination supersedes the Rule C8 "no new variants" note for this spec'd lifecycle action
+export interface RevertTerminationEvent extends TimelineEventBase {
+  kind: 'revert_termination'
+  revertedReasonCode: string
+}
+
 export type TimelineEvent =
   | HireEvent
   | ProbationEvent
@@ -81,3 +88,4 @@ export type TimelineEvent =
   | ContractRenewalEvent
   | PromotionEvent
   | ActingEvent
+  | RevertTerminationEvent

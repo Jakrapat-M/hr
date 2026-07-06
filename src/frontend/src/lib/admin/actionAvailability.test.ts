@@ -39,3 +39,29 @@ describe('actionAvailability — acting (STA-55)', () => {
     expect(acting.reason).toBe(TERMINATED_REASON)
   })
 })
+
+describe('actionAvailability — revert (STA-237)', () => {
+  const REVERT_LOCKED_REASON = 'เฉพาะพนักงานที่พ้นสภาพแล้ว (ใช้เพื่อยกเลิกการสิ้นสุดสภาพ)'
+
+  it('allows revert for a terminated employee', () => {
+    expect(actionAvailability(terminated).revert.ok).toBe(true)
+  })
+
+  it('blocks revert for an active employee with the locked reason', () => {
+    const revert = actionAvailability(active).revert
+    expect(revert.ok).toBe(false)
+    expect(revert.reason).toBe(REVERT_LOCKED_REASON)
+  })
+
+  it('blocks revert for an inactive employee with the locked reason', () => {
+    const revert = actionAvailability(inactive).revert
+    expect(revert.ok).toBe(false)
+    expect(revert.reason).toBe(REVERT_LOCKED_REASON)
+  })
+
+  it('does not affect existing keys (rehire still gated on terminated)', () => {
+    expect(actionAvailability(terminated).rehire.ok).toBe(true)
+    expect(actionAvailability(active).rehire.ok).toBe(false)
+    expect(actionAvailability(active).terminate.ok).toBe(true)
+  })
+})
