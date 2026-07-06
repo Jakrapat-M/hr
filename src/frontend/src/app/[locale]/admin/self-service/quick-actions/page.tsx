@@ -6,8 +6,9 @@
 import { useState } from 'react'
 import { EditorShell } from '@/components/admin/admin-ss/EditorShell'
 import { useAdminSelfService } from '@/lib/admin/store/useAdminSelfService'
-import type { QuickActionTile, RoleName } from '@/lib/admin/types/adminSelfService'
+import type { QuickActionTile, QuickActionSize, RoleName } from '@/lib/admin/types/adminSelfService'
 import { validateThaiPrimary } from '@/lib/admin/utils/thaiPrimary'
+import { packRows, fitsCap, MAX_ROWS } from '@/lib/admin/utils/quickActionGrid'
 
 // Simple in-memory toast (same pattern as requests/page.tsx)
 function useToast() {
@@ -20,6 +21,19 @@ function useToast() {
 }
 
 const ROLES: RoleName[] = ['Employee', 'Manager', 'HRBP', 'SPD']
+
+// STA-246 — cap hint + size selector labels (admin editor is Thai-hardcoded)
+const CAP_HINT = 'เกิน 4 แถวสูงสุด — ลดขนาด ปิด หรือย้ายเมนูลัดอื่นก่อน'
+const SIZE_OPTIONS: { value: QuickActionSize; label: string }[] = [
+  { value: '1x1', label: 'เล็ก (1×1)' },
+  { value: '2x2', label: 'กลาง (2×2)' },
+  { value: '4x2', label: 'ใหญ่ (4×2)' },
+]
+
+// enabled tiles in display order — the set that actually paints on the ESS home grid.
+function enabledOrdered(list: QuickActionTile[]): QuickActionTile[] {
+  return list.filter((q) => q.enabled).sort((a, b) => a.order - b.order)
+}
 
 // Lucide icon subset สำหรับ icon picker (hardcoded per spec §5.5)
 const ICON_OPTIONS = [
@@ -43,6 +57,10 @@ export default function QuickActionsPage() {
   const [modalIcon,  setModalIcon]  = useState('')
   const [modalHref,  setModalHref]  = useState('')
   const [modalRoles, setModalRoles] = useState<RoleName[]>([])
+  const [modalSize,  setModalSize]  = useState<QuickActionSize>('1x1')
+
+  // STA-246 — rows the enabled tiles currently consume on the fixed 4-col grid.
+  const rowsUsed = packRows(enabledOrdered(quickActions))
 
   // ---- HTML5 drag-drop handlers (AC-4) ----
   function handleDragStart(index: number) {
@@ -57,6 +75,11 @@ export default function QuickActionsPage() {
     updated.splice(index, 0, moved)
     // update order field
     const reordered = updated.map((item, i) => ({ ...item, order: i + 1 }))
+    // STA-246 — order changes the row count once spans > 1; revert if it overflows 4 rows.
+    if (packRows(enabledOrdered(reordered)) > MAX_ROWS) {
+      showToast(CAP_HINT)
+      return
+    }
     setQuickActions(reordered)
     setDragIndex(index)
   }
@@ -70,18 +93,35 @@ export default function QuickActionsPage() {
     if (index === 0) return
     const updated = [...quickActions]
     ;[updated[index - 1], updated[index]] = [updated[index], updated[index - 1]]
-    setQuickActions(updated.map((item, i) => ({ ...item, order: i + 1 })))
+    const reordered = updated.map((item, i) => ({ ...item, order: i + 1 }))
+    if (packRows(enabledOrdered(reordered)) > MAX_ROWS) {
+      showToast(CAP_HINT)
+      return
+    }
+    setQuickActions(reordered)
   }
   function moveDown(index: number) {
     if (index === quickActions.length - 1) return
     const updated = [...quickActions]
     ;[updated[index], updated[index + 1]] = [updated[index + 1], updated[index]]
-    setQuickActions(updated.map((item, i) => ({ ...item, order: i + 1 })))
+    const reordered = updated.map((item, i) => ({ ...item, order: i + 1 }))
+    if (packRows(enabledOrdered(reordered)) > MAX_ROWS) {
+      showToast(CAP_HINT)
+      return
+    }
+    setQuickActions(reordered)
   }
 
   // ---- toggle enable/disable ----
   function toggleEnabled(id: string) {
-    setQuickActions(quickActions.map((qa) => qa.id === id ? { ...qa, enabled: !qa.enabled } : qa))
+    const next = quickActions.map((qa) => qa.id === id ? { ...qa, enabled: !qa.enabled } : qa)
+    const target = quickActions.find((qa) => qa.id === id)
+    // STA-246 — enabling a tile can push past the 4-row cap; block it (disabling never can).
+    if (target && !target.enabled && !fitsCap(enabledOrdered(next))) {
+      showToast(CAP_HINT)
+      return
+    }
+    setQuickActions(next)
   }
 
   // ---- edit modal ----
@@ -90,6 +130,7 @@ export default function QuickActionsPage() {
     setModalLabel(qa.label)
     setModalIcon(qa.icon)
     setModalHref(qa.href)
+    setModalSize(qa.size ?? '1x1')
     // QuickActionTile type ไม่มี rolesVisible ใน Wave 1 types — ใช้ enabled proxy แทน
     setModalRoles([])
   }
@@ -99,11 +140,17 @@ export default function QuickActionsPage() {
       showToast(`"${modalLabel}" — label ต้องมีตัวอักษรไทย (Thai-primary required)`)
       return
     }
-    setQuickActions(quickActions.map((qa) =>
+    const next = quickActions.map((qa) =>
       qa.id === editTarget.id
-        ? { ...qa, label: modalLabel, icon: modalIcon, href: modalHref }
+        ? { ...qa, label: modalLabel, icon: modalIcon, href: modalHref, size: modalSize }
         : qa
-    ))
+    )
+    // STA-246 — a size-up on an enabled tile can overflow the 4-row cap; block the save.
+    if (editTarget.enabled && !fitsCap(enabledOrdered(next))) {
+      showToast(CAP_HINT)
+      return
+    }
+    setQuickActions(next)
     setEditTarget(null)
   }
 
@@ -116,7 +163,9 @@ export default function QuickActionsPage() {
       href: '/th/ess/new',
       enabled: false,
       order:   quickActions.length + 1,
+      size:    '1x1',
     }
+    // New tiles start disabled, so they never paint — no cap guard needed here.
     setQuickActions([...quickActions, newItem])
   }
 
@@ -133,8 +182,16 @@ export default function QuickActionsPage() {
       </div>
     )}
     <EditorShell editor="quick-actions" titleTh="จัดการ Quick Actions">
-      {/* Add button */}
-      <div className="mb-4 flex justify-end">
+      {/* Add button + row-usage readout (STA-246) */}
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <span
+          className={[
+            'text-sm font-medium',
+            rowsUsed > MAX_ROWS ? 'text-danger' : 'text-ink-muted',
+          ].join(' ')}
+        >
+          แถวที่ใช้ {rowsUsed}/{MAX_ROWS}
+        </span>
         <button
           type="button"
           onClick={addNew}
@@ -292,6 +349,27 @@ export default function QuickActionsPage() {
               <input type="text" value={modalHref} onChange={(e) => setModalHref(e.target.value)}
                 placeholder="/ess/..."
                 className="w-full rounded-md border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+
+            {/* Size selector — STA-246 (segmented control, WxH = cols × rows) */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-ink mb-1.5">ขนาด</label>
+              <div className="inline-flex rounded-md border border-hairline overflow-hidden" role="group" aria-label="ขนาด">
+                {SIZE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    aria-pressed={modalSize === opt.value}
+                    onClick={() => setModalSize(opt.value)}
+                    className={[
+                      'px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-accent',
+                      modalSize === opt.value ? 'bg-accent text-white' : 'bg-surface text-ink hover:bg-canvas-soft',
+                    ].join(' ')}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex justify-end gap-3">
