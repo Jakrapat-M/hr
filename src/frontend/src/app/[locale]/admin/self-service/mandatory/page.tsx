@@ -57,7 +57,7 @@ export default function MandatoryPage() {
   }
 
   return (
-    <EditorShell editor="mandatory" titleTh="กำหนด Field Mandatory" brd="#180">
+    <EditorShell editor="mandatory" titleTh="กำหนด Field Mandatory">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Matrix panel */}
         <div className="flex-1 min-w-0">

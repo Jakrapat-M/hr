@@ -135,7 +135,7 @@ export default function TilesPage() {
         {toast.msg}
       </div>
     )}
-    <EditorShell editor="tiles" titleTh="จัดการ Tiles & Home Page" brd="#183">
+    <EditorShell editor="tiles" titleTh="จัดการ Tiles & Home Page">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Main tiles panel */}
         <div className="flex-1 min-w-0">

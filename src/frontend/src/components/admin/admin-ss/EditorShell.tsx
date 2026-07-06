@@ -12,13 +12,12 @@ import { AuditLogTab } from './AuditLogTab'
 interface EditorShellProps {
   editor:   EditorName
   titleTh:  string
-  brd:      string
   children: React.ReactNode  // เนื้อหา Config tab
 }
 
 type TabKey = 'config' | 'audit'
 
-export function EditorShell({ editor, titleTh, brd, children }: EditorShellProps) {
+export function EditorShell({ editor, titleTh, children }: EditorShellProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('config')
 
   const isDirty     = useAdminSelfService((s) => s.isDirty)
@@ -39,9 +38,6 @@ export function EditorShell({ editor, titleTh, brd, children }: EditorShellProps
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-[length:var(--text-display-h3)] font-semibold text-ink whitespace-nowrap">{titleTh}</h1>
-            <span className="text-small bg-canvas-soft text-ink-muted font-medium px-2 py-0.5 rounded-full">
-              BRD {brd}
-            </span>
             {isDirty && (
               <span className="inline-flex items-center gap-1 text-small text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">
                 <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />

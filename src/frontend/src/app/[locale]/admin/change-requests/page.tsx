@@ -57,7 +57,7 @@ export default function ChangeRequestsPage() {
           ไม่มีสิทธิ์เข้าถึง
         </h3>
         <p className="mt-2 text-ink-soft" style={{ fontSize: 14 }}>
-          คิวอนุมัติคำขอแก้ไขข้อมูลส่วนบุคคล สงวนสิทธิ์เฉพาะผู้อนุมัติ (SPD) ตาม BRD #166
+          คิวอนุมัติคำขอแก้ไขข้อมูลส่วนบุคคล สงวนสิทธิ์เฉพาะผู้อนุมัติ (SPD)
         </p>
       </div>
     );

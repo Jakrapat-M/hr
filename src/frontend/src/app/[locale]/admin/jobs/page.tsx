@@ -168,7 +168,7 @@ const { Page } = createCrudPage<Job>({
            SF cite: qas-fields-2026-04-26/sf-qas-FOJobCode-2026-04-26.json#.d.results[0] */}
       <div style={{ borderTop: '1px solid var(--color-hairline)', paddingTop: 12, marginTop: 4 }}>
         <p className="humi-label" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>
-          FOJobCode — ข้อมูล Job Grade &amp; Classification (BRD #4)
+          FOJobCode — ข้อมูล Job Grade &amp; Classification
         </p>
 
         {/* cust_JGMin — SF: FOJobCode.cust_JGMin */}

@@ -101,16 +101,11 @@ export default function SecurityPage() {
             >
               <div className="flex items-start justify-between">
                 <tool.Icon size={20} strokeWidth={1.75} className="text-ink-muted" aria-hidden="true" />
-                <div className="flex items-center gap-2">
-                  {alertCount > 0 && tool.alertLabel && (
-                    <span className="bg-danger text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                      {alertCount}
-                    </span>
-                  )}
-                  <span className="text-xs font-mono text-ink-faint bg-canvas-soft px-2 py-0.5 rounded">
-                    {tool.brd}
+                {alertCount > 0 && tool.alertLabel && (
+                  <span className="bg-danger text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {alertCount}
                   </span>
-                </div>
+                )}
               </div>
               <div>
                 <h2 className="text-base font-semibold text-ink group-hover:text-accent transition-colors whitespace-nowrap">

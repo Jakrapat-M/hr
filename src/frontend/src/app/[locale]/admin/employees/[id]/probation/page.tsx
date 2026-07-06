@@ -486,7 +486,7 @@ export default function ProbationAssessPage() {
             }}
             className="text-small text-ink-muted"
           >
-            auto-pass จะทริกเกอร์โดย backend (Sprint 2) — ฟีเจอร์นี้ยังไม่พร้อมใช้งานบน frontend
+            ฟีเจอร์ auto-pass ยังไม่พร้อมใช้งานในระบบนี้
           </div>
 
           {/* ── Days-remaining banner (BRD #117) ── */}

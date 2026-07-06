@@ -194,7 +194,7 @@ export default function UserAssignmentPage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-ink">กำหนดสิทธิ์ผู้ใช้</h1>
-        <p className="text-sm text-ink-muted mt-0.5">BRD #186 — Assign ผู้ใช้ → กลุ่มสิทธิ์แอปพลิเคชัน + กลุ่มสิทธิ์ข้อมูล</p>
+        <p className="text-sm text-ink-muted mt-0.5">Assign ผู้ใช้ → กลุ่มสิทธิ์แอปพลิเคชัน + กลุ่มสิทธิ์ข้อมูล</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

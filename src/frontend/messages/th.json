@@ -186,7 +186,7 @@
     }
   },
   "placeholders": {
-    "comingSoon": "ฟีเจอร์นี้อยู่ระหว่างพัฒนา — Sprint 2+"
+    "comingSoon": "ฟีเจอร์นี้อยู่ระหว่างพัฒนา — เร็วๆ นี้"
   },
   "profile": {
     "title": "โปรไฟล์",
@@ -3683,7 +3683,7 @@
     "stub": {
       "eyebrow": "กำลังพัฒนา",
       "title": "หัวข้อนี้อยู่ระหว่างพัฒนา",
-      "body": "ทีมจะเปิดใช้งานใน Sprint 2 — ขณะนี้สามารถใช้งานหัวข้อ “ข้อมูลองค์กร” ได้",
+      "body": "เร็วๆ นี้ — ขณะนี้สามารถใช้งานหัวข้อ \"ข้อมูลองค์กร\" ได้",
       "cta": "กลับไปข้อมูลองค์กร"
     },
     "defaults": {
@@ -3765,7 +3765,7 @@
     "fieldEmployment": "สถานะการจ้าง",
     "fieldEmpCode": "รหัสพนักงาน",
     "fieldAddress": "ที่อยู่",
-    "placeholder": "กำลังพัฒนา — Sprint 2"
+    "placeholder": "กำลังพัฒนา — เร็วๆ นี้"
   },
   "humiOrgChart": {
     "title": "แผนผังองค์กร",
@@ -4514,7 +4514,7 @@
       "requiredHint": "ช่องที่บังคับกรอก",
       "isPrimaryHint": "บัตรหลัก = เอกสารยืนยันตัวตนหลัก — เลือก \"ไม่ใช่\" เฉพาะกรณีการจ้างคู่ในเครือ (บัตรรอง)",
       "nationalIdChecksumError": "เลขบัตรประชาชนไม่ถูกต้อง (checksum mod-11 ไม่ผ่าน) / National ID checksum invalid",
-      "forwardDateWarning": "วันที่เริ่มงานล่วงหน้าต้องผ่านการอนุมัติจาก SPD ก่อนเปิดใช้งาน (BRD #101)",
+      "forwardDateWarning": "วันที่เริ่มงานล่วงหน้าต้องผ่านการอนุมัติจาก SPD ก่อนเปิดใช้งาน",
       "dvtPreviousId": "รหัสพนักงานเดิม (DVT)",
       "dvtPreviousIdPlaceholder": "กรอกถ้าเคยฝึกงาน/เคยเป็น DVT",
       "dvtPreviousIdHelp": "ใช้ค้นประวัติเดิมและเติมข้อมูลอัตโนมัติเมื่อพบข้อมูลพนักงานฝึกงานเดิม",
@@ -4757,8 +4757,8 @@
       "summarySectionTitle": "สรุปข้อมูลก่อนส่ง",
       "summarySectionSub": "ตรวจสอบก่อนบันทึก — คลิกขั้นตอนด้านซ้ายเพื่อย้อนกลับแก้ไข",
       "selectHrbp": "— เลือก HRBP —",
-      "hrbpRequiredError": "กรุณาเลือก HRBP ก่อนบันทึก (BRD #109)",
-      "notifyHrbpHelp": "SH4 trigger + template ตาม BRD #109 — Sprint 2 จะ wire backend",
+      "hrbpRequiredError": "กรุณาเลือก HRBP ก่อนบันทึก",
+      "notifyHrbpHelp": "ระบบจะแจ้งเตือน HRBP ตามเทมเพลตที่กำหนดไว้เมื่อบันทึกข้อมูล",
       "summaryHireDate": "วันที่เริ่มงาน",
       "summaryCompany": "บริษัท",
       "summaryEventReason": "สาเหตุการจ้าง",

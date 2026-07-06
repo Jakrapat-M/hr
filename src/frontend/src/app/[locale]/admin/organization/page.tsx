@@ -386,7 +386,7 @@ function OrgUnitForm({ draft, onChange, allUnits, editingId }: OrgUnitFormProps)
           SF cite: qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0].cust_Dep1 */}
       <div style={{ borderTop: '1px solid var(--color-hairline)', paddingTop: 12 }}>
         <div style={{ ...labelStyle, display: 'block', marginBottom: 8, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          FODepartment ลำดับชั้น (BRD #2)
+          FODepartment ลำดับชั้น
         </div>
 
         {(['cust_Dep1', 'cust_Dep2', 'cust_Dep3', 'cust_Dep4'] as const).map((field, i) => (
@@ -429,7 +429,7 @@ function OrgUnitForm({ draft, onChange, allUnits, editingId }: OrgUnitFormProps)
           SF cite: qas-fields-2026-04-26/sf-qas-FOBusinessUnit-2026-04-26.json#.d.results[0].cust_businessGroup */}
       <div style={{ borderTop: '1px solid var(--color-hairline)', paddingTop: 12 }}>
         <div style={{ ...labelStyle, display: 'block', marginBottom: 8, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          FOBusinessUnit Custom Fields (BRD #1)
+          FOBusinessUnit Custom Fields
         </div>
 
         <div style={{ marginBottom: 10 }}>

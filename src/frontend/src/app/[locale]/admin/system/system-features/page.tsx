@@ -68,12 +68,9 @@ export default function SystemFeaturesPage() {
             role="listitem"
             className="flex flex-col gap-3 p-5 bg-surface rounded-xl border border-hairline shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:border-accent transition-all group"
           >
-            <div className="flex items-start justify-between">
+            <div className="flex items-start">
               <span className="text-accent" aria-hidden="true">
                 <tool.Icon size={20} strokeWidth={1.75} />
-              </span>
-              <span className="text-xs font-mono text-ink-muted bg-canvas-soft px-2 py-0.5 rounded">
-                {tool.brd}
               </span>
             </div>
             <div>

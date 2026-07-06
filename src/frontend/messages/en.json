@@ -186,7 +186,7 @@
     }
   },
   "placeholders": {
-    "comingSoon": "Coming in Sprint 2+"
+    "comingSoon": "Coming soon"
   },
   "profile": {
     "title": "Profile",
@@ -3774,7 +3774,7 @@
     "stub": {
       "eyebrow": "In development",
       "title": "This section is being built",
-      "body": "The team will enable this in Sprint 2 — meanwhile, Organization is available.",
+      "body": "Coming soon — meanwhile, Organization is available.",
       "cta": "Back to Organization"
     },
     "defaults": {
@@ -3809,7 +3809,7 @@
     "fieldEmployment": "Employment Status",
     "fieldEmpCode": "Employee Code",
     "fieldAddress": "Address",
-    "placeholder": "In Development — Sprint 2"
+    "placeholder": "In Development — Coming soon"
   },
   "humiOrgChart": {
     "title": "Org Chart",
@@ -4635,7 +4635,7 @@
       "requiredHint": "Required fields",
       "isPrimaryHint": "Is Primary = main identity document — select \"No\" only for dual-company employment (secondary card)",
       "nationalIdChecksumError": "National ID checksum invalid (mod-11 failed)",
-      "forwardDateWarning": "A future hire date requires SPD pre-approval before activation (BRD #101)",
+      "forwardDateWarning": "A future hire date requires SPD pre-approval before activation",
       "dvtPreviousId": "Previous Employee ID (DVT)",
       "dvtPreviousIdPlaceholder": "Enter if previously an intern/DVT",
       "dvtPreviousIdHelp": "Used to look up previous intern records and prefill matching data when available",
@@ -4878,8 +4878,8 @@
       "summarySectionTitle": "Pre-submission Summary",
       "summarySectionSub": "Review before saving — click a step on the left to go back and edit",
       "selectHrbp": "— Select HRBP —",
-      "hrbpRequiredError": "Please select an HRBP before submitting (BRD #109)",
-      "notifyHrbpHelp": "SH4 trigger + template per BRD #109 — backend will be wired in Sprint 2",
+      "hrbpRequiredError": "Please select an HRBP before submitting",
+      "notifyHrbpHelp": "The system will notify the HRBP per the configured template when submitted.",
       "summaryHireDate": "Hire Date",
       "summaryCompany": "Company",
       "summaryEventReason": "Event Reason",

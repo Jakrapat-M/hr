@@ -103,7 +103,7 @@ export default function SelfServicePage() {
         aria-label="รายการเครื่องมือตั้งค่า Self-Service"
         style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}
       >
-        {EDITORS.map(({ href, titleTh, brd, descTh, Icon }) => (
+        {EDITORS.map(({ href, titleTh, descTh, Icon }) => (
           <Link
             key={href}
             href={href}
@@ -119,7 +119,7 @@ export default function SelfServicePage() {
               transition: 'box-shadow 180ms ease, border-color 180ms ease',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
               <span
                 style={{
                   display: 'inline-flex',
@@ -134,18 +134,6 @@ export default function SelfServicePage() {
                 aria-hidden
               >
                 <Icon size={18} />
-              </span>
-              <span
-                style={{
-                  fontFamily: 'var(--font-mono, ui-monospace)',
-                  fontSize: 11,
-                  color: 'var(--color-ink-muted)',
-                  background: 'var(--color-canvas)',
-                  padding: '2px 8px',
-                  borderRadius: 4,
-                }}
-              >
-                {brd}
               </span>
             </div>
             <div>

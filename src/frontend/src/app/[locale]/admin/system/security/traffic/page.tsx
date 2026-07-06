@@ -177,7 +177,7 @@ export default function TrafficPage() {
       </div>
 
       <p className="mt-4 text-xs text-ink-faint">
-        BRD #200 — Traffic Report; CSV export UTF-8 BOM + Thai headers (เปิดได้ใน Excel)
+        Traffic Report; CSV export UTF-8 BOM + Thai headers (เปิดได้ใน Excel)
       </p>
     </div>
   )

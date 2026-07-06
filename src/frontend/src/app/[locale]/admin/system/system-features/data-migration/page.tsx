@@ -212,7 +212,7 @@ export default function DataMigrationPage() {
         </div>
       </div>
 
-      <p className="mt-4 text-xs text-ink-faint">BRD #198 — Data Migration stub; import จริงต้องผ่าน validate + dry-run ก่อนเสมอ</p>
+      <p className="mt-4 text-xs text-ink-faint">Data Migration · import ต้องผ่าน validate + dry-run ก่อนเสมอ</p>
     </div>
   )
 }

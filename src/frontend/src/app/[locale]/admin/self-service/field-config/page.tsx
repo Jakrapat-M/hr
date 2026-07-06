@@ -48,7 +48,7 @@ export default function FieldConfigPage() {
   }
 
   return (
-    <EditorShell editor="field-config" titleTh="จัดการ Field Configuration" brd="#178">
+    <EditorShell editor="field-config" titleTh="จัดการ Field Configuration">
       {/* Filter row */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <label className="text-sm font-medium text-ink whitespace-nowrap">Form:</label>

@@ -36,7 +36,7 @@ export default function ReportAutomationPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-ink">งานอัตโนมัติ</h2>
-          <p className="text-sm text-ink-muted mt-1">Report Automation — BRD #207</p>
+          <p className="text-sm text-ink-muted mt-1">Report Automation</p>
         </div>
         <div className="flex gap-3 text-center">
           <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2">

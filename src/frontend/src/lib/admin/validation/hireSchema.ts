@@ -148,7 +148,7 @@ export const stepIdentitySchema = z.object({
     return diffDays <= 90 // past: must be ≤90 days ago
   },
   {
-    message: 'วันที่เริ่มงานย้อนหลังได้ไม่เกิน 90 วัน (BRD #101) — ถ้าต้องการย้อนหลังมากกว่า กรุณาติดต่อ SPD',
+    message: 'วันที่เริ่มงานย้อนหลังได้ไม่เกิน 90 วัน — ถ้าต้องการย้อนหลังมากกว่า กรุณาติดต่อ SPD',
     path: ['hireDate'],
   },
 )

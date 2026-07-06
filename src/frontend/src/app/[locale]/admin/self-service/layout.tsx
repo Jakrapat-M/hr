@@ -30,7 +30,7 @@ export default function SelfServiceLayout({ children }: { children: React.ReactN
         aria-label="Self-Service Config navigation"
       >
         <ul className="flex gap-1 px-4 whitespace-nowrap">
-          {SS_EDITORS.map(({ href, labelTh, brd }) => {
+          {SS_EDITORS.map(({ href, labelTh }) => {
             // exact match สำหรับ overview, prefix match สำหรับ editors
             const isActive = href === '/th/admin/self-service'
               ? pathname === href
@@ -48,9 +48,6 @@ export default function SelfServiceLayout({ children }: { children: React.ReactN
                   aria-current={isActive ? 'page' : undefined}
                 >
                   {labelTh}
-                  {brd && (
-                    <span className="text-xs text-ink-muted font-normal">{brd}</span>
-                  )}
                   {/* dirty indicator — แสดงเมื่อ draft ยังไม่ publish */}
                   {isActive && isDirty && !href.endsWith('/self-service') && (
                     <span
