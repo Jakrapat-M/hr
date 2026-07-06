@@ -11,6 +11,7 @@
 // ════════════════════════════════════════════════════════════
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { Square, CheckSquare, MinusSquare, CheckCircle2, XCircle } from 'lucide-react';
 import { Card } from '@/components/humi';
@@ -84,6 +85,13 @@ function detailHref(locale: string, row: PendingRequest): string {
   return `/${locale}/quick-approve/${row.id}`;
 }
 
+// A row has a dedicated action page when detailHref resolves to something other
+// than the unified /quick-approve/[id] popup-fallback route. Those rows deep-link
+// straight to their action page; the rest open the in-place detail popup.
+function hasDedicatedPage(locale: string, row: PendingRequest): boolean {
+  return !detailHref(locale, row).startsWith(`/${locale}/quick-approve/`);
+}
+
 // Show the typed id as-is; truncate long timestamp ids to keep columns compact.
 // e.g. "LV-20260611-123456-A1B2" → "LV-20260611-…B2"  "BEN-CLM-0001" → unchanged
 function displayRef(id: string): string {
@@ -101,6 +109,7 @@ export function QuickApproveSimple() {
   // status enums (pending_spd/pending_hr/pending_manager(_approval)) → pending for
   // the 3-state filter below.
   const locale = useLocale();
+  const router = useRouter();
   const roles = useAuthStore((s) => s.roles);
   const queue = useSelectPendingApprovals();
   const rows = useMemo<PendingRequest[]>(() => queue.map((q) => q.row), [queue]);
@@ -647,7 +656,9 @@ export function QuickApproveSimple() {
           columns={displayColumns}
           rows={visibleRows}
           rowKey={(row) => row.id}
-          onRowClick={(row) => setSelected(row)}
+          onRowClick={(row) =>
+            hasDedicatedPage(locale, row) ? router.push(detailHref(locale, row)) : setSelected(row)
+          }
           dense
         />
       </Card>
