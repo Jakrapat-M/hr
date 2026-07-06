@@ -146,7 +146,7 @@ export function ResignationPage() {
         <div>
           <h1 className="font-display text-2xl font-semibold text-ink">คำขอลาออก</h1>
           <p className="text-small text-ink-muted mt-1">
-            ยื่นคำขอลาออกผ่านระบบ Self-Service (BRD #172)
+            ยื่นคำขอลาออกผ่านระบบ Self-Service
           </p>
         </div>
 
@@ -216,7 +216,7 @@ export function ResignationPage() {
       <div>
         <h1 className="font-display text-2xl font-semibold text-ink">คำขอลาออก</h1>
         <p className="text-small text-ink-muted mt-1">
-          ยื่นคำขอลาออกผ่านระบบ Self-Service — SPD จะรับทราบและดำเนินการต่อ (BRD #172)
+          ยื่นคำขอลาออกผ่านระบบ Self-Service — SPD จะรับทราบและดำเนินการต่อ
         </p>
       </div>
 
