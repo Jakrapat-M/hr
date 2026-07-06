@@ -138,7 +138,7 @@ export default function IntegrationPage() {
               <AlertTriangle size={14} className="text-warning shrink-0" aria-hidden />
               <p className="text-sm text-amber-800">
                 <span className="font-semibold">Q10 — รอ BA Spec:</span>{' '}
-                การเชื่อมต่อ Microsoft Teams Viva รอการระบุ requirements จาก BA ก่อนเปิดใช้งาน (BRD #194)
+                การเชื่อมต่อ Microsoft Teams Viva รอการระบุ requirements จาก BA ก่อนเปิดใช้งาน
               </p>
             </div>
           )}

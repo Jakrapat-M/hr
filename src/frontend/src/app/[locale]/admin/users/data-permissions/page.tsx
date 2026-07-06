@@ -349,7 +349,7 @@ export default function DataPermissionsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-ink">กลุ่มสิทธิ์ข้อมูล</h1>
-          <p className="text-sm text-ink-muted mt-0.5">BRD #184 — กำหนด Data Scope ตาม Module / BG / Company / Division / Department / EmpGroup / PG</p>
+          <p className="text-sm text-ink-muted mt-0.5">กำหนด Data Scope ตาม Module / BG / Company / Division / Department / EmpGroup / PG</p>
         </div>
         <button
           onClick={() => setModal({ type: 'create' })}

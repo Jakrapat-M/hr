@@ -36,7 +36,7 @@ export default function ScheduleReportPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-ink">กำหนดเวลารายงาน</h2>
-        <p className="text-sm text-ink-muted mt-1">Schedule Report — BRD #196</p>
+        <p className="text-sm text-ink-muted mt-1">Schedule Report</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

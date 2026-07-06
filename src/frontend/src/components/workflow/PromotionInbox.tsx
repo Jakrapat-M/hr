@@ -42,7 +42,7 @@ export function PromotionInbox() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Header */}
       <div>
-        <div className="humi-eyebrow" style={{ marginBottom: 4 }}>Chain 4 — BRD #103</div>
+        <div className="humi-eyebrow" style={{ marginBottom: 4 }}>งานที่รอดำเนินการ</div>
         <h2 className="font-display text-lg font-semibold text-ink">
           คำขอเลื่อนตำแหน่ง — รอ SPD อนุมัติ
         </h2>

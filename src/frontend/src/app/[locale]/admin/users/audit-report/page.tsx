@@ -131,7 +131,7 @@ export default function AuditReportPage() {
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-ink">รายงาน Audit</h1>
         <p className="text-sm text-ink-muted mt-0.5">
-          BRD #189 — Log Add / Edit / Delete ทุก Module พร้อม Export CSV
+          Log Add / Edit / Delete ทุก Module พร้อม Export CSV
         </p>
       </div>
 

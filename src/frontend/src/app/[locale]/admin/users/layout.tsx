@@ -43,9 +43,6 @@ function UsersSubNav() {
                 ].join(' ')}
               >
                 <span>{tool.label}</span>
-                {tool.brd && (
-                  <span className="text-xs text-ink-muted hidden lg:inline">{tool.brd}</span>
-                )}
               </Link>
             </li>
           )

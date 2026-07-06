@@ -68,7 +68,7 @@ export default function LanguagePage() {
       </div>
 
       <p className="mt-4 text-xs text-ink-faint">
-        BRD #195 — การเปลี่ยนภาษาจะถูกบันทึกผ่าน audit log โดยอัตโนมัติ
+        การเปลี่ยนภาษาจะถูกบันทึกผ่าน audit log โดยอัตโนมัติ
       </p>
     </div>
   )

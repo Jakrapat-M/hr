@@ -73,7 +73,7 @@ export default function VisibilityPage() {
   }
 
   return (
-    <EditorShell editor="visibility" titleTh="ควบคุม Field Visibility" brd="#179">
+    <EditorShell editor="visibility" titleTh="ควบคุม Field Visibility">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Matrix panel */}
         <div className="flex-1 min-w-0">

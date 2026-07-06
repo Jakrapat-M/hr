@@ -270,7 +270,7 @@ export default function RoleGroupsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-ink">กลุ่มสิทธิ์แอปพลิเคชัน</h1>
-          <p className="text-sm text-ink-muted mt-0.5">BRD #185 — สิทธิ์เมนูและฟังก์ชันระดับ Field</p>
+          <p className="text-sm text-ink-muted mt-0.5">สิทธิ์เมนูและฟังก์ชันระดับ Field</p>
         </div>
         <button
           onClick={() => setModal({ type: 'create' })}

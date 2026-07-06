@@ -132,7 +132,7 @@ export default function QuickActionsPage() {
         {toast.msg}
       </div>
     )}
-    <EditorShell editor="quick-actions" titleTh="จัดการ Quick Actions" brd="#182">
+    <EditorShell editor="quick-actions" titleTh="จัดการ Quick Actions">
       {/* Add button */}
       <div className="mb-4 flex justify-end">
         <button

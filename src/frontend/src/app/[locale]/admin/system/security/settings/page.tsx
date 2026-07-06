@@ -32,7 +32,7 @@ function HiddenProfileSection() {
           Hidden Profile
         </h2>
         <p className="text-xs text-ink-muted mt-0.5">
-          BRD #201 — ซ่อนโปรไฟล์พนักงานจาก O365 sync (ไม่แสดงใน org chart / directory)
+          ซ่อนโปรไฟล์พนักงานจาก O365 sync (ไม่แสดงใน org chart / directory)
         </p>
       </div>
       <div className="divide-y divide-gray-100 border border-hairline-soft rounded-xl overflow-hidden">
@@ -81,7 +81,7 @@ function DirectUserSection() {
           Direct Users
         </h2>
         <p className="text-xs text-ink-muted mt-0.5">
-          BRD #202 — Service accounts ที่ไม่ผ่าน SSO ({directUsers.length} บัญชี)
+          Service accounts ที่ไม่ผ่าน SSO ({directUsers.length} บัญชี)
         </p>
       </div>
       <div className="border border-hairline-soft rounded-xl overflow-hidden">
@@ -142,7 +142,7 @@ function EncryptionSection() {
           <span className="ml-2 text-xs font-normal text-ink-faint bg-canvas-soft px-2 py-0.5 rounded">READ-ONLY</span>
         </h2>
         <p className="text-xs text-ink-muted mt-0.5">
-          BRD #203 (Q8) — นโยบาย encryption ที่กำหนดโดย IT Security ห้ามแก้ไขผ่าน UI
+          นโยบาย encryption ที่กำหนดโดย IT Security ห้ามแก้ไขผ่าน UI
         </p>
       </div>
       <div className="bg-canvas-soft border border-hairline-soft rounded-xl p-5">
@@ -213,7 +213,7 @@ function SessionTimeoutSection() {
           Session Timeout
         </h2>
         <p className="text-xs text-ink-muted mt-0.5">
-          BRD #204 — กำหนดเวลา session หมดอายุ (5-480 นาที = 8 ชั่วโมงสูงสุด)
+          กำหนดเวลา session หมดอายุ (5-480 นาที = 8 ชั่วโมงสูงสุด)
         </p>
       </div>
       <div className="bg-surface border border-hairline-soft rounded-xl p-5">

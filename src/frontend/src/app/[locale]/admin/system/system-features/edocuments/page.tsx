@@ -155,7 +155,7 @@ export default function EDocumentsPage() {
         </div>
       </div>
 
-      <p className="mt-4 text-xs text-ink-faint">BRD #197 — การดูและดาวน์โหลดเป็น mock action ในระบบนี้</p>
+      <p className="mt-4 text-xs text-ink-faint">การดูและดาวน์โหลดเอกสารอิเล็กทรอนิกส์</p>
     </div>
   )
 }

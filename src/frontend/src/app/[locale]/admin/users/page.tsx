@@ -107,11 +107,8 @@ export default function UsersPage() {
             role="listitem"
             className="flex flex-col gap-3 p-5 bg-surface rounded-lg border border-hairline shadow-card hover:shadow-[var(--shadow-md)] hover:border-accent transition-all group"
           >
-            <div className="flex items-start justify-between">
+            <div className="flex items-start">
               <tool.Icon size={20} strokeWidth={1.75} className="text-ink-muted" aria-hidden="true" />
-              <span className="text-xs font-mono text-ink-faint bg-canvas-soft px-2 py-0.5 rounded">
-                {tool.brd}
-              </span>
             </div>
             <div>
               <h2 className="text-base font-semibold text-ink group-hover:text-accent transition-colors whitespace-nowrap">

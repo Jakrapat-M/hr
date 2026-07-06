@@ -56,7 +56,7 @@ export default function ReadOnlyPage() {
   }
 
   return (
-    <EditorShell editor="readonly" titleTh="กำหนด Field Read-Only" brd="#181">
+    <EditorShell editor="readonly" titleTh="กำหนด Field Read-Only">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Matrix panel */}
         <div className="flex-1 min-w-0">

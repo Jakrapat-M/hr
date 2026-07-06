@@ -152,7 +152,7 @@ export default function ConsentPage() {
         </div>
       </div>
 
-      <p className="mt-4 text-xs text-ink-faint">BRD #199 — Consent Form PDPA; การส่ง Reminder เป็น mock action ในระบบนี้</p>
+      <p className="mt-4 text-xs text-ink-faint">Consent Form PDPA</p>
     </div>
   )
 }

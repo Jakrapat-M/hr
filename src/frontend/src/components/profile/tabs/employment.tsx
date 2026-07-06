@@ -70,8 +70,8 @@ export function EmploymentTab({ employee, loading }: EmploymentTabProps) {
  {(effectiveDate) => (
  <div className="space-y-2">
  <p className="text-sm text-ink-muted">
- {/* Sprint 3 จะ build form fields จริง */}
- Edit form coming in Sprint 3
+ {/* Edit form fields to be built later */}
+ Editing coming soon
  </p>
  <p className="text-xs text-ink-muted font-mono">
  Effective: {effectiveDate.toLocaleDateString()}

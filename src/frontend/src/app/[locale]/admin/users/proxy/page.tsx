@@ -274,7 +274,7 @@ export default function ProxyPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-ink">จัดการ Proxy</h1>
-          <p className="text-sm text-ink-muted mt-0.5">BRD #187 — มอบหมายสิทธิ์ชั่วคราว พร้อม Log ทุก action</p>
+          <p className="text-sm text-ink-muted mt-0.5">มอบหมายสิทธิ์ชั่วคราว พร้อม Log ทุก action</p>
         </div>
         <button
           onClick={() => setShowModal(true)}

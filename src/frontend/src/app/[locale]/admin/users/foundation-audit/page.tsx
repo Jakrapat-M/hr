@@ -126,7 +126,7 @@ function TimelineEntry({ entry }: { entry: FoundationAuditEntry }) {
         {isFutureHireSync && (
           <div className="mt-2 flex items-center gap-2 px-3 py-1.5 bg-warning-soft border border-warning rounded text-xs text-warning-ink">
             <AlertTriangle size={16} strokeWidth={1.75} aria-hidden="true" />
-            <span>Future-Hire SYNC applied (BRD #188 bug-fix)</span>
+            <span>Future-Hire SYNC applied</span>
           </div>
         )}
 
@@ -172,7 +172,7 @@ export default function FoundationAuditPage() {
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-ink">ประวัติการแก้ไข Foundation</h1>
         <p className="text-sm text-ink-muted mt-0.5">
-          BRD #188 — ประวัติการเปลี่ยนแปลง Foundation Data รวมถึง Position Changed events
+          ประวัติการเปลี่ยนแปลง Foundation Data รวมถึง Position Changed events
         </p>
       </div>
 

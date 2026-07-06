@@ -1865,7 +1865,7 @@ export default function EmployeeDetailPage() {
                 }}
               >
                 <div style={{ flex: 1, minWidth: 160 }}>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>คำขอลาออก (BRD #172)</div>
+                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>คำขอลาออก</div>
                   <div className="text-body font-medium text-ink">
                     {TERMINATION_REASON_LABEL[latestTermination.reasonCode]}
                   </div>
@@ -1889,7 +1889,7 @@ export default function EmployeeDetailPage() {
                 }}
               >
                 <div style={{ flex: 1, minWidth: 160 }}>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>คำขอเลื่อนตำแหน่ง (BRD #103)</div>
+                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>คำขอเลื่อนตำแหน่ง</div>
                   <div className="text-body font-medium text-ink">
                     {latestPromotion.fromPosition} → {latestPromotion.toPosition}
                   </div>

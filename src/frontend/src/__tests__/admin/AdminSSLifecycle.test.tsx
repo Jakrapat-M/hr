@@ -198,7 +198,7 @@ describe('EditorShell UI', () => {
   it('TC-LC-8: EditorShell render 3 action buttons — บันทึกร่าง / เผยแพร่ / รีเซ็ต', () => {
     // render EditorShell โดยไม่ต้อง dirty (buttons ยังแสดงอยู่แต่ disabled)
     render(
-      <EditorShell editor="visibility" titleTh="ทดสอบ" brd="#179">
+      <EditorShell editor="visibility" titleTh="ทดสอบ">
         <div data-testid="slot-content">เนื้อหา</div>
       </EditorShell>
     )
