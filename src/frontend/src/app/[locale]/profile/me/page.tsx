@@ -11,7 +11,7 @@
 // Build-B: full 15+ field form + admin mode + activity log (issue #12)
 // ════════════════════════════════════════════════════════════
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -62,6 +62,7 @@ import { BankDetailsEditor, isBankValid } from '@/components/profile/BankDetails
 import { ContactArrayEditor, isContactArrayValid } from '@/components/profile/ContactArrayEditor';
 import CompensationSummary from '@/components/profile/CompensationSummary';
 import CompensationHistory from '@/components/profile/CompensationHistory';
+import { getMaintainConfig, type MaintainKey } from '@/lib/ec-maintain-registry';
 
 // Map slice tab keys → display keys used by existing tab panels
 type TabKey = 'personal' | 'job' | 'emergency' | 'benefits' | 'docs' | 'tax';
@@ -164,7 +165,7 @@ const ATTACHMENT_REQUIRED_FIELDS = new Set([
 // as its own PendingChange (so the approval view shows what changed), but the
 // user interaction is a single grouped edit. Address/Bank/Emergency/Dependents
 // already work this way (their own section editors) and are untouched.
-type SectionId = 'personal' | 'marital' | 'contact' | 'advanced';
+export type SectionId = 'personal' | 'marital' | 'contact' | 'advanced';
 
 interface SectionFieldSpec {
   key: keyof EditFormValues;
@@ -375,6 +376,35 @@ function PendingSectionBadge({ section }: { section: SectionKey }) {
   );
 }
 
+// ── CardinalityLabel — STA-244 config-driven chip stating whether a section holds a
+// single entry or is repeatable. Presentation-only; it ASSERTS the registry agrees
+// with the already-wired editor (never selects/swaps an editor). Skipped for
+// cardinality-intrinsic sections (e.g. contact array) whose split is component-owned.
+function CardinalityLabel({
+  maintainKey,
+  t,
+}: {
+  maintainKey: MaintainKey;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const config = getMaintainConfig(maintainKey);
+  if (config.cardinalityIntrinsic) return null;
+  const label = config.cardinality === 'N' ? t('cardinality.repeatable') : t('cardinality.single');
+  return (
+    <span
+      style={{
+        fontSize: 11,
+        fontWeight: 500,
+        color: 'var(--color-ink-muted)',
+        marginLeft: 8,
+        verticalAlign: 'middle',
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
 export default function HumiProfileMePage({
   initialTab = 'personal',
 }: {
@@ -386,6 +416,7 @@ export default function HumiProfileMePage({
   const tToast = useTranslations('profileToast');
   const tActivity = useTranslations('activityLog');
   const tEss = useTranslations('ess');
+  const tEcMaintain = useTranslations('ecMaintain');
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -607,11 +638,12 @@ export default function HumiProfileMePage({
     );
   }
 
-  // Does the active section require an attachment? (any visible field is in the
-  // attachment-required set — mirrors the prior per-field rule.)
+  // Does the active section require an attachment? Sourced from the STA-244 maintain
+  // registry (config-driven) instead of the local ATTACHMENT_REQUIRED_FIELDS heuristic.
+  // The seed mirrors the identity-gated sections, so behavior is unchanged — the gate
+  // (`sectionSaveDisabled`) and FileUploadField below stay exactly as they were.
   const sectionAttachmentRequired =
-    editingSection !== null &&
-    visibleSectionFields(editingSection).some((f) => ATTACHMENT_REQUIRED_FIELDS.has(f.key));
+    editingSection !== null && getMaintainConfig(editingSection).requiredDocs.length > 0;
 
   const sectionSaveDisabled =
     !sectionDate || (sectionAttachmentRequired && sectionAttachmentIds.length === 0);
@@ -1082,6 +1114,11 @@ export default function HumiProfileMePage({
                   </span>
                 )}
               </p>
+              {sectionAttachmentRequired && (
+                <p className="text-xs text-ink-muted">
+                  {tEcMaintain('requiredDocs')} — {tEcMaintain('requiredDocsHint')}
+                </p>
+              )}
               <FileUploadField
                 label={tEdit('attachLabel')}
                 required={sectionAttachmentRequired}
@@ -1251,6 +1288,11 @@ export default function HumiProfileMePage({
                 title={tEdit('section.personal')}
                 editLabel={tEdit('editSection')}
                 onEdit={() => openSectionEdit('personal')}
+                badge={
+                  getMaintainConfig('personal').editMode === 'approval' ? (
+                    <PendingSectionBadge section={SECTION_TO_STORE_KEY.personal} />
+                  ) : null
+                }
               />
               <div className="grid gap-3 sm:grid-cols-2" style={{ marginBottom: 20 }}>
                 {SECTION_FIELDS.personal.map((spec) => (
@@ -1284,6 +1326,11 @@ export default function HumiProfileMePage({
                 title={tEdit('section.marital')}
                 editLabel={tEdit('editSection')}
                 onEdit={() => openSectionEdit('marital')}
+                badge={
+                  getMaintainConfig('marital').editMode === 'approval' ? (
+                    <PendingSectionBadge section={SECTION_TO_STORE_KEY.marital} />
+                  ) : null
+                }
               />
               <div className="grid gap-3 sm:grid-cols-2" style={{ marginBottom: 20 }}>
                 {SECTION_FIELDS.marital
@@ -1306,6 +1353,11 @@ export default function HumiProfileMePage({
                 title={tEdit('section.contact')}
                 editLabel={tEdit('editSection')}
                 onEdit={() => openSectionEdit('contact')}
+                badge={
+                  getMaintainConfig('contact').editMode === 'approval' ? (
+                    <PendingSectionBadge section={SECTION_TO_STORE_KEY.contact} />
+                  ) : null
+                }
               />
               <div className="grid gap-3 sm:grid-cols-2" style={{ marginBottom: 20 }}>
                 {/* Business email = read-only (edited by HR only) */}
@@ -1355,6 +1407,11 @@ export default function HumiProfileMePage({
                     title=""
                     editLabel={tEdit('editSection')}
                     onEdit={() => openSectionEdit('advanced')}
+                    badge={
+                      getMaintainConfig('advanced').editMode === 'approval' ? (
+                        <PendingSectionBadge section={SECTION_TO_STORE_KEY.advanced} />
+                      ) : null
+                    }
                   />
                   <div className="grid gap-3 sm:grid-cols-2">
                     {SECTION_FIELDS.advanced.map((spec) => (
@@ -1388,6 +1445,7 @@ export default function HumiProfileMePage({
           <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
             {tEss('sections.address')}
             <PendingSectionBadge section="address" />
+            <CardinalityLabel maintainKey="address" t={tEcMaintain} />
           </h3>
           {isEditing ? (
             <AddressSectionEditor />
@@ -1450,6 +1508,7 @@ export default function HumiProfileMePage({
           <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
             {tEss('sections.bank')}
             <PendingSectionBadge section="bank" />
+            <CardinalityLabel maintainKey="bank" t={tEcMaintain} />
           </h3>
           {isEditing ? (
             <BankSectionEditor />
@@ -1687,6 +1746,7 @@ export default function HumiProfileMePage({
               <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
                 {t('emergencyTitle')}
                 <PendingSectionBadge section="emergencyContact" />
+                <CardinalityLabel maintainKey="emergencyContact" t={tEcMaintain} />
               </h3>
               {!editingEmergency && (
                 <Button
@@ -1742,6 +1802,7 @@ export default function HumiProfileMePage({
               <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
                 ผู้อุปการะ
                 <PendingSectionBadge section="dependents" />
+                <CardinalityLabel maintainKey="dependents" t={tEcMaintain} />
               </h3>
               {!editingDependents && (
                 <Button
@@ -1960,10 +2021,13 @@ function SectionEditHeader({
   title,
   editLabel,
   onEdit,
+  badge,
 }: {
   title: string;
   editLabel: string;
   onEdit: () => void;
+  /** STA-244: approval-mode sections pass a <PendingSectionBadge> here (config-driven). */
+  badge?: ReactNode;
 }) {
   return (
     <div
@@ -1980,6 +2044,7 @@ function SectionEditHeader({
         }}
       >
         {title}
+        {badge}
       </span>
       <Button variant="ghost" size="sm" leadingIcon={<Pencil size={13} />} onClick={onEdit}>
         {editLabel}
