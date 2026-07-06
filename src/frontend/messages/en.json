@@ -394,6 +394,11 @@
   "benefits": {
     "title": "Benefits",
     "claimDetailTitle": "Claim detail",
+    "cancelClaim": "Cancel claim",
+    "editClaim": "Edit",
+    "editClaimTitle": "Edit claim",
+    "claimCancelledToast": "Claim cancelled",
+    "claimUpdatedToast": "Claim updated & resubmitted",
     "moreDetail": "More detail",
     "overview": "Benefits Overview",
     "activeEnrollments": "My Active Enrollments",

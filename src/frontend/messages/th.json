@@ -394,6 +394,11 @@
   "benefits": {
     "title": "สวัสดิการ",
     "claimDetailTitle": "รายละเอียดการเบิก",
+    "cancelClaim": "ยกเลิกคำขอ",
+    "editClaim": "แก้ไข",
+    "editClaimTitle": "แก้ไขคำขอ",
+    "claimCancelledToast": "ยกเลิกคำขอแล้ว",
+    "claimUpdatedToast": "ส่งคำขอที่แก้ไขแล้ว",
     "moreDetail": "ดูรายละเอียด",
     "overview": "ภาพรวมสวัสดิการ",
     "activeEnrollments": "สวัสดิการที่ลงทะเบียน",

@@ -7,6 +7,7 @@ import {
   formatClaimDate,
   CLAIM_TYPE_OPTIONS,
   CLAIM_STATUS_BUCKET_OPTIONS,
+  benefitClaimRowActions,
   benefitClaimStatusToBucket,
   deriveAdminClaimType,
 } from '@/lib/claim-history-filter';
@@ -21,7 +22,32 @@ describe('claimStatusSortRank', () => {
   });
 
   it('exposes the rank table with the expected order', () => {
-    expect(CLAIM_STATUS_SORT_RANK).toEqual({ info: 0, pending: 1, approved: 2 });
+    // STA-234 — cancelled is the terminal state and ranks last.
+    expect(CLAIM_STATUS_SORT_RANK).toEqual({ info: 0, pending: 1, approved: 2, cancelled: 3 });
+  });
+
+  it('ranks cancelled (STA-234) last, after approved', () => {
+    expect(claimStatusSortRank('approved')).toBeLessThan(claimStatusSortRank('cancelled'));
+    expect(claimStatusSortRank('cancelled')).toBe(3);
+  });
+});
+
+// STA-234 — pure gating for the hub claim-detail modal action footer.
+describe('benefitClaimRowActions', () => {
+  it('info (ขอข้อมูลเพิ่ม) → both Cancel and Edit allowed', () => {
+    expect(benefitClaimRowActions('info')).toEqual({ canCancel: true, canEdit: true });
+  });
+
+  it('pending (รออนุมัติ) → Cancel only, no Edit', () => {
+    expect(benefitClaimRowActions('pending')).toEqual({ canCancel: true, canEdit: false });
+  });
+
+  it('approved (อนุมัติแล้ว) → neither', () => {
+    expect(benefitClaimRowActions('approved')).toEqual({ canCancel: false, canEdit: false });
+  });
+
+  it('cancelled (ยกเลิกแล้ว) → neither', () => {
+    expect(benefitClaimRowActions('cancelled')).toEqual({ canCancel: false, canEdit: false });
   });
 });
 
