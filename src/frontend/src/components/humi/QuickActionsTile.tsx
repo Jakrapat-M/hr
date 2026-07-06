@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { benefitReimbursementRoute } from '@/lib/benefit-routes';
+import { SIZE_SPAN, type QuickActionSize } from '@/lib/admin/types/adminSelfService';
 
 // ════════════════════════════════════════════════════════════
 // QuickActionsTile — ESS home tile, BRD #171
@@ -35,6 +36,8 @@ export interface QuickAction {
   href: string;
   show?: RoleName[];
   tone?: TileTone;
+  /** STA-246 — tile span on the fixed 4-col grid. Absent → legacy auto-fill layout. */
+  size?: QuickActionSize;
 }
 
 export interface QuickActionsTileProps {
@@ -164,20 +167,34 @@ export function QuickActionsTile({
   locale = 'th',
 }: QuickActionsTileProps) {
   const useTh = locale !== 'en';
+  // STA-246 — when any action carries an explicit size, paint the admin-configurable
+  // fixed 4-col grid (WxH spans). Size-less callers (e.g. MANAGER_ACTIONS) keep the
+  // legacy responsive auto-fill layout untouched.
+  const sized = actions.some((a) => !!a.size);
+  const gridStyle: React.CSSProperties = sized
+    ? {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+        gridAutoRows: 96,
+        gridAutoFlow: 'row',
+        gap: 12,
+      }
+    : { gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))' };
   return (
     <div className="humi-card" role="region" aria-label={eyebrow}>
       <div className="humi-eyebrow" style={{ marginBottom: 14 }}>
         {eyebrow}
       </div>
       <div
-        className="grid gap-3"
-        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))' }}
+        className={sized ? undefined : 'grid gap-3'}
+        style={gridStyle}
       >
         {actions.map((action) => {
           const tone: TileTone = action.tone ?? 'teal';
           const bgClass   = TONE_BG[tone];
           const textClass = TONE_TEXT[tone];
           const label     = useTh ? action.labelTh : (action.labelEn ?? action.labelTh);
+          const span      = sized ? SIZE_SPAN[action.size ?? '1x1'] : null;
           return (
             <Link
               key={`${action.labelTh}:${action.href}`}
@@ -187,6 +204,7 @@ export function QuickActionsTile({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: 10,
                 padding: '16px 8px',
                 borderRadius: 'var(--radius-md)',
@@ -195,6 +213,7 @@ export function QuickActionsTile({
                 color: 'var(--color-ink)',
                 textDecoration: 'none',
                 transition: 'box-shadow var(--dur-base)',
+                ...(span ? { gridColumn: `span ${span.cols}`, gridRow: `span ${span.rows}` } : null),
               }}
               className="humi-quick-action-item"
             >

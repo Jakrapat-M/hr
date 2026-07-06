@@ -30,6 +30,16 @@ export interface FieldConfigEntry {
 // ใช้สำหรับ visibility, mandatory, readonly (#179-181)
 export type VisibilityMatrix = Record<string, Record<RoleName, boolean>>
 
+// QuickActionSize — ขนาด tile บน fixed 4-column grid (WxH = cols × rows) — STA-246
+export type QuickActionSize = '1x1' | '2x2' | '4x2'
+
+// SIZE_SPAN — shared span map: QuickActionSize → { cols, rows } — STA-246
+export const SIZE_SPAN: Record<QuickActionSize, { cols: number; rows: number }> = {
+  '1x1': { cols: 1, rows: 1 },
+  '2x2': { cols: 2, rows: 2 },
+  '4x2': { cols: 4, rows: 2 },
+}
+
 // QuickActionTile — tile ใน Quick Actions Manager (#182)
 export interface QuickActionTile {
   id: string
@@ -40,6 +50,7 @@ export interface QuickActionTile {
   enabled: boolean            // เปิด/ปิดใน ESS home
   order: number               // ลำดับการแสดง (drag-drop)
   tone?: 'teal' | 'indigo' | 'amber' | 'coral'  // สี icon-chip บน ESS home (design tone; default teal)
+  size?: QuickActionSize      // ขนาด tile บน 4-col grid (STA-246; default '1x1')
 }
 
 // HomePageTile — widget ใน Home Page Manager (#183)

@@ -406,7 +406,8 @@
       "enabled": true,
       "order": 1,
       "labelEn": "Time Off",
-      "tone": "teal"
+      "tone": "teal",
+      "size": "1x1"
     },
     {
       "id": "qa_pay_statement",
@@ -416,7 +417,8 @@
       "enabled": true,
       "order": 2,
       "labelEn": "Payslip",
-      "tone": "teal"
+      "tone": "teal",
+      "size": "1x1"
     },
     {
       "id": "qa_personal_info",
@@ -426,7 +428,8 @@
       "enabled": true,
       "order": 3,
       "labelEn": "My Profile",
-      "tone": "indigo"
+      "tone": "indigo",
+      "size": "1x1"
     },
     {
       "id": "qa_benefit_reimbursement",
@@ -436,7 +439,8 @@
       "enabled": true,
       "order": 4,
       "labelEn": "Benefits Claim",
-      "tone": "teal"
+      "tone": "teal",
+      "size": "1x1"
     },
     {
       "id": "qa_request_document",
@@ -446,7 +450,8 @@
       "enabled": true,
       "order": 5,
       "labelEn": "Doc Request",
-      "tone": "indigo"
+      "tone": "indigo",
+      "size": "1x1"
     },
     {
       "id": "qa_time_clock",
@@ -456,7 +461,8 @@
       "enabled": true,
       "order": 6,
       "labelEn": "Time Clock",
-      "tone": "amber"
+      "tone": "amber",
+      "size": "1x1"
     },
     {
       "id": "qa_my_requests",
@@ -466,7 +472,8 @@
       "enabled": true,
       "order": 7,
       "labelEn": "My Requests",
-      "tone": "teal"
+      "tone": "teal",
+      "size": "1x1"
     },
     {
       "id": "qa_announcements",
@@ -476,7 +483,8 @@
       "enabled": true,
       "order": 8,
       "labelEn": "Announcements",
-      "tone": "amber"
+      "tone": "amber",
+      "size": "1x1"
     },
     {
       "id": "qa_org_chart",
@@ -486,7 +494,8 @@
       "enabled": true,
       "order": 9,
       "labelEn": "Org Chart",
-      "tone": "indigo"
+      "tone": "indigo",
+      "size": "1x1"
     },
     {
       "id": "qa_employee_directory",
@@ -496,7 +505,8 @@
       "enabled": true,
       "order": 10,
       "labelEn": "Directory",
-      "tone": "indigo"
+      "tone": "indigo",
+      "size": "1x1"
     },
     {
       "id": "qa_performance",
@@ -506,7 +516,8 @@
       "enabled": true,
       "order": 11,
       "labelEn": "Performance",
-      "tone": "coral"
+      "tone": "coral",
+      "size": "1x1"
     },
     {
       "id": "qa_learning",
@@ -516,7 +527,8 @@
       "enabled": true,
       "order": 12,
       "labelEn": "Learning",
-      "tone": "coral"
+      "tone": "coral",
+      "size": "1x1"
     }
   ],
   "tiles": [

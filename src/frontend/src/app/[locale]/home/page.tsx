@@ -40,6 +40,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/humi';
 import { QuickActionsTile, DEFAULT_ESS_ACTIONS, type QuickAction } from '@/components/humi/QuickActionsTile';
 import { useAdminSelfService } from '@/lib/admin/store/useAdminSelfService';
+import type { QuickActionSize } from '@/lib/admin/types/adminSelfService';
 import {
   HUMI_PENDING_REQUESTS,
   HUMI_EMPLOYEES,
@@ -67,7 +68,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   GraduationCap,
 };
 
-function makeAdminQuickActions(
+export function makeAdminQuickActions(
   tiles: {
     id: string;
     label: string;
@@ -77,6 +78,7 @@ function makeAdminQuickActions(
     enabled: boolean;
     order: number;
     tone?: 'teal' | 'indigo' | 'amber' | 'coral';
+    size?: QuickActionSize;
   }[],
 ): QuickAction[] {
   return tiles
@@ -91,6 +93,7 @@ function makeAdminQuickActions(
       labelEn: t.labelEn ?? t.label,
       href: t.href,
       tone: t.tone, // carry the design tone through so home chips aren't all-teal
+      size: t.size ?? '1x1', // STA-246 — carry size so the home grid paints varied spans
     }));
 }
 

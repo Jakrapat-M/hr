@@ -205,6 +205,19 @@ export const useAdminSelfService = create<AdminSelfServiceState>()(
     {
       // v3 bump: reseeds quick actions with per-tile design tones + EN labels (discards stale v2 localStorage)
       name: 'admin-ss-config-v3',      // localStorage key (AC-6)
+      // STA-246: backfill quickActions[].size onto pre-existing v3 snapshots (no key rename → no wipe).
+      version: 1,
+      migrate: (persisted: unknown, _version: number) => {
+        const p = persisted as { published?: { quickActions?: QuickActionTile[] } } | null
+        if (p?.published?.quickActions) {
+          p.published.quickActions = p.published.quickActions.map((qa) => ({
+            ...qa,
+            size: qa.size ?? '1x1',
+          }))
+        }
+        // fieldConfig / visibility / mandatory / readonly / tiles preserved byte-for-byte.
+        return p as AdminSelfServiceState
+      },
       storage: createJSONStorage(() => {
         // guard สำหรับ SSR — Next.js render บน server ไม่มี localStorage (Rule C6)
         if (typeof window === 'undefined') {
