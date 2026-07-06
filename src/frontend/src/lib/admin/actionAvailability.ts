@@ -4,7 +4,7 @@
 
 export type ActionKey =
   | 'probation' | 'edit' | 'transfer' | 'terminate'
-  | 'contract_renewal' | 'rehire' | 'change_type' | 'promotion' | 'payRateChange' | 'acting'
+  | 'contract_renewal' | 'rehire' | 'change_type' | 'promotion' | 'payRateChange' | 'acting' | 'revert'
 
 export interface EmployeeStatusFacts {
   status: 'active' | 'inactive' | 'terminated'
@@ -52,6 +52,9 @@ export function actionAvailability(
     rehire: isTerminated
       ? { ok: true }
       : { ok: false, reason: 'เฉพาะพนักงานที่พ้นสภาพแล้ว' },
+    revert: isTerminated
+      ? { ok: true }
+      : { ok: false, reason: 'เฉพาะพนักงานที่พ้นสภาพแล้ว (ใช้เพื่อยกเลิกการสิ้นสุดสภาพ)' },
     change_type: isActive
       ? { ok: true }
       : isTerminated ? { ok: false, reason: terminated_reason }

@@ -31,6 +31,7 @@ import {
   Building2,
   Briefcase,
   RefreshCw,
+  Undo2,
   TrendingUp,
   MapPin,
   Network,
@@ -138,6 +139,7 @@ const EVENT_LABELS: Record<string, string> = {
   promotion: 'เลื่อนตำแหน่ง',
   acting_start: 'เริ่มรักษาการ',
   acting_end: 'สิ้นสุดรักษาการ',
+  revert_termination: 'ยกเลิกการสิ้นสุดสภาพ',
 }
 
 const EVENT_DOT_CLASS: Record<string, string> = {
@@ -150,6 +152,7 @@ const EVENT_DOT_CLASS: Record<string, string> = {
   promotion: 'bg-butter',
   acting_start: 'bg-accent',
   acting_end: 'bg-ink-faint',
+  revert_termination: 'bg-success',
 }
 
 function TimelineRow({ event }: { event: TimelineEvent }) {
@@ -1316,6 +1319,14 @@ export default function EmployeeDetailPage() {
       href: `/${locale}/admin/employees/${empId}/rehire`,
       locked: !avail.rehire.ok,
       lockReason: avail.rehire.reason,
+    },
+    {
+      icon: Undo2,
+      label: 'ยกเลิกการสิ้นสุดสภาพ',
+      desc: 'คืนสถานะพนักงานที่สิ้นสุดสภาพโดยไม่ถูกต้อง',
+      href: `/${locale}/admin/employees/${empId}/revert-termination`,
+      locked: !avail.revert.ok,
+      lockReason: avail.revert.reason,
     },
     {
       icon: RefreshCw,

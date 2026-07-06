@@ -22,6 +22,7 @@ const TIMELINE_LABELS_TH: Record<TimelineEvent['kind'], string> = {
   promotion: 'เลื่อนตำแหน่ง',
   acting_start: 'เริ่มรักษาการ',
   acting_end: 'สิ้นสุดรักษาการ',
+  revert_termination: 'ยกเลิกการสิ้นสุดสภาพ',
 }
 
 interface StatCardProps {
@@ -166,6 +167,7 @@ export default function ReportsPage() {
       promotion: 0,
       acting_start: 0,
       acting_end: 0,
+      revert_termination: 0,
     }
     let total = 0
     for (const events of Object.values(byEmployee)) {
