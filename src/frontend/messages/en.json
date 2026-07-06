@@ -5929,6 +5929,8 @@
     "eyebrow": "Exit interview",
     "sectionTitle": "Exit Interview",
     "optional": "optional",
+    "skip": "Skip",
+    "save": "Save",
     "intro": "This Exit Interview is designated to share your thoughts and feedback on your work experience, including the reasons for your departure. This will keep us determine areas of improvement for better HR strategy.",
     "rankedHint": "Please choose 3 factors that influenced your decision to leave.",
     "rankLabel": "Rank {rank}",
