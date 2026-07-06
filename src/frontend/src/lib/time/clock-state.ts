@@ -62,6 +62,7 @@ export type ChipKind =
   | 'clockMismatch'
   | 'clockAbsent'
   | 'ot'
+  | 'leave'
   | 'dayOff'
   | 'holiday';
 
@@ -74,6 +75,7 @@ export type ChipKind =
  *   clockMismatch→ pumpkin (danger)       — solid, the strongest warning
  *   clockAbsent  → gray    (ink-muted)
  *   ot           → amber   (warning)
+ *   leave        → sage    (approved leave — read-only, distinct from indigo shift)
  *   dayOff       → gray    (canvas-soft)
  *   holiday      → amber-soft (warning-soft)
  */
@@ -87,6 +89,8 @@ export const CHIP_CLASS: Record<ChipKind, string> = {
   clockAbsent:
     'bg-canvas-soft text-ink-muted border-[var(--color-ink-muted)]',
   ot: 'bg-warning-soft text-warning border-warning',
+  leave:
+    'bg-[var(--color-sage-soft)] text-[var(--color-sage-ink)] border-[var(--color-sage)]',
   dayOff: 'bg-canvas-soft text-ink-muted border-hairline',
   holiday:
     'bg-warning-soft text-warning border-warning',
