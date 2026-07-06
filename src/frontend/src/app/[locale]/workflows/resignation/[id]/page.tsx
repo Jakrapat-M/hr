@@ -18,6 +18,7 @@ import {
   ArrowRight,
   Check,
   MessageCircle,
+  Paperclip,
   Plus,
   Users,
   X,
@@ -365,6 +366,26 @@ export default function ResignationDetailPage({ params }: PageProps) {
                 : 'The reason and exit-interview answers are shared with HR Admin automatically.'}
             </div>
           </div>
+
+          {/* Attachments card */}
+          {request.attachments?.length ? (
+            <div className="humi-card">
+              <h3 className="mb-3.5 font-display text-base font-semibold tracking-tight text-ink">
+                {isTh ? 'เอกสารแนบ' : 'Attachments'}
+              </h3>
+              <ul className="flex flex-col gap-2">
+                {request.attachments.map((file, idx) => (
+                  <li
+                    key={`${file}-${idx}`}
+                    className="flex items-center gap-2.5 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-3.5 py-2.5 text-sm text-ink"
+                  >
+                    <Paperclip className="h-4 w-4 shrink-0 text-ink-muted" />
+                    <span className="truncate">{file}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           {/* Decision panel */}
           <div className="humi-card">
