@@ -19,10 +19,29 @@ export const CLAIM_STATUS_SORT_RANK: Record<ClaimStatus, number> = {
   info: 0,
   pending: 1,
   approved: 2,
+  // STA-234 — terminal state sorts last (after the 3 active buckets).
+  cancelled: 3,
 };
 
 export function claimStatusSortRank(status: ClaimStatus): number {
   return CLAIM_STATUS_SORT_RANK[status] ?? Number.MAX_SAFE_INTEGER;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// STA-234 — pure gating for the hub claim-detail modal action footer.
+//   Cancel claim: allowed while info (ขอข้อมูลเพิ่ม) or pending (รออนุมัติ).
+//   Edit:         allowed only while info (ขอข้อมูลเพิ่ม).
+//   approved / cancelled → neither.
+// ────────────────────────────────────────────────────────────────────────────
+
+export function benefitClaimRowActions(status: ClaimStatus): {
+  canCancel: boolean;
+  canEdit: boolean;
+} {
+  return {
+    canCancel: status === 'info' || status === 'pending',
+    canEdit: status === 'info',
+  };
 }
 
 /**

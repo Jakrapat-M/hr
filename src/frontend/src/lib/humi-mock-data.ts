@@ -1596,7 +1596,7 @@ export const HUMI_CLAIM_ALLOWANCES: HumiClaimAllowance[] = [
   { id: 'ca-checkup-b', label: 'ตรวจสุขภาพ (แพ็กเกจ B)', used: 0, limit: 8000, sub: 'ปีละครั้ง · แพ็กเกจ B', accent: 'butter' },
 ];
 
-export type ClaimStatus = 'approved' | 'pending' | 'info';
+export type ClaimStatus = 'approved' | 'pending' | 'info' | 'cancelled';
 
 export interface HumiClaimHistoryItem {
   id: string;
@@ -1928,6 +1928,8 @@ export const CLAIM_STATUS_META: Record<ClaimStatus, { label: string; toneClass: 
   approved: { label: 'อนุมัติแล้ว', toneClass: 'bg-[color:var(--color-success-soft)] text-[color:var(--color-success)]' },
   pending: { label: 'รออนุมัติ', toneClass: 'bg-warning-soft text-[color:var(--color-warning)]' },
   info: { label: 'ขอข้อมูลเพิ่ม', toneClass: 'bg-accent-soft text-[color:var(--color-accent-ink)]' },
+  // STA-234 — terminal state after an employee self-cancels a claim (neutral tone).
+  cancelled: { label: 'ยกเลิกแล้ว', toneClass: 'bg-[color:var(--color-canvas-soft)] text-ink-muted' },
 };
 
 /** Review cycle tone → badge. */

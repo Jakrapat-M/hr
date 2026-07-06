@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { ClaimDetailModal } from '@/components/benefits/ClaimDetailModal';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
@@ -93,5 +93,55 @@ describe('<ClaimDetailModal> — read-only, capability-bypassed', () => {
     loginAs(['employee']);
     render(<ClaimDetailModal claim={OWN_CLAIM} open={false} onClose={() => {}} />);
     expect(screen.queryByText('RX-7788')).toBeNull();
+  });
+});
+
+// STA-234 — opt-in Cancel/Edit action footer. Labels pass through the next-intl
+// mock, so the buttons render as the literal keys 'cancelClaim' / 'editClaim'.
+describe('<ClaimDetailModal> — STA-234 action footer (opt-in)', () => {
+  beforeEach(() => {
+    useAuthStore.getState().clearUser();
+    loginAs(['employee']);
+  });
+  afterEach(() => cleanup());
+
+  const cancelBtn = () => screen.queryByRole('button', { name: 'cancelClaim' });
+  const editBtn = () => screen.queryByRole('button', { name: 'editClaim' });
+
+  it('renders NEITHER button when both callbacks are omitted (regression guard for /history + admin)', () => {
+    render(<ClaimDetailModal claim={OWN_CLAIM} open onClose={() => {}} />);
+    expect(cancelBtn()).toBeNull();
+    expect(editBtn()).toBeNull();
+  });
+
+  it('renders Cancel only when onCancel is supplied', () => {
+    render(<ClaimDetailModal claim={OWN_CLAIM} open onClose={() => {}} onCancel={() => {}} />);
+    expect(cancelBtn()).toBeInTheDocument();
+    expect(editBtn()).toBeNull();
+  });
+
+  it('renders Edit only when onEdit is supplied', () => {
+    render(<ClaimDetailModal claim={OWN_CLAIM} open onClose={() => {}} onEdit={() => {}} />);
+    expect(editBtn()).toBeInTheDocument();
+    expect(cancelBtn()).toBeNull();
+  });
+
+  it('fires the callbacks on click', () => {
+    const onCancel = vi.fn();
+    const onEdit = vi.fn();
+    render(
+      <ClaimDetailModal claim={OWN_CLAIM} open onClose={() => {}} onCancel={onCancel} onEdit={onEdit} />,
+    );
+    fireEvent.click(editBtn()!);
+    fireEvent.click(cancelBtn()!);
+    expect(onEdit).toHaveBeenCalledTimes(1);
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it('styles Cancel with the pumpkin --color-danger token (NO-RED)', () => {
+    render(<ClaimDetailModal claim={OWN_CLAIM} open onClose={() => {}} onCancel={() => {}} />);
+    const btn = cancelBtn()!;
+    expect(btn.className).toContain('var(--color-danger)');
+    expect(btn.className).not.toMatch(/red|crimson|coral/i);
   });
 });

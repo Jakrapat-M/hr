@@ -3,8 +3,10 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
   ArrowRight,
+  Check,
   Download,
   FileText,
   Hospital,
@@ -17,12 +19,14 @@ import {
 import {
   Avatar,
   Button,
+  CancelRequestModal,
   Card,
   CardEyebrow,
   CardTitle,
   DataTable,
   DemoValuesDisclaimer,
   FormField,
+  Modal,
   buttonVariants,
 } from '@/components/humi';
 import type { DataTableColumn } from '@/components/humi';
@@ -32,6 +36,7 @@ import { cn } from '@/lib/utils';
 import {
   CLAIM_TYPE_OPTIONS,
   CLAIM_STATUS_BUCKET_OPTIONS,
+  benefitClaimRowActions,
   filterHumiClaimHistory,
   formatClaimDate,
   sortByClaimStatus,
@@ -466,9 +471,23 @@ export default function HumiBenefitsHubPage() {
 // Sub-sections
 // ────────────────────────────────────────────────────────────────────────────
 
+// Simple in-memory toast (no external library; ToastProvider is not mounted here).
+function useToast() {
+  const [toast, setToast] = useState<{ msg: string; visible: boolean }>({ msg: '', visible: false });
+  const show = (msg: string) => {
+    setToast({ msg, visible: true });
+    setTimeout(() => setToast({ msg: '', visible: false }), 3200);
+  };
+  return { toast, show };
+}
+
 // STA-194 — Claim history with Benefit name / Claim Type / Status filters over
 // HUMI_CLAIM_HISTORY, sorted by status group (ขอข้อมูลเพิ่ม → รออนุมัติ → อนุมัติแล้ว).
 function ClaimHistorySection() {
+  const t = useTranslations('benefits');
+  const params = useParams<{ locale?: string }>();
+  const locale = params?.locale === 'en' ? 'en' : 'th';
+
   const [benefitFilter, setBenefitFilter] = useState('');
   const [claimTypeFilter, setClaimTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -476,17 +495,62 @@ function ClaimHistorySection() {
   const [dateToFilter, setDateToFilter] = useState('');
   // STA-182 — "more detail" row action opens a read-only detail modal.
   const [detailRow, setDetailRow] = useState<HumiClaimHistoryItem | null>(null);
+  // STA-234 — local mutable copy so cancel/edit produce visible state transitions
+  // (HUMI_CLAIM_HISTORY is a const; never mutate it). Sub-flow targets + toast.
+  const [rows, setRows] = useState(() => HUMI_CLAIM_HISTORY);
+  const [cancelTarget, setCancelTarget] = useState<HumiClaimHistoryItem | null>(null);
+  const [editTarget, setEditTarget] = useState<HumiClaimHistoryItem | null>(null);
+  const [editDesc, setEditDesc] = useState('');
+  const [editAmount, setEditAmount] = useState('');
+  const { toast, show: showToast } = useToast();
 
   const filteredClaimHistory = useMemo(() => {
-    const rows = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, {
+    const filtered = filterHumiClaimHistory(rows, {
       benefit: benefitFilter,
       claimType: claimTypeFilter,
       status: statusFilter,
       dateFrom: dateFromFilter,
       dateTo: dateToFilter,
     });
-    return sortByClaimStatus(rows);
-  }, [benefitFilter, claimTypeFilter, statusFilter, dateFromFilter, dateToFilter]);
+    return sortByClaimStatus(filtered);
+  }, [rows, benefitFilter, claimTypeFilter, statusFilter, dateFromFilter, dateToFilter]);
+
+  // STA-234 — gate the modal footer buttons on the row's native ClaimStatus.
+  const rowActions = detailRow ? benefitClaimRowActions(detailRow.status) : null;
+
+  const openCancel = () => {
+    if (!detailRow) return;
+    setCancelTarget(detailRow);
+    setDetailRow(null);
+  };
+
+  const openEdit = () => {
+    if (!detailRow) return;
+    setEditDesc(detailRow.desc);
+    setEditAmount(detailRow.amount);
+    setEditTarget(detailRow);
+    setDetailRow(null);
+  };
+
+  const confirmCancel = () => {
+    if (!cancelTarget) return;
+    const id = cancelTarget.id;
+    setRows((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'cancelled' } : x)));
+    setCancelTarget(null);
+    showToast(t('claimCancelledToast'));
+  };
+
+  const saveEdit = () => {
+    if (!editTarget) return;
+    const id = editTarget.id;
+    setRows((prev) =>
+      prev.map((x) =>
+        x.id === id ? { ...x, desc: editDesc, amount: editAmount, status: 'pending' } : x,
+      ),
+    );
+    setEditTarget(null);
+    showToast(t('claimUpdatedToast'));
+  };
 
   const claimHistoryColumns = useMemo<DataTableColumn<HumiClaimHistoryItem>[]>(() => [
     {
@@ -705,12 +769,87 @@ function ClaimHistorySection() {
 
       {/* STA-182 — reuse the read-only ClaimDetailModal (STA-159): request detail +
           approval history + attachment view. The hub preview row is adapted into a
-          BenefitClaimRequest for the shared modal. */}
+          BenefitClaimRequest for the shared modal.
+          STA-234 — opt-in Cancel/Edit footer, gated on the row's native status. */}
       <ClaimDetailModal
         claim={detailRow ? humiClaimHistoryToClaimRequest(detailRow) : null}
         open={detailRow !== null}
         onClose={() => setDetailRow(null)}
+        onCancel={rowActions?.canCancel ? openCancel : undefined}
+        onEdit={rowActions?.canEdit ? openEdit : undefined}
       />
+
+      {/* STA-234 — pumpkin confirm before cancelling (NO-RED). */}
+      <CancelRequestModal
+        open={cancelTarget !== null}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={confirmCancel}
+        locale={locale}
+        fields={{
+          typeLabel: cancelTarget?.type ?? '',
+          period: cancelTarget ? formatClaimDate(cancelTarget.submittedAt) : '',
+          reason: cancelTarget?.desc,
+          currentStep: cancelTarget ? CLAIM_STATUS_META[cancelTarget.status].label : '',
+          currentStatus: cancelTarget ? CLAIM_STATUS_META[cancelTarget.status].label : '',
+        }}
+      />
+
+      {/* STA-234 — inline edit (info claims only): amend desc + amount, resubmit. */}
+      <Modal
+        open={editTarget !== null}
+        onClose={() => setEditTarget(null)}
+        title={t('editClaimTitle')}
+        widthClass="max-w-md"
+      >
+        <div className="flex flex-col gap-4">
+          <FormField id="edit-claim-desc" label={locale === 'en' ? 'Description' : 'รายละเอียด'}>
+            {(controlProps) => (
+              <input
+                {...controlProps}
+                type="text"
+                value={editDesc}
+                onChange={(event) => setEditDesc(event.target.value)}
+                className={filterSelectClass}
+              />
+            )}
+          </FormField>
+          <FormField id="edit-claim-amount" label={locale === 'en' ? 'Amount' : 'จำนวนเงิน'}>
+            {(controlProps) => (
+              <input
+                {...controlProps}
+                type="text"
+                value={editAmount}
+                onChange={(event) => setEditAmount(event.target.value)}
+                className={filterSelectClass}
+              />
+            )}
+          </FormField>
+          <div className="mt-1 flex justify-end gap-2">
+            <Button variant="ghost" size="md" onClick={() => setEditTarget(null)}>
+              {locale === 'en' ? 'Cancel' : 'ยกเลิก'}
+            </Button>
+            <Button variant="primary" size="md" onClick={saveEdit}>
+              {locale === 'en' ? 'Save' : 'บันทึก'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* STA-234 — action toast (mockup in-memory). */}
+      {toast.visible && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={cn(
+            'fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-[var(--radius-md)] px-4 py-3',
+            'bg-ink text-canvas shadow-[var(--shadow-lg)]',
+            'text-body font-medium',
+          )}
+        >
+          <Check size={16} aria-hidden />
+          {toast.msg}
+        </div>
+      )}
     </section>
   );
 }

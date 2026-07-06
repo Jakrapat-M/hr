@@ -15,6 +15,8 @@ const STATUS_MAP: Record<HumiClaimHistoryItem['status'], BenefitClaimStatus> = {
   approved: 'approved',
   pending: 'pending_spd',
   info: 'pending_manager_approval',
+  // STA-234 — employee self-cancelled claim (BenefitClaimStatus has 'cancelled').
+  cancelled: 'cancelled',
 };
 
 function amountToNumber(amount: string): number {

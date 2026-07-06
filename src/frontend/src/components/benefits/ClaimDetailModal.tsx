@@ -14,7 +14,7 @@
 
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Modal } from '@/components/humi';
+import { Button, Modal } from '@/components/humi';
 import { ClaimPayload } from '@/components/quick-approve/detail/RequestPayload';
 import { RequestSummary } from '@/components/quick-approve/detail/RequestSummary';
 import { AttachmentViewPanel } from '@/components/quick-approve/detail/AttachmentViewPanel';
@@ -27,9 +27,15 @@ interface ClaimDetailModalProps {
   claim: BenefitClaimRequest | null;
   open: boolean;
   onClose: () => void;
+  /**
+   * STA-234 — opt-in action footer. A callback renders its button; both omitted
+   * (the /history + admin callers) → no footer row → those surfaces unchanged.
+   */
+  onCancel?: () => void;
+  onEdit?: () => void;
 }
 
-export function ClaimDetailModal({ claim, open, onClose }: ClaimDetailModalProps) {
+export function ClaimDetailModal({ claim, open, onClose, onCancel, onEdit }: ClaimDetailModalProps) {
   const t = useTranslations('benefits');
   const payloadT = useTranslations('quick_approve_detail');
   const locale = useLocale() === 'en' ? 'en' : 'th';
@@ -60,6 +66,28 @@ export function ClaimDetailModal({ claim, open, onClose }: ClaimDetailModalProps
           </div>
 
           <HistoryTimeline steps={request.approvalTimeline} />
+
+          {/* STA-234 — opt-in action footer (below Approval History). Renders only
+              when the caller supplies a callback; other surfaces stay unchanged. */}
+          {(onCancel || onEdit) && (
+            <div className="flex justify-end gap-2 border-t border-hairline pt-4">
+              {onEdit && (
+                <Button variant="ghost" size="md" onClick={onEdit}>
+                  {t('editClaim')}
+                </Button>
+              )}
+              {onCancel && (
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={onCancel}
+                  className="bg-[color:var(--color-danger)] text-canvas hover:bg-[color:var(--color-danger)]/90"
+                >
+                  {t('cancelClaim')}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </Modal>
