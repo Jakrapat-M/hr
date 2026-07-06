@@ -26,52 +26,15 @@ test.describe('Quick Approve Hub', () => {
     }
   });
 
-  test('should select multiple items for bulk action', async ({ page }) => {
+  // STA-238 — approve-all / bulk is removed; approvals are case-by-case only.
+  test('should NOT render any bulk-select affordance (case-by-case only)', async ({ page }) => {
     await navigateTo(page, '/quick-approve');
     await waitForLoading(page);
-    const checkboxes = page.locator(
-      'input[type="checkbox"], [role="checkbox"]',
-    );
-    if ((await checkboxes.count()) >= 2) {
-      await checkboxes.first().click();
-      await checkboxes.nth(1).click();
-      // Bulk actions should appear
-      const bulkActions = page.locator(
-        '[data-testid="bulk-actions"], :has-text("selected")',
-      ).first();
-      await expect(bulkActions).toBeVisible({ timeout: 3000 });
-    }
-  });
-
-  test('should bulk approve selected items', async ({ page }) => {
-    await navigateTo(page, '/quick-approve');
-    await waitForLoading(page);
-    // Select all
-    const selectAll = page.locator(
-      '[data-testid="select-all"], input[type="checkbox"]',
-    ).first();
-    if (await selectAll.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await selectAll.click();
-      const bulkApprove = page.getByRole('button', { name: /approve/i }).first();
-      if (await bulkApprove.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await bulkApprove.click();
-      }
-    }
-  });
-
-  test('should bulk reject selected items', async ({ page }) => {
-    await navigateTo(page, '/quick-approve');
-    await waitForLoading(page);
-    const selectAll = page.locator(
-      '[data-testid="select-all"], input[type="checkbox"]',
-    ).first();
-    if (await selectAll.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await selectAll.click();
-      const bulkReject = page.getByRole('button', { name: /reject/i }).first();
-      if (await bulkReject.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await bulkReject.click();
-      }
-    }
+    // No checkboxes (row select or select-all) anywhere in the queue.
+    await expect(page.locator('input[type="checkbox"], [role="checkbox"]')).toHaveCount(0);
+    // No sticky bulk action bar ("N selected" / bulk approve-selected control).
+    await expect(page.locator('[data-testid="bulk-actions"]')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /approve .*selected|selected/i })).toHaveCount(0);
   });
 
   test('should open slide-over detail panel', async ({ page }) => {
@@ -104,14 +67,4 @@ test.describe('Quick Approve Hub', () => {
     }
   });
 
-  test('should enforce max 50 bulk selection limit', async ({ page }) => {
-    await navigateTo(page, '/quick-approve');
-    await waitForLoading(page);
-    // Check that the page renders with pagination or limit info
-    const limitInfo = page.locator(
-      '[data-testid="selection-limit"], :has-text("50"), :has-text("maximum")',
-    ).first();
-    // This validates the UI enforces limits - may show when selecting many
-    await expect(page.locator('body')).toBeVisible();
-  });
 });

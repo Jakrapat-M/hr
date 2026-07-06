@@ -3238,25 +3238,7 @@
         "awaitingNext": "รอผู้อนุมัติถัดไป"
       },
       "subtitleActionable": "คุณตัดสินใจได้ {actionable} จาก {total} รายการที่รออนุมัติ",
-      "nextApprover": "ถัดไป: {approver}",
-      "bulk": {
-        "selectAll": "เลือกทั้งหมด",
-        "selectRow": "เลือก {ref}",
-        "selectedCount": "เลือกแล้ว {count} รายการ",
-        "clear": "ล้าง",
-        "reject": "ปฏิเสธ",
-        "approveSelected": "อนุมัติที่เลือก ({count})",
-        "confirmApproveTitle": "อนุมัติ {count} รายการ?",
-        "confirmRejectTitle": "ปฏิเสธ {count} รายการ?",
-        "approveConfirmDesc": "จะอนุมัติ {count} รายการที่เลือก แต่ละรายการจะไปยังขั้นอนุมัติถัดไป",
-        "rejectReason": "เหตุผลในการปฏิเสธ",
-        "rejectReasonPlaceholder": "อธิบายเหตุผลที่ปฏิเสธรายการเหล่านี้...",
-        "cancel": "ยกเลิก",
-        "confirm": "ยืนยัน",
-        "submitting": "กำลังดำเนินการ...",
-        "approveSuccess": "อนุมัติแล้ว {count} รายการ",
-        "rejectSuccess": "ปฏิเสธแล้ว {count} รายการ"
-      }
+      "nextApprover": "ถัดไป: {approver}"
     },
     "slideOver": {
       "title": "รายละเอียดคำขอ",

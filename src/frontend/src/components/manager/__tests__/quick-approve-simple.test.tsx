@@ -42,10 +42,12 @@ const TOTAL_SEED_COUNT =
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
 
-// Mock next/navigation
+// Mock next/navigation — capture push so the STA-238 deep-link assertion can read
+// it (a dedicated-page row calls router.push instead of opening the popup).
+const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }));
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/th/quick-approve'),
-  useRouter: vi.fn(() => ({ push: vi.fn() })),
+  useRouter: vi.fn(() => ({ push: pushMock })),
 }));
 
 // PR-1b: run the SINGLE seed authority before each test so the derived inbox has
@@ -70,6 +72,7 @@ beforeEach(() => {
   useOvertimeRequests.getState().clear();
   resetEnsureDemoSeedForTests();
   ensureDemoSeed();
+  pushMock.mockClear();
   // Default acting persona = senior approver (acts on every row).
   setRoles(['hr_admin']);
 });
@@ -186,26 +189,53 @@ describe('QuickApproveSimple — AC7.4 row-click popup', () => {
     expect(screen.queryAllByRole('link', { name: /ดูรายละเอียด/ })).toHaveLength(0);
   });
 
-  it('clicking a request ROW opens the detail popup with an "Open full page" deep link', () => {
-    renderComponent();
-    // Rows are interactive (role=button) once onRowClick is wired by the inbox.
+  it('clicking a FALLBACK-type row (claim) opens the detail popup with an "Open full page" deep link', () => {
+    // Filter to the BE (benefit) module so a claim row — which uses the unified
+    // /quick-approve/[id] fallback → the popup — is in the (preview-capped) list.
+    const { container } = renderComponent();
+    fireEvent.click(container.querySelector('[data-module="BE"]')!);
     const rowButtons = screen.getAllByRole('button').filter((b) => b.tagName === 'TR');
     expect(rowButtons.length).toBeGreaterThanOrEqual(1);
     fireEvent.click(rowButtons[0]);
-    // The popup mounts the generic detail + an "Open full page" deep link that
-    // resolves to the row's per-type detail route (so Reject/Return there aren't
-    // stranded). The inbox passes its full per-type detailHref.
+    // The popup mounts the generic detail + an "Open full page" deep link resolving
+    // to the fallback /quick-approve/[id] route (so Reject/Return aren't stranded).
     const fullPage = screen.getByRole('link', { name: /ดูเต็มหน้า/ });
-    expect(fullPage).toHaveAttribute(
-      'href',
-      expect.stringMatching(
-        /\/(quick-approve|workflows\/(pay-rate|tax-planning|time-correction|leave|ot|probation|resignation))\//,
-      ),
-    );
-    // The popup's Approve control (Modal footer) is now present.
-    expect(
-      screen.getByRole('dialog'),
-    ).toBeInTheDocument();
+    expect(fullPage).toHaveAttribute('href', expect.stringMatching(/\/quick-approve\//));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  // STA-238 — a task with a dedicated page deep-links straight there (no popup).
+  // The default (submittedAt-desc) top rows are all dedicated-page types.
+  it('clicking a dedicated-page row deep-links (router.push) instead of opening a popup', () => {
+    renderComponent();
+    const rowButtons = screen.getAllByRole('button').filter((b) => b.tagName === 'TR');
+    expect(rowButtons.length).toBeGreaterThanOrEqual(1);
+    fireEvent.click(rowButtons[0]);
+    // No popup — a deep-link navigation to the type's own detail route instead.
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(pushMock).toHaveBeenCalledWith(expect.stringMatching(/\/(workflows|team)\//));
+  });
+});
+
+// ────────────────────────────────────────────────────────────
+// STA-238 — no approve-all / bulk surface (case-by-case only)
+// ────────────────────────────────────────────────────────────
+describe('QuickApproveSimple — STA-238 no bulk surface', () => {
+  it('renders no select-all header control or row checkboxes', () => {
+    renderComponent();
+    // The removed select-all lived as a button with the bulk.selectAll aria-label;
+    // that key is gone, and there are no checkboxes in the queue at all.
+    expect(screen.queryByRole('button', { name: /เลือกทั้งหมด/ })).toBeNull();
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+  });
+
+  it('renders no bulk approve/reject action bar', () => {
+    renderComponent();
+    // No "อนุมัติที่เลือก (N)" bulk-approve button and no bulk selected-count status.
+    expect(screen.queryByRole('button', { name: /อนุมัติที่เลือก/ })).toBeNull();
+    expect(screen.queryByRole('status')).toBeNull();
+    // Nothing approvable inline — every decision is case-by-case (popup / full page).
+    expect(queryQueueButtons(/อนุมัติ/)).toHaveLength(0);
   });
 });
 

@@ -416,7 +416,133 @@ const MOCK_CASES: ProbationCase[] = [
       },
     ],
   },
+  {
+    // STA-238 — pending sample so /quick-approve shows a live probation task.
+    id: 'PB-006',
+    employeeId: 'EMP073',
+    fullNameTh: 'ณัฐริกา พงษ์ไพบูลย์',
+    fullNameEn: 'Nattarika Pongpaiboon',
+    photo: 'https://i.pravatar.cc/150?img=24',
+    position: 'Data Analyst',
+    department: 'Product & Technology',
+    company: 'Central Group',
+    businessUnit: 'Data & Insights',
+    location: 'Silom Tower',
+    jobCode: 'DA-TL1',
+    jobLevel: 'TL1',
+    employeeGroup: 'A - Permanent',
+    hireDate: '2026-03-10',
+    probationEndDate: '2026-07-08',
+    status: 'pending_manager',
+    currentApprover: { name: 'Rungrote Amnuaysopon', role: 'VP Product & Technology' },
+    request: {
+      requestedBy: 'ระบบ',
+      requestedRole: 'System',
+      requestedAt: '2026-07-01T09:00:00',
+      source: 'TBD: EC probation workflow API',
+    },
+    manager: { name: 'Rungrote Amnuaysopon', role: 'Direct Manager', employeeId: 'EMP006' },
+    assessment: {
+      result: 'Pending manager decision',
+      score: 'TBD',
+      reason: 'Auto-created when probation reached configured end date.',
+      remarks: '',
+    },
+    slaDeadline: '2026-07-06T17:00:00',
+    requestType: 'Probation manager approval',
+    requestReason: '120-day probation review requires manager sign-off before HR update',
+    assessmentSummary:
+      'Ships dashboards on schedule and picks up the data stack quickly; ready for a permanent decision.',
+    managerRemarks: 'TBD — manager decision comment will be captured on submit',
+    hrRemarks: 'TBD — EC/SharePoint property mapping pending backend confirmation',
+    submittedAt: '2026-07-01T09:00:00',
+    timeline: [
+      {
+        actor: 'ระบบ',
+        actorRole: 'System',
+        action: 'สร้าง workflow อัตโนมัติ — probation ครบ 120 วัน',
+        date: '2026-07-01T09:00:00',
+      },
+      {
+        actor: 'ระบบ',
+        actorRole: 'System',
+        action: 'แจ้ง Rungrote Amnuaysopon (หัวหน้างาน) — SLA 48 ชม.',
+        date: '2026-07-01T09:01:00',
+      },
+    ],
+  },
+  {
+    // STA-238 — a second pending sample, sitting at the HRBP step.
+    id: 'PB-007',
+    employeeId: 'EMP081',
+    fullNameTh: 'กิตติพงศ์ วรรณศิริ',
+    fullNameEn: 'Kittipong Wannasiri',
+    photo: 'https://i.pravatar.cc/150?img=15',
+    position: 'Store Supervisor',
+    department: 'Retail Operations',
+    company: 'Central Group',
+    businessUnit: 'Store Network',
+    location: 'CentralWorld',
+    jobCode: 'SUP-TL1',
+    jobLevel: 'TL1',
+    employeeGroup: 'A - Permanent',
+    hireDate: '2026-03-05',
+    probationEndDate: '2026-07-03',
+    status: 'pending_hr',
+    currentApprover: { name: 'กัณณิกา ศรีสวัสดิ์', role: 'HRBP' },
+    request: {
+      requestedBy: 'ระบบ',
+      requestedRole: 'System',
+      requestedAt: '2026-06-28T09:00:00',
+      source: 'TBD: EC probation workflow API',
+    },
+    manager: { name: 'สุนิสา เจริญทรัพย์', role: 'Direct Manager', employeeId: 'EMP012' },
+    assessment: {
+      result: 'Manager approved — awaiting HRBP',
+      score: 'Meets expectations',
+      reason: 'Manager signed off; HRBP confirmation pending before permanent status.',
+      remarks: 'ดูแลหน้าร้านได้ดี ทีมงานให้ผลตอบรับเชิงบวก',
+    },
+    slaDeadline: '2026-07-06T17:00:00',
+    requestType: 'Probation HRBP approval',
+    requestReason: 'Manager approved probation result; HRBP confirmation required.',
+    assessmentSummary: 'Strong floor leadership and consistent service scores through the probation window.',
+    managerRemarks: 'ดูแลหน้าร้านได้ดี ทีมงานให้ผลตอบรับเชิงบวก',
+    hrRemarks: 'รอ HRBP ยืนยันผลก่อนบรรจุ',
+    submittedAt: '2026-06-28T09:00:00',
+    timeline: [
+      {
+        actor: 'ระบบ',
+        actorRole: 'System',
+        action: 'สร้าง workflow — probation ครบ 120 วัน',
+        date: '2026-06-28T09:00:00',
+      },
+      {
+        actor: 'สุนิสา เจริญทรัพย์',
+        actorRole: 'Manager',
+        action: 'อนุมัติผลทดลองงาน — ส่งต่อ HRBP',
+        date: '2026-06-30T10:20:00',
+        comment: 'ดูแลหน้าร้านได้ดี ทีมงานให้ผลตอบรับเชิงบวก',
+      },
+      {
+        actor: 'ระบบ',
+        actorRole: 'System',
+        action: 'แจ้ง กัณณิกา ศรีสวัสดิ์ (HRBP) — SLA 24 ชม.',
+        date: '2026-06-30T10:21:00',
+      },
+    ],
+  },
 ];
+
+/**
+ * Non-reactive accessor over the probation mock cases (STA-238). Exposed so the
+ * approval-registry's one-shot `getPendingApprovals()` can surface probation rows
+ * without a React render. Returns the raw const (avoids exporting the mutable
+ * array binding directly).
+ */
+export function getProbationCases(): ProbationCase[] {
+  return MOCK_CASES;
+}
 
 export function useProbationCases() {
   const [cases, setCases] = useState<ProbationCase[]>([]);
