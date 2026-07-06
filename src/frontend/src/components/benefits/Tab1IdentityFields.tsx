@@ -17,7 +17,10 @@ export type BenefitTypeGroup = 'reimbursement-employee-hr' | 'reimbursement-hr' 
 export type EnrolmentMode = 'auto' | 'manual';
 export type ClaimPeriod = 'year' | 'month' | 'quarter' | 'one-time' | 'lifetime';
 export type EntitlementCalcMethod = 'full' | 'prorate';
-export type EligibleClaimDate = '30' | '60' | '90' | 'none';
+// STA-240 — widened from the old '30'|'60'|'90'|'none' union to a free integer
+// string (days). BA requires a mandatory integer input, not a fixed dropdown;
+// existing '30' seeds remain valid strings. Guarded at runtime by isValidClaimDays.
+export type EligibleClaimDate = string;
 
 export interface Tab1IdentityValues {
   ttt: string;
@@ -235,21 +238,9 @@ export function Tab1IdentityFields({
         </div>
       </div>
 
-      {/* 1. TTT reference */}
-      <FormField
-        id="tab1-ttt"
-        label={isTh ? 'รหัส TTT' : 'TTT reference'}
-      >
-        {(cp) => (
-          <FormInput
-            {...cp}
-            value={values.ttt}
-            onChange={(e) => onChange('ttt', e.target.value)}
-            disabled={isLocked('ttt')}
-            placeholder="BE_06"
-          />
-        )}
-      </FormField>
+      {/* STA-240 — TTT reference input removed (BA: "user does not use it").
+          The `ttt` model key is retained-but-hidden on Tab1IdentityValues + the
+          registry seeds; only this user-facing control is dropped. */}
 
       {/* 2. Plan key */}
       <FormField
@@ -525,6 +516,29 @@ export function Tab1IdentityFields({
                 <option value="full">{isTh ? 'เต็มจำนวน (Full)' : 'Full'}</option>
                 <option value="prorate">{isTh ? 'ตามสัดส่วน (Prorate)' : 'Prorate'}</option>
               </select>
+            )}
+          </FormField>
+        </div>
+
+        {/* STA-240 — Eligible Claim date (days). Mandatory, integer-only; placed
+            immediately after Entitlement calc method per the ticket. Auto-locks
+            in Insert (not in INSERT_EDITABLE_KEYS); seed '30' keeps it valid. */}
+        <div className="mt-4">
+          <FormField
+            id="tab1-eligibleClaimDate"
+            label={isTh ? 'จำนวนวันที่มีสิทธิเบิก (Eligible claim date)' : 'Eligible Claim date (days)'}
+            required
+          >
+            {(cp) => (
+              <FormInput
+                {...cp}
+                inputMode="numeric"
+                required
+                value={values.eligibleClaimDate}
+                onChange={(e) => onChange('eligibleClaimDate', e.target.value)}
+                disabled={isLocked('eligibleClaimDate')}
+                placeholder="30"
+              />
             )}
           </FormField>
         </div>

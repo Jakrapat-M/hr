@@ -157,8 +157,9 @@ export interface BenefitPlanV1 {
   claimPeriod?: 'year' | 'month' | 'quarter' | 'one-time' | 'lifetime';
   /** STA-70 follow-up — Entitlement-amount calculation method. */
   entitlementCalcMethod?: 'full' | 'prorate';
-  /** STA-70 follow-up — Eligible-claim-date threshold. */
-  eligibleClaimDate?: '30' | '60' | '90' | 'none';
+  /** STA-70 follow-up — Eligible-claim-date threshold (days).
+   *  STA-240: widened to a free integer string; existing '30' seeds stay valid. */
+  eligibleClaimDate?: string;
   /** STA-179 — Special claim condition toggle + revealed condition type. */
   specialClaimCondition?: 'yes' | 'no' | '';
   specialClaimConditionType?: string;
@@ -210,8 +211,9 @@ export interface BenefitPlanV2 {
   claimPeriod?: 'year' | 'month' | 'quarter' | 'one-time' | 'lifetime';
   /** STA-70 follow-up — Entitlement-amount calculation method. */
   entitlementCalcMethod?: 'full' | 'prorate';
-  /** STA-70 follow-up — Eligible-claim-date threshold. */
-  eligibleClaimDate?: '30' | '60' | '90' | 'none';
+  /** STA-70 follow-up — Eligible-claim-date threshold (days).
+   *  STA-240: widened to a free integer string; existing '30' seeds stay valid. */
+  eligibleClaimDate?: string;
   /** STA-179 — Special claim condition toggle + revealed condition type. */
   specialClaimCondition?: 'yes' | 'no' | '';
   specialClaimConditionType?: string;
