@@ -30,6 +30,10 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useBenefitHistoryStore } from '@/stores/benefit-history-store';
 import { applyIdentityToPlan, buildPlanFromCreate } from './plan-builders';
 
+/** STA-240 — Eligible Claim date is mandatory + integer-only (days). Rejects
+ *  empty, decimals, negatives, and non-numeric; accepts e.g. '30' / '90'. */
+const isValidClaimDays = (v: string) => /^\d+$/.test(v.trim());
+
 /** STA-98 FU-2 — next non-colliding versioned id for a superseding plan (PLAN-X → PLAN-X-v2). */
 function nextVersionId(baseId: string, existing: Set<string>): string {
   const root = baseId.replace(/-v\d+$/, '');
@@ -186,6 +190,7 @@ function PlanFormModal({
   }));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleTab1Change = <K extends keyof Tab1IdentityValues>(
     field: K,
@@ -210,6 +215,13 @@ function PlanFormModal({
   // STA-113 — Save branches on the popup mode: correction = update in place,
   // insert = supersede (the old footer Insert behaviour, now driven by the row).
   const handleSave = () => {
+    // STA-240 — Eligible Claim date is mandatory + integer-only; block + show a
+    // visible pumpkin error when invalid.
+    if (!isValidClaimDays(tab1Values.eligibleClaimDate)) {
+      setError(isTh ? 'ระบุจำนวนวัน (ตัวเลขจำนวนเต็ม)' : 'Enter number of days (whole number)');
+      return;
+    }
+    setError(null);
     setSaving(true);
     // In-session mutation only — no backend POST/PUT in this mockup phase.
     if (mode === 'insert') {
@@ -274,6 +286,12 @@ function PlanFormModal({
         {saved && (
           <div role="status" className="rounded-[var(--radius-md)] bg-success-soft p-3 text-small font-medium text-ink">
             {isTh ? 'บันทึกแล้ว' : 'Saved'}
+          </div>
+        )}
+
+        {error && (
+          <div role="alert" className="rounded-[var(--radius-md)] bg-danger-soft p-3 text-small font-medium text-danger-ink">
+            {error}
           </div>
         )}
 
@@ -349,6 +367,12 @@ function CreatePlanModal({
   const handleSave = () => {
     if (!isValid) return;
     setError(null);
+    // STA-240 — Eligible Claim date is mandatory + integer-only; surface a visible
+    // pumpkin error (setError, NOT a silent early-return) when invalid.
+    if (!isValidClaimDays(tab1Values.eligibleClaimDate)) {
+      setError(isTh ? 'ระบุจำนวนวัน (ตัวเลขจำนวนเต็ม)' : 'Enter number of days (whole number)');
+      return;
+    }
     const key = tab1Values.planKey.trim();
     if (existingIds.has(key)) {
       setError(isTh ? `รหัสแผน "${key}" มีอยู่แล้ว` : `Plan ID "${key}" already exists`);
@@ -392,7 +416,7 @@ function CreatePlanModal({
         )}
 
         {error && (
-          <div role="alert" className="rounded-[var(--radius-md)] bg-error-soft p-3 text-small font-medium text-error">
+          <div role="alert" className="rounded-[var(--radius-md)] bg-danger-soft p-3 text-small font-medium text-danger-ink">
             {error}
           </div>
         )}
@@ -573,15 +597,6 @@ export default function BenefitPlansPage() {
       ),
       sortAccessor: (p: BenefitPlan) => p.id,
       className: 'w-36',
-    },
-    {
-      id: 'ttt',
-      header: t('colTtt'),
-      cell: (p: BenefitPlan) => (
-        <span className="font-mono text-[length:var(--text-eyebrow)] text-ink-muted">{p.ttt}</span>
-      ),
-      sortAccessor: (p: BenefitPlan) => p.ttt,
-      className: 'w-20',
     },
     {
       id: 'name',

@@ -35,13 +35,15 @@ const baseValues: Tab1IdentityValues = {
   company: 'CG',
 }
 
-// Identity keys that ACTUALLY render an input/select control. Excludes
-// eligibleClaimDate (no control) and schemaVersion (gated off here via
-// showSchemaVersion={false}, matching the Insert modal).
+// Identity keys that ACTUALLY render an input/select control. STA-240: `ttt` no
+// longer renders a control (input removed, model key retained-but-hidden) and
+// `eligibleClaimDate` now renders one. schemaVersion is gated off here via
+// showSchemaVersion={false}, matching the Insert modal.
 const RENDERED_KEYS = [
-  'ttt', 'planKey', 'nameTh', 'nameEn', 'category', 'template',
+  'planKey', 'nameTh', 'nameEn', 'category', 'template',
   'effectiveFrom', 'effectiveTo', 'country', 'status', 'benefitTypeGroup',
-  'enrolment', 'claimPeriod', 'entitlementCalcMethod', 'specialClaimCondition', 'company',
+  'enrolment', 'claimPeriod', 'entitlementCalcMethod', 'eligibleClaimDate',
+  'specialClaimCondition', 'company',
 ] as const
 
 // Derived complement — a newly added rendered key auto-joins this locked set
