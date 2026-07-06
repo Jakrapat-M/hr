@@ -575,7 +575,7 @@ export default function TerminatePage() {
       <Modal
         open={showExitModal}
         onClose={handleExitSkip}
-        title="สัมภาษณ์ก่อนลาออก"
+        title={t('sectionTitle')}
         widthClass="max-w-3xl"
       >
         <ExitInterviewSection
