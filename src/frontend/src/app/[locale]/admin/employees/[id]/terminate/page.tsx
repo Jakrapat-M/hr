@@ -14,9 +14,8 @@
 // C1: touches only this file (placeholder replaced).
 // C8: TerminateEvent shape from @hrms/shared — no invented variants.
 
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { ArrowLeft, UserX, Circle } from 'lucide-react'
 import { AttachmentDropzone } from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
@@ -39,14 +38,6 @@ import {
 } from '@/lib/admin/termination-logic'
 import type { MockEmployee } from '@/mocks/employees'
 import type { TerminateEvent } from '@hrms/shared/types/timeline'
-import { ExitInterviewSection } from '@/components/admin/terminate/ExitInterviewSection'
-import { Modal } from '@/components/humi'
-import {
-  useExitFeedback,
-  EMPTY_EXIT_INTERVIEW,
-  isExitInterviewEmpty,
-  type ExitInterviewRecord,
-} from '@/stores/exit-feedback'
 
 // ─── Chain progress stepper (BRD #22, #111) ───────────────────────────────────
 // HR-admin initiates termination → triggers 4-step approval chain post-submit.
@@ -291,7 +282,6 @@ export default function TerminatePage() {
   const router = useRouter()
   const empId = params.id as string
   const locale = params.locale as string
-  const t = useTranslations('terminationFeedback')
 
   const employee = useEmployees((s) => s.getById(empId)) ?? null
   const updateEmployee = useEmployees((s) => s.updateEmployee)
@@ -369,20 +359,12 @@ export default function TerminatePage() {
   // ── State ──────────────────────────────────────────────────────────────────
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  // Post-submit Exit Interview popup (STA-236) — client state only.
-  const [showExitModal, setShowExitModal] = useState(false)
-  const [exitInterview, setExitInterview] = useState<ExitInterviewRecord>(EMPTY_EXIT_INTERVIEW)
-  // Stash {reasonCode, resignedDate} at commit — reset() clears the wizard before the popup resolves.
-  const pendingCtxRef = useRef<{ reasonCode: string; resignedDate: string } | null>(null)
 
   // Seed timeline if not already seeded
   const { append, seed } = useTimelines()
   useEffect(() => {
     if (employee) seed(employee)
   }, [employee, seed])
-
-  // Exit-feedback read-model — written on submit alongside the timeline append.
-  const recordExitFeedback = useExitFeedback((s) => s.record)
 
   // Auto-fill Personal Email from the seeded source on mount (Q2 default).
   // Field stays editable + required; only fills when currently blank so manual
@@ -475,58 +457,21 @@ export default function TerminatePage() {
 
     append(empId, event)
 
-    // STA-236: stash {reasonCode, resignedDate} BEFORE reset() clears the wizard —
-    // the Exit Interview popup (opened below) writes the feedback record on Save.
-    pendingCtxRef.current = {
-      reasonCode: termination.reasonCode,
-      resignedDate: termination.resignedDate!,
-    }
-
+    // Flip status to terminated + redirect with the success banner. No Exit
+    // Interview here — exit feedback is collected solely on the ESS resignation
+    // page (employee self-submit), not the HR admin terminate flow.
+    updateEmployee(empId, { status: 'terminated' })
     reset?.()
     setSubmitted(true)
-
-    // STA-236: open the post-submit Exit Interview popup. The status flip +
-    // redirect are deferred to finishRedirect() (runs on Skip/Save) so the
-    // reactive employee selector + terminate guard don't unmount this page and
-    // pre-empt the modal before it renders.
-    setShowExitModal(true)
-  }, [employee, isValid, termination, isTransferOutReason, empId, append, reset])
+    router.push(
+      `/${locale}/admin/employees/${empId}?banner=${encodeURIComponent('บันทึกการสิ้นสุดสภาพพนักงานแล้ว — ส่งข้อมูลไป Payroll')}`,
+    )
+  }, [employee, isValid, termination, isTransferOutReason, empId, append, updateEmployee, reset, router, locale])
 
   const handleSubmit = useCallback(() => {
     if (!isValid) return
     setShowConfirmDialog(true)
   }, [isValid])
-
-  // ── Post-submit Exit Interview popup handlers (STA-236) ──────────────────────
-  // Status flip happens exactly once here (on completion), NOT in commit — see P0.
-  const finishRedirect = useCallback(() => {
-    updateEmployee(empId, { status: 'terminated' })
-    router.push(
-      `/${locale}/admin/employees/${empId}?banner=${encodeURIComponent('บันทึกการสิ้นสุดสภาพพนักงานแล้ว — ส่งข้อมูลไป Payroll')}`,
-    )
-  }, [updateEmployee, empId, router, locale])
-
-  const handleExitSkip = useCallback(() => {
-    setShowExitModal(false)
-    finishRedirect()
-  }, [finishRedirect])
-
-  const handleExitSave = useCallback(() => {
-    if (!isExitInterviewEmpty(exitInterview) && pendingCtxRef.current && employee) {
-      recordExitFeedback({
-        employeeId: empId,
-        employeeNameTh: `${employee.first_name_th} ${employee.last_name_th}`,
-        employeeNameEn: `${employee.first_name_en} ${employee.last_name_en}`,
-        positionTitle: employee.position_title,
-        reasonCode: pendingCtxRef.current.reasonCode,
-        resignedDate: pendingCtxRef.current.resignedDate,
-        recordedAt: new Date().toISOString(),
-        record: exitInterview,
-      })
-    }
-    setShowExitModal(false)
-    finishRedirect()
-  }, [exitInterview, employee, empId, recordExitFeedback, finishRedirect])
 
   // ── Not found ──────────────────────────────────────────────────────────────
   if (!employee) {
@@ -570,27 +515,6 @@ export default function TerminatePage() {
         onConfirm={() => { setShowConfirmDialog(false); commitTermination() }}
         onCancel={() => setShowConfirmDialog(false)}
       />
-
-      {/* STA-236: post-submit Exit Interview popup — Esc/backdrop = Skip */}
-      <Modal
-        open={showExitModal}
-        onClose={handleExitSkip}
-        title={t('modalTitle')}
-        widthClass="max-w-3xl"
-      >
-        <ExitInterviewSection
-          value={exitInterview}
-          onChange={(partial) => setExitInterview((prev) => ({ ...prev, ...partial }))}
-        />
-        <div className="sticky bottom-0 flex justify-end gap-3 border-t border-hairline bg-surface px-6 py-4">
-          <button type="button" className="humi-btn humi-btn--ghost" onClick={handleExitSkip}>
-            {t('skip')}
-          </button>
-          <button type="button" className="humi-btn humi-btn--primary" onClick={handleExitSave}>
-            {t('save')}
-          </button>
-        </div>
-      </Modal>
 
       <div className="pb-8" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* Back nav */}
