@@ -23,8 +23,11 @@ import {
 } from '@/stores/termination-approvals';
 import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 import { formatDate } from '@/lib/date';
+import { useAuthStore } from '@/stores/auth-store';
+import { personaTiers } from '@/lib/persona-tiers';
 
 const APPROVER_NAME = 'ผู้จัดการ / Manager';
+const HR_ADMIN_NAME = 'ผู้ดูแลระบบ HR / HR Admin';
 
 interface PageProps {
   params: Promise<{ id: string; locale: string }>;
@@ -137,7 +140,18 @@ export default function ResignationDetailPage({ params }: PageProps) {
     s.requests.find((r) => r.id === id),
   ) as TerminationRequest | undefined;
   const approveByManager = useTerminationApprovals((s) => s.approveByManager);
+  const approveByHrAdmin = useTerminationApprovals((s) => s.approve);
   const rejectRequest = useTerminationApprovals((s) => s.reject);
+
+  // Step 2 (pending_spd — "HR Admin handling" per the offboarding timeline)
+  // needs its own actor gate: the page previously only ever recognized the
+  // manager step, so HR Admin could never act here even after switching
+  // persona. Mirrors the tier-gate pattern from workflows/probation/[id].
+  const viewerRoles = useAuthStore((s) => s.roles);
+  const viewerName = useAuthStore((s) => s.username);
+  const viewerTiers = personaTiers(viewerRoles);
+  const isManagerViewer = viewerTiers.includes('C');
+  const isHrAdminViewer = viewerTiers.includes('A');
 
   // Attachment preview (mockup). STA-247 — attachments are now AttachedFile[]
   // (base64 dataUrl when captured via the ESS AttachmentDropzone); real files
@@ -183,12 +197,16 @@ export default function ResignationDetailPage({ params }: PageProps) {
   }
 
   const refNum = id.length <= 16 ? id : `${id.slice(0, 12)}…${id.slice(-3)}`;
-  const isPending = request.status === 'pending_manager';
+  const isManagerStep = request.status === 'pending_manager';
+  const isHrAdminStep = request.status === 'pending_spd';
+  // Whether the CURRENTLY ACTING persona can act on THIS request's current
+  // step — not just whether the request happens to be pending at all.
+  const canAct = (isManagerStep && isManagerViewer) || (isHrAdminStep && isHrAdminViewer);
   const statusLabel =
     request.status === 'pending_manager'
       ? isTh ? 'รอหัวหน้าอนุมัติ' : 'Awaiting manager'
       : request.status === 'pending_spd'
-        ? isTh ? 'รอ SPD อนุมัติ' : 'Awaiting SPD'
+        ? isTh ? 'รอ HR Admin ดำเนินการ' : 'Awaiting HR Admin'
         : request.status === 'approved'
           ? isTh ? 'อนุมัติแล้ว' : 'Approved'
           : isTh ? 'ไม่อนุมัติ' : 'Rejected';
@@ -196,19 +214,25 @@ export default function ResignationDetailPage({ params }: PageProps) {
   const reasonLabel = TERMINATION_REASON_LABEL[request.reasonCode];
 
   // Footer left label mirrors the design's decision-state copy.
-  const footerLeft = !isPending
-    ? statusLabel
-    : isTh ? 'พร้อมอนุมัติและกลับไปคิวอนุมัติ' : 'Ready to approve and send back';
+  const footerLeft = canAct
+    ? isTh ? 'พร้อมอนุมัติและกลับไปคิวอนุมัติ' : 'Ready to approve and send back'
+    : statusLabel;
 
   function handleApprove() {
-    if (!request || !isPending) return;
-    approveByManager(request.id, { role: 'manager', name: APPROVER_NAME });
+    if (!request || !canAct) return;
+    if (isManagerStep) {
+      approveByManager(request.id, { role: 'manager', name: viewerName ?? APPROVER_NAME });
+    } else {
+      approveByHrAdmin(request.id, { role: 'hr_admin', name: viewerName ?? HR_ADMIN_NAME });
+    }
     router.push(`/${locale}/quick-approve?decided=resignation-approved`);
   }
 
   function handleSendBack() {
-    if (!request || !isPending || !sendBackReason.trim()) return;
-    rejectRequest(request.id, { role: 'manager', name: APPROVER_NAME }, sendBackReason.trim());
+    if (!request || !canAct || !sendBackReason.trim()) return;
+    const actorRole = isManagerStep ? 'manager' : 'hr_admin';
+    const actorName = viewerName ?? (isManagerStep ? APPROVER_NAME : HR_ADMIN_NAME);
+    rejectRequest(request.id, { role: actorRole, name: actorName }, sendBackReason.trim());
     setSendBackOpen(false);
     router.push(`/${locale}/quick-approve?decided=resignation-sent-back`);
   }
@@ -362,7 +386,9 @@ export default function ResignationDetailPage({ params }: PageProps) {
               title={isTh ? 'หัวหน้าอนุมัติ' : 'Manager approval'}
               sub={
                 request.status === 'pending_manager'
-                  ? isTh ? 'คุณอยู่ขั้นนี้' : 'You are here'
+                  ? isManagerViewer
+                    ? isTh ? 'คุณอยู่ขั้นนี้' : 'You are here'
+                    : isTh ? 'กำลังดำเนินการ' : 'In progress'
                   : isTh ? 'เสร็จแล้ว' : 'Done'
               }
               state={request.status === 'pending_manager' ? 'current' : 'done'}
@@ -370,7 +396,11 @@ export default function ResignationDetailPage({ params }: PageProps) {
             <ProcessStep
               n={3}
               title={isTh ? 'HR Admin จัดการ' : 'HR Admin handling'}
-              sub="Clearance · final pay"
+              sub={
+                request.status === 'pending_spd' && isHrAdminViewer
+                  ? isTh ? 'คุณอยู่ขั้นนี้' : 'You are here'
+                  : 'Clearance · final pay'
+              }
               state={request.status === 'pending_spd' ? 'current' : request.status === 'approved' ? 'done' : 'pending'}
             />
             <ProcessStep
@@ -417,7 +447,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
       <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-lg)] border border-hairline bg-surface px-6 py-4 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2.5">
           <Check
-            className={`h-4 w-4 ${isPending ? 'text-success' : 'text-ink-faint'}`}
+            className={`h-4 w-4 ${canAct ? 'text-success' : 'text-ink-faint'}`}
           />
           <span className="text-sm text-ink-soft">{footerLeft}</span>
         </div>
@@ -425,7 +455,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
           <button
             type="button"
             onClick={() => setSendBackOpen(true)}
-            disabled={!isPending}
+            disabled={!canAct}
             className="humi-button humi-button--ghost disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RotateCcw className="h-3.5 w-3.5" />
@@ -434,7 +464,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
           <button
             type="button"
             onClick={handleApprove}
-            disabled={!isPending}
+            disabled={!canAct}
             className="humi-button humi-button--primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ArrowRight className="h-3.5 w-3.5" />
