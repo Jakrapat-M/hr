@@ -54,15 +54,22 @@ import {
   type EmergencyContactRow,
 } from '@/stores/humi-profile-slice';
 import { FileUploadField } from '@/components/humi/FileUploadField';
-import { Modal } from '@/components/humi';
+import { Modal, FormField } from '@/components/humi';
 import { EmergencyContactList, areAllRowsValid } from '@/components/profile/EmergencyContactList';
 import { DependentsEditor, areAllDependentsValid } from '@/components/profile/DependentsEditor';
 import { Address8Editor, isAddress8Valid } from '@/components/profile/Address8Editor';
 import { BankDetailsEditor, isBankValid } from '@/components/profile/BankDetailsEditor';
 import { ContactArrayEditor, isContactArrayValid } from '@/components/profile/ContactArrayEditor';
+import { RepeatableEntriesEditor } from '@/components/profile/RepeatableEntriesEditor';
 import CompensationSummary from '@/components/profile/CompensationSummary';
 import CompensationHistory from '@/components/profile/CompensationHistory';
 import { getMaintainConfig, type MaintainKey } from '@/lib/ec-maintain-registry';
+import type {
+  EducationEntry,
+  LanguageSkillEntry,
+  WorkPermitEntry,
+  CertificationEntry,
+} from '@/stores/humi-profile-slice';
 
 // Map slice tab keys → display keys used by existing tab panels
 type TabKey = 'personal' | 'job' | 'emergency' | 'benefits' | 'docs' | 'tax';
@@ -157,6 +164,60 @@ const ATTACHMENT_REQUIRED_FIELDS = new Set([
   'maritalStatusSince',
   'spouseName',
 ]);
+
+// ── STA-244 repeatable-group helpers (module scope) ────────────────────────────
+// makeEmpty factories + Save-enablement validity live WITH each group (the shell
+// stays type-agnostic). Rows may be zero (all 4 groups are optional); validity only
+// requires the group's key field(s) on the rows that DO exist.
+
+const REPEATABLE_INPUT_CLS =
+  'w-full rounded-md border border-hairline bg-canvas-soft px-3 py-2 text-body text-ink ' +
+  'placeholder:text-ink-muted transition-[border-color,box-shadow] duration-[var(--dur-fast)] ' +
+  'hover:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
+
+const makeEmptyEducation = (): EducationEntry => ({
+  degree: '',
+  university: '',
+  faculty: '',
+  major: '',
+  gpa: '',
+  graduatedDate: '',
+  isPrimary: false,
+});
+const makeEmptyLanguageSkill = (): LanguageSkillEntry => ({
+  language: '',
+  speaking: '',
+  reading: '',
+  writing: '',
+  listening: '',
+  certificate: '',
+});
+const makeEmptyWorkPermit = (): WorkPermitEntry => ({
+  documentType: '',
+  country: '',
+  documentNumber: '',
+  issueDate: '',
+  expiryDate: '',
+  attachmentId: null,
+});
+const makeEmptyCertification = (): CertificationEntry => ({
+  type: '',
+  name: '',
+  institution: '',
+  effectiveDate: '',
+  expirationDate: '',
+  number: '',
+  attachmentId: null,
+});
+
+const areAllEducationValid = (rows: EducationEntry[]): boolean =>
+  rows.every((r) => r.degree.trim() !== '' && r.university.trim() !== '');
+const areAllLanguageSkillsValid = (rows: LanguageSkillEntry[]): boolean =>
+  rows.every((r) => r.language.trim() !== '');
+const areAllWorkPermitsValid = (rows: WorkPermitEntry[]): boolean =>
+  rows.every((r) => r.documentType.trim() !== '' && r.documentNumber.trim() !== '');
+const areAllCertificationsValid = (rows: CertificationEntry[]): boolean =>
+  rows.every((r) => r.name.trim() !== '');
 
 // ── Section-level edit config (STA-82) ─────────────────────────────────────────
 // BA directive: Personal / Marital / Contact are edited per SECTION (one Edit
@@ -491,6 +552,17 @@ export default function HumiProfileMePage({
   // cancelEdit() would revert the whole draft).
   const [emergencySnapshot, setEmergencySnapshot] = useState<EmergencyContactRow[]>([]);
   const [dependentsSnapshot, setDependentsSnapshot] = useState<HumiDependent[]>([]);
+  // STA-244 — per-section edit toggles for the 4 repeatable groups. Each opens
+  // independently over the shared draft with its own open-time snapshot so Cancel
+  // reverts only its slice (never the whole draft).
+  const [editingFormalEducation, setEditingFormalEducation] = useState(false);
+  const [editingLanguageSkills, setEditingLanguageSkills] = useState(false);
+  const [editingWorkPermit, setEditingWorkPermit] = useState(false);
+  const [editingCertification, setEditingCertification] = useState(false);
+  const [formalEducationSnapshot, setFormalEducationSnapshot] = useState<EducationEntry[]>([]);
+  const [languageSkillsSnapshot, setLanguageSkillsSnapshot] = useState<LanguageSkillEntry[]>([]);
+  const [workPermitSnapshot, setWorkPermitSnapshot] = useState<WorkPermitEntry[]>([]);
+  const [certificationSnapshot, setCertificationSnapshot] = useState<CertificationEntry[]>([]);
   const lastAppliedProfileSearchRef = useRef<string | null>(null);
 
   // Derive panel key from slice activeTab
@@ -580,6 +652,48 @@ export default function HumiProfileMePage({
   function cancelDependentsEdit() {
     updateDraft({ dependents: dependentsSnapshot });
     setEditingDependents(false);
+  }
+
+  // STA-244 — open/cancel for the 4 repeatable groups (mirror emergency pattern).
+  function openFormalEducationEdit() {
+    const current = saved.formalEducation ?? [];
+    setFormalEducationSnapshot(current);
+    updateDraft({ formalEducation: current });
+    setEditingFormalEducation(true);
+  }
+  function cancelFormalEducationEdit() {
+    updateDraft({ formalEducation: formalEducationSnapshot });
+    setEditingFormalEducation(false);
+  }
+  function openLanguageSkillsEdit() {
+    const current = saved.languageSkills ?? [];
+    setLanguageSkillsSnapshot(current);
+    updateDraft({ languageSkills: current });
+    setEditingLanguageSkills(true);
+  }
+  function cancelLanguageSkillsEdit() {
+    updateDraft({ languageSkills: languageSkillsSnapshot });
+    setEditingLanguageSkills(false);
+  }
+  function openWorkPermitEdit() {
+    const current = saved.workPermits ?? [];
+    setWorkPermitSnapshot(current);
+    updateDraft({ workPermits: current });
+    setEditingWorkPermit(true);
+  }
+  function cancelWorkPermitEdit() {
+    updateDraft({ workPermits: workPermitSnapshot });
+    setEditingWorkPermit(false);
+  }
+  function openCertificationEdit() {
+    const current = saved.certifications ?? [];
+    setCertificationSnapshot(current);
+    updateDraft({ certifications: current });
+    setEditingCertification(true);
+  }
+  function cancelCertificationEdit() {
+    updateDraft({ certifications: certificationSnapshot });
+    setEditingCertification(false);
   }
 
   // ── Gate handlers ─────────────────────────────────────────────────────────
@@ -923,6 +1037,435 @@ export default function HumiProfileMePage({
             {tEss('changeRequest.submit')}
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  // ── STA-244 repeatable section editors (direct+dual submit) ───────────────
+  // Each submits the SINGULAR sectionKey and its PLURAL store field's JSON, then
+  // save() — so the added rows show immediately AND a pending badge appears.
+
+  function RepeatableSubmitRow({
+    onCancel,
+    onSubmit,
+    disabled,
+  }: {
+    onCancel: () => void;
+    onSubmit: () => void;
+    disabled: boolean;
+  }) {
+    return (
+      <div className="humi-row" style={{ marginTop: 12, justifyContent: 'flex-end', gap: 8 }}>
+        <Button variant="ghost" size="sm" onClick={onCancel}>
+          {t('profileCancelEdit')}
+        </Button>
+        <Button variant="primary" size="sm" onClick={onSubmit} disabled={disabled}>
+          {tEss('changeRequest.submit')}
+        </Button>
+      </div>
+    );
+  }
+
+  function FormalEducationSectionEditor({
+    onClose,
+    onCancel,
+  }: {
+    onClose: () => void;
+    onCancel: () => void;
+  }) {
+    const rows = draft.formalEducation ?? [];
+    const today = new Date().toISOString().slice(0, 10);
+
+    function handleSubmit() {
+      submitChangeRequest({
+        field: 'formalEducation',
+        oldValue: JSON.stringify(saved.formalEducation ?? []),
+        newValue: JSON.stringify(rows),
+        effectiveDate: today,
+        attachmentIds: [],
+        sectionKey: 'formalEducation',
+      });
+      save();
+      showToast(tEss('changeRequest.submit'));
+      onClose();
+    }
+
+    return (
+      <div style={{ marginTop: 16 }}>
+        <RepeatableEntriesEditor<EducationEntry>
+          entries={rows}
+          onChange={(updated) => updateDraft({ formalEducation: updated })}
+          makeEmpty={makeEmptyEducation}
+          primaryKey="isPrimary"
+          primaryLabel={tEss('formalEducation.primary')}
+          addLabel={tEss('formalEducation.add')}
+          emptyLabel={tEss('formalEducation.empty')}
+          renderRow={(entry, patch) => (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormField label={tEss('formalEducation.degree')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.degree}
+                    onChange={(e) => patch({ degree: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('formalEducation.university')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.university}
+                    onChange={(e) => patch({ university: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('formalEducation.faculty')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.faculty}
+                    onChange={(e) => patch({ faculty: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('formalEducation.major')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.major}
+                    onChange={(e) => patch({ major: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('formalEducation.gpa')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.gpa}
+                    onChange={(e) => patch({ gpa: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('formalEducation.graduatedDate')}>
+                {(cp) => (
+                  <input {...cp} type="date" value={entry.graduatedDate}
+                    onChange={(e) => patch({ graduatedDate: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+            </div>
+          )}
+        />
+        <RepeatableSubmitRow onCancel={onCancel} onSubmit={handleSubmit} disabled={!areAllEducationValid(rows)} />
+      </div>
+    );
+  }
+
+  function LanguageSkillsSectionEditor({
+    onClose,
+    onCancel,
+  }: {
+    onClose: () => void;
+    onCancel: () => void;
+  }) {
+    const rows = draft.languageSkills ?? [];
+    const today = new Date().toISOString().slice(0, 10);
+
+    function handleSubmit() {
+      submitChangeRequest({
+        field: 'languageSkills',
+        oldValue: JSON.stringify(saved.languageSkills ?? []),
+        newValue: JSON.stringify(rows),
+        effectiveDate: today,
+        attachmentIds: [],
+        sectionKey: 'languageSkill',
+      });
+      save();
+      showToast(tEss('changeRequest.submit'));
+      onClose();
+    }
+
+    return (
+      <div style={{ marginTop: 16 }}>
+        <RepeatableEntriesEditor<LanguageSkillEntry>
+          entries={rows}
+          onChange={(updated) => updateDraft({ languageSkills: updated })}
+          makeEmpty={makeEmptyLanguageSkill}
+          addLabel={tEss('languageSkill.add')}
+          emptyLabel={tEss('languageSkill.empty')}
+          renderRow={(entry, patch) => (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormField label={tEss('languageSkill.language')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.language}
+                    onChange={(e) => patch({ language: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('languageSkill.certificate')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.certificate}
+                    onChange={(e) => patch({ certificate: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('languageSkill.speaking')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.speaking}
+                    onChange={(e) => patch({ speaking: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('languageSkill.listening')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.listening}
+                    onChange={(e) => patch({ listening: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('languageSkill.reading')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.reading}
+                    onChange={(e) => patch({ reading: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('languageSkill.writing')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.writing}
+                    onChange={(e) => patch({ writing: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+            </div>
+          )}
+        />
+        <RepeatableSubmitRow onCancel={onCancel} onSubmit={handleSubmit} disabled={!areAllLanguageSkillsValid(rows)} />
+      </div>
+    );
+  }
+
+  function WorkPermitSectionEditor({
+    onClose,
+    onCancel,
+  }: {
+    onClose: () => void;
+    onCancel: () => void;
+  }) {
+    const rows = draft.workPermits ?? [];
+    const today = new Date().toISOString().slice(0, 10);
+
+    function handleSubmit() {
+      submitChangeRequest({
+        field: 'workPermits',
+        oldValue: JSON.stringify(saved.workPermits ?? []),
+        newValue: JSON.stringify(rows),
+        effectiveDate: today,
+        attachmentIds: [],
+        sectionKey: 'workPermit',
+      });
+      save();
+      showToast(tEss('changeRequest.submit'));
+      onClose();
+    }
+
+    return (
+      <div style={{ marginTop: 16 }}>
+        <RepeatableEntriesEditor<WorkPermitEntry>
+          entries={rows}
+          onChange={(updated) => updateDraft({ workPermits: updated })}
+          makeEmpty={makeEmptyWorkPermit}
+          addLabel={tEss('workPermit.add')}
+          emptyLabel={tEss('workPermit.empty')}
+          renderRow={(entry, patch) => (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormField label={tEss('workPermit.documentType')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.documentType}
+                    onChange={(e) => patch({ documentType: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('workPermit.country')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.country}
+                    onChange={(e) => patch({ country: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('workPermit.documentNumber')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.documentNumber}
+                    onChange={(e) => patch({ documentNumber: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <div />
+              <FormField label={tEss('workPermit.issueDate')}>
+                {(cp) => (
+                  <input {...cp} type="date" value={entry.issueDate}
+                    onChange={(e) => patch({ issueDate: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('workPermit.expiryDate')}>
+                {(cp) => (
+                  <input {...cp} type="date" value={entry.expiryDate}
+                    onChange={(e) => patch({ expiryDate: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <div className="sm:col-span-2">
+                <FileUploadField
+                  label={tEss('workPermit.attachment')}
+                  maxFiles={1}
+                  onUpload={(id) => patch({ attachmentId: id })}
+                  onRemove={() => patch({ attachmentId: null })}
+                />
+              </div>
+            </div>
+          )}
+        />
+        <RepeatableSubmitRow onCancel={onCancel} onSubmit={handleSubmit} disabled={!areAllWorkPermitsValid(rows)} />
+      </div>
+    );
+  }
+
+  function CertificationSectionEditor({
+    onClose,
+    onCancel,
+  }: {
+    onClose: () => void;
+    onCancel: () => void;
+  }) {
+    const rows = draft.certifications ?? [];
+    const today = new Date().toISOString().slice(0, 10);
+
+    function handleSubmit() {
+      submitChangeRequest({
+        field: 'certifications',
+        oldValue: JSON.stringify(saved.certifications ?? []),
+        newValue: JSON.stringify(rows),
+        effectiveDate: today,
+        attachmentIds: [],
+        sectionKey: 'certification',
+      });
+      save();
+      showToast(tEss('changeRequest.submit'));
+      onClose();
+    }
+
+    return (
+      <div style={{ marginTop: 16 }}>
+        <RepeatableEntriesEditor<CertificationEntry>
+          entries={rows}
+          onChange={(updated) => updateDraft({ certifications: updated })}
+          makeEmpty={makeEmptyCertification}
+          addLabel={tEss('certification.add')}
+          emptyLabel={tEss('certification.empty')}
+          renderRow={(entry, patch) => (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormField label={tEss('certification.name')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.name}
+                    onChange={(e) => patch({ name: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('certification.type')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.type}
+                    onChange={(e) => patch({ type: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('certification.institution')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.institution}
+                    onChange={(e) => patch({ institution: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('certification.number')}>
+                {(cp) => (
+                  <input {...cp} type="text" value={entry.number}
+                    onChange={(e) => patch({ number: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('certification.effectiveDate')}>
+                {(cp) => (
+                  <input {...cp} type="date" value={entry.effectiveDate}
+                    onChange={(e) => patch({ effectiveDate: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <FormField label={tEss('certification.expirationDate')}>
+                {(cp) => (
+                  <input {...cp} type="date" value={entry.expirationDate}
+                    onChange={(e) => patch({ expirationDate: e.target.value })} className={REPEATABLE_INPUT_CLS} />
+                )}
+              </FormField>
+              <div className="sm:col-span-2">
+                <FileUploadField
+                  label={tEss('certification.attachment')}
+                  maxFiles={1}
+                  onUpload={(id) => patch({ attachmentId: id })}
+                  onRemove={() => patch({ attachmentId: null })}
+                />
+              </div>
+            </div>
+          )}
+        />
+        <RepeatableSubmitRow onCancel={onCancel} onSubmit={handleSubmit} disabled={!areAllCertificationsValid(rows)} />
+      </div>
+    );
+  }
+
+  // Card chrome shared by the 4 repeatable sections: title + pending badge +
+  // cardinality label + edit pencil, swapping the editor for a capped read list.
+  function RepeatableSectionCard({
+    title,
+    maintainKey,
+    sectionKey,
+    editing,
+    onOpen,
+    editor,
+    read,
+  }: {
+    title: string;
+    maintainKey: MaintainKey;   // SINGULAR
+    sectionKey: SectionKey;     // SINGULAR
+    editing: boolean;
+    onOpen: () => void;
+    editor: ReactNode;
+    read: ReactNode;
+  }) {
+    return (
+      <div className="humi-card" style={{ marginTop: 16 }}>
+        <div
+          className="humi-row"
+          style={{ alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
+        >
+          <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
+            {title}
+            <PendingSectionBadge section={sectionKey} />
+            <CardinalityLabel maintainKey={maintainKey} t={tEcMaintain} />
+          </h3>
+          {!editing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              leadingIcon={<Pencil size={13} />}
+              onClick={onOpen}
+              aria-label={`${t('profileEdit')} — ${title}`}
+            >
+              {t('profileEdit')}
+            </Button>
+          )}
+        </div>
+        {editing ? editor : <div style={{ marginTop: 16 }}>{read}</div>}
+      </div>
+    );
+  }
+
+  // Read/display list — caps at 8 rows with a "Showing 8 of N" footer (less-is-more).
+  function ReadPreviewList<T>({
+    rows,
+    renderOne,
+  }: {
+    rows: T[];
+    renderOne: (row: T, index: number) => ReactNode;
+  }) {
+    if (rows.length === 0) {
+      return <p style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>—</p>;
+    }
+    const shown = rows.slice(0, 8);
+    return (
+      <div className="humi-col" style={{ gap: 10 }}>
+        {shown.map((row, index) => (
+          <div
+            key={index}
+            className="humi-card humi-card--tight"
+            style={{ background: 'var(--color-canvas-soft)' }}
+          >
+            {renderOne(row, index)}
+          </div>
+        ))}
+        {rows.length > 8 && (
+          <p style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+            {tEss('repeatable.showingOf', { shown: 8, total: rows.length })}
+          </p>
+        )}
       </div>
     );
   }
@@ -1522,6 +2065,62 @@ export default function HumiProfileMePage({
         </div>
       )}
 
+      {/* ── Personal tab — Formal Education (STA-244 repeatable N) ────────── */}
+      {/* Inner presentational helpers are INVOKED (not `<X/>`), so the stable
+          RepeatableEntriesEditor reconciles in place and inputs keep focus. */}
+      {panelKey === 'personal' &&
+        RepeatableSectionCard({
+          title: tEss('sections.formalEducation'),
+          maintainKey: 'formalEducation',
+          sectionKey: 'formalEducation',
+          editing: editingFormalEducation,
+          onOpen: openFormalEducationEdit,
+          editor: FormalEducationSectionEditor({
+            onClose: () => setEditingFormalEducation(false),
+            onCancel: cancelFormalEducationEdit,
+          }),
+          read: ReadPreviewList({
+            rows: saved.formalEducation ?? [],
+            renderOne: (r) => (
+              <div>
+                <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
+                  {r.isPrimary && '★ '}
+                  {[r.degree, r.major].filter(Boolean).join(' · ') || '—'}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+                  {[r.university, r.graduatedDate].filter(Boolean).join(' · ')}
+                </div>
+              </div>
+            ),
+          }),
+        })}
+
+      {/* ── Personal tab — Language Skills (STA-244 repeatable N) ─────────── */}
+      {panelKey === 'personal' &&
+        RepeatableSectionCard({
+          title: tEss('sections.languageSkill'),
+          maintainKey: 'languageSkill',
+          sectionKey: 'languageSkill',
+          editing: editingLanguageSkills,
+          onOpen: openLanguageSkillsEdit,
+          editor: LanguageSkillsSectionEditor({
+            onClose: () => setEditingLanguageSkills(false),
+            onCancel: cancelLanguageSkillsEdit,
+          }),
+          read: ReadPreviewList({
+            rows: saved.languageSkills ?? [],
+            renderOne: (r) => (
+              <div>
+                <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>{r.language || '—'}</div>
+                <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+                  {[r.speaking, r.reading, r.writing, r.listening].filter(Boolean).join(' · ')}
+                  {r.certificate ? ` · ${r.certificate}` : ''}
+                </div>
+              </div>
+            ),
+          }),
+        })}
+
       {/* ── Job/Compensation tab ──────────────────────────────────────────── */}
       {panelKey === 'job' && (
         <>
@@ -1649,17 +2248,58 @@ export default function HumiProfileMePage({
             </div>
           )}
 
-          {/* ── Batch 7: Certifications / Licenses (STA-82 EC maintain) ────── */}
-          {p.certifications.length > 0 && (
-            <div style={{ marginTop: 16 }}>
-              <FieldCard
-                eyebrow={t('certificationsEyebrow')}
-                title={t('certificationsTitle')}
-                rows={p.certifications}
-                labelW={140}
-              />
-            </div>
-          )}
+          {/* ── STA-244: Work Permit Info (repeatable N) ───────────────────── */}
+          {RepeatableSectionCard({
+            title: tEss('sections.workPermit'),
+            maintainKey: 'workPermit',
+            sectionKey: 'workPermit',
+            editing: editingWorkPermit,
+            onOpen: openWorkPermitEdit,
+            editor: WorkPermitSectionEditor({
+              onClose: () => setEditingWorkPermit(false),
+              onCancel: cancelWorkPermitEdit,
+            }),
+            read: ReadPreviewList({
+              rows: saved.workPermits ?? [],
+              renderOne: (r) => (
+                <div>
+                  <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
+                    {[r.documentType, r.documentNumber].filter(Boolean).join(' · ') || '—'}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+                    {[r.country, r.expiryDate].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+              ),
+            }),
+          })}
+
+          {/* ── STA-244: Certifications / Licenses (read-only card upgraded to
+              repeatable N editor; source is now the store, not HUMI_MY_PROFILE) ── */}
+          {RepeatableSectionCard({
+            title: tEss('sections.certification'),
+            maintainKey: 'certification',
+            sectionKey: 'certification',
+            editing: editingCertification,
+            onOpen: openCertificationEdit,
+            editor: CertificationSectionEditor({
+              onClose: () => setEditingCertification(false),
+              onCancel: cancelCertificationEdit,
+            }),
+            read: ReadPreviewList({
+              rows: saved.certifications ?? [],
+              renderOne: (r) => (
+                <div>
+                  <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
+                    {[r.name, r.type].filter(Boolean).join(' · ') || '—'}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+                    {[r.institution, r.number].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+              ),
+            }),
+          })}
 
           {/* ── Batch 8: Assessments (STA-82 EC maintain) ───────────────────── */}
           {p.assessments.length > 0 && (

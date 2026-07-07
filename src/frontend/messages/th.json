@@ -3879,8 +3879,6 @@
     "workExpCompanyTitle": "ประสบการณ์ภายในบริษัท",
     "prevEmploymentEyebrow": "ประวัติการทำงานก่อนหน้า",
     "prevEmploymentTitle": "ประวัติการทำงานก่อนเข้าร่วม",
-    "certificationsEyebrow": "ใบรับรองและใบอนุญาต",
-    "certificationsTitle": "ใบรับรองวิชาชีพ",
     "assessmentsEyebrow": "การประเมิน",
     "assessmentsTitle": "ประวัติการประเมินและข้อคิดเห็น",
     "membershipsEyebrow": "สมาชิกองค์กรวิชาชีพ",
@@ -4155,7 +4153,56 @@
       "address": "ที่อยู่",
       "contact": "ข้อมูลติดต่อ",
       "bank": "บัญชีธนาคาร",
-      "personal": "ข้อมูลส่วนตัว"
+      "personal": "ข้อมูลส่วนตัว",
+      "formalEducation": "ประวัติการศึกษา",
+      "languageSkill": "ทักษะภาษา",
+      "workPermit": "ข้อมูลใบอนุญาตทำงาน",
+      "certification": "ใบรับรอง / ใบอนุญาตวิชาชีพ"
+    },
+    "repeatable": {
+      "showingOf": "แสดง {shown} จาก {total}"
+    },
+    "formalEducation": {
+      "add": "เพิ่มประวัติการศึกษา",
+      "empty": "ยังไม่มีประวัติการศึกษา",
+      "primary": "สูงสุด",
+      "degree": "วุฒิการศึกษา",
+      "university": "สถาบัน",
+      "faculty": "คณะ",
+      "major": "สาขาวิชา",
+      "gpa": "เกรดเฉลี่ย",
+      "graduatedDate": "วันที่สำเร็จการศึกษา"
+    },
+    "languageSkill": {
+      "add": "เพิ่มภาษา",
+      "empty": "ยังไม่มีทักษะภาษา",
+      "language": "ภาษา",
+      "speaking": "การพูด",
+      "reading": "การอ่าน",
+      "writing": "การเขียน",
+      "listening": "การฟัง",
+      "certificate": "ใบรับรอง / คะแนน"
+    },
+    "workPermit": {
+      "add": "เพิ่มใบอนุญาตทำงาน",
+      "empty": "ยังไม่มีข้อมูลใบอนุญาตทำงาน",
+      "documentType": "ประเภทเอกสาร",
+      "country": "ประเทศ",
+      "documentNumber": "เลขที่เอกสาร",
+      "issueDate": "วันที่ออก",
+      "expiryDate": "วันหมดอายุ",
+      "attachment": "เอกสารแนบ"
+    },
+    "certification": {
+      "add": "เพิ่มใบรับรอง",
+      "empty": "ยังไม่มีใบรับรอง",
+      "type": "ประเภท",
+      "name": "ชื่อใบรับรอง",
+      "institution": "สถาบันที่ออกให้",
+      "number": "เลขที่ใบรับรอง",
+      "effectiveDate": "วันที่มีผล",
+      "expirationDate": "วันหมดอายุ",
+      "attachment": "เอกสารแนบ"
     },
     "changeRequest": {
       "submit": "ส่งคำขออนุมัติ",

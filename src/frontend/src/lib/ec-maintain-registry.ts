@@ -110,6 +110,39 @@ export const EC_MAINTAIN_REGISTRY: MaintainConfig[] = [
     requiredDocs: [],
     sta82Ref: { section: 'Family', subsection: 'Dependents' },
   },
+  // ── STA-244 repeatable (N) sections (direct — submitChangeRequest AND save()) ──
+  // SINGULAR registry keys; their store arrays are PLURAL. The full 47-group
+  // employee-editable cardinality table lives in
+  // specs/sta-244-multi-entry-fields.json (the SSoT); this registry documents only
+  // the wired subset.
+  {
+    key: 'formalEducation',
+    cardinality: 'N',
+    editMode: 'direct',
+    requiredDocs: [],
+    sta82Ref: { section: 'Education', subsection: 'Formal Education' },
+  },
+  {
+    key: 'languageSkill',
+    cardinality: 'N',
+    editMode: 'direct',
+    requiredDocs: [],
+    sta82Ref: { section: 'Qualifications', subsection: 'Language Skills' },
+  },
+  {
+    key: 'workPermit',
+    cardinality: 'N',
+    editMode: 'direct',
+    requiredDocs: [],
+    sta82Ref: { section: 'Work Eligibility', subsection: 'Work Permit Info' },
+  },
+  {
+    key: 'certification',
+    cardinality: 'N',
+    editMode: 'direct',
+    requiredDocs: [],
+    sta82Ref: { section: 'Qualifications', subsection: 'Certification/License' },
+  },
 ];
 
 const REGISTRY_BY_KEY = new Map<MaintainKey, MaintainConfig>(
