@@ -137,7 +137,6 @@ function resetStore(activeTab: 'personal' | 'compensation', seed: Partial<typeof
     draft: { ...EMPTY_SLICE, ...seed },
     saved: { ...EMPTY_SLICE, ...seed },
     attachments: [],
-     
     pendingChanges: [] as any,
     adminMode: false,
   });
@@ -289,7 +288,6 @@ describe('STA-244: repeatable section (Formal Education) submit → CR AND save(
 
     const addBtn = screen.getByTestId('repeatable-add');
     for (let i = 0; i < 3; i += 1) {
-       
       await act(async () => {
         fireEvent.click(addBtn);
       });

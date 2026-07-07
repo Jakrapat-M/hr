@@ -104,6 +104,32 @@ describe('RepeatableEntriesEditor — collection mechanics', () => {
     expect(radios[2].checked).toBe(true);
   });
 
+  it('reassigns primary when the current primary row is removed (exactly-one, not at-most-one)', () => {
+    render(
+      <Harness
+        primaryKey="primary"
+        initial={[
+          { name: 'a', primary: true },
+          { name: 'b', primary: false },
+        ]}
+      />,
+    );
+    // Remove row 1 (the primary). The remaining row must become primary — the
+    // group must never end up with zero primaries.
+    fireEvent.click(screen.getByRole('button', { name: /remove 1/ }));
+    const radios = screen.getAllByRole('radio') as HTMLInputElement[];
+    expect(radios).toHaveLength(1);
+    expect(radios[0].checked).toBe(true);
+  });
+
+  it('marks the first row primary when adding into an empty group', () => {
+    render(<Harness primaryKey="primary" />);
+    fireEvent.click(screen.getByTestId('repeatable-add'));
+    const radios = screen.getAllByRole('radio') as HTMLInputElement[];
+    expect(radios).toHaveLength(1);
+    expect(radios[0].checked).toBe(true);
+  });
+
   it('caps the read-preview at previewRows (disabled) with a "Showing X of N" footer', () => {
     const initial = Array.from({ length: 10 }, (_, i) => ({ name: `r${i}`, primary: false }));
     render(<Harness initial={initial} disabled previewRows={8} />);

@@ -76,7 +76,6 @@ describe('STA-244 store — additive defaults (no version bump)', () => {
       bank: { bankCode: '', accountNo: '', holderName: '', bookAttachmentId: null },
       dependents: [],
     };
-     
     useHumiProfileStore.setState({ saved: legacySaved as any });
 
     const { saved } = useHumiProfileStore.getState();

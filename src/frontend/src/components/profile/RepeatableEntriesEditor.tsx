@@ -67,9 +67,21 @@ export function RepeatableEntriesEditor<T>({
     onChange(entries.map((e, i) => (i === index ? { ...e, ...patch } : e)));
   };
 
+  // Keep exactly-one-primary: if the collection has ≥1 row, none is primary,
+  // and a primaryKey is configured, promote the first row. No-op when primaryKey
+  // is unset or the collection is empty (zero rows → zero primaries is valid).
+  const ensurePrimary = (rows: T[]): T[] => {
+    if (!primaryKey || rows.length === 0) return rows;
+    const hasPrimary = rows.some((r) => Boolean((r as Record<string, unknown>)[primaryKey as string]));
+    if (hasPrimary) return rows;
+    return rows.map((r, i) => (i === 0 ? ({ ...r, [primaryKey]: true }) as T : r));
+  };
+
   const removeRow = (index: number) => {
     if (entries.length <= minRows) return;
-    onChange(entries.filter((_, i) => i !== index));
+    // Reassign primary if the removed row was the primary one (else the group
+    // would have zero primaries — violates exactly-one-primary).
+    onChange(ensurePrimary(entries.filter((_, i) => i !== index)));
   };
 
   const setPrimary = (index: number) => {
@@ -81,7 +93,8 @@ export function RepeatableEntriesEditor<T>({
 
   const addRow = () => {
     if (entries.length >= maxRows) return;
-    onChange([...entries, makeEmpty()]);
+    // ensurePrimary marks the first row primary when adding into an empty group.
+    onChange(ensurePrimary([...entries, makeEmpty()]));
   };
 
   // Read-preview cap only applies in disabled/display mode — never hide rows
