@@ -23,6 +23,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('next-intl', () => ({
+  useLocale: () => 'th',
   useTranslations: () => (key: string) => {
     // Return realistic Thai strings so headings have Thai content
     const map: Record<string, string> = {
@@ -75,6 +76,13 @@ vi.mock('next-intl', () => ({
       'sections.bank': 'บัญชีธนาคาร',
       'sections.emergencyContact': 'ผู้ติดต่อฉุกเฉิน',
       'sections.personal': 'ข้อมูลส่วนตัว',
+      // STA-244 multi-entry sections + cardinality chip — mirror messages/th.json ess.*
+      'sections.formalEducation': 'ประวัติการศึกษา',
+      'sections.languageSkill': 'ทักษะภาษา',
+      'sections.workPermit': 'ข้อมูลใบอนุญาตทำงาน',
+      'sections.certification': 'ใบรับรอง / ใบอนุญาตวิชาชีพ',
+      'cardinality.single': 'รายการเดียว',
+      'cardinality.repeatable': 'หลายรายการ',
     };
     return map[key] ?? key;
   },
