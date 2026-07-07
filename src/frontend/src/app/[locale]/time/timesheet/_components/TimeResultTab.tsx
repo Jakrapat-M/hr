@@ -10,7 +10,7 @@ import { useMemo } from 'react';
 import { Card } from '@/components/humi';
 import { cn } from '@/lib/utils';
 import { getResultsBreakdown, type DotKind } from '@/lib/time/results-breakdown-seed';
-import { toBase60, resultAmount, resultsTotals } from '@/lib/time/results-display';
+import { toBase60Dot, resultAmount, resultsTotals } from '@/lib/time/results-display';
 
 const DOT_COLOR: Record<DotKind, string> = {
   work: 'var(--color-info)',
@@ -59,7 +59,7 @@ export function TimeResultTab({ empId, isTh }: { empId: string; isTh: boolean })
               </tr>
               <tr className="border-b border-hairline text-left text-ink-muted">
                 <th className="border-l border-hairline px-3 pb-2.5 text-right text-xs font-medium">{isTh ? 'ฐาน 10' : 'Decimal'}</th>
-                <th className="px-3 pb-2.5 text-right text-xs font-medium">{isTh ? 'ฐาน 60' : 'HH:mm'}</th>
+                <th className="px-3 pb-2.5 text-right text-xs font-medium">{isTh ? 'ฐาน 60' : 'Base-60'}</th>
               </tr>
             </thead>
             <tbody>
@@ -94,7 +94,7 @@ export function TimeResultTab({ empId, isTh }: { empId: string; isTh: boolean })
                         {r.hours == null ? '—' : r.hours.toFixed(2)}
                       </td>
                       <td className={cn('px-3 py-2 text-right font-mono text-xs tabular-nums', r.hours == null ? 'text-ink-faint' : r.hours < 0 ? 'text-danger' : 'text-ink')}>
-                        {r.hours == null ? '—' : toBase60(r.hours)}
+                        {r.hours == null ? '—' : toBase60Dot(r.hours)}
                       </td>
                       <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-ink">{r.days}</td>
                       <td className="px-3 py-2 text-right font-mono text-xs tabular-nums text-ink">{resultAmount(r).toFixed(2)}</td>
@@ -110,8 +110,8 @@ export function TimeResultTab({ empId, isTh }: { empId: string; isTh: boolean })
                   <div className="text-xs font-normal text-ink-muted">(+{totals.positive.toFixed(2)} / -{totals.negative.toFixed(2)})</div>
                 </td>
                 <td className="px-3 py-2.5 text-right font-mono text-xs tabular-nums">
-                  {totals.base60}
-                  <div className="text-xs font-normal text-ink-muted">(+{toBase60(totals.positive)} / -{toBase60(totals.negative)})</div>
+                  {toBase60Dot(totals.base10)}
+                  <div className="text-xs font-normal text-ink-muted">(+{toBase60Dot(totals.positive)} / -{toBase60Dot(totals.negative)})</div>
                 </td>
                 <td className="px-3 py-2.5 text-right font-mono text-xs tabular-nums">{totals.days}</td>
                 <td className="px-3 py-2.5 text-right font-mono text-xs tabular-nums text-accent">{totals.amount.toFixed(2)}</td>

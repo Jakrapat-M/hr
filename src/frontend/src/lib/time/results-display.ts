@@ -19,6 +19,16 @@ export function toBase60(decimalHours: number): string {
 }
 
 /**
+ * Format decimal hours as base-60 "H.mm" — same minute math as {@link toBase60}
+ * but dot-separated (e.g. 8.5 → "8.30", 8 → "8.00", -0.5 → "-0.30"). STA-233:
+ * the Time Result tab reads both hour columns as `X.XX`, so base-60 uses a dot
+ * instead of a colon. `toBase60` is kept as-is for any surface that wants `H:mm`.
+ */
+export function toBase60Dot(decimalHours: number): string {
+  return toBase60(decimalHours).replace(':', '.');
+}
+
+/**
  * Mock amount (THB) for a breakdown line, keyed by its semantic pay kind:
  * Shift Premium = 60, Meal Allowance = 50, holiday premium = 300, else 0.
  * Deterministic — mirrors the mock's Amount column.

@@ -67,9 +67,13 @@ const REG = { wageCode: 'REG', payCode: 'REG_EXPORT – Regular Export', payKind
 const SHIFT_PREMIUM = { wageCode: '2540', payCode: 'SHIFT_PREMIUM – Shift Premium', payKind: 'shift_premium' as const, dot: 'allow' as const };
 const MEAL = { wageCode: '2599', payCode: 'MEAL_ALLOWANCE – Meal Allw.', payKind: 'meal' as const, dot: 'allow' as const };
 
+// STA-233: dates pinned within the 21→20 payroll period containing DEMO_TODAY
+// ('2026-06-07', see lib/time/period.ts) — 2026-05-21 → 2026-06-20 — so the Time
+// Result rows fall inside the period the page header displays. Offsets from
+// DEMO_TODAY are otherwise identical to the original STA-195 mock.
 const GROUPS: DayGroup[] = [
   {
-    date: '2026-07-01', dateLabelTh: 'อ. 1 ก.ค.', dateLabelEn: 'Tue 1 Jul', dateSubTh: 'กะสาย', dateSubEn: 'Late shift', tone: 'normal',
+    date: '2026-05-29', dateLabelTh: 'ศ. 29 พ.ค.', dateLabelEn: 'Fri 29 May', dateSubTh: 'กะสาย', dateSubEn: 'Late shift', tone: 'normal',
     rows: [
       { ...REG, hours: 8.0, days: 1 },
       { wageCode: '2531', payCode: 'OT_15 – Overtime 1.5x', payKind: 'ot', dot: 'ot', hours: 2.0, days: 0 },
@@ -78,7 +82,7 @@ const GROUPS: DayGroup[] = [
     ],
   },
   {
-    date: '2026-07-02', dateLabelTh: 'พ. 2 ก.ค.', dateLabelEn: 'Wed 2 Jul', dateSubTh: 'กะสาย', dateSubEn: 'Late shift', tone: 'normal',
+    date: '2026-05-30', dateLabelTh: 'ส. 30 พ.ค.', dateLabelEn: 'Sat 30 May', dateSubTh: 'กะสาย', dateSubEn: 'Late shift', tone: 'normal',
     rows: [
       { ...REG, hours: 7.5, days: 1 },
       { wageCode: '2510', payCode: 'LATE_DEDUCT – Late (หักสาย)', payKind: 'late_deduct', dot: 'late', hours: -0.5, days: 0 },
@@ -88,7 +92,7 @@ const GROUPS: DayGroup[] = [
     ],
   },
   {
-    date: '2026-07-03', dateLabelTh: 'พฤ. 3 ก.ค.', dateLabelEn: 'Thu 3 Jul', dateSubTh: 'กะสาย', dateSubEn: 'Late shift', tone: 'normal',
+    date: '2026-05-31', dateLabelTh: 'อา. 31 พ.ค.', dateLabelEn: 'Sun 31 May', dateSubTh: 'กะสาย', dateSubEn: 'Late shift', tone: 'normal',
     rows: [
       { ...REG, hours: 8.0, days: 1 },
       { ...SHIFT_PREMIUM, hours: null, days: 0 },
@@ -96,13 +100,13 @@ const GROUPS: DayGroup[] = [
     ],
   },
   {
-    date: '2026-07-04', dateLabelTh: 'ศ. 4 ก.ค.', dateLabelEn: 'Fri 4 Jul', dateSubTh: 'Day Off', dateSubEn: 'Day Off', tone: 'dayoff',
+    date: '2026-06-01', dateLabelTh: 'จ. 1 มิ.ย.', dateLabelEn: 'Mon 1 Jun', dateSubTh: 'Day Off', dateSubEn: 'Day Off', tone: 'dayoff',
     rows: [
       { wageCode: '2507', payCode: 'DAILY_RATE_OFF – Daily Rate (วันหยุด)', payKind: 'daily_off', dot: 'dayoff', hours: 8.0, days: 1 },
     ],
   },
   {
-    date: '2026-07-05', dateLabelTh: 'ส. 5 ก.ค.', dateLabelEn: 'Sat 5 Jul', dateSubTh: 'Day Off', dateSubEn: 'Day Off', tone: 'dayoff',
+    date: '2026-06-02', dateLabelTh: 'อ. 2 มิ.ย.', dateLabelEn: 'Tue 2 Jun', dateSubTh: 'Day Off', dateSubEn: 'Day Off', tone: 'dayoff',
     rows: [
       { wageCode: '2507', payCode: 'DAILY_RATE_OFF – Daily Rate (วันหยุด)', payKind: 'daily_off', dot: 'dayoff', hours: 8.0, days: 1 },
       { wageCode: '2530', payCode: 'OT_10 – Overtime 1.0x', payKind: 'ot', dot: 'ot', hours: 8.0, days: 0 },
@@ -110,38 +114,38 @@ const GROUPS: DayGroup[] = [
     ],
   },
   {
-    date: '2026-07-06', dateLabelTh: 'อา. 6 ก.ค.', dateLabelEn: 'Sun 6 Jul', dateSubTh: 'กะเช้า', dateSubEn: 'Morning', tone: 'leave',
+    date: '2026-06-03', dateLabelTh: 'พ. 3 มิ.ย.', dateLabelEn: 'Wed 3 Jun', dateSubTh: 'กะเช้า', dateSubEn: 'Morning', tone: 'leave',
     rows: [
       { wageCode: '2700', payCode: 'SICK_LEAVE – Sick Leave (ลาป่วย)', payKind: 'leave', dot: 'leave', hours: 8.0, days: 1 },
     ],
   },
   {
-    date: '2026-07-07', dateLabelTh: 'จ. 7 ก.ค.', dateLabelEn: 'Mon 7 Jul', dateSubTh: 'กะเช้า', dateSubEn: 'Morning', tone: 'leave',
+    date: '2026-06-04', dateLabelTh: 'พฤ. 4 มิ.ย.', dateLabelEn: 'Thu 4 Jun', dateSubTh: 'กะเช้า', dateSubEn: 'Morning', tone: 'leave',
     rows: [
       { wageCode: '2702', payCode: 'PERSONAL_LEAVE – Personal Leave (ลากิจ)', payKind: 'leave', dot: 'leave', hours: 8.0, days: 1 },
     ],
   },
   {
-    date: '2026-07-08', dateLabelTh: 'อ. 8 ก.ค.', dateLabelEn: 'Tue 8 Jul', dateSubTh: 'กะเช้า', dateSubEn: 'Morning', tone: 'leave',
+    date: '2026-06-05', dateLabelTh: 'ศ. 5 มิ.ย.', dateLabelEn: 'Fri 5 Jun', dateSubTh: 'กะเช้า', dateSubEn: 'Morning', tone: 'leave',
     rows: [
       { wageCode: '2701', payCode: 'ANNUAL_LEAVE – Annual Leave (ลาพักผ่อน)', payKind: 'leave', dot: 'leave', hours: 8.0, days: 1 },
     ],
   },
   {
-    date: '2026-07-09', dateLabelTh: 'พ. 9 ก.ค.', dateLabelEn: 'Wed 9 Jul', dateSubTh: 'กะเช้า', dateSubEn: 'Morning', tone: 'leave',
+    date: '2026-06-06', dateLabelTh: 'ส. 6 มิ.ย.', dateLabelEn: 'Sat 6 Jun', dateSubTh: 'กะเช้า', dateSubEn: 'Morning', tone: 'leave',
     rows: [
       { ...REG, hours: 4.0, days: 0 },
       { wageCode: '2700', payCode: 'SICK_LEAVE – Sick Leave ครึ่งวัน', payKind: 'leave', dot: 'leave', hours: 4.0, days: 0.5 },
     ],
   },
   {
-    date: '2026-07-18', dateLabelTh: 'ศ. 18 ก.ค.', dateLabelEn: 'Fri 18 Jul', dateSubTh: 'วันหยุด (F)', dateSubEn: 'Holiday (F)', tone: 'holiday',
+    date: '2026-06-15', dateLabelTh: 'จ. 15 มิ.ย.', dateLabelEn: 'Mon 15 Jun', dateSubTh: 'วันหยุด (F)', dateSubEn: 'Holiday (F)', tone: 'holiday',
     rows: [
       { wageCode: '2507', payCode: 'DAILY_RATE_OFF – Daily Rate (วันหยุด)', payKind: 'daily_off', dot: 'holiday', hours: 8.0, days: 1 },
     ],
   },
   {
-    date: '2026-07-19', dateLabelTh: 'ส. 19 ก.ค.', dateLabelEn: 'Sat 19 Jul', dateSubTh: 'วันหยุด (F)', dateSubEn: 'Holiday (F)', tone: 'holiday',
+    date: '2026-06-16', dateLabelTh: 'อ. 16 มิ.ย.', dateLabelEn: 'Tue 16 Jun', dateSubTh: 'วันหยุด (F)', dateSubEn: 'Holiday (F)', tone: 'holiday',
     rows: [
       { wageCode: '2507', payCode: 'DAILY_RATE_OFF – Daily Rate (วันหยุด)', payKind: 'daily_off', dot: 'holiday', hours: 8.0, days: 1 },
       { wageCode: '2533', payCode: 'OT_30 – Overtime 3.0x', payKind: 'ot', dot: 'ot', hours: 8.0, days: 0 },
@@ -149,7 +153,7 @@ const GROUPS: DayGroup[] = [
     ],
   },
   {
-    date: '2026-07-10', dateLabelTh: 'พฤ. 10 ก.ค.', dateLabelEn: 'Thu 10 Jul', dateSubTh: 'กะสาย', dateSubEn: 'Late shift', tone: 'today',
+    date: '2026-06-07', dateLabelTh: 'อา. 7 มิ.ย.', dateLabelEn: 'Sun 7 Jun', dateSubTh: 'กะเช้า', dateSubEn: 'Morning', tone: 'today',
     rows: [
       { wageCode: '', payCode: '', payKind: 'reg', dot: 'work', hours: null, days: 0, pending: true },
     ],
