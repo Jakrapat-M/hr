@@ -27,7 +27,9 @@ const ROUTES = [
 ];
 
 async function globalSetup(): Promise<void> {
-  const baseURL = process.env.BASE_URL ?? 'http://localhost:3001';
+  // Must match playwright.config.ts's own baseURL fallback — a mismatch here
+  // silently warms up the wrong (or no) server before the real run starts.
+  const baseURL = process.env.BASE_URL ?? 'http://localhost:3000';
 
   console.log(`[global-setup] Warming up ${ROUTES.length} routes on ${baseURL} …`);
 

@@ -73,13 +73,20 @@ describe('ResignationDetailPage', () => {
     useTerminationApprovals.setState({ requests: [] });
   });
 
-  it('shows approve-and-send-back only, without talk-first or reject actions', async () => {
+  it('shows approve-and-send-back and send-back actions, without talk-first or reject', async () => {
     await renderPage();
 
     expect(screen.getByRole('button', { name: /Approve & send back/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /^Send back$/i })).toBeEnabled();
     expect(screen.queryByRole('button', { name: /Talk first/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Reject/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/talk first/i)).not.toBeInTheDocument();
+  });
+
+  it('removes the "Your decision" section from the page', async () => {
+    await renderPage();
+
+    expect(screen.queryByText(/Your decision/i)).not.toBeInTheDocument();
   });
 
   it('approves the resignation and sends the manager back to quick approve', async () => {
@@ -98,6 +105,43 @@ describe('ResignationDetailPage', () => {
       actorRole: 'manager',
       actorName: 'ผู้จัดการ / Manager',
       action: 'approve',
+    });
+  });
+
+  it('requires a reason before confirming send back', async () => {
+    await renderPage();
+
+    await userEvent.click(screen.getByRole('button', { name: /^Send back$/i }));
+
+    const confirmButton = await screen.findByRole('button', { name: /Confirm send back/i });
+    expect(confirmButton).toBeDisabled();
+
+    expect(pushSpy).not.toHaveBeenCalled();
+  });
+
+  it('sends the resignation back with a reason and returns to quick approve', async () => {
+    await renderPage();
+
+    await userEvent.click(screen.getByRole('button', { name: /^Send back$/i }));
+    const reasonInput = await screen.findByPlaceholderText(/Need more details/i);
+    await userEvent.type(reasonInput, 'Need the last-day date confirmed');
+
+    const confirmButton = screen.getByRole('button', { name: /Confirm send back/i });
+    expect(confirmButton).toBeEnabled();
+    await userEvent.click(confirmButton);
+
+    await waitFor(() => {
+      expect(pushSpy).toHaveBeenCalledWith('/en/quick-approve?decided=resignation-sent-back');
+    });
+    const request = useTerminationApprovals
+      .getState()
+      .requests.find((item) => item.id === REQUEST_ID);
+    expect(request?.status).toBe('rejected');
+    expect(request?.audit.at(-1)).toMatchObject({
+      actorRole: 'manager',
+      actorName: 'ผู้จัดการ / Manager',
+      action: 'reject',
+      comment: 'Need the last-day date confirmed',
     });
   });
 });
