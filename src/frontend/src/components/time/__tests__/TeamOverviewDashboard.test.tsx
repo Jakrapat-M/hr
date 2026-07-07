@@ -9,8 +9,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
+import { Star } from 'lucide-react';
 import enMessages from '../../../../messages/en.json';
-import { TeamOverviewDashboard } from '../TeamOverviewDashboard';
+import {
+  TeamOverviewDashboard,
+  DEFAULT_TEAM_OVERVIEW_CARDS,
+  type TeamOverviewCard,
+} from '../TeamOverviewDashboard';
 import { useOvertimeRequests, type OTRequest } from '@/stores/overtime-requests';
 
 const OT_ROWS: OTRequest[] = [
@@ -95,5 +100,33 @@ describe('TeamOverviewDashboard — empty cohort', () => {
     renderDashboard([]);
     expect(screen.getByText('No team members yet')).toBeInTheDocument();
     expect(screen.queryByTestId('team-overview-dashboard')).not.toBeInTheDocument();
+  });
+});
+
+describe('TeamOverviewDashboard — extendable card registry', () => {
+  it('renders one additional card when the registry is extended with a dummy config, with no other changes needed', () => {
+    const dummyCard: TeamOverviewCard = {
+      id: 'dummy-metric',
+      testid: 'kpi-dummy-metric',
+      icon: Star,
+      tone: 'accent',
+      label: () => 'Dummy metric',
+      value: () => '42',
+      sub: () => 'a future KPI, added with zero layout changes',
+    };
+    const extendedCards = [...DEFAULT_TEAM_OVERVIEW_CARDS, dummyCard];
+
+    render(
+      <NextIntlClientProvider locale="en" messages={enMessages}>
+        <TeamOverviewDashboard empIds={['EMP-0301']} cards={extendedCards} />
+      </NextIntlClientProvider>,
+    );
+
+    // The 5 original cards are unaffected...
+    expect(screen.getByTestId('kpi-on-time-rate')).toBeInTheDocument();
+    expect(screen.getByTestId('kpi-current-period')).toBeInTheDocument();
+    // ...and the appended card renders alongside them, with its own content.
+    expect(within(screen.getByTestId('kpi-dummy-metric')).getByText('Dummy metric')).toBeInTheDocument();
+    expect(within(screen.getByTestId('kpi-dummy-metric')).getByText('42')).toBeInTheDocument();
   });
 });
