@@ -100,6 +100,28 @@ function generateTermId(): string {
   return `TR-${ts}-${rand}`;
 }
 
+// v1 — STA-247 changed `attachments` from filenames-only string[] to
+// AttachedFile[] ({id, name, size, type}). Browsers with pre-STA-247
+// persisted state still hold the old string[] shape, which crashes the
+// resignation detail page's `<li key={file.id}>` render (undefined key +
+// blank filename) since a string has no .id/.name. Exported so the
+// migration itself is unit-testable independent of zustand/persist.
+export function migrateTerminationApprovals(persisted: unknown, version: number) {
+  const state = persisted as { requests?: TerminationRequest[] } | undefined;
+  if (version >= 1 || !state?.requests) return state as { requests: TerminationRequest[] };
+  return {
+    ...state,
+    requests: state.requests.map((r) => ({
+      ...r,
+      attachments: r.attachments?.map((file, i) =>
+        typeof file === 'string'
+          ? { id: `seed-att-${i}-${file}`, name: file, size: 0, type: 'application/pdf' }
+          : file,
+      ),
+    })),
+  };
+}
+
 export const useTerminationApprovals = create<TerminationApprovalsState>()(
   persist(
     (set) => ({
@@ -192,6 +214,9 @@ export const useTerminationApprovals = create<TerminationApprovalsState>()(
     {
       name: 'humi-termination-approvals',
       storage: createJSONStorage(() => localStorage),
+      // See migrateTerminationApprovals() above for why this migration exists.
+      version: 1,
+      migrate: (persisted: unknown, version) => migrateTerminationApprovals(persisted, version),
     },
   ),
 );
