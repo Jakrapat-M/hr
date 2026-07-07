@@ -7,6 +7,7 @@
 
 import { getLocale } from 'next-intl/server';
 import { TeamOverviewDashboard } from '@/components/time/TeamOverviewDashboard';
+import { TeamOverviewShortcuts } from '@/components/time/TeamOverviewShortcuts';
 
 export default async function TeamOverviewPage() {
   const locale = await getLocale();
@@ -22,6 +23,10 @@ export default async function TeamOverviewPage() {
           Team <span className="italic font-medium text-accent">{isTh ? 'ภาพรวม' : 'Overview'}</span>
         </h1>
       </header>
+
+      {/* Quick-jump buttons + shortcut groupings sit at the top of the page
+          (STA-249); the summary dashboard follows. */}
+      <TeamOverviewShortcuts />
 
       <TeamOverviewDashboard />
     </div>

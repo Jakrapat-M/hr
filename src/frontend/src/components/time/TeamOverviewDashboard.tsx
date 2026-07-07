@@ -1,16 +1,30 @@
 'use client';
 
-// TeamOverviewDashboard — STA-245 (Time · Team Overview).
-// The full manager attendance dashboard: 5 summary cards (on-time rate / late
-// scans / absences + missed scans / OT hours with X1–X3 breakdown / current
-// period) plus a PERIOD SWITCHER (this week / last week / this period) that
-// re-aggregates every KPI. Numbers are derived from the canonical time-domain
-// seeds via lib/time/team-stats, persona-scoped like /roster, and pinned to
-// DEMO_TODAY — never wall-clock. Mockup only, HUMI tokens, NO-RED (pumpkin).
+// TeamOverviewDashboard — STA-245 (Time · Team Overview) + STA-249.
+// The full manager attendance dashboard: 5 summary KPI cards (on-time rate /
+// late scans / absences + missed scans / OT hours with X1–X3 breakdown /
+// selected period) plus:
+//  • a PERIOD DROPDOWN (STA-249) — 21st→20th pay-period options bounded to
+//    +3 months forward / −1 year back (periodOptions in lib/time/period), the
+//    current period as the default; every KPI re-aggregates on selection.
+//  • an EXPANDABLE detail layer (STA-249) — the collapsed cards summarize; the
+//    "View details" toggle reveals per-employee late/absent, OT and leave lists
+//    (capped 8 + "Showing 8 of N"), derived from lib/time seeds via teamDetail.
+// Numbers are persona-scoped like /roster and pinned to DEMO_TODAY — never
+// wall-clock. Mockup only, HUMI tokens, NO-RED (pumpkin).
 
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useLocale } from 'next-intl';
-import { Clock, AlarmClock, UserX, Timer, CalendarDays, type LucideIcon } from 'lucide-react';
+import {
+  Clock,
+  AlarmClock,
+  UserX,
+  Timer,
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  type LucideIcon,
+} from 'lucide-react';
 import { Card, EmptyState } from '@/components/humi';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -21,20 +35,13 @@ import { DEMO_OT_EMPLOYEE } from '@/lib/demo-seed';
 import { useOvertimeRequests, type OTRequest } from '@/stores/overtime-requests';
 import {
   teamStats,
+  teamDetail,
   OT_MULTIPLIERS,
   type OtMultiplier,
   type TeamStats,
 } from '@/lib/time/team-stats';
-import {
-  defaultWeekWindow,
-  weekWindow,
-  addWeeks,
-  seededPeriodBounds,
-  toUtcMidnight,
-  formatWeekRangeBE,
-  DEMO_TODAY,
-  type WeekWindow,
-} from '@/lib/time/week';
+import { periodOptions, demoToday } from '@/lib/time/period';
+import { toUtcMidnight, formatWeekRangeBE, type WeekWindow } from '@/lib/time/week';
 
 // SSR-safe client gate: getServerSnapshot → false, getSnapshot → true, so the
 // persisted OT store is only read AFTER hydration (server + first client paint
@@ -42,10 +49,11 @@ import {
 const EMPTY_OT: readonly OTRequest[] = [];
 const subscribeNoop = () => () => {};
 
-type PeriodKey = 'this-week' | 'last-week' | 'this-period';
+/** Cap for the expanded per-employee detail lists (less-is-more; see memory). */
+const DETAIL_CAP = 8;
 
-/** Build a WeekWindow-shaped window spanning an arbitrary [start,end] (used for
- *  the whole-payroll-period preset — teamStats only needs {start,end,days}). */
+/** Build a WeekWindow-shaped window spanning an arbitrary [start,end] (the
+ *  whole-payroll-period window — teamStats/teamDetail only need {start,end,days}). */
 function spanWindow(start: Date, end: Date): WeekWindow {
   const days: Date[] = [];
   for (const d = new Date(start.getTime()); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
@@ -53,26 +61,6 @@ function spanWindow(start: Date, end: Date): WeekWindow {
   }
   return { start, end, days };
 }
-
-/** Resolve the window for a period preset, clamped to the seeded data period. */
-function windowForPeriod(key: PeriodKey): WeekWindow {
-  if (key === 'this-period') {
-    const b = seededPeriodBounds();
-    return spanWindow(b.start, b.end);
-  }
-  if (key === 'last-week') {
-    return weekWindow(addWeeks(toUtcMidnight(DEMO_TODAY), -1));
-  }
-  return defaultWeekWindow();
-}
-
-const PERIOD_LABEL: Record<PeriodKey, { th: string; en: string }> = {
-  'this-week': { th: 'สัปดาห์นี้', en: 'This week' },
-  'last-week': { th: 'สัปดาห์ก่อน', en: 'Last week' },
-  'this-period': { th: 'รอบเดือนนี้', en: 'This period' },
-};
-
-const PERIOD_KEYS: PeriodKey[] = ['this-week', 'last-week', 'this-period'];
 
 type Tone = 'accent' | 'warning' | 'danger' | 'indigo';
 
@@ -253,6 +241,54 @@ export const DEFAULT_TEAM_OVERVIEW_CARDS: TeamOverviewCard[] = [
   },
 ];
 
+// ── Expanded detail layer ────────────────────────────────────────────────────
+type DetailRow = { empId: string; name: string; detail: string };
+
+function DetailPanel({
+  title,
+  icon: Icon,
+  rows,
+  isTh,
+  testid,
+}: {
+  title: string;
+  icon: LucideIcon;
+  rows: DetailRow[];
+  isTh: boolean;
+  testid: string;
+}) {
+  const shown = rows.slice(0, DETAIL_CAP);
+  return (
+    <Card variant="flat" size="md">
+      <div data-testid={testid} className="flex flex-col gap-3">
+        <div className="flex items-center gap-2 text-small font-semibold text-ink">
+          <Icon size={16} className="text-ink-muted" aria-hidden />
+          {title}
+        </div>
+        {rows.length === 0 ? (
+          <div className="text-xs text-ink-muted">{isTh ? 'ไม่มีรายการในช่วงนี้' : 'No items this period'}</div>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {shown.map((r) => (
+              <li key={r.empId} className="flex items-center justify-between gap-3 text-small">
+                <span className="truncate text-ink-soft">{r.name}</span>
+                <span className="shrink-0 font-medium text-ink">{r.detail}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {rows.length > DETAIL_CAP && (
+          <div className="text-xs text-ink-muted">
+            {isTh
+              ? `แสดง ${DETAIL_CAP} จาก ${rows.length}`
+              : `Showing ${DETAIL_CAP} of ${rows.length}`}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 export function TeamOverviewDashboard({
   empIds: empIdsProp,
   cards = DEFAULT_TEAM_OVERVIEW_CARDS,
@@ -276,19 +312,82 @@ export function TeamOverviewDashboard({
   }, [scope]);
   const empIds = empIdsProp ?? scopedIds;
 
-  // ── Period switcher state ──
-  const [periodKey, setPeriodKey] = useState<PeriodKey>('this-week');
-  const periodWindow = useMemo(() => windowForPeriod(periodKey), [periodKey]);
+  // ── Period dropdown (STA-249) — 21st→20th options, −1yr … +3mo, current default.
+  const options = useMemo(() => periodOptions(demoToday()), []);
+  const [periodKey, setPeriodKey] = useState<string>(
+    () => options.find((o) => o.isCurrent)?.key ?? options[0].key,
+  );
+  const selected = useMemo(
+    () => options.find((o) => o.key === periodKey) ?? options[0],
+    [options, periodKey],
+  );
+  const periodWindow = useMemo(
+    () => spanWindow(toUtcMidnight(selected.start), toUtcMidnight(selected.end)),
+    [selected],
+  );
+
+  // ── Expandable detail layer (STA-249) — local, touch-friendly toggle.
+  const [expanded, setExpanded] = useState(false);
 
   // ── OT is store-backed (persisted); read it only after hydration so the SSR /
   //    first client paint (empty store) and the hydrated render agree.
   const storeOt = useOvertimeRequests((s) => s.requests);
   const hydrated = useSyncExternalStore(subscribeNoop, () => true, () => false);
+  const otRows = hydrated ? storeOt : EMPTY_OT;
 
   const stats = useMemo(
-    () => teamStats(periodWindow, empIds, hydrated ? storeOt : EMPTY_OT),
-    [periodWindow, empIds, hydrated, storeOt],
+    () => teamStats(periodWindow, empIds, otRows),
+    [periodWindow, empIds, otRows],
   );
+
+  // Only compute the granular per-employee rows while the layer is open.
+  const detail = useMemo(
+    () => (expanded ? teamDetail(periodWindow, empIds, otRows) : []),
+    [expanded, periodWindow, empIds, otRows],
+  );
+
+  // Best-effort display name: employee registry first, then live OT rows (which
+  // carry employeeName for the demo-seeded EMP-* namespace), else the raw id.
+  const resolveName = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of ALL_PORTED_EMPLOYEES) {
+      const en = `${e.firstNameEn ?? e.firstNameTh} ${e.lastNameEn ?? e.lastNameTh}`.trim();
+      m.set(e.id, isTh ? `${e.firstNameTh} ${e.lastNameTh}` : en);
+    }
+    for (const r of otRows) {
+      if (r.employeeName && !m.has(r.employeeId)) m.set(r.employeeId, r.employeeName);
+    }
+    return (id: string) => m.get(id) ?? id;
+  }, [isTh, otRows]);
+
+  const lateRows: DetailRow[] = detail
+    .filter((d) => d.late > 0 || d.missedScans > 0)
+    .sort((a, b) => b.late + b.missedScans - (a.late + a.missedScans))
+    .map((d) => ({
+      empId: d.empId,
+      name: resolveName(d.empId),
+      detail: isTh
+        ? `สาย ${d.late} · ขาด/ไม่ครบ ${d.missedScans}`
+        : `${d.late} late · ${d.missedScans} missed`,
+    }));
+
+  const otDetailRows: DetailRow[] = detail
+    .filter((d) => d.otHours > 0)
+    .sort((a, b) => b.otHours - a.otHours)
+    .map((d) => ({
+      empId: d.empId,
+      name: resolveName(d.empId),
+      detail: isTh ? `${d.otHours} ชม.` : `${d.otHours} h`,
+    }));
+
+  const leaveRows: DetailRow[] = detail
+    .filter((d) => d.leaveDays > 0)
+    .sort((a, b) => b.leaveDays - a.leaveDays)
+    .map((d) => ({
+      empId: d.empId,
+      name: resolveName(d.empId),
+      detail: isTh ? `${d.leaveDays} วัน` : `${d.leaveDays} d`,
+    }));
 
   const rangeLabel = formatWeekRangeBE(periodWindow.start, periodWindow.end, isTh ? 'th' : 'en');
 
@@ -310,33 +409,34 @@ export function TeamOverviewDashboard({
       aria-label={isTh ? 'ภาพรวมทีม' : 'Team overview'}
       className="flex flex-col gap-5"
     >
-      {/* Period switcher */}
-      <div
-        className="flex flex-wrap items-center gap-2"
-        role="group"
-        aria-label={isTh ? 'เลือกช่วงเวลา' : 'Select period'}
-      >
-        {PERIOD_KEYS.map((key) => {
-          const active = key === periodKey;
-          return (
-            <button
-              key={key}
-              type="button"
-              data-testid={`period-${key}`}
-              aria-pressed={active}
-              onClick={() => setPeriodKey(key)}
-              className={cn(
-                'rounded-[var(--radius-md)] border px-3 py-1.5 text-small font-medium transition-colors',
-                active
-                  ? 'border-accent bg-accent-soft text-accent'
-                  : 'border-hairline bg-surface text-ink-soft hover:bg-canvas-soft',
-              )}
-            >
-              {isTh ? PERIOD_LABEL[key].th : PERIOD_LABEL[key].en}
-            </button>
-          );
-        })}
-        <span className="ml-1 inline-flex items-center gap-1.5 text-small text-ink-muted">
+      {/* Period dropdown (STA-249) — replaces the STA-245 preset buttons. */}
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="inline-flex items-center gap-2">
+          <span className="text-small font-medium text-ink-muted">
+            {isTh ? 'ช่วงเวลา' : 'Period'}
+          </span>
+          <select
+            data-testid="period-select"
+            aria-label={isTh ? 'เลือกช่วงเวลา' : 'Select period'}
+            value={periodKey}
+            onChange={(e) => setPeriodKey(e.target.value)}
+            className="rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-1.5 text-small font-medium text-ink transition-colors hover:bg-canvas-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+          >
+            {options.map((o) => {
+              const label = formatWeekRangeBE(
+                toUtcMidnight(o.start),
+                toUtcMidnight(o.end),
+                isTh ? 'th' : 'en',
+              );
+              return (
+                <option key={o.key} value={o.key}>
+                  {o.isCurrent ? `${label} ${isTh ? '• รอบปัจจุบัน' : '• Current'}` : label}
+                </option>
+              );
+            })}
+          </select>
+        </label>
+        <span className="inline-flex items-center gap-1.5 text-small text-ink-muted">
           <CalendarDays size={14} aria-hidden />
           <span data-testid="period-range">{rangeLabel}</span>
         </span>
@@ -360,6 +460,57 @@ export function TeamOverviewDashboard({
             </KpiCard>
           );
         })}
+      </div>
+
+      {/* Expandable granular detail layer (STA-249). */}
+      <div className="flex flex-col gap-4">
+        <button
+          type="button"
+          data-testid="dashboard-expand-toggle"
+          aria-expanded={expanded}
+          aria-controls="team-overview-detail"
+          onClick={() => setExpanded((v) => !v)}
+          className="inline-flex w-fit items-center gap-1.5 rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-1.5 text-small font-medium text-ink-soft transition-colors hover:bg-canvas-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+        >
+          {expanded ? <ChevronUp size={16} aria-hidden /> : <ChevronDown size={16} aria-hidden />}
+          {expanded
+            ? isTh
+              ? 'ซ่อนรายละเอียด'
+              : 'Hide details'
+            : isTh
+              ? 'ดูรายละเอียด'
+              : 'View details'}
+        </button>
+
+        {expanded && (
+          <div
+            id="team-overview-detail"
+            data-testid="team-overview-detail"
+            className="grid gap-4 lg:grid-cols-3"
+          >
+            <DetailPanel
+              testid="detail-late"
+              icon={AlarmClock}
+              title={isTh ? 'สาย / ขาดงาน รายคน' : 'Late / absent by employee'}
+              rows={lateRows}
+              isTh={isTh}
+            />
+            <DetailPanel
+              testid="detail-ot"
+              icon={Timer}
+              title={isTh ? 'ล่วงเวลา (OT) รายคน' : 'Overtime by employee'}
+              rows={otDetailRows}
+              isTh={isTh}
+            />
+            <DetailPanel
+              testid="detail-leave"
+              icon={CalendarDays}
+              title={isTh ? 'การลา รายคน' : 'Leave by employee'}
+              rows={leaveRows}
+              isTh={isTh}
+            />
+          </div>
+        )}
       </div>
 
       {/* Persona scope note (only when the cohort is narrowed and no explicit override) */}

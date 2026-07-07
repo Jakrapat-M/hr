@@ -130,6 +130,45 @@ export function LEAVE_BACKDATE_MIN(refDate?: Date): string {
 }
 
 /**
+ * STA-249 / STA-239 (shared) — the selectable payroll-period options for a period
+ * dropdown (Team Overview, and any future period picker). Generates 21st→20th
+ * pay-period windows bounded to `−1 year back` … `+3 months forward` from the
+ * reference day: 12 previous periods + the current period + 3 forward = 16 options.
+ * Each option carries the period `key` (its start ISO — a stable id), the inclusive
+ * `[start, end]` ISO bounds, and an `isCurrent` flag (the current period is the
+ * intended default selection). Bilingual labels are the CALLER's concern — format
+ * `start`/`end` with the app date helpers — so this stays i18n-free and reusable.
+ * Pure + `refDate`-injectable (pass `demoToday()` on the demo surfaces).
+ */
+export type PeriodOption = {
+  /** Stable id for the option — the period's start ISO ('YYYY-MM-DD', a 21st). */
+  key: string;
+  /** Inclusive period start ISO (the 21st). */
+  start: string;
+  /** Inclusive period end ISO (the 20th of the next month). */
+  end: string;
+  /** True for the period containing `refDate` — the intended default. */
+  isCurrent: boolean;
+};
+
+/** Months of history offered (−1 year). */
+const PERIOD_OPTIONS_BACK = 12;
+/** Months of look-ahead offered (+3 months). */
+const PERIOD_OPTIONS_FORWARD = 3;
+
+export function periodOptions(refDate?: Date): PeriodOption[] {
+  const { start } = currentPeriod(refDate);
+  const cur = new Date(`${start}T00:00:00Z`); // the current period's start (a 21st)
+  const opts: PeriodOption[] = [];
+  for (let n = -PERIOD_OPTIONS_BACK; n <= PERIOD_OPTIONS_FORWARD; n++) {
+    const s = new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth() + n, 21));
+    const e = new Date(Date.UTC(s.getUTCFullYear(), s.getUTCMonth() + 1, 20));
+    opts.push({ key: toISODate(s), start: toISODate(s), end: toISODate(e), isCurrent: n === 0 });
+  }
+  return opts;
+}
+
+/**
  * MOCK ONLY — leave-specific bookable window. Leave supports SF-style advance
  * booking up to `LEAVE_BOOKING_HORIZON_DAYS` days ahead, AND (STA-156) backdating
  * down to the start of the previous payroll cycle (`LEAVE_BACKDATE_MIN`). Dates

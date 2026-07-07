@@ -7,6 +7,7 @@ import {
   isBookableLeaveDate,
   LEAVE_BACKDATE_MIN,
   LEAVE_BOOKING_HORIZON_DAYS,
+  periodOptions,
 } from '@/lib/time/period';
 
 function isoPlusDays(base: Date, days: number): string {
@@ -112,6 +113,39 @@ describe('isBookableLeaveDate (today..+90d advance window)', () => {
 
   test('empty string is not bookable', () => {
     expect(isBookableLeaveDate('', REF)).toBe(false);
+  });
+});
+
+describe('periodOptions — bounded pay-period dropdown options (STA-249)', () => {
+  const REF = new Date(Date.UTC(2026, 5, 7)); // 2026-06-07 → current period 05-21..06-20
+
+  test('offers 12 back + current + 3 forward = 16 options, exactly one current', () => {
+    const opts = periodOptions(REF);
+    expect(opts).toHaveLength(16);
+    expect(opts.filter((o) => o.isCurrent)).toHaveLength(1);
+    // The current option is the payroll period containing the ref day.
+    const cur = opts.find((o) => o.isCurrent)!;
+    expect(cur.start).toBe('2026-05-21');
+    expect(cur.end).toBe('2026-06-20');
+  });
+
+  test('first option is not older than 1 year back; last is not beyond +3 months', () => {
+    const opts = periodOptions(REF);
+    const cur = opts.find((o) => o.isCurrent)!;
+    // First option starts exactly one year before the current period start.
+    expect(opts[0].start).toBe('2025-05-21');
+    expect(opts[0].start >= isoPlusDays(new Date(`${cur.start}T00:00:00Z`), -366)).toBe(true);
+    // Last option ends exactly three months after the current period end.
+    expect(opts[opts.length - 1].end).toBe('2026-09-20');
+    expect(opts[opts.length - 1].start).toBe('2026-08-21');
+  });
+
+  test('every option is a 21st → 20th window with a stable start-ISO key', () => {
+    for (const o of periodOptions(REF)) {
+      expect(o.key).toBe(o.start);
+      expect(o.start.slice(-2)).toBe('21');
+      expect(o.end.slice(-2)).toBe('20');
+    }
   });
 });
 
