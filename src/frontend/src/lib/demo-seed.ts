@@ -14,6 +14,7 @@
 // values, so they keep their own fixtures here.
 
 import { useTerminationApprovals, type TerminationRequest } from '@/stores/termination-approvals';
+import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 import { usePromotionApprovals, type PromotionRequest } from '@/stores/promotion-approvals';
 import { usePayRateApprovals, type PayRateRequest } from '@/stores/pay-rate-approvals';
 import {
@@ -39,6 +40,12 @@ import { currentPeriod, previousPeriod, demoToday } from '@/lib/time/period';
 import { getHolidaysForPeriod } from '@/lib/time/holiday-calendar';
 import { getAttendanceForPeriod } from '@/lib/time/attendance-seed';
 
+// STA-247 — seeded resignation attachments (was filenames-only string[], now
+// AttachedFile[] to match the AttachmentDropzone shape; no real dataUrl for demo seeds).
+function seedAttachment(name: string, sizeBytes = 240_000): AttachedFile {
+  return { id: `seed-att-${name}`, name, size: sizeBytes, type: 'application/pdf' };
+}
+
 const MOCK_TERMINATION_REQUESTS: TerminationRequest[] = [
   {
     // pending_manager — Manager will see this in quick-approve
@@ -48,7 +55,7 @@ const MOCK_TERMINATION_REQUESTS: TerminationRequest[] = [
     requestedLastDay: '2026-05-31',
     reasonCode: 'TERM_RESIGN',
     reasonText: 'ได้รับข้อเสนองานใหม่ที่เหมาะสมกว่า ขอลาออกตามกำหนดแจ้งล่วงหน้า 30 วัน',
-    attachments: ['ใบลาออก-ประเสริฐ.pdf', 'หนังสือแจ้งล่วงหน้า-30วัน.pdf'],
+    attachments: [seedAttachment('ใบลาออก-ประเสริฐ.pdf'), seedAttachment('หนังสือแจ้งล่วงหน้า-30วัน.pdf')],
     status: 'pending_manager',
     submittedAt: '2026-04-24T08:00:00+07:00',
     submittedBy: { id: 'EMP-0055', name: 'ประเสริฐ วัฒนชัย', role: 'employee' },
@@ -89,7 +96,7 @@ const MOCK_TERMINATION_REQUESTS: TerminationRequest[] = [
     requestedLastDay: '2026-05-20',
     reasonCode: 'TERM_EOC',
     reasonText: 'ครบสัญญาจ้าง ไม่ต่อสัญญา',
-    attachments: ['หนังสือแจ้งสิ้นสุดสัญญา-วิชัย.pdf', 'เอกสารส่งมอบงาน-วิชัย.pdf'],
+    attachments: [seedAttachment('หนังสือแจ้งสิ้นสุดสัญญา-วิชัย.pdf'), seedAttachment('เอกสารส่งมอบงาน-วิชัย.pdf')],
     status: 'pending_spd',
     submittedAt: '2026-04-22T09:30:00+07:00',
     submittedBy: { id: 'EMP-0178', name: 'วิชัย ศรีสุวรรณ', role: 'employee' },

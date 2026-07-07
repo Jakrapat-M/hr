@@ -6,7 +6,7 @@
 // Reason codes: 17 SF TERM_* codes (sf-extract/qas-fields-2026-04-25 zVoluntary picklist)
 // เมื่อ submit: addRequest() → toast "ส่งคำขอลาออกแล้ว — รอ SPD อนุมัติ"
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { CheckCircle, AlertTriangle } from 'lucide-react';
 import {
@@ -16,6 +16,8 @@ import {
 } from '@/stores/termination-approvals';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button, FormField, FormInput, Modal } from '@/components/humi';
+import { AttachmentDropzone } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
+import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 import { ExitInterviewSection } from '@/components/admin/terminate/ExitInterviewSection';
 import {
   useExitFeedback,
@@ -27,6 +29,11 @@ import { HUMI_MY_PROFILE } from '@/lib/humi-mock-data';
 
 const selectClassName =
   'h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
+
+// STA-247 — field parity with the admin terminate form: same email pattern +
+// seeded value as terminate/page.tsx's EMAIL_RE / SEEDED_PERSONAL_EMAIL.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SEEDED_PERSONAL_EMAIL = 'personal.email@gmail.com';
 
 function formatDateTh(iso: string): string {
   return new Date(iso).toLocaleDateString('th-TH', {
@@ -44,9 +51,16 @@ export function ResignationPage() {
 
   const [lastWorkingDate, setLastWorkingDate] = useState('');
   const [reasonCode, setReasonCode] = useState<TerminationReasonCode | ''>('');
-  const [comment, setComment] = useState('');
-  const [attachmentName, setAttachmentName] = useState<string | undefined>(undefined);
+  const [personalEmail, setPersonalEmail] = useState(SEEDED_PERSONAL_EMAIL);
+  const [additionalInfo, setAdditionalInfo] = useState('');
+  const [attachmentFiles, setAttachmentFiles] = useState<AttachedFile[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  // Frozen once per mount — react-hooks/purity flags Date.now() in render.
+  const minLastWorkingDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toISOString().slice(0, 10);
+  }, []);
   const [submittedId, setSubmittedId] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   // STA-238 — the Exit Interview is now a post-submit popup (Skip/Save) on the
@@ -79,8 +93,9 @@ export function ResignationPage() {
   const hasPending =
     myRequest?.status === 'pending_manager' || myRequest?.status === 'pending_spd';
   const isApproved = myRequest?.status === 'approved';
+  const personalEmailValid = !!personalEmail && EMAIL_RE.test(personalEmail);
   const isFormValid =
-    !!lastWorkingDate && !!reasonCode && !hasPending && !isApproved;
+    !!lastWorkingDate && !!reasonCode && personalEmailValid && !hasPending && !isApproved;
 
   // Two-step submit: clicking ส่งคำขอลาออก opens a confirmation Modal first
   // (mockup confirm, no backend) so resignation is never a single irreversible-
@@ -97,8 +112,9 @@ export function ResignationPage() {
       employeeName: userName,
       requestedLastDay: lastWorkingDate,
       reasonCode: reasonCode as TerminationReasonCode,
-      reasonText: comment.trim() || undefined,
-      attachments: attachmentName ? [attachmentName] : undefined,
+      reasonText: additionalInfo.trim() || undefined,
+      personalEmail,
+      attachments: attachmentFiles.length ? attachmentFiles : undefined,
       submittedBy: { id: userId, name: userName, role: 'employee' },
     });
     // STA-238 — the resignation is submitted here; the OPTIONAL Exit Interview
@@ -177,9 +193,15 @@ export function ResignationPage() {
                   {TERMINATION_REASON_LABEL[req.reasonCode]}
                 </div>
               </div>
+              {req.personalEmail && (
+                <div>
+                  <div className="humi-eyebrow">อีเมลส่วนตัว</div>
+                  <div className="text-body font-medium text-ink">{req.personalEmail}</div>
+                </div>
+              )}
               {req.reasonText && (
                 <div className="sm:col-span-2">
-                  <div className="humi-eyebrow">หมายเหตุเพิ่มเติม</div>
+                  <div className="humi-eyebrow">ข้อมูลเพิ่มเติม</div>
                   <div className="text-body text-ink">{req.reasonText}</div>
                 </div>
               )}
@@ -269,7 +291,7 @@ export function ResignationPage() {
                 type="date"
                 value={lastWorkingDate}
                 onChange={(e) => setLastWorkingDate(e.target.value)}
-                min={new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)}
+                min={minLastWorkingDate}
                 className="max-w-[220px]"
               />
             )}
@@ -296,13 +318,37 @@ export function ResignationPage() {
             )}
           </FormField>
 
-          {/* หมายเหตุ */}
-          <FormField id="comment" label="หมายเหตุเพิ่มเติม" help="ไม่จำเป็น">
+          {/* อีเมลส่วนตัว */}
+          <FormField
+            id="personalEmail"
+            label={
+              <>
+                อีเมลส่วนตัว <span className="text-ink-muted">(Personal Email)</span>
+              </>
+            }
+            required
+            error={personalEmail && !personalEmailValid ? 'รูปแบบอีเมลไม่ถูกต้อง' : undefined}
+          >
+            {(ctrl) => (
+              <FormInput
+                {...ctrl}
+                type="email"
+                value={personalEmail}
+                onChange={(e) => setPersonalEmail(e.target.value)}
+                placeholder="name@example.com"
+                invalid={!!personalEmail && !personalEmailValid}
+                className="max-w-[320px]"
+              />
+            )}
+          </FormField>
+
+          {/* ข้อมูลเพิ่มเติม */}
+          <FormField id="additionalInfo" label="ข้อมูลเพิ่มเติม" help="ไม่จำเป็น">
             {(ctrl) => (
               <textarea
                 {...ctrl}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
+                value={additionalInfo}
+                onChange={(e) => setAdditionalInfo(e.target.value)}
                 rows={3}
                 placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"
                 className="w-full max-w-[520px] resize-y rounded-md border border-hairline bg-surface px-3 py-2 text-body text-ink placeholder:text-ink-faint transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas"
@@ -311,24 +357,13 @@ export function ResignationPage() {
           </FormField>
 
           {/* เอกสารแนบ */}
-          <div>
-            <label htmlFor="attachment" className="text-small font-medium text-ink">
-              เอกสารแนบ <span className="text-ink-muted">(ไม่จำเป็น)</span>
-            </label>
-            <input
-              id="attachment"
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                setAttachmentName(file ? file.name : undefined);
-              }}
-              className="mt-1 block text-small text-ink-soft"
-            />
-            {attachmentName && (
-              <p className="text-small text-accent mt-1">{attachmentName}</p>
-            )}
-          </div>
+          <AttachmentDropzone
+            files={attachmentFiles}
+            onFilesChange={setAttachmentFiles}
+            label="เอกสารแนบ"
+            maxFiles={5}
+            maxSizeMB={5}
+          />
         </div>
       </div>
 
