@@ -23,6 +23,7 @@ import {
   teamStats,
   OT_MULTIPLIERS,
   type OtMultiplier,
+  type TeamStats,
 } from '@/lib/time/team-stats';
 import {
   defaultWeekWindow,
@@ -146,7 +147,116 @@ function KpiCard({
   );
 }
 
-export function TeamOverviewDashboard({ empIds: empIdsProp }: { empIds?: string[] } = {}) {
+// ── Card registry ──────────────────────────────────────────────────────────
+// Data-driven KPI card list: the grid below maps over this array instead of
+// literal JSX, so a future card is one appended config object — no layout or
+// markup surgery. `TeamOverviewCardContext` bundles everything a card body
+// might need (the aggregated stats, locale flag, and the resolved period
+// range label) so the registry can grow without changing this shape.
+export type TeamOverviewCardContext = {
+  stats: TeamStats;
+  isTh: boolean;
+  rangeLabel: string;
+};
+
+export interface TeamOverviewCard {
+  id: string;
+  testid: string;
+  icon: LucideIcon;
+  tone: Tone;
+  label: (ctx: TeamOverviewCardContext) => string;
+  value: (ctx: TeamOverviewCardContext) => string;
+  sub: (ctx: TeamOverviewCardContext) => string;
+  body?: (ctx: TeamOverviewCardContext) => React.ReactNode;
+}
+
+export const DEFAULT_TEAM_OVERVIEW_CARDS: TeamOverviewCard[] = [
+  {
+    id: 'on-time-rate',
+    testid: 'kpi-on-time-rate',
+    icon: Clock,
+    tone: 'accent',
+    label: ({ isTh }) => (isTh ? 'อัตราเข้างานตรงเวลา' : 'On-time rate'),
+    value: ({ stats }) => `${stats.onTimeRatePct}%`,
+    sub: ({ stats, isTh }) =>
+      isTh
+        ? `คำนวณจากทุกกะที่ตอกเข้า (${stats.onTime}/${stats.scheduledDays})`
+        : `${stats.onTime} of ${stats.scheduledDays} scheduled shifts`,
+  },
+  {
+    id: 'late-scans',
+    testid: 'kpi-late-scans',
+    icon: AlarmClock,
+    tone: 'warning',
+    label: ({ isTh }) => (isTh ? 'การสแกนเข้างานสาย' : 'Late scans'),
+    value: ({ stats, isTh }) => (isTh ? `${stats.late} ครั้ง` : `${stats.late}`),
+    sub: ({ isTh }) => (isTh ? 'ต้องการการตรวจสอบการตอก' : 'need punch review'),
+  },
+  {
+    id: 'absences',
+    testid: 'kpi-absences',
+    icon: UserX,
+    tone: 'danger',
+    label: ({ isTh }) => (isTh ? 'การขาดงาน / ไม่แสกนนิ้ว' : 'Absences / missed scans'),
+    value: ({ stats, isTh }) => (isTh ? `${stats.missedScans} ครั้ง` : `${stats.missedScans}`),
+    sub: ({ stats, isTh }) =>
+      isTh
+        ? `ขาด ${stats.absent} · ไม่ครบ ${stats.mismatch} — หักค่าจ้างและประเมินผล`
+        : `${stats.absent} absent · ${stats.mismatch} incomplete`,
+  },
+  {
+    id: 'ot-hours',
+    testid: 'kpi-ot-hours',
+    icon: Timer,
+    tone: 'indigo',
+    label: ({ isTh }) => (isTh ? 'จำนวนชั่วโมงล่วงเวลา OT' : 'Overtime hours'),
+    value: ({ stats, isTh }) => (isTh ? `${stats.otHours} ชม.` : `${stats.otHours} h`),
+    sub: ({ isTh }) => (isTh ? 'แยกตามอัตราค่าล่วงเวลา' : 'by pay multiplier'),
+    body: ({ stats, isTh }) => (
+      <div className="flex flex-wrap gap-1.5">
+        {OT_MULTIPLIERS.map((m) => (
+          <span
+            key={m}
+            data-testid={`ot-mult-${m}`}
+            className={cn(
+              'inline-flex min-w-[3.25rem] flex-col items-center rounded-[var(--radius-sm)] border px-2 py-1',
+              OT_CHIP_CLASS[m],
+            )}
+          >
+            <span className="text-xs font-semibold uppercase tracking-wide">{OT_CHIP_LABEL[m]}</span>
+            <span className="text-xs font-medium">
+              {stats.otHoursByMultiplier[m]}
+              {isTh ? ' ชม.' : 'h'}
+            </span>
+          </span>
+        ))}
+      </div>
+    ),
+  },
+  {
+    id: 'current-period',
+    testid: 'kpi-current-period',
+    icon: CalendarDays,
+    tone: 'indigo',
+    label: ({ isTh }) => (isTh ? 'ช่วงเวลาที่เลือก' : 'Selected period'),
+    value: ({ rangeLabel }) => rangeLabel,
+    sub: ({ stats, isTh }) =>
+      isTh
+        ? `มีวันหยุดนักขัตฤกษ์ ${stats.holidayCount} วัน · ลา ${stats.leaveCount} รายการ`
+        : `${stats.holidayCount} public holiday(s) · ${stats.leaveCount} on leave`,
+    body: ({ stats, isTh }) =>
+      stats.holidayCount > 0 ? (
+        <div className="text-xs font-medium text-[var(--color-danger)]">
+          {isTh ? 'อัตราเงินพิเศษวันหยุด ×3' : 'Holiday premium ×3'}
+        </div>
+      ) : null,
+  },
+];
+
+export function TeamOverviewDashboard({
+  empIds: empIdsProp,
+  cards = DEFAULT_TEAM_OVERVIEW_CARDS,
+}: { empIds?: string[]; cards?: TeamOverviewCard[] } = {}) {
   const locale = useLocale();
   const isTh = locale !== 'en';
 
@@ -232,85 +342,24 @@ export function TeamOverviewDashboard({ empIds: empIdsProp }: { empIds?: string[
         </span>
       </div>
 
-      {/* 5 summary cards */}
+      {/* Summary cards — registry-driven, see DEFAULT_TEAM_OVERVIEW_CARDS above. */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <KpiCard
-          testid="kpi-on-time-rate"
-          icon={Clock}
-          tone="accent"
-          label={isTh ? 'อัตราเข้างานตรงเวลา' : 'On-time rate'}
-          value={`${stats.onTimeRatePct}%`}
-          sub={
-            isTh
-              ? `คำนวณจากทุกกะที่ตอกเข้า (${stats.onTime}/${stats.scheduledDays})`
-              : `${stats.onTime} of ${stats.scheduledDays} scheduled shifts`
-          }
-        />
-        <KpiCard
-          testid="kpi-late-scans"
-          icon={AlarmClock}
-          tone="warning"
-          label={isTh ? 'การสแกนเข้างานสาย' : 'Late scans'}
-          value={isTh ? `${stats.late} ครั้ง` : `${stats.late}`}
-          sub={isTh ? 'ต้องการการตรวจสอบการตอก' : 'need punch review'}
-        />
-        <KpiCard
-          testid="kpi-absences"
-          icon={UserX}
-          tone="danger"
-          label={isTh ? 'การขาดงาน / ไม่แสกนนิ้ว' : 'Absences / missed scans'}
-          value={isTh ? `${stats.missedScans} ครั้ง` : `${stats.missedScans}`}
-          sub={
-            isTh
-              ? `ขาด ${stats.absent} · ไม่ครบ ${stats.mismatch} — หักค่าจ้างและประเมินผล`
-              : `${stats.absent} absent · ${stats.mismatch} incomplete`
-          }
-        />
-        <KpiCard
-          testid="kpi-ot-hours"
-          icon={Timer}
-          tone="indigo"
-          label={isTh ? 'จำนวนชั่วโมงล่วงเวลา OT' : 'Overtime hours'}
-          value={isTh ? `${stats.otHours} ชม.` : `${stats.otHours} h`}
-          sub={isTh ? 'แยกตามอัตราค่าล่วงเวลา' : 'by pay multiplier'}
-        >
-          <div className="flex flex-wrap gap-1.5">
-            {OT_MULTIPLIERS.map((m) => (
-              <span
-                key={m}
-                data-testid={`ot-mult-${m}`}
-                className={cn(
-                  'inline-flex min-w-[3.25rem] flex-col items-center rounded-[var(--radius-sm)] border px-2 py-1',
-                  OT_CHIP_CLASS[m],
-                )}
-              >
-                <span className="text-xs font-semibold uppercase tracking-wide">{OT_CHIP_LABEL[m]}</span>
-                <span className="text-xs font-medium">
-                  {stats.otHoursByMultiplier[m]}
-                  {isTh ? ' ชม.' : 'h'}
-                </span>
-              </span>
-            ))}
-          </div>
-        </KpiCard>
-        <KpiCard
-          testid="kpi-current-period"
-          icon={CalendarDays}
-          tone="indigo"
-          label={isTh ? 'ช่วงเวลาที่เลือก' : 'Selected period'}
-          value={rangeLabel}
-          sub={
-            isTh
-              ? `มีวันหยุดนักขัตฤกษ์ ${stats.holidayCount} วัน · ลา ${stats.leaveCount} รายการ`
-              : `${stats.holidayCount} public holiday(s) · ${stats.leaveCount} on leave`
-          }
-        >
-          {stats.holidayCount > 0 && (
-            <div className="text-xs font-medium text-[var(--color-danger)]">
-              {isTh ? 'อัตราเงินพิเศษวันหยุด ×3' : 'Holiday premium ×3'}
-            </div>
-          )}
-        </KpiCard>
+        {cards.map((card) => {
+          const ctx: TeamOverviewCardContext = { stats, isTh, rangeLabel };
+          return (
+            <KpiCard
+              key={card.id}
+              testid={card.testid}
+              icon={card.icon}
+              tone={card.tone}
+              label={card.label(ctx)}
+              value={card.value(ctx)}
+              sub={card.sub(ctx)}
+            >
+              {card.body?.(ctx)}
+            </KpiCard>
+          );
+        })}
       </div>
 
       {/* Persona scope note (only when the cohort is narrowed and no explicit override) */}
