@@ -29,19 +29,33 @@ function targetState() {
   return "In Review";
 }
 
+function isImmutablePreview(url) {
+  // branch-alias URLs (…-git-<branch>-….vercel.app) die when the branch is deleted;
+  // only the per-commit deployment URL is safe to hand to the BA.
+  return typeof url === "string" && url.includes(".vercel.app") && !url.includes("-git-");
+}
+
 function buildComment(status, screenshots) {
   const lines = [
     `Shipped ${status.ticket} for review.`,
     "",
     "What changed:",
     "- The approved implementation has been merged and is ready for BA review.",
-    "- The preview was checked before merge.",
-    "",
-    "Review links:",
-    `- Pull request: ${status.prUrl ?? "(not recorded)"}`,
-    `- Vercel preview: ${status.previewUrl ?? "(not recorded)"}`,
     ""
   ];
+  lines.push("Review links:");
+  if (status.merged) {
+    if (status.prodVerified && status.prodUrl) {
+      lines.push(`- Live app: ${status.prodUrl} (build ${String(status.prodSha ?? "").slice(0, 7) || "unknown"})`);
+    } else {
+      lines.push("- Live app: (production not yet verified — run `ship.mjs postmerge` before posting this comment)");
+    }
+  }
+  lines.push(`- Pull request: ${status.prUrl ?? "(not recorded)"}`);
+  if (isImmutablePreview(status.previewUrl)) {
+    lines.push(`- Preview (per-commit, immutable): ${status.previewUrl}`);
+  }
+  lines.push("");
   if (screenshots.length > 0) {
     lines.push("Screenshots:", ...screenshots.map((path) => `- ${path}`), "");
   }

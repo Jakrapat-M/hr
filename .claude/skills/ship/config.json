@@ -1,0 +1,5 @@
+{
+  "productionUrl": "https://hr-indytrading-gmailcoms-projects.vercel.app",
+  "postmergeTimeoutMs": 900000,
+  "pollIntervalMs": 20000
+}
