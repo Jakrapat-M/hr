@@ -21,9 +21,12 @@ Plan-only discovery loop for the HR project. Scan Linear for new tickets + BA fe
 
 ## Guardrails
 
+- **Git-state ban (hard rule):** this session may READ git (`status`, `log`, `diff`, `fetch`) but never mutate it in the shared tree — no `checkout`, `switch`, `stash`, `reset`, `rebase`, `commit`, or branch creation. The shared checkout's branch belongs to whoever is holding it; a switch here wipes their uncommitted work. Writes go only under `src/frontend/.omc/plans/`.
 - Don't move tickets to Done (In Review max is the implementer's call, not this loop's).
 - Respect scope: payroll (other team) + backend (on hold during mockup phase) are out of scope.
 - `feedback_zte_mode` does **not** apply during this plan-only loop.
+
+Two-session integrity runbook (invariants + failure playbook): [docs/two-session-workflow.md](../../docs/two-session-workflow.md).
 
 ## Related memory
 
