@@ -154,7 +154,7 @@ export function TodoBell() {
                         <Check size={11} strokeWidth={3} aria-hidden />
                       </button>
                       <Link
-                        href={t.href}
+                        href={`/${locale}${t.href}`}
                         onClick={() => setOpen(false)}
                         className="flex-1 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
                       >
