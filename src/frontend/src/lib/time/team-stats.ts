@@ -161,3 +161,81 @@ export function teamStats(
     holidayCount: holidays.size,
   };
 }
+
+/** STA-249 — one employee's in-window attendance/OT/leave roll-up, for the
+ *  expandable Team Overview detail layer (the granular per-person breakdown the
+ *  collapsed KPI cards summarize). Same seeds and window semantics as teamStats. */
+export type EmployeeDetail = {
+  empId: string;
+  onTime: number;
+  late: number;
+  mismatch: number;
+  absent: number;
+  /** absent + incomplete — mirrors the aggregate "missed scans" figure. */
+  missedScans: number;
+  otHours: number;
+  /** Approved-leave day-blocks inside the window for this employee. */
+  leaveDays: number;
+};
+
+/**
+ * Per-employee breakdown of the same window teamStats aggregates — one row per
+ * distinct employee, in `empIds` order. The Team Overview expanded view filters
+ * and caps these (late/absent list, OT-by-employee list, leave detail) so the
+ * granular layer stays data-driven off the canonical lib/time seeds. OT is the
+ * plain in-window hour sum (no multiplier split — that lives on the aggregate card).
+ */
+export function teamDetail(
+  window: WeekWindow,
+  empIds: readonly string[],
+  otRequests: readonly OTRequest[] = [],
+): EmployeeDetail[] {
+  const startISO = toIsoDate(window.start);
+  const endISO = toIsoDate(window.end);
+  const dayKeys = new Set(window.days.map(toIsoDate));
+  const uniqueIds = Array.from(new Set(empIds));
+  const idSet = new Set(uniqueIds);
+
+  // OT hours per employee — approved/pending rows, in-window days only.
+  const otByEmp = new Map<string, number>();
+  for (const r of otRequests) {
+    if (!idSet.has(r.employeeId)) continue;
+    if (r.status === 'rejected' || r.status === 'cancelled') continue;
+    const parts = r.days?.length
+      ? r.days.map((d) => ({ date: d.date, hours: d.hours }))
+      : [{ date: (r.startAt ?? '').slice(0, 10), hours: otDisplayHours(r) }];
+    for (const p of parts) {
+      if (!dayKeys.has(p.date) || p.hours <= 0) continue;
+      otByEmp.set(r.employeeId, round2((otByEmp.get(r.employeeId) ?? 0) + p.hours));
+    }
+  }
+
+  return uniqueIds.map((id) => {
+    let onTime = 0;
+    let late = 0;
+    let mismatch = 0;
+    let absent = 0;
+    let leaveDays = 0;
+    for (const day of getAttendanceForPeriod(id)) {
+      if (!dayKeys.has(day.date)) continue;
+      const state = classifyClock(day, DEMO_TODAY);
+      if (state === 'on-time') onTime += 1;
+      else if (state === 'late') late += 1;
+      else if (state === 'mismatch') mismatch += 1;
+      else if (state === 'absent') absent += 1;
+    }
+    for (const lv of getLeaveForPeriod(id)) {
+      if (lv.date >= startISO && lv.date <= endISO) leaveDays += 1;
+    }
+    return {
+      empId: id,
+      onTime,
+      late,
+      mismatch,
+      absent,
+      missedScans: absent + mismatch,
+      otHours: otByEmp.get(id) ?? 0,
+      leaveDays,
+    };
+  });
+}

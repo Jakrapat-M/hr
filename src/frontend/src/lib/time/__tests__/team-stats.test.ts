@@ -10,6 +10,7 @@ import { describe, it, expect } from 'vitest';
 import type { OTRequest } from '@/stores/overtime-requests';
 import {
   teamStats,
+  teamDetail,
   otMultiplierForDay,
   OT_MULTIPLIERS,
 } from '../team-stats';
@@ -49,6 +50,29 @@ const OT_ROWS: OTRequest[] = [
     audit: [],
   },
 ];
+
+describe('teamDetail — per-employee breakdown (EMP-0301, demo week)', () => {
+  const week = defaultWeekWindow(); // 2026-06-01 → 06-07
+
+  it('returns one row per distinct employee mirroring the aggregate figures', () => {
+    const rows = teamDetail(week, ['EMP-0301'], OT_ROWS);
+    expect(rows).toHaveLength(1);
+    const r = rows[0];
+    expect(r.empId).toBe('EMP-0301');
+    // Mirrors teamStats for the same window: 5 on-time, 1 late, 0 missed, 6h OT,
+    // 2 leave days.
+    expect(r.onTime).toBe(5);
+    expect(r.late).toBe(1);
+    expect(r.missedScans).toBe(0);
+    expect(r.otHours).toBe(6);
+    expect(r.leaveDays).toBe(2);
+  });
+
+  it('dedupes repeated ids so the cohort length is stable', () => {
+    const rows = teamDetail(week, ['EMP-0301', 'EMP-0301'], OT_ROWS);
+    expect(rows).toHaveLength(1);
+  });
+});
 
 describe('teamStats — demo week (EMP-0301)', () => {
   const week = defaultWeekWindow(); // 2026-06-01 → 06-07
