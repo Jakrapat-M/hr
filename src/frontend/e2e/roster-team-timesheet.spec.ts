@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { mockAuthSession } from './helpers/auth.helper';
 
-// STA-126 — Team Timesheet weekly grid. Default /roster = weekly matrix; the
-// hourly Gantt is gated behind ?view=hourly; the swap modal stays top-level.
+// STA-126 — Team Timesheet weekly grid. STA-252 re-issue: the hourly Gantt view
+// has been REMOVED — /roster is the weekly matrix only; the swap modal stays
+// top-level (?panel=swap deep-link).
 
 test.describe('Team Timesheet (/roster) — STA-126', () => {
   test.beforeEach(async ({ page }) => {
@@ -44,14 +45,29 @@ test.describe('Team Timesheet (/roster) — STA-126', () => {
     await expect(range).toHaveText(initial ?? '');
   });
 
-  test('?view=hourly renders the hourly Gantt', async ({ page }) => {
+  test('STA-252 N3: hourly view is removed — no toggle, ?view=hourly is a no-op', async ({ page }) => {
     await page.goto('/en/roster?view=hourly');
     await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('heading', { name: /Hourly schedule/i })).toBeVisible();
-    await expect(page.getByTestId('weekly-timesheet-grid')).toHaveCount(0);
+    await expect(page.getByTestId('weekly-timesheet-grid')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Hourly schedule/i })).toHaveCount(0);
+    await expect(page.getByTestId('view-toggle')).toHaveCount(0);
   });
 
-  test('?panel=swap opens the swap modal even without view=hourly', async ({ page }) => {
+  test('STA-252 N2: position filter narrows the grid by ตำแหน่ง', async ({ page }) => {
+    await page.goto('/en/roster');
+    await page.waitForLoadState('networkidle');
+    const before = await page.getByTestId('timesheet-row').count();
+    const select = page.getByLabel('Filter position');
+    await expect(select).toBeVisible();
+    const options = await select.locator('option').allTextContents();
+    // At least one real ตำแหน่ง option beyond "All".
+    expect(options.length).toBeGreaterThan(1);
+    await select.selectOption({ index: 1 });
+    const after = await page.getByTestId('timesheet-row').count();
+    expect(after).toBeLessThanOrEqual(before);
+  });
+
+  test('?panel=swap opens the swap modal', async ({ page }) => {
     await page.goto('/en/roster?panel=swap');
     await page.waitForLoadState('networkidle');
     await expect(page.getByTestId('shift-swap-modal')).toBeVisible();
@@ -109,16 +125,6 @@ test.describe('Team Timesheet (/roster) — STA-126', () => {
     await expect(mondayCell.getByTestId('chip-holiday-pay')).toBeVisible();
     // The work chips are NOT suppressed behind a plain Holiday chip.
     await expect(mondayCell.getByTestId('chip-holiday')).toHaveCount(0);
-  });
-
-  test('STA-137 regression: hourly view edit + swap still work', async ({ page }) => {
-    await page.goto('/en/roster?view=hourly');
-    await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('heading', { name: /Hourly schedule/i })).toBeVisible();
-    // Swap modal deep-link still opens.
-    await page.goto('/en/roster?panel=swap');
-    await page.waitForLoadState('networkidle');
-    await expect(page.getByTestId('shift-swap-modal')).toBeVisible();
   });
 
   test('NO-RED: grid + legend contain no red color', async ({ page }) => {
