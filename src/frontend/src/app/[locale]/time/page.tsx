@@ -12,6 +12,7 @@ import { useTimeCorrections } from '@/stores/time-corrections';
 import { buildMyRequests } from '@/lib/time/my-requests';
 import { demoToday } from '@/lib/time/period';
 import { TimeOffBalanceCard } from '@/components/time/TimeOffBalanceCard';
+import { TeamAttendanceSummary } from '@/components/time/TeamAttendanceSummary';
 
 interface TimeTileDef {
   key: string;
@@ -159,6 +160,9 @@ export default function TimeLandingPage() {
       </div>
 
       <DemoValuesDisclaimer />
+
+      {/* Team attendance summary — moved here from /home, STA-248 */}
+      <TeamAttendanceSummary />
 
       {/* Self-service surface, grouped Daily / Requests / Reports (open to everyone) */}
       {GROUPS.map((group) => (

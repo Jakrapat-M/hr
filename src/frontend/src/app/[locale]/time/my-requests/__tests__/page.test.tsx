@@ -52,7 +52,11 @@ afterEach(() => cleanup());
 
 describe('/time landing card (STA-183)', () => {
   it('shows the My Request card linking to /th/time/my-requests', () => {
-    render(<TimeLandingPage />);
+    render(
+      <NextIntlClientProvider locale="th" messages={thMessages as Record<string, unknown>}>
+        <TimeLandingPage />
+      </NextIntlClientProvider>,
+    );
     const link = screen.getByRole('link', { name: /คำขอของฉัน/ });
     expect(link).toHaveAttribute('href', '/th/time/my-requests');
   });
