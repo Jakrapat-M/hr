@@ -28,6 +28,10 @@
     "baseSha": { "type": ["string", "null"], "pattern": "^[a-f0-9]{40}$" },
     "baseMoved": { "type": "boolean" },
     "merged": { "type": "boolean" },
+    "gatePassed": { "type": "boolean" },
+    "prodVerified": { "type": "boolean" },
+    "prodSha": { "type": ["string", "null"], "pattern": "^[a-f0-9]{40}$" },
+    "prodUrl": { "type": ["string", "null"], "format": "uri" },
     "ticketState": { "type": ["string", "null"] },
     "gate": {
       "type": "string",

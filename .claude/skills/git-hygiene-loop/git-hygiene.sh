@@ -108,6 +108,30 @@ if [ "$NWT" -gt 1 ] && [ -s "$CUR_FILES" ]; then
 fi
 rm -f "$CUR_FILES"
 
+# ============ (6) worktree registry drift (see worktree-guard.sh) ============
+WREG="$REPO/.omc/state/worktrees.json"
+REG_PATHS=$([ -f "$WREG" ] && python3 - "$WREG" <<'PY' 2>/dev/null
+import json, sys
+for e in json.load(open(sys.argv[1])).values(): print(e.get("path", ""))
+PY
+)
+for WT in $WTS; do
+  [ "$WT" = "$REPO" ] && continue
+  case "$(basename "$WT")" in hr-gate-*) continue ;; esac
+  printf '%s\n' "$REG_PATHS" | grep -qxF "$WT" \
+    || ACTIONS+=("🟡 ORPHAN worktree $(basename "$WT") — not in .omc/state/worktrees.json (crashed cycle?) → worktree-guard.sh cleanup <TICKET>")
+done
+if [ -f "$WREG" ]; then
+  while IFS=$'\t' read -r T P; do
+    [ -z "$T" ] && continue
+    [ -d "$P" ] || ACTIONS+=("🟡 GHOST registry entry $T → $P (path gone) → worktree-guard.sh cleanup $T")
+  done < <(python3 - "$WREG" <<'PY' 2>/dev/null
+import json, sys
+for t, e in json.load(open(sys.argv[1])).items(): print("{}\t{}".format(t, e.get("path", "")))
+PY
+)
+fi
+
 # ============ report ============
 if [ ${#BUILD[@]} -gt 0 ]; then
   echo "🔨🔨 BUILD SIGNAL — run FULL review sequence (feature-vs-master → close dead PRs → Linear pull-back):"

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan: Parallel Loop Merge Integrity — stop feature-reverts, worktree mixing, and stale Vercel</title>
+<style>
+  /* ── Baseline plan theme. Identity retuned to the HR app's Humi palette:
+     teal primary + indigo secondary. Structural rules untouched. ── */
+  :root {
+    --bg: #f6f8fb; --surface: #ffffff; --surface-2: #eef1f6; --border: #d7dee7;
+    --text: #1b232d; --muted: #4d5865; --dim: #78838f;
+    --accent: #1fa8a0;    /* Humi teal */
+    --accent-2: #5b6ce0;  /* Humi indigo */
+    --pass: #1a7f37;
+    --partial: #b45309;
+    --fail: #c0362c;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
+    --radius: 10px; --maxw: 920px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f141b; --surface: #161c26; --surface-2: #1d2531; --border: #2a3441;
+      --text: #e6edf3; --muted: #9aa7b4; --dim: #7c8896;
+      --accent: #2fc4bb; --accent-2: #8b98f0;
+      --pass: #3fb950; --partial: #e3902a; --fail: #f0564a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans);
+    line-height: 1.72; font-size: 17px; -webkit-font-smoothing: antialiased; }
+  main { max-width: var(--maxw); margin: 0 auto; padding: 44px 26px 96px; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 4px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.3rem; margin: 52px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.08rem; margin: 26px 0 10px; }
+  h4 { font-size: 0.95rem; margin: 20px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  p { margin: 0 0 14px; }
+  a { color: var(--accent-2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  header .lede { color: var(--muted); font-size: 1.02rem; margin-top: 10px; }
+  section > p:first-of-type { font-size: 1.02rem; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--surface-2);
+    border: 1px solid var(--border); padding: 1px 6px; border-radius: 5px; color: var(--text); }
+  pre { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; overflow-x: auto; font-family: var(--mono); font-size: 0.84rem; line-height: 1.55; margin: 0 0 16px; }
+  pre code { background: none; border: none; padding: 0; color: var(--text); }
+  details.meta { margin-top: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  details.meta > summary { cursor: pointer; padding: 10px 16px; font-size: 0.82rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  details.meta dl { display: grid; grid-template-columns: 130px 1fr; gap: 4px 16px; margin: 0; padding: 4px 16px 16px; font-size: 0.85rem; }
+  details.meta dt { color: var(--dim); }
+  details.meta dd { margin: 0; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); word-break: break-word; }
+  figure { margin: 22px 0; text-align: center; }
+  figure img { max-width: 100%; max-height: 560px; width: auto; height: auto; object-fit: contain;
+    border: 1px solid var(--border); border-radius: var(--radius); display: block; margin: 0 auto; }
+  figcaption { color: var(--dim); font-size: 0.84rem; margin-top: 9px; font-style: italic; max-width: 60ch; margin-left: auto; margin-right: auto; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 1px 7px; border-radius: 20px; vertical-align: middle; }
+  .tag.existing { background: rgba(120,131,143,0.14); color: var(--muted); border: 1px solid var(--border); }
+  .tag.new { background: rgba(26,127,55,0.14); color: var(--pass); border: 1px solid rgba(26,127,55,0.4); }
+  .files ul { list-style: none; padding: 0; margin: 0; }
+  .files li { padding: 7px 0; border-bottom: 1px dashed var(--border); font-size: 0.95rem; }
+  .files li:last-child { border-bottom: none; }
+  .phase { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 6px 24px 22px; margin: 20px 0; }
+  .status { color: var(--dim); font-weight: 700; }
+  ul.checklist { list-style: none; padding: 0; margin: 10px 0 6px; }
+  ul.checklist li { position: relative; padding: 6px 0 6px 30px; font-size: 0.95rem; line-height: 1.6; }
+  ul.checklist li .status { position: absolute; left: 0; top: 6px; }
+  ul.checklist li code { overflow-wrap: anywhere; }
+  .loop { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 14px 0 4px; font-size: 0.9rem; color: var(--muted); }
+  .loop strong { color: var(--text); }
+  .callout { background: var(--surface-2); border-left: 3px solid var(--accent-2); border-radius: 6px; padding: 12px 16px; margin: 14px 0; font-size: 0.92rem; }
+  .callout.risk { border-left-color: var(--partial); }
+  .callout.win { border-left-color: var(--pass); }
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 18px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  #questionables details, #notes details, #amendments details { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 10px 0; }
+  #questionables summary, #notes summary, #amendments summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 0.92rem; }
+  #questionables details > *:not(summary), #notes details > *:not(summary), #amendments details > *:not(summary) { padding: 0 16px 14px; }
+  .qa-answer { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- ===== HEADER + UPDATABLE METADATA ===== -->
+  <header>
+    <h1>Plan: Parallel Loop Merge Integrity</h1>
+    <p class="lede">Harden the two-session <code>/linear-loop</code> + <code>/linear-implement</code> pipeline so merges can never silently revert shipped features, worktrees can never cross-contaminate, and the Vercel URL the BA opens provably serves the merged code.</p>
+    <details class="meta">
+      <summary>Metadata</summary>
+      <dl>
+        <dt>created</dt>      <dd>2026-07-07T11:30:00+07:00</dd>
+        <dt>modified</dt>     <dd>2026-07-07T22:05:00+07:00</dd>
+        <dt>commits</dt>      <dd>—</dd>
+        <dt>agent name</dt>   <dd>Claude Fable 5 (planf3)</dd>
+        <dt>session id</dt>   <dd>22a6dd23-d5f6-49a7-a74c-76a475b9084a</dd>
+        <dt>back refs</dt>    <dd>.claude/commands/linear-loop.md, .claude/commands/linear-implement.md, .claude/skills/git-hygiene-loop/SKILL.md, .claude/skills/ship/SKILL.md, specs/ship-choreography-plan.html</dd>
+        <dt>forward refs</dt> <dd>—</dd>
+      </dl>
+    </details>
+  </header>
+
+  <!-- Hero image — synced to the :root visual identity. Replace with <img> once generated. -->
+  <figure>
+    <!-- {{HERO_IMAGE: two parallel agent lanes (plan lane + implement lane) feeding one serialized merge gate that lands on master, with a verified Vercel checkmark at the end; teal/indigo minimal diagram, <10 words}} -->
+    <figcaption>Two parallel sessions, one serialized merge lane, one verified deploy.</figcaption>
+  </figure>
+
+  <!-- ===== PURPOSE / PROBLEM / SOLUTION ===== -->
+  <section id="purpose">
+    <h2>Purpose</h2>
+    <p>The HR project runs two Claude sessions in parallel: <code>/linear-loop</code> (plan-only) and <code>/linear-implement</code> (ZTE build + self-merge). Throughput is good, but integrity is not: merged PRs sometimes <strong>replace features that sibling tickets already shipped</strong>, worktrees get <strong>mixed</strong> (edits and untracked files leaking between tickets and the shared checkout), and the BA reports that <strong>Vercel does not reflect the implementation</strong> after a ticket is marked done. This plan closes all three gaps with deterministic tooling — a single serialized merge gate, a worktree isolation guard, a hot-file collision policy, and a build-identity check that proves what Vercel is actually serving — plus the doc updates that make the two loops obey them.</p>
+  </section>
+
+  <section id="problem">
+    <h2>Problem</h2>
+    <p>Three symptoms, five root causes. All of them are consequences of running parallel writers against one <code>master</code> with no single enforced landing lane.</p>
+
+    <table>
+      <thead><tr><th>#</th><th>Root cause</th><th>Symptom it produces</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>R1</td>
+          <td><strong>Stale-base merge.</strong> A PR branched days ago stays <code>MERGEABLE</code> on GitHub (no textual conflict) even after siblings merged. Merging it lands its <em>old copy</em> of shared files — GitHub's mergeability check knows nothing about semantic reverts.</td>
+          <td>"The code always conflicts / replaces the feature we already built."</td>
+        </tr>
+        <tr>
+          <td>R2</td>
+          <td><strong>Last-merged-wins on hot files.</strong> Nearly every ticket touches <code>messages/en.json</code>, <code>messages/th.json</code>, sidebar nav, registries, and mock-data seeds. Two open PRs both pass CI independently; whichever merges second overrides the first.</td>
+          <td>Shipped feature's i18n keys / menu entry / registry row silently vanish.</td>
+        </tr>
+        <tr>
+          <td>R3</td>
+          <td><strong>Multiple merge paths.</strong> Merges happen via ad-hoc <code>gh pr merge</code>, <code>merge-ready.sh --go</code> (mergeability-only, no rebase-validation), <code>ship.mjs merge</code> (has a stale-base guard), and the GitHub UI. Only <code>pr-merge-gate.sh</code> validates on the tip the PR will actually land on — and nothing forces it to be used.</td>
+          <td>Gate exists but reverts still ship; inconsistent safety per merge.</td>
+        </tr>
+        <tr>
+          <td>R4</td>
+          <td><strong>Worktree contamination.</strong> Sessions edit the shared checkout (its <code>git status</code> is currently full of mixed untracked files), <code>git stash</code> is shared across all worktrees, worktrees get reused across tickets or left behind, and nothing verifies a worktree's branch was cut from <em>fetched</em> <code>origin/master</code>.</td>
+          <td>"Some mix worktree" — cross-ticket files land in the wrong PR; branch switches clobber uncommitted work.</td>
+        </tr>
+        <tr>
+          <td>R5</td>
+          <td><strong>No deploy-truth check.</strong> After merge, nobody verifies the <em>production</em> Vercel deployment rebuilt and is serving the merge commit. Linear comments link preview URLs that go stale when the branch is deleted, or localhost screenshots. And when R1/R2 reverted the feature, Vercel is faithfully showing a master that genuinely lost it.</td>
+          <td>"BA says Vercel is not reflecting the real implementation when done."</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <figure>
+      <!-- {{PROBLEM_IMAGE: timeline showing PR-A merges, then stale PR-B merges and overwrites A's file, and a Vercel screen showing the old build; teal/indigo minimal, <10 words}} -->
+      <figcaption>Stale PR-B lands after PR-A and silently reverts it; Vercel faithfully shows the loss.</figcaption>
+    </figure>
+
+    <div class="callout risk">
+      <strong>Why the existing tools didn't stop this:</strong> <code>git-hygiene.sh</code> only <em>warns</em>; <code>merge-ready.sh</code> merges anything GitHub calls MERGEABLE; <code>pr-merge-gate.sh</code> does the right validation (rebase onto fresh master, feature-preservation sentinel, baseline-diffed tests) but is optional, only checks <code>en.json</code>, and treats PR-vs-PR overlap as a warning, not a block. Enforcement — not detection — is the missing piece.
+    </div>
+  </section>
+
+  <section id="solution">
+    <h2>Solution</h2>
+    <p>Keep the two-session parallelism for <em>authoring</em>, but make <em>landing</em> strictly serial and <em>verified</em>. Four invariants, each enforced by a script (not by prompt discipline), then encoded into the loop docs:</p>
+    <ul class="checklist">
+      <li><code class="status">[x]</code> <strong>I1 — One merge lane:</strong> the only way code reaches <code>master</code> is <code>pr-merge-gate.sh --go</code>, which rebases the PR onto <em>fresh</em> <code>origin/master</code>, re-runs build + baseline-diffed tests, and asserts no existing i18n key / route disappeared — then merges serially, re-gating each next PR on the new tip. <code>ship.mjs merge</code> and <code>merge-ready.sh</code> both delegate to it.</li>
+      <li><code class="status">[x]</code> <strong>I2 — One ticket, one worktree, one session:</strong> a <code>worktree-guard.sh</code> preflight refuses implementation edits in the shared checkout, verifies branch ↔ ticket ↔ worktree mapping, verifies the branch contains fetched <code>origin/master</code>, blocks on cross-worktree file overlap, and registers every worktree in <code>.omc/state/worktrees.json</code> so leftovers are visible and pruned.</li>
+      <li><code class="status">[x]</code> <strong>I3 — Hot files merge serially:</strong> overlap between two open PRs on the known conflict magnets (<code>en.json</code>/<code>th.json</code>, sidebar nav, registries, mock-data seeds) upgrades from warning to gate <strong>failure</strong> — merge one, force-rebase the other, re-gate. Locale parity is checked for both languages, not just EN.</li>
+      <li><code class="status">[x]</code> <strong>I4 — Vercel is proven, not assumed:</strong> the app exposes <code>/api/version</code> (commit SHA + env). After every merge, a <code>postmerge</code> step polls production until it serves the merge SHA, and only then posts the BA-facing Linear comment — with the <em>production</em> URL, the build SHA, and screenshots taken from that verified URL.</li>
+    </ul>
+    <figure>
+      <!-- {{SOLUTION_IMAGE: pipeline diagram: plan session and N ticket worktrees flow into a single gate box (rebase, test, preserve, merge) then a deploy-verify box then Linear comment; teal/indigo minimal, <10 words}} -->
+      <figcaption>Parallel authoring, serial landing: gate → merge → deploy-verify → report.</figcaption>
+    </figure>
+    <div class="callout win">
+      <strong>Design principle:</strong> every fix is a deterministic script change or a doc change that points at the script. No fix relies on an agent "remembering" a rule — that is exactly what has been failing.
+    </div>
+  </section>
+
+  <!-- ===== RELEVANT FILES ===== -->
+  <section id="files" class="files">
+    <h2>Relevant Files</h2>
+
+    <h3>Existing Files</h3>
+    <ul>
+      <li><span class="tag existing">existing</span> <code>.claude/skills/git-hygiene-loop/pr-merge-gate.sh</code> — the validation core; gains hot-file blocking, TH+EN locale checks, <code>--rebase-source</code> auto-repair, and becomes the sole merge executor</li>
+      <li><span class="tag existing">existing</span> <code>.claude/skills/git-hygiene-loop/merge-ready.sh</code> — currently merges on GitHub mergeability alone; repurposed to a discovery/dry-run front-end that delegates every actual merge to the gate</li>
+      <li><span class="tag existing">existing</span> <code>.claude/skills/git-hygiene-loop/git-hygiene.sh</code> — detector loop; learns to read the worktree registry and report orphaned/mixed worktrees</li>
+      <li><span class="tag existing">existing</span> <code>.claude/skills/git-hygiene-loop/SKILL.md</code> — document the guard + registry + "gate is the only merge path"</li>
+      <li><span class="tag existing">existing</span> <code>.claude/skills/ship/scripts/ship.mjs</code> — <code>merge</code> subcommand delegates to the gate; new <code>postmerge</code> subcommand verifies production</li>
+      <li><span class="tag existing">existing</span> <code>.claude/skills/ship/scripts/linear-report.mjs</code> — report payload gains verified prod URL + build SHA fields</li>
+      <li><span class="tag existing">existing</span> <code>.claude/skills/ship/SKILL.md</code> — workflow gains the postmerge/deploy-verify stage before the Linear comment</li>
+      <li><span class="tag existing">existing</span> <code>.claude/commands/linear-implement.md</code> — steps 2/7/9 rewritten to call the guard, the gate, and the postmerge verify</li>
+      <li><span class="tag existing">existing</span> <code>.claude/commands/linear-loop.md</code> — adds the hard rule: plan session never mutates git state (no checkout/branch/stash) in the shared tree</li>
+    </ul>
+
+    <h3>New Files</h3>
+    <ul>
+      <li><span class="tag new">new</span> <code>.claude/skills/git-hygiene-loop/worktree-guard.sh</code> — I2 enforcement: preflight assertions + worktree registry read/write + prune</li>
+      <li><span class="tag new">new</span> <code>src/frontend/src/app/api/version/route.ts</code> — returns <code>{ sha, env, builtAt }</code> from Vercel build envs; the deploy-truth endpoint</li>
+      <li><span class="tag new">new</span> <code>src/frontend/src/app/api/version/__tests__/route.test.ts</code> — Vitest for the version route shape + fallbacks</li>
+      <li><span class="tag new">new</span> <code>.claude/skills/ship/config.json</code> — production base URL + poll timeout for the postmerge verifier (no secrets)</li>
+      <li><span class="tag new">new</span> <code>docs/two-session-workflow.md</code> — one-page runbook: the 4 invariants, the per-ticket sequence, and the failure playbook (what to do on STALE_BASE, hot-file overlap, deploy-verify timeout)</li>
+    </ul>
+  </section>
+
+  <!-- ===== IMPLEMENTATION PHASES ===== -->
+  <section id="phases">
+    <h2>Implementation Phases</h2>
+    <p><strong>IMPORTANT:</strong> Execute every phase and task step by step, in order, top to bottom.</p>
+    <p>Status markers: <code>[]</code> idle · <code>[wip]</code> in progress · <code>[x]</code> complete · <code>[f]</code> failed. All start as <code>[]</code>; the Build Plan workflow updates them as it works.</p>
+
+    <!-- ══════════════════ PHASE 1 ══════════════════ -->
+    <div class="phase">
+      <h3><code class="status">[x]</code> Phase 1: Single Merge Lane — every merge goes through the gate</h3>
+      <p>Close R1 and R3. <code>pr-merge-gate.sh</code> already validates a PR on the tip it will actually land on (freshness rebase → feature-preservation sentinel → build → baseline-diffed vitest → serialized merge). This phase makes it the <em>only</em> path to <code>master</code> and teaches it to repair stale branches instead of just rejecting them.</p>
+
+      <figure>
+        <!-- {{PHASE_IMAGE: funnel diagram: three old merge paths (gh pr merge, merge-ready, ship) all redirected into one gate box before master; teal/indigo minimal, <10 words}} -->
+        <figcaption>All merge paths collapse into one gate.</figcaption>
+      </figure>
+
+      <h4>1.1 Make the gate the sole merge executor</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> In <code>ship.mjs</code>, replace the direct <code>gh pr merge</code> call inside the <code>merge</code> subcommand with an invocation of <code>bash .claude/skills/git-hygiene-loop/pr-merge-gate.sh --go &lt;PR#&gt;</code>; keep ship's own <code>STALE_BASE</code> check as a fast pre-check, propagate the gate's exit code, and record <code>gatePassed: true/false</code> in <code>.claude/skills/ship/.state/&lt;TICKET&gt;.json</code></li>
+        <li><code class="status">[x]</code> Rewrite <code>merge-ready.sh</code> so <code>--go</code> loops the MERGEABLE PR list into <code>pr-merge-gate.sh --go &lt;PR#&gt;</code> instead of calling <code>gh pr merge</code> itself; keep its dry-run listing output unchanged</li>
+        <li><code class="status">[x]</code> Sweep the repo for remaining direct-merge instructions: <code>grep -rn "gh pr merge" .claude/ docs/</code> — update every command/skill doc to route through the gate (the gate's own internal merge call is the one legitimate remaining site)</li>
+        <li><code class="status">[x]</code> Add a top-of-file banner comment to <code>pr-merge-gate.sh</code> declaring it the single merge lane, and echo a one-line <code>MERGE-LANE</code> marker on every merge so transcripts show which path was used</li>
+      </ul>
+
+      <h4>1.2 Auto-repair stale branches (<code>--rebase-source</code>)</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Add a <code>--rebase-source</code> flag: on a stale-base/rebase-conflict-free case where the branch is merely behind, locate the branch's source worktree via <code>git worktree list --porcelain</code>; if found and clean, run <code>git rebase origin/master</code> there and <code>git push --force-with-lease</code>, then re-enter the gate for that PR</li>
+        <li><code class="status">[x]</code> If the source worktree is missing or dirty, or the rebase hits a real conflict, abort the rebase and fail the gate with a precise instruction line (which worktree, which files) — never resolve conflicts automatically</li>
+        <li><code class="status">[x]</code> After any force-push, invalidate ship state for that ticket (<code>previewVerified: false</code>) so the preview must be re-verified before merge</li>
+      </ul>
+
+      <h4>1.3 Platform backstop (best-effort)</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Attempt to enable a GitHub branch ruleset on <code>master</code> requiring a pull request and an up-to-date branch before merging, via <code>gh api</code>; if the repo's plan doesn't support enforced rulesets on private repos, record that in <code>docs/two-session-workflow.md</code> and rely on the gate as the authoritative enforcement (do not fail the phase on this)</li>
+      </ul>
+
+      <h4>1.4 Testing Strategy</h4>
+      <p>Static checks plus a dry-run rehearsal against the live PR list — nothing is merged during validation.</p>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>bash -n .claude/skills/git-hygiene-loop/pr-merge-gate.sh && bash -n .claude/skills/git-hygiene-loop/merge-ready.sh</code> — both scripts parse after the edits</li>
+        <li><code class="status">[x]</code> <code>node --check .claude/skills/ship/scripts/ship.mjs</code> — ship script still parses</li>
+        <li><code class="status">[x]</code> <code>bash .claude/skills/git-hygiene-loop/merge-ready.sh</code> — dry-run lists PRs and states it would delegate to the gate (merges nothing)</li>
+        <li><code class="status">[x]</code> <code>bash .claude/skills/git-hygiene-loop/pr-merge-gate.sh --all</code> — dry-run gates every open MERGEABLE PR end-to-end (rebase + build + baseline-diff) without merging</li>
+        <li><code class="status">[x]</code> <code>node .claude/skills/ship/scripts/ship.mjs merge --dry-run --ticket STA-0</code> — prints the gate delegation instead of a raw <code>gh pr merge</code></li>
+        <li><code class="status">[x]</code> <code>grep -rn "gh pr merge" .claude/commands .claude/skills --include='*.md'</code> — zero doc-level instructions to merge directly</li>
+      </ul>
+      <div class="loop">
+        🔁 <strong>Do not exit this phase until every box above is checked.</strong>
+        If any command fails, fix the cause and re-run — loop until all pass.
+      </div>
+    </div>
+
+    <!-- ══════════════════ PHASE 2 ══════════════════ -->
+    <div class="phase">
+      <h3><code class="status">[x]</code> Phase 2: Worktree Isolation Guard — one ticket, one worktree, one session</h3>
+      <p>Close R4. Turn the "mixed worktree" memory rules (<code>one-session-per-worktree</code>, <code>branch-off-origin-master</code>, <code>stash-is-shared</code>) into a script the implement loop must pass before its first edit and after its last cleanup.</p>
+
+      <h4>2.1 Build <code>worktree-guard.sh</code></h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>preflight &lt;TICKET&gt;</code> mode asserts, in order: cwd is a linked worktree (its <code>git rev-parse --git-common-dir</code> differs from <code>--git-dir</code>) — <strong>refuse implementation in the main checkout</strong>; current branch matches <code>^(feat|fix|chore)/&lt;TICKET&gt;-</code>; after <code>git fetch origin -q</code>, <code>git merge-base --is-ancestor origin/master HEAD</code> holds (branch contains fresh master) — otherwise print the exact rebase command and fail</li>
+        <li><code class="status">[x]</code> Cross-contamination checks: fail if any <em>other</em> worktree has uncommitted changes to the same files this worktree touches (reuse the overlap logic from <code>git-hygiene.sh</code>); warn loudly if <code>git stash list</code> is non-empty (stash is shared repo-wide — never stash in a ticket worktree)</li>
+        <li><code class="status">[x]</code> Registry: on preflight, upsert <code>{ticket, branch, path, createdAt, sessionId}</code> into <code>.omc/state/worktrees.json</code>; a <code>cleanup &lt;TICKET&gt;</code> mode runs <code>git worktree remove</code>, deletes the registry entry, and runs <code>git worktree prune</code>; a <code>list</code> mode prints registry vs <code>git worktree list</code> drift (orphans = worktrees nobody cleaned up, ghosts = registry entries whose path is gone)</li>
+        <li><code class="status">[x]</code> Guard the shared checkout the other way too: <code>preflight</code> fails if the <em>main</em> checkout has staged changes to <code>src/frontend/src/**</code> (implementation leaking into the plan session's tree)</li>
+      </ul>
+
+      <h4>2.2 Wire it into the loops</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>linear-implement.md</code> step 2 gains: run <code>worktree-guard.sh preflight &lt;TICKET&gt;</code> immediately after <code>git worktree add</code> and before any edit; step 9 becomes <code>worktree-guard.sh cleanup &lt;TICKET&gt;</code></li>
+        <li><code class="status">[x]</code> <code>linear-loop.md</code> gains an explicit git-state ban: the plan session may read git but never <code>checkout</code>/<code>switch</code>/<code>stash</code>/<code>reset</code> in the shared tree, and writes only under <code>src/frontend/.omc/plans/</code></li>
+        <li><code class="status">[x]</code> <code>git-hygiene.sh</code> reads <code>.omc/state/worktrees.json</code> and appends an "orphaned / ghost worktrees" section to its report</li>
+      </ul>
+
+      <h4>2.3 Testing Strategy</h4>
+      <p>Exercise the guard against both a correct worktree and deliberately-wrong setups; the live <code>hr-sta254</code> worktree is a real fixture.</p>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>bash -n .claude/skills/git-hygiene-loop/worktree-guard.sh</code> — parses</li>
+        <li><code class="status">[x]</code> <code>cd /Users/tachongrak/Projects/hr && bash .claude/skills/git-hygiene-loop/worktree-guard.sh preflight STA-0</code> — <strong>fails</strong> with the "main checkout" refusal (negative test)</li>
+        <li><code class="status">[x]</code> From a scratch worktree cut off <code>origin/master</code>: preflight <strong>passes</strong>, and the entry appears in <code>.omc/state/worktrees.json</code>; then <code>cleanup</code> removes both worktree and entry (positive test, then delete the scratch)</li>
+        <li><code class="status">[x]</code> From a scratch worktree deliberately cut off a 5-commit-old master: preflight <strong>fails</strong> with the rebase instruction (stale-base negative test)</li>
+        <li><code class="status">[x]</code> <code>bash .claude/skills/git-hygiene-loop/worktree-guard.sh list</code> — reports the known <code>hr-sta254</code> worktree without false orphan/ghost flags</li>
+      </ul>
+      <div class="loop">
+        🔁 <strong>Do not exit this phase until every box above is checked.</strong>
+        If any command fails, fix the cause and re-run — loop until all pass.
+      </div>
+    </div>
+
+    <!-- ══════════════════ PHASE 3 ══════════════════ -->
+    <div class="phase">
+      <h3><code class="status">[x]</code> Phase 3: Hot-File Collision Policy — the conflict magnets merge serially</h3>
+      <p>Close R2. A handful of files are touched by almost every ticket and are where "the feature we already built got replaced" actually happens. Overlap on these between two open PRs stops being a warning and becomes a gate failure, forcing serial landing (merge one → rebase the other → re-gate).</p>
+
+      <h4>3.1 Define and enforce the hot-file set</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Add a <code>HOT_FILES</code> list to <code>pr-merge-gate.sh</code>: <code>src/frontend/messages/en.json</code>, <code>src/frontend/messages/th.json</code>, the sidebar/nav config, <code>src/frontend/src/lib/approval-registry.ts</code>, <code>src/frontend/src/lib/humi-mock-data.ts</code>, <code>src/frontend/src/lib/ec-maintain-registry.ts</code> (verify exact nav-config path during implementation and extend as found)</li>
+        <li><code class="status">[x]</code> In the step-(3) overlap scan, split results: overlap on a hot file with another <em>open</em> PR ⇒ <code>ok=0</code> with reason <code>hot-file-overlap(#N)</code> and a printed resolution order ("merge #A first, then <code>--rebase-source</code> #B"); overlap on non-hot files stays a warning</li>
+        <li><code class="status">[x]</code> Add <code>--allow-hot-overlap</code> escape hatch (mirroring <code>--allow-removals</code>) for the rare intentional case, so the policy never hard-blocks a human decision</li>
+      </ul>
+
+      <h4>3.2 Locale parity — protect TH the same as EN</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Extend the feature-preservation sentinel (step 5) to diff <code>th.json</code> key-paths against <code>origin/master</code> exactly like <code>en.json</code> — a PR that deletes existing TH keys fails without <code>--allow-removals</code></li>
+        <li><code class="status">[x]</code> Add a parity assertion on the rebased tree: the set of leaf key-paths in <code>en.json</code> and <code>th.json</code> must be equal; print the asymmetric diff (first 12) on failure — this catches the "added EN, forgot TH" class before it lands</li>
+      </ul>
+
+      <h4>3.3 Testing Strategy</h4>
+      <p>Synthetic-branch tests: craft throwaway local branches that violate each rule and confirm the gate catches them; nothing is pushed.</p>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>bash -n .claude/skills/git-hygiene-loop/pr-merge-gate.sh</code> — parses after the changes</li>
+        <li><code class="status">[x]</code> Scratch branch that deletes a TH-only key ⇒ run the sentinel logic against it ⇒ <strong>fails</strong> with the removed key listed (then delete the branch)</li>
+        <li><code class="status">[x]</code> Scratch branch that adds an EN key without its TH twin ⇒ parity assertion <strong>fails</strong> listing the asymmetric key</li>
+        <li><code class="status">[x]</code> <code>bash .claude/skills/git-hygiene-loop/pr-merge-gate.sh --all</code> — dry-run against the real open-PR list; any hot-file overlaps now surface as 🔴 with a resolution order, not ⚠</li>
+      </ul>
+      <div class="loop">
+        🔁 <strong>Do not exit this phase until every box above is checked.</strong>
+        If any command fails, fix the cause and re-run — loop until all pass.
+      </div>
+    </div>
+
+    <!-- ══════════════════ PHASE 4 ══════════════════ -->
+    <div class="phase">
+      <h3><code class="status">[x]</code> Phase 4: Vercel Truth — prove what the BA is looking at</h3>
+      <p>Close R5. Stop asserting "it's on Vercel" and start proving it: the app self-reports which commit it was built from, and the ship pipeline refuses to tell Linear "done" until production serves the merge SHA.</p>
+
+      <figure>
+        <!-- {{PHASE_IMAGE: merge commit sha flowing to Vercel build, /api/version echoing the same sha, matching checkmark, then Linear comment; teal/indigo minimal, <10 words}} -->
+        <figcaption>Merge SHA in, same SHA served — only then does Linear hear "done".</figcaption>
+      </figure>
+
+      <h4>4.1 Build-identity endpoint</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Create <code>src/frontend/src/app/api/version/route.ts</code>: a route handler returning <code>{ sha: process.env.VERCEL_GIT_COMMIT_SHA ?? 'local', ref: process.env.VERCEL_GIT_COMMIT_REF ?? null, env: process.env.VERCEL_ENV ?? 'development', builtAt }</code> with <code>Cache-Control: no-store</code> (must never serve a cached SHA) — no secrets, mockup-phase safe</li>
+        <li><code class="status">[x]</code> Vitest at <code>src/frontend/src/app/api/version/__tests__/route.test.ts</code>: response shape, <code>local</code>/<code>development</code> fallbacks when Vercel envs are absent, and the no-store header</li>
+      </ul>
+
+      <h4>4.2 <code>postmerge</code> deploy verification in ship</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Add <code>.claude/skills/ship/config.json</code> with <code>{ "productionUrl": "&lt;the BA-facing Vercel prod URL&gt;", "postmergeTimeoutMs": 900000, "pollIntervalMs": 20000 }</code> — resolve the actual prod URL from the Vercel project during implementation and commit it here</li>
+        <li><code class="status">[x]</code> Add a <code>postmerge</code> subcommand to <code>ship.mjs</code>: read the merge commit SHA (<code>gh pr view --json mergeCommit</code>), poll <code>&lt;productionUrl&gt;/api/version</code> until <code>sha</code> equals it (or ancestor-of: a later sibling merge that already contains it also passes, via <code>git merge-base --is-ancestor</code>); on timeout, exit non-zero with <code>DEPLOY_NOT_LIVE</code> and the observed SHA — the loop must surface this instead of reporting done</li>
+        <li><code class="status">[x]</code> Record <code>prodVerified</code>, <code>prodSha</code>, <code>prodUrl</code> in the ship state file; update <code>ship-status.schema.json</code> accordingly</li>
+      </ul>
+
+      <h4>4.3 BA-facing report tells the truth</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>linear-report.mjs</code>: for merged tickets, the comment links the <strong>production URL</strong> plus <code>build &lt;sha7&gt;</code>; the preview link (if included) must be the immutable per-commit deployment URL, never the branch-alias URL that dies when the branch is deleted; keep the copy BA-friendly (no gates/hashes jargon beyond the short build tag)</li>
+        <li><code class="status">[x]</code> <code>ship SKILL.md</code> + <code>linear-implement.md</code> step 8: screenshots for the Linear comment are captured from the <em>verified production URL</em> after <code>postmerge</code> passes (localhost screenshots allowed only as a supplement); the Linear comment and the In&nbsp;Review transition are blocked on <code>prodVerified: true</code></li>
+      </ul>
+
+      <h4>4.4 Testing Strategy</h4>
+      <p>Unit-test the route locally, dry-run the postmerge poller, then one live rehearsal against the already-merged tip of master (no new merge needed — master's current SHA should already be live).</p>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run api/version</code> — version route tests pass</li>
+        <li><code class="status">[x]</code> <code>cd src/frontend && npx next dev --port 3100</code> then <code>curl -s localhost:3100/api/version</code> — returns <code>{"sha":"local","env":"development",...}</code> (then stop the server)</li>
+        <li><code class="status">[x]</code> <code>node --check .claude/skills/ship/scripts/ship.mjs && node --check .claude/skills/ship/scripts/linear-report.mjs</code> — both parse</li>
+        <li><code class="status">[x]</code> <code>node .claude/skills/ship/scripts/ship.mjs postmerge --dry-run --ticket STA-0</code> — prints the poll plan (URL, target SHA, timeout) without network writes</li>
+        <li><code class="status">[f]</code> Live rehearsal after the route change deploys: <code>node .claude/skills/ship/scripts/ship.mjs postmerge --sha $(git rev-parse origin/master) </code> against the configured prod URL — passes once Vercel has rebuilt master with the new route</li>
+      </ul>
+      <div class="loop">
+        🔁 <strong>Do not exit this phase until every box above is checked.</strong>
+        If any command fails, fix the cause and re-run — loop until all pass.
+      </div>
+    </div>
+
+    <!-- ══════════════════ PHASE 5 ══════════════════ -->
+    <div class="phase">
+      <h3><code class="status">[x]</code> Phase 5: Encode the Process — docs, runbook, and loop wiring</h3>
+      <p>Make the invariants discoverable and non-optional in the places the two sessions actually read: the command files, the skill docs, and one short runbook.</p>
+
+      <h4>5.1 Update the loop contracts</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>linear-implement.md</code>: step 2 = worktree + <code>worktree-guard preflight</code>; step 7 = ship with gate-only merge; new step 8.5 = <code>postmerge</code> deploy-verify before the Linear comment; step 9 = <code>worktree-guard cleanup</code>; add "run <code>git-hygiene.sh</code> at the top of every cycle" as a hard step, not a suggestion</li>
+        <li><code class="status">[x]</code> <code>linear-loop.md</code>: add the git-state ban (read-only git; writes only under <code>.omc/plans/</code>) and a pointer to the runbook</li>
+        <li><code class="status">[x]</code> <code>git-hygiene-loop/SKILL.md</code> + <code>ship/SKILL.md</code>: document the new flags (<code>--rebase-source</code>, <code>--allow-hot-overlap</code>), the guard modes, the <code>postmerge</code> stage, and the single-merge-lane rule</li>
+      </ul>
+
+      <h4>5.2 Write the runbook</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>docs/two-session-workflow.md</code> (~1 page): the 4 invariants; the per-ticket happy path as a numbered sequence of exact commands; the failure playbook — <code>STALE_BASE</code> → <code>--rebase-source</code>, <code>hot-file-overlap</code> → merge order + rebase, <code>DEPLOY_NOT_LIVE</code> → check Vercel build logs before touching Linear, mixed worktree → <code>worktree-guard list</code> + cleanup</li>
+        <li><code class="status">[x]</code> Cross-link the runbook from both command files and both SKILL.md files</li>
+      </ul>
+
+      <h4>5.3 Testing Strategy</h4>
+      <p>Docs are validated by grep-able assertions — the loops read these files verbatim, so the exact command strings must be present.</p>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>grep -n "worktree-guard.sh preflight" .claude/commands/linear-implement.md</code> — guard is wired into step 2</li>
+        <li><code class="status">[x]</code> <code>grep -n "postmerge" .claude/commands/linear-implement.md .claude/skills/ship/SKILL.md</code> — deploy-verify stage present in both</li>
+        <li><code class="status">[x]</code> <code>grep -n "pr-merge-gate" .claude/skills/ship/SKILL.md .claude/skills/git-hygiene-loop/SKILL.md</code> — single-lane rule documented</li>
+        <li><code class="status">[x]</code> <code>grep -rn "two-session-workflow.md" .claude/commands .claude/skills --include='*.md'</code> — runbook cross-linked from all four contract files</li>
+      </ul>
+      <div class="loop">
+        🔁 <strong>Do not exit this phase until every box above is checked.</strong>
+        If any command fails, fix the cause and re-run — loop until all pass.
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== GLOBAL VALIDATION ===== -->
+  <section id="validation">
+    <h2>Validation Commands</h2>
+    <p>Execute these commands to validate the entire plan is complete:</p>
+    <ul class="checklist">
+      <li><code class="status">[x]</code> <code>for f in .claude/skills/git-hygiene-loop/*.sh; do bash -n "$f" || exit 1; done</code> — every hygiene/gate/guard script parses</li>
+      <li><code class="status">[x]</code> <code>node --check .claude/skills/ship/scripts/ship.mjs && node --check .claude/skills/ship/scripts/linear-report.mjs</code> — ship scripts parse</li>
+      <li><code class="status">[x]</code> <code>bash .claude/skills/git-hygiene-loop/pr-merge-gate.sh --all</code> — full dry-run gate over the live open-PR list completes with per-PR verdicts (merges nothing)</li>
+      <li><code class="status">[x]</code> <code>bash .claude/skills/git-hygiene-loop/worktree-guard.sh list</code> — registry and <code>git worktree list</code> agree; no unexplained orphans</li>
+      <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run api/version</code> — version-route tests green</li>
+      <li><code class="status">[x]</code> <code>cd src/frontend && npm run build</code> — the app (with the new route) still builds; TS gate clean</li>
+      <li><code class="status">[x]</code> <code>node .claude/skills/ship/scripts/ship.mjs postmerge --dry-run --ticket STA-0</code> — postmerge stage wired and prints its poll plan</li>
+      <li><code class="status">[x]</code> <code>grep -rn "gh pr merge" .claude/commands .claude/skills --include='*.md'</code> — no doc instructs a direct merge outside the gate</li>
+      <li><code class="status">[f]</code> End-to-end rehearsal on the next real low-risk ticket: guard preflight → implement → gate merge → postmerge verify → BA comment with verified prod URL + build SHA — one full cycle with zero manual git surgery</li>
+    </ul>
+    <div class="loop">
+      🔁 <strong>The plan is not complete until every box is checked and every command passes. If for some reason a step is not possible to complete, mark it with [f] and move on if possible.</strong>
+    </div>
+  </section>
+
+  <!-- ===== NOTES ===== -->
+  <section id="notes">
+    <h2>Notes</h2>
+
+    <h3>Why serialization, not smarter merging</h3>
+    <p>The tempting fix is a custom JSON merge driver for <code>en.json</code>/<code>th.json</code> so concurrent edits auto-merge. Rejected: merge drivers don't run on GitHub's server-side merges, they mask semantic conflicts (two tickets renaming the same key), and they add a per-machine <code>.gitattributes</code>/config dependency. Serializing hot-file landings through the gate is slower per merge but is deterministic everywhere and costs ~2 minutes per rebase.</p>
+
+    <h3>Assumptions baked into this plan</h3>
+    <div class="callout">
+      <ul style="margin:6px 0 2px; padding-left:20px;">
+        <li><strong>BA looks at the production Vercel URL</strong> (master deployments), not per-PR previews. If it turns out the BA reviews previews, Phase 4's poller targets stay the same — the immutable per-commit preview URL rule already covers that side.</li>
+        <li><strong>The Vercel project deploys <code>master</code> → production</strong> automatically. The concrete prod URL is resolved during implementation and committed to <code>.claude/skills/ship/config.json</code>.</li>
+        <li><strong>GitHub branch rulesets may not be enforceable</strong> on this private repo's plan — that task (1.3) is best-effort by design; the gate script is the real enforcement.</li>
+        <li><strong>No new npm dependencies</strong> anywhere: the version route uses only <code>process.env</code>; the poller uses Node's built-in <code>fetch</code>; guard/gate are plain bash + python3 (already required by the existing scripts).</li>
+      </ul>
+    </div>
+
+    <h3>Failure playbook (summary — full version lands in the runbook)</h3>
+    <table>
+      <thead><tr><th>Signal</th><th>Meaning</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><code>STALE_BASE</code> / rebase conflict</td><td>PR built on an old master; would revert siblings</td><td><code>pr-merge-gate.sh --rebase-source &lt;PR&gt;</code>; if it reports a real conflict, resolve in the ticket worktree, rebuild, re-gate</td></tr>
+        <tr><td><code>hot-file-overlap(#N)</code></td><td>Two open PRs edit a conflict-magnet file</td><td>Merge the printed first PR, then <code>--rebase-source</code> the second, re-gate</td></tr>
+        <tr><td><code>DEPLOY_NOT_LIVE</code></td><td>Production is not serving the merge SHA</td><td>Check Vercel build logs; do <strong>not</strong> comment on Linear or move the ticket until <code>postmerge</code> passes</td></tr>
+        <tr><td>guard: main-checkout refusal</td><td>Implementation attempted in the shared tree</td><td>Create/enter the ticket worktree; the shared tree belongs to the plan session</td></tr>
+        <tr><td>guard: orphan worktrees</td><td>Leftover worktrees from crashed cycles</td><td><code>worktree-guard.sh cleanup &lt;TICKET&gt;</code> for each after confirming no uncommitted work</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Out of scope</h3>
+    <p>CI on GitHub Actions (the gate runs the checks locally and is faster for this solo-repo cadence), backend wiring (mockup phase), payroll tickets (other team), and any change to Linear state rules (In&nbsp;Review cap stays; Done remains human-only). The currently-dirty shared checkout (STA-244 work-in-progress) is untouched by this plan — but note it as exhibit A of R4: once this plan lands, that work belongs in a ticket worktree.</p>
+
+    <h3>Build order &amp; dependencies</h3>
+    <p>Phases 1–3 are pure tooling and can land as one PR (they only touch <code>.claude/</code>). Phase 4 touches app code (<code>/api/version</code>) and needs one production deploy before its live rehearsal — land it second. Phase 5 is docs and lands last, referencing the shipped flags. Ship each phase-group through the gate itself: the plan's own PRs are the first rehearsal.</p>
+
+    <figure>
+      <!-- {{NOTES_IMAGE: three small PR boxes labeled tooling, app route, docs landing in order through the gate; teal/indigo minimal, <10 words}} -->
+      <figcaption>The plan ships in three PRs — each one rehearses the gate it builds.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ===== AMENDMENTS ===== -->
+  <section id="amendments">
+    <h2>Amendments</h2>
+    <details open>
+      <summary>2026-07-07 — first execution (Build Plan)</summary>
+      <ul>
+        <li><strong>1.3 landed better than expected:</strong> GitHub ruleset <code>master-single-merge-lane</code> was created and is <em>active</em> on <code>aeiouboy/hr</code> (PR required, merge-commit only, no bypass). The gate remains the semantic enforcement.</li>
+        <li><strong>Parity check (3.2) is baseline-diffed</strong>, not absolute: only EN/TH asymmetry <em>introduced by the PR</em> fails, so a pre-existing asymmetry on master can never block an unrelated PR. (Master currently has 0 asymmetric keys.)</li>
+        <li><strong>Prod URL + deployment protection:</strong> <code>config.json</code> points at <code>https://hr-indytrading-gmailcoms-projects.vercel.app</code> (stable project alias; GitHub deployments confirm master→Production). ALL <code>*.vercel.app</code> URLs on this project sit behind Vercel SSO deployment protection, so <code>postmerge</code> sends <code>x-vercel-protection-bypass</code> from <code>VERCEL_AUTOMATION_BYPASS_SECRET</code> and fails fast with an actionable message when the secret is absent (verified live). <strong>Owner action:</strong> create the bypass secret in Vercel → Project → Deployment Protection, export it in the implement session.</li>
+        <li><strong>4.4 live rehearsal marked [f]:</strong> blocked until (a) the <code>/api/version</code> route merges + deploys and (b) the bypass secret exists. The DEPLOY_NOT_LIVE failure path was rehearsed live instead. Local <code>curl</code> rehearsal ran against the already-running :4000 dev server (the repo's actual dev port; :3100 hit the <code>.next/dev</code> lock).</li>
+        <li><strong>Registry backfilled:</strong> the live <code>hr-sta254</code> worktree was registered in <code>.omc/state/worktrees.json</code> so <code>worktree-guard.sh list</code> starts drift-free. Guard positive/negative/stale-base tests ran against scratch worktrees (created + cleaned).</li>
+        <li><strong>Gate now exits non-zero</strong> when any PR fails, so <code>ship.mjs</code>/<code>merge-ready.sh</code> delegation propagates failures (the old script always exited 0).</li>
+        <li><strong>End-to-end rehearsal marked [f]/deferred:</strong> it requires the next real ticket cycle; all constituent stages were rehearsed individually (guard preflight ✓, gate dry-run on live PR #423 ✓, postmerge failure path ✓).</li>
+      </ul>
+    </details>
+  </section>
+
+</main>
+</body>
+</html>
