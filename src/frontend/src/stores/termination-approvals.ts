@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Role } from '@/lib/rbac';
+import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 
 // termination-approvals — Zustand+persist store for ESS termination requests.
 //
@@ -67,7 +68,8 @@ export type TerminationRequest = {
   requestedLastDay: string; // ISO date YYYY-MM-DD
   reasonCode: TerminationReasonCode;
   reasonText?: string;
-  attachments?: string[]; // filenames
+  personalEmail?: string; // STA-247 — ESS resignation field parity with termination
+  attachments?: AttachedFile[]; // STA-247 — was filenames-only string[]; now multi-file (AttachmentDropzone)
   status: TerminationStep;
   submittedAt: string; // ISO timestamp
   submittedBy: { id: string; name: string; role: Role };

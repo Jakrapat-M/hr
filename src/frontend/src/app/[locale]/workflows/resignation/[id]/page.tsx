@@ -31,6 +31,7 @@ import {
   TERMINATION_REASON_LABEL,
   type TerminationRequest,
 } from '@/stores/termination-approvals';
+import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 import { formatDate } from '@/lib/date';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
@@ -196,8 +197,10 @@ export default function ResignationDetailPage({ params }: PageProps) {
 
   const [decision, setDecision] = useState<Decision>(null);
   const [comment, setComment] = useState('');
-  // Attachment preview (mockup — no real file store; shows a sample document view).
-  const [previewFile, setPreviewFile] = useState<string | null>(null);
+  // Attachment preview (mockup). STA-247 — attachments are now AttachedFile[]
+  // (base64 dataUrl when captured via the ESS AttachmentDropzone); real files
+  // download their own dataUrl, seeded demo files fall back to a sample view.
+  const [previewFile, setPreviewFile] = useState<AttachedFile | null>(null);
 
   const submittedDate = request ? request.submittedAt : '';
   const submitWaitDays = useMemo(
@@ -379,15 +382,15 @@ export default function ResignationDetailPage({ params }: PageProps) {
                 {isTh ? 'เอกสารแนบ' : 'Attachments'}
               </h3>
               <ul className="flex flex-col gap-2">
-                {request.attachments.map((file, idx) => (
-                  <li key={`${file}-${idx}`}>
+                {request.attachments.map((file) => (
+                  <li key={file.id}>
                     <button
                       type="button"
                       onClick={() => setPreviewFile(file)}
                       className="group flex w-full items-center gap-2.5 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-3.5 py-2.5 text-left text-sm text-ink transition hover:border-accent hover:bg-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
                     >
                       <Paperclip className="h-4 w-4 shrink-0 text-ink-muted" />
-                      <span className="truncate">{file}</span>
+                      <span className="truncate">{file.name}</span>
                       <FileText className="ml-auto h-4 w-4 shrink-0 text-ink-muted transition group-hover:text-accent" />
                     </button>
                   </li>
@@ -574,7 +577,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
       <Modal
         open={previewFile !== null}
         onClose={() => setPreviewFile(null)}
-        title={previewFile ?? ''}
+        title={previewFile?.name ?? ''}
         widthClass="max-w-2xl"
       >
         <div className="flex flex-col gap-4">
@@ -608,14 +611,23 @@ export default function ResignationDetailPage({ params }: PageProps) {
               type="button"
               onClick={() => {
                 if (!previewFile) return;
+                // Real files captured via the ESS AttachmentDropzone carry their own
+                // dataUrl; seeded demo attachments have none and get a sample text file.
+                if (previewFile.dataUrl) {
+                  const a = document.createElement('a');
+                  a.href = previewFile.dataUrl;
+                  a.download = previewFile.name;
+                  a.click();
+                  return;
+                }
                 const blob = new Blob(
-                  [`${previewFile}\n\n${request.employeeName}\n${formatDate(request.requestedLastDay, 'long', locale)}`],
+                  [`${previewFile.name}\n\n${request.employeeName}\n${formatDate(request.requestedLastDay, 'long', locale)}`],
                   { type: 'text/plain' },
                 );
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = previewFile.replace(/\.pdf$/i, '.txt');
+                a.download = previewFile.name.replace(/\.pdf$/i, '.txt');
                 a.click();
                 URL.revokeObjectURL(url);
               }}
