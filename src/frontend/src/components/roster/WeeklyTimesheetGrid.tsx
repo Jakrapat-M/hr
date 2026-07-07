@@ -35,6 +35,19 @@ export type TimesheetRow = {
   avatarTone?: AvatarProps['tone'];
 };
 
+/** Position filter sentinel — 'all' keeps every row regardless of ตำแหน่ง. */
+export const POSITION_FILTER_ALL = 'all';
+
+/**
+ * Stable position key for a row (STA-252 N2). `roleTh` is always populated
+ * (sourced from `HumiEmployee.position`, a Thai string) and is a 1:1 stand-in
+ * for the underlying ตำแหน่ง, unlike `roleEn`/`roleTh` display text which
+ * differs per locale — filter on this, not on the locale-rendered label.
+ */
+export function positionKey(row: Pick<TimesheetRow, 'roleTh'>): string {
+  return row.roleTh;
+}
+
 // STA-235 Draft 2 — attendance filter reduced to exactly: all / absent / leave / late.
 export type ClockFilter = 'all' | 'absent' | 'leave' | 'late';
 
@@ -55,6 +68,8 @@ export type WeeklyTimesheetGridProps = {
   otRequests: ReadonlyArray<OTRequest>;
   cutoffISO: string;
   clockFilter: ClockFilter;
+  /** STA-252 N2 — ตำแหน่ง filter (a `positionKey(row)` value, or `POSITION_FILTER_ALL`). */
+  positionFilter?: string;
   isTh: boolean;
   /** STA-235 — open the shift-time modal for a clicked shift cell (manager only). */
   onEditShift?: (ctx: ShiftEditContext) => void;
@@ -86,6 +101,7 @@ export function WeeklyTimesheetGrid({
   otRequests,
   cutoffISO,
   clockFilter,
+  positionFilter = POSITION_FILTER_ALL,
   isTh,
   onEditShift,
 }: WeeklyTimesheetGridProps) {
@@ -111,9 +127,14 @@ export function WeeklyTimesheetGrid({
   // Attendance filter (STA-235: all / absent / leave / late) — keep only rows with
   // at least one matching day in the visible week. 'all' keeps everyone; 'leave'
   // matches the leave overlay; 'absent'/'late' match the classified clock state.
+  // Composed with the STA-252 N2 position filter (both must pass — AND).
   const visibleRows = useMemo(() => {
-    if (clockFilter === 'all') return rows;
-    return rows.filter((row) => {
+    const byPosition =
+      positionFilter === POSITION_FILTER_ALL
+        ? rows
+        : rows.filter((row) => positionKey(row) === positionFilter);
+    if (clockFilter === 'all') return byPosition;
+    return byPosition.filter((row) => {
       const data = rowData.get(row.id);
       if (!data) return false;
       return dayKeys.some((key) => {
@@ -122,7 +143,7 @@ export function WeeklyTimesheetGrid({
         return att ? classifyClock(att, cutoffISO) === clockFilter : false;
       });
     });
-  }, [rows, rowData, dayKeys, clockFilter, cutoffISO]);
+  }, [rows, rowData, dayKeys, clockFilter, positionFilter, cutoffISO]);
 
   return (
     <div data-testid="weekly-timesheet-grid" className="overflow-x-auto">

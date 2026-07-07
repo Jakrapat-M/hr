@@ -7,6 +7,7 @@
 // modal. Leave + OT stay read-only (employee uses Time Correction; OT is its own
 // approval). Derives from the time-domain seeds + the leave overlay seed.
 
+import { Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DaySchedule } from '@/lib/time/schedule-template';
 import type { AttendanceDay } from '@/lib/time/attendance-math';
@@ -174,11 +175,18 @@ export function DayCell({
           'text-small font-medium leading-tight',
           CHIP_CLASS[chip.kind],
           chip.editable &&
-            'cursor-pointer transition-shadow hover:shadow-[var(--shadow-card)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+            // N1 (STA-252) — read as clearly clickable, not a plain chip: a
+            // standing accent-alt ring (visible before hover) + the Pencil icon
+            // in the label row, strengthening to a solid ring + shadow on
+            // hover/focus.
+            'cursor-pointer ring-1 ring-inset ring-[var(--color-accent-alt)]/50 transition-all hover:shadow-[var(--shadow-card)] hover:ring-2 hover:ring-[var(--color-accent-alt)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
         );
         const body = (
           <>
-            <span>{chip.label}</span>
+            <span className="inline-flex items-center gap-1">
+              {chip.label}
+              {chip.editable && <Pencil size={11} aria-hidden className="shrink-0 opacity-80" />}
+            </span>
             {chip.sub && (
               <span className="font-mono text-xs opacity-80">{chip.sub}</span>
             )}
