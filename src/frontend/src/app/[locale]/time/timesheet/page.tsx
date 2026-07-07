@@ -92,6 +92,19 @@ export default function TimesheetPage() {
       });
     }
     {
+      const iso = '2026-05-30';
+      list.push({
+        level: 'error',
+        badgeTh: 'ผิดพลาด', badgeEn: 'Error',
+        titleTh: 'พบรายการลงเวลาซ้ำซ้อน',
+        titleEn: 'Duplicate clock-in detected',
+        descTh: `ระบบพบการลงเวลาเข้างานซ้ำในวันที่ ${fmt(iso)} — กรุณาแจ้งหัวหน้างานเพื่อตรวจสอบ`,
+        descEn: `The system detected a duplicate clock-in on ${fmt(iso)} — ask your manager to review it.`,
+        date: `${src} · ${fmt(iso)}`,
+        dateRaw: iso,
+      });
+    }
+    {
       const iso = '2026-06-01';
       list.push({
         level: 'approve',
@@ -101,6 +114,19 @@ export default function TimesheetPage() {
         descTh: `OT วันที่ ${fmt(iso)} เวลา 19:00–21:00 ได้รับการอนุมัติจากหัวหน้างานแล้ว`,
         descEn: `OT on ${fmt(iso)}, 19:00–21:00 has been approved by your manager.`,
         date: `${fmt(iso)} · 09:15`,
+        dateRaw: iso,
+      });
+    }
+    {
+      const iso = '2026-05-27';
+      list.push({
+        level: 'approve',
+        badgeTh: 'อนุมัติแล้ว', badgeEn: 'Approved',
+        titleTh: 'คำขอแก้ไขเวลาลงเวลาได้รับการอนุมัติแล้ว',
+        titleEn: 'Your time correction request has been approved',
+        descTh: `รายการแก้ไขเวลาลงเวลาวันที่ ${fmt(iso)} ได้รับการอนุมัติจากหัวหน้างานแล้ว`,
+        descEn: `Your punch-time correction for ${fmt(iso)} has been approved by your manager.`,
+        date: `${fmt(iso)} · 10:20`,
         dateRaw: iso,
       });
     }
