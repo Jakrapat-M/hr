@@ -4276,7 +4276,56 @@
       "address": "Address",
       "contact": "Contact Info",
       "bank": "Bank Account",
-      "personal": "Personal Info"
+      "personal": "Personal Info",
+      "formalEducation": "Formal Education",
+      "languageSkill": "Language Skills",
+      "workPermit": "Work Permit Info",
+      "certification": "Certification / License"
+    },
+    "repeatable": {
+      "showingOf": "Showing {shown} of {total}"
+    },
+    "formalEducation": {
+      "add": "Add Education",
+      "empty": "No education records yet.",
+      "primary": "Highest",
+      "degree": "Degree",
+      "university": "University",
+      "faculty": "Faculty",
+      "major": "Major",
+      "gpa": "GPA",
+      "graduatedDate": "Graduation Date"
+    },
+    "languageSkill": {
+      "add": "Add Language",
+      "empty": "No language skills yet.",
+      "language": "Language",
+      "speaking": "Speaking",
+      "reading": "Reading",
+      "writing": "Writing",
+      "listening": "Listening",
+      "certificate": "Certificate / Score"
+    },
+    "workPermit": {
+      "add": "Add Work Permit",
+      "empty": "No work permit records yet.",
+      "documentType": "Document Type",
+      "country": "Country",
+      "documentNumber": "Document Number",
+      "issueDate": "Issue Date",
+      "expiryDate": "Expiry Date",
+      "attachment": "Attachment"
+    },
+    "certification": {
+      "add": "Add Certification",
+      "empty": "No certifications yet.",
+      "type": "Type",
+      "name": "Name",
+      "institution": "Issuing Institution",
+      "number": "Certificate Number",
+      "effectiveDate": "Effective Date",
+      "expirationDate": "Expiration Date",
+      "attachment": "Attachment"
     },
     "changeRequest": {
       "submit": "Submit for Approval",

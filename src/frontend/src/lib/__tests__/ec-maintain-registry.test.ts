@@ -15,18 +15,22 @@ import {
 } from '@/lib/ec-maintain-registry';
 
 describe('EC_MAINTAIN_REGISTRY — seeded rows', () => {
-  it('seeds exactly the 8 real ESS sections (no 88-row transcription, no defaults)', () => {
+  it('seeds exactly the 12 wired ESS sections (8 base + 4 STA-244 repeatable)', () => {
     const keys = EC_MAINTAIN_REGISTRY.map((c) => c.key).sort();
     expect(keys).toEqual(
       [
         'address',
         'advanced',
         'bank',
+        'certification',
         'contact',
         'dependents',
         'emergencyContact',
+        'formalEducation',
+        'languageSkill',
         'marital',
         'personal',
+        'workPermit',
       ].sort(),
     );
   });
@@ -35,6 +39,14 @@ describe('EC_MAINTAIN_REGISTRY — seeded rows', () => {
   it('emergencyContact and dependents are cardinality N (repeatable)', () => {
     expect(getMaintainConfig('emergencyContact').cardinality).toBe('N');
     expect(getMaintainConfig('dependents').cardinality).toBe('N');
+  });
+
+  // STA-244 — the 4 new repeatable groups are cardinality N
+  it('formalEducation/languageSkill/workPermit/certification are cardinality N', () => {
+    expect(getMaintainConfig('formalEducation').cardinality).toBe('N');
+    expect(getMaintainConfig('languageSkill').cardinality).toBe('N');
+    expect(getMaintainConfig('workPermit').cardinality).toBe('N');
+    expect(getMaintainConfig('certification').cardinality).toBe('N');
   });
 
   // AC-2 — single (1) sections
@@ -84,7 +96,8 @@ describe('EC_MAINTAIN_REGISTRY — seeded rows', () => {
   });
 
   it('getMaintainConfig throws for an unseeded key', () => {
-    // @ts-expect-error — intentional invalid key
+    // 'termination' is a valid SectionKey type but is NOT seeded in the registry,
+    // so the lookup throws at runtime (a missing seed is a bug, not a default).
     expect(() => getMaintainConfig('termination')).toThrow(/No maintain config seeded/);
   });
 });
@@ -106,6 +119,11 @@ describe('EC_MAINTAIN_REGISTRY — editMode matches real submit semantics', () =
     bank: 'direct',
     emergencyContact: 'direct',
     dependents: 'direct',
+    // STA-244 repeatable groups — direct+dual submit
+    formalEducation: 'direct',
+    languageSkill: 'direct',
+    workPermit: 'direct',
+    certification: 'direct',
   };
 
   it('each seeded section labels its editMode per the page submit handler it uses', () => {

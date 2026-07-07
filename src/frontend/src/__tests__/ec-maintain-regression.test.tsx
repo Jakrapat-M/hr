@@ -84,7 +84,14 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-import { useHumiProfileStore, type EmergencyContactRow } from '@/stores/humi-profile-slice';
+import {
+  useHumiProfileStore,
+  type EmergencyContactRow,
+  type EducationEntry,
+  type LanguageSkillEntry,
+  type WorkPermitEntry,
+  type CertificationEntry,
+} from '@/stores/humi-profile-slice';
 
 async function renderProfileMePage() {
   const { default: ProfileMePage } = await import('@/app/[locale]/profile/me/page');
@@ -115,6 +122,11 @@ const EMPTY_SLICE = {
   emailsArr: [],
   bank: { bankCode: '', accountNo: '', holderName: '', bookAttachmentId: null },
   dependents: [],
+  // STA-244 repeatable groups (additive — []-safe)
+  formalEducation: [] as EducationEntry[],
+  languageSkills: [] as LanguageSkillEntry[],
+  workPermits: [] as WorkPermitEntry[],
+  certifications: [] as CertificationEntry[],
 };
 
 function resetStore(activeTab: 'personal' | 'compensation', seed: Partial<typeof EMPTY_SLICE> = {}) {
@@ -125,7 +137,7 @@ function resetStore(activeTab: 'personal' | 'compensation', seed: Partial<typeof
     draft: { ...EMPTY_SLICE, ...seed },
     saved: { ...EMPTY_SLICE, ...seed },
     attachments: [],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     pendingChanges: [] as any,
     adminMode: false,
   });
@@ -218,5 +230,71 @@ describe('STA-244: direct section submit → CR AND save() (dual behavior preser
     expect(pending[0].sectionKey).toBe('emergencyContact');
     // Dual behavior: save() committed draft → saved.
     expect(saveSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// STA-244 (new repeatable group): Formal Education is a NEW direct+dual section — it
+// must submit a CR (sectionKey 'formalEducation') AND save(), with no guarded-flow
+// mutation. It also proves "add unlimited entries" (no cap).
+// ════════════════════════════════════════════════════════════════════════════════
+describe('STA-244: repeatable section (Formal Education) submit → CR AND save()', () => {
+  const validEducationRow: EducationEntry = {
+    degree: 'ปริญญาตรี',
+    university: 'จุฬาลงกรณ์มหาวิทยาลัย',
+    faculty: 'วิศวกรรมศาสตร์',
+    major: 'คอมพิวเตอร์',
+    gpa: '3.50',
+    graduatedDate: '2012-03-31',
+    isPrimary: true,
+  };
+
+  it('Formal Education submit calls submitChangeRequest once (sectionKey formalEducation) AND save()', async () => {
+    mockSearchParams.current = new URLSearchParams('');
+    resetStore('personal', { formalEducation: [validEducationRow] });
+    const saveSpy = vi.spyOn(useHumiProfileStore.getState(), 'save');
+
+    await renderProfileMePage();
+
+    // Open the Formal Education editor via its dedicated edit affordance.
+    const editBtn = screen.getByRole('button', { name: /sections\.formalEducation/ });
+    await act(async () => {
+      fireEvent.click(editBtn);
+    });
+
+    // A valid seed row keeps Submit enabled without further edits.
+    const submitBtn = screen.getByRole('button', { name: /ส่งคำขอ/ });
+    await act(async () => {
+      fireEvent.click(submitBtn);
+    });
+
+    const pending = useHumiProfileStore.getState().pendingChanges;
+    expect(pending).toHaveLength(1);
+    expect(pending[0].sectionKey).toBe('formalEducation');
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('"+ Add" appends rows with no cap (click Add 3× → +3 rows)', async () => {
+    mockSearchParams.current = new URLSearchParams('');
+    resetStore('personal', { formalEducation: [validEducationRow] });
+
+    await renderProfileMePage();
+
+    const editBtn = screen.getByRole('button', { name: /sections\.formalEducation/ });
+    await act(async () => {
+      fireEvent.click(editBtn);
+    });
+
+    expect(screen.getAllByTestId('repeatable-row')).toHaveLength(1);
+
+    const addBtn = screen.getByTestId('repeatable-add');
+    for (let i = 0; i < 3; i += 1) {
+       
+      await act(async () => {
+        fireEvent.click(addBtn);
+      });
+    }
+
+    expect(screen.getAllByTestId('repeatable-row')).toHaveLength(4);
   });
 });

@@ -74,6 +74,12 @@ export default function ChangeRequestsPage() {
       personal: [],
       termination: [],
       dependents: [],
+      // STA-244 repeatable groups — grouped for completeness (not in the curated
+      // SECTION_ORDER render list, mirroring termination/dependents).
+      formalEducation: [],
+      languageSkill: [],
+      workPermit: [],
+      certification: [],
     };
     pending.forEach((pc) => {
       const key = pc.sectionKey ?? 'personal';

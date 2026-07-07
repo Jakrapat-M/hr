@@ -35,9 +35,65 @@ export interface BankDetails {
   bookAttachmentId: string | null;  // ref into attachments[] (existing array)
 }
 
-// ── sectionKey discriminator ───────────────────────────────────────────────────
+// ── STA-244 repeatable (N) row types ────────────────────────────────────────────
+// Store field is PLURAL (a collection); its registry/SectionKey is SINGULAR
+// (a section identity). See specs/sta-244-multi-entry-fields.json for the full
+// 47-group cardinality SSoT; only the wired subset is modelled here.
 
-export type SectionKey = 'emergencyContact' | 'address' | 'contact' | 'bank' | 'personal' | 'termination' | 'dependents';
+export interface EducationEntry {
+  degree: string;
+  university: string;
+  faculty: string;
+  major: string;
+  gpa: string;
+  graduatedDate: string;   // ISO yyyy-MM-dd
+  isPrimary: boolean;      // exactly one primary across the collection
+}
+
+export interface LanguageSkillEntry {
+  language: string;
+  speaking: string;
+  reading: string;
+  writing: string;
+  listening: string;
+  certificate: string;
+}
+
+export interface WorkPermitEntry {
+  documentType: string;
+  country: string;
+  documentNumber: string;
+  issueDate: string;                 // ISO yyyy-MM-dd
+  expiryDate: string;                // ISO yyyy-MM-dd
+  attachmentId: string | null;       // ref into attachments[]
+}
+
+export interface CertificationEntry {
+  type: string;
+  name: string;
+  institution: string;
+  effectiveDate: string;             // ISO yyyy-MM-dd
+  expirationDate: string;            // ISO yyyy-MM-dd
+  number: string;
+  attachmentId: string | null;       // ref into attachments[]
+}
+
+// ── sectionKey discriminator ───────────────────────────────────────────────────
+// STA-244: the 4 new keys are SINGULAR (registry keys); their store arrays are
+// PLURAL. No third vocabulary — these SectionKey values double as registry keys.
+
+export type SectionKey =
+  | 'emergencyContact'
+  | 'address'
+  | 'contact'
+  | 'bank'
+  | 'personal'
+  | 'termination'
+  | 'dependents'
+  | 'formalEducation'
+  | 'languageSkill'
+  | 'workPermit'
+  | 'certification';
 
 // ── ProfileDraft ───────────────────────────────────────────────────────────────
 
@@ -55,6 +111,12 @@ interface ProfileDraft {
   bank: BankDetails;
   // v4 additions
   dependents?: HumiDependent[];
+  // STA-244 repeatable (N) groups — plural store fields; singular registry keys.
+  // Optional so a persisted v6 `saved` that predates them stays []-safe on read.
+  formalEducation?: EducationEntry[];
+  languageSkills?: LanguageSkillEntry[];
+  workPermits?: WorkPermitEntry[];
+  certifications?: CertificationEntry[];
 }
 
 const DRAFT_DEFAULTS: ProfileDraft = {
@@ -78,6 +140,52 @@ const DRAFT_DEFAULTS: ProfileDraft = {
   emailsArr: [{ value: 'jongrak.tanaka@proton.me', primary: true }],
   bank: { bankCode: '', accountNo: '', holderName: '', bookAttachmentId: null },
   dependents: HUMI_DEPENDENTS,
+  // STA-244 seeds — realistic demo rows so a fresh store opens with data to edit.
+  formalEducation: [
+    {
+      degree: 'ปริญญาตรี',
+      university: 'จุฬาลงกรณ์มหาวิทยาลัย',
+      faculty: 'พาณิชยศาสตร์และการบัญชี',
+      major: 'การบัญชี',
+      gpa: '3.45',
+      graduatedDate: '2012-03-31',
+      isPrimary: true,
+    },
+    {
+      degree: 'ปริญญาโท',
+      university: 'สถาบันบัณฑิตพัฒนบริหารศาสตร์',
+      faculty: 'บริหารธุรกิจ',
+      major: 'การเงิน',
+      gpa: '3.72',
+      graduatedDate: '2016-05-20',
+      isPrimary: false,
+    },
+  ],
+  languageSkills: [
+    { language: 'ไทย', speaking: 'ดีมาก', reading: 'ดีมาก', writing: 'ดีมาก', listening: 'ดีมาก', certificate: '' },
+    { language: 'อังกฤษ', speaking: 'ดี', reading: 'ดีมาก', writing: 'ดี', listening: 'ดี', certificate: 'TOEIC 820' },
+  ],
+  workPermits: [
+    {
+      documentType: 'Work Permit',
+      country: 'ไทย',
+      documentNumber: 'WP-2566-004821',
+      issueDate: '2023-01-10',
+      expiryDate: '2026-01-09',
+      attachmentId: null,
+    },
+  ],
+  certifications: [
+    {
+      type: 'วิชาชีพ',
+      name: 'ผู้สอบบัญชีรับอนุญาต (CPA)',
+      institution: 'สภาวิชาชีพบัญชี',
+      effectiveDate: '2017-06-01',
+      expirationDate: '',
+      number: 'CPA-10482',
+      attachmentId: null,
+    },
+  ],
 };
 
 // ════════════════════════════════════════════════════════════
