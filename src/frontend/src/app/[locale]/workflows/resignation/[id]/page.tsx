@@ -12,6 +12,7 @@ import {
   FileText,
   Paperclip,
   Plus,
+  RotateCcw,
   Users,
 } from 'lucide-react';
 import { Modal } from '@/components/humi';
@@ -136,12 +137,17 @@ export default function ResignationDetailPage({ params }: PageProps) {
     s.requests.find((r) => r.id === id),
   ) as TerminationRequest | undefined;
   const approveByManager = useTerminationApprovals((s) => s.approveByManager);
+  const rejectRequest = useTerminationApprovals((s) => s.reject);
 
-  const [comment, setComment] = useState('');
   // Attachment preview (mockup). STA-247 — attachments are now AttachedFile[]
   // (base64 dataUrl when captured via the ESS AttachmentDropzone); real files
   // download their own dataUrl, seeded demo files fall back to a sample view.
   const [previewFile, setPreviewFile] = useState<AttachedFile | null>(null);
+
+  // Send-back (return to employee) — mirrors the RotateCcw "Send back" action
+  // used elsewhere in quick-approve (ActionPanel), backed by the store's reject().
+  const [sendBackOpen, setSendBackOpen] = useState(false);
+  const [sendBackReason, setSendBackReason] = useState('');
 
   const submittedDate = request ? request.submittedAt : '';
   const submitWaitDays = useMemo(
@@ -196,8 +202,15 @@ export default function ResignationDetailPage({ params }: PageProps) {
 
   function handleApprove() {
     if (!request || !isPending) return;
-    approveByManager(request.id, { role: 'manager', name: APPROVER_NAME }, comment || undefined);
+    approveByManager(request.id, { role: 'manager', name: APPROVER_NAME });
     router.push(`/${locale}/quick-approve?decided=resignation-approved`);
+  }
+
+  function handleSendBack() {
+    if (!request || !isPending || !sendBackReason.trim()) return;
+    rejectRequest(request.id, { role: 'manager', name: APPROVER_NAME }, sendBackReason.trim());
+    setSendBackOpen(false);
+    router.push(`/${locale}/quick-approve?decided=resignation-sent-back`);
   }
 
   return (
@@ -326,60 +339,6 @@ export default function ResignationDetailPage({ params }: PageProps) {
             </div>
           ) : null}
 
-          {/* Decision panel */}
-          <div className="humi-card">
-            <h3 className="font-display text-base font-semibold tracking-tight text-ink">
-              {isTh ? 'การตัดสินใจของคุณ' : 'Your decision'}
-            </h3>
-            <p className="mt-1 mb-3.5 text-sm text-ink-muted">
-              {isTh
-                ? 'อนุมัติคำขอลาออกนี้แล้วระบบจะส่งกลับไปที่คิวอนุมัติของคุณ'
-                : 'Approve this resignation request and send back to your approval queue.'}
-            </p>
-
-            <div className="rounded-[var(--radius-md)] border border-accent bg-accent-soft p-4">
-              <div className="flex items-start gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent text-white">
-                  <Check className="h-4 w-4" />
-                </span>
-                <div>
-                  <div className="font-display text-base font-semibold text-ink">
-                    {isTh ? 'อนุมัติและส่งกลับ' : 'Approve and send back'}
-                  </div>
-                  <div className="mt-1 text-xs leading-snug text-ink-muted">
-                    {isTh
-                      ? 'ส่งต่อให้ HR Admin เพื่อเริ่มกระบวนการ offboarding แล้วกลับไปคิวอนุมัติ'
-                      : 'Forward to HR Admin to start offboarding, then return to approvals.'}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Comment */}
-            <div className="mt-4">
-              <label className="mb-1.5 block text-xs font-semibold text-ink-soft">
-                {isTh ? 'ข้อความถึงพนักงาน (ไม่บังคับ)' : 'Message to employee (optional)'}
-              </label>
-              <textarea
-                rows={3}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                disabled={!isPending}
-                placeholder={
-                  isTh
-                    ? 'เช่น ขอบคุณสำหรับสิ่งที่ทำมา · ขอให้โชคดี'
-                    : 'e.g. Thank you for everything · all the best'
-                }
-                className="w-full resize-y rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent-soft disabled:opacity-60"
-              />
-              <div className="mt-1.5 flex items-center gap-1 text-xs text-ink-muted">
-                <AlertTriangle className="h-3 w-3" />
-                {isTh
-                  ? 'ข้อความจะถูกส่งถึงพนักงานพร้อมแจ้งผลการอนุมัติ'
-                  : 'The message is sent to the employee with the decision.'}
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* RIGHT — process timeline + replacement plan */}
@@ -465,6 +424,15 @@ export default function ResignationDetailPage({ params }: PageProps) {
         <div className="flex gap-2.5">
           <button
             type="button"
+            onClick={() => setSendBackOpen(true)}
+            disabled={!isPending}
+            className="humi-button humi-button--ghost disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            {isTh ? 'ส่งกลับ' : 'Send back'}
+          </button>
+          <button
+            type="button"
             onClick={handleApprove}
             disabled={!isPending}
             className="humi-button humi-button--primary disabled:cursor-not-allowed disabled:opacity-50"
@@ -474,6 +442,55 @@ export default function ResignationDetailPage({ params }: PageProps) {
           </button>
         </div>
       </div>
+
+      {/* Send-back reason modal */}
+      <Modal
+        open={sendBackOpen}
+        onClose={() => setSendBackOpen(false)}
+        title={isTh ? 'ส่งกลับคำขอลาออก' : 'Send back resignation request'}
+        widthClass="max-w-md"
+      >
+        <div className="flex flex-col gap-3.5">
+          <p className="text-sm text-ink-muted">
+            {isTh
+              ? 'ระบุเหตุผลที่ส่งกลับคำขอนี้ พนักงานจะเห็นเหตุผลดังกล่าว'
+              : 'Tell the employee why this request is being sent back.'}
+          </p>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-ink-soft">
+              {isTh ? 'เหตุผลในการส่งกลับ' : 'Reason for sending back'}
+              <span aria-hidden className="ml-0.5 text-danger">*</span>
+            </label>
+            <textarea
+              rows={3}
+              value={sendBackReason}
+              onChange={(e) => setSendBackReason(e.target.value)}
+              placeholder={
+                isTh ? 'เช่น ต้องการรายละเอียดเพิ่มเติม' : 'e.g. Need more details'
+              }
+              className="w-full resize-y rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent-soft"
+            />
+          </div>
+          <div className="flex justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={() => setSendBackOpen(false)}
+              className="humi-button humi-button--ghost"
+            >
+              {isTh ? 'ยกเลิก' : 'Cancel'}
+            </button>
+            <button
+              type="button"
+              onClick={handleSendBack}
+              disabled={!sendBackReason.trim()}
+              className="humi-button humi-button--danger disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              {isTh ? 'ยืนยันส่งกลับ' : 'Confirm send back'}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Attachment preview (mockup) — renders a sample document view for the
           selected file. No real file store this phase; the body is derived from
