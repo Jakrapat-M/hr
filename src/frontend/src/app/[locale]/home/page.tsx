@@ -46,7 +46,6 @@ import type { QuickActionSize } from '@/lib/admin/types/adminSelfService';
 import {
   HUMI_PENDING_REQUESTS,
   HUMI_EMPLOYEES,
-  HUMI_TODAY_PRESENCE,
   HUMI_PENDING_DOCS,
   HUMI_ANNOUNCEMENTS,
   HUMI_WEEK_RECOGNITION,
@@ -131,9 +130,6 @@ export default function HumiHomePage() {
 
   const top2 = HUMI_PENDING_REQUESTS.slice(0, 2);
   const feed = HUMI_ANNOUNCEMENTS.slice(0, 2);
-  const ringPct = Math.round(
-    (HUMI_TODAY_PRESENCE.workingCount / HUMI_TODAY_PRESENCE.totalCount) * 100,
-  );
 
   return (
     <div className="pb-8">
@@ -155,140 +151,49 @@ export default function HumiHomePage() {
         </div>
       )}
 
-      {/* Row 1 — hero greeting + today presence */}
-      <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
-        {/* Hero card */}
+      {/* Row 1 — hero greeting (today-presence card moved to /time, STA-248) */}
+      <div
+        className="humi-card humi-grain"
+        style={{ overflow: 'hidden', paddingRight: 'clamp(0px, 9.375vw, 150px)' }}
+      >
         <div
-          className="humi-card humi-grain"
-          style={{ overflow: 'hidden', paddingRight: 'clamp(0px, 9.375vw, 150px)' }}
-        >
-          <div
-            className="humi-blob humi-blob--teal hidden lg:block"
-            style={{ width: 120, height: 150, right: -30, top: -30, opacity: 0.85 }}
-            aria-hidden
-          />
-          <div
-            className="humi-blob humi-blob--coral hidden lg:block"
-            style={{ width: 80, height: 100, right: 60, bottom: -20, opacity: 0.7 }}
-            aria-hidden
-          />
-          <div
-            className="humi-blob humi-blob--butter hidden lg:block"
-            style={{ width: 44, height: 56, right: 110, top: 80, opacity: 0.9 }}
-            aria-hidden
-          />
-          <div className="humi-eyebrow" style={{ marginBottom: 10 }}>
-            {t('dateEyebrow')}
-          </div>
-          <h1 className="humi-hero-title" style={{ maxWidth: 460 }}>
-            {greeting}{username ? ` คุณ${username.split(' ')[0]}` : ''}
-            <br />
-            <span className="humi-hero-title-soft">{t('greetingSub')}</span>
-          </h1>
-          <div className="humi-row" style={{ marginTop: 22, gap: 10, flexWrap: 'wrap' }}>
-            <Link
-              href="/th/timeoff"
-              className="humi-button humi-button--primary"
-            >
-              <Check size={16} />
-              {t('ctaApprove')}
-            </Link>
-            <Link
-              href="/th/announcements"
-              className="humi-button humi-button--ghost"
-            >
-              <Megaphone size={16} />
-              {t('ctaAnnouncements')}
-            </Link>
-          </div>
+          className="humi-blob humi-blob--teal hidden lg:block"
+          style={{ width: 120, height: 150, right: -30, top: -30, opacity: 0.85 }}
+          aria-hidden
+        />
+        <div
+          className="humi-blob humi-blob--coral hidden lg:block"
+          style={{ width: 80, height: 100, right: 60, bottom: -20, opacity: 0.7 }}
+          aria-hidden
+        />
+        <div
+          className="humi-blob humi-blob--butter hidden lg:block"
+          style={{ width: 44, height: 56, right: 110, top: 80, opacity: 0.9 }}
+          aria-hidden
+        />
+        <div className="humi-eyebrow" style={{ marginBottom: 10 }}>
+          {t('dateEyebrow')}
         </div>
-
-        {/* Today presence */}
-        <div className="humi-card">
-          <div className="humi-row" style={{ alignItems: 'flex-start' }}>
-            <div>
-              <div className="humi-eyebrow">{t('todayEyebrow')}</div>
-              <h3 className="mt-1.5 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
-                {t('todayTitle')}
-              </h3>
-            </div>
-            <span className="humi-tag humi-tag--accent" style={{ marginLeft: 'auto' }}>
-              {t('tagLive')}
-            </span>
-          </div>
-          <div className="humi-row" style={{ marginTop: 18, gap: 20 }}>
-            <div
-              className="humi-ring"
-              style={{ ['--p' as string]: ringPct } as React.CSSProperties}
-              role="img"
-              aria-label={`${HUMI_TODAY_PRESENCE.workingCount} / ${HUMI_TODAY_PRESENCE.totalCount} ${t('ringWorkingUnit')}`}
-            >
-              <div style={{ position: 'relative', textAlign: 'center', zIndex: 1 }}>
-                <div className="humi-ring-val">
-                  {HUMI_TODAY_PRESENCE.workingCount.toLocaleString()}
-                </div>
-                <div
-                  style={{
-                    fontSize: 10,
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-ink-muted)',
-                  }}
-                >
-                  {t('ringWorkingUnit')}
-                </div>
-              </div>
-            </div>
-            <div className="humi-col" style={{ gap: 10, flex: 1 }}>
-              <LegendRow
-                dotColor="var(--color-accent)"
-                label={t('legendPresent')}
-                value={HUMI_TODAY_PRESENCE.present}
-              />
-              <LegendRow
-                dotColor="var(--color-warning)"
-                label={t('legendAbsent')}
-                value={HUMI_TODAY_PRESENCE.absent}
-              />
-              <LegendRow
-                dotColor="var(--color-hairline)"
-                label={t('legendOffShift')}
-                value={HUMI_TODAY_PRESENCE.offShift}
-              />
-            </div>
-          </div>
-          <hr className="humi-divider" />
-          <div className="humi-row" style={{ gap: 0 }}>
-            {HUMI_TODAY_PRESENCE.teamInitials.map((initials, idx) => (
-              <span
-                key={initials}
-                className={cn(
-                  AVATAR_TONE_MAP[
-                    (['teal', 'sage', 'butter', 'ink', 'teal'] as const)[idx]
-                  ],
-                )}
-                style={{
-                  marginLeft: idx === 0 ? 0 : -8,
-                  border: '2px solid var(--color-surface)',
-                  width: 30,
-                  height: 30,
-                  fontSize: 11,
-                }}
-                aria-hidden
-              >
-                {initials}
-              </span>
-            ))}
-            <span
-              style={{
-                fontSize: 13,
-                color: 'var(--color-ink-muted)',
-                marginLeft: 8,
-              }}
-            >
-              {HUMI_TODAY_PRESENCE.moreLabel}
-            </span>
-          </div>
+        <h1 className="humi-hero-title" style={{ maxWidth: 460 }}>
+          {greeting}{username ? ` คุณ${username.split(' ')[0]}` : ''}
+          <br />
+          <span className="humi-hero-title-soft">{t('greetingSub')}</span>
+        </h1>
+        <div className="humi-row" style={{ marginTop: 22, gap: 10, flexWrap: 'wrap' }}>
+          <Link
+            href="/th/timeoff"
+            className="humi-button humi-button--primary"
+          >
+            <Check size={16} />
+            {t('ctaApprove')}
+          </Link>
+          <Link
+            href="/th/announcements"
+            className="humi-button humi-button--ghost"
+          >
+            <Megaphone size={16} />
+            {t('ctaAnnouncements')}
+          </Link>
         </div>
       </div>
 
@@ -539,34 +444,6 @@ export default function HumiHomePage() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function LegendRow({
-  dotColor,
-  label,
-  value,
-}: {
-  dotColor: string;
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="humi-row" style={{ justifyContent: 'space-between' }}>
-      <div className="humi-row">
-        <span
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: 999,
-            background: dotColor,
-          }}
-          aria-hidden
-        />
-        <span style={{ color: 'var(--color-ink-soft)', fontSize: 13 }}>{label}</span>
-      </div>
-      <b style={{ color: 'var(--color-ink)', fontSize: 14 }}>{value.toLocaleString()}</b>
     </div>
   );
 }
