@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { Clock } from 'lucide-react';
 import { Card } from '@/components/humi';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/date';
 import { useAuthStore } from '@/stores/auth-store';
 import { resolveCurrentEmpId } from '@/lib/scope-filter';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
@@ -48,39 +49,86 @@ export default function TimesheetPage() {
 
   const messages = useMemo<TimesheetMessage[]>(() => {
     const list: TimesheetMessage[] = [];
+    const src = isTh ? 'ระบบ' : 'System';
+    const fmt = (iso: string) => formatDate(iso, 'medium', locale);
+
     if (lateSummary.lateDays > 0) {
+      const iso = '2026-06-02';
       list.push({
-        level: 'warn',
+        level: 'warning',
         badgeTh: 'แจ้งเตือนมาสาย', badgeEn: 'Late Warning',
         titleTh: `บันทึกมาสาย ${lateSummary.lateDays} ครั้งในรอบนี้`,
         titleEn: `${lateSummary.lateDays} late arrival(s) this period`,
         descTh: `รวมสาย ${lateSummary.totalLateMin} นาที — หากสายเกินเกณฑ์จะส่งผลต่อ Allowance`,
         descEn: `${lateSummary.totalLateMin} min late in total — exceeding the threshold affects your allowance.`,
-        date: isTh ? 'ระบบ' : 'System',
+        date: `${src} · ${fmt(iso)}`,
+        dateRaw: iso,
       });
     }
     if (warnCount > 0) {
+      const iso = '2026-05-28';
       list.push({
-        level: 'warn',
+        level: 'warning',
         badgeTh: 'นอกรัศมี GPS', badgeEn: 'GPS out of radius',
         titleTh: `พบการลงเวลานอกรัศมี ${warnCount} ครั้ง`,
         titleEn: `${warnCount} punch(es) outside the geofence`,
         descTh: 'ตรวจสอบตำแหน่งการลงเวลาในแท็บ Clock Log',
         descEn: 'Review the punch locations in the Clock Log tab.',
-        date: isTh ? 'ระบบ' : 'System',
+        date: `${src} · ${fmt(iso)}`,
+        dateRaw: iso,
+      });
+    }
+    {
+      const iso = '2026-06-05';
+      list.push({
+        level: 'error',
+        badgeTh: 'ผิดพลาด', badgeEn: 'Error',
+        titleTh: 'ตอกบัตรออกไม่สำเร็จ',
+        titleEn: 'Clock-out punch failed',
+        descTh: `ระบบไม่สามารถบันทึกเวลาออกงานเมื่อวันที่ ${fmt(iso)} — กรุณาแจ้งหัวหน้างานเพื่อแก้ไขเวลาย้อนหลัง`,
+        descEn: `The system could not record your clock-out on ${fmt(iso)} — ask your manager to correct the time.`,
+        date: `${src} · ${fmt(iso)}`,
+        dateRaw: iso,
+      });
+    }
+    {
+      const iso = '2026-06-01';
+      list.push({
+        level: 'approve',
+        badgeTh: 'อนุมัติแล้ว', badgeEn: 'Approved',
+        titleTh: 'คำขอ OT ได้รับการอนุมัติแล้ว',
+        titleEn: 'Your OT request has been approved',
+        descTh: `OT วันที่ ${fmt(iso)} เวลา 19:00–21:00 ได้รับการอนุมัติจากหัวหน้างานแล้ว`,
+        descEn: `OT on ${fmt(iso)}, 19:00–21:00 has been approved by your manager.`,
+        date: `${fmt(iso)} · 09:15`,
+        dateRaw: iso,
+      });
+    }
+    {
+      const iso = '2026-05-25';
+      list.push({
+        level: 'information',
+        badgeTh: 'ประกาศ', badgeEn: 'Announcement',
+        titleTh: 'ปรับปรุงตารางเวลาสำหรับรอบถัดไป',
+        titleEn: 'Next period schedule update',
+        descTh: 'ฝ่ายบุคคลได้อัปเดตตารางกะสำหรับรอบเดือนถัดไป กรุณาตรวจสอบแท็บ Schedule',
+        descEn: 'HR has updated the shift schedule for the next period. Please review the Schedule tab.',
+        date: `${src} · ${fmt(iso)}`,
+        dateRaw: iso,
       });
     }
     list.push({
-      level: 'ok',
+      level: 'information',
       badgeTh: 'พร้อมส่ง', badgeEn: 'Ready',
       titleTh: 'ข้อมูลรอบนี้พร้อมให้ผู้จัดการตรวจสอบ',
       titleEn: 'This period is ready for manager review.',
       descTh: 'ระบบรวบรวมเวลาเข้า-ออกและผลคำนวณของรอบนี้เรียบร้อยแล้ว',
       descEn: 'Attendance and computed results for this period have been compiled.',
-      date: isTh ? 'ระบบ' : 'System',
+      date: `${src} · ${fmt(period.end)}`,
+      dateRaw: period.end,
     });
     return list;
-  }, [lateSummary, warnCount, isTh]);
+  }, [lateSummary, warnCount, isTh, locale, period.end]);
 
   const [tab, setTab] = useState<TabKey>('schedule');
 
