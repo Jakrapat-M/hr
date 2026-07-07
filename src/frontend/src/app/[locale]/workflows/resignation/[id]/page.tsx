@@ -1,14 +1,5 @@
 'use client';
 
-// /workflows/resignation/[id] — Manager "อนุมัติการลาออก" (resignation approval).
-// Recreates the approved Offboard_Manager design (mod-offboard.jsx) in Next.js +
-// Humi tokens. Reads the TerminationRequest from termination-approvals, and on a
-// decision dispatches approveByManager / reject, then routes back to /quick-approve.
-//
-// Stage 08 directives (verbatim): always use the word "ลาออก" / resignation in
-// every user-facing string. No red — danger = pumpkin (--color-danger). Bilingual
-// TH/EN via the locale param. Phase: UI mockup, client-side only, no backend.
-
 import { use, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -19,11 +10,9 @@ import {
   Check,
   Download,
   FileText,
-  MessageCircle,
   Paperclip,
   Plus,
   Users,
-  X,
 } from 'lucide-react';
 import { Modal } from '@/components/humi';
 import {
@@ -33,16 +22,12 @@ import {
 } from '@/stores/termination-approvals';
 import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 import { formatDate } from '@/lib/date';
-import { useAuthStore } from '@/stores/auth-store';
-import type { Role } from '@/lib/rbac';
 
 const APPROVER_NAME = 'ผู้จัดการ / Manager';
 
 interface PageProps {
   params: Promise<{ id: string; locale: string }>;
 }
-
-type Decision = 'approve' | 'discuss' | null;
 
 // ── Avatar initials ────────────────────────────────────────────────────────────
 function initials(name: string): string {
@@ -94,47 +79,6 @@ function Metric({
       </div>
       {sub && <div className="mt-0.5 text-xs text-ink-muted">{sub}</div>}
     </div>
-  );
-}
-
-// ── Decision choice card ─────────────────────────────────────────────────────────
-function DecisionCard({
-  active,
-  onClick,
-  title,
-  sub,
-  tone,
-  icon: Icon,
-}: {
-  active: boolean;
-  onClick: () => void;
-  title: string;
-  sub: string;
-  tone: 'warning' | 'accent';
-  icon: typeof Check;
-}) {
-  const activeBorder = tone === 'warning' ? 'border-warning' : 'border-accent';
-  const activeBg = tone === 'warning' ? 'bg-warning-soft' : 'bg-accent-soft';
-  const iconActiveBg = tone === 'warning' ? 'bg-warning text-white' : 'bg-accent text-white';
-  const iconIdle = tone === 'warning' ? 'text-warning' : 'text-accent';
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex flex-col items-start gap-1.5 rounded-[var(--radius-md)] border-[1.5px] p-4 text-left transition ${
-        active ? `${activeBorder} ${activeBg}` : 'border-hairline bg-surface'
-      }`}
-    >
-      <span
-        className={`flex h-9 w-9 items-center justify-center rounded-[10px] ${
-          active ? iconActiveBg : `bg-canvas-soft ${iconIdle}`
-        }`}
-      >
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="mt-1 font-display text-base font-semibold text-ink">{title}</span>
-      <span className="text-xs leading-snug text-ink-muted">{sub}</span>
-    </button>
   );
 }
 
@@ -192,10 +136,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
     s.requests.find((r) => r.id === id),
   ) as TerminationRequest | undefined;
   const approveByManager = useTerminationApprovals((s) => s.approveByManager);
-  const reject = useTerminationApprovals((s) => s.reject);
-  const roles = useAuthStore((s) => s.roles) as Role[];
 
-  const [decision, setDecision] = useState<Decision>(null);
   const [comment, setComment] = useState('');
   // Attachment preview (mockup). STA-247 — attachments are now AttachedFile[]
   // (base64 dataUrl when captured via the ESS AttachmentDropzone); real files
@@ -251,26 +192,12 @@ export default function ResignationDetailPage({ params }: PageProps) {
   // Footer left label mirrors the design's decision-state copy.
   const footerLeft = !isPending
     ? statusLabel
-    : decision === 'approve'
-      ? isTh ? 'พร้อมส่งต่อ HR Admin' : 'Ready to forward to HR Admin'
-      : decision === 'discuss'
-        ? isTh ? 'พร้อมนัด 1-on-1' : 'Ready to schedule 1-on-1'
-        : isTh ? 'กรุณาเลือกการตัดสินใจ' : 'Please choose a decision';
+    : isTh ? 'พร้อมอนุมัติและกลับไปคิวอนุมัติ' : 'Ready to approve and send back';
 
   function handleApprove() {
     if (!request || !isPending) return;
     approveByManager(request.id, { role: 'manager', name: APPROVER_NAME }, comment || undefined);
     router.push(`/${locale}/quick-approve?decided=resignation-approved`);
-  }
-
-  function handleReject() {
-    if (!request || !isPending) return;
-    reject(
-      request.id,
-      { role: roles[0] ?? 'manager', name: APPROVER_NAME },
-      comment || (isTh ? 'ไม่อนุมัติคำขอลาออก' : 'Resignation not approved'),
-    );
-    router.push(`/${locale}/quick-approve?decided=resignation-rejected`);
   }
 
   return (
@@ -406,35 +333,26 @@ export default function ResignationDetailPage({ params }: PageProps) {
             </h3>
             <p className="mt-1 mb-3.5 text-sm text-ink-muted">
               {isTh
-                ? 'คุณสามารถอนุมัติได้เลย หรือขอคุยกับพนักงานก่อน (จะถูกบันทึกเป็น 1-on-1 อัตโนมัติ)'
-                : 'You can approve directly, or ask to talk first (recorded as a 1-on-1 automatically).'}
+                ? 'อนุมัติคำขอลาออกนี้แล้วระบบจะส่งกลับไปที่คิวอนุมัติของคุณ'
+                : 'Approve this resignation request and send back to your approval queue.'}
             </p>
 
-            <div className="grid grid-cols-2 gap-3">
-              <DecisionCard
-                active={decision === 'discuss'}
-                onClick={() => isPending && setDecision('discuss')}
-                title={isTh ? 'ขอคุยก่อน' : 'Talk first'}
-                sub={
-                  isTh
-                    ? 'นัด 1-on-1 ภายใน 2 วัน · เก็บเป็นคำขออยู่ในระบบ'
-                    : 'Schedule a 1-on-1 within 2 days · kept as a request'
-                }
-                tone="warning"
-                icon={MessageCircle}
-              />
-              <DecisionCard
-                active={decision === 'approve'}
-                onClick={() => isPending && setDecision('approve')}
-                title={isTh ? 'อนุมัติ' : 'Approve'}
-                sub={
-                  isTh
-                    ? 'ส่งต่อให้ HR Admin · เริ่มกระบวนการ offboarding'
-                    : 'Forward to HR Admin · start offboarding'
-                }
-                tone="accent"
-                icon={Check}
-              />
+            <div className="rounded-[var(--radius-md)] border border-accent bg-accent-soft p-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent text-white">
+                  <Check className="h-4 w-4" />
+                </span>
+                <div>
+                  <div className="font-display text-base font-semibold text-ink">
+                    {isTh ? 'อนุมัติและส่งกลับ' : 'Approve and send back'}
+                  </div>
+                  <div className="mt-1 text-xs leading-snug text-ink-muted">
+                    {isTh
+                      ? 'ส่งต่อให้ HR Admin เพื่อเริ่มกระบวนการ offboarding แล้วกลับไปคิวอนุมัติ'
+                      : 'Forward to HR Admin to start offboarding, then return to approvals.'}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Comment */}
@@ -540,33 +458,19 @@ export default function ResignationDetailPage({ params }: PageProps) {
       <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-lg)] border border-hairline bg-surface px-6 py-4 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2.5">
           <Check
-            className={`h-4 w-4 ${decision || !isPending ? 'text-success' : 'text-ink-faint'}`}
+            className={`h-4 w-4 ${isPending ? 'text-success' : 'text-ink-faint'}`}
           />
           <span className="text-sm text-ink-soft">{footerLeft}</span>
         </div>
         <div className="flex gap-2.5">
           <button
             type="button"
-            onClick={handleReject}
-            disabled={!isPending}
-            className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-hairline bg-surface px-4 py-2 text-sm font-semibold text-danger transition hover:bg-danger-soft disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <X className="h-3.5 w-3.5" /> {isTh ? 'ปฏิเสธ' : 'Reject'}
-          </button>
-          <button
-            type="button"
             onClick={handleApprove}
-            disabled={!isPending || !decision}
+            disabled={!isPending}
             className="humi-button humi-button--primary disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {decision === 'discuss' ? (
-              <MessageCircle className="h-3.5 w-3.5" />
-            ) : (
-              <ArrowRight className="h-3.5 w-3.5" />
-            )}
-            {decision === 'discuss'
-              ? isTh ? 'นัดคุยก่อน' : 'Schedule a talk'
-              : isTh ? 'อนุมัติและส่งต่อ HR Admin' : 'Approve & forward to HR Admin'}
+            <ArrowRight className="h-3.5 w-3.5" />
+            {isTh ? 'อนุมัติและส่งกลับ' : 'Approve & send back'}
           </button>
         </div>
       </div>
