@@ -24,6 +24,7 @@ import {
   type MyRequestType,
 } from '@/lib/time/my-requests';
 import { currentPeriod, previousPeriod, demoToday } from '@/lib/time/period';
+import { fmtHours } from '@/lib/time/leave-hours';
 import { formatDate } from '@/lib/date';
 import { useTranslations } from 'next-intl';
 
@@ -131,6 +132,18 @@ export default function MyRequestsPage() {
       header: t('col.end'),
       className: 'w-32',
       cell: (row) => <span className="text-sm text-ink">{fmt(row.endDate)}</span>,
+    },
+    {
+      // STA-258 — requested LEAVE hours (holiday/weekly-off days don't count);
+      // em-dash for non-leave rows.
+      id: 'requestedHours',
+      header: t('col.requestedHours'),
+      className: 'w-32',
+      cell: (row) => (
+        <span className="text-sm text-ink tabular-nums">
+          {row.requestedHours != null ? `${fmtHours(row.requestedHours)} ${t('hoursUnit')}` : '—'}
+        </span>
+      ),
     },
     {
       id: 'detail',

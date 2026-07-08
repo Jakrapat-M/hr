@@ -35,6 +35,7 @@ import { appliedChainFor } from '@/lib/time/approval-rules';
 import type { RequestType } from '@/lib/quick-approve-api';
 import type { ApproverStage } from '@/data/benefits/plan-registry';
 import { demoToday } from '@/lib/time/period';
+import { fmtHours } from '@/lib/time/leave-hours';
 import { formatDate } from '@/lib/date';
 
 interface PageProps {
@@ -203,6 +204,15 @@ export default function MyRequestDetailPage({ params }: PageProps) {
             <span className="w-44 shrink-0 text-xs text-ink-muted">{t('detail.dates')}</span>
             <span className="text-sm text-ink">{dateRange}</span>
           </div>
+          {/* STA-258 — requested LEAVE hours (holiday/weekly-off days don't count). */}
+          {row.requestedHours != null && (
+            <div className="flex gap-2 py-1.5" data-testid="detail-requested-hours">
+              <span className="w-44 shrink-0 text-xs text-ink-muted">{t('detail.requestedHours')}</span>
+              <span className="text-sm text-ink tabular-nums">
+                {fmtHours(row.requestedHours)} {t('hoursUnit')}
+              </span>
+            </div>
+          )}
           {source?.reason ? (
             <div className="flex gap-2 py-1.5">
               <span className="w-44 shrink-0 text-xs text-ink-muted">{t('detail.reason')}</span>

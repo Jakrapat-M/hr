@@ -5657,10 +5657,12 @@
         "submitted": "Submitted",
         "start": "Start",
         "end": "End",
+        "requestedHours": "Requested hours",
         "detail": "Detail",
         "status": "Status",
         "action": "Action"
       },
+      "hoursUnit": "hrs",
       "type": {
         "all": "All types",
         "leave": "Leave",
@@ -5709,6 +5711,7 @@
         "history": "History",
         "submitted": "Submitted",
         "dates": "Dates",
+        "requestedHours": "Requested hours",
         "notFound": "Request not found",
         "notFoundDesc": "We couldn't find this request, or it isn't one of yours to view."
       }
