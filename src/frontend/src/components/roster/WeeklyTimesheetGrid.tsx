@@ -22,7 +22,8 @@ import { classifyClock } from '@/lib/time/clock-state';
 import { otHoursByDateForWeek, type OtByDate } from '@/lib/time/ot-week';
 import { toIsoDate, type WeekWindow } from '@/lib/time/week';
 import { HUMI_TH_HOLIDAYS } from '@/lib/humi-mock-data';
-import type { OTRequest } from '@/stores/overtime-requests';
+import type { OTRequest, OtRateType } from '@/stores/overtime-requests';
+import type { BlockedWindow } from '@/lib/time/roster-ot';
 import { DayCell } from './DayCell';
 
 /** A timesheet row — id MUST be in the empId namespace the time seeds key on. */
@@ -82,6 +83,18 @@ export function cellKey(c: { employeeId: string; date: string }): string {
   return `${c.employeeId}__${c.date}`;
 }
 
+/** STA-260 — everything the +OverTime popup needs for one (employee, day). */
+export type OtEditContext = {
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  date: string;
+  /** Existing blocked windows that day (shift / other OT / leave). */
+  blocked: BlockedWindow[];
+  /** Present when editing an existing OT row (prefills the popup). */
+  existing?: { id: string; start: string; end: string; rateType?: OtRateType };
+};
+
 export type WeeklyTimesheetGridProps = {
   rows: ReadonlyArray<TimesheetRow>;
   week: WeekWindow;
@@ -106,6 +119,10 @@ export type WeeklyTimesheetGridProps = {
   onToggleDay?: (cells: ShiftCell[]) => void;
   /** STA-254 — toggle every shift cell in an employee row (select-all-row). */
   onToggleRow?: (cells: ShiftCell[]) => void;
+  /** STA-260 — open the +OverTime popup for a day cell. */
+  onAddOt?: (ctx: OtEditContext) => void;
+  /** STA-260 — open the popup prefilled from an existing OT card. */
+  onEditOt?: (ctx: OtEditContext) => void;
 };
 
 /** Build the editable ShiftCell for a (row, day), or null when not a shift day. */
@@ -163,6 +180,8 @@ export function WeeklyTimesheetGrid({
   onToggleCell,
   onToggleDay,
   onToggleRow,
+  onAddOt,
+  onEditOt,
 }: WeeklyTimesheetGridProps) {
   const locale = useLocale();
   const dayKeys = useMemo(() => week.days.map(toIsoDate), [week]);
@@ -244,6 +263,72 @@ export function WeeklyTimesheetGrid({
   const allSelected = (cells: ShiftCell[]) =>
     cells.length > 0 && cells.every((c) => selected.has(cellKey(c)));
   const someSelected = (cells: ShiftCell[]) => cells.some((c) => selected.has(cellKey(c)));
+
+  // STA-260 — an employee's non-terminal OT rows anchored on a given day
+  // (roster OT is same-day; a row is keyed on its startAt calendar date).
+  const otRowsFor = (empId: string, key: string) =>
+    otRequests.filter(
+      (r) =>
+        r.employeeId === empId &&
+        r.status !== 'rejected' &&
+        r.status !== 'cancelled' &&
+        (r.startAt ?? '').slice(0, 10) === key,
+    );
+
+  // Build the +OverTime popup context for one (employee, day): blocked windows =
+  // the scheduled shift + every other OT window + the leave block; `editing`
+  // (when set) is EXCLUDED from blocked so its own window doesn't self-collide.
+  const otContextFor = (
+    row: TimesheetRow,
+    key: string,
+    schedule: DaySchedule | undefined,
+    leave: LeaveDay | undefined,
+    editing?: OTRequest,
+  ): OtEditContext => {
+    const blocked: BlockedWindow[] = [];
+    if (schedule && !schedule.dayOff && schedule.scheduledIn && schedule.scheduledOut) {
+      blocked.push({
+        start: schedule.scheduledIn,
+        end: schedule.scheduledOut,
+        labelTh: 'กะทำงาน',
+        labelEn: 'shift',
+      });
+    }
+    if (leave) {
+      blocked.push({
+        start: leave.startTime,
+        end: leave.endTime,
+        labelTh: 'การลา',
+        labelEn: 'leave block',
+      });
+    }
+    for (const r of otRowsFor(row.id, key)) {
+      if (editing && r.id === editing.id) continue;
+      blocked.push({
+        start: (r.startAt ?? '').slice(11, 16),
+        end: (r.endAt ?? '').slice(11, 16),
+        labelTh: 'OT เดิม',
+        labelEn: 'existing OT',
+      });
+    }
+    return {
+      employeeId: row.id,
+      employeeName: row.name,
+      department: row.department,
+      date: key,
+      blocked,
+      ...(editing
+        ? {
+            existing: {
+              id: editing.id,
+              start: (editing.startAt ?? '').slice(11, 16),
+              end: (editing.endAt ?? '').slice(11, 16),
+              rateType: editing.rateType,
+            },
+          }
+        : {}),
+    };
+  };
 
   return (
     <div data-testid="weekly-timesheet-grid" className="overflow-x-auto">
@@ -339,6 +424,13 @@ export function WeeklyTimesheetGrid({
                 const schedule = mergedSchedule(row.id, key, data?.scheduleByDate.get(key));
                 const cell = shiftCellFor(row.id, row.name, key, schedule);
                 const isSelected = cell ? selected.has(cellKey(cell)) : false;
+                const leave = data?.leaveByDate.get(key);
+                // STA-260 — first non-terminal SINGLE-DAY OT row that day backs the
+                // editable chip. A multi-day OT (days[]) is excluded so editing via
+                // the roster chip can't flatten its span into one day.
+                const dayOt = onEditOt
+                  ? otRowsFor(row.id, key).find((r) => !r.days?.length)
+                  : undefined;
                 return (
                   <div
                     key={key}
@@ -349,7 +441,7 @@ export function WeeklyTimesheetGrid({
                       schedule={schedule}
                       attendance={data?.attendanceByDate.get(key)}
                       otHours={data?.otByDate[key]}
-                      leave={data?.leaveByDate.get(key)}
+                      leave={leave}
                       isHoliday={HOLIDAY_SET.has(key)}
                       cutoffISO={cutoffISO}
                       isTh={isTh}
@@ -360,6 +452,16 @@ export function WeeklyTimesheetGrid({
                       }
                       onEditShift={
                         !batchMode && cell && onEditShift ? () => onEditShift(cell) : undefined
+                      }
+                      onAddOt={
+                        onAddOt
+                          ? () => onAddOt(otContextFor(row, key, schedule, leave))
+                          : undefined
+                      }
+                      onEditOt={
+                        dayOt
+                          ? () => onEditOt?.(otContextFor(row, key, schedule, leave, dayOt))
+                          : undefined
                       }
                     />
                   </div>

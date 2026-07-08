@@ -42,7 +42,12 @@ import {
   type ShiftEditContext,
   type ShiftCell,
   type ShiftOverride,
+  type OtEditContext,
 } from '@/components/roster/WeeklyTimesheetGrid';
+import {
+  OtScheduleModal,
+  type OtSchedulePayload,
+} from '@/components/roster/OtScheduleModal';
 import { TimesheetLegend } from '@/components/roster/TimesheetLegend';
 import {
   ShiftTimeEditModal,
@@ -103,6 +108,9 @@ export default function RosterPage() {
   const email = useAuthStore((s) => s.email);
   const currentEmpId = email ? EMP_BY_LOGIN[email] ?? null : null;
   const otRequests = useOvertimeRequests((s) => s.requests);
+  const addOtRequest = useOvertimeRequests((s) => s.addRequest);
+  const updateOtRequest = useOvertimeRequests((s) => s.updateRequest);
+  const username = useAuthStore((s) => s.username);
 
   const scope = useMemo(
     () => pickRosterScope(ALL_PORTED_EMPLOYEES, roles, currentEmpId, ROSTER_ROWS.length),
@@ -242,6 +250,39 @@ export default function RosterPage() {
     setBatchModalOpen(false);
   };
 
+  // STA-260 — per-day OT scheduling: the +OverTime / OT-card popup context.
+  const [otCtx, setOtCtx] = useState<OtEditContext | null>(null);
+
+  const handleOtSave = (payload: OtSchedulePayload) => {
+    if (!otCtx) return;
+    const actor = { id: currentEmpId ?? undefined, name: username ?? 'Manager' };
+    const startAt = `${otCtx.date}T${payload.start}:00`;
+    const endAt = `${otCtx.date}T${payload.end}:00`;
+    if (otCtx.existing) {
+      updateOtRequest(
+        otCtx.existing.id,
+        { startAt, endAt, hours: payload.hours, rateType: payload.rateType },
+        actor,
+      );
+      flash(isTh ? 'อัปเดตโอทีแล้ว (ตัวอย่าง)' : 'Overtime updated (demo)');
+    } else {
+      addOtRequest({
+        employeeId: otCtx.employeeId,
+        employeeName: otCtx.employeeName,
+        department: otCtx.department,
+        otType: 'OT',
+        startAt,
+        endAt,
+        hours: payload.hours,
+        rateType: payload.rateType,
+        reason: isTh ? 'จัดตารางโอทีโดยหัวหน้างาน' : 'Scheduled by manager',
+        docs: [],
+      });
+      flash(isTh ? 'เพิ่มโอทีแล้ว (ตัวอย่าง)' : 'Overtime added (demo)');
+    }
+    setOtCtx(null);
+  };
+
   const handleSwapSubmit = () => {
     setSwapOpen(false);
     flash(isTh ? 'ส่งคำขอสลับกะแล้ว (ตัวอย่าง)' : 'Swap requested (demo)');
@@ -356,6 +397,8 @@ export default function RosterPage() {
             onToggleCell={toggleCell}
             onToggleDay={toggleMany}
             onToggleRow={toggleMany}
+            onAddOt={setOtCtx}
+            onEditOt={setOtCtx}
           />
           <TimesheetLegend isTh={isTh} />
         </Card>
@@ -407,6 +450,22 @@ export default function RosterPage() {
           isTh={isTh}
           onClose={() => setBatchModalOpen(false)}
           onSave={handleBatchSave}
+        />
+      )}
+
+      {/* STA-260 — per-day +OverTime / edit-OT popup (same modal aesthetic as
+          the shift-time editor; overlap-guarded, mandatory x1…x3 rate type). */}
+      {otCtx && (
+        <OtScheduleModal
+          key={`${otCtx.employeeId}-${otCtx.date}-${otCtx.existing?.id ?? 'new'}`}
+          open
+          isTh={isTh}
+          employeeName={otCtx.employeeName}
+          date={otCtx.date}
+          blocked={otCtx.blocked}
+          existing={otCtx.existing}
+          onClose={() => setOtCtx(null)}
+          onSave={handleOtSave}
         />
       )}
 
