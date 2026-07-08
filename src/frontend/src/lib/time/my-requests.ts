@@ -19,6 +19,7 @@ import {
 } from '@/stores/time-corrections';
 import { getLeaveType } from '@/lib/time/leave-types';
 import { isCancellableByCycle } from '@/lib/time/period';
+import { leaveHours } from '@/lib/time/leave-hours';
 
 export type MyRequestType = 'leave' | 'ot' | 'time_correction';
 export type MyRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
@@ -40,6 +41,11 @@ export interface MyRequestRow {
   statusLabel: { th: string; en: string };
   /** Cancellable iff not terminal AND the start date is in the cycle window. */
   cancellable: boolean;
+  /**
+   * STA-258 — requested LEAVE hours (working days × 8h; weekly-off/holiday days
+   * don't count; half-day = 4h). Null for OT / time-correction rows.
+   */
+  requestedHours: number | null;
   /** Back-reference to the source store record. */
   raw: { kind: MyRequestType; id: string };
 }
@@ -71,6 +77,10 @@ function leaveToRow(r: LeaveRequest, refDate?: Date): MyRequestRow {
       en: leaveStageLabel(r.status, r.awaitingNext, false),
     },
     cancellable: cancellableFor(status, r.startDate, refDate),
+    requestedHours: leaveHours(r.startDate, r.endDate || r.startDate, r.employeeId, {
+      halfDay: r.halfDay,
+      durationMinutes: r.durationMinutes,
+    }),
     raw: { kind: 'leave', id: r.id },
   };
 }
@@ -94,6 +104,7 @@ function otToRow(r: OTRequest, refDate?: Date): MyRequestRow {
     status,
     statusLabel: { th: label.th, en: label.en },
     cancellable: cancellableFor(status, startDate, refDate),
+    requestedHours: null,
     raw: { kind: 'ot', id: r.id },
   };
 }
@@ -117,6 +128,7 @@ function tcToRow(r: TimeCorrectionRequest, refDate?: Date): MyRequestRow {
     status,
     statusLabel: { th: label.th, en: label.en },
     cancellable: cancellableFor(status, r.date, refDate),
+    requestedHours: null,
     raw: { kind: 'time_correction', id: r.id },
   };
 }
