@@ -5,11 +5,12 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 // for the current employee + day, persisted to localStorage. Drives the
 // /time/clock widget's today-status + punch list.
 //
-// State machine (mockup, pure + testable): before clock-in → only Clock In;
-// after Clock In → only Clock Out; after Clock Out → Clock In again. Multiple
-// in/out pairs per day are allowed; never two Clock-Ins in a row, never a
-// Clock Out before a Clock In. A geofence result (simulated) may ride along on
-// a punch via the optional `geo` field.
+// State machine (mockup, pure + testable — STA-251 Draft 2): two separate
+// buttons. Clock Out is legal only while an unmatched Clock In exists (out
+// right after in is fine). Clock In is legal on an empty day, after an out,
+// or ≥ 2 h after the previous in (cooldown — re-clock-in for a forgotten out
+// / new shift). Multiple in/out pairs per day are allowed. A geofence result
+// (simulated) may ride along on a punch via the optional `geo` field.
 
 export type PunchType = 'in' | 'out';
 
@@ -74,18 +75,65 @@ export function nextPunchType(dayPunches: ClockPunch[]): PunchType {
   return lastPunchType(dayPunches) === 'in' ? 'out' : 'in';
 }
 
+/** STA-251 rule 2b: a Clock In locks the Clock In button for 2 hours. */
+export const CLOCK_IN_COOLDOWN_MS = 2 * 60 * 60 * 1000;
+
+/** ISO timestamp of the day's most recent `in` punch, or null. */
+function lastInAt(dayPunches: ClockPunch[]): string | null {
+  const ins = dayPunches
+    .filter((p) => p.type === 'in')
+    .sort((a, b) => a.at.localeCompare(b.at));
+  return ins.length ? ins[ins.length - 1].at : null;
+}
+
 /**
- * Whether recording `type` next is legal given the day's punches. Rejects two
- * Clock-Ins in a row and a Clock Out before any Clock In. Pure → testable.
+ * Whether recording `type` next is legal given the day's punches. A Clock Out
+ * needs an unmatched Clock In; a repeat Clock In is legal only once the 2-hour
+ * cooldown since the previous Clock In has elapsed. Pure → testable.
  */
 export function assertLegalPunch(
   dayPunches: ClockPunch[],
   type: PunchType,
+  nowMs: number = Date.now(),
 ): boolean {
   const last = lastPunchType(dayPunches);
-  if (type === 'in') return last === null || last === 'out';
+  if (type === 'in') {
+    if (last === null || last === 'out') return true;
+    // last === 'in' — re-clock-in allowed after the cooldown (rule 2b).
+    const at = lastInAt(dayPunches);
+    return at !== null && nowMs - new Date(at).getTime() >= CLOCK_IN_COOLDOWN_MS;
+  }
   // type === 'out'
   return last === 'in';
+}
+
+/** Per-button enable state + disable reason for the dual-button UI (STA-251). */
+export interface ClockButtonState {
+  canIn: boolean;
+  canOut: boolean;
+  /** Why Clock In is disabled ('cooldown') — null when enabled. */
+  inReason: 'cooldown' | null;
+  /** Why Clock Out is disabled ('needsIn') — null when enabled. */
+  outReason: 'needsIn' | null;
+}
+
+/**
+ * Derives the STA-251 state matrix from the day's punches at `nowMs`:
+ * empty day → in only; within 2 h of an in → out only; ≥ 2 h after an in
+ * (still not out) → both; after an out → in only.
+ */
+export function clockButtonState(
+  dayPunches: ClockPunch[],
+  nowMs: number = Date.now(),
+): ClockButtonState {
+  const canIn = assertLegalPunch(dayPunches, 'in', nowMs);
+  const canOut = assertLegalPunch(dayPunches, 'out', nowMs);
+  return {
+    canIn,
+    canOut,
+    inReason: canIn ? null : 'cooldown',
+    outReason: canOut ? null : 'needsIn',
+  };
 }
 
 interface ClockPunchesState {
