@@ -76,55 +76,72 @@ describe('TeamOverviewDashboard — KPI cards from seeds (default = current peri
     expect(within(screen.getByTestId('kpi-absences')).getByText('0')).toBeInTheDocument();
   });
 
-  it('renders the OT card with the X3 holiday bucket = 6h', () => {
+  it('renders the OT card compact; expanding it reveals the X3 holiday bucket = 6h', () => {
     renderDashboard(['EMP-0301']);
-    expect(within(screen.getByTestId('kpi-ot-hours')).getByText('6 h')).toBeInTheDocument();
+    const otCard = screen.getByTestId('kpi-ot-hours');
+    expect(within(otCard).getByText('6 h')).toBeInTheDocument();
+    // STA-255 compact-first: multiplier chips only appear once the card expands.
+    expect(screen.queryByTestId('ot-mult-x3')).not.toBeInTheDocument();
+    fireEvent.click(within(otCard).getByRole('button'));
     expect(within(screen.getByTestId('ot-mult-x3')).getByText('6h')).toBeInTheDocument();
   });
 
-  it('shows the holiday premium note when the period has public holidays', () => {
+  it('shows the holiday premium note inside the expanded period card', () => {
     renderDashboard(['EMP-0301']);
+    const periodCard = screen.getByTestId('kpi-current-period');
+    fireEvent.click(within(periodCard).getByRole('button'));
     expect(screen.getByText('Holiday premium ×3')).toBeInTheDocument();
   });
 });
 
-describe('TeamOverviewDashboard — period dropdown', () => {
-  it('offers 16 bounded pay-period options (−1yr … +3mo), current period default', () => {
-    renderDashboard(['EMP-0301']);
-    const select = screen.getByTestId('period-select') as HTMLSelectElement;
-    expect(select.options).toHaveLength(16);
-    // First option is exactly one year back; last is +3 months ahead.
-    expect(select.options[0].value).toBe('2025-05-21');
-    expect(select.options[15].value).toBe('2026-08-21');
-    // The default selected value is the current period start.
-    expect(select.value).toBe('2026-05-21');
+describe('TeamOverviewDashboard — period dropdown (STA-255 Safari-proof CustomSelect)', () => {
+  it('offers 16 bounded pay-period options (−1yr … +3mo), current period default, via a custom listbox (no native select)', () => {
+    const { container } = renderDashboard(['EMP-0301']);
+    // Safari fix: no native <select> anywhere — the dropdown is a div/button listbox.
+    expect(container.querySelector('select')).toBeNull();
+    const trigger = screen.getByRole('button', { name: 'Select period' });
+    expect(trigger.textContent).toContain('21 May–20 Jun 2026');
+    expect(trigger.textContent).toContain('Current');
+    fireEvent.click(trigger);
+    const opts = screen.getAllByRole('option');
+    expect(opts).toHaveLength(16);
+    expect(opts[0].textContent).toContain('21 May–20 Jun 2025'); // one year back
+    expect(opts[15].textContent).toContain('21 Aug–20 Sep 2026'); // +3 months ahead
   });
 
   it('re-aggregates when a different period is selected (previous period drops OT to 0)', () => {
     renderDashboard(['EMP-0301']);
-    fireEvent.change(screen.getByTestId('period-select'), { target: { value: '2026-04-21' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Select period' }));
+    fireEvent.click(screen.getByRole('option', { name: /21 Apr–20 May 2026/ }));
     expect(screen.getByTestId('period-range')).toHaveTextContent('21 Apr–20 May 2026');
     expect(within(screen.getByTestId('kpi-ot-hours')).getByText('0 h')).toBeInTheDocument();
   });
 });
 
-describe('TeamOverviewDashboard — expandable detail layer', () => {
-  it('reveals the granular per-employee detail on toggle and collapses back', () => {
+describe('TeamOverviewDashboard — STA-255 isolated per-card expansion', () => {
+  it('cards start compact; clicking one expands ONLY that card, and it collapses back', () => {
     renderDashboard(['EMP-0301']);
-    // Collapsed by default.
-    expect(screen.queryByTestId('team-overview-detail')).not.toBeInTheDocument();
+    // Compact by default — no per-employee detail anywhere.
+    expect(screen.queryByTestId('detail-late')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('detail-ot')).not.toBeInTheDocument();
 
-    const toggle = screen.getByTestId('dashboard-expand-toggle');
-    fireEvent.click(toggle);
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    const detail = screen.getByTestId('team-overview-detail');
-    // OT-by-employee panel shows EMP-0301's 6h in-window overtime.
-    expect(within(within(detail).getByTestId('detail-ot')).getByText('6 h')).toBeInTheDocument();
-    // Late/absent panel lists the 2 late scans.
-    expect(within(detail).getByTestId('detail-late')).toBeInTheDocument();
+    // Expand the late-scans card → its detail appears, others stay compact.
+    const lateToggle = within(screen.getByTestId('kpi-late-scans')).getByRole('button');
+    fireEvent.click(lateToggle);
+    expect(lateToggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByTestId('detail-late')).toBeInTheDocument();
+    expect(screen.queryByTestId('detail-ot')).not.toBeInTheDocument();
 
-    fireEvent.click(toggle);
-    expect(screen.queryByTestId('team-overview-detail')).not.toBeInTheDocument();
+    // Expanding the OT card closes the late card (isolated accordion).
+    const otToggle = within(screen.getByTestId('kpi-ot-hours')).getByRole('button');
+    fireEvent.click(otToggle);
+    expect(within(screen.getByTestId('detail-ot')).getByText('6 h')).toBeInTheDocument();
+    expect(screen.queryByTestId('detail-late')).not.toBeInTheDocument();
+    expect(lateToggle).toHaveAttribute('aria-expanded', 'false');
+
+    // Clicking the open card again collapses it.
+    fireEvent.click(otToggle);
+    expect(screen.queryByTestId('detail-ot')).not.toBeInTheDocument();
   });
 });
 
