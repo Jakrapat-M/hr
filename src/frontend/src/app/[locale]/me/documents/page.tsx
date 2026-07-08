@@ -42,7 +42,7 @@ export default function MeDocumentsPage() {
     : HUMI_HR_DOCS.filter((d) => d.type === filter);
 
   return (
-    <div data-testid="me-documents-page" className="max-w-3xl mx-auto px-7 py-6">
+    <div data-testid="me-documents-page">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-semibold text-ink mb-1.5">
