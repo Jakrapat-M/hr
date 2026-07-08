@@ -280,9 +280,10 @@ export default function HumiTimeoffPage() {
           so the cards never contradict the form's remaining-quota check. */}
       <QuotaCards isTh={isTh} />
 
-      {/* Create-only: single centered column. Status + history live on
-          /time/my-requests, so this page just submits a new request. */}
-      <div className="mx-auto w-full max-w-3xl">
+      {/* Create-only form. Full-width so this section's container matches the
+          leave-balance cards above (consistent width, top & bottom). Status +
+          history live on /time/my-requests. */}
+      <div className="w-full">
         <Card variant="raised" size="lg">
           <RequestTab
             onSubmitted={(msg, newId) => {
