@@ -38,7 +38,9 @@ test.describe('STA-163 — remove OT type field', () => {
     await seedEmployee(page)
     await page.goto('/th/overtime')
     await page.waitForLoadState('networkidle').catch(() => {})
-    await page.locator('input[type="date"]').first().fill(inPeriodDate())
+    await page.getByTestId('ot-start-date-0').fill(inPeriodDate())
+    await page.getByTestId('ot-start-time-0').fill('18:00')
+    await page.getByTestId('ot-end-time-0').fill('20:00')
     await page.locator('textarea').first().fill('งานเร่งด่วน')
     await page.getByRole('button', { name: 'ส่งคำขอ' }).click()
     // Status tab becomes active (form heading gone).

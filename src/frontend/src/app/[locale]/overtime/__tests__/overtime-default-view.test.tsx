@@ -58,20 +58,15 @@ describe('/overtime — form-by-default (STA-149)', () => {
     expect(formHeading()).not.toBeInTheDocument()
   })
 
-  // STA-158 — Start/End time are 15-minute dropdown <select>s (00:00…23:45),
-  // defaulting to 18:00 / 20:00, not native <input type="time">.
-  it('renders Start/End time as 15-minute dropdowns (96 options), defaults 18:00/20:00', () => {
+  // STA-256 — Start/End time are native <input type="time"> (system clock widget
+  // + manual typing with hour:minutes format control); the 15-min dropdowns are gone.
+  it('renders Start/End time as native time inputs (blank), no dropdown selects', () => {
     const { container } = render(<OvertimePage />)
-    // The two time selects are the comboboxes with 96 options (the OT-type select
-    // has far fewer); identify them structurally.
-    const timeSelects = [...container.querySelectorAll('select')].filter(
-      (s) => s.querySelectorAll('option').length === 96,
-    )
-    expect(timeSelects).toHaveLength(2)
-    expect((timeSelects[0] as HTMLSelectElement).value).toBe('18:00')
-    expect((timeSelects[1] as HTMLSelectElement).value).toBe('20:00')
-    // No native time picker remains.
-    expect(container.querySelector('input[type="time"]')).toBeNull()
+    const timeInputs = container.querySelectorAll('input[type="time"]')
+    expect(timeInputs).toHaveLength(2)
+    expect((timeInputs[0] as HTMLInputElement).value).toBe('')
+    expect((timeInputs[1] as HTMLInputElement).value).toBe('')
+    expect(container.querySelector('select')).toBeNull()
   })
 
   // STA-163 — the OT-type selector is removed from the form; every request is 'OT'.
@@ -82,17 +77,55 @@ describe('/overtime — form-by-default (STA-149)', () => {
   })
 
   it('still submits a valid request (otType defaults to OT) → jumps to the Status tab', () => {
-    const { container } = render(<OvertimePage />)
+    render(<OvertimePage />)
     // Pick a date inside the current payroll period (validate() gates on the
     // wall-clock current period, so a hardcoded date would drift out of range).
     const inPeriodDate = currentPeriod().start // the 21st — always in-period
-    const startDate = container.querySelector('input[type="date"]') as HTMLInputElement
-    fireEvent.change(startDate, { target: { value: inPeriodDate } })
-    const reason = container.querySelector('textarea') as HTMLTextAreaElement
-    fireEvent.change(reason, { target: { value: 'งานเร่งด่วน' } })
+    fireEvent.change(screen.getByTestId('ot-start-date-0'), { target: { value: inPeriodDate } })
+    fireEvent.change(screen.getByTestId('ot-start-time-0'), { target: { value: '18:00' } })
+    fireEvent.change(screen.getByTestId('ot-end-time-0'), { target: { value: '20:00' } })
+    fireEvent.change(screen.getByPlaceholderText(/ระบุเหตุผล/), { target: { value: 'งานเร่งด่วน' } })
     fireEvent.click(screen.getByRole('button', { name: 'ส่งคำขอ' }))
     // After a successful submit the page switches to the Status tab (form heading gone).
     expect(formHeading()).not.toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /สถานะ/ })).toHaveAttribute('aria-selected', 'true')
+  })
+})
+
+// STA-256 — date/time entry UX: abbreviated date display, auto end date, +1 hour.
+describe('/overtime — STA-256 date/time entry', () => {
+  it('displays the chosen start date as [day mon-abbrev year] with the BE year (TH)', () => {
+    render(<OvertimePage />)
+    fireEvent.change(screen.getByTestId('ot-start-date-0'), { target: { value: '2026-07-08' } })
+    expect(screen.getByTestId('ot-start-date-0-display').textContent).toContain('8 ก.ค. 2569')
+  })
+
+  it('auto-fills the end date (same day; +1 day for cross-midnight) with no editable input', () => {
+    render(<OvertimePage />)
+    fireEvent.change(screen.getByTestId('ot-start-date-0'), { target: { value: '2026-07-08' } })
+    fireEvent.change(screen.getByTestId('ot-start-time-0'), { target: { value: '18:00' } })
+    fireEvent.change(screen.getByTestId('ot-end-time-0'), { target: { value: '20:00' } })
+    // Same-day OT → end date = start date.
+    expect(screen.getByTestId('ot-end-date-0-display').textContent).toContain('8 ก.ค. 2569')
+    // Cross-midnight (end ≤ start) → end date rolls to the next day.
+    fireEvent.change(screen.getByTestId('ot-end-time-0'), { target: { value: '01:00' } })
+    expect(screen.getByTestId('ot-end-date-0-display').textContent).toContain('9 ก.ค. 2569')
+    // The auto end date renders as display-only text — no second date input exists.
+    expect(screen.queryByTestId('ot-end-date-0')).toBeNull()
+  })
+
+  it('+1 hour: first press = start + 1h, repeat presses add another hour (rolls the end date past midnight)', () => {
+    render(<OvertimePage />)
+    fireEvent.change(screen.getByTestId('ot-start-date-0'), { target: { value: '2026-07-08' } })
+    fireEvent.change(screen.getByTestId('ot-start-time-0'), { target: { value: '22:00' } })
+    const endTime = () => (screen.getByTestId('ot-end-time-0') as HTMLInputElement).value
+    const plus = screen.getByTestId('ot-plus-hour-0')
+    fireEvent.click(plus)
+    expect(endTime()).toBe('23:00') // first press: start + 1h
+    fireEvent.click(plus)
+    expect(endTime()).toBe('00:00') // second press: +1h more, wraps midnight…
+    expect(screen.getByTestId('ot-end-date-0-display').textContent).toContain('9 ก.ค. 2569')
+    fireEvent.click(plus)
+    expect(endTime()).toBe('01:00')
   })
 })

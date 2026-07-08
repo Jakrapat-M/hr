@@ -83,6 +83,34 @@ export function yearlyOtTotal(reqs: OTRequest[], employeeId: string, refDate?: D
   return sumWithin(reqs, employeeId, `${year}-01-01`, `${year}-12-31`);
 }
 
+// ── STA-256 date/time entry helpers (pure) ───────────────────────────────────
+
+/** Add N days to a date-only ISO string (UTC-safe, no timezone drift). */
+export function addDaysIso(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * STA-256 — auto-filled End Date: same day as the start; +1 day when the end
+ * time is at or before the start time (cross-midnight shift). Empty until a
+ * start date exists; equals the start date while either time is still blank.
+ */
+export function autoEndDate(startDate: string, startTime: string, endTime: string): string {
+  if (!startDate) return '';
+  if (!startTime || !endTime) return startDate;
+  return endTime <= startTime ? addDaysIso(startDate, 1) : startDate;
+}
+
+/** STA-256 — "+1 hour": roll an HH:MM time forward one hour (wraps past midnight). */
+export function plusOneHour(time: string): string {
+  const m = /^(\d{2}):(\d{2})$/.exec(time);
+  if (!m) return time;
+  return `${String((Number(m[1]) + 1) % 24).padStart(2, '0')}:${m[2]}`;
+}
+
 // ── STA-164 multi-day OT validation (pure; the form maps codes → i18n) ────────
 
 /** One candidate OT-day window built from a form row. */

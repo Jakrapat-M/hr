@@ -33,18 +33,17 @@ import {
   type OTRequest,
 } from '@/stores/overtime-requests';
 import { OT_TYPES, type OtTypeCode } from '@/lib/time/ot-types';
-import { buildTimeOptions } from '@/lib/time/time-options';
+import { FormattedDateInput } from '@/components/time/FormattedDateInput';
 import {
   computeOtHours,
   monthlyOtTotal,
   validateOtDayRows,
+  autoEndDate,
+  plusOneHour,
   MONTHLY_OT_CAP_HOURS,
 } from '@/lib/time/ot-math';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
 import { useLeaveApprovals } from '@/stores/leave-approvals';
-
-// STA-158 — OT Start/End time pickers are 15-minute dropdowns (00:00 … 23:45).
-const OT_TIME_OPTIONS = buildTimeOptions(15);
 
 // Fall back to the demo employee (EMP001 — seeded quota + attrs) when the live
 // persona has no concrete id, so the gates stay demoable.
@@ -149,8 +148,17 @@ export default function OvertimePage() {
   const [rows, setRows] = useState<OtDayRow[]>(() => [newRow()]);
   const [error, setError] = useState<string | null>(null);
 
+  // STA-256 — End Date is auto-calculated (same day as start; +1 day when the
+  // end time is at/before the start time = cross-midnight) on every row change.
   const updateRow = (id: string, patch: Partial<OtDayRow>) =>
-    setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    setRows((rs) =>
+      rs.map((r) => {
+        if (r.id !== id) return r;
+        const merged = { ...r, ...patch };
+        merged.endDate = autoEndDate(merged.startDate, merged.startTime, merged.endTime);
+        return merged;
+      }),
+    );
   // Never drop the last row — a request always has ≥1 OT day.
   const removeRow = (id: string) =>
     setRows((rs) => (rs.length > 1 ? rs.filter((r) => r.id !== id) : rs));
@@ -390,59 +398,80 @@ export default function OvertimePage() {
                       </Button>
                     )}
                   </div>
-                  {/* STA-173 — Start Date · Start Time · End Date · End Time (cross-day). */}
+                  {/* STA-256 — Start Date (system calendar + abbrev display) · Start Time
+                      (native time widget / manual typing) · End Date (auto-calculated,
+                      read-only) · End Time (+1 hour helper button). */}
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-small font-medium text-ink-soft">
                         {isTh ? 'วันที่เริ่ม *' : 'Start Date *'}
                       </label>
-                      <input
-                        type="date"
+                      <FormattedDateInput
                         value={row.startDate}
-                        onChange={(e) => updateRow(row.id, { startDate: e.target.value })}
-                        className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                        onChange={(v) => updateRow(row.id, { startDate: v })}
+                        locale={locale}
+                        aria-label={isTh ? `วันที่เริ่ม วัน OT ${idx + 1}` : `Start date OT day ${idx + 1}`}
+                        data-testid={`ot-start-date-${idx}`}
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-small font-medium text-ink-soft">
                         {isTh ? 'เวลาเริ่ม *' : 'Start Time *'}
                       </label>
-                      <select
+                      <input
+                        type="time"
                         value={row.startTime}
                         onChange={(e) => updateRow(row.id, { startTime: e.target.value })}
-                        className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-                      >
-                        <option value="">{isTh ? '— เลือกเวลา —' : '— Select time —'}</option>
-                        {OT_TIME_OPTIONS.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-small font-medium text-ink-soft">
-                        {isTh ? 'วันที่สิ้นสุด *' : 'End Date *'}
-                      </label>
-                      <input
-                        type="date"
-                        value={row.endDate}
-                        onChange={(e) => updateRow(row.id, { endDate: e.target.value })}
+                        aria-label={isTh ? `เวลาเริ่ม วัน OT ${idx + 1}` : `Start time OT day ${idx + 1}`}
+                        data-testid={`ot-start-time-${idx}`}
                         className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-small font-medium text-ink-soft">
+                        {isTh ? 'วันที่สิ้นสุด (อัตโนมัติ)' : 'End Date (auto)'}
+                      </label>
+                      <FormattedDateInput
+                        value={row.endDate}
+                        locale={locale}
+                        disabled
+                        placeholder="—"
+                        data-testid={`ot-end-date-${idx}`}
+                      />
+                      <p className="text-xs text-ink-faint">
+                        {isTh
+                          ? 'คำนวณจากวันและเวลาเริ่ม — OT ข้ามเที่ยงคืนจะเลื่อนเป็นวันถัดไป'
+                          : 'Calculated from the start — overnight OT rolls to the next day'}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-small font-medium text-ink-soft">
                         {isTh ? 'เวลาสิ้นสุด *' : 'End Time *'}
                       </label>
-                      <select
+                      <input
+                        type="time"
                         value={row.endTime}
                         onChange={(e) => updateRow(row.id, { endTime: e.target.value })}
+                        aria-label={isTh ? `เวลาสิ้นสุด วัน OT ${idx + 1}` : `End time OT day ${idx + 1}`}
+                        data-testid={`ot-end-time-${idx}`}
                         className="w-full rounded-[var(--radius-md)] border border-hairline bg-surface px-3 py-2.5 text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                      />
+                      {/* +1 hour: first press = start time + 1h; afterwards adds
+                          another hour to the end time (may roll the auto end date). */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="self-start"
+                        disabled={!row.startTime && !row.endTime}
+                        data-testid={`ot-plus-hour-${idx}`}
+                        onClick={() => {
+                          const base = row.endTime || row.startTime;
+                          if (!base) return;
+                          updateRow(row.id, { endTime: plusOneHour(base) });
+                        }}
                       >
-                        <option value="">{isTh ? '— เลือกเวลา —' : '— Select time —'}</option>
-                        {OT_TIME_OPTIONS.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
+                        {isTh ? '+1 ชั่วโมง' : '+1 hour'}
+                      </Button>
                     </div>
                   </div>
                   <div className="mt-2 flex items-center gap-1.5 text-small text-ink-muted">
