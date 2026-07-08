@@ -1,7 +1,7 @@
-// STA-153 — the Timesheet "Schedule" tab offers a Table / Calendar view toggle,
-// defaulting to Table. This spec locks: the toggle exists, Table is the default
-// selected view (the schedule table renders), and switching to Calendar shows the
-// Mon→Sun weekday grid while hiding the table.
+// STA-153 / STA-195 — the Timesheet "Schedule" tab is CALENDAR-FIRST (the old
+// Table/Calendar toggle was removed by the STA-195 redesign). This spec locks:
+// the weekday grid renders, cells show the shift TIME range (never the raw
+// shift ID/code), and the month navigation is present.
 import { test, expect, type Page } from '@playwright/test'
 
 async function seed(page: Page) {
@@ -17,34 +17,23 @@ async function seed(page: Page) {
   })
 }
 
-test.describe('STA-153 — timesheet Schedule view toggle', () => {
-  test('defaults to Table; Calendar switches to the weekday grid', async ({ page }) => {
+test.describe('STA-153/195 — timesheet Schedule calendar', () => {
+  test('renders the weekday grid with shift times (no raw shift codes)', async ({ page }) => {
     await seed(page)
     await page.goto('/en/time/timesheet')
 
     await page.getByRole('tab', { name: 'Schedule' }).click()
 
-    // Default view = Table (toggle pressed + the schedule table header renders).
-    const tableToggle = page.getByRole('button', { name: 'Table' })
-    const calendarToggle = page.getByRole('button', { name: 'Calendar' })
-    await expect(tableToggle).toHaveAttribute('aria-pressed', 'true')
-    await expect(calendarToggle).toHaveAttribute('aria-pressed', 'false')
-    await expect(page.getByRole('columnheader', { name: 'Shift code' })).toBeVisible()
-
-    // Switch to Calendar → weekday header grid appears, the table is gone.
-    await calendarToggle.click()
-    await expect(calendarToggle).toHaveAttribute('aria-pressed', 'true')
+    // Weekday header grid (calendar-first, no view toggle).
     await expect(page.getByText('Mon', { exact: true })).toBeVisible()
-    await expect(page.getByRole('columnheader', { name: 'Shift code' })).toHaveCount(0)
+    await expect(page.getByText('Sun', { exact: true })).toBeVisible()
 
-    // STA-153 rework — the calendar cell shows the shift TIME, never the shift
-    // ID/code (e.g. "8A1000"). A working cell renders an HH:MM–HH:MM range.
-    // Generic shift-code shape <hrs><break-letter><HHMM> (e.g. 8A1000, 9A0600, 4C0800).
+    // STA-153 rework — cells show the shift TIME, never the shift ID/code
+    // (generic shift-code shape <hrs><break-letter><HHMM>, e.g. 8A1000, 4C0800).
     await expect(page.getByText(/\b\d(?:\.\d)?[A-C]\d?\d{4}\b/)).toHaveCount(0)
     await expect(page.getByText(/^\d{2}:\d{2}–\d{2}:\d{2}$/).first()).toBeVisible()
 
-    // Back to Table restores the table.
-    await tableToggle.click()
-    await expect(page.getByRole('columnheader', { name: 'Shift code' })).toBeVisible()
+    // Month navigation chips render (previous / next month names).
+    await expect(page.getByRole('button', { name: /May|July/ }).first()).toBeVisible()
   })
 })
