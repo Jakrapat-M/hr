@@ -15,7 +15,7 @@
 import { useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { CalendarRange, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarRange, CheckSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, Button, EmptyState } from '@/components/humi';
 import { useAuthStore } from '@/stores/auth-store';
 import { ALL_PORTED_EMPLOYEES, EMP_BY_LOGIN } from '@/lib/all-ported-employees';
@@ -36,13 +36,25 @@ import {
   WeeklyTimesheetGrid,
   POSITION_FILTER_ALL,
   positionKey,
+  cellKey,
   type TimesheetRow,
   type ClockFilter,
   type ShiftEditContext,
+  type ShiftCell,
+  type ShiftOverride,
 } from '@/components/roster/WeeklyTimesheetGrid';
 import { TimesheetLegend } from '@/components/roster/TimesheetLegend';
-import { ShiftTimeEditModal } from '@/components/roster/ShiftTimeEditModal';
+import {
+  ShiftTimeEditModal,
+  type ShiftTimeEditPayload,
+} from '@/components/roster/ShiftTimeEditModal';
+import { BatchShiftEditBar } from '@/components/roster/BatchShiftEditBar';
 import { ShiftSwapModal } from '@/components/roster/ShiftSwapModal';
+import {
+  spanHours,
+  shiftEndFromStart,
+  breakRangeLabel,
+} from '@/lib/time/shift-time-calc';
 import { ROSTER_ROWS } from '@/data/roster/mock';
 import type { HumiEmployee } from '@/lib/humi-mock-data';
 import type { AvatarProps } from '@/components/humi/Avatar';
@@ -151,6 +163,14 @@ export default function RosterPage() {
   const [swapOpen, setSwapOpen] = useState(() => searchParams?.get('panel') === 'swap');
   const [toast, setToast] = useState<string | null>(null);
 
+  // STA-254 — batch shift edit: selection mode, the selected cells, the modal,
+  // and the mockup-local overrides that make edited shifts re-render on the grid.
+  const [batchMode, setBatchMode] = useState(false);
+  const [selected, setSelected] = useState<Map<string, ShiftCell>>(new Map());
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
+  const [overrides, setOverrides] = useState<Map<string, ShiftOverride>>(new Map());
+  const selectedKeys = useMemo(() => new Set(selected.keys()), [selected]);
+
   const panelSwap = searchParams?.get('panel') === 'swap';
   const swapVisible = swapOpen || panelSwap;
 
@@ -159,10 +179,69 @@ export default function RosterPage() {
     window.setTimeout(() => setToast(null), 4000);
   };
 
-  const handleShiftTimeSave = () => {
+  // Compute + stage a mockup-local override for each target cell (single + batch).
+  // Each cell's end derives from ITS OWN contracted span (8h vs 9h), so a batch
+  // apply across mixed contracts lands the right end time per employee.
+  const applyShiftEdit = (cells: ShiftCell[], payload: ShiftTimeEditPayload) => {
+    setOverrides((prev) => {
+      const next = new Map(prev);
+      for (const cell of cells) {
+        const contractHours = Math.round(spanHours(cell.scheduledIn, cell.scheduledOut)) || 9;
+        const scheduledOut = shiftEndFromStart(payload.start, contractHours);
+        const range =
+          payload.pattern === 'none' ? null : breakRangeLabel(payload.pattern, payload.breakStart);
+        next.set(cellKey(cell), {
+          scheduledIn: payload.start,
+          scheduledOut,
+          breakStart: payload.pattern === 'none' ? null : payload.breakStart,
+          breakEnd: range ? range.split('–')[1] : null,
+        });
+      }
+      return next;
+    });
+  };
+
+  const handleShiftTimeSave = (payload: ShiftTimeEditPayload) => {
+    if (shiftTimeCtx) applyShiftEdit([shiftTimeCtx], payload);
     setShiftTimeCtx(null);
     flash(isTh ? 'บันทึกเวลากะแล้ว (ตัวอย่าง)' : 'Shift time saved (demo)');
   };
+
+  const handleBatchSave = (payload: ShiftTimeEditPayload) => {
+    const cells = [...selected.values()];
+    applyShiftEdit(cells, payload);
+    setBatchModalOpen(false);
+    setSelected(new Map());
+    flash(
+      isTh ? `อัปเดต ${cells.length} กะแล้ว (ตัวอย่าง)` : `Updated ${cells.length} shifts (demo)`,
+    );
+  };
+
+  // Selection toggles — single cell, and select-all (day column / employee row).
+  const toggleCell = (cell: ShiftCell) =>
+    setSelected((prev) => {
+      const next = new Map(prev);
+      const key = cellKey(cell);
+      if (next.has(key)) next.delete(key);
+      else next.set(key, cell);
+      return next;
+    });
+  const toggleMany = (cells: ShiftCell[]) =>
+    setSelected((prev) => {
+      const next = new Map(prev);
+      const allSel = cells.length > 0 && cells.every((c) => next.has(cellKey(c)));
+      for (const c of cells) {
+        if (allSel) next.delete(cellKey(c));
+        else next.set(cellKey(c), c);
+      }
+      return next;
+    });
+  const exitBatch = () => {
+    setBatchMode(false);
+    setSelected(new Map());
+    setBatchModalOpen(false);
+  };
+
   const handleSwapSubmit = () => {
     setSwapOpen(false);
     flash(isTh ? 'ส่งคำขอสลับกะแล้ว (ตัวอย่าง)' : 'Swap requested (demo)');
@@ -246,6 +325,18 @@ export default function RosterPage() {
             ))}
           </select>
         </label>
+
+        {/* STA-254 — batch shift-edit toggle. When on, shift cells become
+            selectable and the BatchShiftEditBar appears. */}
+        <Button
+          variant={batchMode ? 'primary' : 'secondary'}
+          aria-pressed={batchMode}
+          data-testid="batch-mode-toggle"
+          leadingIcon={<CheckSquare size={16} aria-hidden />}
+          onClick={() => (batchMode ? exitBatch() : setBatchMode(true))}
+        >
+          {isTh ? 'แก้กะหลายรายการ' : 'Batch edit'}
+        </Button>
       </div>
 
       {weekInPeriod ? (
@@ -259,6 +350,12 @@ export default function RosterPage() {
             positionFilter={positionFilter}
             isTh={isTh}
             onEditShift={setShiftTimeCtx}
+            shiftOverrides={overrides}
+            batchMode={batchMode}
+            selectedKeys={selectedKeys}
+            onToggleCell={toggleCell}
+            onToggleDay={toggleMany}
+            onToggleRow={toggleMany}
           />
           <TimesheetLegend isTh={isTh} />
         </Card>
@@ -272,10 +369,21 @@ export default function RosterPage() {
         />
       )}
 
+      {/* STA-254 — batch shift-edit action bar (visible while in batch mode) */}
+      {batchMode && (
+        <BatchShiftEditBar
+          count={selected.size}
+          isTh={isTh}
+          onEditSelected={() => setBatchModalOpen(true)}
+          onClear={() => setSelected(new Map())}
+          onExit={exitBatch}
+        />
+      )}
+
       {/* STA-235 — weekly-grid shift-time edit modal (manager edits shift TIME only) */}
       {shiftTimeCtx && (
         <ShiftTimeEditModal
-          key={`${shiftTimeCtx.employeeName}-${shiftTimeCtx.date}`}
+          key={`${shiftTimeCtx.employeeId}-${shiftTimeCtx.date}`}
           open
           employeeName={shiftTimeCtx.employeeName}
           date={shiftTimeCtx.date}
@@ -286,6 +394,19 @@ export default function RosterPage() {
           isTh={isTh}
           onClose={() => setShiftTimeCtx(null)}
           onSave={handleShiftTimeSave}
+        />
+      )}
+
+      {/* STA-254 — batch shift-time edit modal (applies to every selected cell) */}
+      {batchModalOpen && selected.size > 0 && (
+        <ShiftTimeEditModal
+          key={`batch-${selected.size}`}
+          open
+          batch
+          cells={[...selected.values()]}
+          isTh={isTh}
+          onClose={() => setBatchModalOpen(false)}
+          onSave={handleBatchSave}
         />
       )}
 

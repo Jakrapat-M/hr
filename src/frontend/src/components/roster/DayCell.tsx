@@ -7,6 +7,7 @@
 // modal. Leave + OT stay read-only (employee uses Time Correction; OT is its own
 // approval). Derives from the time-domain seeds + the leave overlay seed.
 
+import type { ReactNode } from 'react';
 import { Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DaySchedule } from '@/lib/time/schedule-template';
@@ -19,6 +20,22 @@ import {
   CHIP_CLASS,
   type ChipKind,
 } from '@/lib/time/clock-state';
+
+// STA-254 item 9 — de-emphasized token classes for the NON-shift chips so the
+// shift chip reads as the primary interactive element. Softer bg, transparent
+// border (no standing outline), smaller text applied at render. Danger states
+// keep pumpkin (--color-danger) so late/incomplete punches stay legible; NO-RED.
+const CHIP_CLASS_MUTED: Record<ChipKind, string> = {
+  shift: CHIP_CLASS.shift, // shift never renders muted; kept for type completeness
+  clockOnTime: 'bg-accent-soft/50 text-ink-soft border-transparent',
+  clockLate: 'bg-[var(--color-danger-soft)] text-[var(--color-danger)] border-transparent',
+  clockMismatch: 'bg-[var(--color-danger-soft)] text-[var(--color-danger)] border-transparent',
+  clockAbsent: 'bg-canvas-soft text-ink-muted border-transparent',
+  ot: 'bg-warning-soft/60 text-warning border-transparent',
+  leave: 'bg-[var(--color-sage-soft)]/60 text-ink-soft border-transparent',
+  dayOff: 'bg-canvas-soft text-ink-faint border-transparent',
+  holiday: 'bg-warning-soft/60 text-warning border-transparent',
+};
 
 export type DayCellProps = {
   isoDate: string;
@@ -34,6 +51,12 @@ export type DayCellProps = {
   isTh: boolean;
   /** STA-235 — when set, the SHIFT chip becomes a button that opens the edit modal. */
   onEditShift?: () => void;
+  /** STA-254 — batch shift-edit selection mode (turns the shift chip into a checkbox). */
+  batchMode?: boolean;
+  /** STA-254 — whether this cell's shift is currently selected in batch mode. */
+  selected?: boolean;
+  /** STA-254 — toggle this cell's batch selection (only set when it's a shift cell). */
+  onToggleSelect?: () => void;
 };
 
 type Chip = {
@@ -57,6 +80,9 @@ export function DayCell({
   cutoffISO,
   isTh,
   onEditShift,
+  batchMode = false,
+  selected = false,
+  onToggleSelect,
 }: DayCellProps) {
   const chips: Chip[] = [];
 
@@ -170,22 +196,21 @@ export function DayCell({
       className="flex min-h-[72px] flex-col gap-1.5 border-l border-hairline-soft px-2 py-2"
     >
       {visible.map((chip, i) => {
-        const className = cn(
-          'inline-flex flex-col rounded-[var(--radius-sm)] border px-2 py-1 text-left',
-          'text-small font-medium leading-tight',
-          CHIP_CLASS[chip.kind],
-          chip.editable &&
-            // N1 (STA-252) — read as clearly clickable, not a plain chip: a
-            // standing accent-alt ring (visible before hover) + the Pencil icon
-            // in the label row, strengthening to a solid ring + shadow on
-            // hover/focus.
-            'cursor-pointer ring-1 ring-inset ring-[var(--color-accent-alt)]/50 transition-all hover:shadow-[var(--shadow-card)] hover:ring-2 hover:ring-[var(--color-accent-alt)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+        const isShift = chip.kind === 'shift';
+        // STA-254 item 9 — only the shift chip keeps full weight; every other
+        // chip renders muted (transparent border, softer bg, smaller text).
+        const base = cn(
+          'inline-flex flex-col rounded-[var(--radius-sm)] border px-2 py-1 text-left leading-tight',
+          isShift
+            ? cn('text-small font-medium', CHIP_CLASS.shift)
+            : cn('text-xs font-medium', CHIP_CLASS_MUTED[chip.kind]),
         );
-        const body = (
+
+        const body = (labelExtra?: ReactNode) => (
           <>
             <span className="inline-flex items-center gap-1">
+              {labelExtra}
               {chip.label}
-              {chip.editable && <Pencil size={11} aria-hidden className="shrink-0 opacity-80" />}
             </span>
             {chip.sub && (
               <span className="font-mono text-xs opacity-80">{chip.sub}</span>
@@ -195,20 +220,59 @@ export function DayCell({
             )}
           </>
         );
-        return chip.editable ? (
-          <button
-            key={`${chip.testid}-${i}`}
-            type="button"
-            data-testid={chip.testid}
-            onClick={onEditShift}
-            aria-label={isTh ? 'แก้ไขเวลากะ' : 'Edit shift time'}
-            className={className}
-          >
-            {body}
-          </button>
-        ) : (
-          <span key={`${chip.testid}-${i}`} data-testid={chip.testid} className={className}>
-            {body}
+
+        // STA-254 item 7 — in batch mode the shift chip becomes a selection
+        // toggle (checkbox + selected ring) instead of the single-edit button.
+        if (isShift && batchMode && onToggleSelect) {
+          return (
+            <label
+              key={`${chip.testid}-${i}`}
+              data-testid={chip.testid}
+              className={cn(
+                base,
+                'cursor-pointer ring-inset transition-all focus-within:ring-2 focus-within:ring-accent',
+                selected
+                  ? 'ring-2 ring-[var(--color-accent-alt)] shadow-[var(--shadow-card)]'
+                  : 'ring-1 ring-[var(--color-accent-alt)]/40 hover:ring-2 hover:ring-[var(--color-accent-alt)]',
+              )}
+            >
+              {body(
+                <input
+                  type="checkbox"
+                  data-testid="shift-select-checkbox"
+                  checked={selected}
+                  onChange={onToggleSelect}
+                  aria-label={isTh ? 'เลือกกะนี้' : 'Select this shift'}
+                  className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-[var(--color-accent)]"
+                />,
+              )}
+            </label>
+          );
+        }
+
+        // STA-252 N1 — single-edit: the shift chip is a clearly-clickable button
+        // (standing accent-alt ring + Pencil icon, strengthening on hover/focus).
+        if (isShift && chip.editable) {
+          return (
+            <button
+              key={`${chip.testid}-${i}`}
+              type="button"
+              data-testid={chip.testid}
+              onClick={onEditShift}
+              aria-label={isTh ? 'แก้ไขเวลากะ' : 'Edit shift time'}
+              className={cn(
+                base,
+                'cursor-pointer ring-1 ring-inset ring-[var(--color-accent-alt)]/50 transition-all hover:shadow-[var(--shadow-card)] hover:ring-2 hover:ring-[var(--color-accent-alt)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+              )}
+            >
+              {body(<Pencil size={11} aria-hidden className="shrink-0 opacity-80" />)}
+            </button>
+          );
+        }
+
+        return (
+          <span key={`${chip.testid}-${i}`} data-testid={chip.testid} className={base}>
+            {body()}
           </span>
         );
       })}
