@@ -8,7 +8,7 @@
 // approval). Derives from the time-domain seeds + the leave overlay seed.
 
 import type { ReactNode } from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DaySchedule } from '@/lib/time/schedule-template';
 import type { AttendanceDay } from '@/lib/time/attendance-math';
@@ -57,6 +57,10 @@ export type DayCellProps = {
   selected?: boolean;
   /** STA-254 — toggle this cell's batch selection (only set when it's a shift cell). */
   onToggleSelect?: () => void;
+  /** STA-260 — open the +OverTime popup for this (employee, day). */
+  onAddOt?: () => void;
+  /** STA-260 — the OT chip becomes clickable and opens the popup prefilled. */
+  onEditOt?: () => void;
 };
 
 type Chip = {
@@ -83,6 +87,8 @@ export function DayCell({
   batchMode = false,
   selected = false,
   onToggleSelect,
+  onAddOt,
+  onEditOt,
 }: DayCellProps) {
   const chips: Chip[] = [];
 
@@ -270,6 +276,27 @@ export function DayCell({
           );
         }
 
+        // STA-260 item 4 — an assigned OT card is EDITABLE: clicking it opens
+        // the OT popup prefilled. Clickable affordance mirrors the shift chip
+        // (standing ring + pencil, strengthening on hover) in the warning tone.
+        if (chip.kind === 'ot' && onEditOt && !batchMode) {
+          return (
+            <button
+              key={`${chip.testid}-${i}`}
+              type="button"
+              data-testid={chip.testid}
+              onClick={onEditOt}
+              aria-label={isTh ? 'แก้ไขโอที' : 'Edit overtime'}
+              className={cn(
+                base,
+                'cursor-pointer ring-1 ring-inset ring-warning/50 transition-all hover:shadow-[var(--shadow-card)] hover:ring-2 hover:ring-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+              )}
+            >
+              {body(<Pencil size={11} aria-hidden className="shrink-0 opacity-80" />)}
+            </button>
+          );
+        }
+
         return (
           <span key={`${chip.testid}-${i}`} data-testid={chip.testid} className={base}>
             {body()}
@@ -283,6 +310,19 @@ export function DayCell({
         >
           +{overflow}
         </span>
+      )}
+      {/* STA-260 item 2 — small +OverTime button UNDER the stacked info cards
+          (every day, keyboard focusable; hidden while batch-select is active). */}
+      {onAddOt && !batchMode && (
+        <button
+          type="button"
+          data-testid="add-ot-button"
+          onClick={onAddOt}
+          className="mt-auto inline-flex w-fit items-center gap-1 rounded-[var(--radius-sm)] border border-dashed border-hairline px-1.5 py-0.5 text-xs font-medium text-ink-faint transition-colors hover:border-accent hover:bg-accent-soft hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          <Plus size={11} aria-hidden />
+          {isTh ? 'ล่วงเวลา' : 'OverTime'}
+        </button>
       )}
     </div>
   );

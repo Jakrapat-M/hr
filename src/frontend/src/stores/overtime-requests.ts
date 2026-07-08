@@ -24,10 +24,14 @@ export type OTStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 export type OTAuditEntry = {
   actorId: string;
   actorName: string;
-  action: 'submit' | 'approve' | 'reject' | 'cancel';
+  action: 'submit' | 'approve' | 'reject' | 'cancel' | 'update';
   comment?: string;
   at: string; // ISO timestamp
 };
+
+/** STA-260 — OT pay-rate type a manager must choose when scheduling roster OT. */
+export type OtRateType = 'x1' | 'x1.5' | 'x2' | 'x3';
+export const OT_RATE_TYPES: readonly OtRateType[] = ['x1', 'x1.5', 'x2', 'x3'];
 
 /** One day's OT window inside a multi-day request (STA-164). */
 export type OtDay = { date: string; startAt: string; endAt: string; hours: number };
@@ -53,6 +57,9 @@ export type OTRequest = {
   status: OTStatus;
   submittedAt: string; // ISO timestamp
   audit: OTAuditEntry[];
+  /** STA-260 — mandatory rate type on manager-scheduled roster OT (x1…x3).
+   *  Absent on employee-submitted ESS OT (the rate derives from schedule context). */
+  rateType?: OtRateType;
 };
 
 export const OT_STATUS_LABEL: Record<OTStatus, { th: string; en: string }> = {
@@ -80,6 +87,16 @@ interface OvertimeRequestsState {
    * selector's cancelled guard.
    */
   cancel: (id: string, by: { id?: string; name: string }) => void;
+  /**
+   * STA-260 — edit an existing (non-terminal) OT window/rate in place, e.g. a
+   * manager clicking an OT card on /roster. Appends an 'update' audit entry so
+   * the /overtime status view and the roster chip stay consistent (one store).
+   */
+  updateRequest: (
+    id: string,
+    patch: Partial<Pick<OTRequest, 'startAt' | 'endAt' | 'hours' | 'rateType' | 'reason'>>,
+    by: { id?: string; name: string },
+  ) => void;
   /** Seed deterministic demo rows, preserving row.id (idempotent per id). */
   seedFromQueue: (rows: OTRequest[]) => void;
   clear: () => void;
@@ -181,6 +198,26 @@ export const useOvertimeRequests = create<OvertimeRequestsState>()(
                       actorId: by.id ?? '',
                       actorName: by.name,
                       action: 'cancel' as const,
+                      at: new Date().toISOString(),
+                    },
+                  ],
+                },
+          ),
+        })),
+      updateRequest: (id, patch, by) =>
+        set((state) => ({
+          requests: state.requests.map((r) =>
+            r.id !== id || r.status === 'rejected' || r.status === 'cancelled'
+              ? r
+              : {
+                  ...r,
+                  ...patch,
+                  audit: [
+                    ...r.audit,
+                    {
+                      actorId: by.id ?? '',
+                      actorName: by.name,
+                      action: 'update' as const,
                       at: new Date().toISOString(),
                     },
                   ],
