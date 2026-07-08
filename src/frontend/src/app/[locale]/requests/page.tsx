@@ -23,6 +23,7 @@ import {
 import {
   Avatar,
   Button,
+  buttonVariants,
   CancelRequestModal,
   Card,
   CardEyebrow,
@@ -30,6 +31,7 @@ import {
   Modal,
   Textarea,
 } from '@/components/humi';
+import { TerminationRequestSummary } from '@/components/termination/TerminationRequestSummary';
 import { cn } from '@/lib/utils';
 import {
   HUMI_REQUEST_CATALOG,
@@ -51,6 +53,10 @@ import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from 
 import { selectTaxPlanningRequestSummaries, useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
 import { useQueueRequestRows, buildCancelModalFields, APPROVAL_REGISTRY } from '@/lib/approval-registry';
 import { useAuthStore } from '@/stores/auth-store';
+import {
+  useTerminationApprovals,
+  type TerminationRequest,
+} from '@/stores/termination-approvals';
 import type { Role } from '@/lib/rbac';
 import type { RequestType } from '@/lib/quick-approve-api';
 
@@ -346,9 +352,15 @@ function MineTab({
   // STA-193 — employee self-service on sent-back ('info') rows.
   const withdrawRequest = useEssRequestActions((s) => s.withdraw);
   const resubmitRequest = useEssRequestActions((s) => s.resubmit);
+  const terminationRequests = useTerminationApprovals((s) => s.requests);
+  const withdrawTermination = useTerminationApprovals((s) => s.withdraw);
   const [withdrawRow, setWithdrawRow] = useState<MineRow | null>(null);
   const [reviseRow, setReviseRow] = useState<MineRow | null>(null);
   const [reviseNote, setReviseNote] = useState('');
+  const terminationById = useMemo(
+    () => new Map(terminationRequests.map((request) => [request.id, request])),
+    [terminationRequests],
+  );
 
   // A sent-back row the current employee may act on. The "คำร้องของฉัน" tab is a
   // fan-in list; static mock rows carry no requesterId, so treat those (and rows
@@ -358,6 +370,9 @@ function MineTab({
 
   function handleConfirmWithdraw() {
     if (!withdrawRow) return;
+    if (terminationById.has(withdrawRow.id)) {
+      withdrawTermination(withdrawRow.id);
+    }
     withdrawRequest(withdrawRow.id);
     setWithdrawRow(null);
     onWithdrawn();
@@ -456,6 +471,10 @@ function MineTab({
           <ul role="list" className="divide-y divide-hairline">
             {filtered.slice(0, 8).map((r) => {
               const meta = REQUEST_STATUS_META[r.status];
+              const terminationRequest = terminationById.get(r.id);
+              const reviseHref = terminationRequest
+                ? terminationReviseHref(terminationRequest, locale)
+                : null;
               return (
                 <li
                   key={r.id}
@@ -509,13 +528,22 @@ function MineTab({
                         >
                           {locale === 'th' ? 'ถอนคำขอ' : 'Withdraw'}
                         </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => { setReviseRow(r); setReviseNote(''); }}
-                        >
-                          {locale === 'th' ? 'แก้ไขและส่งใหม่' : 'Revise & resubmit'}
-                        </Button>
+                        {reviseHref ? (
+                          <Link
+                            href={reviseHref}
+                            className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }))}
+                          >
+                            {locale === 'th' ? 'แก้ไขและส่งใหม่' : 'Revise & resubmit'}
+                          </Link>
+                        ) : (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => { setReviseRow(r); setReviseNote(''); }}
+                          >
+                            {locale === 'th' ? 'แก้ไขและส่งใหม่' : 'Revise & resubmit'}
+                          </Button>
+                        )}
                       </>
                     )}
                     <button
@@ -541,7 +569,13 @@ function MineTab({
         )}
       </Card>
 
-      <RequestDetailModal open={selected !== null} request={selected} onClose={() => setSelected(null)} />
+      <RequestDetailModal
+        open={selected !== null}
+        request={selected}
+        terminationRequest={selected ? terminationById.get(selected.id) : undefined}
+        locale={locale}
+        onClose={() => setSelected(null)}
+      />
 
       {/* STA-175 — shared self-cancel confirm modal. */}
       {cancelFields && (
@@ -647,7 +681,26 @@ const STEP_LABEL: Record<HumiApprovalStep['status'], string> = {
   skipped: 'ข้ามขั้น',
 };
 
-function RequestDetailModal({ open, request, onClose }: { open: boolean; request: MineRow | null; onClose: () => void }) {
+function terminationReviseHref(request: TerminationRequest, locale: 'th' | 'en'): string {
+  if (request.sourceRoute === 'admin') {
+    return `/${locale}/admin/employees/${request.employeeId}/terminate?edit=${request.id}`;
+  }
+  return `/${locale}/resignation?edit=${request.id}`;
+}
+
+function RequestDetailModal({
+  open,
+  request,
+  terminationRequest,
+  locale,
+  onClose,
+}: {
+  open: boolean;
+  request: MineRow | null;
+  terminationRequest?: TerminationRequest;
+  locale: 'th' | 'en';
+  onClose: () => void;
+}) {
   if (!request) return null;
   const meta = REQUEST_STATUS_META[request.status];
   return (
@@ -662,6 +715,9 @@ function RequestDetailModal({ open, request, onClose }: { open: boolean; request
             </span>
           </p>
         </div>
+        {terminationRequest ? (
+          <TerminationRequestSummary request={terminationRequest} locale={locale} />
+        ) : null}
         <div>
           <h4 className="mb-3 text-small font-semibold uppercase tracking-[0.14em] text-ink-muted">ลำดับการอนุมัติ</h4>
           {request.approvalChain.length === 0 ? (
