@@ -66,3 +66,21 @@ describe('formatCurrency', () => {
  expect(result).toContain('120,000');
  });
 });
+
+// ── STA-256 — formatDateAbbrev: [day mon-abbrev year], TH = BE / EN = AD ─────
+import { formatDateAbbrev } from '../date';
+
+describe('formatDateAbbrev', () => {
+  it('EN → "8 Jul 2026" (A.D., standard abbreviation)', () => {
+    expect(formatDateAbbrev('2026-07-08', 'en')).toBe('8 Jul 2026');
+    expect(formatDateAbbrev('2026-01-31', 'en')).toBe('31 Jan 2026');
+  });
+  it('TH → "8 ก.ค. 2569" (B.E. year, Thai abbreviation)', () => {
+    expect(formatDateAbbrev('2026-07-08', 'th')).toBe('8 ก.ค. 2569');
+    expect(formatDateAbbrev('2026-12-01', 'th')).toBe('1 ธ.ค. 2569');
+  });
+  it('handles empty / null → "-"', () => {
+    expect(formatDateAbbrev('', 'en')).toBe('-');
+    expect(formatDateAbbrev(null, 'th')).toBe('-');
+  });
+});

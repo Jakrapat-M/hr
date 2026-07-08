@@ -137,3 +137,44 @@ describe('yearlyOtTotal', () => {
     expect(yearlyOtTotal(reqs, 'EMP001', refDate)).toBe(7);
   });
 });
+
+// ── STA-256 — date/time entry helpers ────────────────────────────────────────
+import { addDaysIso, autoEndDate, plusOneHour } from '../ot-math';
+
+describe('addDaysIso', () => {
+  it('adds days across month/year boundaries (UTC-safe)', () => {
+    expect(addDaysIso('2026-07-08', 1)).toBe('2026-07-09');
+    expect(addDaysIso('2026-07-31', 1)).toBe('2026-08-01');
+    expect(addDaysIso('2026-12-31', 1)).toBe('2027-01-01');
+  });
+  it('returns the input unchanged when unparseable', () => {
+    expect(addDaysIso('not-a-date', 1)).toBe('not-a-date');
+  });
+});
+
+describe('autoEndDate — STA-256 auto-filled End Date', () => {
+  it('is empty without a start date; equals start while a time is blank', () => {
+    expect(autoEndDate('', '18:00', '20:00')).toBe('');
+    expect(autoEndDate('2026-07-08', '', '')).toBe('2026-07-08');
+    expect(autoEndDate('2026-07-08', '18:00', '')).toBe('2026-07-08');
+  });
+  it('same day when end > start; +1 day when end ≤ start (cross-midnight)', () => {
+    expect(autoEndDate('2026-07-08', '18:00', '20:00')).toBe('2026-07-08');
+    expect(autoEndDate('2026-07-08', '23:00', '01:00')).toBe('2026-07-09');
+    expect(autoEndDate('2026-07-08', '22:00', '22:00')).toBe('2026-07-09'); // equal → next day
+  });
+});
+
+describe('plusOneHour — STA-256 +1 hour button math', () => {
+  it('adds one hour, keeping minutes', () => {
+    expect(plusOneHour('08:00')).toBe('09:00');
+    expect(plusOneHour('18:30')).toBe('19:30');
+  });
+  it('wraps past midnight', () => {
+    expect(plusOneHour('23:15')).toBe('00:15');
+  });
+  it('passes through malformed input', () => {
+    expect(plusOneHour('')).toBe('');
+    expect(plusOneHour('8:00')).toBe('8:00');
+  });
+});

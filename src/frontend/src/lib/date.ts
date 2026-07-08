@@ -52,6 +52,25 @@ export function formatDate(
  }
 }
 
+// STA-256 — abbreviated [day mon year] display for chosen dates: EN → "8 Jul 2026"
+// (A.D.), TH → "8 ก.ค. 2569" (B.E.), standard month abbreviations only. Parses a
+// date-only ISO string (YYYY-MM-DD) directly to avoid timezone drift.
+export function formatDateAbbrev(
+ iso: string | null | undefined,
+ locale: string ='en'
+): string {
+ if (!iso) return'-';
+ const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+ if (!m) return formatDate(iso,'medium', locale);
+ const year = Number(m[1]);
+ const month = Number(m[2]) - 1;
+ const day = Number(m[3]);
+ if (month < 0 || month > 11) return'-';
+ const isTh = locale ==='th';
+ const monthsShort = isTh ? THAI_MONTHS_SHORT : EN_MONTHS_SHORT;
+ return `${day} ${monthsShort[month]} ${isTh ? toBuddhistYear(year) : year}`;
+}
+
 // STA-132 — when a current benefit is set Inactive, its effective end date is
 // the day BEFORE "today" (set Inactive on 19 Jun 2026 → end date 18 Jun 2026).
 // Pure + date-only math (no timezone drift): returns an ISO `YYYY-MM-DD` string.
