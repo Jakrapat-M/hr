@@ -21,10 +21,11 @@ import {
 } from '@/stores/time-corrections';
 import { useAuthStore } from '@/stores/auth-store';
 
-// A clocking employee id (passes the non-clocking gate) + a date inside the current
-// (unlocked) payroll period so isTimesheetLocked stays false.
+// A clocking employee id (passes the non-clocking gate) + a date inside the
+// STA-257 correction window (current DEMO pay cycle 2026-05-21 → DEMO_TODAY
+// 2026-06-07) so the one-cycle gate admits it.
 const CLOCKING_EMP = 'emp-001';
-const UNLOCKED_DATE = '2026-06-25';
+const UNLOCKED_DATE = '2026-06-05';
 
 function req(p: Partial<TimeCorrectionRequest>): TimeCorrectionRequest {
   return {

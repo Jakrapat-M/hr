@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils';
 import { formatDateAbbrev } from '@/lib/date';
 
 export interface FormattedDateInputProps {
+  /** Forwarded to the native input so a FormField label can target it. */
+  id?: string;
   /** Date-only ISO value (YYYY-MM-DD) or '' when unset. */
   value: string;
   onChange?: (iso: string) => void;
@@ -29,6 +31,7 @@ export interface FormattedDateInputProps {
 }
 
 export function FormattedDateInput({
+  id,
   value,
   onChange,
   locale,
@@ -51,6 +54,7 @@ export function FormattedDateInput({
       {!disabled && (
         <input
           ref={ref}
+          id={id}
           type="date"
           value={value}
           min={min}

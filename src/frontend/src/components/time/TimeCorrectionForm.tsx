@@ -30,7 +30,8 @@ import {
 } from '@/stores/time-corrections';
 import { CORRECTION_REASONS } from '@/lib/time/correction-reasons';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
-import { previousPeriod } from '@/lib/time/period';
+import { currentPeriod, demoToday, DEMO_TODAY } from '@/lib/time/period';
+import { FormattedDateInput } from '@/components/time/FormattedDateInput';
 import { getAttendanceForPeriod } from '@/lib/time/attendance-seed';
 import { computeLateMinutes, formatLate, type AttendanceDay } from '@/lib/time/attendance-math';
 import { useAuthStore } from '@/stores/auth-store';
@@ -148,10 +149,14 @@ export function TimeCorrectionForm({
   const attrs = getEmployeeTimeAttrs(subjectEmpId);
   const attendance = useMemo(() => getAttendanceForPeriod(subjectEmpId), [subjectEmpId]);
 
-  // Earliest correctable date = start of the PREVIOUS payroll cycle, wall-clock —
-  // identical to the leave backdate floor (LEAVE_BACKDATE_MIN), so the two backdate
-  // surfaces stay in lock-step. Not demo-anchored: mirrors the shipped leave rule.
-  const correctionMinDate = useMemo(() => previousPeriod().start, []);
+  // STA-257 — the editable window is ONE pay cycle: the CURRENT payroll cycle
+  // (21st → 20th) up to "today". DEMO-ANCHORED (demoToday/DEMO_TODAY), because
+  // the attendance rows this form corrects come from the demo-pinned seed
+  // (getAttendanceForPeriod → currentPeriod(demoToday())) — a wall-clock window
+  // would drift past the seeded period and leave no selectable dates. Narrowed
+  // from the previous-cycle floor of STA-156/170 per the Draft-2 ticket.
+  const correctionMinDate = useMemo(() => currentPeriod(demoToday()).start, []);
+  const correctionMaxDate = DEMO_TODAY;
 
   const [rows, setRows] = useState<CorrectionRow[]>(() => [
     newRow({ date: prefill?.date, correctionType: prefill?.correctionType }),
@@ -215,11 +220,11 @@ export function TimeCorrectionForm({
         );
         if (bothError) return bothError;
       }
-      // Per-row backdate floor: previous payroll cycle onward (STA-170 retroactive rule).
-      if (row.date && row.date < correctionMinDate) {
+      // Per-row window: within the CURRENT pay cycle only, up to today (STA-257).
+      if (row.date && (row.date < correctionMinDate || row.date > correctionMaxDate)) {
         return isTh
-          ? 'เลือกย้อนหลังได้ถึงต้นรอบเวลาก่อนหน้าเท่านั้น'
-          : 'You can only backdate to the start of the previous time period';
+          ? 'แก้ไขเวลาได้เฉพาะภายในรอบปัจจุบัน (ตั้งแต่ต้นรอบถึงวันนี้)'
+          : 'Time can only be corrected within the current cycle (cycle start through today)';
       }
       // For 'both', key the conflict guard on the corrected clock-IN (the mirror
       // anchor) so findCorrectionConflict receives a valid "HH:mm" value.
@@ -387,14 +392,18 @@ export function TimeCorrectionForm({
                   )}
                 </div>
 
+                {/* STA-257 — system calendar stays the selection method; the chosen
+                    value displays as [day mon-abbrev year] (TH = BE / EN = AD). */}
                 <FormField label={isTh ? 'วันที่' : 'Date'} required>
                   {(controlProps) => (
-                    <FormInput
-                      {...controlProps}
-                      type="date"
+                    <FormattedDateInput
+                      id={controlProps.id}
                       value={row.date}
+                      locale={locale}
                       min={correctionMinDate}
-                      onChange={(e) => updateRow(row.id, { date: e.target.value })}
+                      max={correctionMaxDate}
+                      data-testid={`correction-date-${idx}`}
+                      onChange={(v) => updateRow(row.id, { date: v })}
                     />
                   )}
                 </FormField>
