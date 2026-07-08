@@ -2255,6 +2255,7 @@
     "scheduleExitInterview": "Schedule Exit Interview",
     "exitInterviewDate": "Exit Interview Date",
     "submitResignation": "Submit Resignation",
+    "personalEmailRemark": "This email is used to receive the Employment Letter, Payslip and 50BIS.",
     "confirmSubmitTitle": "Confirm Resignation Submission",
     "confirmSubmitMessage": "Are you sure you want to submit your resignation? This action will start the resignation workflow.",
     "submitSuccess": "Resignation submitted successfully",

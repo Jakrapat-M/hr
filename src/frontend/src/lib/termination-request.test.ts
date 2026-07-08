@@ -11,6 +11,7 @@ vi.mock('@/lib/admin/store/useTimelines', () => ({
   useTimelines: {
     getState: () => ({
       append: appendTimeline,
+      seed: seedTimeline,
     }),
   },
 }));
@@ -19,12 +20,15 @@ vi.mock('@/lib/admin/store/useEmployees', () => ({
   useEmployees: {
     getState: () => ({
       updateEmployee,
+      getById,
     }),
   },
 }));
 
 const appendTimeline = vi.fn();
+const seedTimeline = vi.fn();
 const updateEmployee = vi.fn();
+const getById = vi.fn(() => undefined);
 
 describe('termination-request helpers', () => {
   it('derives termination date from resigned date', () => {

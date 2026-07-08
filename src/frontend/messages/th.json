@@ -2972,6 +2972,7 @@
     "scheduleExitInterview": "นัดหมายสัมภาษณ์ก่อนลาออก",
     "exitInterviewDate": "วันที่สัมภาษณ์ก่อนลาออก",
     "submitResignation": "ส่งใบลาออก",
+    "personalEmailRemark": "อีเมลนี้ใช้สำหรับรับหนังสือรับรองการทำงาน (Employment Letter), สลิปเงินเดือน (Payslip) และ 50 ทวิ (50BIS)",
     "confirmSubmitTitle": "ยืนยันการส่งใบลาออก",
     "confirmSubmitMessage": "คุณแน่ใจหรือไม่ที่จะส่งใบลาออก? การดำเนินการนี้จะเริ่มกระบวนการลาออก",
     "submitSuccess": "ส่งใบลาออกเรียบร้อยแล้ว",

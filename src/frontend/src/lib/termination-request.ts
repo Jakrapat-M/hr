@@ -144,6 +144,10 @@ export function commitApprovedTermination(request: ApprovedTerminationCommitRequ
     notes: extraNote || undefined,
   } satisfies TerminateEvent;
 
+  // Seed the baseline timeline first — seed() is a no-op once ANY events exist,
+  // so appending before seeding would leave the employee with a terminate-only history.
+  const employee = useEmployees.getState().getById(request.employeeId);
+  if (employee) useTimelines.getState().seed(employee);
   useTimelines.getState().append(request.employeeId, event);
   useEmployees.getState().updateEmployee(request.employeeId, { status: 'terminated' });
 }
