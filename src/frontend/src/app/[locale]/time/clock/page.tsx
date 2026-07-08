@@ -23,7 +23,9 @@ import {
   useClockPunches,
   punchesForDay,
   nextPunchType,
+  clockButtonState,
   localDateKey,
+  type PunchType,
 } from '@/stores/clock-punches';
 import {
   evaluateGeofence,
@@ -117,13 +119,16 @@ export default function ClockInOutPage() {
       ? isTh ? `เข้างานแล้ว · ${fmtPunchTime(inPunch.at, isTh)}` : `Clocked in · ${fmtPunchTime(inPunch.at, isTh)}`
       : isTh ? `ออกงานแล้ว · ${outPunch ? fmtPunchTime(outPunch.at, isTh) : ''}` : `Clocked out · ${outPunch ? fmtPunchTime(outPunch.at, isTh) : ''}`;
 
-  function handlePunch() {
+  // STA-251 dual-button matrix, derived from today's punches + timestamps.
+  const buttons = clockButtonState(todayPunches, now ? now.getTime() : Date.now());
+
+  function handlePunch(type: PunchType) {
     const evalResult = evaluateGeofence(sim);
     // Case 3 — GPS disabled/denied: block, no punch, error popup.
     if (evalResult.result === 'disabled') {
       setResult({
         variant: 'error',
-        punchType: next,
+        punchType: type,
         time: now ? fmtClock(now, isTh) : '',
         distanceM: null,
       });
@@ -131,7 +136,7 @@ export default function ClockInOutPage() {
     }
     // Cases 1 & 2 — record the punch, then show success / warning.
     const outside = evalResult.result === 'outside';
-    const created = doPunch(empId, next, {
+    const created = doPunch(empId, type, {
       withinRadius: !outside,
       distanceM: evalResult.distanceM ?? 0,
       notifiedSupervisor: outside,
@@ -225,21 +230,57 @@ export default function ClockInOutPage() {
               </div>
             )}
 
-            {/* Big punch button — always the single legal action (in or out). */}
-            <button
-              type="button"
-              data-testid="punch-button"
-              disabled={result !== null}
-              onClick={handlePunch}
-              className={`flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] py-4 text-base font-semibold text-white transition active:scale-[0.99] disabled:opacity-50 ${
-                next === 'in' ? 'bg-accent hover:opacity-90' : 'bg-ink hover:opacity-90'
-              }`}
-            >
-              {next === 'in' ? <LogIn size={20} aria-hidden /> : <LogOut size={20} aria-hidden />}
-              {next === 'in'
-                ? isTh ? 'ลงเวลาเข้า' : 'Clock in'
-                : isTh ? 'ลงเวลาออก' : 'Clock out'}
-            </button>
+            {/* STA-251 — two large, clearly separated buttons. Enable/disable
+                follows the dual-button matrix (2-hour in-cooldown; out needs an
+                unmatched in). Both lock while a result popup is open. */}
+            <div className="grid w-full grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  data-testid="clock-in-button"
+                  disabled={result !== null || !buttons.canIn}
+                  onClick={() => handlePunch('in')}
+                  className={`flex h-16 w-full items-center justify-center gap-2 rounded-[var(--radius-md)] text-base font-semibold transition active:scale-[0.99] ${
+                    buttons.canIn && result === null
+                      ? 'bg-accent text-white hover:opacity-90'
+                      : 'cursor-not-allowed bg-canvas-soft text-ink-faint'
+                  }`}
+                >
+                  <LogIn size={20} aria-hidden />
+                  {isTh ? 'ลงเวลาเข้า' : 'Clock in'}
+                </button>
+                {buttons.inReason === 'cooldown' && (
+                  <p data-testid="clock-in-helper" className="text-xs text-ink-muted">
+                    {isTh
+                      ? 'ลงเวลาเข้าได้อีกครั้งหลังจากเข้างานครบ 2 ชั่วโมง'
+                      : 'You can clock in again 2 hours after your last clock-in'}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  data-testid="clock-out-button"
+                  disabled={result !== null || !buttons.canOut}
+                  onClick={() => handlePunch('out')}
+                  className={`flex h-16 w-full items-center justify-center gap-2 rounded-[var(--radius-md)] text-base font-semibold transition active:scale-[0.99] ${
+                    buttons.canOut && result === null
+                      ? 'bg-ink text-white hover:opacity-90'
+                      : 'cursor-not-allowed bg-canvas-soft text-ink-faint'
+                  }`}
+                >
+                  <LogOut size={20} aria-hidden />
+                  {isTh ? 'ลงเวลาออก' : 'Clock out'}
+                </button>
+                {buttons.outReason === 'needsIn' && (
+                  <p data-testid="clock-out-helper" className="text-xs text-ink-muted">
+                    {isTh
+                      ? 'ต้องลงเวลาเข้าก่อน จึงจะลงเวลาออกได้'
+                      : 'Clock in first before clocking out'}
+                  </p>
+                )}
+              </div>
+            </div>
 
             {/* Today's punches */}
             <div className="w-full">

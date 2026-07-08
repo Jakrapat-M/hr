@@ -4,7 +4,9 @@ import {
   nextPunchType,
   lastPunchType,
   assertLegalPunch,
+  clockButtonState,
   localDateKey,
+  CLOCK_IN_COOLDOWN_MS,
   type ClockPunch,
 } from '../clock-punches';
 
@@ -80,23 +82,58 @@ describe('nextPunchType — multiple pairs per day (never "done")', () => {
   });
 });
 
-describe('assertLegalPunch — illegal-transition guard', () => {
+const T0 = new Date('2026-06-09T08:00:00.000Z').getTime();
+
+describe('assertLegalPunch — illegal-transition guard (STA-251 cooldown)', () => {
   it('allows an in on an empty day, rejects an out-first', () => {
-    expect(assertLegalPunch([], 'in')).toBe(true);
-    expect(assertLegalPunch([], 'out')).toBe(false);
+    expect(assertLegalPunch([], 'in', T0)).toBe(true);
+    expect(assertLegalPunch([], 'out', T0)).toBe(false);
   });
-  it('rejects two ins in a row; allows the following out', () => {
-    const day = [p({ type: 'in' })];
-    expect(assertLegalPunch(day, 'in')).toBe(false);
-    expect(assertLegalPunch(day, 'out')).toBe(true);
+  it('rejects a second in within the 2-hour cooldown; allows the out', () => {
+    const day = [p({ type: 'in', at: '2026-06-09T08:00:00.000Z' })];
+    const oneHourLater = T0 + 60 * 60 * 1000;
+    expect(assertLegalPunch(day, 'in', oneHourLater)).toBe(false);
+    expect(assertLegalPunch(day, 'out', oneHourLater)).toBe(true);
+  });
+  it('allows a re-clock-in at exactly +2 h (boundary inclusive)', () => {
+    const day = [p({ type: 'in', at: '2026-06-09T08:00:00.000Z' })];
+    expect(assertLegalPunch(day, 'in', T0 + CLOCK_IN_COOLDOWN_MS - 1)).toBe(false);
+    expect(assertLegalPunch(day, 'in', T0 + CLOCK_IN_COOLDOWN_MS)).toBe(true);
   });
   it('allows a new in after an out (next pair)', () => {
     const day = [
       p({ id: '1', type: 'in', at: '2026-06-09T08:00:00Z' }),
       p({ id: '2', type: 'out', at: '2026-06-09T12:00:00Z' }),
     ];
-    expect(assertLegalPunch(day, 'in')).toBe(true);
-    expect(assertLegalPunch(day, 'out')).toBe(false);
+    expect(assertLegalPunch(day, 'in', T0)).toBe(true);
+    expect(assertLegalPunch(day, 'out', T0)).toBe(false);
+  });
+});
+
+describe('clockButtonState — STA-251 dual-button state matrix', () => {
+  const HOUR = 60 * 60 * 1000;
+  const inAt8 = p({ id: 'i1', type: 'in', at: '2026-06-09T08:00:00.000Z' });
+
+  it('row 1 — no punches yet: in enabled, out disabled (needs an in)', () => {
+    const s = clockButtonState([], T0);
+    expect(s).toEqual({ canIn: true, canOut: false, inReason: null, outReason: 'needsIn' });
+  });
+  it('row 2 — clocked in < 2 h ago, not out: in disabled (cooldown), out enabled immediately', () => {
+    const s = clockButtonState([inAt8], T0 + 1); // 1 ms after the in
+    expect(s).toEqual({ canIn: false, canOut: true, inReason: 'cooldown', outReason: null });
+  });
+  it('row 3 — clocked in ≥ 2 h ago, not out: both enabled (boundary at exactly +2 h)', () => {
+    expect(clockButtonState([inAt8], T0 + 2 * HOUR - 1).canIn).toBe(false);
+    const s = clockButtonState([inAt8], T0 + 2 * HOUR);
+    expect(s).toEqual({ canIn: true, canOut: true, inReason: null, outReason: null });
+  });
+  it('row 4 — last punch is an out: in enabled, out disabled until the next in', () => {
+    const day = [
+      inAt8,
+      p({ id: 'o1', type: 'out', at: '2026-06-09T12:00:00.000Z' }),
+    ];
+    const s = clockButtonState(day, T0 + 5 * HOUR);
+    expect(s).toEqual({ canIn: true, canOut: false, inReason: null, outReason: 'needsIn' });
   });
 });
 
