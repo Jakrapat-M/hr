@@ -397,6 +397,8 @@
     "cancelClaim": "ยกเลิกคำขอ",
     "editClaim": "แก้ไข",
     "editClaimTitle": "แก้ไขคำขอ",
+    "editClaimSave": "บันทึกการแก้ไข",
+    "editClaimExistingAttachment": "ไฟล์แนบเดิม",
     "claimCancelledToast": "ยกเลิกคำขอแล้ว",
     "claimUpdatedToast": "ส่งคำขอที่แก้ไขแล้ว",
     "moreDetail": "ดูรายละเอียด",

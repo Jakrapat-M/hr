@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { FileText } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput, Textarea } from '@/components/humi';
 import { Modal } from '@/components/humi/Modal';
@@ -31,6 +32,24 @@ export interface BenefitTemplateProps {
    *  the actual submit fires only on "Confirm submit claim". Default off so the
    *  admin "Start a claim" + physical-checkup consumers keep direct submit. */
   confirmBeforeSubmit?: boolean;
+  /** STA-234 — edit mode: prefill the form fields from an existing claim.
+   *  Omitted → fields default to empty (existing callers unchanged). */
+  initialValues?: Partial<{
+    receiptDate: string;
+    receiptNo: string;
+    receiptAmount: string;
+    claimAmount: string;
+    remark: string;
+  }>;
+  /** STA-234 — edit mode: name of the file already attached to the claim, shown
+   *  as a read-only chip above the uploader. Not a submit gate. */
+  initialAttachmentName?: string;
+  /** STA-234 — override the submit button label (e.g. "Save changes" in edit). */
+  submitLabel?: string;
+  /** STA-234 — edit mode: prefill bucket-specific conditional field values
+   *  (e.g. medicalDental, gasolineClaimType) so Edit doesn't force a manual
+   *  reselect of an already-required field. Omitted → empty (unchanged). */
+  initialDynamic?: Partial<Record<ClaimFieldKey, string>>;
 }
 
 export interface SimpleClaimSubmission {
@@ -53,6 +72,9 @@ export interface SimpleClaimSubmission {
 // general group + the conditional groups for the plan's category bucket.
 
 const todayIsoDate = () => new Date().toISOString().slice(0, 10);
+// Impure id generator hoisted to module scope (matches todayIsoDate) so the
+// react-hooks purity rule doesn't flag Date.now() inside the component.
+const makeWorkflowId = () => `WF-${Date.now()}`;
 
 // Bilingual field labels — mirrors messages/{th,en}.json `benefits.claim.*`
 // (kept in sync by the i18n parity test). Inline here to match the other
@@ -89,6 +111,8 @@ const CLAIM_LABELS: Record<string, { th: string; en: string }> = {
   confirmSubmit: { th: 'ยืนยันส่งคำขอ', en: 'Confirm submit claim' },
   previewEdit: { th: 'แก้ไข', en: 'Edit' },
   attachment: { th: 'เอกสารแนบ', en: 'Attachment' },
+  // STA-234 — edit-mode existing-attachment chip label.
+  editClaimExistingAttachment: { th: 'ไฟล์แนบเดิม', en: 'Previously attached' },
 };
 
 export function SimpleClaimForm({
@@ -99,6 +123,10 @@ export function SimpleClaimForm({
   remainingAmount,
   monthlyLimitThb,
   confirmBeforeSubmit,
+  initialValues,
+  initialAttachmentName,
+  submitLabel,
+  initialDynamic,
 }: BenefitTemplateProps) {
   const locale = useLocale();
   const isTh = locale !== 'en';
@@ -115,17 +143,25 @@ export function SimpleClaimForm({
 
   const emptyDynamic = (): Partial<Record<ClaimFieldKey, string>> => ({});
 
-  const [form, setForm] = useState({
+  // STA-234 — lazy-init merges edit-mode initialValues over the empty defaults;
+  // claimDate always stays today (read-only). Existing callers pass no
+  // initialValues → identical empty defaults.
+  const [form, setForm] = useState(() => ({
     claimDate: todayIsoDate(),
-    receiptDate: '',
-    receiptNo: '',
-    receiptAmount: '',
-    claimAmount: '',
-    remark: '',
+    receiptDate: initialValues?.receiptDate ?? '',
+    receiptNo: initialValues?.receiptNo ?? '',
+    receiptAmount: initialValues?.receiptAmount ?? '',
+    claimAmount: initialValues?.claimAmount ?? '',
+    remark: initialValues?.remark ?? '',
     attachmentName: '',
-  });
+  }));
   // Conditional values live here so switching benefit can clear them wholesale.
-  const [dynamic, setDynamic] = useState<Partial<Record<ClaimFieldKey, string>>>(emptyDynamic);
+  // STA-234 — lazy-init merges edit-mode initialDynamic over the empty defaults;
+  // existing callers pass no initialDynamic → identical empty object.
+  const [dynamic, setDynamic] = useState<Partial<Record<ClaimFieldKey, string>>>(() => ({
+    ...emptyDynamic(),
+    ...initialDynamic,
+  }));
   const [errors, setErrors] = useState<string[]>([]);
   const [lastWorkflowId, setLastWorkflowId] = useState<string | null>(null);
   // STA-145 Phase B — patient-transfer "Yes" opens an error popup that asks the
@@ -263,7 +299,7 @@ export function SimpleClaimForm({
     setSubmitting(true);
     const amount = Number(form.receiptAmount);
     const claimAmount = Number(form.claimAmount || form.receiptAmount);
-    const wfId = `WF-${Date.now()}`;
+    const wfId = makeWorkflowId();
     setLastWorkflowId(wfId);
     const submittedDynamic = { ...dynamic } as Partial<Record<ClaimFieldKey, string | number>>;
     const submittedClaimDate = form.claimDate;
@@ -466,6 +502,17 @@ export function SimpleClaimForm({
             : 'I hereby certify that the above information is accurate and complete'}
         </p>
 
+        {/* STA-234 — edit mode: read-only chip of the previously-attached file,
+            shown above the uploader. Neutral canvas-soft tone (NOT pumpkin). The
+            prior file need not be re-uploaded (attachment is not a submit gate). */}
+        {initialAttachmentName && (
+          <div className="sm:col-span-2 flex items-center gap-2 rounded-[var(--radius-sm)] border border-hairline bg-canvas-soft px-3 py-2 text-small text-ink">
+            <FileText size={15} aria-hidden className="text-ink-muted" />
+            <span className="font-medium">{initialAttachmentName}</span>
+            <span className="text-ink-muted">· {tc('editClaimExistingAttachment')}</span>
+          </div>
+        )}
+
         <FileUploadField
           label={isTh ? 'เอกสารแนบ' : 'Attachments'}
           required
@@ -490,7 +537,7 @@ export function SimpleClaimForm({
 
       <div className="mt-4 flex justify-end">
         <Button variant="primary" onClick={validateAndMaybePreview}>
-          {isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim'}
+          {submitLabel ?? (isTh ? 'ส่งคำขอเบิกสวัสดิการ' : 'Submit claim')}
         </Button>
       </div>
 
