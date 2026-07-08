@@ -16,7 +16,8 @@ import { formatDate } from '@/lib/date';
 import { useAuthStore } from '@/stores/auth-store';
 import { resolveCurrentEmpId } from '@/lib/scope-filter';
 import { getEmployeeTimeAttrs } from '@/lib/time/employee-time-attrs';
-import { currentPeriod, demoToday } from '@/lib/time/period';
+import { currentPeriod, periodOptions, demoToday } from '@/lib/time/period';
+import { CustomSelect } from '@/components/ui/custom-select';
 import { getAttendanceForPeriod } from '@/lib/time/attendance-seed';
 import { periodLateSummary } from '@/lib/time/attendance-math';
 import { getClockLogForPeriod, clockLogWarnCount } from '@/lib/time/clock-log-seed';
@@ -42,6 +43,14 @@ export default function TimesheetPage() {
   const isClocking = attrs.employeeType === 'clocking';
 
   const period = useMemo(() => currentPeriod(demoToday()), []);
+  // STA-239 (ticket 1) — period selector: −12 cycles back … +3 forward, current
+  // pre-selected. Only the current demo period carries seeded attendance, so the
+  // Summary tab reacts to the selection; other tabs stay pinned to the demo period.
+  const periods = useMemo(() => periodOptions(demoToday()), []);
+  const [periodKey, setPeriodKey] = useState(
+    () => periodOptions(demoToday()).find((o) => o.isCurrent)!.key,
+  );
+  const selectedPeriod = periods.find((o) => o.key === periodKey) ?? periods.find((o) => o.isCurrent)!;
   const days = useMemo(() => getAttendanceForPeriod(empId), [empId]);
   const lateSummary = useMemo(() => periodLateSummary(days), [days]);
   const clockLog = useMemo(() => getClockLogForPeriod(empId), [empId]);
@@ -181,9 +190,19 @@ export default function TimesheetPage() {
           <p className="mb-0.5 text-xs font-semibold uppercase tracking-widest text-ink-muted">{t('eyebrow')}</p>
           <h1 className="text-2xl font-bold text-ink">{t('title')}</h1>
         </div>
-        <span className="rounded-full border border-[var(--color-accent-alt)] bg-[var(--color-accent-alt-soft)] px-3 py-1 text-xs font-medium text-[var(--color-accent-alt)]">
-          {fmtPeriodChip(period.start, period.end, isTh)}
-        </span>
+        {/* STA-239 — period DROPDOWN (replaces the static chip): pick any of the
+            last 12 / next 3 payroll cycles (21st → 20th). */}
+        <div className="w-60" data-testid="period-selector">
+          <CustomSelect
+            value={periodKey}
+            options={periods.map((o) => ({
+              value: o.key,
+              label: fmtPeriodChip(o.start, o.end, isTh),
+            }))}
+            onChange={setPeriodKey}
+            aria-label={isTh ? 'เลือกกะ/รอบเวลา' : 'Select pay period'}
+          />
+        </div>
       </header>
 
       {/* Tab bar */}
@@ -218,7 +237,14 @@ export default function TimesheetPage() {
       ) : (
         <>
           {tab === 'schedule' && <ScheduleTab empId={empId} isTh={isTh} period={period} />}
-          {tab === 'summary' && <SummaryTab empId={empId} isTh={isTh} period={period} />}
+          {tab === 'summary' && (
+            <SummaryTab
+              empId={empId}
+              isTh={isTh}
+              period={{ start: selectedPeriod.start, end: selectedPeriod.end }}
+              isCurrentPeriod={selectedPeriod.isCurrent}
+            />
+          )}
           {tab === 'result' && <TimeResultTab empId={empId} isTh={isTh} />}
           {tab === 'gps' && <ClockLogTab entries={clockLog} isTh={isTh} />}
           {tab === 'messages' && <MessagesTab messages={messages} isTh={isTh} />}

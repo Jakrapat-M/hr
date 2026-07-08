@@ -37,6 +37,7 @@ const WORKED_DAYOFF_OVERRIDES: Record<string, string> = {
 export function getAttendanceForPeriod(empId: string): AttendanceDay[] {
   const schedule = getScheduleForPeriod(empId);
   const todayD = new Date(DEMO_TODAY + 'T00:00:00Z');
+  let multiPunchSeeded = false;
 
   return schedule.map((s, i) => {
     // Worked day-off override: derive ALL four scheduled fields from the shift code
@@ -62,13 +63,31 @@ export function getAttendanceForPeriod(empId: string): AttendanceDay[] {
 
     let actualIn: string | null = null;
     let actualOut: string | null = null;
+    let punchPairs: { in: string; out: string | null }[] | undefined;
     const isPast = new Date(s.date + 'T00:00:00Z').getTime() <= todayD.getTime();
     if (!s.dayOff && s.scheduledIn && isPast) {
       // Deterministic late pattern: ~every 7th day late 23m, ~every 11th 12m.
       const lateMin = i % 7 === 3 ? 23 : i % 11 === 5 ? 12 : 0;
       actualIn = addMinutes(s.scheduledIn, lateMin);
       actualOut = s.scheduledOut;
+      // STA-239 — ONE multi-punch scenario day per period (out for an errand and
+      // back around the break): split into two in/out pairs so the summary row
+      // is expandable. First-in/last-out (actualIn/actualOut) stay unchanged, so
+      // worked-hours / late math is untouched. First eligible day from the 5th
+      // schedule slot; break times when the shift has them, else a 13:00–14:00
+      // gap — guarded to fall strictly inside the punch window.
+      if (!multiPunchSeeded && i >= 4) {
+        const splitOut = s.breakStart ?? '13:00';
+        const splitIn = s.breakEnd ?? '14:00';
+        if (actualIn < splitOut && splitOut < splitIn && actualOut !== null && splitIn < actualOut) {
+          punchPairs = [
+            { in: actualIn, out: splitOut },
+            { in: splitIn, out: actualOut },
+          ];
+          multiPunchSeeded = true;
+        }
+      }
     }
-    return { ...s, actualIn, actualOut };
+    return { ...s, actualIn, actualOut, ...(punchPairs ? { punchPairs } : {}) };
   });
 }

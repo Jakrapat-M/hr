@@ -14,6 +14,13 @@ export type AttendanceDay = {
   breakEnd: string | null;
   actualIn: string | null; // null = no clock-in yet (future / absent)
   actualOut: string | null;
+  /**
+   * STA-239 — full in/out pairs when the day carries MULTIPLE clock punches
+   * (e.g. out for an errand and back). When present (length > 1) the timesheet
+   * summary row becomes expandable; actualIn/actualOut stay the day's first-in /
+   * last-out so all existing math is untouched.
+   */
+  punchPairs?: { in: string; out: string | null }[];
 };
 
 function toMinutes(hhmm: string): number {
