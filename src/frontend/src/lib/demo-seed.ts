@@ -74,7 +74,7 @@ const MOCK_TERMINATION_REQUESTS: TerminationRequest[] = [
     employeeId: 'EMP-0203',
     employeeName: 'อรณิชา ปานสุข',
     requestedLastDay: '2026-05-15',
-    reasonCode: 'TERM_RETRIE',
+    reasonCode: 'TERM_RETIRE',
     reasonText: 'เกษียณอายุตามครบกำหนด',
     status: 'pending_manager',
     submittedAt: '2026-04-23T11:00:00+07:00',
