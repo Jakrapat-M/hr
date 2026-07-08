@@ -12,6 +12,10 @@ import {
   calcYearsInCorpTitle,
 } from './calculations'
 import type { LifecycleEvent } from './calculations'
+// STA-234 — type-only import (erased at compile time; the reverse edge
+// claim-field-config → benefit-claims → humi-mock-data is also type-only, so
+// this forms no runtime import cycle).
+import type { ClaimFieldKey } from '@/data/benefits/claim-field-config'
 
 export type EmployeeStatus = 'active' | 'leave' | 'terminated';
 
@@ -1610,16 +1614,52 @@ export interface HumiClaimHistoryItem {
   status: ClaimStatus;
   /** STA-194 — sub-type under the fuel benefit (Gasoline / Toll / Parking). */
   claimType?: string;
+  /** STA-234 — Edit-mode conditional-field prefill so the full SimpleClaimForm
+   *  reopens with every REQUIRED-by-default conditional field already answered
+   *  (no manual reselect). Seeded per the plan `planIdForClaimRow` resolves to;
+   *  option ids verified against each field's lov in claim-field-config.ts. */
+  dynamicFields?: Partial<Record<ClaimFieldKey, string>>;
 }
 
 export const HUMI_CLAIM_HISTORY: HumiClaimHistoryItem[] = [
-  { id: 'cl-1', date: '15 เม.ย. 2569', submittedAt: '2026-04-15', type: 'ค่ารักษาพยาบาล', desc: 'รพ.บำรุงราษฎร์ · ใบเสร็จ #RX-3381', amount: '฿4,820', status: 'approved' },
-  { id: 'cl-2', date: '2 เม.ย. 2569', submittedAt: '2026-04-02', type: 'ค่าน้ำมันรถ', desc: 'ปตท. สาขาทองหล่อ · 230 กิโลเมตร', amount: '฿1,280', status: 'approved', claimType: 'gasoline' },
-  { id: 'cl-3', date: '28 เม.ย. 2569', submittedAt: '2026-04-28', type: 'ค่าโทรศัพท์', desc: 'AIS · บิลเดือน เม.ย.', amount: '฿800', status: 'pending' },
-  { id: 'cl-4', date: '22 เม.ย. 2569', submittedAt: '2026-04-22', type: 'ค่ารักษาพยาบาล', desc: 'บีเอ็นเอชคลินิก · ใบเสร็จ #RX-3280', amount: '฿7,580', status: 'approved' },
-  { id: 'cl-5', date: '10 เม.ย. 2569', submittedAt: '2026-04-10', type: 'ค่าทันตกรรม', desc: 'ต้องแนบใบเสร็จเพิ่ม', amount: '฿1,500', status: 'info' },
-  { id: 'cl-6', date: '18 เม.ย. 2569', submittedAt: '2026-04-18', type: 'ค่าน้ำมันรถ', desc: 'ทางด่วนศรีรัช · ต้องแนบใบเสร็จค่าผ่านทางเพิ่ม', amount: '฿420', status: 'info', claimType: 'toll' },
-  { id: 'cl-7', date: '25 เม.ย. 2569', submittedAt: '2026-04-25', type: 'ค่าน้ำมันรถ', desc: 'อาคารจอดรถ สยามพารากอน · ไปราชการ', amount: '฿240', status: 'pending', claimType: 'parking' },
+  {
+    id: 'cl-1', date: '15 เม.ย. 2569', submittedAt: '2026-04-15', type: 'ค่ารักษาพยาบาล', desc: 'รพ.บำรุงราษฎร์ · ใบเสร็จ #RX-3381', amount: '฿4,820', status: 'approved',
+    // BE-MED-001 (medical bucket) — required-by-default: medicalDental, opdIpd,
+    // hospitalType, medicalHospitalName, patientTransferDoc, diseaseDetails.
+    dynamicFields: { medicalDental: 'medical', opdIpd: 'OPD', hospitalType: 'private', medicalHospitalName: 'bnh', patientTransferDoc: 'no', diseaseDetails: 'cold_fever' },
+  },
+  {
+    id: 'cl-2', date: '2 เม.ย. 2569', submittedAt: '2026-04-02', type: 'ค่าน้ำมันรถ', desc: 'ปตท. สาขาทองหล่อ · 230 กิโลเมตร', amount: '฿1,280', status: 'approved', claimType: 'gasoline',
+    // BE-GAS-001 (gasoline bucket) — required-by-default: gasolineClaimType.
+    dynamicFields: { gasolineClaimType: 'gasoline' },
+  },
+  {
+    id: 'cl-3', date: '28 เม.ย. 2569', submittedAt: '2026-04-28', type: 'ค่าโทรศัพท์', desc: 'AIS · บิลเดือน เม.ย.', amount: '฿800', status: 'pending',
+    // BE-MOB-001 (mobile bucket) — required-by-default: realMonthDate.
+    dynamicFields: { realMonthDate: 'apr' },
+  },
+  {
+    id: 'cl-4', date: '22 เม.ย. 2569', submittedAt: '2026-04-22', type: 'ค่ารักษาพยาบาล', desc: 'บีเอ็นเอชคลินิก · ใบเสร็จ #RX-3280', amount: '฿7,580', status: 'approved',
+    // BE-MED-001 (medical bucket) — hospitalType kept 'private' (NOT 'clinic':
+    // SimpleClaimForm pops a not-allowed notice when Type of Hospital = Clinic).
+    dynamicFields: { medicalDental: 'medical', opdIpd: 'OPD', hospitalType: 'private', medicalHospitalName: 'bnh', patientTransferDoc: 'no', diseaseDetails: 'headache_migraine' },
+  },
+  {
+    id: 'cl-5', date: '10 เม.ย. 2569', submittedAt: '2026-04-10', type: 'ค่าทันตกรรม', desc: 'ต้องแนบใบเสร็จเพิ่ม', amount: '฿1,500', status: 'info',
+    // BE-DEN-001 (dental bucket) — required-by-default: medicalDental only.
+    dynamicFields: { medicalDental: 'dental' },
+  },
+  {
+    id: 'cl-6', date: '18 เม.ย. 2569', submittedAt: '2026-04-18', type: 'ค่าน้ำมันรถ', desc: 'ทางด่วนศรีรัช · ต้องแนบใบเสร็จค่าผ่านทางเพิ่ม', amount: '฿420', status: 'info', claimType: 'toll',
+    // BE-TOL-001 (gasoline bucket) — 'expressway_toll' is the real lov option id
+    // (GASOLINE_CLAIM_TYPE_OPTIONS has no bare 'toll' id).
+    dynamicFields: { gasolineClaimType: 'expressway_toll' },
+  },
+  {
+    id: 'cl-7', date: '25 เม.ย. 2569', submittedAt: '2026-04-25', type: 'ค่าน้ำมันรถ', desc: 'อาคารจอดรถ สยามพารากอน · ไปราชการ', amount: '฿240', status: 'pending', claimType: 'parking',
+    // BE-PAR-001 (gasoline bucket) — 'car_parking' is the real lov option id.
+    dynamicFields: { gasolineClaimType: 'car_parking' },
+  },
 ];
 
 export interface HumiPayslip {

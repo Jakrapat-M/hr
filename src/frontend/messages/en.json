@@ -397,6 +397,8 @@
     "cancelClaim": "Cancel claim",
     "editClaim": "Edit",
     "editClaimTitle": "Edit claim",
+    "editClaimSave": "Save changes",
+    "editClaimExistingAttachment": "Previously attached",
     "claimCancelledToast": "Claim cancelled",
     "claimUpdatedToast": "Claim updated & resubmitted",
     "moreDetail": "More detail",

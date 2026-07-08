@@ -31,7 +31,10 @@ import {
 } from '@/components/humi';
 import type { DataTableColumn } from '@/components/humi';
 import { ClaimDetailModal } from '@/components/benefits/ClaimDetailModal';
+import { SimpleClaimForm, type SimpleClaimSubmission } from '@/components/benefits/templates';
 import { humiClaimHistoryToClaimRequest } from '@/lib/humi-claim-history-to-claim';
+import { planIdForClaimRow } from '@/lib/claim-history-plan-resolver';
+import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry';
 import { cn } from '@/lib/utils';
 import {
   CLAIM_TYPE_OPTIONS,
@@ -500,9 +503,26 @@ function ClaimHistorySection() {
   const [rows, setRows] = useState(() => HUMI_CLAIM_HISTORY);
   const [cancelTarget, setCancelTarget] = useState<HumiClaimHistoryItem | null>(null);
   const [editTarget, setEditTarget] = useState<HumiClaimHistoryItem | null>(null);
-  const [editDesc, setEditDesc] = useState('');
-  const [editAmount, setEditAmount] = useState('');
   const { toast, show: showToast } = useToast();
+
+  // STA-234 — Edit opens the SAME full SimpleClaimForm used by "Start claim" for
+  // the row's benefit, prefilled from the row. Resolve the plan by explicit map
+  // (row.type differs from registry nameTh) — fallback always yields BE-MED-001.
+  const editPlan = editTarget
+    ? BENEFIT_PLAN_REGISTRY.find(
+        (p) => p.id === planIdForClaimRow(editTarget.type, editTarget.claimType),
+      ) ?? null
+    : null;
+  // Prefill mirrors the humi-claim-history-to-claim adapter convention.
+  const editInitialValues = editTarget
+    ? {
+        receiptNo: `RCPT-${editTarget.id}`,
+        receiptDate: editTarget.submittedAt.slice(0, 10),
+        receiptAmount: String(claimAmountValue(editTarget.amount)),
+        claimAmount: String(claimAmountValue(editTarget.amount)),
+        remark: editTarget.desc,
+      }
+    : undefined;
 
   const filteredClaimHistory = useMemo(() => {
     const filtered = filterHumiClaimHistory(rows, {
@@ -526,8 +546,6 @@ function ClaimHistorySection() {
 
   const openEdit = () => {
     if (!detailRow) return;
-    setEditDesc(detailRow.desc);
-    setEditAmount(detailRow.amount);
     setEditTarget(detailRow);
     setDetailRow(null);
   };
@@ -540,15 +558,24 @@ function ClaimHistorySection() {
     showToast(t('claimCancelledToast'));
   };
 
-  const saveEdit = () => {
+  // STA-234 — full-form submit updates the row from the submission, flips the
+  // status back to pending (resubmitted), and closes.
+  const onEditSubmitted = (_wfId: string, submission?: SimpleClaimSubmission) => {
     if (!editTarget) return;
     const id = editTarget.id;
+    const nextDesc = submission?.remark || editTarget.desc;
+    const nextAmountNum =
+      submission?.totalClaimAmount ??
+      submission?.receiptAmount ??
+      claimAmountValue(editTarget.amount);
+    const nextAmount = formatThb(nextAmountNum);
     setRows((prev) =>
       prev.map((x) =>
-        x.id === id ? { ...x, desc: editDesc, amount: editAmount, status: 'pending' } : x,
+        x.id === id ? { ...x, desc: nextDesc, amount: nextAmount, status: 'pending' } : x,
       ),
     );
     setEditTarget(null);
+    setDetailRow(null);
     showToast(t('claimUpdatedToast'));
   };
 
@@ -794,44 +821,29 @@ function ClaimHistorySection() {
         }}
       />
 
-      {/* STA-234 — inline edit (info claims only): amend desc + amount, resubmit. */}
+      {/* STA-234 — Edit opens the FULL claim form (same SimpleClaimForm as
+          "Start claim"), prefilled from the row incl. the existing attachment.
+          Large + scrollable body. */}
       <Modal
         open={editTarget !== null}
         onClose={() => setEditTarget(null)}
         title={t('editClaimTitle')}
-        widthClass="max-w-md"
+        widthClass="max-w-3xl"
       >
-        <div className="flex flex-col gap-4">
-          <FormField id="edit-claim-desc" label={locale === 'en' ? 'Description' : 'รายละเอียด'}>
-            {(controlProps) => (
-              <input
-                {...controlProps}
-                type="text"
-                value={editDesc}
-                onChange={(event) => setEditDesc(event.target.value)}
-                className={filterSelectClass}
-              />
-            )}
-          </FormField>
-          <FormField id="edit-claim-amount" label={locale === 'en' ? 'Amount' : 'จำนวนเงิน'}>
-            {(controlProps) => (
-              <input
-                {...controlProps}
-                type="text"
-                value={editAmount}
-                onChange={(event) => setEditAmount(event.target.value)}
-                className={filterSelectClass}
-              />
-            )}
-          </FormField>
-          <div className="mt-1 flex justify-end gap-2">
-            <Button variant="ghost" size="md" onClick={() => setEditTarget(null)}>
-              {locale === 'en' ? 'Cancel' : 'ยกเลิก'}
-            </Button>
-            <Button variant="primary" size="md" onClick={saveEdit}>
-              {locale === 'en' ? 'Save' : 'บันทึก'}
-            </Button>
-          </div>
+        <div className="max-h-[70vh] overflow-y-auto">
+          {editTarget && editPlan && (
+            <SimpleClaimForm
+              key={editTarget.id}
+              plan={editPlan}
+              selectedBenefitLabel={editTarget.type}
+              initialValues={editInitialValues}
+              initialDynamic={editTarget.dynamicFields}
+              initialAttachmentName="opd-receipt.pdf"
+              submitLabel={t('editClaimSave')}
+              confirmBeforeSubmit={false}
+              onSubmitted={onEditSubmitted}
+            />
+          )}
         </div>
       </Modal>
 
