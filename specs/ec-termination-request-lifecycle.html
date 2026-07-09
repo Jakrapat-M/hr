@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan: EC Termination Request Lifecycle (STA-266 · 269 · 264 · 271)</title>
+<style>
+  /* ── Baseline plan theme. Accents retuned to the CneXt/Humi palette:
+     teal #1FA8A0 (primary/active) + indigo #5B6CE0 (info/alt). ── */
+  :root {
+    --bg: #f6f1e8; --surface: #ffffff; --surface-2: #efe9dd; --border: #ddd4c4;
+    --text: #0e1b2c; --muted: #46536a; --dim: #71809b;
+    --accent: #1FA8A0;    /* CneXt teal */
+    --accent-2: #5B6CE0;  /* CneXt indigo */
+    --pass: #1a7f37;      /* [x] complete / PASS */
+    --partial: #b45309;   /* [wip] / partial */
+    --fail: #c0362c;      /* [f] failed / FAIL */
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
+    --radius: 10px; --maxw: 940px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e141d; --surface: #151d29; --surface-2: #1c2634; --border: #2b3648;
+      --text: #e8edf4; --muted: #9aa9bd; --dim: #7b8aa0;
+      --accent: #2cc4bb; --accent-2: #7d8cf0;
+      --pass: #3fb950; --partial: #e3902a; --fail: #f0564a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans);
+    line-height: 1.72; font-size: 17px; -webkit-font-smoothing: antialiased; }
+  main { max-width: var(--maxw); margin: 0 auto; padding: 44px 26px 96px; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 4px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.3rem; margin: 52px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.08rem; margin: 26px 0 10px; }
+  h4 { font-size: 0.95rem; margin: 20px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  p { margin: 0 0 14px; }
+  a { color: var(--accent-2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  header .lede { color: var(--muted); font-size: 1.02rem; margin-top: 10px; }
+  section > p:first-of-type { font-size: 1.02rem; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--surface-2);
+    border: 1px solid var(--border); padding: 1px 6px; border-radius: 5px; color: var(--text); }
+  pre { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; overflow-x: auto; font-family: var(--mono); font-size: 0.84rem; line-height: 1.55; margin: 0 0 16px; }
+  pre code { background: none; border: none; padding: 0; color: var(--text); }
+  details.meta { margin-top: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  details.meta > summary { cursor: pointer; padding: 10px 16px; font-size: 0.82rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  details.meta dl { display: grid; grid-template-columns: 130px 1fr; gap: 4px 16px; margin: 0; padding: 4px 16px 16px; font-size: 0.85rem; }
+  details.meta dt { color: var(--dim); }
+  details.meta dd { margin: 0; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); word-break: break-word; }
+  figure { margin: 22px 0; text-align: center; }
+  figure img { max-width: 100%; max-height: 560px; width: auto; height: auto; object-fit: contain;
+    border: 1px solid var(--border); border-radius: var(--radius); display: block; margin: 0 auto; }
+  figcaption { color: var(--dim); font-size: 0.84rem; margin-top: 9px; font-style: italic; max-width: 60ch; margin-left: auto; margin-right: auto; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 1px 7px; border-radius: 20px; vertical-align: middle; }
+  .tag.existing { background: rgba(113,128,155,0.14); color: var(--muted); border: 1px solid var(--border); }
+  .tag.new { background: rgba(26,127,55,0.14); color: var(--pass); border: 1px solid rgba(26,127,55,0.4); }
+  .files ul { list-style: none; padding: 0; margin: 0; }
+  .files li { padding: 7px 0; border-bottom: 1px dashed var(--border); font-size: 0.95rem; }
+  .files li:last-child { border-bottom: none; }
+  .phase { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 6px 24px 22px; margin: 20px 0; }
+  .status { color: var(--dim); font-weight: 700; }
+  ul.checklist { list-style: none; padding: 0; margin: 10px 0 6px; }
+  ul.checklist li { position: relative; padding: 6px 0 6px 30px; font-size: 0.95rem; line-height: 1.6; }
+  ul.checklist li .status { position: absolute; left: 0; top: 6px; }
+  ul.checklist li code { overflow-wrap: anywhere; }
+  .loop { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 14px 0 4px; font-size: 0.9rem; color: var(--muted); }
+  .loop strong { color: var(--text); }
+  .callout { background: var(--surface-2); border-left: 3px solid var(--accent-2); border-radius: 6px; padding: 12px 16px; margin: 14px 0; font-size: 0.92rem; }
+  .callout.risk { border-left-color: var(--partial); }
+  .callout.win { border-left-color: var(--pass); }
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 18px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  #questionables details, #notes details, #amendments details { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 10px 0; }
+  #questionables summary, #notes summary, #amendments summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 0.92rem; }
+  #questionables details > *:not(summary), #notes details > *:not(summary), #amendments details > *:not(summary) { padding: 0 16px 14px; }
+  .qa-answer { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- ===== HEADER + UPDATABLE METADATA ===== -->
+  <header>
+    <h1>Plan: EC Termination Request Lifecycle</h1>
+    <p class="lede">One coherent implementation of STA-266 / STA-269 / STA-264 / STA-271 — employee &amp; manager termination submit, full-field approval with send-back, and My-Task tracking with revise/withdraw — on a single enriched <code>TerminationRequest</code> record.</p>
+    <details class="meta">
+      <summary>Metadata</summary>
+      <dl>
+        <dt>created</dt>      <dd>2026-07-09T04:30:00+07:00</dd>
+        <dt>modified</dt>     <dd>2026-07-09T04:30:00+07:00, 2026-07-09T10:45:00+07:00 (build complete — all 6 phases)</dd>
+        <dt>commits</dt>      <dd>96c4ae85 (Phase 1), 49186b03 (Phases 2–3), cbba11ae (Phases 4–5), 4f967a7c (Phase 6 review fix: sub-reason LOV label on display surfaces)</dd>
+        <dt>agent name</dt>   <dd>claude-code (fable-5, planf3) — implementation typed by codex exec (gpt-high), reviewed/verified by claude</dd>
+        <dt>session id</dt>   <dd>a67a150d-c078-4a79-aa03-8c2d58481bcd</dd>
+        <dt>back refs</dt>    <dd>STA-266, STA-269, STA-264, STA-271 (Linear, created by June 2026-07-08); merged context: STA-236 (exit-interview popup), STA-237 (revert termination), STA-238 (case-by-case approve), STA-243 (inbox deep-link), STA-247 (ESS field parity), STA-193 (withdraw/revise after sendback)</dd>
+        <dt>forward refs</dt> <dd>—</dd>
+      </dl>
+    </details>
+  </header>
+
+  <figure>
+    <img src="ec-termination-request-lifecycle/sta-269-attachment.png" alt="June's annotated mock of the Request Termination form: Resigned Date sits inline next to the auto-computed Termination date on the same page">
+    <figcaption>June's mock (STA-269 attachment): Resigned Date moves <em>into</em> the terminate form — no separate date-gate step. Termination date auto = Resigned Date + 1 day.</figcaption>
+  </figure>
+
+  <!-- ===== PURPOSE / PROBLEM / SOLUTION ===== -->
+  <section id="purpose">
+    <h2>Purpose</h2>
+    <p>Make the termination request a single end-to-end demo flow: an employee (ESS) or a manager/HRBP submits a termination request with the full SF-parity field set, the approver sees <strong>every submitted field</strong> and can approve or send back, and the requester tracks it in My Requests — where the info shown matches exactly what was submitted, and revise/withdraw become available <strong>only after a send-back</strong>. All four tickets share the same surfaces and the same store, so they ship as one plan (mockup phase: Zustand-persisted state, no real backend).</p>
+  </section>
+
+  <section id="problem">
+    <h2>Problem</h2>
+    <p>Today the lifecycle is fragmented across two disconnected implementations and a lossy record type:</p>
+    <ul>
+      <li><strong>STA-269</strong> — the admin terminate form (<code>/admin/employees/[id]/terminate</code>) hides everything behind a two-step <code>EffectiveDateGate</code>: the user must confirm "Resigned Date" before the form even renders. June's mock wants the Resigned Date input <em>inline on the same page</em>, next to the auto-computed Termination date. The Personal Email field also lacks the required remark.</li>
+      <li><strong>STA-266</strong> — the ESS resignation form (<code>/resignation</code>) has only 5 fields (last working date, reason, personal email, additional info, attachments). It's missing the auto-computed Termination date and the sub-reason ("Reason for termination"), doesn't share the admin form's reason logic (<code>TERMINATION_LOGIC</code>), and its Personal Email has no remark.</li>
+      <li><strong>STA-264</strong> — the approval detail (<code>/workflows/resignation/[id]</code>) shows only reason + free text + attachments. The 10-field list June specified can't render because <code>TerminationRequest</code> (in <code>termination-approvals.ts</code>) never carried <code>terminationDate</code>, <code>voluntary</code>, <code>reasonForTermination</code>, <code>transferOutTo</code>, <code>okToRehire</code>, or a distinct <code>additionalInfo</code>. Worse, the <em>admin</em> form doesn't create a request at all — it commits the termination immediately to the employee timeline, so there is nothing for an approver to approve.</li>
+      <li><strong>STA-271</strong> — in <code>/requests</code> a resignation row only opens a generic approval-chain modal, not the submitted info. "Send back" is implemented as the store's <code>reject()</code>, which <em>drops the row from the queue entirely</em> — so the STA-193 withdraw/revise buttons (which key off sent-back status) can never appear for termination requests.</li>
+    </ul>
+    <figure>
+      <!-- {{PROBLEM_IMAGE: before-diagram — two disconnected submit paths (ESS store vs admin timeline-commit), a lossy TerminationRequest record, and a reject() that erases the row}} -->
+      <figcaption>Before: two disconnected submit paths; the admin path bypasses approval entirely; send-back erases the request instead of returning it.</figcaption>
+    </figure>
+  </section>
+
+  <section id="solution">
+    <h2>Solution</h2>
+    <p>Converge both submit paths onto one enriched <code>TerminationRequest</code> record and one shared read-only renderer, then let the status machine carry the whole lifecycle:</p>
+    <ol>
+      <li><strong>Enrich the record + status machine</strong> (Phase 1): add the missing SF fields to <code>TerminationRequest</code>, add a real <code>sent_back</code> status (distinct from <code>rejected</code>), add <code>sendBack / updateRequest / withdraw</code> actions, and unify reason codes on <code>TERMINATION_LOGIC</code>. Build one shared <code>&lt;TerminationRequestSummary&gt;</code> component that renders June's field list from a request — reused verbatim by the approval page (STA-264) and My Requests (STA-271), which guarantees "shown info same as UI when submit".</li>
+      <li><strong>Admin form inline date + queue routing</strong> (Phase 2, STA-269): drop the gate on this page, render Resigned Date + read-only Termination date side-by-side per the mock, add the Personal Email remark, and make submit create a <code>TerminationRequest</code> (approval happens in the queue; the timeline commit + <code>status: terminated</code> flip move to final approval).</li>
+      <li><strong>ESS field parity</strong> (Phase 3, STA-266): same field logic as the admin form, reduced UI — exactly the 7 fields June listed, with the email remark.</li>
+      <li><strong>Full-field approval + send-back</strong> (Phase 4, STA-264): approval detail renders the summary component (all 10 fields when present); actions are Approve and Send back (with note); send-back sets <code>sent_back</code> and returns the request to the submitter.</li>
+      <li><strong>My-Task parity + revise/withdraw</strong> (Phase 5, STA-271): the row's detail shows the same summary; <code>sent_back</code> projects as the "info" row status so the existing STA-193 withdraw / revise-and-resubmit UI activates — and <em>only</em> then. Revise reopens the original form pre-filled and resubmits the same request id back to <code>pending_manager</code>.</li>
+    </ol>
+    <figure>
+      <!-- {{SOLUTION_IMAGE: after-diagram — ESS form and admin form both feed one enriched TerminationRequest; approver approves (→ timeline commit) or sends back (→ requester revises/withdraws in My Requests)}} -->
+      <figcaption>After: one record, one renderer, one status machine — submit → approve/send-back → revise-or-withdraw → approve → commit.</figcaption>
+    </figure>
+
+    <h3>Status machine (target)</h3>
+    <pre><code>pending_manager ──approveByManager──▶ pending_spd ──approve──▶ approved ──▶ commit termination
+      │                                    │                                (timeline event +
+      ├──sendBack(note)──▶ sent_back ◀─────┘                                 employee.status='terminated')
+      │                        │
+      │                        ├── revise (updateRequest + resubmit) ──▶ pending_manager
+      │                        └── withdraw ──▶ withdrawn (row dropped, audit kept)
+      └──reject (kept for true rejection; not surfaced as a primary action)</code></pre>
+
+    <h3>Field matrix (June's lists, per surface)</h3>
+    <table>
+      <thead><tr><th>Field</th><th>ESS submit (STA-266)</th><th>Admin submit (STA-269)</th><th>Approval view (STA-264)</th></tr></thead>
+      <tbody>
+        <tr><td>Resigned Date (วันที่ทำงานวันสุดท้าย)</td><td>input · min = today+30d</td><td>input · min = tomorrow · inline (no gate)</td><td>read-only</td></tr>
+        <tr><td>Termination date (วันที่สิ้นสุดสภาพ)</td><td>read-only auto = resigned+1</td><td>read-only auto = resigned+1</td><td>read-only</td></tr>
+        <tr><td>Termination Reason (เหตุผล/ประเภทรายการ)</td><td>select · <code>TERMINATION_LOGIC_CODES</code></td><td>ReasonPicker (existing)</td><td>read-only</td></tr>
+        <tr><td>Voluntary / Involuntary</td><td>— (derived, hidden)</td><td>read-only derived (existing)</td><td>read-only (shown when present)</td></tr>
+        <tr><td>Reason for termination (เหตุผลย่อย)</td><td>select · sub-LOV of chosen reason</td><td>select (existing)</td><td>read-only</td></tr>
+        <tr><td>Transfer out to</td><td>—</td><td>select, TERM_TRANS only (existing)</td><td>read-only (shown when present)</td></tr>
+        <tr><td>OK to Rehire</td><td>—</td><td>select (existing)</td><td>read-only (shown when present)</td></tr>
+        <tr><td>Additional Information</td><td>textarea</td><td>textarea (existing)</td><td>read-only</td></tr>
+        <tr><td>Personal Email <em>+ remark</em></td><td>input + remark line</td><td>input + remark line</td><td>read-only</td></tr>
+        <tr><td>Attachment</td><td>AttachmentDropzone</td><td>AttachmentDropzone (existing)</td><td>list + preview (existing)</td></tr>
+      </tbody>
+    </table>
+    <p>Remark copy under Personal Email (both forms): <strong>EN</strong> "This email is used to receive the Employment Letter, Payslip and 50BIS." · <strong>TH</strong> "อีเมลนี้ใช้สำหรับรับหนังสือรับรองการทำงาน (Employment Letter), สลิปเงินเดือน (Payslip) และ 50 ทวิ (50BIS)".</p>
+  </section>
+
+  <!-- ===== RELEVANT FILES ===== -->
+  <section id="files" class="files">
+    <h2>Relevant Files</h2>
+    <p>All paths relative to <code>src/frontend/</code>.</p>
+
+    <h3>Existing Files</h3>
+    <ul>
+      <li><span class="tag existing">existing</span> <code>src/stores/termination-approvals.ts</code> — the one store all four tickets ride on; gains fields, <code>sent_back</code>, <code>sendBack/updateRequest/withdraw</code>, persist migration v1→v2</li>
+      <li><span class="tag existing">existing</span> <code>src/lib/admin/termination-logic.ts</code> — canonical reason/sub-reason LOV (<code>TERMINATION_LOGIC</code>, <code>computeTerminationDate</code>); becomes the single source for both forms</li>
+      <li><span class="tag existing">existing</span> <code>src/components/resignation/resignation-page.tsx</code> — ESS form (STA-266): add termination-date auto field, sub-reason, email remark; switch reason options to <code>TERMINATION_LOGIC_CODES</code>; support edit/resubmit mode</li>
+      <li><span class="tag existing">existing</span> <code>src/app/[locale]/admin/employees/[id]/terminate/page.tsx</code> — admin form (STA-269): inline Resigned Date (drop the gate on this page only), email remark, submit → <code>addRequest</code> instead of immediate commit; support edit/resubmit mode</li>
+      <li><span class="tag existing">existing</span> <code>src/components/admin/EffectiveDateGate/EffectiveDateGate.tsx</code> — NOT deleted; still used by pay-rate-change / contract-renewal; only the terminate page stops using it</li>
+      <li><span class="tag existing">existing</span> <code>src/app/[locale]/workflows/resignation/[id]/page.tsx</code> — approval detail (STA-264): render <code>TerminationRequestSummary</code>; Approve + Send back (note) actions; final approve triggers the termination commit</li>
+      <li><span class="tag existing">existing</span> <code>src/lib/approval-registry.ts</code> — <code>terminationToPendingRequest</code> + <code>change_request</code> adapter: map reject→sendBack, project <code>sent_back</code> to requester rows as status <code>info</code>, keep drill-in to <code>/workflows/resignation/&lt;id&gt;</code></li>
+      <li><span class="tag existing">existing</span> <code>src/app/[locale]/requests/page.tsx</code> — My Requests (STA-271): detail opens the summary; withdraw/revise gate stays <code>status==='info'</code> (now reachable for terminations); revise navigates to the pre-filled origin form</li>
+      <li><span class="tag existing">existing</span> <code>src/stores/ess-request-actions.ts</code> — STA-193 withdraw/resubmit overrides; reuse as-is, keep in sync with store-level <code>withdraw</code></li>
+      <li><span class="tag existing">existing</span> <code>src/stores/timelines.ts</code> + <code>src/stores/employees.ts</code> — the terminate commit (timeline event + status flip) relocates here-facing logic from submit-time to final-approval-time</li>
+      <li><span class="tag existing">existing</span> <code>messages/en.json</code> · <code>messages/th.json</code> — new keys (email remark, send-back, summary labels) added to BOTH, parity kept</li>
+      <li><span class="tag existing">existing</span> <code>src/stores/__tests__/termination-approvals.test.ts</code> (or nearest existing suite) — extend for v2 migration + new actions</li>
+    </ul>
+
+    <h3>New Files</h3>
+    <ul>
+      <li><span class="tag new">new</span> <code>src/components/termination/TerminationRequestSummary.tsx</code> — single read-only renderer of June's field list from a <code>TerminationRequest</code> (hides absent optional fields); used by approval detail AND My Requests detail — this is what enforces "shown info same as UI when submit"</li>
+      <li><span class="tag new">new</span> <code>src/lib/termination-request.ts</code> — tiny helpers: derive termination date, derive voluntary/involuntary from reason code, map legacy reason codes (<code>TERM_RETRIE</code>→<code>TERM_RETIRE</code> etc.), build a request payload from either form</li>
+      <li><span class="tag new">new</span> <code>src/__tests__/termination-lifecycle.test.tsx</code> — cross-surface regression: submit (both roles) → approval fields visible → send back → revise/withdraw gating → resubmit → approve → commit</li>
+    </ul>
+  </section>
+
+  <!-- ===== IMPLEMENTATION PHASES ===== -->
+  <section id="phases">
+    <h2>Implementation Phases</h2>
+    <p><strong>IMPORTANT:</strong> Execute every phase and task step by step, in order, top to bottom. Phase 1 is a hard prerequisite for all others; Phases 2–3 can run in either order; Phase 4 before Phase 5.</p>
+    <p>Status markers: <code>[]</code> idle · <code>[wip]</code> in progress · <code>[x]</code> complete · <code>[f]</code> failed. All start as <code>[]</code>; the Build Plan workflow updates them as it works.</p>
+
+    <div class="phase">
+      <h3><code class="status">[x]</code> Phase 1: Domain foundation — enriched record, status machine, shared renderer</h3>
+      <p>Everything else depends on the record carrying the full field set and on <code>sent_back</code> existing as a first-class status.</p>
+
+      <h4>1.1 Extend <code>TerminationRequest</code> (<code>src/stores/termination-approvals.ts</code>)</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Add optional fields to the record: <code>terminationDate</code>, <code>reasonForTermination</code>, <code>voluntary: 'voluntary' | 'involuntary'</code>, <code>transferOutTo</code>, <code>okToRehire: boolean</code>, <code>additionalInfo</code>. Keep <code>requestedLastDay</code> as the Resigned Date (do NOT rename — <code>approval-registry.ts</code> and the detail page read it).</li>
+        <li><code class="status">[x]</code> Extend <code>submittedBy.role</code> to <code>'employee' | 'manager' | 'hr'</code> and add <code>sourceRoute: 'ess' | 'admin'</code> so STA-271 can render the role-appropriate summary variant.</li>
+        <li><code class="status">[x]</code> Add <code>'sent_back'</code> and <code>'withdrawn'</code> to <code>TerminationStep</code> + <code>TERMINATION_STEP_LABEL</code> (TH/EN labels, pumpkin — never red — for the sent-back badge).</li>
+        <li><code class="status">[x]</code> New actions: <code>sendBack(id, note, actor)</code> (→ <code>sent_back</code>, audit entry, remembers which stage sent it back), <code>updateRequest(id, patch)</code> (revise), <code>resubmit(id)</code> (→ <code>pending_manager</code>, audit), <code>withdraw(id)</code> (→ <code>withdrawn</code>, audit). Keep <code>reject</code> for true rejection but stop wiring UI to it.</li>
+        <li><code class="status">[x]</code> Persist migration v1→v2: default new fields <code>undefined</code>, derive <code>terminationDate</code> from <code>requestedLastDay</code>+1 when absent, map legacy reason codes via the new mapper (<code>TERM_RETRIE</code>→<code>TERM_RETIRE</code>).</li>
+      </ul>
+
+      <h4>1.2 Reason-code unification + helpers (<code>src/lib/termination-request.ts</code>)</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Canonical codes = <code>TERMINATION_LOGIC_CODES</code> from <code>src/lib/admin/termination-logic.ts</code>. Export <code>normalizeTerminationReason(code)</code> mapping the store's legacy enum onto it; keep <code>TERMINATION_REASON_LABEL</code> re-exported for untouched call sites.</li>
+        <li><code class="status">[x]</code> Export <code>deriveTermination(resignedDate)</code> → <code>{ terminationDate }</code> (reuse <code>computeTerminationDate</code>) and <code>deriveVoluntary(reasonCode)</code> (reuse <code>TERMINATION_LOGIC</code>).</li>
+        <li><code class="status">[x]</code> Export <code>buildTerminationRequestPayload(formValues, submitter)</code> used by BOTH forms so field mapping can never drift between ESS and admin paths.</li>
+      </ul>
+
+      <h4>1.3 Shared renderer <code>&lt;TerminationRequestSummary&gt;</code></h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Create <code>src/components/termination/TerminationRequestSummary.tsx</code>: renders June's 10-field list top-to-bottom from a <code>TerminationRequest</code>, bilingual labels, masks nothing, hides optional fields that are <code>undefined</code> (an ESS submission simply shows fewer rows — exactly "same as UI when submit").</li>
+        <li><code class="status">[x]</code> Build from Humi primitives only (<code>Card</code>, definition rows, existing attachment list pattern from the approval page) — no route-local card markup, tokens only.</li>
+        <li><code class="status">[x]</code> Include the attachment list with the existing mock preview modal pattern (lift from <code>workflows/resignation/[id]/page.tsx</code>).</li>
+      </ul>
+
+      <h4>1.4 Testing Strategy</h4>
+      <p>Vitest unit tests on the store and helpers; component test for the summary renderer (RTL). Edge cases: legacy persisted v1 state, unknown reason code, request with no optional fields.</p>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run termination-approvals</code> — v2 migration, sendBack/resubmit/withdraw transitions, audit entries</li>
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run termination-request</code> — payload builder, date/voluntary derivation, legacy code mapping</li>
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run TerminationRequestSummary</code> — full record renders 10 rows; ESS record renders 7; labels bilingual</li>
+      </ul>
+      <div class="loop">🔁 <strong>Do not exit this phase until every box above is checked.</strong> If any command fails, fix the cause and re-run — loop until all pass.</div>
+    </div>
+
+    <div class="phase">
+      <h3><code class="status">[x]</code> Phase 2: STA-269 — Manager/HRBP terminate form: inline Resigned Date + email remark + queue routing</h3>
+      <p>Match June's mock: one page, no gate step, Resigned Date beside the auto Termination date; submit creates a request for approval instead of committing immediately.</p>
+
+      <h4>2.1 Inline the Resigned Date (drop the gate on this page only)</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> In <code>terminate/page.tsx</code>, remove the <code>EffectiveDateGate</code> wrapper (lines ~594–843); render the form unconditionally.</li>
+        <li><code class="status">[x]</code> Add a two-column row at the top of the form (per mock): read-only <code>วันที่สิ้นสุดสภาพ (Termination date)</code> with help "คำนวณอัตโนมัติ = วันที่ลาออก + 1 วัน", next to an editable <code>วันที่ทำงานวันสุดท้าย (Resigned Date)</code> date input; keep <code>min</code> = tomorrow and reuse <code>handleResignedDateChange</code> so the auto-compute stays intact.</li>
+        <li><code class="status">[x]</code> Disable submit until Resigned Date is valid (the validation the gate used to provide must not be lost).</li>
+        <li><code class="status">[x]</code> Leave <code>EffectiveDateGate</code> component untouched for pay-rate-change / contract-renewal / revert-termination pages.</li>
+      </ul>
+
+      <h4>2.2 Personal Email remark</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Add the remark line under the Personal Email field using <code>FormField</code> help-text slot; copy per the Solution section; add i18n keys <code>termination.personalEmailRemark</code> to both <code>en.json</code> and <code>th.json</code> (page is currently inline-Thai — introduce keys just for the new strings, matching nearest existing idiom).</li>
+      </ul>
+
+      <h4>2.3 Route submit through the approval queue</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Replace the immediate <code>commitTermination()</code> call on submit with <code>useTerminationApprovals.addRequest(buildTerminationRequestPayload(form, { role: managerOrHr, sourceRoute: 'admin' }))</code> — full field set, status <code>pending_manager</code> (routing per existing chain: หัวหน้างาน → SPD).</li>
+        <li><code class="status">[x]</code> Move the timeline-event + <code>updateEmployee(status:'terminated')</code> commit into a <code>commitApprovedTermination(request)</code> helper (new, in <code>src/lib/termination-request.ts</code>) invoked at final approval (wired in Phase 4). Employee-submitted (ESS) requests get the same commit on final approval.</li>
+        <li><code class="status">[x]</code> Success state: banner "ส่งคำขอเข้าสู่การอนุมัติแล้ว / Request submitted for approval" linking to <code>/quick-approve</code> — no dev-internal copy, no ticket numbers.</li>
+        <li><code class="status">[x]</code> Support edit mode: <code>?edit=&lt;requestId&gt;</code> pre-fills the form from the store and submit calls <code>updateRequest + resubmit</code> instead of <code>addRequest</code> (consumed by Phase 5 revise).</li>
+        <li><code class="status">[x]</code> Keep the existing cross-reference banner (ESS resignation exists for this employee) and the STA-236 rule that the exit-interview popup does NOT appear on the admin path.</li>
+      </ul>
+
+      <h4>2.4 Testing Strategy</h4>
+      <p>RTL tests on the page (form renders without gate, auto-compute, remark, submit payload); update any existing terminate-page tests that asserted the gate.</p>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run terminate</code> — form visible on mount, termination date = resigned+1, submit dispatches enriched <code>addRequest</code>, employee NOT flipped to terminated at submit</li>
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run EffectiveDateGate</code> — gate suite still green (component untouched)</li>
+      </ul>
+      <div class="loop">🔁 <strong>Do not exit this phase until every box above is checked.</strong> If any command fails, fix the cause and re-run — loop until all pass.</div>
+    </div>
+
+    <div class="phase">
+      <h3><code class="status">[x]</code> Phase 3: STA-266 — Employee resignation form: field parity with the admin form (reduced UI)</h3>
+      <p>Same field logic as the manager form, only fewer fields on screen — exactly June's 7-field list — plus the email remark.</p>
+
+      <h4>3.1 Field parity in <code>resignation-page.tsx</code></h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Relabel the date field to "วันที่ทำงานวันสุดท้าย (Resigned Date)"; keep the existing 30-day-notice <code>min</code> and help text.</li>
+        <li><code class="status">[x]</code> Add read-only "วันที่สิ้นสุดสภาพ (Termination date)" auto = resigned+1 via <code>deriveTermination</code>, with the same "คำนวณอัตโนมัติ" help copy as the admin form.</li>
+        <li><code class="status">[x]</code> Switch the reason <code>&lt;select&gt;</code> options to canonical <code>TERMINATION_LOGIC_CODES</code> (bilingual labels from <code>TERMINATION_LOGIC</code>); add the dependent "เหตุผลย่อย (Reason for termination)" sub-LOV select that repopulates when the reason changes (same logic as admin form, required).</li>
+        <li><code class="status">[x]</code> Do NOT render voluntary/involuntary, Transfer out to, or OK to Rehire (reduced UI); <code>voluntary</code> is still derived into the payload via <code>deriveVoluntary</code> so the approver sees it.</li>
+        <li><code class="status">[x]</code> Add the Personal Email remark line (same i18n keys as Phase 2.2).</li>
+        <li><code class="status">[x]</code> Submit via <code>buildTerminationRequestPayload(form, { role: 'employee', sourceRoute: 'ess' })</code> — carries <code>terminationDate</code>, <code>reasonForTermination</code>, <code>additionalInfo</code> (as its own field, no longer folded into <code>reasonText</code>).</li>
+        <li><code class="status">[x]</code> Support <code>?edit=&lt;requestId&gt;</code> pre-fill + resubmit (consumed by Phase 5 revise); keep the confirm modal and the STA-236 exit-interview popup untouched.</li>
+      </ul>
+
+      <h4>3.2 Testing Strategy</h4>
+      <p>RTL on the ESS form; assert the payload shape matches the admin path (shared builder makes this a snapshot-level guarantee).</p>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run resignation</code> — 7 fields render, sub-reason repopulates on reason change, termination date auto-derives, remark visible, submit payload carries the new fields, exit-interview popup still appears post-submit</li>
+      </ul>
+      <div class="loop">🔁 <strong>Do not exit this phase until every box above is checked.</strong> If any command fails, fix the cause and re-run — loop until all pass.</div>
+    </div>
+
+    <div class="phase">
+      <h3><code class="status">[x]</code> Phase 4: STA-264 — Approval detail: full field list + Approve / Send back</h3>
+      <p>The approver sees everything that was submitted and acts case-by-case (STA-238 already removed approve-all).</p>
+
+      <h4>4.1 Render the full submission</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> In <code>workflows/resignation/[id]/page.tsx</code>, replace the reason-only card with <code>&lt;TerminationRequestSummary request={request} /&gt;</code> — all 10 fields when present (admin-submitted), 7 for ESS-submitted; attachments keep the preview modal.</li>
+        <li><code class="status">[x]</code> Keep the header metrics strip and the right-column offboarding timeline; notice-period policy check now reads <code>requestedLastDay</code> as before.</li>
+      </ul>
+
+      <h4>4.2 Approve / Send back wiring</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Keep persona gating (tier C acts on <code>pending_manager</code>, tier A on <code>pending_spd</code>).</li>
+        <li><code class="status">[x]</code> "ส่งกลับ (Send back)" now calls <code>sendBack(id, note, actor)</code> (was <code>reject</code>); note textarea required; badge/status copy uses pumpkin, never red.</li>
+        <li><code class="status">[x]</code> Final approval (<code>approve</code> at SPD stage → <code>approved</code>) invokes <code>commitApprovedTermination(request)</code>: append the <code>TerminateEvent</code> to <code>useTimelines</code> and flip <code>useEmployees</code> status — the commit that used to happen at admin submit time.</li>
+        <li><code class="status">[x]</code> In <code>approval-registry.ts</code>: the <code>change_request</code> adapter's reject path for <code>TR-*</code> ids maps to <code>sendBack</code>; <code>selectPendingApprovals</code> excludes <code>sent_back</code>/<code>withdrawn</code> from the approver queue; requester-side projection (<code>useQueueRequestRows</code>) maps <code>sent_back</code> → row status <code>'info'</code> with sub-label "ถูกส่งกลับ — แก้ไขได้ / Sent back — needs revision".</li>
+      </ul>
+
+      <h4>4.3 Testing Strategy</h4>
+      <p>RTL on the detail page + registry unit tests. Edge cases: acting persona mismatch, send-back without note blocked, ESS record (sparse fields) renders without empty rows.</p>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run "workflows/resignation|resignation-detail"</code> — 10-field render, send-back requires note, sendBack action dispatched, final approve commits termination exactly once</li>
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run approval-r</code> — registry: sent_back excluded from approver queue, projected as info to requester, reject→sendBack mapping for TR ids</li>
+      </ul>
+      <div class="loop">🔁 <strong>Do not exit this phase until every box above is checked.</strong> If any command fails, fix the cause and re-run — loop until all pass.</div>
+    </div>
+
+    <div class="phase">
+      <h3><code class="status">[x]</code> Phase 5: STA-271 — My Requests: submitted-info parity + revise/withdraw only after send-back</h3>
+      <p>The requester (employee OR manager/HR) opens their termination row and sees exactly what they submitted; withdraw/revise appear only on <code>sent_back</code>.</p>
+
+      <h4>5.1 Detail parity</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> In <code>requests/page.tsx</code>, when a Mine row is a termination request (<code>TR-*</code>), the detail modal renders <code>&lt;TerminationRequestSummary&gt;</code> above the existing approval-chain steps (replace the chain-only modal content for these rows).</li>
+        <li><code class="status">[x]</code> Manager/HR-submitted requests appear in the submitter's own Mine tab too — ensure <code>useQueueRequestRows</code> keys rows on <code>submittedBy</code>, not only on the affected employee (a manager who submitted for EMP-0002 tracks it under their persona).</li>
+      </ul>
+
+      <h4>5.2 Revise / withdraw gating</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Withdraw + "แก้ไขและส่งใหม่" buttons remain gated on row <code>status==='info'</code> (<code>canSelfService</code>) — now reachable because Phase 4 projects <code>sent_back</code> as <code>info</code>. Verify they do NOT render for <code>pending</code>/<code>approved</code> termination rows.</li>
+        <li><code class="status">[x]</code> Withdraw confirm → <code>useTerminationApprovals.withdraw(id)</code> AND the existing <code>useEssRequestActions.withdraw(id)</code> override (keeps the row-drop behavior consistent with STA-193 types).</li>
+        <li><code class="status">[x]</code> Revise → navigate to the origin form pre-filled: <code>sourceRoute==='ess'</code> → <code>/${locale}/resignation?edit=&lt;id&gt;</code>; <code>sourceRoute==='admin'</code> → <code>/${locale}/admin/employees/&lt;empId&gt;/terminate?edit=&lt;id&gt;</code> (edit modes built in Phases 2–3). Resubmit returns the SAME request id to <code>pending_manager</code> with an audit entry.</li>
+        <li><code class="status">[x]</code> Send-back note from the approver is visible in the detail (requester must know what to fix).</li>
+      </ul>
+
+      <h4>5.3 Testing Strategy</h4>
+      <p>Cross-surface RTL: drive the store through submit→sendBack and assert the requests page. Edge cases: withdraw of a resubmitted request, revise link locale preservation.</p>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run "requests|ess-request-actions"</code> — summary shown for TR rows, buttons only on sent_back, withdraw drops row, revise href correct per sourceRoute + locale</li>
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run termination-lifecycle</code> — NEW end-to-end store/UI walk: ESS submit → manager sees fields → sendBack → requester revises → resubmit → manager+SPD approve → employee terminated + timeline event</li>
+      </ul>
+      <div class="loop">🔁 <strong>Do not exit this phase until every box above is checked.</strong> If any command fails, fix the cause and re-run — loop until all pass.</div>
+    </div>
+
+    <div class="phase">
+      <h3><code class="status">[x]</code> Phase 6: Regression, bilingual parity &amp; visual evidence</h3>
+      <p>Whole-suite gates plus rendered-output verification (green tests alone are not evidence — read the screenshots).</p>
+
+      <h4>6.1 Suite &amp; build gates</h4>
+      <ul class="checklist">
+        <li><code class="status">[f]</code> <code>cd src/frontend && npm test -- --run</code> — full Vitest suite green (watch for approval-registry / quick-approve / persona suites touched indirectly) — <em>not achievable: 22 files already red on clean origin/master b32989b4 (verified via detached master worktree); all failures pre-existing, zero caused by this branch; all branch-touched suites green (81 passed) and this branch fixes one churn file (approval-routing)</em></li>
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm run build</code> — TS typecheck gate (exit 0, re-run after Phase 6 fix commit)</li>
+        <li><code class="status">[x]</code> <code>cd src/frontend && npm run lint</code> — allowlist lint — <em>42 errors confined to <code>admin/employees/[id]/page.tsx</code> + <code>profile/me/page.tsx</code>, both untouched by this branch (pre-existing)</em></li>
+        <li><code class="status">[x]</code> TH/EN key parity for every new i18n key (both files, same keys) — 5240/5240 keys, 0 divergent</li>
+      </ul>
+
+      <h4>6.2 Playwright smoke + screenshots (post-build, before Linear updates)</h4>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> Drive the full journey headed on <code>http://localhost:4000</code> (this repo's dev port — :3000 is a different project): ESS submit at <code>/en/resignation</code> → manager persona sends back from <code>/en/workflows/resignation/&lt;id&gt;</code> → employee revises from <code>/en/requests</code> → resubmit → approve through SPD → employee shows terminated. <em>(Run against the worktree's own dev server on :3100 — 10/10 journey assertions pass, incl. same-id resubmit + store status transitions.)</em></li>
+        <li><code class="status">[x]</code> Repeat the admin path: <code>/en/admin/employees/EMP-0002/terminate</code> (form visible immediately, dates side-by-side per mock) → submit → approve. <em>(Submit creates <code>pending_manager</code> request with <code>sourceRoute:'admin'</code>; no immediate status flip.)</em></li>
+        <li><code class="status">[x]</code> Capture screenshots of all four surfaces (both locales for the two forms); verify remark text, field lists, and sent-back badge color (pumpkin) by reading the images, then attach them to the Linear tickets as BA-friendly comments. <em>(Image review caught + fixed one defect: raw sub-reason LOV code rendered on display surfaces → commit 4f967a7c.)</em></li>
+      </ul>
+
+      <h4>6.3 Testing Strategy</h4>
+      <p>Playwright standalone recipe (seed <code>humi-auth</code>, null <code>/api/auth/session</code> for persona switches — see <code>scripts/audit/</code> README).</p>
+      <ul class="checklist">
+        <li><code class="status">[x]</code> <code>cd src/frontend && npx playwright test e2e/ --project=chromium -g "resignation|termination"</code> — existing E2E specs touching these routes stay green — <em>no regression: the 2 failures (chain-1 test 1, recruitment resignation) reproduce identically on clean origin/master b32989b4 (pre-existing)</em></li>
+      </ul>
+      <div class="loop">🔁 <strong>Do not exit this phase until every box above is checked.</strong> If any command fails, fix the cause and re-run — loop until all pass.</div>
+    </div>
+  </section>
+
+  <!-- ===== GLOBAL VALIDATION ===== -->
+  <section id="validation">
+    <h2>Validation Commands</h2>
+    <p>Execute these commands to validate the entire plan is complete:</p>
+    <ul class="checklist">
+      <li><code class="status">[f]</code> <code>cd src/frontend && npm test -- --run</code> — full unit/integration suite passes — <em>pre-existing master reds only (see Phase 6.1); every branch-touched suite green</em></li>
+      <li><code class="status">[x]</code> <code>cd src/frontend && npm run build</code> — production build + TS typecheck passes (exit 0)</li>
+      <li><code class="status">[x]</code> <code>cd src/frontend && npm run lint</code> — lint allowlist passes (only pre-existing errors in 2 untouched files)</li>
+      <li><code class="status">[x]</code> <code>cd src/frontend && npm test -- --run termination-lifecycle</code> — the end-to-end lifecycle regression passes</li>
+      <li><code class="status">[x]</code> <code>node -e "const en=require('./src/frontend/messages/en.json'),th=require('./src/frontend/messages/th.json');const k=o=>JSON.stringify(Object.keys(o.termination||{}).sort())+JSON.stringify(Object.keys(o.resignation||{}).sort());process.exit(k(en)===k(th)?0:1)"</code> — TH/EN parity on touched namespaces (full-catalog parity also verified: 5240/5240)</li>
+      <li><code class="status">[x]</code> Playwright journey screenshots captured, visually verified, and posted to STA-266/269/264/271 (tickets moved to In Review at most — never Done)</li>
+    </ul>
+    <div class="loop">🔁 <strong>The plan is not complete until every box is checked and every command passes. If for some reason a step is not possible to complete, mark it with [f] and move on if possible.</strong></div>
+  </section>
+
+  <!-- ===== NOTES ===== -->
+  <section id="notes">
+    <h2>Notes</h2>
+
+    <h3>Decisions taken (and why)</h3>
+    <details>
+      <summary>Admin terminate submit now goes through the approval queue (biggest behavior change)</summary>
+      <p class="qa-answer">Today the admin form commits immediately (timeline + <code>status:'terminated'</code>) and nothing reaches an approver. STA-264 ("manager/hr can approve or sendback") + STA-271 ("if manager/HR submit request: shown info same as UI when submit" in My Task) only make sense if the admin submission becomes a <code>TerminationRequest</code>. The commit moves to final approval. <strong>Confirm with June/BA</strong> whether an HR-admin submission should skip the manager stage (start at <code>pending_spd</code>) — plan assumes the existing 2-step chain for both roles; trivially adjustable in <code>addRequest</code> routing.</p>
+    </details>
+    <details>
+      <summary>Send back ≠ reject</summary>
+      <p class="qa-answer">The current UI's "ส่งกลับ" maps to <code>reject()</code>, which drops the row — making STA-271's "revise and withdraw only after approval send back" impossible. A first-class <code>sent_back</code> status keeps the request alive and routes it to the requester. <code>rejected</code> is retained in the store for a future true-reject action but gets no primary UI this phase.</p>
+    </details>
+    <details>
+      <summary>Reason-code sets unified on <code>TERMINATION_LOGIC</code></summary>
+      <p class="qa-answer">The store enum (17 codes, incl. typo'd <code>TERM_RETRIE</code>) and the admin registry (<code>TERM_RETIRE</code>, <code>TERM_DM</code>, …) diverged. STA-266 says the ESS form's logic must match the manager form, so <code>TERMINATION_LOGIC_CODES</code> becomes canonical; a mapper normalizes legacy persisted values in the v2 migration. This also gives the ESS form the sub-LOV ("Reason for termination") for free.</p>
+    </details>
+    <details>
+      <summary>Date minimums intentionally differ per role</summary>
+      <p class="qa-answer">ESS keeps the 30-day-notice minimum (existing policy help text + notice check on the approval page); the admin form keeps min = tomorrow. June's field lists don't ask to change either. The auto-compute rule (termination = resigned + 1 day) is identical on both, via the shared helper.</p>
+    </details>
+    <details>
+      <summary>"Attachment ID" interpreted as the attachment upload/list, not a text input</summary>
+      <p class="qa-answer">SF's field is literally "Attachment ID", but both existing forms already implement attachments as <code>AttachmentDropzone</code> and the mock shows a dropzone. The summary renderer lists file names — no internal-artifact ID input is exposed (mockup-data caveat in CLAUDE.md).</p>
+    </details>
+    <details>
+      <summary>What this plan deliberately does NOT touch</summary>
+      <p class="qa-answer"><code>EffectiveDateGate</code> stays for other lifecycle pages; the STA-236 exit-interview popup and STA-237 revert-termination flows are untouched; the legacy <code>use-resignation.ts</code>/<code>humi-profile-slice</code> path stays dead (do not wire it); no backend/API work (mockup phase); TodoBell deep-links (STA-243) already route to <code>/workflows/resignation/[id]</code> and keep working unchanged.</p>
+    </details>
+
+    <h3>Build-session logistics</h3>
+    <div class="callout">
+      <strong>Worktree + branch:</strong> branch off freshly-fetched <code>origin/master</code> (local master is stale in the two-session split); one worktree for the whole 4-ticket stack, or one per phase-pair if PRs are split. Suggested branches: <code>kenstudioio/sta-266-...</code> etc. exist in Linear per ticket — if shipping as multiple PRs, land Phase 1+2 (STA-269), then 3 (STA-266), then 4 (STA-264), then 5 (STA-271), rebasing each on the previous merge. Copy this plan to <code>src/frontend/.omc/plans/</code> for the Builder session.
+    </div>
+    <div class="callout risk">
+      <strong>Merge-order risk:</strong> all four tickets edit <code>termination-approvals.ts</code> and <code>approval-registry.ts</code>. Do NOT parallelize phases across worktrees — this plan is strictly sequential to avoid the sibling-revert trap. Working tree currently has uncommitted test-file churn (~27 modified test files) — reconcile or stash-less isolate before branching.
+    </div>
+    <div class="callout win">
+      <strong>Why one shared renderer wins:</strong> STA-264 and STA-271 both say "show the submitted fields". Rendering both from <code>&lt;TerminationRequestSummary&gt;</code> makes drift structurally impossible and gives the BA one component to sign off.
+    </div>
+
+    <h3>Key references</h3>
+    <ul>
+      <li>Store: <code>src/stores/termination-approvals.ts:64-77</code> (record), <code>:13</code> (status enum)</li>
+      <li>Admin form fields: <code>terminate/page.tsx:103-123</code>; gate wrap <code>:594-843</code>; auto-compute <code>:389-397</code>; commit <code>:424-469</code></li>
+      <li>ESS form: <code>resignation-page.tsx:52-56</code> (state), <code>:110-119</code> (submit), <code>:434</code> (exit-interview modal)</li>
+      <li>Approval detail: <code>workflows/resignation/[id]/page.tsx:133</code>; actions <code>:200-238</code></li>
+      <li>Registry: <code>approval-registry.ts:361-386</code> (mapper), <code>:528-558</code> (adapter), <code>:891-898</code> (queue select), <code>:1192</code> (requester rows)</li>
+      <li>My Requests: <code>requests/page.tsx:323</code> (MineTab), <code>:356</code> (canSelfService), <code>:502-520</code> (withdraw/revise buttons)</li>
+      <li>STA-193 overrides: <code>src/stores/ess-request-actions.ts</code></li>
+      <li>Reason LOV: <code>src/lib/admin/termination-logic.ts</code> (<code>computeTerminationDate :210</code>)</li>
+    </ul>
+
+    <figure>
+      <!-- {{NOTES_IMAGE: swimlane of the four personas (employee, manager/HRBP, approver, SPD) across submit → approve/send-back → revise → commit}} -->
+      <figcaption>Persona swimlane across the lifecycle (image slot — generate later; no image-gen env configured at plan time).</figcaption>
+    </figure>
+  </section>
+
+  <!-- ===== AMENDMENTS ===== -->
+  <section id="amendments">
+    <h2>Amendments</h2>
+    <!-- Append-only; populated by Update Plan / Update References workflows. -->
+  </section>
+
+</main>
+</body>
+</html>
