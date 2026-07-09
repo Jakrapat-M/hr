@@ -93,8 +93,8 @@ npm run test:e2e -- --project=chromium <ชื่อ spec>
 
 อยากดูระบบในมุมหัวหน้า/HR/พนักงาน — ใช้ปุ่มสลับ persona ในแอป (`PersonaSwitcher` บน topbar)
 หรือบัญชีเดโม (ดู `lib/demo-users.ts`) เช่น:
-- `ken@humi.test` / `ken2026` → บัญชีของเคนเอง (HR Admin)
-- `admin@humi.test` / `admin2026` → มุม HR Admin
+- `ken@cnext.test` / `ken2026` → บัญชีของเคนเอง (HR Admin)
+- `admin@cnext.test` / `admin2026` → มุม HR Admin
 - หรือกดปุ่ม "Login as" สลับ tier A/B/C/D ได้เลย
 
 ---

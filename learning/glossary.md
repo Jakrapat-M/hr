@@ -23,8 +23,8 @@
 
 | คำ | แปลแบบบ้านๆ |
 |----|-------------|
-| **import / export** | `export` = "เปิดให้ไฟล์อื่นเอาไปใช้", `import` = "ดึงของจากไฟล์อื่นมาใช้" เช่น `import { Button } from '@/components/humi'` = ขอ Button จากกล่อง humi มาใช้ |
-| **barrel** | ไฟล์ `index.ts` ที่รวบรวม export ของหลายไฟล์ไว้ที่เดียว เพื่อให้ `import` จากที่เดียวสะดวก (เช่น `components/humi/index.ts`) |
+| **import / export** | `export` = "เปิดให้ไฟล์อื่นเอาไปใช้", `import` = "ดึงของจากไฟล์อื่นมาใช้" เช่น `import { Button } from '@/components/cnext'` = ขอ Button จากกล่อง cnext มาใช้ |
+| **barrel** | ไฟล์ `index.ts` ที่รวบรวม export ของหลายไฟล์ไว้ที่เดียว เพื่อให้ `import` จากที่เดียวสะดวก (เช่น `components/cnext/index.ts`) |
 | **component** | "ชิ้นส่วนหน้าจอ" 1 ชิ้น เขียนเป็นฟังก์ชันที่คืนหน้าตาออกมา (เช่น ปุ่ม การ์ด ทั้งหน้า) |
 | **JSX** | การเขียน "หน้าตา HTML" ปนอยู่ในโค้ด เช่น `<h1>สวัสดี</h1>` ที่อยู่ใน .tsx |
 | **prop (property)** | "ค่าที่ส่งเข้า component" เหมือนพารามิเตอร์ เช่น `<Button size="md">` — `size` คือ prop |

@@ -1,4 +1,4 @@
-# บท 04 — ระบบดีไซน์ Humi
+# บท 04 — ระบบดีไซน์ Cnext
 
 > เป้าหมาย: ทำหน้าจอให้ "หน้าตาเหมือนกันทั้งระบบ" โดยใช้ชิ้นส่วน + สีมาตรฐาน
 > ห้ามประดิษฐ์ปุ่ม/การ์ด/สีเองเด็ดขาด — หยิบของที่มีให้
@@ -8,13 +8,13 @@
 ## 1. ทำไมต้องมี "ระบบดีไซน์"
 
 ถ้าแต่ละหน้าทำปุ่มเอง สีเอง ขนาดเอง → ระบบจะดูมั่ว ไม่เป็นอันหนึ่งอันเดียว
-Humi = ชุดชิ้นส่วน + สีกลาง ที่ทำไว้แล้ว ทุกหน้าหยิบไปใช้ → หน้าตาเนียนเหมือนกันหมด
+Cnext = ชุดชิ้นส่วน + สีกลาง ที่ทำไว้แล้ว ทุกหน้าหยิบไปใช้ → หน้าตาเนียนเหมือนกันหมด
 
 **แหล่งความจริง (source of truth) 2 ที่:**
-1. ชิ้นส่วน: `src/components/humi/`
+1. ชิ้นส่วน: `src/components/cnext/`
 2. สี/ระยะ/เงา: `src/app/globals.css` (เรียกว่า "design tokens")
 
-เอกสารเสริม: `docs/design-system-humi.md`, `docs/humi-components.md`
+เอกสารเสริม: `docs/design-system-cnext.md`, `docs/cnext-components.md`
 
 ---
 
@@ -56,7 +56,7 @@ Humi = ชุดชิ้นส่วน + สีกลาง ที่ทำไ
 
 import ทั้งหมดจากที่เดียว:
 ```tsx
-import { Card, Button, FormField, FormInput, DataTable, EmptyState } from '@/components/humi';
+import { Card, Button, FormField, FormInput, DataTable, EmptyState } from '@/components/cnext';
 ```
 
 ### 3.1 Card — กล่องเนื้อหา
@@ -141,7 +141,7 @@ className="mt-4 px-3 py-2"               // ระยะ: margin-top 4, padding 
 
 ## 6. หลักคิดเวลาทำหน้าใหม่
 
-1. เริ่มจากชิ้นส่วน Humi เสมอ (`Card`, `Button`, ...) — อย่าเขียน div เปล่าทำเอง
+1. เริ่มจากชิ้นส่วน Cnext เสมอ (`Card`, `Button`, ...) — อย่าเขียน div เปล่าทำเอง
 2. ใช้โทเคนสี ไม่ใส่สีดิบ
 3. อันตราย = ส้ม ไม่ใช่แดง
 4. ข้อความไปไว้ใน `messages/` (บท 06) ไม่ฮาร์ดโค้ด (ยกเว้นต้นแบบเล็กๆ)
@@ -151,7 +151,7 @@ className="mt-4 px-3 py-2"               // ระยะ: margin-top 4, padding 
 
 ## สรุปบทนี้
 
-- Humi = ชิ้นส่วน (`components/humi/`) + โทเคนสี (`globals.css`)
+- Cnext = ชิ้นส่วน (`components/cnext/`) + โทเคนสี (`globals.css`)
 - หยิบชิ้นส่วนมาใช้ ห้ามประดิษฐ์เอง
 - ใช้โทเคนสี ห้ามสีดิบ ห้ามแดง (ใช้ส้มฟักทอง)
 - ตัวอักษร/ระยะ ใช้คลาส Tailwind มาตรฐาน

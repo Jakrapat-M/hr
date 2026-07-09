@@ -20,7 +20,7 @@
 เพิ่มข้อความ = เพิ่มทั้ง `th.json` + `en.json` (กุญแจเท่ากัน) ห้ามไทยปนใน en.json
 
 ### 🧱 A4. ใช้ของที่มีก่อนสร้างใหม่
-หยิบชิ้นส่วน Humi / store / helper / route ที่มีอยู่ ก่อนประดิษฐ์ใหม่ — diff เล็ก ย้อนง่าย
+หยิบชิ้นส่วน Cnext / store / helper / route ที่มีอยู่ ก่อนประดิษฐ์ใหม่ — diff เล็ก ย้อนง่าย
 
 ### 🔑 A5. เมนูไม่มีสิทธิ์ = เอาออก ไม่ใช่ล็อก (บท 07)
 
@@ -60,7 +60,7 @@
 **แก้:** ใส่ `key` ที่ไม่ซ้ำ (id ก่อน, ถ้าไม่มีค่อย index) — ดูสูตร 5 บท 08
 
 ### ⚠️ B4. ลืม TITLE_MAP ตอนเพิ่มเมนู
-**อาการ:** เพิ่ม leaf ในเมนูแล้วเทสต์ `humi-functional` แดง
+**อาการ:** เพิ่ม leaf ในเมนูแล้วเทสต์ `cnext-functional` แดง
 **แก้:** เพิ่มชื่อหน้าใน `TITLE_MAP` (`AppShell.tsx`) ทั้ง `/th/...` และ `/en/...`
 
 ### ⚠️ B5. ลืม locale ในลิงก์
@@ -94,8 +94,8 @@
 ## ส่วน D: เอกสารอ้างอิงตัวเต็ม (เผื่อต้องลงลึก)
 
 - `CLAUDE.md` (ราก repo) — กฎโปรเจกต์ฉบับเต็ม
-- `docs/design-system-humi.md`, `docs/humi-components.md` — ดีไซน์ระบบ
-- `src/components/humi/index.ts` — รายการชิ้นส่วนทั้งหมด
+- `docs/design-system-cnext.md`, `docs/cnext-components.md` — ดีไซน์ระบบ
+- `src/components/cnext/index.ts` — รายการชิ้นส่วนทั้งหมด
 - `src/lib/rbac.ts` — ตารางสิทธิ์ตัวจริง
 
 ---

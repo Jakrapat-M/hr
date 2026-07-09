@@ -1,8 +1,8 @@
-# Plan: Humi Continuation — Functional Wiring + Close #1 & #2 Deferrals
+# Plan: Cnext Continuation — Functional Wiring + Close #1 & #2 Deferrals
 
 ## Task Description
 
-ต่อจาก sprint #1 (PARTIAL PASS) + sprint #2 (Phase A port เสร็จใน commit batch A/B/C). ตอนนี้ 11 Humi screens ของ reference bundle (`docs/design-ref/shelfly-bundle/project/`) ถูก port ลง `src/frontend/src/app/[locale]/` แล้ว แต่เป็น **static mocks** — ปุ่มไม่ click form ไม่ submit tab ไม่ switch state. Sprint นี้ = **ทำให้ทุก feature ของ 11 screens ใช้งานได้จริง** + ปิด deferrals ที่ค้างไว้.
+ต่อจาก sprint #1 (PARTIAL PASS) + sprint #2 (Phase A port เสร็จใน commit batch A/B/C). ตอนนี้ 11 Cnext screens ของ reference bundle (`docs/design-ref/shelfly-bundle/project/`) ถูก port ลง `src/frontend/src/app/[locale]/` แล้ว แต่เป็น **static mocks** — ปุ่มไม่ click form ไม่ submit tab ไม่ switch state. Sprint นี้ = **ทำให้ทุก feature ของ 11 screens ใช้งานได้จริง** + ปิด deferrals ที่ค้างไว้.
 
 งานแบ่งเป็น 4 phase สั่งรัน:
 
@@ -14,36 +14,36 @@
 **Scope decision — uncommitted triage** (PO ruling):
 
 1. `src/services/employee-center/prisma/schema.prisma` 788-line diff = **OUT OF SCOPE** sprint นี้ → Phase A1 ใช้ `git stash push src/services/employee-center/prisma/schema.prisma` ก่อนทำ savepoint commit; Ken ตัดสินเรื่อง schema แยก (ไม่ใช่ frontend revamp)
-2. 13 modified frontend files + 14+ untracked frontend/spec files = **IN SCOPE** → Phase A1 รวมเป็น savepoint commit `chore(humi): savepoint #2 Phase A in-flight before #3` บน branch ใหม่ `humi/continue-functional-issue-3` ก่อนเริ่ม
-3. `.ironteam/`, `specs/humi-*.md`, `docs/design-ref/`, `docs/shelfly-hr-design-research.md`, `docs/sprint-1-spec.md`, `src/frontend/src/__tests__/`, `src/frontend/src/components/humi/__tests__/`, `src/frontend/e2e/workflow-e2e-full.spec.ts`, `tests/e2e/sprint1-employee-profile.spec.ts`, `src/frontend/src/components/profile/tabs/ec-personal-info.tsx` = commit ใน savepoint เดียวกัน
-4. `planning/logo-concepts/v2/...` + `recolor_local*.py` + `humi-recolor-v3.png` + `humi-recolor-v4-warm.png` + `recolor-v4-warm/` + `recolor-v3/` = **OUT OF SCOPE** (Rungrote direction ยังไม่ lock ตาม `project_humi_branding.md`) → Phase A1 ใช้ `git stash push planning/` ก่อน savepoint
+2. 13 modified frontend files + 14+ untracked frontend/spec files = **IN SCOPE** → Phase A1 รวมเป็น savepoint commit `chore(cnext): savepoint #2 Phase A in-flight before #3` บน branch ใหม่ `cnext/continue-functional-issue-3` ก่อนเริ่ม
+3. `.ironteam/`, `specs/cnext-*.md`, `docs/design-ref/`, `docs/shelfly-hr-design-research.md`, `docs/sprint-1-spec.md`, `src/frontend/src/__tests__/`, `src/frontend/src/components/cnext/__tests__/`, `src/frontend/e2e/workflow-e2e-full.spec.ts`, `tests/e2e/sprint1-employee-profile.spec.ts`, `src/frontend/src/components/profile/tabs/ec-personal-info.tsx` = commit ใน savepoint เดียวกัน
+4. `planning/logo-concepts/v2/...` + `recolor_local*.py` + `cnext-recolor-v3.png` + `cnext-recolor-v4-warm.png` + `recolor-v4-warm/` + `recolor-v3/` = **OUT OF SCOPE** (Rungrote direction ยังไม่ lock ตาม `project_cnext_branding.md`) → Phase A1 ใช้ `git stash push planning/` ก่อน savepoint
 5. `src/services/employee-center/src/employee/employee.service.spec.ts` = OUT OF SCOPE (backend test, Phase A1 stash กับ schema.prisma)
 
 **Reference source of truth** (Rule C8): ทุก feature/label ที่ port ต้อง trace กลับ `docs/design-ref/shelfly-bundle/project/screens/<name>.jsx`. ห้าม invent feature ที่ reference ไม่มี. Functional wiring (Phase C) = ตีความ interaction ที่ reference บอกใบ้ไว้ (เช่น `<button>ส่งคำร้อง</button>` ใน reference → sprint นี้ต้องให้ click แล้วเพิ่ม row ใน history list + reset form)
 
 ## Objective
 
-ส่งมอบ Humi HR frontend ที่:
+ส่งมอบ Cnext HR frontend ที่:
 
-1. **ทุก screen interactive** — 11 Humi screens ปุ่ม/form/tab/toggle ทำงานจริง state persist ด้วย Zustand + localStorage (mock layer ไม่แตะ API backend)
+1. **ทุก screen interactive** — 11 Cnext screens ปุ่ม/form/tab/toggle ทำงานจริง state persist ด้วย Zustand + localStorage (mock layer ไม่แตะ API backend)
 2. **Shell feature complete** — Sidebar active state ถูก pathname, Topbar search ⌘K เปิด command palette (search ข้ามทุก screen + route jump), Topbar theme toggle light/dark, Sidebar มี locale switcher th/en
 3. **#2 Phase B ปิด** — OrgChart zoom/pan re-injected, ThemeProvider dark mode ทำงาน round-trip, legacy route decision ถูก document ใน code comment (ไม่ expand sidebar)
-4. **#1 deferrals เคลียร์** — (a) SSR locale middleware (`src/frontend/middleware.ts` next-intl) first paint เป็น Thai (b) `globals.css` ลบ `Adapted จาก Shelfly bundle` comment (c) `src/frontend/src/app/[locale]/payslip/page.tsx` แทน 6 จุด `#C8102E` ด้วย token Humi (เก็บ visual ใกล้เคียง ไม่ rewrite)
+4. **#1 deferrals เคลียร์** — (a) SSR locale middleware (`src/frontend/middleware.ts` next-intl) first paint เป็น Thai (b) `globals.css` ลบ `Adapted จาก Shelfly bundle` comment (c) `src/frontend/src/app/[locale]/payslip/page.tsx` แทน 6 จุด `#C8102E` ด้วย token Cnext (เก็บ visual ใกล้เคียง ไม่ rewrite)
 5. **Invented pages archived** — `src/frontend/src/app/[locale]/employees/` + `/settings/` ย้าย `.archive-2026-04/` (Phase A15 จาก #2), imports ที่ reference path เก่าต้อง redirect ไป `/profile/me` และ `/integrations`
 6. **Thai-primary** — 0 English user-facing string ใน 11 ported screens + shell + command palette (whitelist: PDF/CSV/API/SSO/URL/HR/KPI/OT/LOA/UUID/HTTP/JSON/JPEG/PNG/GIF/SVG/⌘K)
 7. **NO RED** — 0 `#C8102E` ในไฟล์ที่แตะ (รวมถึง payslip หลัง migrate)
 8. **Tailwind hygiene** — `globals.css` ไม่มี global `* { padding/margin: 0 }` reset (Rule 26b)
-9. **Validation guards** — layout-integration + thai-heading + humi-reference-smoke + humi-functional (ใหม่) + humi-phase-b + Playwright walkthrough โดย MK IV + reference-match audit โดย MK V
+9. **Validation guards** — layout-integration + thai-heading + cnext-reference-smoke + cnext-functional (ใหม่) + cnext-phase-b + Playwright walkthrough โดย MK IV + reference-match audit โดย MK V
 
 ## Tech Stack
 
 - **Language**: TypeScript (strict)
 - **Framework**: Next.js 16 (App Router, `[locale]` routing), React 19
 - **Runtime**: Node.js, npm
-- **Styling**: Tailwind v4 + Humi CSS variables (`@theme` block in `src/frontend/src/app/globals.css`) — NO global `*` reset (Rule 26b) + NO `#C8102E`
-- **State**: Zustand slices (new: `timeoff-slice`, `requests-slice`, `goals-slice`, `benefits-slice`, `learning-slice`, `announcements-slice`, `integrations-slice`, `profile-slice`) with `persist` middleware to localStorage (`humi-state-v1` key)
+- **Styling**: Tailwind v4 + Cnext CSS variables (`@theme` block in `src/frontend/src/app/globals.css`) — NO global `*` reset (Rule 26b) + NO `#C8102E`
+- **State**: Zustand slices (new: `timeoff-slice`, `requests-slice`, `goals-slice`, `benefits-slice`, `learning-slice`, `announcements-slice`, `integrations-slice`, `profile-slice`) with `persist` middleware to localStorage (`cnext-state-v1` key)
 - **i18n**: next-intl v4 + **NEW** `src/frontend/middleware.ts` (SSR locale fix — closes #1 deferral)
-- **Icons**: lucide-react + `components/humi/icons/` (existing from sprint #2)
+- **Icons**: lucide-react + `components/cnext/icons/` (existing from sprint #2)
 - **Fonts**: CPN family (already loaded)
 - **Testing**: vitest + jsdom (unit + integration), Playwright 1.x (screenshot), chrome-browse MCP (walkthrough)
 - **Auth**: existing MSAL flow — **ห้ามแตะ** (AC-11 from #2)
@@ -64,7 +64,7 @@
   - `src/frontend/middleware.ts` (NEW) — next-intl `createMiddleware` with `locales: ['th','en']`, `defaultLocale: 'th'`, `localeDetection: false`
   - `src/frontend/next.config.ts` (verify no conflicting rewrites)
 - **globals.css comment clean** (Task a4-css-clean):
-  - `src/frontend/src/app/globals.css` line 9: ลบคอมเมนต์ `Adapted จาก Shelfly bundle` (replace with neutral `Humi design tokens` comment) — ไม่แตะ CSS body
+  - `src/frontend/src/app/globals.css` line 9: ลบคอมเมนต์ `Adapted จาก Shelfly bundle` (replace with neutral `Cnext design tokens` comment) — ไม่แตะ CSS body
 - **Payslip red migrate** (Task a5-payslip-red):
   - `src/frontend/src/app/[locale]/payslip/page.tsx` — 6 จุด `#C8102E` → `var(--color-warning)` หรือ `var(--color-accent)` ตาม semantic usage (ไม่ rewrite layout, surgical ≤ 15 lines changed)
 
@@ -73,37 +73,37 @@
 - **OrgChart zoom re-inject** (Task b1-orgchart-zoom):
   - `src/frontend/src/app/[locale]/org-chart/page.tsx` (EDIT, mount `<OrgChart>` ใน canvas slot ที่ว่างไว้)
   - `src/frontend/src/components/profile/org-chart.tsx` (verify compat; ≤ 30 lines diff allowed for prop adjustments)
-  - `src/frontend/src/__tests__/humi-phase-b.test.tsx` (NEW, wheel event → transform changes)
+  - `src/frontend/src/__tests__/cnext-phase-b.test.tsx` (NEW, wheel event → transform changes)
 - **ThemeProvider toggle** (Task b2-theme-toggle):
-  - `src/frontend/src/components/humi/shell/Topbar.tsx` (ADD sun/moon IconButton beside bell)
+  - `src/frontend/src/components/cnext/shell/Topbar.tsx` (ADD sun/moon IconButton beside bell)
   - `src/frontend/src/components/shared/theme-provider.tsx` (verify sets `html[data-theme="dark"]` — align with styles.css selector)
   - `src/frontend/src/app/[locale]/layout.tsx` (ensure ThemeProvider wraps AppShell)
 - **Legacy route doc** (Task b3-legacy-decision):
-  - `src/frontend/src/components/humi/shell/Sidebar.tsx` (ADD file-top comment explaining decision)
+  - `src/frontend/src/components/cnext/shell/Sidebar.tsx` (ADD file-top comment explaining decision)
 - **Nav active state** (Task b4-nav-active):
-  - `src/frontend/src/components/humi/shell/Sidebar.tsx` (verify `usePathname()` → `.active` class on current route's nav-item; fix if drift)
+  - `src/frontend/src/components/cnext/shell/Sidebar.tsx` (verify `usePathname()` → `.active` class on current route's nav-item; fix if drift)
 - **⌘K command palette** (Task b5-command-palette):
-  - `src/frontend/src/components/humi/shell/CommandPalette.tsx` (NEW)
-  - `src/frontend/src/components/humi/shell/Topbar.tsx` (wire search pill + ⌘K hotkey → open palette)
-  - `src/frontend/src/lib/humi-command-registry.ts` (NEW, static list ของ 11 routes + nav-item labels → palette entries)
+  - `src/frontend/src/components/cnext/shell/CommandPalette.tsx` (NEW)
+  - `src/frontend/src/components/cnext/shell/Topbar.tsx` (wire search pill + ⌘K hotkey → open palette)
+  - `src/frontend/src/lib/cnext-command-registry.ts` (NEW, static list ของ 11 routes + nav-item labels → palette entries)
 - **Locale switcher** (Task b6-locale-switcher):
-  - `src/frontend/src/components/humi/shell/Sidebar.tsx` (ADD th/en toggle ใน sidebar-foot ใต้ user chip)
-  - `src/frontend/src/lib/humi-locale.ts` (NEW, helper: read/swap locale segment ใน pathname + router.push)
+  - `src/frontend/src/components/cnext/shell/Sidebar.tsx` (ADD th/en toggle ใน sidebar-foot ใต้ user chip)
+  - `src/frontend/src/lib/cnext-locale.ts` (NEW, helper: read/swap locale segment ใน pathname + router.push)
 
 ### Phase C — Functional Wiring (11 screens)
 
-**New Zustand slices** (all use `persist` middleware, key `humi-state-v1`):
+**New Zustand slices** (all use `persist` middleware, key `cnext-state-v1`):
 
-- `src/frontend/src/stores/humi-profile-slice.ts` (NEW) — 5-tab active state + edit draft + save-to-localStorage
-- `src/frontend/src/stores/humi-timeoff-slice.ts` (NEW) — balance (static) + history list + submit handler (append)
-- `src/frontend/src/stores/humi-benefits-slice.ts` (NEW) — enrolled benefits set + active tab
-- `src/frontend/src/stores/humi-requests-slice.ts` (NEW) — filter state + request submission list + status transitions
-- `src/frontend/src/stores/humi-goals-slice.ts` (NEW) — goals list + progress edits + create/edit drafts
-- `src/frontend/src/stores/humi-learning-slice.ts` (NEW) — search query + active filter tab + enrolled set
-- `src/frontend/src/stores/humi-orgchart-slice.ts` (NEW) — search query + selected node id
-- `src/frontend/src/stores/humi-announcements-slice.ts` (NEW) — pinned set (optimistic) + active filter tab
-- `src/frontend/src/stores/humi-integrations-slice.ts` (NEW) — enabled set + active category filter
-- `src/frontend/src/stores/humi-ui-slice.ts` (NEW) — command palette open, theme, locale (can extend existing `ui-store.ts` instead — PO leaves decision to builder c7-builders)
+- `src/frontend/src/stores/cnext-profile-slice.ts` (NEW) — 5-tab active state + edit draft + save-to-localStorage
+- `src/frontend/src/stores/cnext-timeoff-slice.ts` (NEW) — balance (static) + history list + submit handler (append)
+- `src/frontend/src/stores/cnext-benefits-slice.ts` (NEW) — enrolled benefits set + active tab
+- `src/frontend/src/stores/cnext-requests-slice.ts` (NEW) — filter state + request submission list + status transitions
+- `src/frontend/src/stores/cnext-goals-slice.ts` (NEW) — goals list + progress edits + create/edit drafts
+- `src/frontend/src/stores/cnext-learning-slice.ts` (NEW) — search query + active filter tab + enrolled set
+- `src/frontend/src/stores/cnext-orgchart-slice.ts` (NEW) — search query + selected node id
+- `src/frontend/src/stores/cnext-announcements-slice.ts` (NEW) — pinned set (optimistic) + active filter tab
+- `src/frontend/src/stores/cnext-integrations-slice.ts` (NEW) — enabled set + active category filter
+- `src/frontend/src/stores/cnext-ui-slice.ts` (NEW) — command palette open, theme, locale (can extend existing `ui-store.ts` instead — PO leaves decision to builder c7-builders)
 
 **Screen edits** (all in `src/frontend/src/app/[locale]/<route>/page.tsx`):
 
@@ -123,8 +123,8 @@
 
 - `src/frontend/src/__tests__/layout-integration.test.tsx` (NEW) — sidebar visible ทุก route, wordmark "Hum", ⌘K kbd present, bell icon, user avatar chip
 - `src/frontend/src/__tests__/thai-heading-regression.test.tsx` (NEW) — render 11 routes, h1/h2/h3 match `/[฀-๿]/`, whitelist ok
-- `src/frontend/src/__tests__/humi-reference-smoke.test.tsx` (NEW) — per screen key sections present per reference bundle
-- `src/frontend/src/__tests__/humi-functional.test.tsx` (NEW) — per screen **interaction tests**:
+- `src/frontend/src/__tests__/cnext-reference-smoke.test.tsx` (NEW) — per screen key sections present per reference bundle
+- `src/frontend/src/__tests__/cnext-functional.test.tsx` (NEW) — per screen **interaction tests**:
   - home: click shortcut → mock `router.push` called with correct path
   - profile: click tab 2/3/4/5 → active class flips; edit field → save → slice state updated
   - timeoff: submit form → history list length +1
@@ -136,12 +136,12 @@
   - announcements: pin click → pinned set toggled
   - integrations: switch click → enabled set toggled
   - shell: ⌘K hotkey → palette open; palette select → route jump; theme toggle → `data-theme` flips; locale toggle → pathname `/th/...` → `/en/...`
-- `src/frontend/src/__tests__/humi-phase-b.test.tsx` (NEW) — OrgChart wheel → transform changes; theme toggle round-trip; middleware redirect root `/` → `/th/`
+- `src/frontend/src/__tests__/cnext-phase-b.test.tsx` (NEW) — OrgChart wheel → transform changes; theme toggle round-trip; middleware redirect root `/` → `/th/`
 
 ### Tests to preserve (verify still pass)
 
 - `src/frontend/src/__tests__/employee-profile.test.tsx` (existing)
-- `src/frontend/src/components/humi/__tests__/{Button,DataTable,Nav,Toggle}.test.tsx` (existing)
+- `src/frontend/src/components/cnext/__tests__/{Button,DataTable,Nav,Toggle}.test.tsx` (existing)
 - All 149 tests from sprint #1
 
 ### i18n
@@ -183,7 +183,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Test Writer**
   - Name: test-writer
   - Agent: MK VI — Test Writer
-  - Role: Phase D tests — layout-integration + thai-heading + humi-reference-smoke + humi-functional + humi-phase-b. Writes failing tests first, runs vitest, reports pass/fail (JARVIS runs tests — rule 21)
+  - Role: Phase D tests — layout-integration + thai-heading + cnext-reference-smoke + cnext-functional + cnext-phase-b. Writes failing tests first, runs vitest, reports pass/fail (JARVIS runs tests — rule 21)
 
 - **Code Reviewer**
   - Name: code-reviewer
@@ -204,14 +204,14 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Assigned To**: cleanup-builder
 - **Parallel**: false
 - **Files**:
-  - New branch `humi/continue-functional-issue-3` from `master`
+  - New branch `cnext/continue-functional-issue-3` from `master`
   - 13 modified + 14 in-scope untracked (see Scope decision § 2-3 in Task Description)
 - **Actions**:
-  - `git checkout -b humi/continue-functional-issue-3`
+  - `git checkout -b cnext/continue-functional-issue-3`
   - `git stash push -m "out-of-scope sprint #3" src/services/employee-center/prisma/schema.prisma src/services/employee-center/src/employee/employee.service.spec.ts planning/`
   - `git add` all in-scope files (exclude stashed paths)
-  - Commit: `chore(humi): savepoint sprint #2 Phase A in-flight work before sprint #3 continuation`
-  - Push branch: `git push -u origin humi/continue-functional-issue-3`
+  - Commit: `chore(cnext): savepoint sprint #2 Phase A in-flight work before sprint #3 continuation`
+  - Push branch: `git push -u origin cnext/continue-functional-issue-3`
   - Verify: `git status` clean except stash
   - Max 0 lines of new code (pure commit)
 
@@ -257,7 +257,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**: `src/frontend/src/app/globals.css`
 - **Actions**:
-  - Replace line 9 comment `Adapted จาก Shelfly bundle (cream / teal / ink) + NO-RED scrub` with neutral text: `Humi design tokens (cream + teal + ink) — NO RED constraint`
+  - Replace line 9 comment `Adapted จาก Shelfly bundle (cream / teal / ink) + NO-RED scrub` with neutral text: `Cnext design tokens (cream + teal + ink) — NO RED constraint`
   - ไม่แตะ CSS body. Surgical change only.
   - Verify no other `Shelfly` occurrence in `globals.css`: `grep -n Shelfly src/frontend/src/app/globals.css` = empty
   - Max 1 line changed
@@ -288,7 +288,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Actions**:
   - Mount `<OrgChart data={...} onNodeClick={...} />` inside the canvas slot in page.tsx (the big node-tree area)
   - Keep reference toolbar (search + zoom +/- + reset) wired to OrgChart's imperative zoom methods (expose via ref if needed)
-  - Restyle OrgChart node visuals using Humi tokens (`bg-accent-soft`, `bg-[color:var(--color-sage-soft)]`) if minor; otherwise skin only surrounding chrome
+  - Restyle OrgChart node visuals using Cnext tokens (`bg-accent-soft`, `bg-[color:var(--color-sage-soft)]`) if minor; otherwise skin only surrounding chrome
   - Smoke test: wheel event on chart → inline `transform: scale()` style changes; reset button → transform back to `scale(1)`
   - Max 8 files
 
@@ -299,13 +299,13 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Assigned To**: shell-integrator
 - **Parallel**: true
 - **Files**:
-  - `src/frontend/src/components/humi/shell/Topbar.tsx` (ADD IconButton sun/moon beside bell)
+  - `src/frontend/src/components/cnext/shell/Topbar.tsx` (ADD IconButton sun/moon beside bell)
   - `src/frontend/src/components/shared/theme-provider.tsx` (verify `html[data-theme="dark"]`)
   - `src/frontend/src/app/[locale]/layout.tsx` (verify ThemeProvider wraps AppShell)
   - `src/frontend/src/messages/{th,en}.json` (add `shell.theme.light/dark/aria` keys)
 - **Actions**:
   - Wire IconButton `aria-label="สลับโหมดมืด/สว่าง"` to ThemeProvider toggle
-  - Verify round-trip light → dark → light, no flicker, all Humi tokens respond
+  - Verify round-trip light → dark → light, no flicker, all Cnext tokens respond
   - Max 5 files
 
 ### 8. Legacy route documentation
@@ -314,9 +314,9 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Depends On**: a2-archive
 - **Assigned To**: shell-integrator
 - **Parallel**: true
-- **Files**: `src/frontend/src/components/humi/shell/Sidebar.tsx`
+- **Files**: `src/frontend/src/components/cnext/shell/Sidebar.tsx`
 - **Actions**:
-  - Add file-top comment block: "PO direction (#3): Humi sidebar stays clean to 10 reference items. Legacy routes (payroll, performance, permissions, onboarding, workflows, and 12 others) remain URL-accessible (`/th/<route>`) but are NOT surfaced in sidebar. Reason: preserves Humi information architecture per design-ref bundle. If expansion needed, add `'บริษัท' > { id: 'legacy', label: 'เครื่องมือเพิ่มเติม' }` pointing to `/legacy` hub page (separate sprint)."
+  - Add file-top comment block: "PO direction (#3): Cnext sidebar stays clean to 10 reference items. Legacy routes (payroll, performance, permissions, onboarding, workflows, and 12 others) remain URL-accessible (`/th/<route>`) but are NOT surfaced in sidebar. Reason: preserves Cnext information architecture per design-ref bundle. If expansion needed, add `'บริษัท' > { id: 'legacy', label: 'เครื่องมือเพิ่มเติม' }` pointing to `/legacy` hub page (separate sprint)."
   - No nav change. Documentation-only task.
   - Max 1 file, ≤ 15 lines added
 
@@ -326,7 +326,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Depends On**: a2-archive
 - **Assigned To**: shell-integrator
 - **Parallel**: true
-- **Files**: `src/frontend/src/components/humi/shell/Sidebar.tsx`
+- **Files**: `src/frontend/src/components/cnext/shell/Sidebar.tsx`
 - **Actions**:
   - Verify `usePathname()` → `.nav-item.active` class flips on route change
   - Fix drift if exists (e.g., strip locale prefix `/th/` for comparison, handle `/profile/me` matching `/profile/*`)
@@ -340,9 +340,9 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Assigned To**: shell-integrator
 - **Parallel**: false
 - **Files**:
-  - `src/frontend/src/components/humi/shell/CommandPalette.tsx` (NEW)
-  - `src/frontend/src/components/humi/shell/Topbar.tsx` (wire search pill + ⌘K hotkey)
-  - `src/frontend/src/lib/humi-command-registry.ts` (NEW, static list of 11 routes + nav labels)
+  - `src/frontend/src/components/cnext/shell/CommandPalette.tsx` (NEW)
+  - `src/frontend/src/components/cnext/shell/Topbar.tsx` (wire search pill + ⌘K hotkey)
+  - `src/frontend/src/lib/cnext-command-registry.ts` (NEW, static list of 11 routes + nav labels)
   - `src/frontend/src/messages/{th,en}.json` (commandPalette keys)
 - **Actions**:
   - CommandPalette = modal overlay, search input at top, filtered command list below (keyboard arrow up/down + enter), esc to close
@@ -360,8 +360,8 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Assigned To**: shell-integrator
 - **Parallel**: false
 - **Files**:
-  - `src/frontend/src/components/humi/shell/Sidebar.tsx` (ADD th/en toggle in sidebar-foot, below user chip)
-  - `src/frontend/src/lib/humi-locale.ts` (NEW, helper functions)
+  - `src/frontend/src/components/cnext/shell/Sidebar.tsx` (ADD th/en toggle in sidebar-foot, below user chip)
+  - `src/frontend/src/lib/cnext-locale.ts` (NEW, helper functions)
   - `src/frontend/src/messages/{th,en}.json` (`shell.locale.*` keys)
 - **Actions**:
   - Render 2 button pills: TH | EN (active one highlighted)
@@ -377,11 +377,11 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/profile/me/page.tsx` (EDIT)
-  - `src/frontend/src/stores/humi-profile-slice.ts` (NEW)
+  - `src/frontend/src/stores/cnext-profile-slice.ts` (NEW)
   - `src/frontend/src/messages/{th,en}.json` (profile functional keys)
 - **Actions**:
   - Zustand slice: `{ activeTab: 'personal'|'employment'|'compensation'|'documents'|'activity', draft, save() }`
-  - Persist to localStorage key `humi-profile-v1`
+  - Persist to localStorage key `cnext-profile-v1`
   - 5 tabs click → slice.activeTab flips → panel content swaps (use `data-tab-id` map)
   - Edit button → enter draft mode → form fields controlled from `draft` → save button → commit draft to `profile` field → persist + toast "บันทึกเรียบร้อย"
   - No API call; pure local persistence
@@ -411,7 +411,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/announcements/page.tsx` (EDIT)
-  - `src/frontend/src/stores/humi-announcements-slice.ts` (NEW)
+  - `src/frontend/src/stores/cnext-announcements-slice.ts` (NEW)
   - `src/frontend/src/messages/{th,en}.json` (announcements functional keys)
 - **Actions**:
   - Slice: `{ pinned: Set<id>, activeFilter: 'all'|'pinned'|'news'|'policy', togglePin(id), setFilter() }`
@@ -441,14 +441,14 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/timeoff/page.tsx` (EDIT)
-  - `src/frontend/src/stores/humi-timeoff-slice.ts` (NEW)
+  - `src/frontend/src/stores/cnext-timeoff-slice.ts` (NEW)
   - `src/frontend/src/messages/{th,en}.json` (timeoff form keys)
 - **Actions**:
   - Slice: `{ history: [...initial], submit(request) }`
   - Request form: leave type + start/end date + reason + attachment placeholder
   - Validation: start < end, reason length ≥ 5, required fields
   - Submit → append to history with status `'pending'` + timestamp + toast; form resets
-  - Balance display = static mock data (read from existing `humi-mock-data.ts`)
+  - Balance display = static mock data (read from existing `cnext-mock-data.ts`)
   - Max 5 files
 
 ### 17. Benefits-hub functional wiring
@@ -459,8 +459,8 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/benefits-hub/page.tsx` (EDIT)
-  - `src/frontend/src/stores/humi-benefits-slice.ts` (NEW)
-  - `src/frontend/src/components/humi/Modal.tsx` (NEW, small modal primitive if not reusing existing)
+  - `src/frontend/src/stores/cnext-benefits-slice.ts` (NEW)
+  - `src/frontend/src/components/cnext/Modal.tsx` (NEW, small modal primitive if not reusing existing)
   - `src/frontend/src/messages/{th,en}.json` (benefits keys)
 - **Actions**:
   - Slice: `{ enrolled: Set<id>, activeTab: string, toggleEnroll(id), setTab() }`
@@ -477,7 +477,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/requests/page.tsx` (EDIT)
-  - `src/frontend/src/stores/humi-requests-slice.ts` (NEW)
+  - `src/frontend/src/stores/cnext-requests-slice.ts` (NEW)
   - `src/frontend/src/messages/{th,en}.json` (requests keys)
 - **Actions**:
   - Slice: `{ submissions: [...], filter: 'all'|'pending'|'approved'|'rejected', submit(), setFilter() }`
@@ -494,7 +494,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/goals/page.tsx` (EDIT)
-  - `src/frontend/src/stores/humi-goals-slice.ts` (NEW)
+  - `src/frontend/src/stores/cnext-goals-slice.ts` (NEW)
   - `src/frontend/src/messages/{th,en}.json` (goals keys)
 - **Actions**:
   - Slice: `{ goals: [...], create(g), update(id, patch), remove(id) }`
@@ -511,7 +511,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/learning-directory/page.tsx` (EDIT)
-  - `src/frontend/src/stores/humi-learning-slice.ts` (NEW)
+  - `src/frontend/src/stores/cnext-learning-slice.ts` (NEW)
   - `src/frontend/src/messages/{th,en}.json` (learning keys)
 - **Actions**:
   - Slice: `{ query: string, filter: 'all'|'enrolled'|'new'|..., enrolled: Set<id>, setQuery(), setFilter(), toggleEnroll(id) }`
@@ -528,7 +528,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/org-chart/page.tsx` (EDIT)
-  - `src/frontend/src/stores/humi-orgchart-slice.ts` (NEW)
+  - `src/frontend/src/stores/cnext-orgchart-slice.ts` (NEW)
   - `src/frontend/src/messages/{th,en}.json` (orgChart keys)
 - **Actions**:
   - Slice: `{ query: string, selectedId: string|null, setQuery(), select(id) }`
@@ -545,11 +545,11 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/integrations/page.tsx` (EDIT)
-  - `src/frontend/src/stores/humi-integrations-slice.ts` (NEW)
+  - `src/frontend/src/stores/cnext-integrations-slice.ts` (NEW)
   - `src/frontend/src/messages/{th,en}.json` (integrations keys)
 - **Actions**:
   - Slice: `{ enabled: Set<id>, category: 'all'|'hr'|'finance'|'communications'|..., toggle(id), setCategory() }`
-  - Toggle switch (humi/Toggle primitive) bound to `enabled.has(id)` + click → `toggle(id)`
+  - Toggle switch (cnext/Toggle primitive) bound to `enabled.has(id)` + click → `toggle(id)`
   - Category chips filter integration grid
   - Status badge ("เชื่อมต่อแล้ว" / "ยังไม่เชื่อมต่อ") reacts to state
   - Max 5 files
@@ -563,15 +563,15 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Files**:
   - `src/frontend/src/__tests__/layout-integration.test.tsx` (NEW)
   - `src/frontend/src/__tests__/thai-heading-regression.test.tsx` (NEW)
-  - `src/frontend/src/__tests__/humi-reference-smoke.test.tsx` (NEW)
-  - `src/frontend/src/__tests__/humi-functional.test.tsx` (NEW)
-  - `src/frontend/src/__tests__/humi-phase-b.test.tsx` (NEW)
+  - `src/frontend/src/__tests__/cnext-reference-smoke.test.tsx` (NEW)
+  - `src/frontend/src/__tests__/cnext-functional.test.tsx` (NEW)
+  - `src/frontend/src/__tests__/cnext-phase-b.test.tsx` (NEW)
 - **Actions**:
   - layout-integration: mount LocaleLayout with 11 route fixtures → assert `<aside class*="sidebar">` present, wordmark "Hum", ⌘K kbd, bell, avatar. Traceability: `// AC-1, AC-2`
   - thai-heading: render 11 routes → query h1/h2/h3 → assert `/[฀-๿]/` match; whitelist tokens (PDF, API, SSO, ⌘K, ฯลฯ) allowed. Traceability: `// AC-7`
-  - humi-reference-smoke: per screen assert reference sections (home → greeting + shortcut grid, timeoff → balance KPIs + form, goals → goal cards + slider, etc.). Traceability: `// AC-4`
-  - humi-functional: per screen interaction — simulate click/type/submit → assert slice state change OR DOM update. 11 screens × ≥ 1 interaction each = ≥ 15 test cases. Plus shell: ⌘K open palette, theme toggle, locale swap. Traceability: `// AC-3, AC-5, AC-6`
-  - humi-phase-b: OrgChart wheel event → transform style changes; reset → transform reset; theme round-trip; middleware redirect `/` → `/th/` (mocked). Traceability: `// AC-8, AC-9, AC-14`
+  - cnext-reference-smoke: per screen assert reference sections (home → greeting + shortcut grid, timeoff → balance KPIs + form, goals → goal cards + slider, etc.). Traceability: `// AC-4`
+  - cnext-functional: per screen interaction — simulate click/type/submit → assert slice state change OR DOM update. 11 screens × ≥ 1 interaction each = ≥ 15 test cases. Plus shell: ⌘K open palette, theme toggle, locale swap. Traceability: `// AC-3, AC-5, AC-6`
+  - cnext-phase-b: OrgChart wheel event → transform style changes; reset → transform reset; theme round-trip; middleware redirect `/` → `/th/` (mocked). Traceability: `// AC-8, AC-9, AC-14`
   - JARVIS runs `npm test --prefix src/frontend -- --run` — total ≥ 180 (149 existing + ≥ 31 new), 0 failures
   - Attach actual terminal output to report (Rule C2)
 
@@ -584,7 +584,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Actions**:
   - **Reference-match audit**: per 11 ported screen, `diff -u docs/design-ref/shelfly-bundle/project/screens/<name>.jsx src/frontend/src/app/[locale]/<route>/page.tsx`. Build table: reference section | ported + functional behavior | match-status (exact/adapted/missing/extended). `extended` ok if adds interactivity hinted in reference (e.g., button → actually submits); `missing` BLOCKS
   - **Functional behavior audit**: per screen, trace user flow against slice state: click → slice action → state update → UI reflect. Flag any "button is no-op" → BLOCK
-  - **Slice hygiene**: each Zustand slice uses `persist` middleware, localStorage key namespaced `humi-*-v1`, no cross-slice cyclic imports
+  - **Slice hygiene**: each Zustand slice uses `persist` middleware, localStorage key namespaced `cnext-*-v1`, no cross-slice cyclic imports
   - **Rule 26b sweep**: `grep -E '^\* ?\{ ?(padding|margin)' src/frontend/src/app/globals.css` returns empty
   - **NO-RED sweep**: `grep -rn '#C8102E' src/frontend/src/{app,components}` returns only test fixtures (Button.test.tsx) + `components/learning/learning-page.tsx` + `components/time/time-page.tsx` (legacy, out of scope); `src/frontend/src/app/[locale]/` returns empty
   - **Thai whitelist sweep**: `grep -E '>[A-Za-z]{4,}<' src/frontend/src/app/[locale]/{home,profile,timeoff,benefits-hub,requests,goals,learning-directory,org-chart,announcements,integrations,login}/**/*.tsx` — manually verify each hit is whitelist token
@@ -667,19 +667,19 @@ a1-savepoint
 
 - **AC-1**: AppShell sidebar 3 groups + 10 items + correct badges (timeoff:2, benefits:1, requests:1), nav active state flips on route change — verified by layout-integration test + chrome-browse walkthrough
 - **AC-2**: Topbar renders eyebrow + search pill (with ⌘K kbd) + bell + **theme toggle** + **command palette opens on ⌘K** (per route) — verified by test + walkthrough
-- **AC-3**: All 11 Humi routes render 200 with Thai h1 on **first paint** (SSR via middleware, not client hydration flip) — verified by `curl -I /` returns 307 → `/th/` + `curl /th/home` h1 Thai
+- **AC-3**: All 11 Cnext routes render 200 with Thai h1 on **first paint** (SSR via middleware, not client hydration flip) — verified by `curl -I /` returns 307 → `/th/` + `curl /th/home` h1 Thai
 - **AC-4**: Each ported screen matches reference layout + adds functional interactivity hinted in reference (button → submit/click actually does something). Reference-match table by MK V shows 0 `missing` rows
-- **AC-5**: 11 screens **interactive**: profile (5 tabs switch + edit + save), timeoff (form submit → history+1), benefits (tab + modal + enroll toggle), requests (template select + submit + filter), goals (create + edit + slider), learning (search + filter + enroll), org-chart (search + node click + zoom), announcements (filter + pin), integrations (toggle + category filter), home (shortcut → route), login (MSAL preserved) — verified by humi-functional test + walkthrough state screenshots
-- **AC-6**: Shell features: ⌘K opens command palette → select → route jump; theme toggle light ↔ dark with no flicker; locale switcher th ↔ en swaps URL + messages — verified by humi-functional test + walkthrough
+- **AC-5**: 11 screens **interactive**: profile (5 tabs switch + edit + save), timeoff (form submit → history+1), benefits (tab + modal + enroll toggle), requests (template select + submit + filter), goals (create + edit + slider), learning (search + filter + enroll), org-chart (search + node click + zoom), announcements (filter + pin), integrations (toggle + category filter), home (shortcut → route), login (MSAL preserved) — verified by cnext-functional test + walkthrough state screenshots
+- **AC-6**: Shell features: ⌘K opens command palette → select → route jump; theme toggle light ↔ dark with no flicker; locale switcher th ↔ en swaps URL + messages — verified by cnext-functional test + walkthrough
 - **AC-7**: **0 English user-facing strings** in 11 ported screens + shell + command palette. Whitelist: PDF/CSV/API/SSO/URL/HR/KPI/OT/LOA/UUID/HTTP/JSON/JPEG/PNG/GIF/SVG/⌘K. AC fails if ANY h1/h2/h3/button/label outside whitelist is English
 - **AC-8**: **0 `#C8102E` red** in `src/frontend/src/app/[locale]/` after payslip migration (`grep` returns empty). Test fixture Button.test.tsx allowed (explicit style test); legacy `components/{learning,time}/*-page.tsx` out of scope for this sprint
-- **AC-9**: OrgChart zoom/pan re-injected + reset works — verified by humi-phase-b test (wheel → transform change) + walkthrough
-- **AC-10**: ThemeProvider dark mode round-trip light → dark → light no flicker; `html[data-theme]` flips; all Humi tokens respond
+- **AC-9**: OrgChart zoom/pan re-injected + reset works — verified by cnext-phase-b test (wheel → transform change) + walkthrough
+- **AC-10**: ThemeProvider dark mode round-trip light → dark → light no flicker; `html[data-theme]` flips; all Cnext tokens respond
 - **AC-11**: MSAL login flow NOT broken — manual dev-server login → callback → `/th/home`; Login page visual may change (restyle already done) but auth logic untouched. Validator confirms explicitly in final report
 - **AC-12**: Invented pages archived — `src/frontend/.archive-2026-04/{employees,employees-[id],settings}/` present with README; `grep -rn "@/app/\[locale\]/employees\|@/app/\[locale\]/settings" src/frontend/src` empty
 - **AC-13**: SSR locale middleware works — `curl -I localhost:3000/` returns 307 → `/th/`; first-paint h1 is Thai (no client flip)
 - **AC-14**: `globals.css` no longer contains "Shelfly" string; `grep -E '^\* ?\{ ?(padding|margin)' src/frontend/src/app/globals.css` returns empty (Rule 26b)
-- **AC-15**: All tests pass — existing 149 + new layout-integration + thai-heading + humi-reference-smoke + humi-functional + humi-phase-b tests. Total ≥ 180. Terminal output attached to validator report (Rule C2). `npm run build --prefix src/frontend` exit 0.
+- **AC-15**: All tests pass — existing 149 + new layout-integration + thai-heading + cnext-reference-smoke + cnext-functional + cnext-phase-b tests. Total ≥ 180. Terminal output attached to validator report (Rule C2). `npm run build --prefix src/frontend` exit 0.
 - **AC-16**: **MK V independent Code Review** signs off with reference-match + functional-behavior audit posted to issue #3 — not MK IV dual-role. **MK IV Validator** Reads each of 11+ screenshot PNGs and emits honest PASS/FAIL per AC. If English heading visible in any PNG → AC-7 explicitly FAIL — no silent pass.
 
 ## Validation Commands
@@ -688,9 +688,9 @@ a1-savepoint
 - `cd src/frontend && npm test -- --run` — unit + integration tests (0 failures, total ≥ 180)
 - `cd src/frontend && npm test -- --run src/__tests__/layout-integration.test.tsx`
 - `cd src/frontend && npm test -- --run src/__tests__/thai-heading-regression.test.tsx`
-- `cd src/frontend && npm test -- --run src/__tests__/humi-reference-smoke.test.tsx`
-- `cd src/frontend && npm test -- --run src/__tests__/humi-functional.test.tsx`
-- `cd src/frontend && npm test -- --run src/__tests__/humi-phase-b.test.tsx`
+- `cd src/frontend && npm test -- --run src/__tests__/cnext-reference-smoke.test.tsx`
+- `cd src/frontend && npm test -- --run src/__tests__/cnext-functional.test.tsx`
+- `cd src/frontend && npm test -- --run src/__tests__/cnext-phase-b.test.tsx`
 - `cd src/frontend && npm run dev` (port 3000) + chrome-browse MCP walkthrough 11 routes at 1440x900 (Playwright CLI fallback)
 - Screenshots saved `test-artifacts/2026-04-21-continue-functional/<route>-<state>.png`; Read each via Read tool (Rule 62)
 - Middleware smoke: `curl -I localhost:3000/` returns 307 → `/th/`; `curl localhost:3000/th/home` returns 200 + Thai h1 on first line of body
@@ -707,7 +707,7 @@ a1-savepoint
 - Backend / API changes (MSAL, employee-center, cashflow ฯลฯ)
 - `src/services/employee-center/prisma/schema.prisma` 788-line diff (Ken to triage separately — stashed before savepoint)
 - The 16 legacy routes beyond "URL-accessible, not in sidebar" decision (payroll, performance, permissions, onboarding, workflows, hrbp-reports, government-reports, idp, locations, manager-dashboard, overtime, quick-approve, recruitment, resignation, screening, spd-management, succession, talent-management, training-records, hospital-referral, benefits [legacy vs benefits-hub], leave [legacy vs timeoff], learning [legacy vs learning-directory], time — separate sprint)
-- Logo generation / brand asset work (`planning/logo-concepts/v2/...` — awaiting Rungrote direction lock per `project_humi_branding.md` — stashed)
+- Logo generation / brand asset work (`planning/logo-concepts/v2/...` — awaiting Rungrote direction lock per `project_cnext_branding.md` — stashed)
 - `src/frontend/src/components/{learning,time}/*-page.tsx` legacy `#C8102E` (not touched by this sprint's screens — separate sprint)
 - CI/CD changes
 - Real backend persistence for functional wiring — this sprint uses Zustand + localStorage only; connecting to actual APIs = separate sprint

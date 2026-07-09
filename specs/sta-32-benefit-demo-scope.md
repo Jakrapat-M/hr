@@ -133,7 +133,7 @@ SPD sign-off question: SPD action set และ field visibility เพียง
 | --- | --- | --- |
 | Store | `src/frontend/src/stores/benefit-claims.ts` | Claim statuses, claim fields, attachment rules, approval actions |
 | Store | `src/frontend/src/stores/benefit-referrals.ts` | Referral statuses, hospital network, covered people, letter issue action |
-| Store | `src/frontend/src/stores/humi-benefits-slice.ts` | Benefits hub tab state |
+| Store | `src/frontend/src/stores/cnext-benefits-slice.ts` | Benefits hub tab state |
 | Hook | `src/frontend/src/hooks/use-medical-claims.ts` | Legacy/mock medical claim model with manager/HR steps |
 | Hook | `src/frontend/src/hooks/use-hospital-referral.ts` | Legacy/mock hospital referral model with letter issue statuses |
 | Lib | `src/frontend/src/lib/benefit-routes.ts` | Canonical localized route helpers |
@@ -472,7 +472,7 @@ Repo evidence:
 - `src/frontend/src/app/[locale]/spd/inbox/page.tsx`
 - `src/frontend/src/stores/benefit-claims.ts`
 - `src/frontend/src/stores/benefit-referrals.ts`
-- `src/frontend/src/stores/humi-benefits-slice.ts`
+- `src/frontend/src/stores/cnext-benefits-slice.ts`
 - `src/frontend/src/hooks/use-medical-claims.ts`
 - `src/frontend/src/hooks/use-hospital-referral.ts`
 - `src/frontend/src/lib/benefit-routes.ts`

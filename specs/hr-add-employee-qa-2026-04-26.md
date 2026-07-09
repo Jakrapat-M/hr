@@ -75,7 +75,7 @@
 **BRD ref:** #109  
 **Root cause:** `hrbpAssignee` is local state in `ClusterReview`. It is never passed to `WizardShell`'s `isCurrentStepValid`. `checkStepValid(3)` returns `sliceValid.review()` which always returns `true`. The "บันทึกและส่ง" button is always enabled on step 3 regardless of HRBP selection.  
 **Evidence:** `test-artifacts/add-employee-qa/NEG-13-review-hrbp-empty.png`  
-**Impact:** SH4 notification (BRD #109) cannot fire reliably — the audit entry hardcodes `hrbpEmail: 'hrbp@humi.test'` rather than using the selected HRBP.
+**Impact:** SH4 notification (BRD #109) cannot fire reliably — the audit entry hardcodes `hrbpEmail: 'hrbp@cnext.test'` rather than using the selected HRBP.
 
 ---
 

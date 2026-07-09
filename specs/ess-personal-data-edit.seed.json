@@ -5,17 +5,17 @@
     "projectType": "brownfield",
     "contextReferences": [
       "aeiouboy/hr src/frontend/ (Next.js 16 App Router + React 19)",
-      "Prior run #12 (Humi Profile Edit FE E2E) — FileUploadField atom + 15-field form + Zustand pending/attachments + i18n th/en already in repo",
+      "Prior run #12 (Cnext Profile Edit FE E2E) — FileUploadField atom + 15-field form + Zustand pending/attachments + i18n th/en already in repo",
       "Issue #54 (sibling) owns approver-side UI — this issue stubs a mock-submit hook that #54 later wires",
       "memory/feedback_thai_address_8_fields_structured.md — Thai address = 8 structured fields, not textarea",
       "memory/feedback_duplicate_data_two_formats_one_chip.md — avoid duplicate metric chips; one canonical display",
-      "memory/feedback_humi_button_primitive_over_tailwind.md — actions import <Button> from @/components/humi",
+      "memory/feedback_cnext_button_primitive_over_tailwind.md — actions import <Button> from @/components/cnext",
       "memory/feedback_zustand_persist_version_migrate.md — nested slice shape change requires bump `version: N` + `migrate()`",
       "expertise: AttachmentDropzone is the canonical atom for any attachment upload"
     ],
     "existingPatterns": [
       "Change Request locale keys already exist in messages/th.json + en.json (changeRequests / workflows nav slot)",
-      "Humi primitives (Button, Card, FormField) live under @/components/humi",
+      "Cnext primitives (Button, Card, FormField) live under @/components/cnext",
       "Zustand store pattern for profile draft persist — see existing profile-edit work from #12"
     ],
     "existingDependencies": [
@@ -23,7 +23,7 @@
       "react@19",
       "zustand@4 (persist middleware, must bump version on shape change)",
       "next-intl or similar i18n layer",
-      "@/components/humi primitives",
+      "@/components/cnext primitives",
       "@/components/admin/AttachmentDropzone"
     ]
   },

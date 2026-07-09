@@ -15,8 +15,8 @@
 
 | ไฟล์ | เก็บอะไร |
 |------|----------|
-| `humi-mock-data.ts` | ข้อมูลหลัก: พนักงาน โปรไฟล์ ฯลฯ |
-| `humi-mock-data-sf-parity.ts`, `humi-mock-data-sf-real.ts` | ข้อมูลเสริม (เทียบ SuccessFactors) |
+| `cnext-mock-data.ts` | ข้อมูลหลัก: พนักงาน โปรไฟล์ ฯลฯ |
+| `cnext-mock-data-sf-parity.ts`, `cnext-mock-data-sf-real.ts` | ข้อมูลเสริม (เทียบ SuccessFactors) |
 | `all-ported-employees.ts` | รายชื่อพนักงานทั้งหมดที่ใช้ในตาราง/สโคป |
 | `demo-seed.ts` | ตัว "เพาะเมล็ด" ข้อมูลลง store ตอนเปิดแอป |
 | `demo-users.ts` | บัญชีผู้ใช้สำหรับเดโม (ล็อกอินเป็น persona ต่างๆ) |
@@ -87,7 +87,7 @@ canAccessModule(userRoles, 'payslip');      // เข้าโมดูล paysl
 ถ้าบทบาทหนึ่งไม่มีสิทธิ์เข้าเมนูไหน → **ตัดเมนูนั้นทิ้งไปเลย**
 อย่าแสดงเป็นปุ่มเทาๆ กดไม่ได้ (กันผู้ใช้สับสน/เข้าใจผิด)
 
-- เมนูคุมที่ `components/humi/shell/Sidebar.tsx` (แต่ละ leaf มี `show: [...]`)
+- เมนูคุมที่ `components/cnext/shell/Sidebar.tsx` (แต่ละ leaf มี `show: [...]`)
   > 📌 ชื่อใน `show:` เป็น "persona id" ของ Sidebar เอง เช่น `hradmin`, `hris`, `sysadmin`, `hrbp`, `spd`, `manager`
   > **ไม่ใช่ชื่อ Role เป๊ะๆ จาก `rbac.ts`** (เช่น `hr_admin` มี `_`) — มันถูกแปลงผ่าน `PERSONA_ROLE` (`lib/persona-tiers.ts`)
   > เวลาเพิ่ม leaf ให้ลอกชื่อ persona จาก leaf ข้างเคียง อย่าเดาเอง

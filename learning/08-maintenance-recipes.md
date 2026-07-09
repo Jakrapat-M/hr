@@ -44,7 +44,7 @@
    ```tsx
    'use client';
    import { useLocale } from 'next-intl';
-   import { Card } from '@/components/humi';
+   import { Card } from '@/components/cnext';
 
    export default function TeamNotesPage() {
      const locale = useLocale();
@@ -60,9 +60,9 @@
    }
    ```
 3. เปิด `http://localhost:3000/th/team/notes` → เห็นหน้าแล้ว (URL เกิดเองจากโฟลเดอร์)
-4. **ถ้าต้องให้เข้าถึงจากเมนู** → เพิ่ม leaf ใน `components/humi/shell/Sidebar.tsx`
+4. **ถ้าต้องให้เข้าถึงจากเมนู** → เพิ่ม leaf ใน `components/cnext/shell/Sidebar.tsx`
    **และ** เพิ่มชื่อหน้าใน `TITLE_MAP` (ใน `AppShell.tsx`) ทั้ง `/th/...` และ `/en/...`
-   > ⚠️ ลืม `TITLE_MAP` = เทสต์ `humi-functional` แดง (กฎนี้เคยทำพลาดมาแล้ว)
+   > ⚠️ ลืม `TITLE_MAP` = เทสต์ `cnext-functional` แดง (กฎนี้เคยทำพลาดมาแล้ว)
 5. **ถ้าต้องกันสิทธิ์** → เพิ่ม `layout.tsx` ในโฟลเดอร์นั้น (ดูตัวอย่าง `hrbp/employees/layout.tsx`)
 6. **พิสูจน์:** กดจากเมนูเข้าได้ + `npm run build` ผ่าน
 

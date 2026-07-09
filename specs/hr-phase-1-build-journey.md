@@ -25,7 +25,7 @@ By end of day 2026-04-23:
 
 - **Language**: TypeScript (strict)
 - **Framework**: Next.js 15 App Router (existing `src/frontend/`) + React 19
-- **Styling**: Tailwind v4 + Humi re-skin via `.humi-step-section` CSS overrides (existing pattern)
+- **Styling**: Tailwind v4 + Cnext re-skin via `.cnext-step-section` CSS overrides (existing pattern)
 - **State**: Zustand with `persist` middleware (existing `useHireWizard` pattern for wizards; in-memory store for employees fixture)
 - **Validation**: Zod schemas + `@hrms/shared/validation` toolkit (F3 — 7 validators + DOB cross-field)
 - **Virtualization**: `@tanstack/react-virtual` (Cashflow project reference pattern)
@@ -81,8 +81,8 @@ Detail page → Link to /admin/employees/[id]/<action>
 ### Existing (must read before build)
 - `src/frontend/src/app/[locale]/admin/hire/page.tsx` + `steps/Step*.tsx` — current 13-field 3-cluster wizard (Option-1 shape from `project_hr_hire_wizard_option1_2026-04-23.md`) — S1 expands these
 - `src/frontend/src/app/[locale]/admin/hire/useHireWizard.ts` — Zustand store with `persist` key `hire-wizard-draft`
-- `src/frontend/src/components/humi/shell/Sidebar.tsx` — Admin Sidebar nav (S2 adds entry)
-- `src/frontend/src/components/humi/WizardShell.tsx` — Humi re-skin wizard shell (S4 + S5 reuse)
+- `src/frontend/src/components/cnext/shell/Sidebar.tsx` — Admin Sidebar nav (S2 adds entry)
+- `src/frontend/src/components/cnext/WizardShell.tsx` — Cnext re-skin wizard shell (S4 + S5 reuse)
 - `packages/shared/src/factory/createClusterWizard.ts` — D1 factory (S4 + S5 consumers)
 - `packages/shared/src/types/timeline.ts` — `TimelineEvent` union (7 variants), S5 MAY need `employee_data_edit` variant — **first check if it exists; if not in Plan v2 §4, use generic `update` variant documented in D1**
 - `packages/shared/src/picklists/index.ts` — export surface for `PICKLIST_YES_NO`, `PICKLIST_MARITAL_STATUS`
@@ -169,7 +169,7 @@ JARVIS orchestrates — never touches code directly. Each task assigned to one M
   - Cross-field validator: `hireSchema.refine((data) => data.dateOfBirth < data.hireDate, { message: "Recent Date should be greater than Date of Birth", path: ["hireDate"] })` — exact BA cross-field flag verbatim.
   - Wire `Permanent` vs `Partime` toggle visibility (BA cols F/G): if `contractType === 'Permanent'` hide `endDate`, etc. — follow BA sheet exactly.
   - Zustand store `useHireWizard` extended: add all 37 fields with sensible defaults. `persist` key unchanged (`hire-wizard-draft`).
-  - Preserve existing Humi re-skin via `.humi-step-section` — do NOT edit step component structure beyond adding new `<Field>` rows in appropriate cluster.
+  - Preserve existing Cnext re-skin via `.cnext-step-section` — do NOT edit step component structure beyond adding new `<Field>` rows in appropriate cluster.
   - **C1**: Do not refactor unrelated code. Do not change WizardShell or Option-1 3-cluster shape.
   - **C8 source-grounding**: Every new `<Field>` has a JSDoc comment `/** BA row X — <field name> */` above it.
 
@@ -182,7 +182,7 @@ JARVIS orchestrates — never touches code directly. Each task assigned to one M
 - **Files**:
   - `src/frontend/src/app/[locale]/admin/employees/page.tsx`
   - `src/frontend/src/mocks/employees.ts` (shared with S3/S4/S5 — S2 owns creation)
-  - `src/frontend/src/components/humi/shell/Sidebar.tsx` (add nav entry)
+  - `src/frontend/src/components/cnext/shell/Sidebar.tsx` (add nav entry)
   - `src/frontend/src/components/employee/EmployeeListTable.tsx`
 - **Actions**:
   - Create `mocks/employees.ts` exporting `EMPLOYEES: Employee[]` — 1,000 rows with realistic Thai names, employee_id (`emp-0001`..`emp-1000`), class (A/B/C/D), dob (1960-2000 range), hire_date (2015-2025 range), org_unit (5 hardcoded: HR / IT / Finance / Operations / Sales), position (per org_unit, 3-4 each), probation_status (`in-probation` | `passed` | `extended` | `failed`), phone, email. Seed deterministic (fixed seed) so tests are stable.
@@ -377,7 +377,7 @@ After 2 failed retries → JARVIS escalates to Ken with full context + ACTUAL te
 - **AC-5**: S5 Edit renders 23 pre-filled fields, readOnlyKeys contains `employee_id`, submit updates store. Verify: vitest test counts 23 `<input>`/`<select>` + asserts `employee_id` field disabled. Marital-since cross-field validated.
 - **AC-6 (E2E JOURNEY — load-bearing)**: browser-harness walks List → Detail → Probation → submit → Detail-with-new-event. 4 screenshots saved to `test-artifacts/phase1-build-2026-04-23/screenshots/journey-stage-{1,2,3,4}-*.png`. Zoom verify: no text overlap, timeline shows 2 events (hire + probation_assess) on stage 4.
 - **AC-7**: `cd src/frontend && npx vitest run` — 0 new failures beyond D1 baseline (10 pre-existing test file import errors allowed). `npx tsc --noEmit` — 0 new errors (ignore 3 Phase-2 placeholder pages if harmless).
-- **AC-8 (NO ORPHAN ROUTES — Ken DoD)**: Admin Sidebar has nav entry to `/admin/employees`. `grep -rn '/admin/employees' src/frontend/src/components/humi/shell/Sidebar.tsx` ≥ 1 match. All 5 action-menu cards link to real routes (Probation + Edit = functional; Transfer/Terminate/Rehire = placeholder pages, but reachable with working back-link). Manual check: clicking each card never 404s.
+- **AC-8 (NO ORPHAN ROUTES — Ken DoD)**: Admin Sidebar has nav entry to `/admin/employees`. `grep -rn '/admin/employees' src/frontend/src/components/cnext/shell/Sidebar.tsx` ≥ 1 match. All 5 action-menu cards link to real routes (Probation + Edit = functional; Transfer/Terminate/Rehire = placeholder pages, but reachable with working back-link). Manual check: clicking each card never 404s.
 
 ## Validation Commands
 
@@ -392,7 +392,7 @@ grep -cE "PICKLIST_|picklist_id" /Users/tachongrak/Projects/hr/src/frontend/src/
 grep -E "refine.*dateOfBirth.*hireDate|DOB.*hireDate" /Users/tachongrak/Projects/hr/src/frontend/src/app/\[locale\]/admin/hire/hireSchema.ts
 
 # AC-8 sidebar nav check
-grep -rn '/admin/employees' /Users/tachongrak/Projects/hr/src/frontend/src/components/humi/shell/Sidebar.tsx
+grep -rn '/admin/employees' /Users/tachongrak/Projects/hr/src/frontend/src/components/cnext/shell/Sidebar.tsx
 
 # Dev server for E2E
 cd /Users/tachongrak/Projects/hr/src/frontend && npm run dev &
@@ -419,6 +419,6 @@ open /Users/tachongrak/Projects/hr/test-artifacts/phase1-build-2026-04-23/screen
 - **Probation allowance → Payroll integration** — capture note field only. Phase 2+.
 - **Email / To-Do / reminder notifications (Day 30/75/90 per BRD #117)** — UI only. Phase 2 adds notifier.
 - **Password / Login flow** — Phase 3 (Azure B2C per `project_oms_login_b2c.md` reference pattern).
-- **Humi full re-skin beyond `.humi-step-section` overrides** — Phase 2.5 design system sweep.
+- **Cnext full re-skin beyond `.cnext-step-section` overrides** — Phase 2.5 design system sweep.
 - **Mobile responsive testing** — covered by separate sprint per `ironteam_run_5_hr_mobile_responsive.md`.
 - **Dark theme** — separate spec `2026-03-27-dark-theme-support.md`.

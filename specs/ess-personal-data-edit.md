@@ -20,14 +20,14 @@
 
 - ลด gap ESS ที่ใหญ่ที่สุดของ Phase 1 (ปัจจุบัน user ทำ self-service ไม่ได้เลย)
 - สร้าง shared primitives ที่ sibling #54 (approver UI) จะ consume ต่อ
-- ยืนยัน pattern BRD SH6-SH8 (submit → approve → effective-date apply) ทำงานจริงใน Humi UI
+- ยืนยัน pattern BRD SH6-SH8 (submit → approve → effective-date apply) ทำงานจริงใน Cnext UI
 
 ## Tech Stack
 
 - **Framework**: Next.js 16 App Router (hr repo: `src/frontend/`)
 - **Runtime**: React 19 + TypeScript 5
 - **State**: Zustand 4 + persist middleware (must bump `version` + provide `migrate()` on shape change — ref `feedback_zustand_persist_version_migrate.md`)
-- **UI primitives**: `@/components/humi` (Button / Card / FormField) — **ห้ามใช้ raw Tailwind** สำหรับ action components
+- **UI primitives**: `@/components/cnext` (Button / Card / FormField) — **ห้ามใช้ raw Tailwind** สำหรับ action components
 - **Attachments**: `@/components/admin/AttachmentDropzone` (reusable drop-zone, expertise pattern) — ห้ามใช้ raw `<input type=file>`
 - **i18n**: next-intl (`messages/th.json` + `messages/en.json` — `changeRequests` / `workflows` keys already scaffolded)
 - **Tests**: vitest + @testing-library/react + jsdom
@@ -37,7 +37,7 @@
 
 ### Read-only (understand existing shape)
 - `src/frontend/app/employees/me/**` — current read-only view (exact path may be `src/frontend/app/(authed)/employees/me/page.tsx` or similar; Builder must locate)
-- `src/frontend/components/humi/*` — Button/Card/FormField/Modal primitives
+- `src/frontend/components/cnext/*` — Button/Card/FormField/Modal primitives
 - `src/frontend/components/admin/AttachmentDropzone/AttachmentDropzone.tsx` — attachment drop-zone
 - `src/frontend/messages/th.json` + `en.json` — existing `changeRequests` / `workflows` i18n keys
 - `src/frontend/hooks/useProfileEdit.ts` (if present from run #12) — prior profile-edit hook to reuse

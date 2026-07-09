@@ -50,7 +50,7 @@ console.log(employee.name);   // อ่านค่า → 'สมชาย'
 
 ```ts
 interface CompRow {
-  readonly emp: HumiEmployee;   // พนักงาน
+  readonly emp: CnextEmployee;   // พนักงาน
   readonly base: number;        // เงินเดือนฐาน
   readonly allowances: number;  // เบี้ยเลี้ยง
   readonly total: number;       // รวม
@@ -140,7 +140,7 @@ function Greeting({ name }: { name: string }) {
 <Greeting name="สมชาย" />     // แสดง: สวัสดี สมชาย
 ```
 
-ในระบบ ชิ้นส่วน Humi รับ props แบบนี้ตลอด:
+ในระบบ ชิ้นส่วน Cnext รับ props แบบนี้ตลอด:
 ```tsx
 <Button variant="primary" size="md" onClick={handleSubmit}>
   ส่งคำขอ

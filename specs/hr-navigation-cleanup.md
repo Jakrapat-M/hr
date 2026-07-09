@@ -2,7 +2,7 @@
 
 > **Generated**: 2026-04-26
 > **Author**: architect (autopilot navigation cleanup pass)
-> **Source**: live grep of `src/frontend/src/app/[locale]/**/page.tsx`, `src/components/humi/QuickActionsTile.tsx`, `src/components/humi/shell/Sidebar.tsx`, `src/components/admin/shell/AdminSidebar.tsx`, `src/data/admin/mockAdminSelfService.json`, `next.config.ts`, `specs/hr-drift-matrix.md`
+> **Source**: live grep of `src/frontend/src/app/[locale]/**/page.tsx`, `src/components/cnext/QuickActionsTile.tsx`, `src/components/cnext/shell/Sidebar.tsx`, `src/components/admin/shell/AdminSidebar.tsx`, `src/data/admin/mockAdminSelfService.json`, `next.config.ts`, `specs/hr-drift-matrix.md`
 > **Hard constraints**: no new pages, no backend, Thai-primary labels, adopt-not-reinvent, redirect-or-remove only
 >
 > **Scope summary**: 8 duplicate-entry groups, 17 EN-only/EN-mixed labels, 9 files modified.
@@ -13,7 +13,7 @@
 
 | # | Feature | Canonical | Aliases (action) | Reason |
 |---|---|---|---|---|
-| 1 | Leave / Time-off | `/th/timeoff` | `/th/leave` (redirect → `/th/timeoff`)<br>`/th/leave/request` (redirect → `/th/timeoff?tab=request`)<br>`/th/leave/history` (redirect → `/th/timeoff?tab=history`) | Sidebar comment lines 279-281 already declares `/timeoff` canonical; `humi-timeoff-slice` is the active store; `/leave/*` are legacy ts-build code. Drift-matrix has no Wave-1 BRD pinning `/leave/*`. Keep redirects (don't `rm`) so existing seeded admin tile `qa_leave_request` (`mockAdminSelfService.json:453`) keeps resolving until that seed is sanitized. |
+| 1 | Leave / Time-off | `/th/timeoff` | `/th/leave` (redirect → `/th/timeoff`)<br>`/th/leave/request` (redirect → `/th/timeoff?tab=request`)<br>`/th/leave/history` (redirect → `/th/timeoff?tab=history`) | Sidebar comment lines 279-281 already declares `/timeoff` canonical; `cnext-timeoff-slice` is the active store; `/leave/*` are legacy ts-build code. Drift-matrix has no Wave-1 BRD pinning `/leave/*`. Keep redirects (don't `rm`) so existing seeded admin tile `qa_leave_request` (`mockAdminSelfService.json:453`) keeps resolving until that seed is sanitized. |
 | 2 | Profile (ESS) | `/th/profile/me` | `/th/profile` (redirect → `/th/profile/me`)<br>`/th/ess` (redirect → `/th/profile/me`)<br>`/th/ess/profile` (redirect → `/th/profile/me`)<br>`/th/employees/me` (already redirects — keep) | Sidebar item `profile` (line 91) and BRD #166/#173 reference `/profile/me`. `/employees/me/page.tsx` already redirects (line 1, 14). `/ess/page.tsx` is a 4-tile mini-dashboard whose 3 tiles ALL re-link into canonical pages — pure duplication. `/profile/page.tsx` predates `profile/me` and has stale `router.push('/profile?id=...')` that drops locale. |
 | 3 | Profile edit | `/th/ess/profile/edit` | (none — keep, but stop deep-linking from elsewhere) | BRD #166 surface; `qa_manage_data` tile (`mockAdminSelfService.json:437`) already targets it. **Decision**: keep `/ess/profile/edit` as canonical edit form (don't redirect — it's a working flow), but remove the `/ess/profile` *view* page (covered above). |
 | 4 | Payslip | `/th/employees/me/payslip` | `/th/payslip` (already redirects — verified `payslip/page.tsx:1-11`) | Already correctly redirected. No code change needed. **Action**: update `mockAdminSelfService.json:405` `qa_pay_statement` to point at `/th/employees/me/payslip` (not `/th/payslip`) so the seed reflects canonical. |

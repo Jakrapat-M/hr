@@ -1,10 +1,10 @@
-# Plan: Humi Redesign Recovery — Phase A Port Reference + Phase B Preserve Features
+# Plan: Cnext Redesign Recovery — Phase A Port Reference + Phase B Preserve Features
 
 ## Task Description
 
 Sprint #1 (`aeiouboy/hr` issue #1) ลง PARTIAL PASS เพราะ spec เดิมสั่ง "overwrite" 3 หน้า แต่ **ไม่เคย port** reference bundle ที่ Ken sync ไว้ที่ `docs/design-ref/shelfly-bundle/project/` (shell.jsx + styles.css 581 lines + icons.jsx + 11 screens). สิ่งที่เกิดขึ้น:
 
-- AppShell ปัจจุบันใน `src/frontend/src/components/humi/AppShell.tsx` เป็นของ **JARVIS invent เอง** ไม่ได้ port จาก `shell.jsx`
+- AppShell ปัจจุบันใน `src/frontend/src/components/cnext/AppShell.tsx` เป็นของ **JARVIS invent เอง** ไม่ได้ port จาก `shell.jsx`
 - มีแค่ 5 หน้า (home, employees list/detail, org-chart, settings) ซึ่ง 3 ใน 5 (**employees list, employees/[id], settings**) เป็น invented — reference ไม่มี — ต้อง archive แทน port
 - 11 หน้าใน reference (`home / profile / timeoff / benefits / requests / goals / learning_directory / orgchart / announcements / integrations / login`) ยังไม่ได้ port เลย
 
@@ -28,14 +28,14 @@ Ken ตัดสินใจ **A แล้ว B**:
 
 ## Objective
 
-ส่งมอบ Humi HR frontend ที่:
+ส่งมอบ Cnext HR frontend ที่:
 
 1. **Port reference 1:1** — shell.jsx + styles.css + icons.jsx + 11 screens → ทุก label/layout/interaction trace กลับ `docs/design-ref/shelfly-bundle/project/` ได้ (Rule C8)
 2. **Adapt retail → generic HR** — copy ที่ retail-specific (เช่น `ผู้จัดการร้าน · สาขาฮัมเบอร์`) ปรับเป็น Central Group HR context ตามที่ Ken expand scope
 3. **Archive invented screens** — employees list/detail, settings ที่ sprint #1 สร้างขึ้นโดย reference ไม่มี → move ไป `.archive-2026-04/` แทน port
 4. **Preserve existing interactive features** — OrgChart zoom/pan real component + ThemeProvider dark mode + legacy route exposure
 5. **Thai-primary user-facing** — 0 English heading/button/label ที่ไม่อยู่ใน whitelist (PDF, CSV, API, SSO, URL, HR, KPI ฯลฯ)
-6. **Not red** — 0 `#C8102E` ในไฟล์ที่แตะ (Humi palette NO RED)
+6. **Not red** — 0 `#C8102E` ในไฟล์ที่แตะ (Cnext palette NO RED)
 7. **Validation guards** — layout-integration test + Thai heading regression + per-screen smoke test + MK V independent review + MK IV honest pixel-zoom Read() ทุก PNG
 
 ## Tech Stack
@@ -43,7 +43,7 @@ Ken ตัดสินใจ **A แล้ว B**:
 - **Language**: TypeScript (strict)
 - **Framework**: Next.js 16 (App Router, `[locale]` routing), React 19
 - **Runtime**: Node.js, npm
-- **Styling**: Tailwind v4 + Humi CSS variables (`@theme` block ใน `src/frontend/src/app/globals.css`) — NO global `*` reset (Rule 26b) + NO `#C8102E`
+- **Styling**: Tailwind v4 + Cnext CSS variables (`@theme` block ใน `src/frontend/src/app/globals.css`) — NO global `*` reset (Rule 26b) + NO `#C8102E`
 - **Fonts**: CPN family (Light/Regular/Bold/Condensed/Compressed) from `src/frontend/public/fonts/cpn/`
 - **i18n**: next-intl (`src/frontend/src/messages/{th,en}.json`)
 - **Icons**: lucide-react (existing) + custom `ShelflyMark`/`Hum` wordmark port จาก `icons.jsx`
@@ -55,10 +55,10 @@ Ken ตัดสินใจ **A แล้ว B**:
 
 ### Infrastructure (Phase A1-A3)
 
-- `src/frontend/src/components/humi/AppShell.tsx` — REPLACE JARVIS-invented version with port of `shell.jsx` (sidebar layout)
-- `src/frontend/src/components/humi/Topbar.tsx` — NEW, port from `shell.jsx` Topbar section (search + bell + eyebrow)
-- `src/frontend/src/components/humi/icons/ShelflyMark.tsx` — NEW, port brand mark from `icons.jsx`
-- `src/frontend/src/components/humi/icons/index.ts` — NEW, map reference icon names → lucide equivalents + custom
+- `src/frontend/src/components/cnext/AppShell.tsx` — REPLACE JARVIS-invented version with port of `shell.jsx` (sidebar layout)
+- `src/frontend/src/components/cnext/Topbar.tsx` — NEW, port from `shell.jsx` Topbar section (search + bell + eyebrow)
+- `src/frontend/src/components/cnext/icons/ShelflyMark.tsx` — NEW, port brand mark from `icons.jsx`
+- `src/frontend/src/components/cnext/icons/index.ts` — NEW, map reference icon names → lucide equivalents + custom
 - `src/frontend/src/app/globals.css` — EXTEND with component classes from `styles.css` (pill, avatar, nav-item, sidebar-foot, search, topbar, kbd, icon-btn, dot-badge, eyebrow, wordmark) that don't translate cleanly to Tailwind utilities
 - `src/frontend/src/app/[locale]/layout.tsx` — UPDATE to mount new AppShell + Topbar pair
 
@@ -91,9 +91,9 @@ Route mapping (reference file → Next.js route):
 
 - `src/frontend/src/components/profile/org-chart.tsx` — existing real zoom/pan/drag 168 lines → re-injected in B1
 - `src/frontend/src/components/shared/theme-provider.tsx` — existing dark mode hook → preserved in B2
-- `src/frontend/src/components/humi/{Button,Card,Nav,DataTable,FormField,Avatar,Toggle}.tsx` — primitives from sprint #1 (reuse)
+- `src/frontend/src/components/cnext/{Button,Card,Nav,DataTable,FormField,Avatar,Toggle}.tsx` — primitives from sprint #1 (reuse)
 - `src/frontend/src/components/shared/{header,sidebar,mobile-menu,page-shell,page-layout}.tsx` — NOT touched (legacy routes still use)
-- `src/frontend/src/lib/humi-mock-data.ts` — EXTEND with per-screen data (home cards, timeoff balance, requests list, ฯลฯ)
+- `src/frontend/src/lib/cnext-mock-data.ts` — EXTEND with per-screen data (home cards, timeoff balance, requests list, ฯลฯ)
 
 ### i18n
 
@@ -104,8 +104,8 @@ Route mapping (reference file → Next.js route):
 
 - `src/frontend/src/__tests__/layout-integration.test.tsx` — sidebar visible ทุก route + brand wordmark "Hum" + ⌘K hint
 - `src/frontend/src/__tests__/thai-heading-regression.test.tsx` — h1/h2/h3 match `[\u0E00-\u0E7F]` ทุก route
-- `src/frontend/src/__tests__/humi-reference-smoke.test.tsx` — per-screen: correct sections/cards render, feature buttons present
-- `src/frontend/src/__tests__/humi-phase-b.test.tsx` — OrgChart zoom/pan callbacks wired + theme toggle round-trip
+- `src/frontend/src/__tests__/cnext-reference-smoke.test.tsx` — per-screen: correct sections/cards render, feature buttons present
+- `src/frontend/src/__tests__/cnext-phase-b.test.tsx` — OrgChart zoom/pan callbacks wired + theme toggle round-trip
 
 ## Team Orchestration
 
@@ -167,8 +167,8 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Assigned To**: infra-researcher
 - **Parallel**: false
 - **Files**:
-  - `src/frontend/src/components/humi/AppShell.tsx` (REPLACE invented)
-  - `src/frontend/src/components/humi/Topbar.tsx` (NEW)
+  - `src/frontend/src/components/cnext/AppShell.tsx` (REPLACE invented)
+  - `src/frontend/src/components/cnext/Topbar.tsx` (NEW)
   - `src/frontend/src/app/[locale]/layout.tsx` (UPDATE mount)
   - `src/frontend/src/messages/{th,en}.json` (shell namespace keys)
 - **Actions**:
@@ -191,8 +191,8 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: false
 - **Files**:
   - `src/frontend/src/app/globals.css` (EXTEND)
-  - `src/frontend/src/components/humi/AppShell.tsx` (wire classes from a1)
-  - `src/frontend/src/components/humi/Topbar.tsx` (wire classes)
+  - `src/frontend/src/components/cnext/AppShell.tsx` (wire classes from a1)
+  - `src/frontend/src/components/cnext/Topbar.tsx` (wire classes)
 - **Actions**:
   - Read `docs/design-ref/shelfly-bundle/project/styles.css` (581 lines)
   - Skip `:root` tokens — already live in `globals.css` `@theme` block from sprint #1 (verify coverage via grep, add gaps only)
@@ -203,19 +203,19 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
   - Document decision per class in comment (e.g., `/* kept as CSS: needs :hover + complex transition */`)
   - Run `npm run build` → exit 0 (no Tailwind errors)
 
-### 3. Port icons.jsx → components/humi/icons/
+### 3. Port icons.jsx → components/cnext/icons/
 
 - **Task ID**: a3-port-icons
 - **Depends On**: none
 - **Parallel**: true
 - **Assigned To**: infra-researcher
 - **Files**:
-  - `src/frontend/src/components/humi/icons/ShelflyMark.tsx` (NEW, port from `icons.jsx` line 45-50)
-  - `src/frontend/src/components/humi/icons/index.ts` (NEW, name → component map)
+  - `src/frontend/src/components/cnext/icons/ShelflyMark.tsx` (NEW, port from `icons.jsx` line 45-50)
+  - `src/frontend/src/components/cnext/icons/index.ts` (NEW, name → component map)
 - **Actions**:
   - Port `ShelflyMark` component 1:1 (gumdrop shape, `var(--accent)` default, size prop)
   - Port 31 entries of `I` icon set → map to lucide-react equivalents where visual match (e.g., `home` → `Home`, `calendar` → `Calendar`, `bell` → `Bell`) + port custom inline SVG for any non-lucide (check `globe`, `plug`, `mega`, `pin`, `party` carefully — may need custom)
-  - Export a typed map: `export const HumiIcons: Record<ReferenceIconName, LucideIcon | CustomIcon>`
+  - Export a typed map: `export const CnextIcons: Record<ReferenceIconName, LucideIcon | CustomIcon>`
   - Unit test: each reference name resolves to a renderable component
 
 ### 4. Port home.jsx
@@ -226,13 +226,13 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/home/page.tsx` (OVERWRITE current partial)
-  - `src/frontend/src/lib/humi-mock-data.ts` (EXTEND: home section data)
+  - `src/frontend/src/lib/cnext-mock-data.ts` (EXTEND: home section data)
   - `src/frontend/src/messages/{th,en}.json` (home namespace)
 - **Actions**:
   - Read `docs/design-ref/shelfly-bundle/project/screens/home.jsx` (227 lines)
-  - Port layout 1:1 using Humi primitives + ported shell
+  - Port layout 1:1 using Cnext primitives + ported shell
   - Adapt any retail-specific copy → generic HR
-  - Use `humi/Card`, `humi/Button`, `humi/Avatar` where API matches reference markup
+  - Use `cnext/Card`, `cnext/Button`, `cnext/Avatar` where API matches reference markup
   - Thai-primary, no English user-facing strings
   - Max 8 files touched
   - Smoke test: `curl localhost:3000/th/home` returns 200 + Thai h1 present
@@ -245,7 +245,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/profile/me/page.tsx` (NEW)
-  - `src/frontend/src/lib/humi-mock-data.ts` (EXTEND)
+  - `src/frontend/src/lib/cnext-mock-data.ts` (EXTEND)
   - `src/frontend/src/messages/{th,en}.json` (profile namespace)
 - **Actions**:
   - Read `docs/design-ref/shelfly-bundle/project/screens/profile.jsx` (184 lines)
@@ -260,7 +260,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/timeoff/page.tsx` (NEW)
-  - `src/frontend/src/lib/humi-mock-data.ts` (EXTEND)
+  - `src/frontend/src/lib/cnext-mock-data.ts` (EXTEND)
   - `src/frontend/src/messages/{th,en}.json` (timeoff namespace)
 - **Actions**:
   - Read `screens/timeoff.jsx` (185 lines) — port leave balance + request form + history
@@ -275,7 +275,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/benefits-hub/page.tsx` (NEW)
-  - `src/frontend/src/lib/humi-mock-data.ts` (EXTEND)
+  - `src/frontend/src/lib/cnext-mock-data.ts` (EXTEND)
   - `src/frontend/src/messages/{th,en}.json` (benefits namespace)
 - **Actions**:
   - Read `screens/benefits.jsx` (256 lines) — port salary breakdown + benefit cards
@@ -289,11 +289,11 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/requests/page.tsx` (NEW)
-  - `src/frontend/src/lib/humi-mock-data.ts` (EXTEND)
+  - `src/frontend/src/lib/cnext-mock-data.ts` (EXTEND)
   - `src/frontend/src/messages/{th,en}.json` (requests namespace)
 - **Actions**:
   - Read `screens/requests.jsx` (649 lines — largest) — port form templates + submission list
-  - Split into subcomponents inside `src/frontend/src/components/humi/requests/` if needed (max 8 files total)
+  - Split into subcomponents inside `src/frontend/src/components/cnext/requests/` if needed (max 8 files total)
   - Max 8 files
 
 ### 9. Port goals.jsx
@@ -304,7 +304,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/goals/page.tsx` (NEW)
-  - `src/frontend/src/lib/humi-mock-data.ts` (EXTEND)
+  - `src/frontend/src/lib/cnext-mock-data.ts` (EXTEND)
   - `src/frontend/src/messages/{th,en}.json` (goals namespace)
 - **Actions**:
   - Read `screens/goals.jsx` (196 lines) — port goal cards + progress rings
@@ -318,7 +318,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/learning-directory/page.tsx` (NEW)
-  - `src/frontend/src/lib/humi-mock-data.ts` (EXTEND)
+  - `src/frontend/src/lib/cnext-mock-data.ts` (EXTEND)
   - `src/frontend/src/messages/{th,en}.json` (learning namespace)
 - **Actions**:
   - Read `screens/learning_directory.jsx` (83 lines) — port course grid
@@ -332,7 +332,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/org-chart/page.tsx` (OVERWRITE)
-  - `src/frontend/src/lib/humi-mock-data.ts` (EXTEND org data)
+  - `src/frontend/src/lib/cnext-mock-data.ts` (EXTEND org data)
   - `src/frontend/src/messages/{th,en}.json` (orgChart namespace)
 - **Actions**:
   - Read `screens/orgchart.jsx` (283 lines) — port card+tree visual layout + search + filter controls
@@ -348,7 +348,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/announcements/page.tsx` (NEW)
-  - `src/frontend/src/lib/humi-mock-data.ts` (EXTEND)
+  - `src/frontend/src/lib/cnext-mock-data.ts` (EXTEND)
   - `src/frontend/src/messages/{th,en}.json` (announcements namespace)
 - **Actions**:
   - Read `screens/announcements.jsx` (119 lines) — port announcement feed + pinned items
@@ -362,7 +362,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/integrations/page.tsx` (NEW)
-  - `src/frontend/src/lib/humi-mock-data.ts` (EXTEND)
+  - `src/frontend/src/lib/cnext-mock-data.ts` (EXTEND)
   - `src/frontend/src/messages/{th,en}.json` (integrations namespace)
 - **Actions**:
   - Read `screens/integrations.jsx` (149 lines) — port integration catalog + status cards
@@ -381,7 +381,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Actions**:
   - Read `screens/login.jsx` (89 lines)
   - **Restyle visual only** — do NOT touch MSAL `signIn()` calls, auth callback URLs, redirect logic, useAuth hook wiring
-  - Wrap existing auth component tree in new Humi layout (branded left panel + form right)
+  - Wrap existing auth component tree in new Cnext layout (branded left panel + form right)
   - Verify MSAL round-trip still works (dev-server login → callback → dashboard)
   - Max 4 files
 
@@ -417,7 +417,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
   - Replace `<div data-orgchart-slot />` placeholder (from a11) with `<OrgChart data={...} onNodeClick={...} />`
   - Keep reference-layout: card + search controls + filter chips wrap around the OrgChart
   - Preserve zoom/pan/drag/reset — verify via smoke test (simulate mouse wheel zoom → transform style changes)
-  - Restyle OrgChart node visuals using Humi tokens (avatar.coral, card, nav-label) if diff is small; otherwise leave visuals untouched and skin only the surrounding chrome
+  - Restyle OrgChart node visuals using Cnext tokens (avatar.coral, card, nav-label) if diff is small; otherwise leave visuals untouched and skin only the surrounding chrome
   - Max 30 lines changed in existing `org-chart.tsx` component
 
 ### 17. Phase B2 — ThemeProvider wiring (dark mode)
@@ -428,7 +428,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Parallel**: true
 - **Files**:
   - `src/frontend/src/app/[locale]/layout.tsx` (ensure ThemeProvider wraps children)
-  - `src/frontend/src/components/humi/AppShell.tsx` (add theme toggle button in topbar actions or sidebar-foot — use `Ic.sun`/`Ic.moon` from icon port)
+  - `src/frontend/src/components/cnext/AppShell.tsx` (add theme toggle button in topbar actions or sidebar-foot — use `Ic.sun`/`Ic.moon` from icon port)
   - `src/frontend/src/components/shared/theme-provider.tsx` (verify it sets `html[data-theme="dark"]` attribute to match styles.css token selector)
 - **Actions**:
   - Verify existing ThemeProvider uses same attribute (`data-theme="dark"`) as ported styles.css. If different, align
@@ -443,10 +443,10 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Assigned To**: phase-b-integrator
 - **Parallel**: true
 - **Files**:
-  - `src/frontend/src/components/humi/AppShell.tsx` (NAV extension OR no-op with documentation)
+  - `src/frontend/src/components/cnext/AppShell.tsx` (NAV extension OR no-op with documentation)
 - **Actions**:
   - Scan `src/frontend/src/app/[locale]/**/page.tsx` for non-ported routes (payroll, performance, permissions, onboarding, workflows ฯลฯ — 17 legacy routes per sprint context)
-  - **Decision (PO direction)**: keep sidebar clean to the 10 reference items; legacy routes accessible via URL only (no "อื่นๆ" expandable section — avoids cluttering the Humi-designed sidebar). Document rationale in file comment
+  - **Decision (PO direction)**: keep sidebar clean to the 10 reference items; legacy routes accessible via URL only (no "อื่นๆ" expandable section — avoids cluttering the Cnext-designed sidebar). Document rationale in file comment
   - If Ken later wants legacy exposed, add `"บริษัท" > { id: "legacy", label: "เครื่องมือเพิ่มเติม", icon: "more" }` → links to `/legacy` index page (not in this sprint)
   - Deliverable: file comment + zero nav changes (task is a decision-document task, no code change)
 
@@ -459,13 +459,13 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
 - **Files**:
   - `src/frontend/src/__tests__/layout-integration.test.tsx`
   - `src/frontend/src/__tests__/thai-heading-regression.test.tsx`
-  - `src/frontend/src/__tests__/humi-reference-smoke.test.tsx`
-  - `src/frontend/src/__tests__/humi-phase-b.test.tsx`
+  - `src/frontend/src/__tests__/cnext-reference-smoke.test.tsx`
+  - `src/frontend/src/__tests__/cnext-phase-b.test.tsx`
 - **Actions**:
   - layout-integration: mount LocaleLayout → assert sidebar `<aside class="sidebar">` visible + wordmark text "Hum" + ⌘K kbd present + bell icon + user avatar "จท". Traceability: `// AC-1/AC-5`
   - thai-heading: for each of 11 reference routes + archived routes (which should 404 or redirect), render + query h1/h2/h3 → assert innerText matches `/[\u0E00-\u0E7F]/`. Traceability: `// AC-7`
-  - humi-reference-smoke: per screen, assert key reference sections present (home → greeting + shortcut grid; timeoff → balance card + request form; goals → goal cards; etc.). Traceability: `// AC-3/AC-4`
-  - humi-phase-b: OrgChart zoom callback fires on wheel event; theme toggle flips `data-theme` attribute. Traceability: `// AC-9/AC-10`
+  - cnext-reference-smoke: per screen, assert key reference sections present (home → greeting + shortcut grid; timeoff → balance card + request form; goals → goal cards; etc.). Traceability: `// AC-3/AC-4`
+  - cnext-phase-b: OrgChart zoom callback fires on wheel event; theme toggle flips `data-theme` attribute. Traceability: `// AC-9/AC-10`
   - Confirm all existing tests still pass: `npm test --prefix src/frontend -- --run`
 
 ### 20. Code Review
@@ -496,7 +496,7 @@ JARVIS orchestrates — never touches code directly. Each task Assigned To one a
   - For each AC-1 through AC-14, emit PASS/FAIL with terminal output evidence + screenshot reference. No rubber-stamp — if any h1 English, AC-7 is FAIL
   - Run `npm run build --prefix src/frontend` — exit 0 required; paste actual terminal output (Rule C2)
   - Run `npm test --prefix src/frontend -- --run` — 0 failures; paste actual test summary output
-  - Capture `getComputedStyle` evidence for at least 3 Humi classes on 3 routes (Rule 26c): padding, margin, color applied
+  - Capture `getComputedStyle` evidence for at least 3 Cnext classes on 3 routes (Rule 26c): padding, margin, color applied
   - If any FAIL → send back to appropriate builder; max 2 retries then escalate to Ken
 
 ## Pipeline
@@ -538,11 +538,11 @@ If Validate Final fails → builder fixes → re-run Code Review → Validate. A
 - AC-7: **0 English user-facing strings** in 11 ported screens + shell. Whitelist: PDF, CSV, API, SSO, URL, HR, KPI, OT, LOA, UUID, HTTP, JSON, JPEG, PNG, GIF, SVG, ⌘K. AC fails if ANY h1/h2/h3/button/label outside whitelist is English
 - AC-8: **0 `#C8102E` red** in any touched file (`grep -rn '#C8102E' src/frontend/src/{app,components}/` returns empty)
 - AC-9: OrgChart zoom/pan preserved (Phase B1) — smoke test simulates wheel event → transform style changes + reset button restores transform to identity
-- AC-10: ThemeProvider dark mode works (Phase B2) — toggle button flips `html[data-theme]` attribute, all Humi tokens flip in one frame, round-trip light/dark 3x no flicker
+- AC-10: ThemeProvider dark mode works (Phase B2) — toggle button flips `html[data-theme]` attribute, all Cnext tokens flip in one frame, round-trip light/dark 3x no flicker
 - AC-11: Existing MSAL login flow NOT broken (Phase A14) — manual dev-server login works; existing auth tests still pass
 - AC-12: Archive cleanup complete (Phase A15) — `.archive-2026-04/` has README + `grep -rn "from '@/app/\[locale\]/employees\|from '@/app/\[locale\]/settings'" src/frontend/src` returns empty (no live imports to archived paths)
 - AC-13: `npm run build --prefix src/frontend` exits 0 with no warnings
-- AC-14: All tests pass — existing 149 + new layout-integration + thai-heading + humi-reference-smoke + humi-phase-b tests. Total ≥ 160. Terminal output attached to validator report (Rule C2)
+- AC-14: All tests pass — existing 149 + new layout-integration + thai-heading + cnext-reference-smoke + cnext-phase-b tests. Total ≥ 160. Terminal output attached to validator report (Rule C2)
 - AC-15: **MK V independent Code Review** signs off with full reference-match table posted to issue #2 — not MK IV rubber-stamp
 - AC-16: **MK IV Validator** Reads each of 11 screenshot PNGs and emits honest PASS/FAIL per AC. If English heading visible in any PNG, AC-7 is explicitly marked FAIL with screenshot reference — no silent pass
 
@@ -552,8 +552,8 @@ If Validate Final fails → builder fixes → re-run Code Review → Validate. A
 - `cd src/frontend && npm test -- --run` — unit + integration tests (0 failures)
 - `cd src/frontend && npm test -- --run src/__tests__/layout-integration.test.tsx` — sidebar + Topbar guard
 - `cd src/frontend && npm test -- --run src/__tests__/thai-heading-regression.test.tsx` — Thai sweep guard
-- `cd src/frontend && npm test -- --run src/__tests__/humi-reference-smoke.test.tsx` — per-screen section assertions
-- `cd src/frontend && npm test -- --run src/__tests__/humi-phase-b.test.tsx` — OrgChart zoom + theme toggle guards
+- `cd src/frontend && npm test -- --run src/__tests__/cnext-reference-smoke.test.tsx` — per-screen section assertions
+- `cd src/frontend && npm test -- --run src/__tests__/cnext-phase-b.test.tsx` — OrgChart zoom + theme toggle guards
 - `cd src/frontend && npm run dev` (port 3000) + Playwright screenshot 11 routes at 1440x900 → save `test-artifacts/recovery/<route>.png`
 - Manual: Read each screenshot via Read tool + pixel-zoom inspect — per Rule 62
 - Reference-match diff: for each ported screen, `diff -u docs/design-ref/shelfly-bundle/project/screens/<name>.jsx src/frontend/src/app/[locale]/<route>/page.tsx | head -100` — MK V reviews and attaches summary to issue #2
@@ -566,7 +566,7 @@ If Validate Final fails → builder fixes → re-run Code Review → Validate. A
 
 - Backend / API changes
 - Any of the 17 legacy routes (payroll, performance, permissions, onboarding, workflows, ฯลฯ) beyond the "keep URL accessible, don't surface in sidebar" decision in B3 — separate sprint
-- Logo generation / brand asset work (see `project_humi_branding.md` — awaiting Rungrote direction lock)
+- Logo generation / brand asset work (see `project_cnext_branding.md` — awaiting Rungrote direction lock)
 - CI/CD changes
 - Full i18n extraction tooling (th.json + en.json updates for the 12 namespaces are in scope; broader extraction automation is not)
 - Dark theme feature-complete polish beyond "wiring works" (separate spec `2026-03-27-dark-theme-support.md` already tracks that)

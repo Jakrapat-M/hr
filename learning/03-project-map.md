@@ -28,7 +28,7 @@ src/frontend/
 ├── src/
 │   ├── app/[locale]/        ← 🗺️ "หน้าเว็บ" ทั้งหมด (1 โฟลเดอร์ = 1 URL)
 │   ├── components/          ← ชิ้นส่วน UI
-│   │   ├── humi/            ← ⭐ ชิ้นส่วนมาตรฐาน (Button, Card, ...)
+│   │   ├── cnext/            ← ⭐ ชิ้นส่วนมาตรฐาน (Button, Card, ...)
 │   │   └── <โดเมน>/         ← ชิ้นส่วนเฉพาะงาน (benefits, payroll, ...)
 │   ├── stores/             ← 🧠 "กระดานโน้ต" Zustand (ข้อมูล/สถานะ)
 │   ├── lib/                ← 🔧 ตัวช่วย (วันที่, สิทธิ์, ข้อมูลจำลอง, ...)
@@ -67,23 +67,23 @@ src/frontend/
 
 ---
 
-## 4. โฟลเดอร์ `components/humi/` — ชิ้นส่วนมาตรฐาน
+## 4. โฟลเดอร์ `components/cnext/` — ชิ้นส่วนมาตรฐาน
 
 ชิ้นส่วนสำเร็จรูปที่ใช้ซ้ำทั้งระบบ **ต้องหยิบจากที่นี่ก่อนเสมอ** (อย่าสร้างปุ่ม/การ์ดเอง)
 
 วิธีเรียกใช้ (import จากที่เดียว):
 ```tsx
-import { Button, Card, FormField, DataTable, Modal } from '@/components/humi';
+import { Button, Card, FormField, DataTable, Modal } from '@/components/cnext';
 ```
 
-ชิ้นส่วนที่มีให้ (ดูตัวจริงที่ `components/humi/index.ts`):
+ชิ้นส่วนที่มีให้ (ดูตัวจริงที่ `components/cnext/index.ts`):
 `Button`, `Card` (+ `CardTitle`, `CardEyebrow`), `FormField` (+ `FormInput`),
 `DataTable`, `Modal`, `Avatar`, `Toggle`, `Textarea`, `EmptyState`,
 `NotificationBell`, `QuickActionsTile`, `Capability`, `DemoValuesDisclaimer`, `Nav`
 
-> `@/` = ทางลัดที่แปลว่า "`src/` ของ frontend" — `@/components/humi` = `src/components/humi`
+> `@/` = ทางลัดที่แปลว่า "`src/` ของ frontend" — `@/components/cnext` = `src/components/cnext`
 
-รายละเอียดการใช้แต่ละตัว → [บท 04](./04-humi-design-system.md)
+รายละเอียดการใช้แต่ละตัว → [บท 04](./04-cnext-design-system.md)
 
 ---
 
@@ -96,7 +96,7 @@ import { Button, Card, FormField, DataTable, Modal } from '@/components/humi';
 | `auth-store.ts` | ใครล็อกอินอยู่ มี role อะไร |
 | `time-corrections.ts` | คำขอแก้เวลาเข้า-ออกงาน |
 | `leave-approvals.ts` | คิวอนุมัติการลา |
-| `humi-benefits-slice.ts` | ข้อมูลสวัสดิการ |
+| `cnext-benefits-slice.ts` | ข้อมูลสวัสดิการ |
 | `ui-store.ts` | สถานะหน้าตา (เปิด/ปิด sidebar ฯลฯ) |
 
 รายละเอียด → [บท 05](./05-state-zustand.md)
@@ -113,7 +113,7 @@ import { Button, Card, FormField, DataTable, Modal } from '@/components/humi';
 | `rbac.ts` | ระบบสิทธิ์ — มี role อะไรบ้าง ใครเข้าโมดูลไหนได้ |
 | `scope-filter.ts` | กรองพนักงานตาม persona (หัวหน้าเห็นแค่ลูกทีม ฯลฯ) |
 | `claim-permissions.ts` | ใครกดอนุมัติคำขอได้ |
-| `humi-mock-data.ts` | ข้อมูลจำลองหลัก (พนักงาน ฯลฯ) |
+| `cnext-mock-data.ts` | ข้อมูลจำลองหลัก (พนักงาน ฯลฯ) |
 | `all-ported-employees.ts` | รายชื่อพนักงานทั้งหมด (+ `maskNationalId`) |
 | `approval-registry.ts` | ศูนย์รวมคิวอนุมัติทุกประเภท |
 
@@ -153,7 +153,7 @@ import { Button, Card, FormField, DataTable, Modal } from '@/components/humi';
 1. `messages/th.json` + `messages/en.json` (ข้อความอยู่ที่นี่ ไม่ได้ฮาร์ดโค้ดในหน้า)
 2. `src/app/globals.css` ที่ตัวแปร `--color-accent` (โทเคนสี — บท 04)
 3. สร้างโฟลเดอร์ + `page.tsx` ใน `app/[locale]/...` (บท 08)
-4. `components/humi/shell/Sidebar.tsx` (เมนู) + `rbac.ts` (สิทธิ์) — บท 07
+4. `components/cnext/shell/Sidebar.tsx` (เมนู) + `rbac.ts` (สิทธิ์) — บท 07
 
 </details>
 
@@ -163,10 +163,10 @@ import { Button, Card, FormField, DataTable, Modal } from '@/components/humi';
 
 - โค้ดจริง = `src/frontend/` เท่านั้น
 - หน้าเว็บ = โฟลเดอร์ใน `app/[locale]/` ที่มี `page.tsx`
-- ชิ้นส่วนมาตรฐาน = `components/humi/`
+- ชิ้นส่วนมาตรฐาน = `components/cnext/`
 - ข้อมูล/สถานะ = `stores/`
 - ตัวช่วย/ข้อมูลจำลอง = `lib/`
 - ข้อความ 2 ภาษา = `messages/th.json` + `en.json`
 - สี/ระยะ = `app/globals.css`
 
-**ต่อไป →** [บท 04: ระบบดีไซน์ Humi](./04-humi-design-system.md)
+**ต่อไป →** [บท 04: ระบบดีไซน์ Cnext](./04-cnext-design-system.md)

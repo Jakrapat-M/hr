@@ -13,7 +13,7 @@
 
 ## 1. Executive Summary
 
-STA-27 delivers the **HRBP** and **SPD** persona benefits surfaces on top of the STA-28 manager foundation. Per `[[unified-approval-inbox]]`, the STA-27 §5 inbox ACs are **re-scoped to audit-only** (verifying `/quick-approve` Smart Tabs predicates already cover HRBP/SPD scope per PR-B v2) and HRBP exception oversight + reports plus SPD branch view + reports are shipped as **new non-inbox routes**. v2 adopts Architect's **Option A.5 5-PR split** to preserve STA-28's mutation/analytics PR boundary: PR-A foundation, PR-B HRBP exceptions (mutation, ships first to stress-test foundation), PR-B′ HRBP reports (analytics), PR-C SPD branch view, PR-D SPD reports. Mockup-grade only (setTimeout, Humi tokens, bilingual TH/EN, zero new deps).
+STA-27 delivers the **HRBP** and **SPD** persona benefits surfaces on top of the STA-28 manager foundation. Per `[[unified-approval-inbox]]`, the STA-27 §5 inbox ACs are **re-scoped to audit-only** (verifying `/quick-approve` Smart Tabs predicates already cover HRBP/SPD scope per PR-B v2) and HRBP exception oversight + reports plus SPD branch view + reports are shipped as **new non-inbox routes**. v2 adopts Architect's **Option A.5 5-PR split** to preserve STA-28's mutation/analytics PR boundary: PR-A foundation, PR-B HRBP exceptions (mutation, ships first to stress-test foundation), PR-B′ HRBP reports (analytics), PR-C SPD branch view, PR-D SPD reports. Mockup-grade only (setTimeout, Cnext tokens, bilingual TH/EN, zero new deps).
 
 ---
 
@@ -60,11 +60,11 @@ STA-27 delivers the **HRBP** and **SPD** persona benefits surfaces on top of the
 - `src/frontend/src/lib/benefit-exception-mock.ts` — `BenefitExceptionRecord` type + ≥12 deterministic records spanning HR-EX-01..05 categories
 - `src/frontend/src/stores/benefit-exception-store.ts` *(CRIT #1 — corrected path: `src/stores/`, NOT `src/lib/stores/`, matches existing `src/stores/benefit-claims.ts` convention)* — `hrbpApproveException(id, note)` + `hrbpRejectException(id, reason)`, both setTimeout(300) mock async, push `AuditTimelineEntry` with `actorRole: 'hrbp'` (exceptions are terminal — no auto-restore needed)
 - `docs/sta-27-quick-approve-predicate-audit.md` — quoted excerpt of `predicates.ts:68` (the `partneredDepts not in mock data — default to true` comment), HRBP/SPD persona-group classification table, screenshots of `/quick-approve` Watching tab as HRBP, "no code change required" verdict with explicit scope-limitation callout
-- `src/frontend/src/components/quick-approve/HrbpScopeBanner.tsx` *(CRIT #6 — concrete UI surface for the doc's verdict)* — small info banner (Humi info token) rendered on `/quick-approve` only when persona ∈ {hrbp, spd}: "Demo mode: cross-team queue not yet filtered by partnered departments. See audit doc." with link.
+- `src/frontend/src/components/quick-approve/HrbpScopeBanner.tsx` *(CRIT #6 — concrete UI surface for the doc's verdict)* — small info banner (Cnext info token) rendered on `/quick-approve` only when persona ∈ {hrbp, spd}: "Demo mode: cross-team queue not yet filtered by partnered departments. See audit doc." with link.
 
 *Modified:*
 - `src/frontend/src/stores/benefit-claims.ts:29` *(CRIT #2)* — extend `actorRole` union from `'employee' | 'spd' | 'manager' | 'system'` → `'employee' | 'spd' | 'manager' | 'hrbp' | 'system'`. Update any TypeScript narrowing sites flagged by tsc.
-- `src/frontend/src/components/manager/benefits/AuditTimeline.tsx` *(CRIT #2)* — extend role chip color map + i18n label map to include `'hrbp'` (Humi info token; bilingual labels: TH "HR Business Partner" / EN "HR Business Partner").
+- `src/frontend/src/components/manager/benefits/AuditTimeline.tsx` *(CRIT #2)* — extend role chip color map + i18n label map to include `'hrbp'` (Cnext info token; bilingual labels: TH "HR Business Partner" / EN "HR Business Partner").
 - `src/frontend/src/components/manager/benefits/ApproveTriadButtons.tsx` *(CRIT #3 — Option (a) extension chosen over standalone ExceptionActionBar)* — extend `ApproveTriadButtonsProps`:
   - add `onReject?: (reason: string) => Promise<void>` (renders Reject button when provided)
   - add `hideSendBack?: boolean` (default false — preserves existing manager UX)
@@ -81,7 +81,7 @@ STA-27 delivers the **HRBP** and **SPD** persona benefits surfaces on top of the
 3. `useHrbpScope()` returns ≥1 partnered dept in mock mode; `useSpdBranches()` returns ≥2 assigned branches.
 4. `benefit-exception-mock.ts` exports ≥12 deterministic records spanning HR-EX-01..05 categories.
 5. `hrbpApproveException` and `hrbpRejectException` push an `AuditTimelineEntry` with `actorRole: 'hrbp'` and resolve after ~300ms.
-6. `benefit-claims.ts:29` `actorRole` union includes `'hrbp'`; `AuditTimeline.tsx` renders `'hrbp'` chip with Humi info token + bilingual label. **Exception audit entries log with `actorRole: 'hrbp'`** (CRIT #2 verbatim).
+6. `benefit-claims.ts:29` `actorRole` union includes `'hrbp'`; `AuditTimeline.tsx` renders `'hrbp'` chip with Cnext info token + bilingual label. **Exception audit entries log with `actorRole: 'hrbp'`** (CRIT #2 verbatim).
 7. *(CRIT #6 — rewritten behaviorally)* `/quick-approve` as HRBP renders `<HrbpScopeBanner />` above Smart Tabs; banner text matches the audit doc's quoted excerpt of `predicates.ts:68`; banner links to `docs/sta-27-quick-approve-predicate-audit.md`. Audit doc renders the quoted excerpt verbatim. HR demo opens both surfaces without surprise.
 8. `ApproveTriadButtons` accepts `onReject?`, `hideSendBack?`, `hideUpdate?` props; all existing manager call-sites in `/workflows/benefit-claim/[id]/page.tsx` continue to behave identically (props default to current behavior).
 9. `plan-registry.ts` plan shape exposes `dvtVariant?: boolean`; exactly 2 plans flagged `true`. Type-check passes across all 5 known consumers (admin/benefits/plans page, hospital-claim page, reimbursement page, team-benefits-matrix, PendingApprovalsReport).
@@ -94,7 +94,7 @@ STA-27 delivers the **HRBP** and **SPD** persona benefits surfaces on top of the
 4. Click banner link → audit doc opens with `predicates.ts:68` excerpt quoted verbatim.
 5. tsc passes; existing /workflows/benefit-claim/[id] approve/sendBack still functions unchanged.
 
-**LOC budget:** ≤410 (was ≤380, +30 per CRIT items 2/3/4). **Hard constraints:** no new deps; setTimeout only; Humi tokens; bilingual; preserve backward-compat for ApproveTriadButtons callers.
+**LOC budget:** ≤410 (was ≤380, +30 per CRIT items 2/3/4). **Hard constraints:** no new deps; setTimeout only; Cnext tokens; bilingual; preserve backward-compat for ApproveTriadButtons callers.
 
 ---
 
@@ -152,7 +152,7 @@ STA-27 delivers the **HRBP** and **SPD** persona benefits surfaces on top of the
 - `src/frontend/src/locales/{en,th}.json` — 4 report titles + descriptions
 
 **Acceptance criteria (numbered)**
-1. `/hrbp/benefits/reports` shows 4 report cards in 2×2 grid (Humi tokens, no hex).
+1. `/hrbp/benefits/reports` shows 4 report cards in 2×2 grid (Cnext tokens, no hex).
 2. Each card opens drawer/sub-page with stat tiles + CSV export button reusing `manager-reports-mock.csvExport`.
 3. Report data respects `useHrbpScope().partneredDepts`.
 4. Bilingual TH/EN parity.
@@ -225,7 +225,7 @@ STA-27 delivers the **HRBP** and **SPD** persona benefits surfaces on top of the
 - `src/frontend/src/locales/{en,th}.json` — 3 report titles + descriptions
 
 **Acceptance criteria (numbered)**
-1. `/spd/benefits/reports` shows 3 cards (Humi tokens).
+1. `/spd/benefits/reports` shows 3 cards (Cnext tokens).
 2. Each drawer/sub-page shows tiles scoped to `useSpdBranches().assignedBranches`.
 3. CSV export reuses `manager-reports-mock.csvExport`.
 4. Bilingual TH/EN parity.

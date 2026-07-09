@@ -7,10 +7,10 @@
 ## Prior Knowledge
 
 ### Related Memory Documents
-- `project_hr_hire_wizard_option1_2026-04-23.md` — current Hire Option-1 (3-cluster + persist + Humi skin) = source for F4 template extraction
+- `project_hr_hire_wizard_option1_2026-04-23.md` — current Hire Option-1 (3-cluster + persist + Cnext skin) = source for F4 template extraction
 - `project_hr_ui_delivery_timeline_2026-04-23.md` — RIS-locked 4-batch timeline; this Phase 0 must finish before Apr 27 UI drop
 - `feedback_wizard_structure_before_skin.md` — collapse multi-step BEFORE skinning (already applied to Hire)
-- `feedback_css_child_vs_descendant_trap.md` — CSS override pattern used in `.humi-step-section` re-skin
+- `feedback_css_child_vs_descendant_trap.md` — CSS override pattern used in `.cnext-step-section` re-skin
 - `ironteam_run_1981_ec_admin_portal_phase1.md` — EC Admin Portal Phase 1 setup patterns (mocks, stores)
 - `ironteam_run_3_hr_continue_functional.md` — Zustand stores + shell integration patterns
 
@@ -56,7 +56,7 @@ Ship 5 foundation artifacts that (a) mirror SAP SuccessFactors EC field-by-field
 - **State**: Zustand 5 with `persist` middleware (localStorage)
 - **Validation**: Zod v3
 - **Testing**: Vitest + @testing-library/react + jsdom (existing setup)
-- **Design system**: Humi tokens (cream/teal/navy, NO-RED) — CSS classes + Tailwind v4 utilities
+- **Design system**: Cnext tokens (cream/teal/navy, NO-RED) — CSS classes + Tailwind v4 utilities
 - **Build tooling**: TS compiler + custom Node script (scripts/audit-field-coverage.ts)
 
 ## Technical Design
@@ -327,7 +327,7 @@ All agents must follow:
 - **C7 Single source of truth**: field-catalog/ec-core.ts IS the catalog. Do not duplicate field defs in stores/schemas.
 - **C8 Source-grounding**: every FieldDef entry must have `brdRow` or `sfEntity/sfField` reference — no invented fields.
 - **C10 Thai-primary**: labelTh mandatory; labelEn optional for technical fields.
-- **Humi tokens**: probation scaffold must use existing `.humi-step-section`, `.humi-card`, `.humi-eyebrow`, `.humi-section-title` classes from `globals.css`.
+- **Cnext tokens**: probation scaffold must use existing `.cnext-step-section`, `.cnext-card`, `.cnext-eyebrow`, `.cnext-section-title` classes from `globals.css`.
 
 ## Frontend Skill Requirements (MANDATORY)
 

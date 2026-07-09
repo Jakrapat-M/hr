@@ -204,14 +204,14 @@ Excluded until backend-later:
 
 Approval wording: HR/Payroll should approve only that the Report screen represents the right report families and actions for a demo. Backend implementation is blocked until HR/Payroll sign-off confirms whether the final report list is PND1, PND1 Kor, SSO, PVD, or a different statutory taxonomy.
 
-## 10. Humi/design-token risk notes
+## 10. Cnext/design-token risk notes
 
-The Payroll demo should conform to Humi design token/component conventions:
+The Payroll demo should conform to Cnext design token/component conventions:
 
-- Use Humi components such as `Card`, `CardTitle`, `Button`, `DemoValuesDisclaimer`, and tokenized text/surface classes.
-- Use token colors and surfaces such as `text-ink`, `text-ink-muted`, `border-hairline`, `bg-surface`, and Humi card styles.
+- Use Cnext components such as `Card`, `CardTitle`, `Button`, `DemoValuesDisclaimer`, and tokenized text/surface classes.
+- Use token colors and surfaces such as `text-ink`, `text-ink-muted`, `border-hairline`, `bg-surface`, and Cnext card styles.
 - Keep Thai-first copy where the local screen is Thai-first, with English terms only where already used for payroll labels.
-- Avoid legacy red/admin styles; danger/reject states should follow approved Humi danger treatment.
+- Avoid legacy red/admin styles; danger/reject states should follow approved Cnext danger treatment.
 - Keep `DemoValuesDisclaimer` visible on demo numeric screens to reinforce that mock numeric values are illustrative and non-binding.
 
 Risks to review:
@@ -266,7 +266,7 @@ Backend implementation is blocked until HR/Payroll sign-off completes all items 
 - [ ] Government report boundary approved for PND1, SSO, and PVD mock actions only.
 - [ ] Tax review / employee tax planning requests approved as safe-summary planning flow only.
 - [ ] Mock numeric values are illustrative and non-binding disclaimer approved.
-- [ ] Humi design token/component conformance accepted for the demo approval direction.
+- [ ] Cnext design token/component conformance accepted for the demo approval direction.
 - [ ] Backend implementation unblocked only after all above boxes are checked by HR/Payroll.
 
 ## 14. Knowledge sources consulted

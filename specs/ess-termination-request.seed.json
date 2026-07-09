@@ -1,18 +1,18 @@
 {
-  "goal": "EXTEND existing 912-LOC prior art (resignation-page.tsx + use-resignation.ts + humi-profile-slice.ts) ให้ ESS termination request flow persist ผ่าน humi-profile-slice PendingChange (sectionKey='termination') + แสดง 4 voluntary reason codes + link จาก /profile/me Employment tab.",
+  "goal": "EXTEND existing 912-LOC prior art (resignation-page.tsx + use-resignation.ts + cnext-profile-slice.ts) ให้ ESS termination request flow persist ผ่าน cnext-profile-slice PendingChange (sectionKey='termination') + แสดง 4 voluntary reason codes + link จาก /profile/me Employment tab.",
   "taskType": "code",
   "brownfieldContext": {
     "projectType": "brownfield",
     "contextReferences": [
       "specs/ess-termination-request.md",
       "specs/ess-termination-request.interview.json",
-      "src/frontend/src/stores/humi-profile-slice.ts:38,92-143,202-217,266-296",
+      "src/frontend/src/stores/cnext-profile-slice.ts:38,92-143,202-217,266-296",
       "src/frontend/src/components/resignation/resignation-page.tsx:14-106",
       "src/frontend/src/hooks/use-resignation.ts:1-113",
       "src/frontend/src/components/admin/lifecycle/ReasonPicker.tsx:17-50"
     ],
     "existingPatterns": [
-      "humi-profile-slice PendingChange + submitChangeRequest + sectionKey discriminator",
+      "cnext-profile-slice PendingChange + submitChangeRequest + sectionKey discriminator",
       "Zustand persist v2 + migrate() — bump version + add no-op branch when extending enums",
       "ReasonPicker primitive (event prop filter) — extend with mode='ess-voluntary' instead of duplicating component",
       "AttachmentDropzone for attachment fields (universal pattern from #50)",
@@ -30,20 +30,20 @@
   "constraints": [
     "Next.js 16 App Router + Zustand 4 + next-intl",
     "Builder write ≤ 150 LOC (EXTEND not BUILD per Phase 0.6)",
-    "Touch only 5 files: humi-profile-slice.ts / ReasonPicker.tsx / use-resignation.ts / resignation-page.tsx / profile/me/page.tsx",
+    "Touch only 5 files: cnext-profile-slice.ts / ReasonPicker.tsx / use-resignation.ts / resignation-page.tsx / profile/me/page.tsx",
     "DO NOT TOUCH: /admin/employees/[id]/terminate (#18 shipped) / SPD approval / payroll cron / e-signing",
-    "DO NOT INVENT new state mechanism — humi-profile-slice = SSoT (C7)",
+    "DO NOT INVENT new state mechanism — cnext-profile-slice = SSoT (C7)",
     "Thai-primary labels mandatory (C10); reject SF-bilingual paren patterns",
     "useResignation MUST NOT contain useState<ResignationRecord> (read from store only)"
   ],
   "acceptanceCriteria": [
     {
-      "text": "/resignation submission persists ผ่าน useHumiProfileStore.submitChangeRequest({sectionKey:'termination', ...}) — pendingChanges array ได้ entry ใหม่ที่ sectionKey === 'termination'",
+      "text": "/resignation submission persists ผ่าน useCnextProfileStore.submitChangeRequest({sectionKey:'termination', ...}) — pendingChanges array ได้ entry ใหม่ที่ sectionKey === 'termination'",
       "rule": "interview Q4 item 1 + BRD #172",
       "invariant": false
     },
     {
-      "text": "useResignation hook อ่านจาก useHumiProfileStore.pendingChanges ไม่ใช่ local useState — git grep useState.*ResignationRecord returns 0",
+      "text": "useResignation hook อ่านจาก useCnextProfileStore.pendingChanges ไม่ใช่ local useState — git grep useState.*ResignationRecord returns 0",
       "rule": "C7 SSoT + interview Q4 item 2",
       "invariant": true
     },
@@ -70,7 +70,7 @@
   ],
   "ontologySchema": {
     "name": "ESS Termination Request",
-    "description": "Employee-initiated voluntary resignation request stored as PendingChange in humi-profile-slice",
+    "description": "Employee-initiated voluntary resignation request stored as PendingChange in cnext-profile-slice",
     "fields": [
       {
         "name": "lastWorkingDate",
@@ -138,7 +138,7 @@
     },
     {
       "name": "ssot",
-      "description": "Rule C7 — humi-profile-slice = single source for termination state",
+      "description": "Rule C7 — cnext-profile-slice = single source for termination state",
       "weight": 1.0
     },
     {
@@ -171,7 +171,7 @@
   ],
   "scope": {
     "inScope": [
-      "src/frontend/src/stores/humi-profile-slice.ts",
+      "src/frontend/src/stores/cnext-profile-slice.ts",
       "src/frontend/src/hooks/use-resignation.ts",
       "src/frontend/src/components/resignation/resignation-page.tsx",
       "src/frontend/src/components/admin/lifecycle/ReasonPicker.tsx",
@@ -190,7 +190,7 @@
   },
   "systemInvariants": [
     "Voluntary reasons only — ReasonPicker mode='ess-voluntary' MUST filter EVENT_REASONS['5597'] to exactly 4 RESIGN_* codes; employee cannot self-classify involuntary termination (TERM_DISMISS, TERM_LAYOFF, etc.)",
-    "humi-profile-slice = single source of truth for ESS termination state; useResignation MUST subscribe to store, never duplicate state via local useState",
+    "cnext-profile-slice = single source of truth for ESS termination state; useResignation MUST subscribe to store, never duplicate state via local useState",
     "Thai-primary labels mandatory (C10) — all 4 RESIGN_* labels + UI copy in Thai; no SF-bilingual parens beyond locale codes (TH)/(EN)/(VN)",
     "PendingChange.sectionKey === 'termination' is the ONLY discriminator for ESS termination requests; store action MUST set this literal, callers MUST NOT pass any other value",
     "Persist version bump (v2 → v3) MUST include migrate() v2→v3 branch (no-op acceptable since pendingChanges schema unchanged, only enum extended); existing v2 localStorage state MUST survive load",

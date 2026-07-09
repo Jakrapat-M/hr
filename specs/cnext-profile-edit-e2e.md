@@ -1,12 +1,12 @@
-# Plan: Humi Profile Edit FE E2E (Sprint 3 — Full Edit Form + Attachments + Admin Mock)
+# Plan: Cnext Profile Edit FE E2E (Sprint 3 — Full Edit Form + Attachments + Admin Mock)
 
 ## Task Description
 
-ขยาย Humi `/profile/me` edit form จาก 4 fields (nickname/phone/email/address) → 15+ fields ครอบคลุม 4 sections (Personal Info / Marital / Contact / Advanced) พร้อม FileUploadField สำหรับแนบเอกสารตามกฎหมายไทย (พ.ร.บ. คุ้มครองแรงงาน + PDPA) และ Admin mock approval flow.
+ขยาย Cnext `/profile/me` edit form จาก 4 fields (nickname/phone/email/address) → 15+ fields ครอบคลุม 4 sections (Personal Info / Marital / Contact / Advanced) พร้อม FileUploadField สำหรับแนบเอกสารตามกฎหมายไทย (พ.ร.บ. คุ้มครองแรงงาน + PDPA) และ Admin mock approval flow.
 
-Sprint นี้ต่อยอดจาก `humi/effective-date-gate-issue-9` ซึ่งวางโครง `EffectiveDateGate.tsx` 2-step state machine ไว้แล้ว (date → form) — sprint นี้จะ wire `onConfirm(date, values)` กลับเข้า Zustand store เป็นครั้งแรก + สร้าง pending change + attachment + admin approve loop แบบ FE-only (mock ทั้งหมด ไม่มี backend).
+Sprint นี้ต่อยอดจาก `cnext/effective-date-gate-issue-9` ซึ่งวางโครง `EffectiveDateGate.tsx` 2-step state machine ไว้แล้ว (date → form) — sprint นี้จะ wire `onConfirm(date, values)` กลับเข้า Zustand store เป็นครั้งแรก + สร้าง pending change + attachment + admin approve loop แบบ FE-only (mock ทั้งหมด ไม่มี backend).
 
-Humi = FE-first prototype — state อยู่ใน Zustand + localStorage, attachments เก็บเป็น base64 string. **Zero backend required.**
+Cnext = FE-first prototype — state อยู่ใน Zustand + localStorage, attachments เก็บเป็น base64 string. **Zero backend required.**
 
 ## Objective
 
@@ -23,7 +23,7 @@ Humi = FE-first prototype — state อยู่ใน Zustand + localStorage, a
 - **Language**: TypeScript strict
 - **Framework**: React 18 + Next.js 16 (App Router, `[locale]` segment)
 - **Runtime**: Node.js (Next dev server)
-- **State**: Zustand (extend existing `humi-profile-slice.ts`) + localStorage persist
+- **State**: Zustand (extend existing `cnext-profile-slice.ts`) + localStorage persist
 - **Styling**: Tailwind v4 (preflight only — ห้าม global `*` reset per Rule 26b)
 - **i18n**: next-intl (existing `messages/th.json` + `messages/en.json`)
 - **File handling**: native FileReader API → base64 string (NO new deps)
@@ -60,7 +60,7 @@ FileUploadField (atom)
 
 1. **Base64 in localStorage** — FE-only prototype. 5MB cap prevents quota overflow (localStorage ~5-10MB). No Blob URL, no IndexedDB — simplest path (C3).
 2. **Attachment required = FE validation only** — Submit button disabled until required category has ≥1 file. No backend enforcement.
-3. **Admin mode = Zustand boolean** — no role system, just a toggle. Topbar button visible always (Humi prototype convention).
+3. **Admin mode = Zustand boolean** — no role system, just a toggle. Topbar button visible always (Cnext prototype convention).
 4. **EffectiveDateGate reused, not re-built** — only wire `onConfirm` to store. Preserve 2-step state machine + 77 existing tests.
 5. **Pending changes = separate array** — don't mutate field directly. `pendingChanges[]` holds all requests, field display checks `pendingChanges.find(pc => pc.field === X && pc.status === 'pending')` for badge.
 6. **Rule 26b guard** — audit `globals.css` before commit, reject any `* { margin: 0; padding: 0 }` introduced by auto-format.
@@ -68,18 +68,18 @@ FileUploadField (atom)
 ## Relevant Files
 
 **NEW (2 files)**
-- `src/frontend/src/components/humi/FileUploadField.tsx` (~150 LOC) — atom: drag-drop zone + click-browse + base64 conversion + preview + remove. Props: `{value: Attachment[], onChange, accept, maxSizeMB, required?}`.
+- `src/frontend/src/components/cnext/FileUploadField.tsx` (~150 LOC) — atom: drag-drop zone + click-browse + base64 conversion + preview + remove. Props: `{value: Attachment[], onChange, accept, maxSizeMB, required?}`.
 - `src/frontend/e2e/profile-edit-e2e.spec.ts` — Playwright 8-step scenario (AC-10).
 
 **EDIT (5 files)**
-- `src/frontend/src/stores/humi-profile-slice.ts` — add types `Attachment`, `PendingChange`; add state `pendingChanges[]`, `adminMode: boolean`; add actions `submitChangeRequest`, `adminApprove`, `adminReject`, `toggleAdminMode`, `addAttachment`, `removeAttachment`. Preserve existing draft/persistence.
+- `src/frontend/src/stores/cnext-profile-slice.ts` — add types `Attachment`, `PendingChange`; add state `pendingChanges[]`, `adminMode: boolean`; add actions `submitChangeRequest`, `adminApprove`, `adminReject`, `toggleAdminMode`, `addAttachment`, `removeAttachment`. Preserve existing draft/persistence.
 - `src/frontend/src/app/[locale]/profile/me/page.tsx` — expand edit sections (4 sub-sections with 15+ fields), add Admin mode toggle in topbar, wire toast (existing `useToast`).
 - `src/frontend/src/components/profile/EffectiveDateGate.tsx` — keep 2-step state machine; change `onConfirm(date, values)` to dispatch `submitChangeRequest` via new prop `onSubmit`.
 - `src/frontend/src/components/profile/tabs/personal-info.tsx` — remove "Sprint 3 coming" placeholder, render full 15+ field edit form grouped in 4 sub-sections.
 - `src/frontend/messages/th.json` + `src/frontend/messages/en.json` — new keys under `profile.edit.*`, `profile.attachment.*`, `profile.pending.*`, `profile.admin.*`.
 
 **DO NOT TOUCH (C1)**
-- ที่เหลือทั้งหมดของ Humi 11 screens (employment-info, leave, payroll, etc.)
+- ที่เหลือทั้งหมดของ Cnext 11 screens (employment-info, leave, payroll, etc.)
 - AppShell, theme, locale switcher
 - Existing 410+ tests (must stay green)
 
@@ -123,8 +123,8 @@ JARVIS orchestrates — never touches code directly. Each task assigned to one M
 - **Assigned To**: frontend-builder-a
 - **Parallel**: true
 - **Files**:
-  - `src/frontend/src/stores/humi-profile-slice.ts`
-  - `src/frontend/src/components/humi/FileUploadField.tsx`
+  - `src/frontend/src/stores/cnext-profile-slice.ts`
+  - `src/frontend/src/components/cnext/FileUploadField.tsx`
 - **Actions**:
   - Define types in slice: `Attachment = {id, filename, size, base64, mime}`, `PendingChange = {id, field, oldValue, newValue, effectiveDate, attachments: Attachment[], status: 'pending'|'approved'|'rejected', createdAt}`
   - Add state: `pendingChanges: PendingChange[]`, `adminMode: boolean`
@@ -176,8 +176,8 @@ JARVIS orchestrates — never touches code directly. Each task assigned to one M
 - **Assigned To**: test-writer
 - **Parallel**: false
 - **Files**:
-  - `src/frontend/src/stores/__tests__/humi-profile-slice.test.ts` (extend)
-  - `src/frontend/src/components/humi/__tests__/FileUploadField.test.tsx` (NEW)
+  - `src/frontend/src/stores/__tests__/cnext-profile-slice.test.ts` (extend)
+  - `src/frontend/src/components/cnext/__tests__/FileUploadField.test.tsx` (NEW)
   - `src/frontend/e2e/profile-edit-e2e.spec.ts` (NEW)
 - **Actions**:
   - Unit (vitest + jsdom, reuse existing config per Rule 93):
@@ -206,7 +206,7 @@ JARVIS orchestrates — never touches code directly. Each task assigned to one M
 - **Assigned To**: code-reviewer
 - **Parallel**: false
 - **Actions**:
-  - C1 audit: diff limited to 7 files (no bleed into other Humi screens)
+  - C1 audit: diff limited to 7 files (no bleed into other Cnext screens)
   - C3 audit: FileUploadField ≤ 150 LOC, no premature abstraction
   - C6 audit: every `catch` has `console.warn` or toast surfacing
   - Rule 26b: grep `globals.css` for `\* {` — reject any global reset
@@ -280,11 +280,11 @@ After 2 failed retries → JARVIS escalates to Ken with full terminal output + s
 cd src/frontend && npm run build 2>&1 | tail -5
 
 # Phase 3b — unit tests (zero regression = 410+ passing)
-cd src/frontend && npx vitest run 2>&1 | tee /tmp/humi-vitest.log
-grep -E "Tests|passed|failed" /tmp/humi-vitest.log
+cd src/frontend && npx vitest run 2>&1 | tee /tmp/cnext-vitest.log
+grep -E "Tests|passed|failed" /tmp/cnext-vitest.log
 
 # Phase 3b — E2E
-cd src/frontend && npx playwright test e2e/profile-edit-e2e.spec.ts 2>&1 | tee /tmp/humi-e2e.log
+cd src/frontend && npx playwright test e2e/profile-edit-e2e.spec.ts 2>&1 | tee /tmp/cnext-e2e.log
 
 # Phase 3b — Rule 26b guard
 grep -rn "^\* {" src/frontend/**/*.css && echo "FAIL: global reset found" || echo "PASS: no global reset"
@@ -293,7 +293,7 @@ grep -rn "^\* {" src/frontend/**/*.css && echo "FAIL: global reset found" || ech
 # Validator crafts harness python script at Phase 5 time for:
 #   /th/profile/me at 375 / 768 / 1440
 #   Edit form open / FileUploadField preview / Pending badge / Admin mode buttons / Mobile drawer
-# Save to: screenshots/humi-profile-edit-e2e/<viewport>-<state>.png
+# Save to: screenshots/cnext-profile-edit-e2e/<viewport>-<state>.png
 
 # Manual check: localStorage roundtrip
 #   1. Submit a change in dev server
@@ -303,9 +303,9 @@ grep -rn "^\* {" src/frontend/**/*.css && echo "FAIL: global reset found" || ech
 
 ## Out of Scope
 
-- Real backend persistence (Humi = FE prototype — backend epic in separate sprint)
+- Real backend persistence (Cnext = FE prototype — backend epic in separate sprint)
 - HR workflow engine (multi-level approval, escalation rules) — Admin mock is single-click approve only
-- Other 11 Humi screens (employment-info edit, leave request form, payroll, performance, etc.)
+- Other 11 Cnext screens (employment-info edit, leave request form, payroll, performance, etc.)
 - File upload to real storage (S3/Azure Blob) — base64 in localStorage only
 - OCR / document validation — upload accepts any matching mime, no content inspection
 - Email notifications on approval/rejection

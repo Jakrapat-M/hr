@@ -44,14 +44,14 @@ Expertise (`mk3-builder.yaml` + `forge-frontend.yaml`) captures "Attachment fiel
 | Store | Decision based on hydration state? | Guard needed? |
 |---|---|---|
 | `auth-store` | ✅ yes — `admin/layout.tsx` sync-gates render on `isAuthenticated` | ✅ **has guard** (#48) |
-| `humi-announcements-slice` | No — view-state only | ❌ |
-| `humi-benefits-slice` | No — view-state only | ❌ |
-| `humi-goals-slice` | No — view-state only | ❌ |
-| `humi-integrations-slice` | No — view-state only | ❌ |
-| `humi-learning-slice` | No — view-state only | ❌ |
-| `humi-profile-slice` | No — form/view state, no redirect | ❌ |
-| `humi-requests-slice` | No — view-state only | ❌ |
-| `humi-timeoff-slice` | No — form state only | ❌ |
+| `cnext-announcements-slice` | No — view-state only | ❌ |
+| `cnext-benefits-slice` | No — view-state only | ❌ |
+| `cnext-goals-slice` | No — view-state only | ❌ |
+| `cnext-integrations-slice` | No — view-state only | ❌ |
+| `cnext-learning-slice` | No — view-state only | ❌ |
+| `cnext-profile-slice` | No — form/view state, no redirect | ❌ |
+| `cnext-requests-slice` | No — view-state only | ❌ |
+| `cnext-timeoff-slice` | No — form state only | ❌ |
 | `workflow-approvals` | No — view-state only | ❌ |
 | `useAdminSelfService` | No — form/view state | ❌ |
 | `useDataManagement` | No — view-state only | ❌ |

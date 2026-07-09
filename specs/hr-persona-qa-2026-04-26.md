@@ -12,7 +12,7 @@
 ## Setup
 
 - Dev server: `src/frontend/npm run dev` → `http://localhost:3000`
-- Auth injection: `localStorage.setItem('humi-auth', ...)` via `page.evaluate` (Zustand persist key), re-injected before every route navigation to guard against Next.js rehydration clobbering
+- Auth injection: `localStorage.setItem('cnext-auth', ...)` via `page.evaluate` (Zustand persist key), re-injected before every route navigation to guard against Next.js rehydration clobbering
 - Screenshots: `src/frontend/test-artifacts/persona-qa/<persona>-<route>.png`
 - Personas sourced from `src/frontend/src/lib/demo-users.ts` (DEMO_USERS T7 SF-canonical set)
 
@@ -62,8 +62,8 @@ Re-ran `e2e/persona-switch-qa.spec.ts --project=chromium` after fixes: **10/10 P
 ### MED — English h1 in /th/quick-approve
 
 **Route**: `Rungrote (manager) → /th/quick-approve`  
-**Symptom**: Page contains `<h1>Quick Approve</h1>` (English) inside the Humi-canonical quick-approve widget, alongside correctly translated Thai content (คิวลา queue, manager approval cards in Thai).  
-**Root cause**: The Humi quick-approve widget embedded in the page was not translated — `h1` and surrounding stats panel remain in English.  
+**Symptom**: Page contains `<h1>Quick Approve</h1>` (English) inside the Cnext-canonical quick-approve widget, alongside correctly translated Thai content (คิวลา queue, manager approval cards in Thai).  
+**Root cause**: The Cnext quick-approve widget embedded in the page was not translated — `h1` and surrounding stats panel remain in English.  
 **Fix**: Translate "Quick Approve", "Review and process pending approvals", "Delegations", "Select All", filter labels ("Leave", "Expense", "Overtime", etc.) to Thai.  
 **Impact**: Mixed-language page for Manager persona. Thai workflow content (คิวลา section) renders correctly. Not a dead-end.
 
@@ -77,7 +77,7 @@ Re-ran `e2e/persona-switch-qa.spec.ts --project=chromium` after fixes: **10/10 P
   - HRBP cannot reach `/th/hrbp-reports` (own module) — **Access Denied in English** (HIGH)
   - Manager `/th/quick-approve` has English h1 "Quick Approve" (MED)
 - All 5 persona test cases complete without crashes or navigation failures
-- Persona switching mechanism (localStorage `humi-auth` injection) works correctly for all 5 personas
+- Persona switching mechanism (localStorage `cnext-auth` injection) works correctly for all 5 personas
 
 **Verdict**: **PARTIAL** — personas switch without dead-ends and all routes render, but Apinya (HRBP) hits an English "Access Denied" on `/th/hrbp-reports` (own-data route), and Rungrote (Manager) sees an untranslated English h1 on `/th/quick-approve`.
 

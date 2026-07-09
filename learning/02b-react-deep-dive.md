@@ -249,7 +249,7 @@ const { capabilities } = useCapabilities();
 component ซ้อน component ได้ และส่ง "เนื้อหาข้างใน" ผ่าน `children`:
 ```tsx
 function Panel({ children }) {
-  return <div className="humi-card">{children}</div>;
+  return <div className="cnext-card">{children}</div>;
 }
 
 <Panel>
@@ -257,7 +257,7 @@ function Panel({ children }) {
   <p>เนื้อหา</p>
 </Panel>
 ```
-ของจริง: `<Card> <Button> <FormField>` ของ Humi ทำงานแบบนี้ — เราเอาเนื้อหาใส่ข้างใน
+ของจริง: `<Card> <Button> <FormField>` ของ Cnext ทำงานแบบนี้ — เราเอาเนื้อหาใส่ข้างใน
 
 ---
 

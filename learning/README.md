@@ -21,7 +21,7 @@
 | 02 | [02-typescript-react-basics.md](./02-typescript-react-basics.md) | พื้นฐาน TypeScript + React ที่ "ระบบนี้ใช้จริง" | 📖 อ่าน + ทดลอง |
 | 02b | [02b-react-deep-dive.md](./02b-react-deep-dive.md) | **React เจาะลึก** — hooks, ฟอร์ม, re-render, กับดัก | ⏭️ **ข้ามได้ตอนแรก!** กลับมาอ่านตอนเจอ useEffect/useMemo ในงานจริง |
 | 03 | [03-project-map.md](./03-project-map.md) | แผนที่โฟลเดอร์ — ของแต่ละอย่างอยู่ไหน | ❌ แค่อ่าน |
-| 04 | [04-humi-design-system.md](./04-humi-design-system.md) | ระบบดีไซน์ Humi — ปุ่ม/การ์ด/สี ใช้ยังไงให้ถูก | 📖 อ่าน + ลองแก้สี |
+| 04 | [04-cnext-design-system.md](./04-cnext-design-system.md) | ระบบดีไซน์ Cnext — ปุ่ม/การ์ด/สี ใช้ยังไงให้ถูก | 📖 อ่าน + ลองแก้สี |
 | 05 | [05-state-zustand.md](./05-state-zustand.md) | ข้อมูลที่ "จำได้ระหว่างคลิก" เก็บที่ไหน (Zustand) | 📖 อ่าน |
 | 06 | [06-i18n-bilingual.md](./06-i18n-bilingual.md) | ระบบสองภาษา ไทย/อังกฤษ — เพิ่ม/แก้ข้อความ | ⌨️ แก้จริง |
 | 07 | [07-mock-data-and-rbac.md](./07-mock-data-and-rbac.md) | ข้อมูลจำลอง + ระบบสิทธิ์ (ใครเห็นอะไร) | 📖 อ่าน |

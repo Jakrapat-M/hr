@@ -71,7 +71,7 @@ Implementation note: predicate functions live in `src/frontend/src/components/ma
 - NEW `src/frontend/src/hooks/usePersonaDefault.ts` (~30 LOC) — returns `{ defaultTab, mineToggleDefault }` per current user persona
 
 ### Hard constraints
-- Humi tokens only (`bg-canvas-soft`, `shadow-card`, `bg-accent-soft`, `text-ink-muted`)
+- Cnext tokens only (`bg-canvas-soft`, `shadow-card`, `bg-accent-soft`, `text-ink-muted`)
 - Bilingual TH/EN parity for 3 tab labels + toolbar buttons + tooltip
 - No new npm deps
 - All async = `setTimeout` via mock-async
@@ -123,7 +123,7 @@ Implementation note: predicate functions live in `src/frontend/src/components/ma
 - Optional: extract `<SLABadge>` consumption from PR-A v2 components
 
 ### Hard constraints
-- Same as PR-B v2 (Humi, bilingual, no deps, mock async, mobile safe-area continued)
+- Same as PR-B v2 (Cnext, bilingual, no deps, mock async, mobile safe-area continued)
 - ≤350 LOC net delta
 
 ### AC + smoke

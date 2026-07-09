@@ -1,14 +1,14 @@
-# Plan: Humi UI Parity with SF EC Core
+# Plan: Cnext UI Parity with SF EC Core
 
 ## Task Description
 
-Add missing fields + sidebar menu items to Humi that match what CENTRAL's SF (SuccessFactors) users currently see at `/sf/liveprofile` and the SF main sidebar. Scope is **UI-only** — no backend/Prisma schema changes, no effective-date UX gate. Target: users demo Humi and recognize the field catalog + menu parity vs their current SF experience, then validate field list before we lock the backend schema in Sprint 2.
+Add missing fields + sidebar menu items to Cnext that match what CENTRAL's SF (SuccessFactors) users currently see at `/sf/liveprofile` and the SF main sidebar. Scope is **UI-only** — no backend/Prisma schema changes, no effective-date UX gate. Target: users demo Cnext and recognize the field catalog + menu parity vs their current SF experience, then validate field list before we lock the backend schema in Sprint 2.
 
 Source of truth: the SF extraction artifact at `chat-assist/projects/hr-platform-replacement/sf-extract/ec-core/EC_CORE_SCHEMA.md` (ground-truth field catalog harvested via browser-harness Phase 1-3, PII-scrubbed).
 
 ## Objective
 
-Humi users opening `/th/profile/me` see 14 new fields across Personal Info + Employment Info + Organization sections (all SF-equivalent labels with TH/EN i18n). Humi sidebar shows 16 total nav items (existing 10 + 6 new SF modules + 1 external T&A link). All new routes render placeholder pages without error. Existing 410-test suite still passes — zero regressions.
+Cnext users opening `/th/profile/me` see 14 new fields across Personal Info + Employment Info + Organization sections (all SF-equivalent labels with TH/EN i18n). Cnext sidebar shows 16 total nav items (existing 10 + 6 new SF modules + 1 external T&A link). All new routes render placeholder pages without error. Existing 410-test suite still passes — zero regressions.
 
 ## Tech Stack
 
@@ -22,7 +22,7 @@ Humi users opening `/th/profile/me` see 14 new fields across Personal Info + Emp
 
 ### Architecture
 
-Existing Humi frontend under `src/frontend/` is a Next.js app with `[locale]` routing, shadcn/ui primitives, and a dedicated `humi/shell` layout (Sidebar + AppShell drawer). Profile page is a tabbed view built from `components/profile/tabs/*.tsx`. Changes are additive — extend existing components + add new placeholder routes + extend sidebar NAV array. No shared data layer changes.
+Existing Cnext frontend under `src/frontend/` is a Next.js app with `[locale]` routing, shadcn/ui primitives, and a dedicated `cnext/shell` layout (Sidebar + AppShell drawer). Profile page is a tabbed view built from `components/profile/tabs/*.tsx`. Changes are additive — extend existing components + add new placeholder routes + extend sidebar NAV array. No shared data layer changes.
 
 ### Key Design Decisions
 
@@ -37,7 +37,7 @@ Existing Humi frontend under `src/frontend/` is a Next.js app with `[locale]` ro
 - `src/frontend/src/components/profile/tabs/personal-info.tsx` — Personal Information tab; add 6 fields (salutation EN/TH, other title TH, middle name EN, last name TH, marital status since)
 - `src/frontend/src/components/profile/tabs/ec-personal-info.tsx` — sibling tab (may need same fields if it mirrors); inspect + align if needed
 - `src/frontend/src/components/profile/tabs/employment.tsx` — Employment Info tab; add 4 date/text fields + Organization sub-section (4 retail-org fields)
-- `src/frontend/src/components/humi/shell/Sidebar.tsx` — add 6 new `NavItem` entries + 1 external T&A link; update NAV array + `NavSection` groups
+- `src/frontend/src/components/cnext/shell/Sidebar.tsx` — add 6 new `NavItem` entries + 1 external T&A link; update NAV array + `NavSection` groups
 - `src/frontend/src/app/[locale]/(routes)/performance-form/page.tsx` — NEW placeholder page (ประเมินผลงาน)
 - `src/frontend/src/app/[locale]/(routes)/development/page.tsx` — NEW placeholder page (การพัฒนา)
 - `src/frontend/src/app/[locale]/(routes)/succession/page.tsx` — NEW placeholder page (สายการสืบทอด)
@@ -58,17 +58,17 @@ JARVIS orchestrates — never touches code directly (except Phase 2.5 import fix
 ### Team Members
 
 - **Frontend Builder**
-  - Name: humi-ui-builder
+  - Name: cnext-ui-builder
   - Agent: Forge Frontend — UI Builder
-  - Role: Extend 2 profile tabs with new fields + extend Sidebar NAV + create 6 placeholder pages + update i18n files. Match existing Humi styles.
+  - Role: Extend 2 profile tabs with new fields + extend Sidebar NAV + create 6 placeholder pages + update i18n files. Match existing Cnext styles.
 
 - **Test Writer**
-  - Name: humi-test-writer
+  - Name: cnext-test-writer
   - Agent: MK VI — Test Writer
   - Role: Write Vitest component tests (AC-1..5) + Playwright E2E (AC-6 placeholder routing + external link rel/target). Tests include traceability comments `// AC-N`.
 
 - **Code Reviewer / Validator**
-  - Name: humi-validator
+  - Name: cnext-validator
   - Agent: MK IV — Validator
   - Role: Dual-role review + validate. Run full test suite, verify 10 ACs, capture viewport screenshots (375/768/1280 px) via browser-harness primary, commit evidence.
 
@@ -77,7 +77,7 @@ JARVIS orchestrates — never touches code directly (except Phase 2.5 import fix
 ### 1. Extend Personal Info tab (6 new fields)
 - **Task ID**: personal-info-fields
 - **Depends On**: none
-- **Assigned To**: humi-ui-builder
+- **Assigned To**: cnext-ui-builder
 - **Parallel**: true
 - **Files**: `src/frontend/src/components/profile/tabs/personal-info.tsx`, `src/frontend/src/components/profile/tabs/ec-personal-info.tsx` (if sibling needs same fields — inspect first), `messages/{th,en}.json`
 - **Actions**:
@@ -92,7 +92,7 @@ JARVIS orchestrates — never touches code directly (except Phase 2.5 import fix
 ### 2. Extend Employment Info tab (4 fields + Organization sub-section)
 - **Task ID**: employment-fields
 - **Depends On**: none
-- **Assigned To**: humi-ui-builder
+- **Assigned To**: cnext-ui-builder
 - **Parallel**: true
 - **Files**: `src/frontend/src/components/profile/tabs/employment.tsx`, `messages/{th,en}.json`
 - **Actions**:
@@ -104,9 +104,9 @@ JARVIS orchestrates — never touches code directly (except Phase 2.5 import fix
 ### 3. Extend Sidebar with 6 SF-equivalent items + external T&A
 - **Task ID**: sidebar-nav
 - **Depends On**: none
-- **Assigned To**: humi-ui-builder
+- **Assigned To**: cnext-ui-builder
 - **Parallel**: true
-- **Files**: `src/frontend/src/components/humi/shell/Sidebar.tsx`, `messages/{th,en}.json`
+- **Files**: `src/frontend/src/components/cnext/shell/Sidebar.tsx`, `messages/{th,en}.json`
 - **Actions**:
   - Add to 'บุคลากร': `performance-form` (Activity icon), `development` (TrendingUp), `succession` (Users2)
   - Add to 'บริษัท': `careers` (Search), `recruiting` (UserPlus, admin-only if role-gated), `reports` (BarChart3)
@@ -116,7 +116,7 @@ JARVIS orchestrates — never touches code directly (except Phase 2.5 import fix
 ### 4. Create 6 placeholder pages
 - **Task ID**: placeholder-pages
 - **Depends On**: none
-- **Assigned To**: humi-ui-builder
+- **Assigned To**: cnext-ui-builder
 - **Parallel**: true
 - **Files**: 6 new `src/frontend/src/app/[locale]/(routes)/*/page.tsx` files (one per new sidebar item, except time-attendance which is external)
 - **Actions**:
@@ -128,7 +128,7 @@ JARVIS orchestrates — never touches code directly (except Phase 2.5 import fix
 ### 5. Write Tests
 - **Task ID**: write-tests
 - **Depends On**: personal-info-fields, employment-fields, sidebar-nav, placeholder-pages
-- **Assigned To**: humi-test-writer
+- **Assigned To**: cnext-test-writer
 - **Parallel**: false
 - **Files**: `src/frontend/src/components/__tests__/profile-fields.test.tsx`, `src/frontend/src/components/__tests__/sidebar-nav.test.tsx`, `src/frontend/e2e/sf-parity.spec.ts`
 - **Actions**:
@@ -142,7 +142,7 @@ JARVIS orchestrates — never touches code directly (except Phase 2.5 import fix
 ### 6. Code Review + Validate Final Output
 - **Task ID**: review-and-validate
 - **Depends On**: write-tests
-- **Assigned To**: humi-validator
+- **Assigned To**: cnext-validator
 - **Parallel**: false
 - **Actions**:
   - Run full test suite (`cd src/frontend && bun run test` + `npx playwright test e2e/sf-parity.spec.ts`) — capture actual terminal output to `test-artifacts/<runId>/test-output.txt`
@@ -157,7 +157,7 @@ JARVIS orchestrates — never touches code directly (except Phase 2.5 import fix
   - Save screenshots to `test-artifacts/<runId>/screenshots/`
   - Write `test-artifacts/<runId>/test-report.md` with AC→test mapping + actual pass/fail
   - Fix trivial issues in-place (typos, missing i18n keys) — disclose in self-heal table
-  - If structural issues → flag + re-dispatch humi-ui-builder (C1 surgical rule)
+  - If structural issues → flag + re-dispatch cnext-ui-builder (C1 surgical rule)
   - Post close comment to issue #7 with screenshots + test evidence + self-heal table
 
 ## Pipeline
@@ -171,7 +171,7 @@ Build → Write Tests → Code Review (MK IV dual-role) → Validate Final (MK I
 
 All 4 Build tasks (#1-#4) run in parallel via single Agent dispatch message (Frontend Builder handles all four sequentially within one agent). Write Tests runs after Build completes. Code Review and Validate Final Output merge into one MK IV dual-role dispatch — efficient for UI-only scope.
 
-If MK IV returns FAIL → JARVIS dispatches humi-ui-builder with specific fix instructions → re-runs MK IV. After 2 failed attempts, escalate to Ken with full context (Phase 6).
+If MK IV returns FAIL → JARVIS dispatches cnext-ui-builder with specific fix instructions → re-runs MK IV. After 2 failed attempts, escalate to Ken with full context (Phase 6).
 
 ## Acceptance Criteria
 
@@ -181,7 +181,7 @@ If MK IV returns FAIL → JARVIS dispatches humi-ui-builder with specific fix in
 - AC-4: Sidebar shows 16 total items across 3 groups (existing 10 + 6 new SF-equivalent modules + 1 external T&A link)
 - AC-5: "เวลา & การเข้างาน" T&A link opens `https://cnext-time.centralgroup.com` in a new tab — assert DOM has `target="_blank"` + `rel` attribute containing `noopener`
 - AC-6: All 6 new routes (/performance-form, /development, /succession, /careers, /recruiting, /reports) render placeholder card without console errors
-- AC-7: Existing Humi test suite passes — Vitest count at parity or higher than pre-change baseline (was 410+), zero regression in existing specs
+- AC-7: Existing Cnext test suite passes — Vitest count at parity or higher than pre-change baseline (was 410+), zero regression in existing specs
 - AC-8: Mobile responsive at 375 px: sidebar drawer opens correctly + all new fields stack without horizontal scroll. Tablet (768) + desktop (1280) also verified
 - AC-9: i18n TH + EN entries exist for every new label — grep messages/th.json and messages/en.json for each new key returns a match
 - AC-10: No console errors during `bun run dev` render + `bun run build` completes with exit 0

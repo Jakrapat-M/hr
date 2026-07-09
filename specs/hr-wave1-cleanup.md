@@ -21,7 +21,7 @@ Ship 4 closed issues with 0 net test regression + E2E smoke pass on AttachmentDr
 - Next.js 16 App Router (React 19)
 - TypeScript strict mode
 - Zustand v4 persist middleware
-- Tailwind v4 + Humi design system (primary = teal/accent)
+- Tailwind v4 + Cnext design system (primary = teal/accent)
 - Vitest + jsdom for unit tests, browser-harness for E2E
 - Lucide icons, `@/components/admin/AttachmentDropzone/AttachmentDropzone`
 

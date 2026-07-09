@@ -4,7 +4,7 @@
 
   "sidebar_coverage": {
     "enabled": true,
-    "config_file": "src/frontend/src/components/humi/shell/Sidebar.tsx",
+    "config_file": "src/components/cnext/shell/Sidebar.tsx",
     "href_pattern": "href[\\s=:]*[`\"']([^`\"']+)[`\"']",
     "legacy_marker": "// SIDEBAR_LEGACY:",
     "exclude_dynamic_routes": true,
@@ -14,7 +14,7 @@
   "token_compliance": {
     "enabled": true,
     "primitive_paths": [
-      "@/components/humi/",
+      "@/components/cnext/",
       "@/components/admin/"
     ],
     "opt_out_marker": "// HUMI_TOKEN_EXEMPT:",

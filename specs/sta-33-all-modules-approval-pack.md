@@ -63,7 +63,7 @@ Approval story: Time module covers attendance, leave/time-off, overtime, correct
 
 | Area | Demo approval scope | Key personas | Known TBDs from STA-30 |
 | --- | --- | --- | --- |
-| Attendance | Clock in/out, live clock, shift progress, location/geofence display, schedule, timesheet | Employee, Manager, HR Admin | Time Humi cleanup: raw hex/gradient/red class risks in `time-page.tsx`; device/geofence production rule backend-later |
+| Attendance | Clock in/out, live clock, shift progress, location/geofence display, schedule, timesheet | Employee, Manager, HR Admin | Time Cnext cleanup: raw hex/gradient/red class risks in `time-page.tsx`; device/geofence production rule backend-later |
 | Leave/time-off | Request form, balance KPIs, history, approval tab, team coverage, policy callout | Employee, Manager, HR | Leave type mismatch: seed requires 8 types but `/timeoff` exposes 3 tiles; 5 policy configs in settings; half-day parity check |
 | OT | OT request, estimated amount, audit trail, status chips, approval chain | Employee, Manager, Payroll/HR | OT rate/multiplier/cut-off/max hours are mock and need HR/Payroll decision |
 | Corrections | Time correction modal: date/type/original/corrected/reason/status | Employee, Manager/HR | Whether correction enters unified approval queue is TBD |
@@ -144,7 +144,7 @@ Approved UI decisions may become backend requirements only after Product/Enginee
 
 | Priority | Item | Module | Decision / risk | Recommended follow-up seed or Linear action |
 | --- | --- | --- | --- | --- |
-| High | Time Humi cleanup | Time | `time-page.tsx` has raw hex/gradient/red-class risks; executive demo polish may be blocked | Create cleanup-before-demo UI task scoped to Time Humi token compliance; do not duplicate STA-30 |
+| High | Time Cnext cleanup | Time | `time-page.tsx` has raw hex/gradient/red-class risks; executive demo polish may be blocked | Create cleanup-before-demo UI task scoped to Time Cnext token compliance; do not duplicate STA-30 |
 | High | Leave type mismatch | Time | Seed requires 8 leave types, current `/timeoff` request tiles expose 3; settings has 5 policies | Create Time demo parity seed for 8 visible leave types or explicit HR-approved reduced demo set |
 | High | HR/Admin attendance reporting | Time | Team attendance mock data exists but no confirmed HR/Admin reporting route | Create Time reporting storyboard issue only if HR marks required for demo; otherwise backlog |
 | High | Payroll payslip canonical self-view | Payroll | Employee payslip redirects to Profile employment tab; detail breakdown depth needs approval | Create Payroll self-view decision seed for canonical payslip/pay statement fields and route policy |
@@ -154,7 +154,7 @@ Approved UI decisions may become backend requirements only after Product/Enginee
 | High | Employee Center 8 TBDs | Employee Center | Field schema, validation copy, withdraw/cancel, field diff, reject taxonomy, manager sensitive mask, lifecycle count/promotion, comp approval chain/effective-date | Create one EC approval-closure seed listing the 8 decisions; reference STA-29 rather than duplicating it |
 | Medium | Approval chain taxonomy | Cross-module | Manager-only vs Manager -> HRBP vs SPD differs by request type | Create workflow taxonomy seed after module owners agree chain per request |
 | Medium | Mock numbers and policies | Time / Payroll / Benefit | Leave balances, OT rates, payroll/tax values, entitlement limits are illustrative | Add approval note to demo script and any deck export; backend policy seed only after owner signs |
-| Medium | Route visual readiness | Cross-module | Some modules are design-approved but may need Humi cleanup before executive visual demo | Create per-module visual readiness checklist, not backend issue |
+| Medium | Route visual readiness | Cross-module | Some modules are design-approved but may need Cnext cleanup before executive visual demo | Create per-module visual readiness checklist, not backend issue |
 | Medium | Document storage and attachments | Employee Center / Benefit / Time | Attachments shown as fields but no production storage/signature | Create Document Center boundary seed if HR requires attachment-heavy demo |
 
 Decision rule: follow-up recommendations must not duplicate existing STA-25, STA-26, STA-27, STA-28, STA-29, STA-30, STA-31, or STA-32. They should reference the existing issue as source and narrow only the unresolved approval decision
@@ -166,7 +166,7 @@ Decision rule: follow-up recommendations must not duplicate existing STA-25, STA
 | Module | Acceptance gate | Owner sign-off | Decision |
 | --- | --- | --- | --- |
 | Employee Center | HR approves employee profile, lifecycle action list, manager/HR approval boundaries, and STA-29 TBD closure path | HR Admin / HRBP | [ ] Approved / [ ] Revise |
-| Time | HR approves attendance, leave, OT, correction, manager approval story, and explicitly resolves or defers leave type/reporting/Humi blockers | HR / Manager owner / Payroll for OT | [ ] Approved / [ ] Revise |
+| Time | HR approves attendance, leave, OT, correction, manager approval story, and explicitly resolves or defers leave type/reporting/Cnext blockers | HR / Manager owner / Payroll for OT | [ ] Approved / [ ] Revise |
 | Payroll | HR/Payroll/Finance approve setup/run/review/report/tax/payslip story, masking model, and mock-only numeric values | Payroll / Finance / HR Security | [ ] Approved / [ ] Revise |
 | Benefit | HR Benefit/HRBP/SPD/HR Admin approve entitlement, claims/referrals, beneficiaries, admin rules, exceptions/reports, and policy/payment handoffs | HR Benefit / HRBP / SPD / HR Admin | [ ] Approved / [ ] Revise |
 

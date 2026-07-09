@@ -1,4 +1,4 @@
-# EC Fidelity Drift Matrix — HR Humi (Wave 1)
+# EC Fidelity Drift Matrix — HR Cnext (Wave 1)
 
 > **Generated**: 2026-04-26
 > **Author**: ultrawork — 4-cluster fan-out (executors A/B/C/D), aggregated by orchestrator
@@ -19,13 +19,13 @@
 ## Top-10 HIGH-severity drifts (Wave 2 priority queue)
 
 1. **#111 / #22 — `/admin/employees/[id]/terminate`** — 4-step approval chain (Employee→Manager→HRBP→SPD) bypassed; 50ทวิ statutory document not auto-generated. `doSubmit()` writes directly with no approval gate. **Legal compliance gap.** _(Cluster C)_
-2. **#114 — `/admin/employees/[id]/terminate`** — `okToRehire` requires SPD-only write per SF RBAC (SPD=12/47 vs HR Admin=45/47); Humi exposes radio button to any HR Admin with no role check. **RBAC bypass.** _(Cluster A + C)_
+2. **#114 — `/admin/employees/[id]/terminate`** — `okToRehire` requires SPD-only write per SF RBAC (SPD=12/47 vs HR Admin=45/47); Cnext exposes radio button to any HR Admin with no role check. **RBAC bypass.** _(Cluster A + C)_
 3. **#184 — `/admin/users/data-permissions`** — Data-permission groups have no query interceptor; any HR Admin can read records outside configured scope. **Privilege escalation risk.** _(Cluster A + D)_
 4. **#188 + #189 — `/admin/users/foundation-audit` + `/audit-report`** — Both stores seeded from mock JSON, marked "ไม่ persist"; CSV export covers only static mock data; real HR actions emit no audit events. **Audit integrity void.** _(Cluster D)_
 5. **#178-181 — `/admin/self-service/{field-config,visibility,mandatory,readonly}`** — `publish()` writes to Zustand+localStorage only; consumer pages ignore published config. **Dead config bus — field-level RBAC has zero runtime effect.** _(Cluster D)_
 6. **#134 / #95 — `/spd/inbox`** — Inbox reads from 3 local Zustand stores; `wfRequestId`, `currentStep`, `completionPercent`, `requestedBy` absent; approval actions have no persistence. **Workflow engine missing.** _(Cluster A)_
 7. **#14 — `/admin/hire` StepIdentity** — Thai national ID has no mod-11 checksum (line 81/399); `cardType` codes mismatch SF (`tni2` not mapped); SH4/SH1 re-auth not modeled. **Data integrity.** _(Cluster A + B)_
-8. **#17 — `/admin/hire` StepContact** — 8-structured-field Thai address block (PerAddressDEFLT) entirely missing from hire wizard; employees hired through Humi have no home address captured. **Critical data absent at hire.** _(Cluster B + C)_
+8. **#17 — `/admin/hire` StepContact** — 8-structured-field Thai address block (PerAddressDEFLT) entirely missing from hire wizard; employees hired through Cnext have no home address captured. **Critical data absent at hire.** _(Cluster B + C)_
 9. **#109 — `/admin/hire` ClusterReview** — HRBP picker is hardcoded 5-option mock stub; SPD step not modeled; SH4 email trigger deferred. **Workflow incomplete across 3 personas.** _(Cluster A + C)_
 10. **#1 / #2 / #4 — `/admin/organization` + `/admin/jobs`** — All FOBusinessUnit custom fields, FODepartment 5-tier hierarchy, FOJobCode classification (`cust_JGMin/Max`, `cust_jobType`, `jobFunction`) absent from foundation forms. **Foundation cost-allocation/policy data cannot be registered.** _(Cluster B)_
 
@@ -33,20 +33,20 @@
 
 ## HIGH-severity drift rows (58)
 
-| BRD# | Persona | Cluster | Surface route | SF says | Humi shows | SF cite | Humi cite |
+| BRD# | Persona | Cluster | Surface route | SF says | Cnext shows | SF cite | Cnext cite |
 |---|---|---|---|---|---|---|---|
 | #1 | HR Admin | B | `/admin/organization` | FOBusinessUnit `cust_businessGroup`, `cust_policyProfile`, `cust_toGroup`, `cust_toLegalEntity`, `headOfUnit` — 5+ custom fields for Thai legal entity mapping | Drawer form has only `code`, `nameTh`, `nameEn`, `company`, `parentId`, `active`; all FOBusinessUnit custom fields absent | qas-fields-2026-04-26/sf-qas-FOBusinessUnit-2026-04-26.json#.d.results[0].cust_businessGroup | src/app/[locale]/admin/organization/page.tsx:272-390 |
 | #2 | HR Admin | B | `/admin/organization` | FODepartment `cust_Dep1`–`cust_Dep4`, `cust_SectionGroup`, `cust_section` — 5-tier dept hierarchy + `costCenter` linkage | Tree shows `nameTh`/`nameEn`/`company`/`parentId` only; no cost center, no 5-tier hierarchy | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0] keys | src/app/[locale]/admin/organization/page.tsx:272-400 |
 | #4 | HR Admin | B | `/admin/jobs` | FOJobCode `cust_JGMin`, `cust_JGMax`, `cust_bandMatching`, `cust_jobType`, `jobFunction` — 5 required classification fields | CRUD form has `code`, `titleTh`, `titleEn`, `family` (6 generic), `level` (6 generic), `active`; no JG band, no SF jobFunction, no cust_jobType | qas-fields-2026-04-26/sf-qas-FOJobCode-2026-04-26.json#.d.results[0].cust_JGMin | src/app/[locale]/admin/jobs/page.tsx:1-100 |
 | #8 | Manager | A | `/org-chart` | FODepartment `headOfUnit`, `parentUnit`, `legalEntityOfRecord`, `costCenter`, `startDate/endDate/status` — node shows head-of-unit | Nodes show `name`, `role`, `department` string, `email`, `phone`, `location` only | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0] | src/app/[locale]/org-chart/page.tsx:143-240 |
-| #8 | HR Admin | B | `/org-chart` | FODepartment as live source; org chart should reflect FODepartment hierarchy | `/org-chart` uses `HUMI_ORG_PEOPLE` mock; no connection to FODepartment store | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0].cust_headOforg | src/app/[locale]/org-chart/page.tsx:24-25 |
+| #8 | HR Admin | B | `/org-chart` | FODepartment as live source; org chart should reflect FODepartment hierarchy | `/org-chart` uses `CNEXT_ORG_PEOPLE` mock; no connection to FODepartment store | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0].cust_headOforg | src/app/[locale]/org-chart/page.tsx:24-25 |
 | #12 | HR Admin | B | `/admin/hire` StepBiographical | `maritalStatus` picklist `ecMaritalStatus` = 5 codes (`M`/`E`/`D`/`S`/`N`) | Renders Thai text options; schema uses generic string; `E` (Engaged) missing | qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.ecMaritalStatus | src/app/[locale]/admin/hire/steps/StepBiographical.tsx:291-309 |
 | #12 | HR Admin | B | `/admin/hire` StepBiographical | `gender` picklist = 2 codes: `Female`, `Male` (no third option in SF QAS) | `GENDER_IDS = ['M','F','X']` — code IDs differ; `X` has no SF counterpart | qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.gender | src/lib/admin/validation/hireSchema.ts:41 |
 | #13 | HR Admin | B | `/admin/hire` StepBiographical | PerPersonal `customString2/3/10/11` = spouse names (TH/EN); `partnerName`, `secondLastName` — 5 spouse fields | StepBiographical has no spouse name, no secondLastName, no partnerName fields | qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json#.d.results[0].partnerName | src/app/[locale]/admin/hire/steps/StepBiographical.tsx:1-341 |
 | #13 | HR Admin | B | `/admin/hire` StepBiographical | PerPersonal `customString5`=nativePreferredLang code (`2427`) — required personnel field | No native/preferred language field in StepBiographical | qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json#.d.results[0].nativePreferredLang | src/app/[locale]/admin/hire/steps/StepBiographical.tsx:1-341 |
 | #14 | HRBP | A | `/admin/hire` StepIdentity | National ID triggers PerNationalId mod-11 checksum + SH4 (HRBP) / SH1 (SPD) re-auth before save | Free text input at line 399; no mod-11 function, no SH4/SH1 re-auth flow | qas-fields-2026-04-26/sf-qas-PerNationalId-2026-04-26.json#.d.results[0] | src/app/[locale]/admin/hire/steps/StepIdentity.tsx:399 |
 | #14 | HR Admin | B | `/admin/hire` StepIdentity | PerNationalId Thai mod-11 checksum required when `cardType=tni2`; SF stores validated 13-digit | `nationalId` accepts any non-empty string; no mod-11 in `stepIdentitySchema.nationalId` | qas-fields-2026-04-26/sf-qas-PerNationalId-2026-04-26.json#.d.results[0].nationalId | src/lib/admin/validation/hireSchema.ts:81 |
-| #14 | HR Admin | B | `/admin/hire` StepIdentity | PerNationalId `cardType` picklist contains code `tni2` mapped from `PICKLIST_ID_CARD_TYPE` | Humi codes `NATIONAL_ID/PASSPORT/WORK_PERMIT/ALIEN_ID/OTHER` — none maps to SF `tni2` | qas-fields-2026-04-26/sf-qas-PerNationalId-2026-04-26.json#.d.results[0].cardType | src/lib/admin/validation/hireSchema.ts:33 |
+| #14 | HR Admin | B | `/admin/hire` StepIdentity | PerNationalId `cardType` picklist contains code `tni2` mapped from `PICKLIST_ID_CARD_TYPE` | Cnext codes `NATIONAL_ID/PASSPORT/WORK_PERMIT/ALIEN_ID/OTHER` — none maps to SF `tni2` | qas-fields-2026-04-26/sf-qas-PerNationalId-2026-04-26.json#.d.results[0].cardType | src/lib/admin/validation/hireSchema.ts:33 |
 | #15 | HR Admin | B | `/admin/hire` StepContact | PerEmail `emailType` picklist + `isPrimary` flag; multi-value array, no cap | Capped at 5; emailType uses `personal`/`work` (2 local options); not wired to SF picklist | qas-fields-2026-04-26/sf-qas-PerEmail-2026-04-26.json#.d.results[0].emailType | src/app/[locale]/admin/hire/steps/StepContact.tsx:17-19 |
 | #16 | HR Admin | B | `/admin/hire` StepContact | PerPhone `phoneType` picklist + `countryCode` + `extension` + `isPrimary` | Phone has `type/value/isPrimary` only; no `countryCode`, no `extension` | qas-fields-2026-04-26/sf-qas-PerPhone-2026-04-26.json#.d.results[0].countryCode | src/app/[locale]/admin/hire/steps/StepContact.tsx:11-15 |
 | #17 | HR Admin | B | `/admin/hire` StepContact | PerAddressDEFLT 8 Thai fields (address5=house, address4=village, address7=soi, address12=subdistrict, city=district, state=province, zipCode, country) | StepContact has no address section at all | qas-fields-2026-04-26/sf-qas-PerAddressDEFLT-2026-04-26.json#.d.results[0] | src/app/[locale]/admin/hire/steps/StepContact.tsx:1-301 |
@@ -96,13 +96,13 @@
 
 ## MED-severity drift rows (40)
 
-| BRD# | Persona | Cluster | Surface route | SF says | Humi shows | SF cite | Humi cite |
+| BRD# | Persona | Cluster | Surface route | SF says | Cnext shows | SF cite | Cnext cite |
 |---|---|---|---|---|---|---|---|
 | #3 | HR Admin | B | `/admin/organization` | FODepartment `status="A"`/inactive; `endDate` for temporal validity | `active` boolean toggle only; no `endDate`/`startDate` | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0].endDate | src/app/[locale]/admin/organization/page.tsx:272-400 |
 | #5 | HR Admin | B | `/admin/positions` | Position tied to FOJobCode/FODepartment with effective dates | Links exist but `startDate`/`endDate` absent from Position form | qas-fields-2026-04-26/sf-qas-Position-2026-04-26.json#.d.results[0] | src/app/[locale]/admin/positions/page.tsx:47-80 |
 | #9 | Manager | A | `/org-chart` | FODepartment effective-date history with `status=A/I` | No effective-date display; no status indicator | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0] | src/app/[locale]/org-chart/page.tsx:380-408 |
 | #9 | HR Admin | B | `/org-chart` | FODepartment `name_th_TH` + `name_en_US` bilingual | Shows English `person.role` + `person.department` only | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0].name_th_TH | src/app/[locale]/org-chart/page.tsx:111-116 |
-| #11 | Manager | A | `/org-chart` | FODepartment `division`/`businessUnit` navigation | `HumiOrgPerson` has `department` string only; no division/BU navigation | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0] | src/lib/humi-mock-data.ts:25-50 |
+| #11 | Manager | A | `/org-chart` | FODepartment `division`/`businessUnit` navigation | `CnextOrgPerson` has `department` string only; no division/BU navigation | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0] | src/lib/cnext-mock-data.ts:25-50 |
 | #11 | HR Admin | B | `/org-chart` | Org chart shows `cust_headOforg` and cost center | DetailRow shows Manager/Department/Email/Phone; no headOfUnit, no costCenter | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0].cust_headOforg | src/app/[locale]/org-chart/page.tsx:132-141 |
 | #12 | HR Admin | B | `/admin/hire` StepBiographical | `RELIGION_THA` picklist 6 options; SF stores religion code (e.g. `1444`) | No religion field in StepBiographical | qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json#.d.results[0].customString1 | src/app/[locale]/admin/hire/steps/StepBiographical.tsx:1-341 |
 | #12 | HR Admin | B | `/admin/hire` StepBiographical | `zMilitaryStatus` picklist = 3 codes (1/2/3) | `PICKLIST_MILITARY_STATUS` has 5 Thai labels; not validated against SF code IDs | qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.zMilitaryStatus | src/app/[locale]/admin/hire/steps/StepBiographical.tsx:196-213 |
@@ -141,7 +141,7 @@
 
 ## LOW-severity drift rows (20)
 
-| BRD# | Persona | Cluster | Surface route | SF says | Humi shows | SF cite | Humi cite |
+| BRD# | Persona | Cluster | Surface route | SF says | Cnext shows | SF cite | Cnext cite |
 |---|---|---|---|---|---|---|---|
 | #7 | HR Admin | B | `/admin/*` | Admin CRUD for picklist values via PicklistOption entity | No admin CRUD UI for picklists; hardcoded in `@hrms/shared/picklists` | qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#uniquePicklists | src/app/[locale]/admin/hire/steps/StepIdentity.tsx:17-23 |
 | #20 | Employee | B | `/profile/me` personal tab | PerPersonal `secondLastName` post-marriage surname change for Thai | EditFormValues has no `secondLastName`; only `spouseName` | qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json#.d.results[0].secondLastName | src/app/[locale]/profile/me/page.tsx:86-108 |
@@ -156,7 +156,7 @@
 | #109 | HRBP | A | ClusterReview HRBP picker | HRBP picker label bilingual per UI locale | `<option>` Thai-only (e.g. `'คุณสิริพร จันทร์แดง (HRBP — สำนักงานใหญ่)'`) | qas-fields-2026-04-25/RBAC-MATRIX-V2-2026-04-26.md | src/app/[locale]/admin/hire/clusters/ClusterReview.tsx:115-120 |
 | #152 | SPD | A | `/admin/system/reports` | UNCLASSIFIED — no direct entity match | Route not found in frontend src; no `page.tsx` under this path | _(no entity match)_ | _(route not found)_ |
 | #165 | Employee | B | `/profile/me` personal tab | BLOODGROUP picklist = 4 codes (`AB`/`A`/`O`/`B`) without Rh | `BLOOD_TYPES` has 8 options with Rh factor; SF QAS has 4 base codes only | qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.BLOODGROUP | src/app/[locale]/profile/me/page.tsx:81 |
-| #169 | Manager | A | `/org-chart` | FODepartment `costCenter` nav for Manager (universal 46/46 fields) | costCenter from `HumiOrgPerson.costCenter` mock string; no FODepartment nav linkage | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0] | src/app/[locale]/org-chart/page.tsx:456-460 |
+| #169 | Manager | A | `/org-chart` | FODepartment `costCenter` nav for Manager (universal 46/46 fields) | costCenter from `CnextOrgPerson.costCenter` mock string; no FODepartment nav linkage | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0] | src/app/[locale]/org-chart/page.tsx:456-460 |
 | #169 | Employee | B | `/org-chart` | FODepartment temporal records with `startDate`/`endDate`; point-in-time view | Display-only; no effective-date selector; cannot view historical/future state | qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json#.d.results[0].endDate | src/app/[locale]/org-chart/page.tsx:143-183 |
 | #178 | HR Admin | D | `/admin/self-service` (layout) | RBAC enforced server-side; only HRIS Admins access | `admin/layout.tsx` client-side Zustand check only; layout has zero additional check | qas-fields-2026-04-25/RBAC-MATRIX-V2-2026-04-26.md#cross-persona-summary | src/app/[locale]/admin/self-service/layout.tsx:1-7 |
 | #183 | HR Admin | D | `/admin/self-service/tiles` | Per-role visibility (Employee vs Manager vs HRBP vs SPD) reflects role-scoped tile config | Role tabs are visual filter only; all 4 sets stored same mock; no role-aware publish diff | qas-fields-2026-04-25/RBAC-MATRIX-V2-2026-04-26.md#cross-persona-summary | src/app/[locale]/admin/self-service/tiles/page.tsx:10-15 |
@@ -166,7 +166,7 @@
 
 | BRD# | Persona | Cluster | Note |
 |---|---|---|---|
-| #114 | SPD | A | Terminate `lastDay`/`payrollEffectiveDate` — Humi correctly models both fields with right labels. The `okToRehire` SPD-only gate gap is captured separately above. _(not a drift; included for completeness)_ |
+| #114 | SPD | A | Terminate `lastDay`/`payrollEffectiveDate` — Cnext correctly models both fields with right labels. The `okToRehire` SPD-only gate gap is captured separately above. _(not a drift; included for completeness)_ |
 
 ---
 
@@ -214,6 +214,6 @@ Recommended ordering by impact + complexity:
 
 ## Footnotes
 
-- All cite paths are relative to either `~/stark/projects/hr-platform-replacement/` (SF) or `src/frontend/` (Humi).
-- For full text of "SF says" / "Humi shows" descriptions, see the four cluster fragments listed at the top.
+- All cite paths are relative to either `~/stark/projects/hr-platform-replacement/` (SF) or `src/frontend/` (Cnext).
+- For full text of "SF says" / "Cnext shows" descriptions, see the four cluster fragments listed at the top.
 - Some BRDs appear under multiple personas/clusters (e.g., #14 in A+B, #109 in A+C, #114 in A+C) — these are not duplicates; each captures a different persona's drift on the same surface.

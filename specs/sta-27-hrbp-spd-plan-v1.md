@@ -11,7 +11,7 @@
 
 ## 1. Executive Summary
 
-STA-27 delivers the **HRBP** and **SPD** persona surfaces for the EC Benefits module on top of the STA-28 manager foundation. Per the `[[unified-approval-inbox]]` memory rule, **no per-persona benefits inbox pages are built**; instead, the existing `/quick-approve` Smart Tabs (predicate matrix already maps HRBP/SPD scope via PR-B v2) is the single approval surface, audited but not re-implemented. New routes are limited to **non-inbox** persona-specific work: HRBP exception oversight + 4 reports, and SPD branch-scoped enrollment view + 3 branch reports. All UI is mockup-grade (setTimeout async, Humi tokens, bilingual TH/EN, no new deps), shipped across **4 PRs** each ≤500 LOC. Persona drill-in to individual claims continues to use the shared `/workflows/benefit-claim/[id]` detail page already built in STA-28 PR-A.
+STA-27 delivers the **HRBP** and **SPD** persona surfaces for the EC Benefits module on top of the STA-28 manager foundation. Per the `[[unified-approval-inbox]]` memory rule, **no per-persona benefits inbox pages are built**; instead, the existing `/quick-approve` Smart Tabs (predicate matrix already maps HRBP/SPD scope via PR-B v2) is the single approval surface, audited but not re-implemented. New routes are limited to **non-inbox** persona-specific work: HRBP exception oversight + 4 reports, and SPD branch-scoped enrollment view + 3 branch reports. All UI is mockup-grade (setTimeout async, Cnext tokens, bilingual TH/EN, no new deps), shipped across **4 PRs** each ≤500 LOC. Persona drill-in to individual claims continues to use the shared `/workflows/benefit-claim/[id]` detail page already built in STA-28 PR-A.
 
 ---
 
@@ -81,7 +81,7 @@ The original STA-27 §5 acceptance criteria literally name inbox routes for HRBP
 4. Open `/quick-approve` as HRBP → lands on Watching tab by default (PR-B v2 behavior preserved).
 5. Open the audit doc → it references `predicates.ts` and confirms no rework.
 
-**LOC budget:** ≤380. **Hard constraints:** no new deps; setTimeout only; Humi tokens; bilingual.
+**LOC budget:** ≤380. **Hard constraints:** no new deps; setTimeout only; Cnext tokens; bilingual.
 
 ---
 
@@ -110,7 +110,7 @@ The original STA-27 §5 acceptance criteria literally name inbox routes for HRBP
 2. Each exception row expands to show paired +/− borrow-forward visualization (CSS bar, no chart lib) and AuditTimeline (reused).
 3. Approve action calls `hrbpApproveException`, updates table optimistically after setTimeout, pushes timeline entry, shows toast.
 4. Reject action calls `hrbpRejectException` with required reason ≥10 chars; same UX.
-5. `/hrbp/benefits/reports` shows 4 report cards in 2×2 grid (Humi tokens, no hex).
+5. `/hrbp/benefits/reports` shows 4 report cards in 2×2 grid (Cnext tokens, no hex).
 6. Each report card opens a drawer/sub-page with stat tiles + CSV export button reusing `manager-reports-mock.csvExport`.
 7. Report data respects `useHrbpScope().partneredDepts` (e.g., only shows employees from partnered depts).
 8. Bilingual TH/EN parity verified for all chrome.
@@ -152,7 +152,7 @@ The original STA-27 §5 acceptance criteria literally name inbox routes for HRBP
 5. Employee name click opens drill-in panel (reuse popover pattern).
 6. SP-BR-01..05 mapping documented in PR description (1 line each).
 7. Bilingual TH/EN parity.
-8. Humi tokens only; sticky header row + sticky first column for matrix readability.
+8. Cnext tokens only; sticky header row + sticky first column for matrix readability.
 9. Empty state when no branches assigned: friendly message + sidebar reference.
 
 **Smoke walkthrough (5 steps)**
@@ -184,7 +184,7 @@ The original STA-27 §5 acceptance criteria literally name inbox routes for HRBP
 - `src/frontend/src/locales/{en,th}.json` — 3 report titles + descriptions
 
 **Acceptance criteria (numbered)**
-1. `/spd/benefits/reports` shows 3 report cards (Humi tokens).
+1. `/spd/benefits/reports` shows 3 report cards (Cnext tokens).
 2. Each card drawer/sub-page shows stat tiles scoped to `useSpdBranches().assignedBranches`.
 3. CSV export per report reuses `manager-reports-mock.csvExport`.
 4. Bilingual TH/EN parity.
@@ -257,7 +257,7 @@ These are appended to `.omc/plans/open-questions.md` per Planner protocol.
 **Drivers:**
 1. `[[unified-approval-inbox]]` memory rule forbids per-persona inbox routes; STA-27 §5 wording predates this rule.
 2. STA-28 foundation (5 components + 2 mock helpers + 1 claim-detail page + Q10 send-back pattern) is reusable as-is.
-3. Mockup phase mandates ≤500 LOC/PR, no real API, no new deps, Humi tokens, bilingual TH/EN.
+3. Mockup phase mandates ≤500 LOC/PR, no real API, no new deps, Cnext tokens, bilingual TH/EN.
 
 **Alternatives considered:**
 - **5-PR split** (separate HRBP exceptions from HRBP reports): rejected — extra merge tax with no offsetting reviewer/demo benefit.

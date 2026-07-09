@@ -1,15 +1,15 @@
-# Team Alpha — Single Requirements Brief (Humi Token Design)
+# Team Alpha — Single Requirements Brief (Cnext Token Design)
 
 สถานะเอกสาร: Consolidated requirement brief for Team Alpha  
 วันที่จัดทำ: 2026-05-20  
 Scope: UI/design/storyboard requirement summary across HR modules  
-Design system: Humi tokens from `design.md`, `docs/design-system-humi.md`, and `src/frontend/src/app/globals.css`
+Design system: Cnext tokens from `design.md`, `docs/design-system-cnext.md`, and `src/frontend/src/app/globals.css`
 
 ---
 
 ## 1. Executive Requirement
 
-Team Alpha ต้อง build / polish HR demo ให้เป็น **single coherent HR lifecycle experience** โดยใช้ Humi design token system เดียวกันทุก module:
+Team Alpha ต้อง build / polish HR demo ให้เป็น **single coherent HR lifecycle experience** โดยใช้ Cnext design token system เดียวกันทุก module:
 
 1. **Employee Center** — master profile, self-service change, HR lifecycle actions, manager/HR approvals
 2. **Time** — attendance, leave/time-off, overtime, correction, manager approval
@@ -18,9 +18,9 @@ Team Alpha ต้อง build / polish HR demo ให้เป็น **single co
 
 เอกสารนี้เป็น requirement summary สำหรับทีม Alpha เท่านั้น ไม่ใช่ backend authorization. Backend remains blocked until HR/module-owner sign-off และ follow-up backend issues/seeds ถูกสร้างพร้อม AC แยกต่างหาก
 
-## 2. Humi Design Token Contract
+## 2. Cnext Design Token Contract
 
-ทุกหน้าที่ Team Alpha แตะต้องต้องใช้ Humi token utility / CSS variable ตามนี้ ห้าม hardcode visual identity ใหม่
+ทุกหน้าที่ Team Alpha แตะต้องต้องใช้ Cnext token utility / CSS variable ตามนี้ ห้าม hardcode visual identity ใหม่
 
 ### Visual baseline
 
@@ -37,7 +37,7 @@ Team Alpha ต้อง build / polish HR demo ให้เป็น **single co
 
 ### Mandatory UI rules
 
-- Start from existing Humi primitives: `Card`, `Button`, `FormField`, `FileUploadField`, `DataTable`, shell/navigation components
+- Start from existing Cnext primitives: `Card`, `Button`, `FormField`, `FileUploadField`, `DataTable`, shell/navigation components
 - Do not use hardcoded hex, route-local legacy card styles, Tailwind `red-*`, Central retail red, clay/coral red, or raw gradient classes
 - Focus ring = teal halo via `ring-4 ring-accent-soft`
 - Tables/lists use `border-hairline-soft`, `text-ink`, and tokenized hover/selected state
@@ -54,7 +54,7 @@ Team Alpha ต้อง build / polish HR demo ให้เป็น **single co
 | Masking first | Salary, bank, Tax ID, benefit/payment sensitive data masked by default unless role-specific review requires otherwise |
 | No backend implication | UI buttons can demo approve/export/save but must not imply real persistence/integration/payment/tax filing |
 | No dead end | Every demo path must have a back/next/result state; no blank terminal screens |
-| Humi compliance | Any route touched for demo polish must pass no raw hex / no red utility / no legacy surface check |
+| Cnext compliance | Any route touched for demo polish must pass no raw hex / no red utility / no legacy surface check |
 
 ## 4. Persona Requirements
 
@@ -93,7 +93,7 @@ Open decisions / blockers:
 
 ### 5.2 Time
 
-Alpha outcome: Time module clearly demonstrates employee attendance operations and manager approval, with Humi cleanup completed before HR presentation.
+Alpha outcome: Time module clearly demonstrates employee attendance operations and manager approval, with Cnext cleanup completed before HR presentation.
 
 Required flows:
 
@@ -108,7 +108,7 @@ Required flows:
 
 Open decisions / blockers:
 
-- High priority: Time Humi cleanup — remove raw hex, hardcoded gradients, and red-ish legacy classes in Time screens
+- High priority: Time Cnext cleanup — remove raw hex, hardcoded gradients, and red-ish legacy classes in Time screens
 - Leave type mismatch: current visible `/timeoff` shows 3, hook has 8, settings has 5; Alpha must align demo story or document explicit reduced set
 - HR/Admin attendance reporting route: decide required for demo or backlog
 - Device/geofence, schedule engine, leave balance formula, OT multipliers/cut-off, payroll posting all backend-later
@@ -166,7 +166,7 @@ Alpha is complete only when the consolidated demo can pass these checks:
 
 1. **Storyboard continuity** — reviewer can walk Employee Center → Time → Payroll → Benefit without unexplained dead ends
 2. **Persona boundaries** — every action clearly belongs to Employee, Manager, HR Admin, HRBP, SPD, or Payroll/Finance
-3. **Humi token compliance** — touched screens use `bg-canvas`, `bg-surface`, `text-ink`, `border-hairline`, `ring-accent-soft`, `shadow-[var(--shadow-card)]`; no forbidden raw red/legacy styling
+3. **Cnext token compliance** — touched screens use `bg-canvas`, `bg-surface`, `text-ink`, `border-hairline`, `ring-accent-soft`, `shadow-[var(--shadow-card)]`; no forbidden raw red/legacy styling
 4. **Mock transparency** — mock/save/export/payment/report/tax actions are marked as demo/preview where needed
 5. **Sensitive masking** — salary, bank, Tax ID, benefit/payment data masked in shared or employee-facing contexts
 6. **Approval readiness** — each module has owner sign-off question and unresolved decisions listed as explicit TBD/RAID
@@ -177,7 +177,7 @@ Alpha is complete only when the consolidated demo can pass these checks:
 
 | Priority | Workstream | Required action |
 | --- | --- | --- |
-| P0 | Humi compliance | Clean visible Time/demo surfaces first: no raw hex, no red utility, no legacy card mix |
+| P0 | Cnext compliance | Clean visible Time/demo surfaces first: no raw hex, no red utility, no legacy card mix |
 | P0 | Demo narrative | Lock one walkthrough order and persona script across all modules |
 | P0 | Masking | Confirm and enforce masking copy/defaults for Payroll and cross-module sensitive data |
 | P1 | Time parity | Resolve 8 leave types vs visible 3/5 mismatch before HR presentation |
@@ -204,9 +204,9 @@ Backend work can start only after signed HR/module-owner approval and separate i
 
 Primary inputs:
 
-- `design.md` — Humi Design Tokens Compact
-- `docs/design-system-humi.md` — Humi token/no-red design rules
-- `docs/humi-components.md` — Humi primitive usage
+- `design.md` — Cnext Design Tokens Compact
+- `docs/design-system-cnext.md` — Cnext token/no-red design rules
+- `docs/cnext-components.md` — Cnext primitive usage
 - `specs/sta-33-all-modules-approval-pack.md` — consolidated all-module approval pack
 - `specs/sta-29-employee-center-demo-scope.md` — Employee Center
 - `specs/sta-30-time-demo-scope.md` — Time
@@ -218,7 +218,7 @@ Primary inputs:
 | Area | Question | Decision |
 | --- | --- | --- |
 | Storyboard | Employee Center → Time → Payroll → Benefit is the approved single demo order? | [ ] Approved / [ ] Revise |
-| Design | Humi token contract is mandatory for all Alpha-touched screens? | [ ] Approved / [ ] Revise |
+| Design | Cnext token contract is mandatory for all Alpha-touched screens? | [ ] Approved / [ ] Revise |
 | Persona | Persona boundaries across Employee, Manager, HR Admin, HRBP, SPD, Payroll/Finance are acceptable? | [ ] Approved / [ ] Revise |
 | Mock boundary | Demo/preview/read-only labels are sufficient to avoid backend misunderstanding? | [ ] Approved / [ ] Revise |
 | Masking | Sensitive data masking model is acceptable for demo and presenter mode? | [ ] Approved / [ ] Revise |

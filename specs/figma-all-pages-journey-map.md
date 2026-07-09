@@ -17,7 +17,7 @@ the running app. We want a "wall map":
 - **Personas labelled** on every cluster (A System/HR Admin · B People Partners · C Manager ·
   D Employee) so it's obvious *who* each screen is for.
 
-This is **additive** to the existing "Humi HR — Live Capture" file (`fileKey
+This is **additive** to the existing "Cnext HR — Live Capture" file (`fileKey
 S3lmjnZpoIawSEz2Ov3nkB`), which already holds 12 captured routes + a componentized Home. We
 extend that file rather than start fresh.
 
@@ -41,7 +41,7 @@ Reuse the **proven capture recipe** (see `memory/reference_figma_mcp_code_to_des
    Dynamic injection does NOT fire. Remove this line when the whole job is done.
 3. Dev server running: `cd src/frontend && npm run dev` (port 3000).
 4. Auth seeded in the **real Chrome profile** localStorage so every gated route renders:
-   `humi-auth = {state:{userId:'ADM001',username:'admin',email:'admin@humi.test',
+   `cnext-auth = {state:{userId:'ADM001',username:'admin',email:'admin@cnext.test',
    roles:[<ALL roles>],isAuthenticated:true},version:0}`. Super-user sees every menu/route.
 5. **Lifecycle/gated forms** (terminate, pay-rate, contract-renewal, probation,
    change-type, rehire, acting, special-privilege, reallocate-budget) sit behind
@@ -179,6 +179,6 @@ multiple chips.
 - `specs/figma-live-capture.md` — full prior capture map (12 routes) + componentization recipe.
 - `memory/reference_figma_mcp_code_to_design.md` — working recipe + binding gotchas.
 - `src/lib/persona-tiers.ts`, `src/lib/rbac.ts` — persona/RBAC source of truth.
-- Figma file `S3lmjnZpoIawSEz2Ov3nkB` ("Humi HR — Live Capture").
+- Figma file `S3lmjnZpoIawSEz2Ov3nkB` ("Cnext HR — Live Capture").
 </content>
 </invoke>

@@ -93,7 +93,7 @@ function handleSubmit() {
 | สวัสดิการ | `benefit-claims.ts` | เคลมสวัสดิการ |
 | | `benefit-referrals.ts` | ส่งตัวรพ. |
 | | `benefit-exception-store.ts` | ข้อยกเว้น |
-| โดเมน Humi | `humi-*-slice.ts` | announcements, goals, profile, timeoff, ฯลฯ |
+| โดเมน Cnext | `cnext-*-slice.ts` | announcements, goals, profile, timeoff, ฯลฯ |
 
 > 💡 **กฎ:** ก่อนสร้าง store ใหม่ ให้หา slice ที่ดูแลโดเมนนั้นอยู่แล้วก่อนเสมอ
 > เกือบทุกโดเมนมี store อยู่แล้ว — เพิ่มเข้าไปในตัวเดิม ดีกว่าสร้างใหม่ทับซ้อน

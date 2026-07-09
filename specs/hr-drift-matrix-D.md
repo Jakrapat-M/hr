@@ -7,7 +7,7 @@
 
 ## Drift table
 
-| BRD# | Persona | Surface route | SF says | Humi shows | Severity | SF cite | Humi cite |
+| BRD# | Persona | Surface route | SF says | Cnext shows | Severity | SF cite | Cnext cite |
 |---|---|---|---|---|---|---|---|
 | #117 | HR Admin | `/admin/employees/[id]/probation` | Auto-pass triggers at day 119 + email notifications at day 30/75/90 (cron-based background job) | UI shows "auto-pass ของระบบจะทริกเกอร์ (รอ backend phase)" comment — no actual cron, no email scheduler wired; Sprint 2 backlog (#67 P-B6) | HIGH | qas-fields-2026-04-25/RBAC-MATRIX-V2-2026-04-26.md#EmpEmployment | src/frontend/src/app/[locale]/admin/employees/[id]/probation/page.tsx:82-108 |
 | #178 | HR Admin | `/admin/self-service/field-config` | Field-level config changes must be persisted to backend; RBAC: only HR Admin can write field config — other personas are read-only consumers | `useAdminSelfService.publish()` writes only to Zustand+localStorage (`mockAdminSelfService.json` seed) — no backend API call; HR Admin role check is delegated entirely to admin/layout.tsx (client-side only, no server enforcement) | HIGH | qas-fields-2026-04-25/RBAC-MATRIX-V2-2026-04-26.md#cross-persona-summary | src/frontend/src/lib/admin/store/useAdminSelfService.ts:183-195 |

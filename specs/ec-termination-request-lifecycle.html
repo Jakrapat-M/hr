@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Plan: EC Termination Request Lifecycle (STA-266 · 269 · 264 · 271)</title>
 <style>
-  /* ── Baseline plan theme. Accents retuned to the CneXt/Humi palette:
+  /* ── Baseline plan theme. Accents retuned to the CneXt/Cnext palette:
      teal #1FA8A0 (primary/active) + indigo #5B6CE0 (info/alt). ── */
   :root {
     --bg: #f6f1e8; --surface: #ffffff; --surface-2: #efe9dd; --border: #ddd4c4;
@@ -229,7 +229,7 @@
       <h4>1.3 Shared renderer <code>&lt;TerminationRequestSummary&gt;</code></h4>
       <ul class="checklist">
         <li><code class="status">[x]</code> Create <code>src/components/termination/TerminationRequestSummary.tsx</code>: renders June's 10-field list top-to-bottom from a <code>TerminationRequest</code>, bilingual labels, masks nothing, hides optional fields that are <code>undefined</code> (an ESS submission simply shows fewer rows — exactly "same as UI when submit").</li>
-        <li><code class="status">[x]</code> Build from Humi primitives only (<code>Card</code>, definition rows, existing attachment list pattern from the approval page) — no route-local card markup, tokens only.</li>
+        <li><code class="status">[x]</code> Build from Cnext primitives only (<code>Card</code>, definition rows, existing attachment list pattern from the approval page) — no route-local card markup, tokens only.</li>
         <li><code class="status">[x]</code> Include the attachment list with the existing mock preview modal pattern (lift from <code>workflows/resignation/[id]/page.tsx</code>).</li>
       </ul>
 
@@ -375,7 +375,7 @@
       </ul>
 
       <h4>6.3 Testing Strategy</h4>
-      <p>Playwright standalone recipe (seed <code>humi-auth</code>, null <code>/api/auth/session</code> for persona switches — see <code>scripts/audit/</code> README).</p>
+      <p>Playwright standalone recipe (seed <code>cnext-auth</code>, null <code>/api/auth/session</code> for persona switches — see <code>scripts/audit/</code> README).</p>
       <ul class="checklist">
         <li><code class="status">[x]</code> <code>cd src/frontend && npx playwright test e2e/ --project=chromium -g "resignation|termination"</code> — existing E2E specs touching these routes stay green — <em>no regression: the 2 failures (chain-1 test 1, recruitment resignation) reproduce identically on clean origin/master b32989b4 (pre-existing)</em></li>
       </ul>
@@ -425,7 +425,7 @@
     </details>
     <details>
       <summary>What this plan deliberately does NOT touch</summary>
-      <p class="qa-answer"><code>EffectiveDateGate</code> stays for other lifecycle pages; the STA-236 exit-interview popup and STA-237 revert-termination flows are untouched; the legacy <code>use-resignation.ts</code>/<code>humi-profile-slice</code> path stays dead (do not wire it); no backend/API work (mockup phase); TodoBell deep-links (STA-243) already route to <code>/workflows/resignation/[id]</code> and keep working unchanged.</p>
+      <p class="qa-answer"><code>EffectiveDateGate</code> stays for other lifecycle pages; the STA-236 exit-interview popup and STA-237 revert-termination flows are untouched; the legacy <code>use-resignation.ts</code>/<code>cnext-profile-slice</code> path stays dead (do not wire it); no backend/API work (mockup phase); TodoBell deep-links (STA-243) already route to <code>/workflows/resignation/[id]</code> and keep working unchanged.</p>
     </details>
 
     <h3>Build-session logistics</h3>

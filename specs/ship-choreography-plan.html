@@ -6,14 +6,14 @@
 <title>Plan: Ship Choreography — one /ship for every Linear ticket</title>
 <style>
   :root{
-    /* Synced visual identity — DevOps "ship pipeline" theme, tied to Humi tokens */
-    --bg:#0E1B2C;          /* Humi navy ink */
+    /* Synced visual identity — DevOps "ship pipeline" theme, tied to Cnext tokens */
+    --bg:#0E1B2C;          /* Cnext navy ink */
     --surface:#16283d;
-    --ink:#F6F1E8;         /* Humi cream */
+    --ink:#F6F1E8;         /* Cnext cream */
     --ink-muted:#9db0c6;
-    --accent:#1FA8A0;      /* Humi teal = active/success */
+    --accent:#1FA8A0;      /* Cnext teal = active/success */
     --accent-soft:rgba(31,168,160,.16);
-    --gate:#FB923C;        /* Humi pumpkin = human gate / caution (NEVER red) */
+    --gate:#FB923C;        /* Cnext pumpkin = human gate / caution (NEVER red) */
     --gate-soft:rgba(251,146,60,.16);
     --hair:rgba(157,176,198,.18);
     --radius:14px;
@@ -161,7 +161,7 @@
     <ul>
       <li><span class="tag existing">existing</span> <code>.claude/commands/linear-implement.md</code> — encodes the current ship ceremony (steps 1, 7, 8) this plan consolidates; will be rewritten to call <code>/ship</code>.</li>
       <li><span class="tag existing">existing</span> <code>.claude/commands/linear-loop.md</code> — the plan-only producer; defines the <code>📋 Implementation plan (… APPROVED)</code> Linear comment that <code>/ship</code> reads as report context.</li>
-      <li><span class="tag existing">existing</span> <code>src/frontend/scripts/audit/deck-capture/cap-cnext-all.mjs</code> — the screenshot harness (seed <code>humi-auth</code>, null <code>/api/auth/session</code>, raw <code>page.screenshot({path})</code>) to reuse for gate-2 evidence.</li>
+      <li><span class="tag existing">existing</span> <code>src/frontend/scripts/audit/deck-capture/cap-cnext-all.mjs</code> — the screenshot harness (seed <code>cnext-auth</code>, null <code>/api/auth/session</code>, raw <code>page.screenshot({path})</code>) to reuse for gate-2 evidence.</li>
       <li><span class="tag existing">existing</span> <code>.claude/skills/planf3/</code> — the skill+scripts pattern (SKILL.md router + <code>scripts/</code> + <code>.env.sample</code> + skill-local <code>.gitignore</code>) to mirror.</li>
       <li><span class="tag existing">existing</span> <code>.omc/plans/</code> — git-ignored, worktree-local; the reason the portable plan lives as a Linear comment, not a file.</li>
       <li><span class="tag existing">existing</span> <code>CLAUDE.md</code> — repo conventions (base <code>master</code>, port 3000, In-Review cap, BA-friendly comments).</li>
@@ -376,7 +376,7 @@
     </details>
     <details>
       <summary>Reuse the deck-capture harness for screenshots, or write new?</summary>
-      <p class="qa-answer"><strong>Leaning: reuse.</strong> <code>cap-cnext-all.mjs</code> already solves seed-<code>humi-auth</code> + null <code>/api/auth/session</code> + raw <code>page.screenshot</code> (the MCP path-deadlock workaround). Wrap, don't rebuild.</p>
+      <p class="qa-answer"><strong>Leaning: reuse.</strong> <code>cap-cnext-all.mjs</code> already solves seed-<code>cnext-auth</code> + null <code>/api/auth/session</code> + raw <code>page.screenshot</code> (the MCP path-deadlock workaround). Wrap, don't rebuild.</p>
     </details>
   </section>
 

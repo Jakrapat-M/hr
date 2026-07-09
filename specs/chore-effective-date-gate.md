@@ -2,7 +2,7 @@
 
 ## Task Description
 
-เพิ่ม edit affordance + EffectiveDateGate overlay pattern บน Humi Profile sections เพื่อ replicate SF EC Core data integrity pattern ที่บังคับกรอก "When should these changes take effect?" **ก่อน** เปิด field อื่น. SF extraction Phase 3 พบว่านี่เป็น **data integrity contract** ไม่ใช่ UX choice — ถ้าไม่มี users จะแก้ข้อมูลปัจจุบันเป็นข้อมูลย้อนหลังได้ผิดพลาด → audit fail. Sprint นี้ scope = **frontend-only** (mock onSubmit; Sprint 2 backend จะ persist effective_start_date column ใน Sprint 3).
+เพิ่ม edit affordance + EffectiveDateGate overlay pattern บน Cnext Profile sections เพื่อ replicate SF EC Core data integrity pattern ที่บังคับกรอก "When should these changes take effect?" **ก่อน** เปิด field อื่น. SF extraction Phase 3 พบว่านี่เป็น **data integrity contract** ไม่ใช่ UX choice — ถ้าไม่มี users จะแก้ข้อมูลปัจจุบันเป็นข้อมูลย้อนหลังได้ผิดพลาด → audit fail. Sprint นี้ scope = **frontend-only** (mock onSubmit; Sprint 2 backend จะ persist effective_start_date column ใน Sprint 3).
 
 ## Objective
 
@@ -11,7 +11,7 @@ User คลิก edit pencil บน Personal Info section → modal overlay เ
 ## Tech Stack
 
 - **Language**: TypeScript
-- **Framework**: Next.js 16 App Router (existing Humi)
+- **Framework**: Next.js 16 App Router (existing Cnext)
 - **Runtime**: Bun (dev) / Node (prod)
 - **Key libraries**: shadcn/ui (Dialog + DatePicker + Button), Tailwind v4, react-hook-form (form mode), zod (date validation), next-intl (TH+EN), lucide-react (Pencil + ExternalLink icons)
 - **Testing**: Vitest + @testing-library/react (jsdom environment), Playwright (E2E)
