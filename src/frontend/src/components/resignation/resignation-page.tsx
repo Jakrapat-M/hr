@@ -56,11 +56,18 @@ export function ResignationPage() {
   const t = useTranslations('resignation');
   const tf = useTranslations('terminationFeedback');
   const searchParams = useSearchParams();
-  const editRequestId = searchParams.get('edit');
+  const editParamId = searchParams.get('edit');
   const addRequest = useTerminationApprovals((s) => s.addRequest);
   const requests = useTerminationApprovals((s) => s.requests);
   const userId = useAuthStore((s) => s.userId) ?? 'EMP001';
   const userName = useAuthStore((s) => s.username) ?? 'พนักงาน';
+  // A sent-back request must be REVISED (same id), never duplicated — so landing
+  // on the bare page while one exists behaves exactly like following the
+  // "แก้ไขและส่งใหม่" link from My Requests (?edit=<id>).
+  const sentBackRequest = requests.find(
+    (r) => r.employeeId === userId && r.status === 'sent_back',
+  );
+  const editRequestId = editParamId ?? sentBackRequest?.id ?? null;
   const editRequest = editRequestId
     ? requests.find((r) => r.id === editRequestId)
     : undefined;
@@ -99,21 +106,26 @@ export function ResignationPage() {
   const patchExit = (patch: Partial<ExitInterviewRecord>) =>
     setExitInterview((prev) => ({ ...prev, ...patch }));
 
-  // Find a pending or approved request by this user.
-  // If the most recent request is `rejected`, allow re-submission — the form
-  // re-renders and the rejected request is shown as a notice (see banner below).
-  // Pre-Phase-5 fix: any-status `find()` blocked the form forever once a seeded
-  // demo request existed for the default `EMP001` userId.
-  const myRequest = requests.find(
-    (r) => r.employeeId === userId && r.status !== 'rejected',
+  // Only an IN-FLIGHT request blocks a new submission. Terminal states
+  // (approved / rejected / withdrawn) surface as informational banners but keep
+  // the form usable — demo personas share EMP001, so a permanent block after one
+  // completed journey is a dead end (the bug this replaced).
+  const pendingRequest = requests.find(
+    (r) =>
+      r.employeeId === userId &&
+      (r.status === 'pending_manager' || r.status === 'pending_spd'),
+  );
+  const approvedRequest = requests.find(
+    (r) => r.employeeId === userId && r.status === 'approved',
   );
   const lastRejected = requests.find(
     (r) => r.employeeId === userId && r.status === 'rejected',
   );
+  const sendBackNote = sentBackRequest?.audit.findLast(
+    (entry) => entry.action === 'send_back',
+  )?.comment;
 
-  const hasPending =
-    !editRequestId && (myRequest?.status === 'pending_manager' || myRequest?.status === 'pending_spd');
-  const isApproved = !editRequestId && myRequest?.status === 'approved';
+  const hasPending = !editRequestId && !!pendingRequest;
   const personalEmailValid = !!personalEmail && EMAIL_RE.test(personalEmail);
   const activeEntry = reasonCode ? TERMINATION_LOGIC[reasonCode] : undefined;
   const terminationDate = lastWorkingDate ? deriveTermination(lastWorkingDate).terminationDate : '';
@@ -122,8 +134,7 @@ export function ResignationPage() {
     !!reasonCode &&
     !!reasonForTermination &&
     personalEmailValid &&
-    !hasPending &&
-    !isApproved;
+    !hasPending;
 
   const handleReasonChange = (code: string) => {
     const entry = TERMINATION_LOGIC[code];
@@ -303,29 +314,40 @@ export function ResignationPage() {
         </p>
       </div>
 
-      {myRequest?.status === 'pending_manager' && (
+      {pendingRequest?.status === 'pending_manager' && (
         <div className="humi-card humi-card--info p-4">
           <div className="humi-eyebrow">มีคำขอที่ยังรอ Manager อนุมัติ</div>
           <div className="text-small text-ink">
-            รหัส {myRequest.id} — รออนุมัติจาก Manager ส่งคำขอใหม่ไม่ได้จนกว่า Manager จะตัดสิน
+            รหัส {pendingRequest.id} — รออนุมัติจาก Manager ส่งคำขอใหม่ไม่ได้จนกว่า Manager จะตัดสิน
           </div>
         </div>
       )}
 
-      {myRequest?.status === 'pending_spd' && (
+      {pendingRequest?.status === 'pending_spd' && (
         <div className="humi-card humi-card--info p-4">
           <div className="humi-eyebrow">มีคำขอที่ยังรอ SPD อนุมัติ</div>
           <div className="text-small text-ink">
-            รหัส {myRequest.id} — Manager อนุมัติแล้ว รออนุมัติครั้งสุดท้ายจาก SPD
+            รหัส {pendingRequest.id} — Manager อนุมัติแล้ว รออนุมัติครั้งสุดท้ายจาก SPD
           </div>
         </div>
       )}
 
-      {myRequest?.status === 'approved' && (
-        <div className="humi-card humi-card--success p-4">
-          <div className="humi-eyebrow">คำขอลาออกได้รับการอนุมัติแล้ว</div>
+      {sentBackRequest && !pendingRequest && (
+        <div className="humi-card humi-card--warning p-4">
+          <div className="humi-eyebrow">คำขอถูกส่งกลับให้แก้ไข</div>
           <div className="text-small text-ink">
-            รหัส {myRequest.id} — วันทำงานสุดท้าย {formatDateTh(myRequest.requestedLastDay)}
+            รหัส {sentBackRequest.id}
+            {sendBackNote ? ` — เหตุผลจากผู้อนุมัติ: ${sendBackNote}` : ''}
+            {' — '}ฟอร์มด้านล่างเติมข้อมูลเดิมให้แล้ว แก้ไขแล้วกดส่งอีกครั้งได้เลย (เป็นคำขอใบเดิม)
+          </div>
+        </div>
+      )}
+
+      {approvedRequest && !pendingRequest && (
+        <div className="humi-card humi-card--success p-4">
+          <div className="humi-eyebrow">คำขอลาออกก่อนหน้านี้ได้รับการอนุมัติแล้ว</div>
+          <div className="text-small text-ink">
+            รหัส {approvedRequest.id} — วันทำงานสุดท้าย {formatDateTh(approvedRequest.requestedLastDay)} — ยื่นคำขอใหม่ได้หากต้องการ
           </div>
         </div>
       )}
