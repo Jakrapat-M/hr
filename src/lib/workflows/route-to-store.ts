@@ -18,7 +18,7 @@
  */
 
 // EventReason union: verbatim PRCHG codes from ReasonPicker (event=5587).
-// Source: src/frontend/src/components/admin/lifecycle/ReasonPicker.tsx — EVENT_REASONS['5587']
+// Source: src/components/admin/lifecycle/ReasonPicker.tsx — EVENT_REASONS['5587']
 // If @/types/workflows ships EventReason in a future PR, replace this colocated declaration.
 export type EventReason =
   | 'PRCHG_PROMO'

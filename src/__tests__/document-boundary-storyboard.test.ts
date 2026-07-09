@@ -25,18 +25,18 @@ describe('STA-49 document boundary storyboard copy', () => {
 
   it('wires the shared copy into Employee Center, Time, Benefit, and document-center surfaces', () => {
     const surfaces = [
-      'src/frontend/src/components/humi/FileUploadField.tsx',
-      'src/frontend/src/components/admin/AttachmentDropzone/AttachmentDropzone.tsx',
-      'src/frontend/src/app/[locale]/profile/me/page.tsx',
-      'src/frontend/src/app/[locale]/timeoff/page.tsx',
-      'src/frontend/src/components/leave/leave-detail.tsx',
-      'src/frontend/src/components/benefits/referral/ReferralRequestPanel.tsx',
-      'src/frontend/src/components/benefits/referral/ReferralLetterPreview.tsx',
-      'src/frontend/src/components/hospital-referral/referral-letter-preview.tsx',
-      'src/frontend/src/app/[locale]/me/documents/page.tsx',
-      'src/frontend/src/app/[locale]/me/documents/request/page.tsx',
-      'src/frontend/src/app/[locale]/admin/documents/page.tsx',
-      'src/frontend/src/app/[locale]/admin/system/system-features/edocuments/page.tsx',
+      'src/components/humi/FileUploadField.tsx',
+      'src/components/admin/AttachmentDropzone/AttachmentDropzone.tsx',
+      'src/app/[locale]/profile/me/page.tsx',
+      'src/app/[locale]/timeoff/page.tsx',
+      'src/components/leave/leave-detail.tsx',
+      'src/components/benefits/referral/ReferralRequestPanel.tsx',
+      'src/components/benefits/referral/ReferralLetterPreview.tsx',
+      'src/components/hospital-referral/referral-letter-preview.tsx',
+      'src/app/[locale]/me/documents/page.tsx',
+      'src/app/[locale]/me/documents/request/page.tsx',
+      'src/app/[locale]/admin/documents/page.tsx',
+      'src/app/[locale]/admin/system/system-features/edocuments/page.tsx',
     ];
 
     for (const surface of surfaces) {
@@ -46,9 +46,9 @@ describe('STA-49 document boundary storyboard copy', () => {
 
   it('does not add backend document implementation artifacts for this storyboard', () => {
     const changedSurfaceText = [
-      'src/frontend/src/lib/document-boundary.ts',
-      'src/frontend/src/components/humi/FileUploadField.tsx',
-      'src/frontend/src/components/admin/AttachmentDropzone/AttachmentDropzone.tsx',
+      'src/lib/document-boundary.ts',
+      'src/components/humi/FileUploadField.tsx',
+      'src/components/admin/AttachmentDropzone/AttachmentDropzone.tsx',
     ].map(read).join('\n');
 
     expect(changedSurfaceText).not.toMatch(/createTable\(|CREATE TABLE|presigned|S3Client|virusScanProvider|ocrProvider|signatureProvider/);

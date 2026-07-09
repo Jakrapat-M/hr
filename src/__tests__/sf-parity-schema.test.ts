@@ -9,12 +9,12 @@ import type { FormData } from '../lib/admin/store/useHireWizard'
 
 // ---------------------------------------------------------------------------
 // Path resolution
-// __dirname = /Users/tachongrak/Projects/hr/src/frontend/src/__tests__
+// __dirname = /Users/tachongrak/Projects/hr/src/__tests__
 // 6 levels up → /Users/tachongrak
 // ---------------------------------------------------------------------------
 const SF_DUMP_DIR = resolve(
   __dirname,
-  '../../../../../../stark/projects/hr-platform-replacement/sf-extract/qas-fields-2026-04-25',
+  '../../../../stark/projects/hr-platform-replacement/sf-extract/qas-fields-2026-04-25',
 )
 
 // ---------------------------------------------------------------------------

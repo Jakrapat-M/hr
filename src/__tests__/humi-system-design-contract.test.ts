@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const repoRoot = join(__dirname, '..', '..', '..', '..');
+const repoRoot = join(__dirname, '..', '..');
 
 function read(path: string): string {
   return readFileSync(join(repoRoot, path), 'utf8');
@@ -19,7 +19,7 @@ describe('Humi system design contract', () => {
   });
 
   it('keeps global Humi tokens and namespaced primitives wired', () => {
-    const css = read('src/frontend/src/app/globals.css');
+    const css = read('src/app/globals.css');
 
     expect(css).toContain('--color-canvas:');
     expect(css).toContain('--color-accent:');
@@ -33,11 +33,11 @@ describe('Humi system design contract', () => {
   });
 
   it('keeps shell, home, and login pages on Humi primitives', () => {
-    const shell = read('src/frontend/src/components/humi/shell/AppShell.tsx');
-    const sidebar = read('src/frontend/src/components/humi/shell/Sidebar.tsx');
-    const topbar = read('src/frontend/src/components/humi/shell/Topbar.tsx');
-    const home = read('src/frontend/src/app/[locale]/home/page.tsx');
-    const login = read('src/frontend/src/app/[locale]/login/page.tsx');
+    const shell = read('src/components/humi/shell/AppShell.tsx');
+    const sidebar = read('src/components/humi/shell/Sidebar.tsx');
+    const topbar = read('src/components/humi/shell/Topbar.tsx');
+    const home = read('src/app/[locale]/home/page.tsx');
+    const login = read('src/app/[locale]/login/page.tsx');
 
     // AppShell builds the class via template literal (`humi-app${...}`) so the
     // literal string `"humi-app"` won't appear verbatim — check for the token instead.

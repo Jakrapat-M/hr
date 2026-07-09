@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const repoRoot = join(__dirname, '..', '..', '..', '..');
+const repoRoot = join(__dirname, '..', '..');
 
 const visualReadinessFiles = [
-  'src/frontend/src/app/[locale]/profile/me/page.tsx',
-  'src/frontend/src/components/time/time-page.tsx',
-  'src/frontend/src/app/[locale]/hrbp/dashboard/page.tsx',
+  'src/app/[locale]/profile/me/page.tsx',
+  'src/components/time/time-page.tsx',
+  'src/app/[locale]/hrbp/dashboard/page.tsx',
 ];
 
 const forbiddenVisualPatterns = [
@@ -37,7 +37,7 @@ describe('STA-48 executive visual readiness cleanup', () => {
   });
 
   it('removes the STA-44 time attendance red blocker from the detailed Time component', () => {
-    const source = read('src/frontend/src/components/time/time-page.tsx');
+    const source = read('src/components/time/time-page.tsx');
 
     expect(source).toContain('var(--color-accent)');
     expect(source).toContain('bg-ink text-canvas');
