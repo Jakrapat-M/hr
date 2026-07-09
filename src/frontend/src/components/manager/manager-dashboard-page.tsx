@@ -127,6 +127,7 @@ export function ManagerDashboardPage() {
  const [positionDeptFilter, setPositionDeptFilter] = useState<string>('all');
  const [positionStatusFilter, setPositionStatusFilter] = useState<string>('all');
  const [movementFilter, setMovementFilter] = useState<'เดือนนี้' | '30 วันล่าสุด' | 'ทั้งหมด'>('เดือนนี้');
+ const [showExportNotice, setShowExportNotice] = useState(false);
 
  const tabs = [
  { key:'overview', label: t('teamOverview') },
@@ -673,7 +674,7 @@ export function ManagerDashboardPage() {
    </Card>
 
    {/* Section B — การเคลื่อนไหวของทีม */}
-   <Card header={<><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full"><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-accent" />การเคลื่อนไหวของทีม</CardTitle><Button variant="secondary" size="sm" className="gap-1.5 shrink-0" onClick={() => { console.log('TODO: backend phase wire CSV export'); }}><Download className="h-4 w-4" />ส่งออก CSV</Button></div><div className="flex flex-wrap gap-2 mt-2">{(['เดือนนี้', '30 วันล่าสุด', 'ทั้งหมด'] as const).map((label) => (<button key={label} onClick={() => setMovementFilter(label)} className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition', movementFilter === label ? 'bg-brand text-white' : 'bg-surface-raised text-ink-muted hover:bg-surface-raised')}>{label}</button>))}</div></>}>
+   <Card header={<><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full"><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-accent" />การเคลื่อนไหวของทีม</CardTitle><div className="flex items-center gap-2">{showExportNotice && <span role="status" aria-live="polite" className="text-xs text-ink-muted">{locale === 'th' ? 'เร็วๆ นี้' : 'Coming soon'}</span>}<Button variant="secondary" size="sm" className="gap-1.5 shrink-0" onClick={() => setShowExportNotice(true)}><Download className="h-4 w-4" />ส่งออก CSV</Button></div></div><div className="flex flex-wrap gap-2 mt-2">{(['เดือนนี้', '30 วันล่าสุด', 'ทั้งหมด'] as const).map((label) => (<button key={label} onClick={() => setMovementFilter(label)} className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition', movementFilter === label ? 'bg-brand text-white' : 'bg-surface-raised text-ink-muted hover:bg-surface-raised')}>{label}</button>))}</div></>}>
      {filteredMovement.length === 0 ? (
       <p className="text-sm text-ink-muted text-center py-6">ไม่มีการเคลื่อนไหวในช่วงนี้</p>
      ) : (
