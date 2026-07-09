@@ -63,7 +63,7 @@ describe('ProfileEditPage — 4 sections render', () => {
   it('required fields ต้องมี asterisk (*) กำกับ', () => {
     const { container } = renderPage()
 
-    // component ใช้ span[class*="color-danger"] สำหรับ * ไม่ใช่ text-red-500
+    // component ใช้ span[class*="color-danger"] สำหรับ * ไม่ใช่ tailwind red class
     const asterisks = container.querySelectorAll('span[class*="color-danger"]')
     // ต้องมี * อย่างน้อย 4 ตัว
     expect(asterisks.length).toBeGreaterThanOrEqual(4)

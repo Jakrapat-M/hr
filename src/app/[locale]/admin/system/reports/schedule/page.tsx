@@ -52,7 +52,7 @@ export default function ScheduleReportPage() {
               id="sched-report"
               value={selectedReportId}
               onChange={(e) => setSelectedReportId(e.target.value)}
-              className="w-full rounded-md border border-hairline px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-hairline px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             >
               <option value="">— เลือกรายงาน —</option>
               {reports.map((r) => (
@@ -74,7 +74,7 @@ export default function ScheduleReportPage() {
               id="sched-delivery"
               value={delivery}
               onChange={(e) => setDelivery(e.target.value as typeof delivery)}
-              className="w-full rounded-md border border-hairline px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-hairline px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             >
               {DELIVERY_OPTIONS.map((d) => (
                 <option key={d.value} value={d.value}>{d.label}</option>

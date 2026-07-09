@@ -113,7 +113,7 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
           value={hour}
           onChange={(e) => handleChange({ hour: e.target.value.padStart(2, '0') })}
           aria-label="ชั่วโมง"
-          className="w-14 rounded border border-hairline px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-14 rounded border border-hairline px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         />
         <span className="text-ink-faint">:</span>
         <input
@@ -123,7 +123,7 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
           value={minute}
           onChange={(e) => handleChange({ minute: e.target.value.padStart(2, '0') })}
           aria-label="นาที"
-          className="w-14 rounded border border-hairline px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-14 rounded border border-hairline px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         />
         <span className="text-xs text-ink-faint">น.</span>
       </div>
@@ -160,7 +160,7 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
             value={dayOfMonth}
             onChange={(e) => handleChange({ dayOfMonth: e.target.value })}
             aria-label="วันที่ของเดือน"
-            className="w-16 rounded border border-hairline px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-16 rounded border border-hairline px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
           />
           <span className="text-xs text-ink-faint">ของทุกเดือน</span>
         </div>

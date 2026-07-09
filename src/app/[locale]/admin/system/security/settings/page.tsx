@@ -57,7 +57,7 @@ function HiddenProfileSection() {
                     onChange={(e) => setHiddenProfile(emp.id, e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-10 h-5 bg-hairline-soft peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5" />
+                  <div className="w-10 h-5 bg-hairline-soft peer-focus:ring-2 peer-focus:ring-[var(--color-accent)] rounded-full peer peer-checked:bg-accent after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-surface after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5" />
                 </label>
               </div>
             </div>
@@ -229,7 +229,7 @@ function SessionTimeoutSection() {
               max={480}
               value={localVal}
               onChange={(e) => handleInput(e.target.value)}
-              className="w-32 text-sm border border-hairline rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-32 text-sm border border-hairline rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               aria-describedby="session-timeout-hint"
             />
             <p id="session-timeout-hint" className="text-xs text-ink-faint mt-1">ช่วง 5–480 นาที</p>
@@ -237,7 +237,7 @@ function SessionTimeoutSection() {
           <button
             type="button"
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-colors"
           >
             {saved ? <span className="inline-flex items-center gap-1.5"><Check size={16}/>บันทึกแล้ว</span> : 'บันทึก'}
           </button>

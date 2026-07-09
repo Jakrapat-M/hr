@@ -50,7 +50,7 @@ export default function LanguagePage() {
                 value={opt.value}
                 checked={language === opt.value}
                 onChange={() => handleChange(opt.value)}
-                className="w-4 h-4 text-accent border-hairline focus:ring-blue-500"
+                className="w-4 h-4 text-accent border-hairline focus:ring-[var(--color-accent)]"
               />
               <span className="text-xl" aria-hidden="true">{opt.flag}</span>
               <div className="flex-1">

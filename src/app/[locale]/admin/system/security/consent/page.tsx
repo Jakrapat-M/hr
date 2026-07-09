@@ -79,7 +79,7 @@ export default function ConsentPage() {
             id="filter-status"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
-            className="text-sm border border-hairline rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-sm border border-hairline rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
           >
             <option value="all">ทั้งหมด ({consentForms.length})</option>
             <option value="signed">ลงนามแล้ว ({signed})</option>

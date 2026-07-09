@@ -155,7 +155,7 @@ export default function IntegrationPage() {
                 type="text"
                 value={tenantId}
                 onChange={(e) => setTenantId(e.target.value)}
-                className="w-full rounded-md border border-hairline px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-hairline px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               />
             </div>
 
@@ -190,7 +190,7 @@ export default function IntegrationPage() {
                 checked={syncEnabled}
                 onChange={(e) => setSyncEnabled(e.target.checked)}
                 disabled={teamsVivaConfig.baSpecPending}
-                className="h-4 w-4 rounded border-hairline text-accent focus:ring-blue-500 disabled:opacity-50"
+                className="h-4 w-4 rounded border-hairline text-accent focus:ring-[var(--color-accent)] disabled:opacity-50"
               />
               {teamsVivaConfig.baSpecPending && (
                 <span className="text-xs text-amber-600">(ปิดใช้งาน — รอ BA Spec)</span>
