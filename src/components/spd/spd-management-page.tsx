@@ -4,13 +4,13 @@
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Pencil, Save, X, Eye, Download } from 'lucide-react';
-import { Tabs } from '@/components/ui/tabs';
+import { Tabs } from '@/components/cnext/molecules/tabs';
 import { Card, CardTitle, Button, Modal } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
-import { FormField } from '@/components/ui/form-field';
+import { Badge } from '@/components/cnext/atoms/badge';
+import { FormField } from '@/components/cnext/molecules/form-field';
 import { useSpd, type TeamTimeRecord, type TeamOTRecord, type ShiftDay, type TeamSchedule } from '@/hooks/use-spd';
 import { cn } from '@/lib/utils';
-import { CustomSelect } from '@/components/ui/custom-select';
+import { CustomSelect } from '@/components/cnext/molecules/custom-select';
 
 type TabKey ='timeRecords' |'otRecords' |'schedules' |'leaveDocuments';
 

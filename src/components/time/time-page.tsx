@@ -9,9 +9,9 @@ import {
  LogIn, LogOut, Palmtree, Coffee, Sun, Moon,
 } from 'lucide-react';
 import { Card, CardTitle, Button, Modal } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
-import { FormField } from '@/components/ui/form-field';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/cnext/atoms/badge';
+import { FormField } from '@/components/cnext/molecules/form-field';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
 import { useTime, type AttendanceRecord, type TimeCorrectionRequest } from '@/hooks/use-time';
 
 const STATUS_CONFIG: Record<string, { variant:'success' |'warning' |'error' |'info' |'neutral'; icon: typeof CheckCircle }> = {

@@ -38,8 +38,8 @@ import {
 } from 'lucide-react';
 import { Card, CardTitle, Button, DataTable, Modal } from '@/components/cnext';
 import type { DataTableColumn } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/cnext/atoms/badge';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
 import { DelegationModal } from '@/components/quick-approve/DelegationModal';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';

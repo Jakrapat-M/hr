@@ -23,11 +23,11 @@ vi.mock('next-intl', () => ({
 
 // ── cnext component stubs ──────────────────────────────────────────────────────
 // Card renders children; Button renders a <button>; FormField passes children.
-vi.mock('@/components/cnext/Card', () => ({
+vi.mock('@/components/cnext/molecules/Card', () => ({
   Card: ({ children }: { children: React.ReactNode }) => <div data-testid="card">{children}</div>,
 }));
 
-vi.mock('@/components/cnext/Button', () => ({
+vi.mock('@/components/cnext/atoms/Button', () => ({
   Button: ({
     children,
     onClick,
@@ -43,7 +43,7 @@ vi.mock('@/components/cnext/Button', () => ({
   ),
 }));
 
-vi.mock('@/components/cnext/Modal', () => ({
+vi.mock('@/components/cnext/organisms/Modal', () => ({
   Modal: ({
     open,
     children,
@@ -61,7 +61,7 @@ vi.mock('@/components/cnext/Modal', () => ({
     ) : null,
 }));
 
-vi.mock('@/components/cnext/FormField', () => ({
+vi.mock('@/components/cnext/molecules/FormField', () => ({
   FormField: ({
     children,
     label,

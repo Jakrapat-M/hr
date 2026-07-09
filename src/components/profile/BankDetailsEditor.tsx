@@ -8,7 +8,7 @@
 
 import { useTranslations } from 'next-intl';
 import { FormField } from '@/components/cnext';
-import { FileUploadField } from '@/components/cnext/FileUploadField';
+import { FileUploadField } from '@/components/cnext/molecules/FileUploadField';
 import { cn } from '@/lib/utils';
 import type { BankDetails } from '@/stores/cnext-profile-slice';
 

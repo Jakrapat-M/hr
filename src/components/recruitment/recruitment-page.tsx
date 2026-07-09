@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { UserPlus, Briefcase, Users, Clock } from 'lucide-react';
 import { Card, CardTitle, Button, Modal } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
-import { Tabs } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/cnext/atoms/badge';
+import { Tabs } from '@/components/cnext/molecules/tabs';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
 import { useRecruitment, type ApplicationStatus } from '@/hooks/use-recruitment';
 import { formatCurrency } from '@/lib/date';
 

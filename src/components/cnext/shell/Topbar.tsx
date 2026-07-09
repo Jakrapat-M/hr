@@ -28,8 +28,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 import { getLocaleFromPath, swapLocale, type SupportedLocale } from '@/lib/cnext-locale';
 import { PersonaSwitcher } from '@/components/cnext/shell/PersonaSwitcher';
-import { NotificationBell } from '@/components/cnext/NotificationBell';
-import { TodoBell } from '@/components/cnext/TodoBell';
+import { NotificationBell } from '@/components/cnext/organisms/NotificationBell';
+import { TodoBell } from '@/components/cnext/organisms/TodoBell';
 
 export interface TopbarProps {
   /** h2 page title — typically derived from route */

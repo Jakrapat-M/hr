@@ -9,7 +9,7 @@ import { useState, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { FileText, Printer, Filter, Clock, CheckCircle, PackageCheck, Send } from 'lucide-react';
 import { Button } from '@/components/cnext';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/cnext/molecules/toast';
 import { LetterGenerator } from '@/components/documents/letter-generator';
 import {
   DOCUMENT_TEMPLATES,

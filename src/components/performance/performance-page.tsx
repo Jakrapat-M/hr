@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Flag, Plus, TrendingUp, Target, ClipboardCheck } from 'lucide-react';
 import { Card, Button, Modal } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
-import { Tabs } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
-import { FormField } from '@/components/ui/form-field';
+import { Badge } from '@/components/cnext/atoms/badge';
+import { Tabs } from '@/components/cnext/molecules/tabs';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
+import { FormField } from '@/components/cnext/molecules/form-field';
 import { usePerformance, type Goal, type GoalCategory, type GoalStatus } from '@/hooks/use-performance';
 
 const STATUS_VARIANT: Record<GoalStatus,'neutral' |'info' |'success' |'warning' |'error'> = {

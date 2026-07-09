@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Modal, Button, FormField, FormInput } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/cnext/atoms/badge';
 import { Trash2, Plus } from 'lucide-react';
 import type { Delegation } from '@/lib/quick-approve-api';
 

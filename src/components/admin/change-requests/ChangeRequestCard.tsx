@@ -1,8 +1,8 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Card } from '@/components/cnext/Card';
-import { Button } from '@/components/cnext/Button';
+import { Card } from '@/components/cnext/molecules/Card';
+import { Button } from '@/components/cnext/atoms/Button';
 import type { PendingChange, FileAttachment, SectionKey } from '@/stores/cnext-profile-slice';
 
 // ════════════════════════════════════════════════════════════

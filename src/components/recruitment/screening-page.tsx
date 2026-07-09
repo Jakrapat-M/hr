@@ -2,9 +2,9 @@
 
 import { useTranslations } from 'next-intl';
 import { ArrowRight, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/cnext/atoms/badge';
 import { Card, CardTitle, Button } from '@/components/cnext';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
 import { useRecruitment, type ApplicationStatus } from '@/hooks/use-recruitment';
 
 const STAGES: ApplicationStatus[] = ['applied','screening','interview','offer','hired'];

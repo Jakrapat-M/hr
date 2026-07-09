@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useLocale } from 'next-intl';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/cnext';
-import { FileUploadField } from '@/components/cnext/FileUploadField';
+import { FileUploadField } from '@/components/cnext/molecules/FileUploadField';
 import { Capability } from '@/components/cnext';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import {

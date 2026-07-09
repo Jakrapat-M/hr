@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { GraduationCap, Search, Star, Clock, Award, Download } from 'lucide-react';
 import { Card } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/cnext/atoms/badge';
 import { Button } from '@/components/cnext';
-import { Tabs } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs } from '@/components/cnext/molecules/tabs';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
 import { useLearning } from '@/hooks/use-learning';
-import { CustomSelect } from '@/components/ui/custom-select';
+import { CustomSelect } from '@/components/cnext/molecules/custom-select';
 
 function generateCertificateHtml(course: { nameEn: string; code: string; score?: number; hours: number; credits: number; completionDate?: string }) {
  const completionDate = course.completionDate

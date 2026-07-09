@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { FileText } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput, Textarea } from '@/components/cnext';
-import { Modal } from '@/components/cnext/Modal';
-import { FileUploadField } from '@/components/cnext/FileUploadField';
+import { Modal } from '@/components/cnext/organisms/Modal';
+import { FileUploadField } from '@/components/cnext/molecules/FileUploadField';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import {
   bucketsForPlan,

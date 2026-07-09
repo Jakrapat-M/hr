@@ -53,7 +53,7 @@ import {
   type SectionKey,
   type EmergencyContactRow,
 } from '@/stores/cnext-profile-slice';
-import { FileUploadField } from '@/components/cnext/FileUploadField';
+import { FileUploadField } from '@/components/cnext/molecules/FileUploadField';
 import { Modal, FormField } from '@/components/cnext';
 import { EmergencyContactList, areAllRowsValid } from '@/components/profile/EmergencyContactList';
 import { DependentsEditor, areAllDependentsValid } from '@/components/profile/DependentsEditor';

@@ -45,7 +45,7 @@ vi.mock('@/hooks/use-spd-branches', () => ({
   }),
 }));
 
-vi.mock('@/components/cnext/DemoValuesDisclaimer', () => ({
+vi.mock('@/components/cnext/molecules/DemoValuesDisclaimer', () => ({
   DemoValuesDisclaimer: () => <div>Demo values only</div>,
 }));
 

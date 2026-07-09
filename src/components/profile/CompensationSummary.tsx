@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Wallet, Eye, EyeOff, Lock } from 'lucide-react';
-import { DemoValuesDisclaimer } from '@/components/cnext/DemoValuesDisclaimer';
+import { DemoValuesDisclaimer } from '@/components/cnext/molecules/DemoValuesDisclaimer';
 import PayStatements from '@/components/profile/PayStatements';
 import { CNEXT_MY_PROFILE } from '@/lib/cnext-mock-data';
 import { useAuthStore } from '@/stores/auth-store';

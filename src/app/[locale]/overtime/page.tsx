@@ -23,7 +23,7 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { Clock, ChevronRight } from 'lucide-react';
 import { Card, CardEyebrow, Button } from '@/components/cnext';
-import { FileUploadField } from '@/components/cnext/FileUploadField';
+import { FileUploadField } from '@/components/cnext/molecules/FileUploadField';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import {

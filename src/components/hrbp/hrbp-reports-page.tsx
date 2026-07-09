@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Tabs } from '@/components/ui/tabs';
+import { Tabs } from '@/components/cnext/molecules/tabs';
 import { Card, CardTitle } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/cnext/atoms/badge';
 import { useHRBPReports } from '@/hooks/use-hrbp-reports';
-import { CustomSelect } from '@/components/ui/custom-select';
+import { CustomSelect } from '@/components/cnext/molecules/custom-select';
 import { useHireAudit } from '@/stores/hire-audit';
 
 type TabKey ='attendance' |'leave' |'overtime' |'hire-notifications' |'summary';

@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Card, CardTitle } from '@/components/cnext';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
 import { cn } from '@/lib/utils';
 import { ClipboardList } from 'lucide-react';
 import type { HospitalReferral, ReferralStatus } from '@/hooks/use-hospital-referral';

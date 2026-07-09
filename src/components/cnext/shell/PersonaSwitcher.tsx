@@ -29,7 +29,7 @@ import {
   PERSONA_BADGE,
   landingForDemoUser,
 } from '@/lib/demo-users';
-import { Modal } from '@/components/cnext/Modal';
+import { Modal } from '@/components/cnext/organisms/Modal';
 import { cn } from '@/lib/utils';
 
 export function PersonaSwitcher() {

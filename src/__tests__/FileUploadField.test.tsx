@@ -84,7 +84,7 @@ vi.mock('@/lib/utils', () => ({
 }));
 
 // ── Import component AFTER mocks ──────────────────────────────────────────────
-import { FileUploadField } from '@/components/cnext/FileUploadField';
+import { FileUploadField } from '@/components/cnext/molecules/FileUploadField';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

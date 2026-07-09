@@ -8,7 +8,7 @@ import { useState, useMemo } from 'react';
 import { useLocale } from 'next-intl';
 import { Download } from 'lucide-react';
 import { Card } from '@/components/cnext';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
 import { useDirectReports } from '@/hooks/use-direct-reports';
 import {
   getReportEntitlementUsage,

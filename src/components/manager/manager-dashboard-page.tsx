@@ -28,9 +28,9 @@ import {
  Download,
 } from 'lucide-react';
 import { Card, CardTitle, Button, Modal } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs } from '@/components/ui/tabs';
+import { Badge } from '@/components/cnext/atoms/badge';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
+import { Tabs } from '@/components/cnext/molecules/tabs';
 import { useManagerDashboard } from '@/hooks/use-manager-dashboard';
 import type { TeamMember, PendingApproval, OrgNode, Position, MovementEvent } from '@/hooks/use-manager-dashboard';
 import { useAuthStore } from '@/stores/auth-store';

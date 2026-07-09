@@ -22,7 +22,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Card, CardEyebrow, CardTitle, Button } from '@/components/cnext';
-import { QuickActionsTile, MANAGER_ACTIONS, type QuickAction } from '@/components/cnext/QuickActionsTile';
+import { QuickActionsTile, MANAGER_ACTIONS, type QuickAction } from '@/components/cnext/molecules/QuickActionsTile';
 import {
   CNEXT_PENDING_REQUESTS,
   CNEXT_EMPLOYEES,

@@ -42,7 +42,7 @@ vi.mock('next/link', () => ({
 }));
 
 // ── Stub heavy Cnext primitives ──────────────────────────────────────────────
-vi.mock('@/components/cnext/Card', () => ({
+vi.mock('@/components/cnext/molecules/Card', () => ({
   Card: ({
     children,
     header,
@@ -59,7 +59,7 @@ vi.mock('@/components/cnext/Card', () => ({
   cardVariants: {},
 }));
 
-vi.mock('@/components/cnext/Button', () => ({
+vi.mock('@/components/cnext/atoms/Button', () => ({
   Button: ({
     children,
     onClick,
@@ -83,7 +83,7 @@ vi.mock('@/components/cnext/Button', () => ({
   buttonVariants: {},
 }));
 
-vi.mock('@/components/cnext/Modal', () => ({
+vi.mock('@/components/cnext/organisms/Modal', () => ({
   Modal: ({
     open,
     children,
@@ -101,7 +101,7 @@ vi.mock('@/components/cnext/Modal', () => ({
     ) : null,
 }));
 
-vi.mock('@/components/cnext/DataTable', () => ({
+vi.mock('@/components/cnext/organisms/DataTable', () => ({
   DataTable: ({
     rows,
     emptyState,
@@ -132,8 +132,8 @@ vi.mock('@/components/cnext/DataTable', () => ({
 // original. We inline the stubs here to avoid that confusion.
 vi.mock('@/components/cnext', async () => {
   // Capability: import the real implementation so RBAC gates work
-  const { Capability } = await vi.importActual<typeof import('@/components/cnext/Capability')>(
-    '@/components/cnext/Capability',
+  const { Capability } = await vi.importActual<typeof import('@/components/cnext/atoms/Capability')>(
+    '@/components/cnext/atoms/Capability',
   );
   return {
     Card: ({ children, header }: { children: React.ReactNode; header?: React.ReactNode }) => (
@@ -177,13 +177,13 @@ vi.mock('@/components/cnext', async () => {
   };
 });
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@/components/cnext/atoms/badge', () => ({
   Badge: ({ children }: { children: React.ReactNode }) => (
     <span data-testid="badge">{children}</span>
   ),
 }));
 
-vi.mock('@/components/ui/skeleton', () => ({
+vi.mock('@/components/cnext/atoms/skeleton', () => ({
   Skeleton: ({ className }: { className?: string }) => (
     <div className={className} aria-hidden />
   ),

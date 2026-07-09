@@ -14,8 +14,8 @@
 import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { FileText, Download, Printer } from 'lucide-react';
-import { Modal } from '@/components/cnext/Modal';
-import { Button } from '@/components/cnext/Button';
+import { Modal } from '@/components/cnext/organisms/Modal';
+import { Button } from '@/components/cnext/atoms/Button';
 import {
   GENERATABLE_LETTERS,
   type GeneratableLetter,

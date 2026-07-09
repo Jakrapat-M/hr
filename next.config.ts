@@ -36,11 +36,11 @@ const nextConfig: NextConfig = {
     ];
   },
   webpack(config) {
-    // resolve @hrms/shared/* → shared lib source (no NestJS layer)
+    // resolve @hrms/shared/* → vendored shared lib source (src/shared)
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@hrms/shared/picklists': path.resolve(__dirname, '../services/shared/src/picklists/index.ts'),
-      '@hrms/shared/field-catalog': path.resolve(__dirname, '../services/shared/src/field-catalog/index.ts'),
+      '@hrms/shared/picklists': path.resolve(__dirname, 'src/shared/picklists/index.ts'),
+      '@hrms/shared/field-catalog': path.resolve(__dirname, 'src/shared/field-catalog/index.ts'),
     };
     return config;
   },

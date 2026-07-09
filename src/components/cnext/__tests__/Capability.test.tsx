@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Capability } from '@/components/cnext/Capability';
+import { Capability } from '@/components/cnext/atoms/Capability';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/lib/rbac';
 

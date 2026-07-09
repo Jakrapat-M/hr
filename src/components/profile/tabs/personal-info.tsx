@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { User, Phone, MapPin, AlertTriangle, Users, Shield } from 'lucide-react';
-import { FieldGroup } from '@/components/ui/field-group';
-import { Field } from '@/components/ui/field';
-import { Badge } from '@/components/ui/badge';
+import { FieldGroup } from '@/components/cnext/molecules/field-group';
+import { Field } from '@/components/cnext/molecules/field';
+import { Badge } from '@/components/cnext/atoms/badge';
 import { formatDate, maskValue } from '@/lib/date';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
 import { EffectiveDateGate } from '@/components/profile/EffectiveDateGate';
 import { EditPencilButton } from '@/components/profile/EditPencilButton';
 

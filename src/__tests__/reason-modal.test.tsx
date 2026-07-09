@@ -23,7 +23,7 @@ vi.mock('next-intl', () => ({
 }));
 
 // ── cnext primitive stubs ──────────────────────────────────────────────────────
-vi.mock('@/components/cnext/Modal', () => ({
+vi.mock('@/components/cnext/organisms/Modal', () => ({
   Modal: ({
     open,
     children,
@@ -43,7 +43,7 @@ vi.mock('@/components/cnext/Modal', () => ({
     ) : null,
 }));
 
-vi.mock('@/components/cnext/Button', () => ({
+vi.mock('@/components/cnext/atoms/Button', () => ({
   Button: ({
     children,
     onClick,
@@ -66,7 +66,7 @@ vi.mock('@/components/cnext/Button', () => ({
   ),
 }));
 
-vi.mock('@/components/cnext/FormField', () => ({
+vi.mock('@/components/cnext/molecules/FormField', () => ({
   FormField: ({
     children,
     label,

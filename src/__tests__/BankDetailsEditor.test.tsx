@@ -46,7 +46,7 @@ vi.mock('@/components/cnext', () => ({
 }));
 
 // ── Mock FileUploadField ───────────────────────────────────────────────────────
-vi.mock('@/components/cnext/FileUploadField', () => ({
+vi.mock('@/components/cnext/molecules/FileUploadField', () => ({
   FileUploadField: ({ label }: { label?: React.ReactNode }) => (
     <div data-testid="file-upload-field">{label}</div>
   ),

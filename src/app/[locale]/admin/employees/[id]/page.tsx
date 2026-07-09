@@ -77,7 +77,7 @@ import {
   type BenefitClaimStatus,
 } from '@/stores/benefit-claims'
 import { EmptyState, Modal, Button, FormField, FormInput } from '@/components/cnext'
-import { FileUploadField } from '@/components/cnext/FileUploadField'
+import { FileUploadField } from '@/components/cnext/molecules/FileUploadField'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
 import { SectionJumpNav, type JumpItem } from '@/components/admin/employees/SectionJumpNav'
 import { EmployeePersonalSections } from '@/components/admin/EmployeePersonalSections'

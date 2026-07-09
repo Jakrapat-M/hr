@@ -13,7 +13,7 @@ import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Search, FileText, Download, Printer, User } from 'lucide-react';
 import { Button } from '@/components/cnext';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/cnext/molecules/toast';
 import { ALL_PORTED_EMPLOYEES } from '@/lib/all-ported-employees';
 import { GENERATABLE_LETTERS, type GeneratableLetter } from '@/data/documents/templates';
 import {

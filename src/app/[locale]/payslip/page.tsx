@@ -10,7 +10,7 @@
 
 import { Wallet } from 'lucide-react';
 import { Card, CardEyebrow } from '@/components/cnext';
-import { DemoValuesDisclaimer } from '@/components/cnext/DemoValuesDisclaimer';
+import { DemoValuesDisclaimer } from '@/components/cnext/molecules/DemoValuesDisclaimer';
 import PayStatements from '@/components/profile/PayStatements';
 import { cn } from '@/lib/utils';
 

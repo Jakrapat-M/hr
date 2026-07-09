@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Modal } from '@/components/cnext/Modal';
-import { Button } from '@/components/cnext/Button';
-import { FormField } from '@/components/cnext/FormField';
+import { Modal } from '@/components/cnext/organisms/Modal';
+import { Button } from '@/components/cnext/atoms/Button';
+import { FormField } from '@/components/cnext/molecules/FormField';
 import { useCnextProfileStore } from '@/stores/cnext-profile-slice';
 
 // ════════════════════════════════════════════════════════════

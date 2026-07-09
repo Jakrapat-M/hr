@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { BookOpen, Plus, CheckCircle, Clock, Circle } from 'lucide-react';
 import { Card, CardTitle } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/cnext/atoms/badge';
 import { Button } from '@/components/cnext';
-import { Tabs } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs } from '@/components/cnext/molecules/tabs';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
 import { useIdp, type ActionStatus } from '@/hooks/use-idp';
 
 const ACTION_ICON: Record<ActionStatus, React.ReactNode> = {

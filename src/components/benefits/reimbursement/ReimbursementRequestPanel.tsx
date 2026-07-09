@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/cnext';
-import { FileUploadField } from '@/components/cnext/FileUploadField';
+import { FileUploadField } from '@/components/cnext/molecules/FileUploadField';
 import {
   BENEFIT_CODE_BY_TYPE,
   BENEFIT_TYPE_LABEL,

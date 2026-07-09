@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl';
 import { MapPin, Plus, Trash2, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardTitle, Button, Modal } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
-import { FormField } from '@/components/ui/form-field';
+import { Badge } from '@/components/cnext/atoms/badge';
+import { FormField } from '@/components/cnext/molecules/form-field';
 import { useGeofencing, type GeofenceZone } from '@/hooks/use-geofencing';
 
 type ZoneForm = {

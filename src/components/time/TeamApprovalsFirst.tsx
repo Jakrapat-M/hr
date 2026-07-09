@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { ChevronRight, Inbox } from 'lucide-react';
 import { Card } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/cnext/atoms/badge';
 import { useSelectPendingApprovals } from '@/lib/approval-registry';
 import { formatDate } from '@/lib/date';
 

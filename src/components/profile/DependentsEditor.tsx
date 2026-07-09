@@ -9,7 +9,7 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/cnext';
 import { FormField } from '@/components/cnext';
-import { FileUploadField } from '@/components/cnext/FileUploadField';
+import { FileUploadField } from '@/components/cnext/molecules/FileUploadField';
 import { cn } from '@/lib/utils';
 import {
   DEPENDENT_RELATION_LABELS,

@@ -89,8 +89,8 @@ vi.mock('next/link', () => ({
 
 // ── Cnext component stubs ───────────────────────────────────────────────────
 vi.mock('@/components/cnext', async () => {
-  const { Capability } = await vi.importActual<typeof import('@/components/cnext/Capability')>(
-    '@/components/cnext/Capability',
+  const { Capability } = await vi.importActual<typeof import('@/components/cnext/atoms/Capability')>(
+    '@/components/cnext/atoms/Capability',
   );
   return {
     Card: ({ children }: any) => <div>{children}</div>,

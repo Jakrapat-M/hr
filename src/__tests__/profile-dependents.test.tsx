@@ -83,7 +83,7 @@ vi.mock('@/components/cnext', () => ({
 }));
 
 // ── Mock FileUploadField ──────────────────────────────────────────────────────
-vi.mock('@/components/cnext/FileUploadField', () => ({
+vi.mock('@/components/cnext/molecules/FileUploadField', () => ({
   FileUploadField: ({
     label,
     onUpload: _u,

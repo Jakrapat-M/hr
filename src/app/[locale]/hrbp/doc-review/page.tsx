@@ -13,7 +13,7 @@ import { useState, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { FileText, ClipboardCheck, Clock, CheckCircle2 } from 'lucide-react';
 import { Button, Modal } from '@/components/cnext';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/components/cnext/molecules/toast';
 import {
   DOCUMENT_TEMPLATES,
   GENERATABLE_LETTERS,

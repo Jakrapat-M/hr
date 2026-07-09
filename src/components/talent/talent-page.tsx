@@ -4,11 +4,11 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { TrendingUp, Users, AlertTriangle, Star } from 'lucide-react';
 import { Card, CardTitle } from '@/components/cnext';
-import { Badge } from '@/components/ui/badge';
-import { Tabs } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/cnext/atoms/badge';
+import { Tabs } from '@/components/cnext/molecules/tabs';
+import { Skeleton } from '@/components/cnext/atoms/skeleton';
 import { useTalent } from '@/hooks/use-talent';
-import { CustomSelect } from '@/components/ui/custom-select';
+import { CustomSelect } from '@/components/cnext/molecules/custom-select';
 
 export function TalentPage() {
  const t = useTranslations('talent');

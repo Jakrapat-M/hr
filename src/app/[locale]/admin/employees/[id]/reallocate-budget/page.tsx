@@ -28,7 +28,7 @@ import { formatDate } from '@/lib/date'
 import { useAuthStore } from '@/stores/auth-store'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
-import { FileUploadField } from '@/components/cnext/FileUploadField'
+import { FileUploadField } from '@/components/cnext/molecules/FileUploadField'
 import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry'
 import {
   useBenefitExceptionFormStore,

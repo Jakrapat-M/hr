@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { Capability } from '@/components/cnext/Capability';
+import { Capability } from '@/components/cnext/atoms/Capability';
 import { Card, CardEyebrow, CardTitle, Button } from '@/components/cnext';
 import { TalentSearchPanel } from '@/components/talent/TalentSearchPanel';
 

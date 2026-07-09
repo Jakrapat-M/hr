@@ -23,7 +23,7 @@ import {
   Briefcase,
 } from 'lucide-react';
 import { Capability } from '@/components/cnext';
-import { QuickActionsTile, type QuickAction } from '@/components/cnext/QuickActionsTile';
+import { QuickActionsTile, type QuickAction } from '@/components/cnext/molecules/QuickActionsTile';
 import { ExitFeedbackPanel } from '@/components/hrbp/ExitFeedbackPanel';
 import {
   CNEXT_PENDING_REQUESTS,

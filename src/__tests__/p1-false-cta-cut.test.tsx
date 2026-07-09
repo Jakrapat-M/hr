@@ -32,7 +32,7 @@ import {
   QuickActionsTile,
   DEFAULT_ESS_ACTIONS,
   MANAGER_ACTIONS,
-} from '@/components/cnext/QuickActionsTile';
+} from '@/components/cnext/molecules/QuickActionsTile';
 
 const FORBIDDEN = /\/admin\/(employees|positions)/;
 
