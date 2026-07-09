@@ -51,6 +51,20 @@ export function deriveTermination(resignedDate: string): { readonly terminationD
   return { terminationDate: computeTerminationDate(resignedDate) };
 }
 
+// Sub-reason values persist as LOV codes (e.g. RESIGN_PERSONAL); every display
+// surface must resolve the label. Legacy free-text values fall through as-is.
+export function terminationSubReasonLabel(
+  reasonCode: string,
+  subReason: string | undefined,
+): string | undefined {
+  if (!subReason) return undefined;
+  const canonical = normalizeTerminationReason(reasonCode);
+  return (
+    TERMINATION_LOGIC[canonical].reasonForTermination.options.find((o) => o.code === subReason)
+      ?.label ?? subReason
+  );
+}
+
 export function deriveVoluntary(reasonCode: string): TerminationVoluntary {
   const canonical = normalizeTerminationReason(reasonCode);
   return TERMINATION_LOGIC[canonical].voluntary ? 'voluntary' : 'involuntary';

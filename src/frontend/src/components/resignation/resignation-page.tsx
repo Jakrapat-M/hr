@@ -31,6 +31,7 @@ import {
   buildTerminationRequestPayload,
   deriveTermination,
   normalizeTerminationReason,
+  terminationSubReasonLabel,
 } from '@/lib/termination-request';
 import {
   TERMINATION_LOGIC,
@@ -248,7 +249,9 @@ export function ResignationPage() {
               {req.reasonForTermination && (
                 <div>
                   <div className="humi-eyebrow">เหตุผลย่อย</div>
-                  <div className="text-body font-medium text-ink">{req.reasonForTermination}</div>
+                  <div className="text-body font-medium text-ink">
+                    {terminationSubReasonLabel(req.reasonCode, req.reasonForTermination)}
+                  </div>
                 </div>
               )}
               {req.personalEmail && (
@@ -522,7 +525,9 @@ export function ResignationPage() {
               </div>
               <div className="flex justify-between gap-3 py-1">
                 <dt className="text-ink-muted">เหตุผลย่อย</dt>
-                <dd className="font-medium text-ink">{reasonForTermination}</dd>
+                <dd className="font-medium text-ink">
+                  {terminationSubReasonLabel(reasonCode, reasonForTermination)}
+                </dd>
               </div>
             </dl>
           )}

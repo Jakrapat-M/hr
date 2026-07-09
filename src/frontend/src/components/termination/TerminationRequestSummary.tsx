@@ -12,7 +12,7 @@ import {
   TerminationAttachmentPreview,
   type TerminationSummaryLocale,
 } from './TerminationAttachmentPreview';
-import { normalizeTerminationReason } from '@/lib/termination-request';
+import { normalizeTerminationReason, terminationSubReasonLabel } from '@/lib/termination-request';
 import { cn } from '@/lib/utils';
 
 type Label = {
@@ -141,7 +141,9 @@ export function TerminationRequestSummary({
       ? {
           id: 'reasonForTermination',
           label: LABELS.reasonForTermination,
-          value: request.reasonForTermination ?? request.reasonText,
+          value:
+            terminationSubReasonLabel(request.reasonCode, request.reasonForTermination) ??
+            request.reasonText,
         }
       : undefined,
     request.transferOutTo
