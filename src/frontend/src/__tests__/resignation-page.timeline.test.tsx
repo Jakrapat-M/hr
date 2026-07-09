@@ -78,6 +78,7 @@ vi.mock('next/navigation', () => ({
   usePathname: vi.fn().mockReturnValue('/th/resignation'),
   useRouter: vi.fn().mockReturnValue({ push: vi.fn() }),
   useParams: vi.fn().mockReturnValue({ locale: 'th' }),
+  useSearchParams: vi.fn().mockReturnValue(new URLSearchParams()),
 }));
 
 import { useHumiProfileStore } from '@/stores/humi-profile-slice';

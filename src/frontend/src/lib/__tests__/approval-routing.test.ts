@@ -124,11 +124,9 @@ describe('currentStep / currentStepIndex — derived from status + timeline', ()
     expect(nextApproverLabel(item, 'en')).toBe('SPD Benefits');
   });
 
-  it('awaitingNext advances a single-step chain to its last index', () => {
+  it('awaitingNext advances to the next routed step', () => {
     const item = pendingItem('leave', [{ step: 1, approver: 'Manager', status: 'approved' }], true);
-    // leave has a single [manager] step → clamps to last index (0), but the
-    // manager has already acted (awaitingNext) so canActOn keeps it view-only.
-    expect(currentStepIndex(item)).toBe(0);
+    expect(currentStepIndex(item)).toBe(1);
   });
 });
 

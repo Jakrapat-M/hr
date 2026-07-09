@@ -7,17 +7,18 @@
 // เมื่อ submit: addRequest() → toast "ส่งคำขอลาออกแล้ว — รอ SPD อนุมัติ"
 
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { CheckCircle, AlertTriangle } from 'lucide-react';
 import {
   useTerminationApprovals,
   TERMINATION_REASON_LABEL,
-  type TerminationReasonCode,
 } from '@/stores/termination-approvals';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button, FormField, FormInput, Modal } from '@/components/humi';
 import { AttachmentDropzone } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
+import { REASON_LABELS } from '@/components/admin/lifecycle/ReasonPicker';
 import { ExitInterviewSection } from '@/components/admin/terminate/ExitInterviewSection';
 import {
   useExitFeedback,
@@ -26,6 +27,16 @@ import {
   type ExitInterviewRecord,
 } from '@/stores/exit-feedback';
 import { HUMI_MY_PROFILE } from '@/lib/humi-mock-data';
+import {
+  buildTerminationRequestPayload,
+  deriveTermination,
+  normalizeTerminationReason,
+  terminationSubReasonLabel,
+} from '@/lib/termination-request';
+import {
+  TERMINATION_LOGIC,
+  TERMINATION_LOGIC_CODES,
+} from '@/lib/admin/termination-logic';
 
 const selectClassName =
   'h-10 w-full rounded-md border border-hairline bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--dur-fast)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-canvas';
@@ -44,16 +55,26 @@ function formatDateTh(iso: string): string {
 export function ResignationPage() {
   const t = useTranslations('resignation');
   const tf = useTranslations('terminationFeedback');
+  const searchParams = useSearchParams();
+  const editRequestId = searchParams.get('edit');
   const addRequest = useTerminationApprovals((s) => s.addRequest);
   const requests = useTerminationApprovals((s) => s.requests);
   const userId = useAuthStore((s) => s.userId) ?? 'EMP001';
   const userName = useAuthStore((s) => s.username) ?? 'พนักงาน';
+  const editRequest = editRequestId
+    ? requests.find((r) => r.id === editRequestId)
+    : undefined;
+  const initialReasonCode = editRequest ? normalizeTerminationReason(editRequest.reasonCode) : '';
+  const initialEntry = initialReasonCode ? TERMINATION_LOGIC[initialReasonCode] : undefined;
 
-  const [lastWorkingDate, setLastWorkingDate] = useState('');
-  const [reasonCode, setReasonCode] = useState<TerminationReasonCode | ''>('');
-  const [personalEmail, setPersonalEmail] = useState(SEEDED_PERSONAL_EMAIL);
-  const [additionalInfo, setAdditionalInfo] = useState('');
-  const [attachmentFiles, setAttachmentFiles] = useState<AttachedFile[]>([]);
+  const [lastWorkingDate, setLastWorkingDate] = useState(editRequest?.requestedLastDay ?? '');
+  const [reasonCode, setReasonCode] = useState(initialReasonCode);
+  const [reasonForTermination, setReasonForTermination] = useState(
+    editRequest?.reasonForTermination ?? initialEntry?.reasonForTermination.default ?? '',
+  );
+  const [personalEmail, setPersonalEmail] = useState(editRequest?.personalEmail ?? SEEDED_PERSONAL_EMAIL);
+  const [additionalInfo, setAdditionalInfo] = useState(editRequest?.additionalInfo ?? editRequest?.reasonText ?? '');
+  const [attachmentFiles, setAttachmentFiles] = useState<AttachedFile[]>(editRequest?.attachments ?? []);
   const [submitted, setSubmitted] = useState(false);
   // Frozen once per mount — react-hooks/purity flags Date.now() in render.
   const minLastWorkingDate = useMemo(() => {
@@ -91,11 +112,24 @@ export function ResignationPage() {
   );
 
   const hasPending =
-    myRequest?.status === 'pending_manager' || myRequest?.status === 'pending_spd';
-  const isApproved = myRequest?.status === 'approved';
+    !editRequestId && (myRequest?.status === 'pending_manager' || myRequest?.status === 'pending_spd');
+  const isApproved = !editRequestId && myRequest?.status === 'approved';
   const personalEmailValid = !!personalEmail && EMAIL_RE.test(personalEmail);
+  const activeEntry = reasonCode ? TERMINATION_LOGIC[reasonCode] : undefined;
+  const terminationDate = lastWorkingDate ? deriveTermination(lastWorkingDate).terminationDate : '';
   const isFormValid =
-    !!lastWorkingDate && !!reasonCode && personalEmailValid && !hasPending && !isApproved;
+    !!lastWorkingDate &&
+    !!reasonCode &&
+    !!reasonForTermination &&
+    personalEmailValid &&
+    !hasPending &&
+    !isApproved;
+
+  const handleReasonChange = (code: string) => {
+    const entry = TERMINATION_LOGIC[code];
+    setReasonCode(code);
+    setReasonForTermination(entry?.reasonForTermination.default ?? '');
+  };
 
   // Two-step submit: clicking ส่งคำขอลาออก opens a confirmation Modal first
   // (mockup confirm, no backend) so resignation is never a single irreversible-
@@ -107,16 +141,27 @@ export function ResignationPage() {
 
   const confirmSubmit = () => {
     if (!isFormValid || !reasonCode) return;
-    const id = addRequest({
+    const payload = buildTerminationRequestPayload({
       employeeId: userId,
       employeeName: userName,
       requestedLastDay: lastWorkingDate,
-      reasonCode: reasonCode as TerminationReasonCode,
-      reasonText: additionalInfo.trim() || undefined,
+      reasonCode,
+      reasonForTermination,
+      additionalInfo,
       personalEmail,
       attachments: attachmentFiles.length ? attachmentFiles : undefined,
-      submittedBy: { id: userId, name: userName, role: 'employee' },
+    }, {
+      id: userId,
+      name: userName,
+      role: 'employee',
+      sourceRoute: 'ess',
     });
+    const store = useTerminationApprovals.getState();
+    const id = editRequestId ?? addRequest(payload);
+    if (editRequestId) {
+      store.updateRequest(editRequestId, payload);
+      store.resubmit(editRequestId);
+    }
     // STA-238 — the resignation is submitted here; the OPTIONAL Exit Interview
     // now opens as a post-submit popup (Skip/Save) instead of the old inline
     // section. Recording + the success view are deferred to the popup handlers.
@@ -142,7 +187,7 @@ export function ResignationPage() {
         employeeNameTh: userName,
         employeeNameEn: userName,
         positionTitle: HUMI_MY_PROFILE.position,
-        reasonCode: reasonCode as string,
+        reasonCode,
         resignedDate: lastWorkingDate,
         recordedAt: new Date().toISOString(),
         record: exitInterview,
@@ -187,22 +232,38 @@ export function ResignationPage() {
                   {formatDateTh(req.requestedLastDay)}
                 </div>
               </div>
+              {req.terminationDate && (
+                <div>
+                  <div className="humi-eyebrow">วันที่สิ้นสุดสภาพ</div>
+                  <div className="text-body font-medium text-ink">
+                    {formatDateTh(req.terminationDate)}
+                  </div>
+                </div>
+              )}
               <div>
                 <div className="humi-eyebrow">เหตุผล</div>
                 <div className="text-body font-medium text-ink">
-                  {TERMINATION_REASON_LABEL[req.reasonCode]}
+                  {TERMINATION_REASON_LABEL[normalizeTerminationReason(req.reasonCode)]}
                 </div>
               </div>
+              {req.reasonForTermination && (
+                <div>
+                  <div className="humi-eyebrow">เหตุผลย่อย</div>
+                  <div className="text-body font-medium text-ink">
+                    {terminationSubReasonLabel(req.reasonCode, req.reasonForTermination)}
+                  </div>
+                </div>
+              )}
               {req.personalEmail && (
                 <div>
                   <div className="humi-eyebrow">อีเมลส่วนตัว</div>
                   <div className="text-body font-medium text-ink">{req.personalEmail}</div>
                 </div>
               )}
-              {req.reasonText && (
+              {req.additionalInfo && (
                 <div className="sm:col-span-2">
                   <div className="humi-eyebrow">ข้อมูลเพิ่มเติม</div>
-                  <div className="text-body text-ink">{req.reasonText}</div>
+                  <div className="text-body text-ink">{req.additionalInfo}</div>
                 </div>
               )}
               <div>
@@ -284,18 +345,43 @@ export function ResignationPage() {
 
         <div className="space-y-5">
           {/* วันทำงานวันสุดท้าย */}
-          <FormField id="lastWorkingDate" label="วันทำงานวันสุดท้าย" required help="กรุณาแจ้งล่วงหน้าอย่างน้อย 30 วัน">
-            {(ctrl) => (
-              <FormInput
-                {...ctrl}
-                type="date"
-                value={lastWorkingDate}
-                onChange={(e) => setLastWorkingDate(e.target.value)}
-                min={minLastWorkingDate}
-                className="max-w-[220px]"
-              />
-            )}
-          </FormField>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField
+              id="lastWorkingDate"
+              label="วันที่ทำงานวันสุดท้าย (Resigned Date)"
+              required
+              help="กรุณาแจ้งล่วงหน้าอย่างน้อย 30 วัน"
+            >
+              {(ctrl) => (
+                <FormInput
+                  {...ctrl}
+                  type="date"
+                  value={lastWorkingDate}
+                  onChange={(e) => setLastWorkingDate(e.target.value)}
+                  min={minLastWorkingDate}
+                  className="max-w-[220px]"
+                />
+              )}
+            </FormField>
+
+            <FormField
+              id="terminationDate"
+              label="วันที่สิ้นสุดสภาพ (Termination date)"
+              help="คำนวณอัตโนมัติ = วันที่ลาออก + 1 วัน"
+            >
+              {(ctrl) => (
+                <FormInput
+                  {...ctrl}
+                  type="date"
+                  value={terminationDate}
+                  readOnly
+                  disabled
+                  className="max-w-[220px] opacity-70"
+                  aria-readonly="true"
+                />
+              )}
+            </FormField>
+          </div>
 
           {/* เหตุผลการลาออก */}
           <FormField id="reasonCode" label="เหตุผลการลาออก" required>
@@ -303,17 +389,38 @@ export function ResignationPage() {
               <select
                 {...ctrl}
                 value={reasonCode}
-                onChange={(e) => setReasonCode(e.target.value as TerminationReasonCode | '')}
+                onChange={(e) => handleReasonChange(e.target.value)}
                 className={selectClassName + ' max-w-[360px]'}
               >
                 <option value="">-- เลือกเหตุผล --</option>
-                {(Object.entries(TERMINATION_REASON_LABEL) as [TerminationReasonCode, string][]).map(
-                  ([code, label]) => (
-                    <option key={code} value={code}>
-                      {label}
-                    </option>
-                  ),
-                )}
+                {TERMINATION_LOGIC_CODES.map((code) => (
+                  <option key={code} value={code}>
+                    {REASON_LABELS[code] ?? TERMINATION_REASON_LABEL[normalizeTerminationReason(code)]}
+                  </option>
+                ))}
+              </select>
+            )}
+          </FormField>
+
+          <FormField
+            id="reasonForTermination"
+            label="เหตุผลย่อย (Reason for termination)"
+            required
+          >
+            {(ctrl) => (
+              <select
+                {...ctrl}
+                value={reasonForTermination}
+                onChange={(e) => setReasonForTermination(e.target.value)}
+                disabled={!activeEntry}
+                className={selectClassName + ' max-w-[360px] disabled:bg-canvas-soft disabled:text-ink-muted'}
+              >
+                {!activeEntry && <option value="">-- เลือกเหตุผลหลักก่อน --</option>}
+                {activeEntry?.reasonForTermination.options.map((option) => (
+                  <option key={option.code} value={option.code}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             )}
           </FormField>
@@ -327,6 +434,7 @@ export function ResignationPage() {
               </>
             }
             required
+            help={t('personalEmailRemark')}
             error={personalEmail && !personalEmailValid ? 'รูปแบบอีเมลไม่ถูกต้อง' : undefined}
           >
             {(ctrl) => (
@@ -412,7 +520,13 @@ export function ResignationPage() {
               <div className="flex justify-between gap-3 py-1">
                 <dt className="text-ink-muted">{t('reasonType')}</dt>
                 <dd className="font-medium text-ink">
-                  {TERMINATION_REASON_LABEL[reasonCode as TerminationReasonCode]}
+                  {TERMINATION_REASON_LABEL[normalizeTerminationReason(reasonCode)]}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3 py-1">
+                <dt className="text-ink-muted">เหตุผลย่อย</dt>
+                <dd className="font-medium text-ink">
+                  {terminationSubReasonLabel(reasonCode, reasonForTermination)}
                 </dd>
               </div>
             </dl>

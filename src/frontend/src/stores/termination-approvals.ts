@@ -2,6 +2,19 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Role } from '@/lib/rbac';
 import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
+import {
+  deriveTermination,
+  normalizeTerminationReason,
+  type TerminationReasonCode,
+  type TerminationRequestSourceRoute,
+  type TerminationRequestSubmitterRole,
+  type TerminationVoluntary,
+} from '@/lib/termination-request';
+import { migrateTerminationApprovals } from './termination-approvals-migration';
+export { TERMINATION_REASON_LABEL } from '@/lib/termination-request';
+export type { TerminationReasonCode } from '@/lib/termination-request';
+export { migrateTerminationApprovals } from './termination-approvals-migration';
+export { TERMINATION_STEP_BADGE_TONE, TERMINATION_STEP_LABEL, TERMINATION_STEP_LABEL_I18N } from './termination-approval-labels';
 
 // termination-approvals — Zustand+persist store for ESS termination requests.
 //
@@ -10,53 +23,14 @@ import type { AttachedFile } from '@/components/admin/AttachmentDropzone/Attachm
 // Reason codes sourced from SF zVoluntary picklist (sf-extract/qas-fields-2026-04-25).
 // 17 codes total: 16 TERM_* from zVoluntary + TERM_OTHER.
 
-export type TerminationStep = 'pending_manager' | 'pending_spd' | 'approved' | 'rejected';
+export type TerminationStep = 'pending_manager' | 'pending_spd' | 'approved' | 'rejected' | 'sent_back' | 'withdrawn';
 
-// 17 SF termination reason codes with Thai labels (sf-extract/terminate/ is empty;
-// Thai labels hand-authored per BRD #172 + zVoluntary externalCodes from QAS extract).
-export type TerminationReasonCode =
-  | 'TERM_RESIGN'
-  | 'TERM_DISMISS'
-  | 'TERM_LAYOFF'
-  | 'TERM_RETRIE'
-  | 'TERM_ERLRETIRE'
-  | 'TERM_EOC'
-  | 'TERM_COVID'
-  | 'TERM_ENDASSIGN'
-  | 'TERM_UNSUCPROB'
-  | 'TERM_PASSAWAY'
-  | 'TERM_TRANS'
-  | 'TERM_NOSHOW'
-  | 'TERM_REORG'
-  | 'TERM_CRISIS'
-  | 'TERM_REDUNDANCY'
-  | 'TERM_ABSENT'
-  | 'TERM_OTHER';
-
-export const TERMINATION_REASON_LABEL: Record<TerminationReasonCode, string> = {
-  TERM_RESIGN:    'ลาออกโดยสมัครใจ',
-  TERM_DISMISS:   'ถูกเลิกจ้าง / ไล่ออก',
-  TERM_LAYOFF:    'ถูกพักงาน / เลิกจ้างชั่วคราว',
-  TERM_RETRIE:    'เกษียณอายุ',
-  TERM_ERLRETIRE: 'เกษียณก่อนกำหนด',
-  TERM_EOC:       'ครบกำหนดสัญญาจ้าง',
-  TERM_COVID:     'เลิกจ้างเนื่องจาก COVID-19',
-  TERM_ENDASSIGN: 'สิ้นสุดการมอบหมายงาน',
-  TERM_UNSUCPROB: 'ไม่ผ่านทดลองงาน',
-  TERM_PASSAWAY:  'เสียชีวิต',
-  TERM_TRANS:     'โอนย้ายออกจากบริษัท',
-  TERM_NOSHOW:    'ขาดงานโดยไม่แจ้ง',
-  TERM_REORG:     'ปรับโครงสร้างองค์กร',
-  TERM_CRISIS:    'วิกฤตองค์กร',
-  TERM_REDUNDANCY:'ตัดตำแหน่งซ้ำซ้อน',
-  TERM_ABSENT:    'ขาดงานเกินกำหนด',
-  TERM_OTHER:     'อื่น ๆ',
-};
+export type TerminationActorRole = Role | 'hr';
 
 export type TerminationAuditEntry = {
-  actorRole: Role;
+  actorRole: TerminationActorRole;
   actorName: string;
-  action: 'submit' | 'approve' | 'reject';
+  action: 'submit' | 'approve' | 'reject' | 'send_back' | 'resubmit' | 'withdraw';
   comment?: string;
   at: string; // ISO timestamp
 };
@@ -66,31 +40,34 @@ export type TerminationRequest = {
   employeeId: string;
   employeeName: string;
   requestedLastDay: string; // ISO date YYYY-MM-DD
+  terminationDate?: string;
   reasonCode: TerminationReasonCode;
   reasonText?: string;
+  reasonForTermination?: string;
+  voluntary?: TerminationVoluntary;
+  transferOutTo?: string;
+  okToRehire?: boolean;
+  additionalInfo?: string;
   personalEmail?: string; // STA-247 — ESS resignation field parity with termination
   attachments?: AttachedFile[]; // STA-247 — was filenames-only string[]; now multi-file (AttachmentDropzone)
   status: TerminationStep;
+  sentBackFrom?: Extract<TerminationStep, 'pending_manager' | 'pending_spd'>;
   submittedAt: string; // ISO timestamp
-  submittedBy: { id: string; name: string; role: Role };
+  submittedBy: { id: string; name: string; role: TerminationRequestSubmitterRole };
+  sourceRoute?: TerminationRequestSourceRoute;
   audit: TerminationAuditEntry[];
-};
-
-export const TERMINATION_STEP_LABEL: Record<TerminationStep, string> = {
-  pending_manager: 'รอ Manager อนุมัติ',
-  pending_spd:     'รอ SPD อนุมัติ',
-  approved:        'อนุมัติแล้ว',
-  rejected:        'ถูกปฏิเสธ',
 };
 
 interface TerminationApprovalsState {
   requests: TerminationRequest[];
-  addRequest: (
-    r: Omit<TerminationRequest, 'id' | 'submittedAt' | 'status' | 'audit'>,
-  ) => string;
+  addRequest: (r: Omit<TerminationRequest, 'id' | 'submittedAt' | 'status' | 'audit' | 'sourceRoute'> & { sourceRoute?: TerminationRequestSourceRoute }) => string;
   approveByManager: (id: string, by: { role: 'manager'; name: string }, comment?: string) => void;
-  approve: (id: string, by: { role: Role; name: string }, comment?: string) => void;
-  reject: (id: string, by: { role: Role; name: string }, reason: string) => void;
+  approve: (id: string, by: { role: TerminationActorRole; name: string }, comment?: string) => void;
+  reject: (id: string, by: { role: TerminationActorRole; name: string }, reason: string) => void;
+  sendBack: (id: string, note: string, actor: { role: TerminationActorRole; name: string }) => void;
+  updateRequest: (id: string, patch: Partial<Omit<TerminationRequest, 'id' | 'submittedAt' | 'audit'>>) => void;
+  resubmit: (id: string) => void;
+  withdraw: (id: string) => void;
   clear: () => void;
 }
 
@@ -98,28 +75,6 @@ function generateTermId(): string {
   const ts = new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `TR-${ts}-${rand}`;
-}
-
-// v1 — STA-247 changed `attachments` from filenames-only string[] to
-// AttachedFile[] ({id, name, size, type}). Browsers with pre-STA-247
-// persisted state still hold the old string[] shape, which crashes the
-// resignation detail page's `<li key={file.id}>` render (undefined key +
-// blank filename) since a string has no .id/.name. Exported so the
-// migration itself is unit-testable independent of zustand/persist.
-export function migrateTerminationApprovals(persisted: unknown, version: number) {
-  const state = persisted as { requests?: TerminationRequest[] } | undefined;
-  if (version >= 1 || !state?.requests) return state as { requests: TerminationRequest[] };
-  return {
-    ...state,
-    requests: state.requests.map((r) => ({
-      ...r,
-      attachments: r.attachments?.map((file, i) =>
-        typeof file === 'string'
-          ? { id: `seed-att-${i}-${file}`, name: file, size: 0, type: 'application/pdf' }
-          : file,
-      ),
-    })),
-  };
 }
 
 export const useTerminationApprovals = create<TerminationApprovalsState>()(
@@ -134,6 +89,9 @@ export const useTerminationApprovals = create<TerminationApprovalsState>()(
           id,
           submittedAt: now,
           status: 'pending_manager',
+          reasonCode: normalizeTerminationReason(payload.reasonCode),
+          terminationDate: payload.terminationDate ?? deriveTermination(payload.requestedLastDay).terminationDate,
+          sourceRoute: payload.sourceRoute ?? 'ess',
           audit: [
             {
               actorRole: payload.submittedBy.role,
@@ -209,13 +167,90 @@ export const useTerminationApprovals = create<TerminationApprovalsState>()(
                 },
           ),
         })),
+      sendBack: (id, note, actor) =>
+        set((state) => ({
+          requests: state.requests.map((r) =>
+            r.id !== id || (r.status !== 'pending_manager' && r.status !== 'pending_spd')
+              ? r
+              : {
+                  ...r,
+                  status: 'sent_back' as TerminationStep,
+                  sentBackFrom: r.status,
+                  audit: [
+                    ...r.audit,
+                    {
+                      actorRole: actor.role,
+                      actorName: actor.name,
+                      action: 'send_back' as const,
+                      comment: note,
+                      at: new Date().toISOString(),
+                    },
+                  ],
+                },
+          ),
+        })),
+      updateRequest: (id, patch) =>
+        set((state) => ({
+          requests: state.requests.map((r) => {
+            if (r.id !== id) return r;
+            const requestedLastDay = patch.requestedLastDay ?? r.requestedLastDay;
+            return {
+              ...r,
+              ...patch,
+              reasonCode: patch.reasonCode ? normalizeTerminationReason(patch.reasonCode) : r.reasonCode,
+              requestedLastDay,
+              terminationDate: patch.terminationDate ?? deriveTermination(requestedLastDay).terminationDate,
+            };
+          }),
+        })),
+      resubmit: (id) =>
+        set((state) => ({
+          requests: state.requests.map((r) =>
+            r.id !== id || r.status !== 'sent_back'
+              ? r
+              : {
+                  ...r,
+                  status: 'pending_manager' as TerminationStep,
+                  sentBackFrom: undefined,
+                  audit: [
+                    ...r.audit,
+                    {
+                      actorRole: r.submittedBy.role,
+                      actorName: r.submittedBy.name,
+                      action: 'resubmit' as const,
+                      at: new Date().toISOString(),
+                    },
+                  ],
+                },
+          ),
+        })),
+      withdraw: (id) =>
+        set((state) => ({
+          requests: state.requests.map((r) =>
+            r.id !== id || r.status === 'approved' || r.status === 'withdrawn'
+              ? r
+              : {
+                  ...r,
+                  status: 'withdrawn' as TerminationStep,
+                  audit: [
+                    ...r.audit,
+                    {
+                      actorRole: r.submittedBy.role,
+                      actorName: r.submittedBy.name,
+                      action: 'withdraw' as const,
+                      at: new Date().toISOString(),
+                    },
+                  ],
+                },
+          ),
+        })),
       clear: () => set({ requests: [] }),
     }),
     {
       name: 'humi-termination-approvals',
       storage: createJSONStorage(() => localStorage),
       // See migrateTerminationApprovals() above for why this migration exists.
-      version: 1,
+      version: 2,
       migrate: (persisted: unknown, version) => migrateTerminationApprovals(persisted, version),
     },
   ),

@@ -8,21 +8,18 @@ import {
   AlertTriangle,
   ArrowRight,
   Check,
-  Download,
-  FileText,
-  Paperclip,
   Plus,
   RotateCcw,
   Users,
 } from 'lucide-react';
 import { Modal } from '@/components/humi';
+import { TerminationRequestSummary } from '@/components/termination/TerminationRequestSummary';
 import {
   useTerminationApprovals,
-  TERMINATION_REASON_LABEL,
   type TerminationRequest,
 } from '@/stores/termination-approvals';
-import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 import { formatDate } from '@/lib/date';
+import { commitApprovedTermination } from '@/lib/termination-request';
 import { useAuthStore } from '@/stores/auth-store';
 import { personaTiers } from '@/lib/persona-tiers';
 
@@ -141,7 +138,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
   ) as TerminationRequest | undefined;
   const approveByManager = useTerminationApprovals((s) => s.approveByManager);
   const approveByHrAdmin = useTerminationApprovals((s) => s.approve);
-  const rejectRequest = useTerminationApprovals((s) => s.reject);
+  const sendBackRequest = useTerminationApprovals((s) => s.sendBack);
 
   // Step 2 (pending_spd — "HR Admin handling" per the offboarding timeline)
   // needs its own actor gate: the page previously only ever recognized the
@@ -153,13 +150,6 @@ export default function ResignationDetailPage({ params }: PageProps) {
   const isManagerViewer = viewerTiers.includes('C');
   const isHrAdminViewer = viewerTiers.includes('A');
 
-  // Attachment preview (mockup). STA-247 — attachments are now AttachedFile[]
-  // (base64 dataUrl when captured via the ESS AttachmentDropzone); real files
-  // download their own dataUrl, seeded demo files fall back to a sample view.
-  const [previewFile, setPreviewFile] = useState<AttachedFile | null>(null);
-
-  // Send-back (return to employee) — mirrors the RotateCcw "Send back" action
-  // used elsewhere in quick-approve (ActionPanel), backed by the store's reject().
   const [sendBackOpen, setSendBackOpen] = useState(false);
   const [sendBackReason, setSendBackReason] = useState('');
 
@@ -209,9 +199,11 @@ export default function ResignationDetailPage({ params }: PageProps) {
         ? isTh ? 'รอ HR Admin ดำเนินการ' : 'Awaiting HR Admin'
         : request.status === 'approved'
           ? isTh ? 'อนุมัติแล้ว' : 'Approved'
-          : isTh ? 'ไม่อนุมัติ' : 'Rejected';
-
-  const reasonLabel = TERMINATION_REASON_LABEL[request.reasonCode];
+          : request.status === 'sent_back'
+            ? isTh ? 'ส่งกลับให้แก้ไข' : 'Sent back'
+            : request.status === 'withdrawn'
+              ? isTh ? 'ถอนคำขอแล้ว' : 'Withdrawn'
+              : isTh ? 'ไม่อนุมัติ' : 'Rejected';
 
   // Footer left label mirrors the design's decision-state copy.
   const footerLeft = canAct
@@ -224,6 +216,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
       approveByManager(request.id, { role: 'manager', name: viewerName ?? APPROVER_NAME });
     } else {
       approveByHrAdmin(request.id, { role: 'hr_admin', name: viewerName ?? HR_ADMIN_NAME });
+      commitApprovedTermination(request);
     }
     router.push(`/${locale}/quick-approve?decided=resignation-approved`);
   }
@@ -232,7 +225,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
     if (!request || !canAct || !sendBackReason.trim()) return;
     const actorRole = isManagerStep ? 'manager' : 'hr_admin';
     const actorName = viewerName ?? (isManagerStep ? APPROVER_NAME : HR_ADMIN_NAME);
-    rejectRequest(request.id, { role: actorRole, name: actorName }, sendBackReason.trim());
+    sendBackRequest(request.id, sendBackReason.trim(), { role: actorRole, name: actorName });
     setSendBackOpen(false);
     router.push(`/${locale}/quick-approve?decided=resignation-sent-back`);
   }
@@ -320,48 +313,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Reason card */}
-          <div className="humi-card">
-            <div className="mb-3.5 flex items-center justify-between">
-              <h3 className="font-display text-base font-semibold tracking-tight text-ink">
-                {isTh ? 'เหตุผลที่ลาออก' : 'Reason for resignation'}
-              </h3>
-              <span className="humi-tag">{reasonLabel}</span>
-            </div>
-            <div className="rounded-[var(--radius-md)] border-l-[3px] border-accent bg-canvas-soft p-4 text-sm italic leading-relaxed text-ink-soft">
-              &ldquo;{request.reasonText || (isTh ? 'ไม่ได้ระบุเหตุผลเพิ่มเติม' : 'No additional reason provided')}&rdquo;
-            </div>
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-ink-muted">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              {isTh
-                ? 'เหตุผลและคำตอบสัมภาษณ์ออกจะถูกแชร์ให้ HR Admin โดยอัตโนมัติ'
-                : 'The reason and exit-interview answers are shared with HR Admin automatically.'}
-            </div>
-          </div>
-
-          {/* Attachments card */}
-          {request.attachments?.length ? (
-            <div className="humi-card">
-              <h3 className="mb-3.5 font-display text-base font-semibold tracking-tight text-ink">
-                {isTh ? 'เอกสารแนบ' : 'Attachments'}
-              </h3>
-              <ul className="flex flex-col gap-2">
-                {request.attachments.map((file) => (
-                  <li key={file.id}>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewFile(file)}
-                      className="group flex w-full items-center gap-2.5 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft px-3.5 py-2.5 text-left text-sm text-ink transition hover:border-accent hover:bg-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
-                    >
-                      <Paperclip className="h-4 w-4 shrink-0 text-ink-muted" />
-                      <span className="truncate">{file.name}</span>
-                      <FileText className="ml-auto h-4 w-4 shrink-0 text-ink-muted transition group-hover:text-accent" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+          <TerminationRequestSummary request={request} locale={isTh ? 'th' : 'en'} />
 
         </div>
 
@@ -517,74 +469,6 @@ export default function ResignationDetailPage({ params }: PageProps) {
             >
               <RotateCcw className="h-3.5 w-3.5" />
               {isTh ? 'ยืนยันส่งกลับ' : 'Confirm send back'}
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Attachment preview (mockup) — renders a sample document view for the
-          selected file. No real file store this phase; the body is derived from
-          the request so it reads as a believable resignation document. */}
-      <Modal
-        open={previewFile !== null}
-        onClose={() => setPreviewFile(null)}
-        title={previewFile?.name ?? ''}
-        widthClass="max-w-2xl"
-      >
-        <div className="flex flex-col gap-4">
-          <div className="rounded-[var(--radius-md)] border border-hairline bg-surface px-8 py-7 shadow-[var(--shadow-card)]">
-            <div className="mb-5 flex items-center gap-2 text-eyebrow uppercase tracking-wide text-ink-muted">
-              <FileText className="h-3.5 w-3.5" />
-              {isTh ? 'ตัวอย่างเอกสาร' : 'Sample document'}
-            </div>
-            <div className="space-y-2.5 text-sm leading-relaxed text-ink-soft">
-              <p>{isTh ? 'เรียน ฝ่ายทรัพยากรบุคคล' : 'To: Human Resources'}</p>
-              <p>
-                {isTh
-                  ? `ข้าพเจ้า ${request.employeeName} มีความประสงค์ขอลาออกจากตำแหน่ง โดยแจ้งล่วงหน้าตามระเบียบบริษัท`
-                  : `I, ${request.employeeName}, hereby submit my resignation with the required advance notice per company policy.`}
-              </p>
-              <p>
-                {isTh
-                  ? `วันสุดท้ายของการปฏิบัติงานคือ ${formatDate(request.requestedLastDay, 'long', locale)}`
-                  : `My last working day will be ${formatDate(request.requestedLastDay, 'long', locale)}.`}
-              </p>
-              <p>{isTh ? 'จึงเรียนมาเพื่อโปรดพิจารณา' : 'Thank you for your consideration.'}</p>
-              <p className="pt-2">{isTh ? 'ขอแสดงความนับถือ' : 'Sincerely,'}</p>
-              <p className="font-medium text-ink">{request.employeeName}</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-ink-muted">
-              {isTh ? 'เอกสารตัวอย่างสำหรับการตรวจสอบ' : 'Sample document for review'}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                if (!previewFile) return;
-                // Real files captured via the ESS AttachmentDropzone carry their own
-                // dataUrl; seeded demo attachments have none and get a sample text file.
-                if (previewFile.dataUrl) {
-                  const a = document.createElement('a');
-                  a.href = previewFile.dataUrl;
-                  a.download = previewFile.name;
-                  a.click();
-                  return;
-                }
-                const blob = new Blob(
-                  [`${previewFile.name}\n\n${request.employeeName}\n${formatDate(request.requestedLastDay, 'long', locale)}`],
-                  { type: 'text/plain' },
-                );
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = previewFile.name.replace(/\.pdf$/i, '.txt');
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-hairline bg-surface px-3.5 py-2 text-sm font-semibold text-ink-soft transition hover:bg-canvas-soft"
-            >
-              <Download className="h-3.5 w-3.5" /> {isTh ? 'ดาวน์โหลด' : 'Download'}
             </button>
           </div>
         </div>

@@ -15,19 +15,19 @@
 // C8: TerminateEvent shape from @hrms/shared — no invented variants.
 
 import { useEffect, useMemo, useState, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, UserX, Circle } from 'lucide-react'
 import { AttachmentDropzone } from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
 import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone'
 import { ReasonPicker } from '@/components/admin/lifecycle/ReasonPicker'
-import { useTimelines } from '@/lib/admin/store/useTimelines'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
 import { createClusterWizard } from '@/lib/admin/wizard-template/createClusterWizard'
-import { EffectiveDateGate } from '@/components/admin/EffectiveDateGate'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
 import { useTerminationApprovals, TERMINATION_REASON_LABEL } from '@/stores/termination-approvals'
+import { useAuthStore } from '@/stores/auth-store'
+import { FormField, FormInput } from '@/components/humi'
 import {
   TERMINATION_LOGIC,
   TERMINATION_LOGIC_CODES,
@@ -36,8 +36,12 @@ import {
   NO_SELECTION,
   computeTerminationDate,
 } from '@/lib/admin/termination-logic'
+import {
+  buildTerminationRequestPayload,
+  normalizeTerminationReason,
+} from '@/lib/termination-request'
+import { hasAnyRole } from '@/lib/rbac'
 import type { MockEmployee } from '@/mocks/employees'
-import type { TerminateEvent } from '@hrms/shared/types/timeline'
 
 // ─── Chain progress stepper (BRD #22, #111) ───────────────────────────────────
 // HR-admin initiates termination → triggers 4-step approval chain post-submit.
@@ -147,6 +151,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 // a single seeded value on mount. The field stays editable + required; if this
 // is empty the field renders blank and required-validation still fires.
 const SEEDED_PERSONAL_EMAIL = 'personal.email@gmail.com'
+const PERSONAL_EMAIL_REMARK =
+  'อีเมลนี้ใช้สำหรับรับหนังสือรับรองการทำงาน (Employment Letter), สลิปเงินเดือน (Payslip) และ 50 ทวิ (50BIS) / This email is used to receive the Employment Letter, Payslip and 50BIS.'
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -248,13 +254,13 @@ function ConfirmTerminateDialog({
           className="font-display text-lg font-semibold text-ink"
           style={{ marginBottom: 8 }}
         >
-          ยืนยันการสิ้นสุดสภาพพนักงาน?
+          ยืนยันส่งคำขอสิ้นสุดสภาพ?
         </h2>
         <p className="text-body text-ink-muted" style={{ marginBottom: 8 }}>
-          ยืนยันการสิ้นสุดสภาพพนักงาน <strong className="text-ink">{empId}</strong>?
+          ส่งคำขอสิ้นสุดสภาพพนักงาน <strong className="text-ink">{empId}</strong> เข้าสู่การอนุมัติ?
         </p>
         <p className="text-small text-ink-muted" style={{ marginBottom: 20 }}>
-          การดำเนินการนี้ไม่สามารถย้อนกลับได้
+          พนักงานจะยังไม่ถูกปรับสถานะเป็นสิ้นสุดสภาพจนกว่าคำขอได้รับอนุมัติครบขั้น
         </p>
         <div className="humi-row" style={{ gap: 10, justifyContent: 'flex-end' }}>
           <button
@@ -267,7 +273,7 @@ function ConfirmTerminateDialog({
             onClick={onConfirm}
             className="humi-btn humi-btn--danger"
           >
-            ยืนยัน บันทึกการสิ้นสุดสภาพ
+            ยืนยัน ส่งคำขออนุมัติ
           </button>
         </div>
       </div>
@@ -279,15 +285,24 @@ function ConfirmTerminateDialog({
 
 export default function TerminatePage() {
   const params = useParams()
-  const router = useRouter()
+  const searchParams = useSearchParams()
   const empId = params.id as string
   const locale = params.locale as string
+  const editRequestId = searchParams.get('edit')
 
   const employee = useEmployees((s) => s.getById(empId)) ?? null
-  const updateEmployee = useEmployees((s) => s.updateEmployee)
+  const actorId = useAuthStore((s) => s.userId) ?? 'admin-current'
+  const actorName = useAuthStore((s) => s.username) ?? 'HR Admin'
+  const actorRoles = useAuthStore((s) => s.roles)
+  const actorRole = hasAnyRole(actorRoles, ['hrbp', 'spd', 'hr_admin', 'hr_manager'])
+    ? 'hr'
+    : 'manager'
 
   // ── Resignation cross-reference: show banner if approved ESS resignation exists ──
   const resignationRequests = useTerminationApprovals((s) => s.requests)
+  const editRequest = editRequestId
+    ? resignationRequests.find((r) => r.id === editRequestId)
+    : undefined
   const approvedResignation = resignationRequests.find(
     (r) => r.employeeId === empId && r.status === 'approved',
   )
@@ -359,23 +374,40 @@ export default function TerminatePage() {
   // ── State ──────────────────────────────────────────────────────────────────
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-
-  // Seed timeline if not already seeded
-  const { append, seed } = useTimelines()
-  useEffect(() => {
-    if (employee) seed(employee)
-  }, [employee, seed])
+  const [hydratedEditId, setHydratedEditId] = useState<string | null>(null)
 
   // Auto-fill Personal Email from the seeded source on mount (Q2 default).
   // Field stays editable + required; only fills when currently blank so manual
   // edits aren't clobbered on re-render.
   useEffect(() => {
     if (!employee || !setStepData) return
+    if (editRequest) return
     if (!termination.personalEmail && SEEDED_PERSONAL_EMAIL) {
       setStepData('termination', { personalEmail: SEEDED_PERSONAL_EMAIL })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employee, setStepData])
+  }, [employee, setStepData, editRequest])
+
+  useEffect(() => {
+    if (!employee || !setStepData || !editRequest || hydratedEditId === editRequest.id) return
+    const reasonCode = normalizeTerminationReason(editRequest.reasonCode)
+    const entry = TERMINATION_LOGIC[reasonCode]
+    setStepData('termination', {
+      resignedDate: editRequest.requestedLastDay,
+      terminationDate: editRequest.terminationDate ?? computeTerminationDate(editRequest.requestedLastDay),
+      reasonCode,
+      voluntary: editRequest.voluntary
+        ? editRequest.voluntary === 'voluntary'
+        : entry.voluntary,
+      reasonForTermination: editRequest.reasonForTermination ?? entry.reasonForTermination.default,
+      transferOutTo: editRequest.transferOutTo ?? entry.transferOutDefault,
+      okToRehire: editRequest.okToRehire ?? entry.okToRehireDefault,
+      personalEmail: editRequest.personalEmail ?? SEEDED_PERSONAL_EMAIL,
+      additionalInfo: editRequest.additionalInfo ?? editRequest.reasonText ?? '',
+      attachmentFiles: editRequest.attachments ?? [],
+    })
+    setHydratedEditId(editRequest.id)
+  }, [editRequest, employee, hydratedEditId, setStepData])
 
   // ── Patch handler ──────────────────────────────────────────────────────────
   const patch = useCallback(
@@ -421,52 +453,50 @@ export default function TerminatePage() {
   const isTransferOutReason = termination.reasonCode === TRANSFER_OUT_REASON_CODE
 
   // ── Submit logic ───────────────────────────────────────────────────────────
-  const commitTermination = useCallback(() => {
+  const submitApprovalRequest = useCallback(() => {
     if (!employee || !isValid) return
 
-    // Extra BA-spec fields (reasonForTermination, voluntary, transferOutTo, personalEmail)
-    // are not on the shared TerminateEvent type — fold them into the timeline note text.
-    const extraNote = [
-      termination.additionalInfo,
-      termination.reasonForTermination
-        ? `เหตุผล: ${termination.reasonForTermination}`
-        : '',
-      termination.voluntary === null
-        ? ''
-        : `ประเภท: ${termination.voluntary ? 'Voluntary' : 'Involuntary'}`,
-      isTransferOutReason && termination.transferOutTo !== NO_SELECTION
-        ? `โอนย้ายไป: ${termination.transferOutTo}`
-        : '',
-      termination.personalEmail ? `อีเมลส่วนตัว: ${termination.personalEmail}` : '',
-    ]
-      .filter(Boolean)
-      .join(' · ')
-
-    const event: TerminateEvent = {
-      id: `evt-term-${Date.now()}`,
+    const payload = buildTerminationRequestPayload({
       employeeId: empId,
-      kind: 'terminate',
-      effectiveDate: termination.resignedDate!,
-      recordedAt: new Date().toISOString(),
-      actorUserId: 'admin-current',
+      employeeName: `${employee.first_name_th} ${employee.last_name_th}`,
+      requestedLastDay: termination.resignedDate ?? '',
       reasonCode: termination.reasonCode,
-      lastDay: termination.resignedDate!,
-      okToRehire: termination.okToRehire === true,
-      notes: extraNote || undefined,
+      reasonForTermination: termination.reasonForTermination,
+      transferOutTo: isTransferOutReason && termination.transferOutTo !== NO_SELECTION
+        ? termination.transferOutTo
+        : undefined,
+      okToRehire: termination.okToRehire ?? undefined,
+      additionalInfo: termination.additionalInfo,
+      personalEmail: termination.personalEmail,
+      attachments: termination.attachmentFiles,
+    }, {
+      id: actorId,
+      name: actorName,
+      role: actorRole,
+      sourceRoute: 'admin',
+    })
+
+    const store = useTerminationApprovals.getState()
+    if (editRequestId) {
+      store.updateRequest(editRequestId, payload)
+      store.resubmit(editRequestId)
+    } else {
+      store.addRequest(payload)
     }
-
-    append(empId, event)
-
-    // Flip status to terminated + redirect with the success banner. No Exit
-    // Interview here — exit feedback is collected solely on the ESS resignation
-    // page (employee self-submit), not the HR admin terminate flow.
-    updateEmployee(empId, { status: 'terminated' })
     reset?.()
     setSubmitted(true)
-    router.push(
-      `/${locale}/admin/employees/${empId}?banner=${encodeURIComponent('บันทึกการสิ้นสุดสภาพพนักงานแล้ว — ส่งข้อมูลไป Payroll')}`,
-    )
-  }, [employee, isValid, termination, isTransferOutReason, empId, append, updateEmployee, reset, router, locale])
+  }, [
+    employee,
+    isValid,
+    termination,
+    isTransferOutReason,
+    empId,
+    actorId,
+    actorName,
+    actorRole,
+    editRequestId,
+    reset,
+  ])
 
   const handleSubmit = useCallback(() => {
     if (!isValid) return
@@ -512,7 +542,7 @@ export default function TerminatePage() {
       <ConfirmTerminateDialog
         open={showConfirmDialog}
         empId={employee.employee_id}
-        onConfirm={() => { setShowConfirmDialog(false); commitTermination() }}
+        onConfirm={() => { setShowConfirmDialog(false); submitApprovalRequest() }}
         onCancel={() => setShowConfirmDialog(false)}
       />
 
@@ -590,42 +620,58 @@ export default function TerminatePage() {
         {/* BRD #22, #111 — 4-step approval chain stepper (informational) */}
         <ApprovalChainStepper />
 
-        {/* Terminate form — field 1 (Resigned Date) is the EffectiveDateGate */}
-        <EffectiveDateGate
-          min={resignedMin}
-          initialEffectiveDate={termination.resignedDate ?? undefined}
-          onEffectiveDateChange={(date) => handleResignedDateChange(date)}
-          label="วันที่ลาออก (Resigned Date)"
-          instructions="ระบุวันที่ลาออก — ต้องเป็นวันในอนาคต ระบบจะคำนวณวันสิ้นสุดสภาพให้อัตโนมัติ"
-        >
-          {() => (
+        {submitted && (
+          <div className="humi-card humi-card--success" style={{ padding: '12px 16px' }}>
+            <div className="font-display text-body font-semibold text-ink">
+              ส่งคำขอเข้าสู่การอนุมัติแล้ว / Request submitted for approval
+            </div>
+            <Link href={`/${locale}/quick-approve`} className="text-small text-accent hover:underline">
+              เปิดคิวอนุมัติ
+            </Link>
+          </div>
+        )}
+
         <div className="humi-card">
           <div className="humi-eyebrow" style={{ marginBottom: 16 }}>
             บันทึกการสิ้นสุดการจ้างงาน
           </div>
 
-          {/* ── 2. Termination date (read-only = Resigned + 1 day) ── */}
-          <div style={{ marginBottom: 20 }}>
-            <label
-              htmlFor="terminationDate"
-              className="text-body font-semibold text-ink"
-              style={{ display: 'block', marginBottom: 6 }}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2" style={{ marginBottom: 20 }}>
+            <FormField
+              id="resignedDate"
+              label="วันที่ทำงานวันสุดท้าย (Resigned Date)"
+              required
+              help="ต้องเป็นวันในอนาคต ระบบจะคำนวณวันสิ้นสุดสภาพให้อัตโนมัติ"
             >
-              วันที่สิ้นสุดสภาพ (Termination date)
-            </label>
-            <input
+              {(ctrl) => (
+                <FormInput
+                  {...ctrl}
+                  type="date"
+                  value={termination.resignedDate ?? ''}
+                  onChange={(e) => handleResignedDateChange(e.target.value)}
+                  min={resignedMin}
+                  className="max-w-[240px]"
+                />
+              )}
+            </FormField>
+
+            <FormField
               id="terminationDate"
-              type="date"
-              value={termination.terminationDate ?? ''}
-              readOnly
-              disabled
-              className="humi-input"
-              style={{ maxWidth: 240, opacity: 0.7 }}
-              aria-readonly="true"
-            />
-            <p className="text-small text-ink-muted mt-1">
-              คำนวณอัตโนมัติ = วันที่ลาออก + 1 วัน
-            </p>
+              label="วันที่สิ้นสุดสภาพ (Termination date)"
+              help="คำนวณอัตโนมัติ = วันที่ลาออก + 1 วัน"
+            >
+              {(ctrl) => (
+                <FormInput
+                  {...ctrl}
+                  type="date"
+                  value={termination.terminationDate ?? ''}
+                  readOnly
+                  disabled
+                  className="max-w-[240px] opacity-70"
+                  aria-readonly="true"
+                />
+              )}
+            </FormField>
           </div>
 
           <hr className="humi-divider" />
@@ -780,32 +826,25 @@ export default function TerminatePage() {
 
           {/* ── 9. Personal Email (required, email format) ── */}
           <div style={{ marginBottom: 20 }}>
-            <label
-              htmlFor="personalEmail"
-              className="text-body font-semibold text-ink"
-              style={{ display: 'block', marginBottom: 6 }}
-            >
-              อีเมลส่วนตัว (Personal Email){' '}
-              <span style={{ color: 'var(--color-danger)' }}>*</span>
-            </label>
-            <input
+            <FormField
               id="personalEmail"
-              type="email"
-              value={termination.personalEmail}
-              onChange={(e) => patch({ personalEmail: e.target.value })}
-              placeholder="name@example.com"
-              className="humi-input"
-              style={{ maxWidth: 320 }}
-              aria-required="true"
-              aria-invalid={
-                !!termination.personalEmail && !personalEmailValid ? true : undefined
-              }
-            />
-            {!!termination.personalEmail && !personalEmailValid && (
-              <p className="text-small mt-1" style={{ color: 'var(--color-danger)' }} role="alert">
-                รูปแบบอีเมลไม่ถูกต้อง
-              </p>
-            )}
+              label="อีเมลส่วนตัว (Personal Email)"
+              required
+              help={PERSONAL_EMAIL_REMARK}
+              error={!!termination.personalEmail && !personalEmailValid ? 'รูปแบบอีเมลไม่ถูกต้อง' : undefined}
+            >
+              {(ctrl) => (
+                <FormInput
+                  {...ctrl}
+                  type="email"
+                  value={termination.personalEmail}
+                  onChange={(e) => patch({ personalEmail: e.target.value })}
+                  placeholder="name@example.com"
+                  invalid={!!termination.personalEmail && !personalEmailValid}
+                  className="max-w-[320px]"
+                />
+              )}
+            </FormField>
           </div>
 
           <hr className="humi-divider" />
@@ -839,8 +878,6 @@ export default function TerminatePage() {
             </button>
           </div>
         </div>
-          )}
-        </EffectiveDateGate>
       </div>
     </>
   )

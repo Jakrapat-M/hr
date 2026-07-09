@@ -164,11 +164,11 @@ describe('ResignationDetailPage — manager step (pending_manager)', () => {
     const request = useTerminationApprovals
       .getState()
       .requests.find((item) => item.id === REQUEST_ID);
-    expect(request?.status).toBe('rejected');
+    expect(request?.status).toBe('sent_back');
     expect(request?.audit.at(-1)).toMatchObject({
       actorRole: 'manager',
       actorName: 'ผู้จัดการ / Manager',
-      action: 'reject',
+      action: 'send_back',
       comment: 'Need the last-day date confirmed',
     });
   });
@@ -221,11 +221,11 @@ describe('ResignationDetailPage — HR Admin step (pending_spd)', () => {
     const request = useTerminationApprovals
       .getState()
       .requests.find((item) => item.id === REQUEST_ID);
-    expect(request?.status).toBe('rejected');
+    expect(request?.status).toBe('sent_back');
     expect(request?.audit.at(-1)).toMatchObject({
       actorRole: 'hr_admin',
       actorName: 'ผู้ดูแลระบบ HR / HR Admin',
-      action: 'reject',
+      action: 'send_back',
       comment: 'Missing final pay documentation',
     });
   });

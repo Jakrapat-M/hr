@@ -56,6 +56,7 @@ import {
 import { OT_TYPES, type OtTypeCode } from '@/lib/time/ot-types';
 import {
   useTerminationApprovals,
+  type TerminationActorRole,
   type TerminationRequest,
 } from '@/stores/termination-approvals';
 import { useShiftAssignment } from '@/stores/shift-assignment';
@@ -367,7 +368,7 @@ export function terminationToPendingRequest(r: TerminationRequest): PendingReque
     id: r.id,
     type: 'change_request',
     requester: {
-      id: r.employeeId,
+      id: r.submittedBy.id,
       employeeId: r.employeeId,
       name: r.employeeName,
       position: 'คำขอลาออก',
@@ -388,6 +389,21 @@ export function terminationToPendingRequest(r: TerminationRequest): PendingReque
 /** True when an id belongs to a resignation (termination-approvals) record. */
 export function isTerminationId(id: string): boolean {
   return useTerminationApprovals.getState().requests.some((r) => r.id === id);
+}
+
+function approvalActorToTerminationRole(role: string | undefined): TerminationActorRole {
+  switch (role) {
+    case 'employee':
+    case 'manager':
+    case 'hrbp':
+    case 'spd':
+    case 'hr_admin':
+    case 'hr_manager':
+    case 'hr':
+      return role;
+    default:
+      return 'manager';
+  }
 }
 
 // STA-168 — shift_assignment → shift-assignment store. A manager's submitted
@@ -546,7 +562,10 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
       if (isTerminationId(id)) {
         useTerminationApprovals
           .getState()
-          .reject(id, { role: (actor.role as never) ?? ('manager' as never), name: actor.name }, reason);
+          .sendBack(id, reason, {
+            role: approvalActorToTerminationRole(actor.role),
+            name: actor.name,
+          });
         return;
       }
       useWorkflowApprovals
@@ -883,13 +902,8 @@ export function selectPendingApprovals(input: {
     });
   }
 
-  // resignation rows derive from the termination-approvals store (BRD #172),
-  // surfaced via the change_request vehicle. Only NON-TERMINAL rows are queue-
-  // eligible (mirrors tax-planning): pending_manager → pending (manager step
-  // actionable); pending_spd → pending + awaitingNext (manager step done, now
-  // awaiting SPD). approved/rejected are terminal and drop out of the queue.
   for (const r of input.terminations ?? []) {
-    if (r.status === 'approved' || r.status === 'rejected') continue;
+    if (r.status !== 'pending_manager' && r.status !== 'pending_spd') continue;
     out.push({
       row: terminationToPendingRequest(r),
       status: 'pending',
@@ -1098,7 +1112,7 @@ export interface QueueRequestRow {
   cancellable: boolean;
   sub: string;
   submitted: string;
-  status: QueueStatus;
+  status: QueueStatus | 'info';
   approvalChain: {
     role: string;
     name: string;
@@ -1184,6 +1198,72 @@ export function queueApprovalToRequestRow(q: QueueApproval, locale: 'th' | 'en' 
   };
 }
 
+function latestSendBackComment(request: TerminationRequest): string | undefined {
+  return request.audit.findLast((entry) => entry.action === 'send_back')?.comment;
+}
+
+function terminationRequestStatus(request: TerminationRequest): QueueRequestRow['status'] {
+  if (request.status === 'approved') return 'approved';
+  if (request.status === 'rejected') return 'rejected';
+  if (request.status === 'sent_back') return 'info';
+  return 'pending';
+}
+
+function terminationRequestSub(request: TerminationRequest): string {
+  if (request.status === 'sent_back') {
+    return `คำขอสิ้นสุดสภาพ · ${request.employeeName} · ถูกส่งกลับ — แก้ไขได้ / Sent back — needs revision`;
+  }
+  return `คำขอสิ้นสุดสภาพ · ${request.employeeName}`;
+}
+
+function terminationRequestToRequestRow(
+  request: TerminationRequest,
+  locale: 'th' | 'en' = 'th',
+): QueueRequestRow {
+  const submitted = new Date(request.submittedAt).toLocaleDateString(
+    locale === 'th' ? 'th-TH' : 'en-US',
+    { day: 'numeric', month: 'short', year: 'numeric' },
+  );
+  const status = terminationRequestStatus(request);
+  const managerStatus = request.status === 'pending_manager' || request.status === 'sent_back'
+    ? 'pending'
+    : 'approved';
+  const spdStatus = request.status === 'approved'
+    ? 'approved'
+    : request.status === 'rejected'
+      ? 'rejected'
+      : 'pending';
+  return {
+    id: request.id,
+    type: locale === 'th' ? 'สิ้นสุดสภาพ' : 'Termination',
+    requestType: 'change_request',
+    requesterId: request.submittedBy.id,
+    cancellable: false,
+    sub: terminationRequestSub(request),
+    submitted,
+    status,
+    approvalChain: [
+      {
+        role: locale === 'th' ? 'หัวหน้างาน' : 'Manager',
+        name: locale === 'th' ? 'หัวหน้างาน' : 'Manager',
+        initials: locale === 'th' ? 'หง' : 'MG',
+        tone: 'teal',
+        status: managerStatus,
+        when: request.status === 'pending_manager' ? locale === 'th' ? 'รอดำเนินการ' : 'Pending' : undefined,
+        note: request.status === 'sent_back' ? latestSendBackComment(request) : undefined,
+      },
+      {
+        role: 'SPD',
+        name: 'SPD',
+        initials: 'SP',
+        tone: 'butter',
+        status: spdStatus,
+        when: request.status === 'pending_spd' ? locale === 'th' ? 'รอดำเนินการ' : 'Pending' : undefined,
+      },
+    ],
+  };
+}
+
 /**
  * Reactive projection for /requests — the SAME canonical rows the manager queue
  * shows, in the employee tracker's row shape. Subscribing here means an approval
@@ -1191,6 +1271,7 @@ export function queueApprovalToRequestRow(q: QueueApproval, locale: 'th' | 'en' 
  */
 export function useQueueRequestRows(locale: 'th' | 'en' = 'th'): QueueRequestRow[] {
   const queue = useSelectPendingApprovals();
+  const terminations = useTerminationApprovals((s) => s.requests);
   // pay_rate is an ADMIN-initiated change (not an employee self-service request),
   // and tax_planning already has its OWN domain projection on /requests
   // (selectTaxPlanningRequestSummaries). Exclude both here so the employee request
@@ -1202,9 +1283,15 @@ export function useQueueRequestRows(locale: 'th' | 'en' = 'th'): QueueRequestRow
         q.row.type !== 'tax_planning' &&
         // shift_assignment is a MANAGER-initiated group, not an employee self-
         // service request — keep it off the employee request tracker.
-        q.row.type !== 'shift_assignment',
+        q.row.type !== 'shift_assignment' &&
+        !isTerminationId(q.row.id),
     )
-    .map((q) => queueApprovalToRequestRow(q, locale));
+    .map((q) => queueApprovalToRequestRow(q, locale))
+    .concat(
+      terminations
+        .filter((request) => request.status !== 'withdrawn')
+        .map((request) => terminationRequestToRequestRow(request, locale)),
+    );
 }
 
 /**

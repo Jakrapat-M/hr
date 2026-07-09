@@ -18,11 +18,13 @@ import {
   APPROVAL_REGISTRY,
   probationToPendingRequest,
   benefitClaimToPendingRequest,
+  selectPendingApprovals,
   type ApprovalAdapter,
 } from '../approval-registry';
 import type { PendingRequest, RequestType, Urgency } from '../quick-approve-api';
 import type { ProbationCase } from '@/hooks/use-probation';
 import type { BenefitClaimRequest } from '@/stores/benefit-claims';
+import { useTerminationApprovals } from '@/stores/termination-approvals';
 
 const ALL_REQUEST_TYPES: RequestType[] = [
   'leave',
@@ -116,6 +118,70 @@ describe('APPROVAL_REGISTRY — non-throwing approve/reject (AC-1a.3)', () => {
         APPROVAL_REGISTRY[type].reject('MISSING', { name: 'A', role: 'spd' }, 'r'),
       ).not.toThrow();
     }
+  });
+});
+
+describe('APPROVAL_REGISTRY — termination lifecycle projection', () => {
+  beforeEach(() => {
+    useTerminationApprovals.getState().clear();
+  });
+
+  afterEach(() => {
+    useTerminationApprovals.getState().clear();
+  });
+
+  function addTerminationRequest(): string {
+    return useTerminationApprovals.getState().addRequest({
+      employeeId: 'EMP-TERM-1',
+      employeeName: 'Termination Tester',
+      requestedLastDay: '2026-08-31',
+      reasonCode: 'TERM_OTHER',
+      reasonText: 'Lifecycle test',
+      submittedBy: { id: 'SUBMITTER-TERM-1', name: 'Submitter', role: 'employee' },
+      sourceRoute: 'ess',
+    });
+  }
+
+  it('maps the change_request reject adapter to termination sendBack for TR rows', () => {
+    const id = addTerminationRequest();
+
+    APPROVAL_REGISTRY.change_request.reject(
+      id,
+      { name: 'Manager', role: 'manager' },
+      'Please revise the request',
+    );
+
+    const request = useTerminationApprovals.getState().requests.find((item) => item.id === id);
+    expect(request?.status).toBe('sent_back');
+    expect(request?.audit.at(-1)).toMatchObject({
+      action: 'send_back',
+      actorRole: 'manager',
+      actorName: 'Manager',
+      comment: 'Please revise the request',
+    });
+  });
+
+  it('excludes sent-back and withdrawn termination rows from the approver queue', () => {
+    const pendingId = addTerminationRequest();
+    const sentBackId = addTerminationRequest();
+    const withdrawnId = addTerminationRequest();
+    useTerminationApprovals
+      .getState()
+      .sendBack(sentBackId, 'Need revisions', { role: 'manager', name: 'Manager' });
+    useTerminationApprovals.getState().withdraw(withdrawnId);
+
+    const rows = selectPendingApprovals({
+      leave: [],
+      workflow: [],
+      claims: [],
+      transfers: [],
+      terminations: useTerminationApprovals.getState().requests,
+    });
+    const ids = rows.map((item) => item.row.id);
+
+    expect(ids).toContain(pendingId);
+    expect(ids).not.toContain(sentBackId);
+    expect(ids).not.toContain(withdrawnId);
   });
 });
 
