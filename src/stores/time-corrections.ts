@@ -350,7 +350,7 @@ export const useTimeCorrections = create<TimeCorrectionsState>()(
       clear: () => set({ requests: [] }),
     }),
     {
-      name: 'humi-time-corrections',
+      name: 'cnext-time-corrections',
       storage: createJSONStorage(() => localStorage),
     },
   ),

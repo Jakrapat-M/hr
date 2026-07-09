@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocale } from 'next-intl';
-import { Card, CardEyebrow, CardTitle } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle } from '@/components/cnext';
 import type { BenefitTemplateProps } from './SimpleClaimForm';
 
 // ── RecordsComputedView ───────────────────────────────────────────────────────

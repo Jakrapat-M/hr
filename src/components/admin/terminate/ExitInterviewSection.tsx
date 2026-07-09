@@ -11,7 +11,7 @@
 //   5    New Job — single select + conditional new-job-type sub-select.
 //   +    Overall comment textarea.
 //
-// Humi FormField + native <select>/<textarea>. NO-RED (danger = pumpkin).
+// Cnext FormField + native <select>/<textarea>. NO-RED (danger = pumpkin).
 
 import { useTranslations } from 'next-intl'
 import {
@@ -70,12 +70,12 @@ export function ExitInterviewSection({ value, onChange }: ExitInterviewSectionPr
 
   return (
     <section
-      className="humi-card"
+      className="cnext-card"
       style={{ marginTop: 20 }}
       aria-labelledby="exit-interview-heading"
       data-testid="exit-interview-section"
     >
-      <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+      <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
         {t('eyebrow')}
       </div>
       <h2
@@ -118,7 +118,7 @@ export function ExitInterviewSection({ value, onChange }: ExitInterviewSectionPr
                     id={`exit-${key}-${slot}`}
                     value={value[key][slot]}
                     onChange={(e) => patchRanked(key, { [slot]: e.target.value })}
-                    className="humi-input"
+                    className="cnext-input"
                     style={{ width: '100%' }}
                   >
                     <option value="">{t('selectPlaceholder')}</option>
@@ -146,14 +146,14 @@ export function ExitInterviewSection({ value, onChange }: ExitInterviewSectionPr
               onChange={(e) => patchRanked(key, { comment: e.target.value })}
               rows={2}
               placeholder={t('partCommentPlaceholder')}
-              className="humi-input"
+              className="cnext-input"
               style={{ width: '100%', resize: 'vertical' }}
             />
           </div>
         </div>
       ))}
 
-      <hr className="humi-divider" />
+      <hr className="cnext-divider" />
 
       {/* ── Part 4 — Personal Reason (single select) ── */}
       <div style={{ marginBottom: 24, marginTop: 20 }}>
@@ -168,7 +168,7 @@ export function ExitInterviewSection({ value, onChange }: ExitInterviewSectionPr
           id="exit-personalReason"
           value={value.personalReason.value}
           onChange={(e) => onChange({ personalReason: { value: e.target.value } })}
-          className="humi-input"
+          className="cnext-input"
           style={{ maxWidth: 360, width: '100%' }}
         >
           <option value="">{t('selectPlaceholder')}</option>
@@ -202,7 +202,7 @@ export function ExitInterviewSection({ value, onChange }: ExitInterviewSectionPr
               },
             })
           }}
-          className="humi-input"
+          className="cnext-input"
           style={{ maxWidth: 360, width: '100%' }}
         >
           <option value="">{t('selectPlaceholder')}</option>
@@ -230,7 +230,7 @@ export function ExitInterviewSection({ value, onChange }: ExitInterviewSectionPr
                   newJob: { value: value.newJob.value, newJobType: e.target.value },
                 })
               }
-              className="humi-input"
+              className="cnext-input"
               style={{ maxWidth: 360, width: '100%' }}
             >
               <option value="">{t('selectPlaceholder')}</option>
@@ -244,7 +244,7 @@ export function ExitInterviewSection({ value, onChange }: ExitInterviewSectionPr
         )}
       </div>
 
-      <hr className="humi-divider" />
+      <hr className="cnext-divider" />
 
       {/* ── Overall comment ── */}
       <div style={{ marginTop: 20 }}>
@@ -261,7 +261,7 @@ export function ExitInterviewSection({ value, onChange }: ExitInterviewSectionPr
           onChange={(e) => onChange({ overallComment: e.target.value })}
           rows={3}
           placeholder={t('overallCommentPlaceholder')}
-          className="humi-input"
+          className="cnext-input"
           style={{ width: '100%', resize: 'vertical' }}
         />
       </div>

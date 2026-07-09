@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { BookOpen, Plus, CheckCircle, Clock, Circle } from 'lucide-react';
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { Tabs } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useIdp, type ActionStatus } from '@/hooks/use-idp';

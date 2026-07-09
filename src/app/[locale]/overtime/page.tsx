@@ -16,14 +16,14 @@
 //   • outside the current payroll period (isWithinCurrentPeriod).
 //   • OT+Leave overlap (scan the leave-approvals store).
 //   • monthly OT cap exceeded (monthlyOtTotal + requested > MONTHLY_OT_CAP_HOURS).
-// All errors render in pumpkin (--color-danger). Humi tokens only. No backend.
+// All errors render in pumpkin (--color-danger). Cnext tokens only. No backend.
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { Clock, ChevronRight } from 'lucide-react';
-import { Card, CardEyebrow, Button } from '@/components/humi';
-import { FileUploadField } from '@/components/humi/FileUploadField';
+import { Card, CardEyebrow, Button } from '@/components/cnext';
+import { FileUploadField } from '@/components/cnext/FileUploadField';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -92,10 +92,10 @@ function OTRow({ req, locale }: { req: OTRequest; locale: string }) {
     });
 
   return (
-    <li className="humi-card" style={{ padding: 16 }}>
+    <li className="cnext-card" style={{ padding: 16 }}>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <div className="humi-eyebrow mb-0.5">{req.id}</div>
+          <div className="cnext-eyebrow mb-0.5">{req.id}</div>
           <p className="text-body font-semibold text-ink">
             {otLabel} · {req.hours}h
           </p>
@@ -305,7 +305,7 @@ export default function OvertimePage() {
       </nav>
 
       {/* Header */}
-      <header className="humi-page-head">
+      <header className="cnext-page-head">
         <div className="flex flex-col gap-1">
           <CardEyebrow>{isTh ? 'การทำงาน · OT' : 'Work · Overtime'}</CardEyebrow>
           <h1 className="font-display text-[length:var(--text-display-h1)] font-semibold leading-[var(--text-display-h1--line-height)] tracking-tight text-ink">
@@ -551,7 +551,7 @@ export default function OvertimePage() {
 
       {/* Request list (Status tab) */}
       {activeTab === 'status' && (myRequests.length === 0 ? (
-        <div className="humi-card humi-card--cream" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card cnext-card--cream" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">
             {isTh ? 'ยังไม่มีคำขอ OT' : 'No OT requests yet'}
           </p>

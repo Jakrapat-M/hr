@@ -61,8 +61,8 @@ vi.mock('@/stores/auth-store', () => ({
 
 // ── Capability component — resolves against real capabilities module ───────────
 // We use a simple pass-through that reads 'action' and denies talentSearch/bulkApprove
-vi.mock('@/components/humi', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/components/humi')>();
+vi.mock('@/components/cnext', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/components/cnext')>();
   return {
     ...actual,
     Capability: ({ action, children, fallback = null }: { action?: string; children: React.ReactNode; fallback?: React.ReactNode }) => {
@@ -107,7 +107,7 @@ describe('Manager Dashboard — Approval queue', () => {
     const { default: Page } = await import('@/app/[locale]/manager-dashboard/page');
     const { container } = render(<Page />);
 
-    // HUMI_PENDING_REQUESTS has 4 items; all 4 should show
+    // CNEXT_PENDING_REQUESTS has 4 items; all 4 should show
     const listItems = container.querySelectorAll('ul[role="list"] li');
     // at least 4 items (one list is queue, another is activity)
     expect(listItems.length).toBeGreaterThanOrEqual(4);
@@ -158,7 +158,7 @@ describe('Manager Dashboard — Recent activity', () => {
     const { default: Page } = await import('@/app/[locale]/manager-dashboard/page');
     render(<Page />);
 
-    // First item from HUMI_RECENT_ACTIVITY
+    // First item from CNEXT_RECENT_ACTIVITY
     expect(screen.getByText(/วาสนา จิรวัฒน์/)).toBeTruthy();
   });
 });

@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/humi';
-import { FileUploadField } from '@/components/humi/FileUploadField';
+import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/cnext';
+import { FileUploadField } from '@/components/cnext/FileUploadField';
 import {
   BENEFIT_CODE_BY_TYPE,
   BENEFIT_TYPE_LABEL,
@@ -197,7 +197,7 @@ export function ReimbursementRequestPanel({
         <FileUploadField
           label="เอกสารแนบเบิกย้อนหลัง"
           required
-          helperText="แนบใบเสร็จหรือเอกสารประกอบตาม Humi file upload pattern — PDF, JPG, PNG สูงสุด 5 MB"
+          helperText="แนบใบเสร็จหรือเอกสารประกอบตาม Cnext file upload pattern — PDF, JPG, PNG สูงสุด 5 MB"
           className="sm:col-span-2"
           onUpload={(_, file) => setField('attachmentName', file?.filename ?? '')}
           onRemove={() => setField('attachmentName', '')}

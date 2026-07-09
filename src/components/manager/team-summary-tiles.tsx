@@ -6,7 +6,7 @@
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { Users, Clock, AlertTriangle, Banknote } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import type { Employee } from '@/hooks/use-direct-reports';
 import {
   getReportPendingClaimsCount,

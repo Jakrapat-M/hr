@@ -9,7 +9,7 @@
 // Danger = pumpkin (Button variant="danger"); no red, no hex.
 // ════════════════════════════════════════════════════════════
 
-import { Modal, FormField, Button } from '@/components/humi';
+import { Modal, FormField, Button } from '@/components/cnext';
 import type { BulkAction } from './useBulkApproveDispatch';
 
 export interface BulkActionModalLabels {

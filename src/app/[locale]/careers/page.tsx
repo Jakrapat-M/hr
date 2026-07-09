@@ -6,7 +6,7 @@ export default function CareersPage() {
   const t = useTranslations();
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="humi-card max-w-md w-full text-center p-8">
+      <div className="cnext-card max-w-md w-full text-center p-8">
         <h1 className="font-display text-2xl font-semibold text-ink mb-3">
           {t('pages.careers.title')}
         </h1>

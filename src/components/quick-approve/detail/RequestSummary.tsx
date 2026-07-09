@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { Calendar, Clock, User } from 'lucide-react';
-import { Avatar, Capability } from '@/components/humi';
+import { Avatar, Capability } from '@/components/cnext';
 import { formatDate } from '@/lib/date';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 

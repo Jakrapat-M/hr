@@ -6,7 +6,7 @@
  *   SPD /spd/inbox ApprovalInbox shows the row with employee's real name + diff →
  *   SPD approves → Employee /ess/workflows shows "อนุมัติแล้ว".
  *
- * Auth strategy: authedContext() from storage-auth.helper — injects humi-auth
+ * Auth strategy: authedContext() from storage-auth.helper — injects cnext-auth
  * via addInitScript (before any React code) as a safety belt against Zustand
  * rehydration races that cause AppShell to redirect to /login.
  *
@@ -60,7 +60,7 @@ test.describe.serial('Chain 3 — ESS Profile Edit → SPD (BRD #166)', () => {
       await page.goto('/th/home', { waitUntil: 'domcontentloaded', timeout: 15_000 });
       await page.evaluate(() => {
         Object.keys(localStorage)
-          .filter((k) => k.startsWith('humi-') && k !== 'humi-auth')
+          .filter((k) => k.startsWith('cnext-') && k !== 'cnext-auth')
           .forEach((k) => localStorage.removeItem(k));
       });
 

@@ -9,7 +9,7 @@
 // (the canonical TH/EN-at-call-site convention used across the app).
 
 import { ExternalLink } from 'lucide-react';
-import { EmptyState } from '@/components/humi';
+import { EmptyState } from '@/components/cnext';
 
 export default function PerformanceFormPage() {
   return (

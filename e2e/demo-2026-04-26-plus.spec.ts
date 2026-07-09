@@ -6,7 +6,7 @@
  * employee sees update) for a total of 27 frames.
  *
  * Persona model (option C from session 2026-04-26):
- *   admin@humi.test = view-as super-user. Real demo personas =
+ *   admin@cnext.test = view-as super-user. Real demo personas =
  *   { employee, manager, hrbp, spd } per src/lib/rbac.ts Role type.
  *
  * Output: <repo>/test-artifacts/demo-2026-04-26-plus/<role>/<app>.png
@@ -33,25 +33,25 @@ const PERSONAS: Record<ProductionRole, {
   roles: string[];
 }> = {
   employee: {
-    email: 'employee@humi.test',
+    email: 'employee@cnext.test',
     name: 'สมชาย ใจดี',
     userId: 'EMP001',
     roles: ['employee'],
   },
   manager: {
-    email: 'manager@humi.test',
+    email: 'manager@cnext.test',
     name: 'พิชญ์ ม. (หัวหน้าทีม)',
     userId: 'MGR001',
     roles: ['manager', 'employee'],
   },
   hrbp: {
-    email: 'hrbp@humi.test',
+    email: 'hrbp@cnext.test',
     name: 'วิทยา ส. (HRBP)',
     userId: 'HRB001',
     roles: ['hrbp', 'employee'],
   },
   spd: {
-    email: 'spd@humi.test',
+    email: 'spd@cnext.test',
     name: 'ดารณี ล. (SPD)',
     userId: 'SPD001',
     roles: ['spd', 'employee'],
@@ -87,7 +87,7 @@ async function injectPersona(page: import('@playwright/test').Page, role: Produc
       },
       version: 0,
     };
-    window.localStorage.setItem('humi-auth', JSON.stringify(authState));
+    window.localStorage.setItem('cnext-auth', JSON.stringify(authState));
   }, persona);
 }
 

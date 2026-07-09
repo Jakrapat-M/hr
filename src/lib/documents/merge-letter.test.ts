@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { mergeLetter, letterToHtml, mockHireDate, type MergeOptions } from './merge-letter';
 import { getGeneratableLetter, GENERATABLE_LETTERS } from '@/data/documents/templates';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
 
 // Employee fixture WITH a hireDate (SF-real shape) — exercises full substitution.
-const empFull: HumiEmployee = {
+const empFull: CnextEmployee = {
   id: 'emp-test-1',
   employeeCode: 'CG-9001',
   firstNameTh: 'สมชาย',
@@ -21,7 +21,7 @@ const empFull: HumiEmployee = {
 };
 
 // Synthetic-core fixture WITHOUT hireDate — exercises missingFields.
-const empNoHire: HumiEmployee = {
+const empNoHire: CnextEmployee = {
   id: 'emp-test-2',
   employeeCode: 'CG-9002',
   firstNameTh: 'วิไล',
@@ -137,7 +137,7 @@ describe('mockHireDate — deterministic, always a valid date (regression: signe
   // month/day and an invalid ISO ("2022--1-..") that rendered as "-".
   const ids = ['emp-003', 'emp-001', 'emp-007', 'emp-sf-42', 'CG-0425', 'x', 'zzzzzzzz', 'emp-999999'];
   it.each(ids)('produces a parseable YYYY-MM-DD with valid month/day for "%s"', (id) => {
-    const d = mockHireDate({ id } as HumiEmployee);
+    const d = mockHireDate({ id } as CnextEmployee);
     expect(d).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     const [y, m, day] = d.split('-').map(Number);
     expect(m).toBeGreaterThanOrEqual(1);
@@ -149,6 +149,6 @@ describe('mockHireDate — deterministic, always a valid date (regression: signe
     expect(Number.isNaN(new Date(d).getTime())).toBe(false);
   });
   it('is deterministic (same id → same date)', () => {
-    expect(mockHireDate({ id: 'emp-003' } as HumiEmployee)).toBe(mockHireDate({ id: 'emp-003' } as HumiEmployee));
+    expect(mockHireDate({ id: 'emp-003' } as CnextEmployee)).toBe(mockHireDate({ id: 'emp-003' } as CnextEmployee));
   });
 });

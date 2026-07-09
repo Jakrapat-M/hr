@@ -1,6 +1,6 @@
 /**
  * STA-248 — TeamAttendanceSummary, extracted from the home dashboard onto the
- * /time hub. Locks the legend copy + counts sourced from HUMI_TODAY_PRESENCE.
+ * /time hub. Locks the legend copy + counts sourced from CNEXT_TODAY_PRESENCE.
  */
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';

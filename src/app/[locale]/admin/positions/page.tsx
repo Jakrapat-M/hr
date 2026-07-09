@@ -148,10 +148,10 @@ const { Page } = createCrudPage<Position>({
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {/* รหัสตำแหน่ง */}
-        <label className="humi-label">
+        <label className="cnext-label">
           รหัสตำแหน่ง *
           <input
-            className="humi-input"
+            className="cnext-input"
             type="text"
             placeholder="เช่น POS-0001"
             value={pos.code ?? ''}
@@ -160,10 +160,10 @@ const { Page } = createCrudPage<Position>({
         </label>
 
         {/* ชื่อตำแหน่ง TH */}
-        <label className="humi-label">
+        <label className="cnext-label">
           ชื่อตำแหน่ง (TH) *
           <input
-            className="humi-input"
+            className="cnext-input"
             type="text"
             placeholder="เช่น ผู้จัดการทรัพยากรมนุษย์"
             value={pos.titleTh ?? ''}
@@ -172,10 +172,10 @@ const { Page } = createCrudPage<Position>({
         </label>
 
         {/* ชื่อตำแหน่ง EN */}
-        <label className="humi-label">
+        <label className="cnext-label">
           ชื่อตำแหน่ง (EN) *
           <input
-            className="humi-input"
+            className="cnext-input"
             type="text"
             placeholder="e.g. Human Resources Manager"
             value={pos.titleEn ?? ''}
@@ -184,10 +184,10 @@ const { Page } = createCrudPage<Position>({
         </label>
 
         {/* บริษัท */}
-        <label className="humi-label">
+        <label className="cnext-label">
           บริษัท
           <select
-            className="humi-input"
+            className="cnext-input"
             value={pos.company ?? 'CEN'}
             onChange={(e) => onChange({ company: e.target.value })}
           >
@@ -200,11 +200,11 @@ const { Page } = createCrudPage<Position>({
         </label>
 
         {/* Job (FK) */}
-        <label className="humi-label">
+        <label className="cnext-label">
           งาน
           {hasJobs ? (
             <select
-              className="humi-input"
+              className="cnext-input"
               value={pos.jobId ?? ''}
               onChange={(e) => onChange({ jobId: e.target.value })}
             >
@@ -232,11 +232,11 @@ const { Page } = createCrudPage<Position>({
         </label>
 
         {/* หน่วยงาน (FK) */}
-        <label className="humi-label">
+        <label className="cnext-label">
           หน่วยงาน
           {hasOrgUnits ? (
             <select
-              className="humi-input"
+              className="cnext-input"
               value={pos.orgUnitId ?? ''}
               onChange={(e) => onChange({ orgUnitId: e.target.value })}
             >
@@ -264,10 +264,10 @@ const { Page } = createCrudPage<Position>({
         </label>
 
         {/* Default Headcount */}
-        <label className="humi-label">
+        <label className="cnext-label">
           จำนวนพนักงานตามแผน
           <input
-            className="humi-input"
+            className="cnext-input"
             type="number"
             min={0}
             value={pos.defaultHeadcount ?? 1}
@@ -276,10 +276,10 @@ const { Page } = createCrudPage<Position>({
         </label>
 
         {/* Current Headcount — readonly */}
-        <label className="humi-label">
+        <label className="cnext-label">
           จำนวนพนักงานปัจจุบัน
           <input
-            className="humi-input"
+            className="cnext-input"
             type="number"
             readOnly
             aria-readonly="true"
@@ -294,22 +294,22 @@ const { Page } = createCrudPage<Position>({
 
         {/* ─── BRD #5: Position effective dates (MED) ──────────────────────────
              SF cite: qas-fields-2026-04-26/sf-qas-Position-2026-04-26.json#.d.results[0] */}
-        <label className="humi-label">
+        <label className="cnext-label">
           วันที่มีผล (startDate)
           <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--color-ink-muted)', marginLeft: 4 }}>SF: startDate</span>
           <input
-            className="humi-input"
+            className="cnext-input"
             type="date"
             value={pos.startDate ?? ''}
             onChange={(e) => onChange({ startDate: e.target.value || null })}
           />
         </label>
 
-        <label className="humi-label">
+        <label className="cnext-label">
           วันที่สิ้นสุด (endDate)
           <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--color-ink-muted)', marginLeft: 4 }}>SF: endDate — ว่าง = ไม่มีกำหนด</span>
           <input
-            className="humi-input"
+            className="cnext-input"
             type="date"
             value={pos.endDate ?? ''}
             onChange={(e) => onChange({ endDate: e.target.value || null })}
@@ -318,7 +318,7 @@ const { Page } = createCrudPage<Position>({
 
         {/* สถานะ */}
         <label
-          className="humi-label"
+          className="cnext-label"
           style={{ flexDirection: 'row', alignItems: 'center', gap: 8, cursor: 'pointer' }}
         >
           <input

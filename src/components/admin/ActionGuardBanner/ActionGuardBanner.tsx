@@ -20,7 +20,7 @@ export function ActionGuardBanner({ reason, backHref, actionLabel }: Props) {
       <div>
         <Link
           href={backHref}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -29,7 +29,7 @@ export function ActionGuardBanner({ reason, backHref, actionLabel }: Props) {
       </div>
 
       <div
-        className="humi-card humi-card--cream"
+        className="cnext-card cnext-card--cream"
         role="alert"
         aria-live="polite"
         style={{ padding: 32, textAlign: 'center' }}
@@ -52,7 +52,7 @@ export function ActionGuardBanner({ reason, backHref, actionLabel }: Props) {
         </p>
         <Link
           href={backHref}
-          className="humi-button humi-button--ghost"
+          className="cnext-button cnext-button--ghost"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />

@@ -10,7 +10,7 @@
  * Surface: /[locale]/admin/employees/EMP-0001 → "Benefit enrollment" section →
  * "Enroll now" on the first (Mobile allowance) row → 8-field modal.
  *
- * Auth: seed humi-auth (hr_admin) via addInitScript AND stub /api/auth/session so
+ * Auth: seed cnext-auth (hr_admin) via addInitScript AND stub /api/auth/session so
  * AuthSync does not clobber the seeded persona (project per-persona recipe).
  */
 import { test, expect, type Page, type BrowserContext, type Browser } from '@playwright/test';
@@ -26,7 +26,7 @@ async function hrAdminContext(browser: Browser): Promise<BrowserContext> {
   await ctx.route('**/api/auth/session', (r) =>
     r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
   );
-  await ctx.addInitScript((a) => localStorage.setItem('humi-auth', JSON.stringify(a)), HR_ADMIN);
+  await ctx.addInitScript((a) => localStorage.setItem('cnext-auth', JSON.stringify(a)), HR_ADMIN);
   return ctx;
 }
 

@@ -23,7 +23,7 @@ export type PayKind =
   | 'meal'
   | 'holiday_premium';
 
-/** Coloured-dot category (mirrors the mock's .d-* dot classes → Humi tokens). */
+/** Coloured-dot category (mirrors the mock's .d-* dot classes → Cnext tokens). */
 export type DotKind = 'work' | 'ot' | 'late' | 'leave' | 'allow' | 'dayoff' | 'holiday';
 
 export type RowTone = 'normal' | 'dayoff' | 'holiday' | 'leave' | 'today';

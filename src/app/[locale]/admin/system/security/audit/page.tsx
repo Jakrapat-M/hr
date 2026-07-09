@@ -3,8 +3,8 @@
 import { useState, useMemo } from 'react';
 import { useLocale } from 'next-intl';
 import { ShieldCheck, Filter, X } from 'lucide-react';
-import { Card, CardEyebrow, DataTable, Capability } from '@/components/humi';
-import type { DataTableColumn } from '@/components/humi';
+import { Card, CardEyebrow, DataTable, Capability } from '@/components/cnext';
+import type { DataTableColumn } from '@/components/cnext';
 import { MOCK_AUDIT_LOG, type AuditEntry, type AuditCategory } from '@/data/audit/mock';
 import { cn } from '@/lib/utils';
 

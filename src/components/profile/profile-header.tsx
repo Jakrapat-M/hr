@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { MapPin, Mail, Phone, Building, Edit, Network } from 'lucide-react';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { isHR } from '@/lib/rbac';

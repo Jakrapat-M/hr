@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Card, CardEyebrow, CardTitle, Modal } from '@/components/humi';
+import { Button, Card, CardEyebrow, CardTitle, Modal } from '@/components/cnext';
 import { buildMockEPatientLetterPayload } from '@/lib/benefit-referral-adapters';
 import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import type { BenefitReferralRequest } from '@/stores/benefit-referrals';

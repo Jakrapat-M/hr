@@ -1,14 +1,14 @@
 'use client';
 
 // admin/system/benefit-catalog/page.tsx — HRIS Benefit Catalog configuration
-// surface (Humi Journey EC/BE work-item #1, artboard 04.7). Single source of
+// surface (Cnext Journey EC/BE work-item #1, artboard 04.7). Single source of
 // truth for benefit types + default annual quota; HR Admin overrides per grade.
 // UI-MOCKUP phase: static seed rows, no persistence.
 
 import { useLocale, useTranslations } from 'next-intl';
 import { Info } from 'lucide-react';
-import { Card, CardEyebrow, DataTable, Capability } from '@/components/humi';
-import type { DataTableColumn } from '@/components/humi';
+import { Card, CardEyebrow, DataTable, Capability } from '@/components/cnext';
+import type { DataTableColumn } from '@/components/cnext';
 
 type BenefitRow = { id: string; labelTh: string; labelEn: string; quota: string };
 

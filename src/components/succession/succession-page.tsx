@@ -1,10 +1,10 @@
 'use client';
 
 // ════════════════════════════════════════════════════════════
-// Succession Planning — reskinned from shadcn primitives → Humi tokens.
+// Succession Planning — reskinned from shadcn primitives → Cnext tokens.
 // Ken UAT 2026-04-22: "ดูเป็นคนละระบบ" — shadcn Card/Badge/Skeleton felt
-// visually foreign to Humi cream+teal language. Reskin uses humi-card,
-// humi-tag (sage/butter/coral/accent variants), humi-eyebrow, humi-divider
+// visually foreign to Cnext cream+teal language. Reskin uses cnext-card,
+// cnext-tag (sage/butter/coral/accent variants), cnext-eyebrow, cnext-divider
 // so the page reads as one system with /home, /profile, /timeoff etc.
 // Data + hook contract (useSuccession, RiskLevel, Readiness) unchanged.
 // ════════════════════════════════════════════════════════════
@@ -14,17 +14,17 @@ import { Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSuccession, type Readiness, type RiskLevel } from '@/hooks/use-succession';
 
-// Map SF risk/readiness ontology → Humi tag variants. NO RED tokens used
+// Map SF risk/readiness ontology → Cnext tag variants. NO RED tokens used
 // (coral + butter already map through warning-amber / butter-soft per rule).
 const RISK_TAG: Record<RiskLevel, string> = {
-  high: 'humi-tag--coral',
-  medium: 'humi-tag--butter',
-  low: 'humi-tag--sage',
+  high: 'cnext-tag--coral',
+  medium: 'cnext-tag--butter',
+  low: 'cnext-tag--sage',
 };
 const READINESS_TAG: Record<Readiness, string> = {
-  ready_now: 'humi-tag--sage',
-  '1_2_years': 'humi-tag--accent',
-  '3_plus_years': 'humi-tag',
+  ready_now: 'cnext-tag--sage',
+  '1_2_years': 'cnext-tag--accent',
+  '3_plus_years': 'cnext-tag',
 };
 
 export function SuccessionPage() {
@@ -33,11 +33,11 @@ export function SuccessionPage() {
 
   if (loading) {
     return (
-      <div className="humi-col" style={{ gap: 16 }}>
+      <div className="cnext-col" style={{ gap: 16 }}>
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="humi-card"
+            className="cnext-card"
             style={{ height: 160, background: 'var(--color-canvas-soft)' }}
             aria-hidden="true"
           />
@@ -48,9 +48,9 @@ export function SuccessionPage() {
 
   return (
     <>
-      {/* Page header — eyebrow + display h1 matches other Humi pages (/home, /profile) */}
+      {/* Page header — eyebrow + display h1 matches other Cnext pages (/home, /profile) */}
       <div className="mb-8">
-        <div className="humi-eyebrow">{t('title')}</div>
+        <div className="cnext-eyebrow">{t('title')}</div>
         <h1
           className="mt-1 text-ink"
           style={{
@@ -65,7 +65,7 @@ export function SuccessionPage() {
         </h1>
       </div>
 
-      {/* Stats row — 4 tiles with humi-card, token-only colors (no text-brand red) */}
+      {/* Stats row — 4 tiles with cnext-card, token-only colors (no text-brand red) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatTile value={stats.totalPositions} label={t('criticalPositions')} tone="ink" />
         <StatTile value={stats.highRisk} label={t('highRisk')} tone="coral" />
@@ -74,16 +74,16 @@ export function SuccessionPage() {
       </div>
 
       {/* Plans list */}
-      <div className="humi-col" style={{ gap: 20 }}>
+      <div className="cnext-col" style={{ gap: 20 }}>
         {plans.map((plan) => (
-          <div key={plan.id} className="humi-card">
+          <div key={plan.id} className="cnext-card">
             <div className="flex flex-col lg:flex-row lg:items-start gap-6">
               {/* Left — position + incumbent */}
               <div className="lg:w-1/3">
-                <div className="humi-eyebrow">{t('criticalPositions')}</div>
+                <div className="cnext-eyebrow">{t('criticalPositions')}</div>
                 <div className="mt-1 flex items-start gap-3">
                   <span
-                    className="humi-avatar humi-avatar--ink"
+                    className="cnext-avatar cnext-avatar--ink"
                     style={{ width: 36, height: 36, borderRadius: 12, flexShrink: 0 }}
                     aria-hidden="true"
                   >
@@ -107,10 +107,10 @@ export function SuccessionPage() {
                   </div>
                 </div>
 
-                <hr className="humi-divider" />
+                <hr className="cnext-divider" />
 
                 {/* Incumbent row */}
-                <div className="humi-row">
+                <div className="cnext-row">
                   {plan.incumbentPhoto && (
                     <img
                       src={plan.incumbentPhoto}
@@ -130,8 +130,8 @@ export function SuccessionPage() {
                 </div>
 
                 {/* Risk chip + reason */}
-                <div className="humi-row" style={{ marginTop: 12, flexWrap: 'wrap' }}>
-                  <span className={cn('humi-tag', RISK_TAG[plan.riskLevel])}>
+                <div className="cnext-row" style={{ marginTop: 12, flexWrap: 'wrap' }}>
+                  <span className={cn('cnext-tag', RISK_TAG[plan.riskLevel])}>
                     {t(`flightRisk.${plan.riskLevel}` as never)}
                   </span>
                   <span style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
@@ -142,7 +142,7 @@ export function SuccessionPage() {
 
               {/* Right — successors */}
               <div className="flex-1 min-w-0">
-                <div className="humi-eyebrow">
+                <div className="cnext-eyebrow">
                   {t('identifiedSuccessors')} · {plan.successors.length}
                 </div>
                 {plan.successors.length === 0 ? (
@@ -156,14 +156,14 @@ export function SuccessionPage() {
                     {t('noSuccessorsIdentified')}
                   </p>
                 ) : (
-                  <div className="humi-col" style={{ gap: 10, marginTop: 10 }}>
+                  <div className="cnext-col" style={{ gap: 10, marginTop: 10 }}>
                     {plan.successors.map((s) => (
                       <div
                         key={s.id}
-                        className="humi-card humi-card--cream humi-card--tight"
+                        className="cnext-card cnext-card--cream cnext-card--tight"
                         style={{ padding: 14 }}
                       >
-                        <div className="humi-row" style={{ gap: 12 }}>
+                        <div className="cnext-row" style={{ gap: 12 }}>
                           {s.photo && (
                             <img
                               src={s.photo}
@@ -191,7 +191,7 @@ export function SuccessionPage() {
                             </div>
                           </div>
                           <span
-                            className={cn('humi-tag', READINESS_TAG[s.readiness])}
+                            className={cn('cnext-tag', READINESS_TAG[s.readiness])}
                             style={{ flexShrink: 0 }}
                           >
                             {s.readiness === 'ready_now'
@@ -203,11 +203,11 @@ export function SuccessionPage() {
                         </div>
                         {s.gaps.length > 0 && (
                           <div
-                            className="humi-row"
+                            className="cnext-row"
                             style={{ gap: 6, marginTop: 10, flexWrap: 'wrap' }}
                           >
                             {s.gaps.map((g) => (
-                              <span key={g} className="humi-tag humi-tag--butter">
+                              <span key={g} className="cnext-tag cnext-tag--butter">
                                 {g}
                               </span>
                             ))}
@@ -246,7 +246,7 @@ function StatTile({
           ? 'var(--color-accent)'
           : 'var(--color-success)';
   return (
-    <div className="humi-card humi-card--tight" style={{ textAlign: 'center' }}>
+    <div className="cnext-card cnext-card--tight" style={{ textAlign: 'center' }}>
       <div
         style={{
           fontFamily: 'var(--font-display)',

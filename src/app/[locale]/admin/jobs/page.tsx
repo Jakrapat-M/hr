@@ -101,10 +101,10 @@ const { Page } = createCrudPage<Job>({
   renderForm: (job, onChange) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {/* รหัส */}
-      <label className="humi-label">
+      <label className="cnext-label">
         รหัส *
         <input
-          className="humi-input"
+          className="cnext-input"
           type="text"
           placeholder="เช่น HR-001, ENG-002"
           value={job.code ?? ''}
@@ -113,10 +113,10 @@ const { Page } = createCrudPage<Job>({
       </label>
 
       {/* ชื่องาน TH */}
-      <label className="humi-label">
+      <label className="cnext-label">
         ชื่องาน (TH) *
         <input
-          className="humi-input"
+          className="cnext-input"
           type="text"
           placeholder="เช่น เจ้าหน้าที่ทรัพยากรมนุษย์"
           value={job.titleTh ?? ''}
@@ -125,10 +125,10 @@ const { Page } = createCrudPage<Job>({
       </label>
 
       {/* ชื่องาน EN */}
-      <label className="humi-label">
+      <label className="cnext-label">
         ชื่องาน (EN) *
         <input
-          className="humi-input"
+          className="cnext-input"
           type="text"
           placeholder="e.g. Human Resources Officer"
           value={job.titleEn ?? ''}
@@ -137,10 +137,10 @@ const { Page } = createCrudPage<Job>({
       </label>
 
       {/* กลุ่ม */}
-      <label className="humi-label">
+      <label className="cnext-label">
         กลุ่มงาน
         <select
-          className="humi-input"
+          className="cnext-input"
           value={job.family ?? 'HR'}
           onChange={(e) => onChange({ family: e.target.value })}
         >
@@ -151,10 +151,10 @@ const { Page } = createCrudPage<Job>({
       </label>
 
       {/* ระดับ */}
-      <label className="humi-label">
+      <label className="cnext-label">
         ระดับ
         <select
-          className="humi-input"
+          className="cnext-input"
           value={job.level ?? 'JUNIOR'}
           onChange={(e) => onChange({ level: e.target.value as Job['level'] })}
         >
@@ -167,15 +167,15 @@ const { Page } = createCrudPage<Job>({
       {/* ─── BRD #4: FOJobCode custom fields ─────────────────────────────────
            SF cite: qas-fields-2026-04-26/sf-qas-FOJobCode-2026-04-26.json#.d.results[0] */}
       <div style={{ borderTop: '1px solid var(--color-hairline)', paddingTop: 12, marginTop: 4 }}>
-        <p className="humi-label" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>
+        <p className="cnext-label" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>
           FOJobCode — ข้อมูล Job Grade &amp; Classification
         </p>
 
         {/* cust_JGMin — SF: FOJobCode.cust_JGMin */}
-        <label className="humi-label" style={{ marginBottom: 10 }}>
+        <label className="cnext-label" style={{ marginBottom: 10 }}>
           Job Grade ขั้นต่ำ (JG Min) <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--color-ink-muted)' }}>SF: cust_JGMin</span>
           <input
-            className="humi-input"
+            className="cnext-input"
             type="text"
             placeholder="เช่น JG5"
             value={job.cust_JGMin ?? ''}
@@ -184,10 +184,10 @@ const { Page } = createCrudPage<Job>({
         </label>
 
         {/* cust_JGMax — SF: FOJobCode.cust_JGMax */}
-        <label className="humi-label" style={{ marginBottom: 10 }}>
+        <label className="cnext-label" style={{ marginBottom: 10 }}>
           Job Grade สูงสุด (JG Max) <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--color-ink-muted)' }}>SF: cust_JGMax</span>
           <input
-            className="humi-input"
+            className="cnext-input"
             type="text"
             placeholder="เช่น JG9"
             value={job.cust_JGMax ?? ''}
@@ -196,10 +196,10 @@ const { Page } = createCrudPage<Job>({
         </label>
 
         {/* cust_bandMatching — SF: FOJobCode.cust_bandMatching */}
-        <label className="humi-label" style={{ marginBottom: 10 }}>
+        <label className="cnext-label" style={{ marginBottom: 10 }}>
           Band Matching <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--color-ink-muted)' }}>SF: cust_bandMatching</span>
           <input
-            className="humi-input"
+            className="cnext-input"
             type="text"
             placeholder="รหัส Band Matching"
             value={job.cust_bandMatching ?? ''}
@@ -208,10 +208,10 @@ const { Page } = createCrudPage<Job>({
         </label>
 
         {/* cust_jobType — SF: FOJobCode.cust_jobType */}
-        <label className="humi-label" style={{ marginBottom: 10 }}>
+        <label className="cnext-label" style={{ marginBottom: 10 }}>
           ประเภทงาน (Job Type) <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--color-ink-muted)' }}>SF: cust_jobType</span>
           <input
-            className="humi-input"
+            className="cnext-input"
             type="text"
             placeholder="เช่น PERMANENT, CONTRACT"
             value={job.cust_jobType ?? ''}
@@ -220,10 +220,10 @@ const { Page } = createCrudPage<Job>({
         </label>
 
         {/* jobFunction — SF: FOJobCode.jobFunction */}
-        <label className="humi-label">
+        <label className="cnext-label">
           Job Function <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--color-ink-muted)' }}>SF: jobFunction</span>
           <select
-            className="humi-input"
+            className="cnext-input"
             value={job.jobFunction ?? ''}
             onChange={(e) => onChange({ jobFunction: e.target.value || null })}
           >
@@ -237,7 +237,7 @@ const { Page } = createCrudPage<Job>({
 
       {/* สถานะ */}
       <label
-        className="humi-label"
+        className="cnext-label"
         style={{ flexDirection: 'row', alignItems: 'center', gap: 8, cursor: 'pointer' }}
       >
         <input

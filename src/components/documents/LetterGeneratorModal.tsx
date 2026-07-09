@@ -14,8 +14,8 @@
 import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { FileText, Download, Printer } from 'lucide-react';
-import { Modal } from '@/components/humi/Modal';
-import { Button } from '@/components/humi/Button';
+import { Modal } from '@/components/cnext/Modal';
+import { Button } from '@/components/cnext/Button';
 import {
   GENERATABLE_LETTERS,
   type GeneratableLetter,
@@ -26,23 +26,23 @@ import {
   downloadLetter,
   mockHireDate,
 } from '@/lib/documents/merge-letter';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
 import { formatDate } from '@/lib/date';
 
 interface LetterGeneratorModalProps {
   open: boolean;
   onClose: () => void;
   /** The logged-in employee (self). When null, generation is disabled. */
-  employee: HumiEmployee | null;
+  employee: CnextEmployee | null;
 }
 
 /**
  * Deterministic mock monthly salary for the salary certificate.
- * The HumiEmployee pool carries NO salary field (audit gap), so for the
+ * The CnextEmployee pool carries NO salary field (audit gap), so for the
  * self-service mockup we derive a stable pseudo-salary from the employee id
  * — same employee always yields the same number. Range ~25k–95k THB.
  */
-function mockMonthlySalary(emp: HumiEmployee): number {
+function mockMonthlySalary(emp: CnextEmployee): number {
   let hash = 0;
   for (const ch of emp.id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   return 25000 + (hash % 71) * 1000;
@@ -109,7 +109,7 @@ export function LetterGeneratorModal({ open, onClose, employee }: LetterGenerato
               <span className="font-semibold text-ink" data-testid="generator-self-name">
                 {employeeName}
               </span>
-              <span className="humi-tag humi-tag--accent">{t('selfBadge')}</span>
+              <span className="cnext-tag cnext-tag--accent">{t('selfBadge')}</span>
             </div>
 
             {/* Letter picker */}

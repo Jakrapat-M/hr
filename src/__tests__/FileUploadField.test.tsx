@@ -20,8 +20,8 @@ import React from 'react';
 const mockAddAttachment = vi.fn();
 const mockRemoveAttachment = vi.fn();
 
-vi.mock('@/stores/humi-profile-slice', () => ({
-  useHumiProfileStore: (selector: (s: unknown) => unknown) => {
+vi.mock('@/stores/cnext-profile-slice', () => ({
+  useCnextProfileStore: (selector: (s: unknown) => unknown) => {
     const fakeState = {
       addAttachment: mockAddAttachment,
       removeAttachment: mockRemoveAttachment,
@@ -84,7 +84,7 @@ vi.mock('@/lib/utils', () => ({
 }));
 
 // ── Import component AFTER mocks ──────────────────────────────────────────────
-import { FileUploadField } from '@/components/humi/FileUploadField';
+import { FileUploadField } from '@/components/cnext/FileUploadField';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

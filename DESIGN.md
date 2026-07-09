@@ -1,7 +1,7 @@
 ---
 version: alpha
-name: Humi System Design
-description: Curated, presentation-ready Humi design system for Central Group HR UI, executive decks, and AI-generated product mockups.
+name: Cnext System Design
+description: Curated, presentation-ready Cnext design system for Central Group HR UI, executive decks, and AI-generated product mockups.
 colors:
   primary: "#1FA8A0"
   primarySoft: "#D6EEEC"
@@ -183,7 +183,7 @@ components:
 
 ## Overview
 
-Humi System Design คือ design system แบบคัดเฉพาะ token ที่ใช้ได้จริงสำหรับงาน Humi HR product, UI mockup, และ presentation. บุคลิกหลักคือ **editorial HR system**: อบอุ่น อ่านง่าย มี depth แบบ modern software product ไม่ใช่ retail POS dashboard และไม่ใช่ white/black admin template.
+Cnext System Design คือ design system แบบคัดเฉพาะ token ที่ใช้ได้จริงสำหรับงาน Cnext HR product, UI mockup, และ presentation. บุคลิกหลักคือ **editorial HR system**: อบอุ่น อ่านง่าย มี depth แบบ modern software product ไม่ใช่ retail POS dashboard และไม่ใช่ white/black admin template.
 
 Core principles:
 
@@ -195,7 +195,7 @@ Core principles:
 
 Use this file as the agent-readable source for:
 
-- Humi UI screens and React components
+- Cnext UI screens and React components
 - Figma-style mockups and product storyboards
 - executive decks and HR sign-off presentations
 - visual QA instructions for AI-generated artifacts
@@ -214,7 +214,7 @@ Use this file as the agent-readable source for:
 - **Ink Soft / Muted** — secondary copy, helper text, captions.
 - **Hairline (`#E7DFD1`)** — thin divider only.
 - **Butter (`#E8C46B`)** — KPI highlight and warm executive accent.
-- **Success Soft / Warning Soft / Danger Soft** — status backgrounds that preserve the Humi warm identity.
+- **Success Soft / Warning Soft / Danger Soft** — status backgrounds that preserve the Cnext warm identity.
 - **Danger Ink (`#9A3412`)** — readable text on danger-soft.
 
 Presentation color rhythm: **ink cover → cream content → white cards → teal decisions → butter KPIs → indigo flows**.
@@ -291,7 +291,7 @@ Shapes should feel soft, precise, and product-grade.
 ### Do
 
 - Use `bg-canvas text-ink` as baseline.
-- Use `bg-surface`, `border-hairline`, `shadow-[var(--shadow-card)]`, and Humi primitives first.
+- Use `bg-surface`, `border-hairline`, `shadow-[var(--shadow-card)]`, and Cnext primitives first.
 - Use `ring-4 ring-accent-soft` for focus state.
 - Use teal for decisions/actions, indigo for flow/info, butter for KPI highlights.
 - Use CPN/Anuphan for all Thai/English UI text.
@@ -304,12 +304,12 @@ Shapes should feel soft, precise, and product-grade.
 - Do not use red family colors: `#C8102E`, `#DC2626`, `#EF4444`, coral, clay, brick, crimson.
 - Do not add global `* { margin: 0; padding: 0 }`.
 - Do not import CPN via CDN; use `next/font/local`.
-- Do not mix legacy cards with Humi primitives on migrated routes.
+- Do not mix legacy cards with Cnext primitives on migrated routes.
 - Do not create dense presentation slides with tiny screenshots or long paragraphs.
 
 Source of truth:
 
 - `src/frontend/src/app/globals.css` — Tailwind v4 `@theme` tokens.
-- `docs/design-system-humi.md` — human token reference.
-- `docs/humi-components.md` — Humi component primitives.
-- `docs/humi-shell-port-notes.md` — shell implementation notes.
+- `docs/design-system-cnext.md` — human token reference.
+- `docs/cnext-components.md` — Cnext component primitives.
+- `docs/cnext-shell-port-notes.md` — shell implementation notes.

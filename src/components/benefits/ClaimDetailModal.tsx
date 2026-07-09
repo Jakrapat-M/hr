@@ -14,7 +14,7 @@
 
 import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Button, Modal } from '@/components/humi';
+import { Button, Modal } from '@/components/cnext';
 import { ClaimPayload } from '@/components/quick-approve/detail/RequestPayload';
 import { RequestSummary } from '@/components/quick-approve/detail/RequestSummary';
 import { AttachmentViewPanel } from '@/components/quick-approve/detail/AttachmentViewPanel';

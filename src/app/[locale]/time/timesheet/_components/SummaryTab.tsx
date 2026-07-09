@@ -9,12 +9,12 @@
 //   • rows with multiple clock punches expand (chevron) to list each in/out pair
 //   • the header row FREEZES: the table lives in a max-height scroll container
 //     with a sticky thead
-// All derived from the live attendance seed + leave overlay. Humi tokens only;
+// All derived from the live attendance seed + leave overlay. Cnext tokens only;
 // deducted/absent = pumpkin (NO RED).
 
 import { Fragment, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { getAttendanceForPeriod, ecPlanHoursFor } from '@/lib/time/attendance-seed';
 import { lateMinutesFor, periodLateSummary } from '@/lib/time/attendance-math';

@@ -1,5 +1,5 @@
 /**
- * profile-edit-e2e.spec.ts — Full E2E scenario: Humi Profile Edit (Sprint 3, issue #12)
+ * profile-edit-e2e.spec.ts — Full E2E scenario: Cnext Profile Edit (Sprint 3, issue #12)
  * Framework: Playwright
  *
  * AC-10: 15-step full scenario
@@ -11,7 +11,7 @@
  *
  * Note: uses mockAuthSession helper (bypasses real auth — dev mode).
  *       baseURL from playwright.config.ts (http://localhost:3000).
- *       TH locale (/th/...) is Humi primary.
+ *       TH locale (/th/...) is Cnext primary.
  */
 
 import { test, expect, type Page } from '@playwright/test';

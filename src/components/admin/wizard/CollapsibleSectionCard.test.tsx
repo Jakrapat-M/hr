@@ -111,7 +111,7 @@ describe('CollapsibleSectionCard', () => {
     expect(section?.tagName).toBe('SECTION')
     expect(section?.className).toContain('scroll-mt-[var(--jumpnav-anchor)]')
     // base classes preserved
-    expect(section?.className).toContain('humi-card')
+    expect(section?.className).toContain('cnext-card')
   })
 
   it('renders without a className unchanged (back-compat)', () => {
@@ -121,7 +121,7 @@ describe('CollapsibleSectionCard', () => {
       </CollapsibleSectionCard>,
     )
     const section = document.getElementById('nocls')
-    expect(section?.className).toContain('humi-card')
+    expect(section?.className).toContain('cnext-card')
     expect(section?.className).not.toContain('scroll-mt-')
   })
 

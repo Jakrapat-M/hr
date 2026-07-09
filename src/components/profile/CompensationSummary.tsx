@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Wallet, Eye, EyeOff, Lock } from 'lucide-react';
-import { DemoValuesDisclaimer } from '@/components/humi/DemoValuesDisclaimer';
+import { DemoValuesDisclaimer } from '@/components/cnext/DemoValuesDisclaimer';
 import PayStatements from '@/components/profile/PayStatements';
-import { HUMI_MY_PROFILE } from '@/lib/humi-mock-data';
+import { CNEXT_MY_PROFILE } from '@/lib/cnext-mock-data';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
 
@@ -44,7 +44,7 @@ export default function CompensationSummary({
   const roles = useAuthStore((s) => s.roles);
   const [isMasked, setIsMasked] = useState(true);
   const [revealToast, setRevealToast] = useState<string | null>(null);
-  const p = HUMI_MY_PROFILE;
+  const p = CNEXT_MY_PROFILE;
 
   // Self view (prop omitted) ⇒ owner. Explicit non-owner ⇒ masked unless the
   // viewer holds an HR comp-view role.
@@ -60,7 +60,7 @@ export default function CompensationSummary({
     if (!canViewFull) return;
     setIsMasked((m) => !m);
     if (isMasked) {
-      // NB: 'BRD ' + '#170' assembled to avoid the Humi no-hex source guard
+      // NB: 'BRD ' + '#170' assembled to avoid the Cnext no-hex source guard
       // misreading the literal as a colour token; the rendered text is unchanged.
       setRevealToast(`ระบบจะร้องขอ PIN ในรุ่นถัดไป (BRD ${'#'}170 SH1 re-auth — backend deferred)`);
       setTimeout(() => setRevealToast(null), 3500);
@@ -68,9 +68,9 @@ export default function CompensationSummary({
   }
 
   return (
-    <section className="humi-card mt-5" style={{ padding: '22px 26px' }} data-testid="compensation-summary">
-      <header className="humi-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div className="humi-row" style={{ gap: 8, alignItems: 'center' }}>
+    <section className="cnext-card mt-5" style={{ padding: '22px 26px' }} data-testid="compensation-summary">
+      <header className="cnext-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div className="cnext-row" style={{ gap: 8, alignItems: 'center' }}>
           <Wallet size={18} aria-hidden />
           <h3 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
             สรุปค่าตอบแทน
@@ -80,7 +80,7 @@ export default function CompensationSummary({
           <button
             type="button"
             onClick={handleReveal}
-            className="humi-row"
+            className="cnext-row"
             style={{ gap: 6, fontSize: 13, color: 'var(--color-ink-muted)' }}
             aria-label={isMasked ? 'แสดงเงินเดือน' : 'ซ่อนเงินเดือน'}
             data-testid="comp-reveal-toggle"
@@ -90,7 +90,7 @@ export default function CompensationSummary({
           </button>
         ) : (
           <span
-            className="humi-tag"
+            className="cnext-tag"
             data-testid="comp-viewonly-badge"
             style={{ gap: 6, fontSize: 12, color: 'var(--color-ink-muted)', borderColor: 'var(--color-hairline)' }}
             aria-label="ค่าตอบแทนถูกปิดบังสำหรับผู้ที่ไม่ใช่เจ้าของ"

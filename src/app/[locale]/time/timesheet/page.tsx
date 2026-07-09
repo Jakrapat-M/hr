@@ -3,14 +3,14 @@
 // /time/timesheet — My Timesheet (STA-195). A 5-tab document mirroring the BA mock:
 //   Schedule · Summary · Time Result · Clock Log (GPS) · Messages.
 // Each tab is a component under ./_components. Deterministic seeds, no backend,
-// Humi tokens only; danger / out-of-radius / noti-badge = pumpkin, never red.
+// Cnext tokens only; danger / out-of-radius / noti-badge = pumpkin, never red.
 
 import { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Clock } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/date';
 import { useAuthStore } from '@/stores/auth-store';

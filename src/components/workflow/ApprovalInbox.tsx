@@ -14,7 +14,7 @@ import {
   type ApprovalRequest,
 } from '@/stores/workflow-approvals';
 import { useAuthStore } from '@/stores/auth-store';
-import { Button, FormField } from '@/components/humi';
+import { Button, FormField } from '@/components/cnext';
 import type { Role } from '@/lib/rbac';
 
 interface ApprovalInboxProps {
@@ -68,16 +68,16 @@ export function ApprovalInbox({ expectedStep, role, title, subtitle }: ApprovalI
       </div>
 
       {/* KPI chips */}
-      <div className="humi-row" style={{ gap: 12, flexWrap: 'wrap' }}>
-        <div className="humi-card humi-card--cream" style={{ padding: '10px 16px', minWidth: 140 }}>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>
+      <div className="cnext-row" style={{ gap: 12, flexWrap: 'wrap' }}>
+        <div className="cnext-card cnext-card--cream" style={{ padding: '10px 16px', minWidth: 140 }}>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>
             <Clock size={10} className="inline mr-1" aria-hidden />
             รอดำเนินการ
           </div>
           <div className="text-body font-semibold text-ink">{pending.length} รายการ</div>
         </div>
-        <div className="humi-card humi-card--cream" style={{ padding: '10px 16px', minWidth: 140 }}>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>
+        <div className="cnext-card cnext-card--cream" style={{ padding: '10px 16px', minWidth: 140 }}>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>
             <CheckCircle2 size={10} className="inline mr-1" aria-hidden />
             ล่าสุดที่อนุมัติ/ปฏิเสธ
           </div>
@@ -87,9 +87,9 @@ export function ApprovalInbox({ expectedStep, role, title, subtitle }: ApprovalI
 
       {/* Pending list */}
       <section>
-        <div className="humi-eyebrow" style={{ marginBottom: 10 }}>คำขอรอการอนุมัติ</div>
+        <div className="cnext-eyebrow" style={{ marginBottom: 10 }}>คำขอรอการอนุมัติ</div>
         {pending.length === 0 ? (
-          <div className="humi-card humi-card--cream" style={{ textAlign: 'center', padding: 40 }}>
+          <div className="cnext-card cnext-card--cream" style={{ textAlign: 'center', padding: 40 }}>
             <p className="text-body text-ink-muted">ไม่มีคำขอรอการอนุมัติในขณะนี้</p>
             <p className="text-small text-ink-muted mt-1">
               คำขอใหม่จากพนักงานจะแสดงที่นี่เมื่อมีเข้ามา
@@ -116,7 +116,7 @@ export function ApprovalInbox({ expectedStep, role, title, subtitle }: ApprovalI
       {/* Recent history */}
       {history.length > 0 && (
         <section>
-          <div className="humi-eyebrow" style={{ marginBottom: 10 }}>ประวัติล่าสุด (5 รายการ)</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 10 }}>ประวัติล่าสุด (5 รายการ)</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {history.map((req) => (
               <HistoryRow key={req.id} req={req} />
@@ -153,10 +153,10 @@ function RequestCard({
   };
 
   return (
-    <div className="humi-card" style={{ padding: 18 }}>
-      <div className="humi-row" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+    <div className="cnext-card" style={{ padding: 18 }}>
+      <div className="cnext-row" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>{req.id}</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>{req.id}</div>
           <div className="text-body font-semibold text-ink">
             ขอแก้ไขข้อมูลส่วนตัว — {req.employeeName}
           </div>
@@ -164,7 +164,7 @@ function RequestCard({
             {req.employeeId} · ส่งเมื่อ {formatDate(req.submittedAt)}
           </div>
         </div>
-        <span className="humi-tag humi-tag--butter" style={{ alignSelf: 'center' }}>
+        <span className="cnext-tag cnext-tag--butter" style={{ alignSelf: 'center' }}>
           {STEP_LABEL[req.status]}
         </span>
       </div>
@@ -177,12 +177,12 @@ function RequestCard({
           paddingTop: 14,
         }}
       >
-        <div className="humi-eyebrow" style={{ marginBottom: 8 }}>การเปลี่ยนแปลง ({req.diffs.length})</div>
+        <div className="cnext-eyebrow" style={{ marginBottom: 8 }}>การเปลี่ยนแปลง ({req.diffs.length})</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {req.diffs.map((d) => (
             <div
               key={d.path}
-              className="humi-row"
+              className="cnext-row"
               style={{
                 gap: 10,
                 fontSize: 13,
@@ -214,7 +214,7 @@ function RequestCard({
             paddingTop: 12,
           }}
         >
-          <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+          <div className="cnext-eyebrow" style={{ marginBottom: 8 }}>
             <Paperclip size={11} className="inline mr-1" aria-hidden />
             เอกสารแนบ ({req.attachments.length})
           </div>
@@ -222,7 +222,7 @@ function RequestCard({
             {req.attachments.map((a, i) => (
               <div
                 key={`${a.filename}-${i}`}
-                className="humi-row"
+                className="cnext-row"
                 style={{
                   gap: 10,
                   fontSize: 13,
@@ -243,7 +243,7 @@ function RequestCard({
                 <a
                   href={a.dataUrl}
                   download={a.filename}
-                  className="humi-row inline-flex items-center gap-1 text-small font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+                  className="cnext-row inline-flex items-center gap-1 text-small font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
                   style={{ padding: '4px 8px' }}
                 >
                   <Download size={12} aria-hidden />
@@ -257,7 +257,7 @@ function RequestCard({
 
       {/* Actions */}
       {mode === 'none' ? (
-        <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+        <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
           <Button
             variant="ghost"
             size="sm"
@@ -298,7 +298,7 @@ function RequestCard({
               />
             )}
           </FormField>
-          <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+          <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
             <Button
               variant="ghost"
               size="sm"
@@ -325,7 +325,7 @@ function HistoryRow({ req }: { req: ApprovalRequest }) {
   const last = req.audit[req.audit.length - 1];
   return (
     <div
-      className="humi-card humi-card--cream"
+      className="cnext-card cnext-card--cream"
       style={{
         padding: '10px 14px',
         display: 'flex',
@@ -334,10 +334,10 @@ function HistoryRow({ req }: { req: ApprovalRequest }) {
         alignItems: 'center',
       }}
     >
-      <span className="humi-eyebrow" style={{ minWidth: 160 }}>{req.id}</span>
+      <span className="cnext-eyebrow" style={{ minWidth: 160 }}>{req.id}</span>
       <span className="text-small text-ink">{req.employeeName}</span>
-      <span className="humi-spacer" style={{ flex: 1 }} />
-      <span className="humi-tag">{STEP_LABEL[req.status]}</span>
+      <span className="cnext-spacer" style={{ flex: 1 }} />
+      <span className="cnext-tag">{STEP_LABEL[req.status]}</span>
       <span className="text-small text-ink-muted">{formatDate(last.at)}</span>
     </div>
   );

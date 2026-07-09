@@ -18,7 +18,7 @@ import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CalendarRange } from 'lucide-react';
-import { Card, Button, EmptyState, Textarea } from '@/components/humi';
+import { Card, Button, EmptyState, Textarea } from '@/components/cnext';
 import { useAuthStore } from '@/stores/auth-store';
 import { EMP_BY_LOGIN } from '@/lib/all-ported-employees';
 import { getHolidaysForPeriod } from '@/lib/time/holiday-calendar';
@@ -41,9 +41,9 @@ const APPROVER_NAME = 'ฝ่ายบุคคล / HR';
 
 function statusTone(status: ShiftGroup['status']): string {
   // NO-RED: returned = pumpkin/neutral, never red.
-  if (status === 'approved') return 'humi-tag humi-tag--accent';
-  if (status === 'pending') return 'humi-tag humi-tag--butter';
-  return 'humi-tag'; // draft / returned → neutral
+  if (status === 'approved') return 'cnext-tag cnext-tag--accent';
+  if (status === 'pending') return 'cnext-tag cnext-tag--butter';
+  return 'cnext-tag'; // draft / returned → neutral
 }
 
 export default function ShiftAssignPage() {
@@ -190,8 +190,8 @@ export default function ShiftAssignPage() {
   return (
     <div className="pb-8 flex flex-col gap-5">
       <header className="flex flex-col gap-1">
-        <span className="humi-eyebrow">
-          {isTh ? 'HUMI • บริหารทีม • จัดกะ' : 'HUMI • TEAM MANAGEMENT • SHIFT ASSIGNMENT'}
+        <span className="cnext-eyebrow">
+          {isTh ? 'CNEXT • บริหารทีม • จัดกะ' : 'CNEXT • TEAM MANAGEMENT • SHIFT ASSIGNMENT'}
         </span>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="font-display text-2xl font-bold tracking-tight text-ink">{t('title')}</h1>

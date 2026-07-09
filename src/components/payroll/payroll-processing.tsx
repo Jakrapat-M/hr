@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { CheckCircle, AlertTriangle, ArrowLeft, ArrowRight, Download, Upload, ChevronUp, ChevronDown } from 'lucide-react';
-import { Card, CardTitle, Button, DemoValuesDisclaimer } from '@/components/humi';
+import { Card, CardTitle, Button, DemoValuesDisclaimer } from '@/components/cnext';
 import { FormField } from '@/components/ui/form-field';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';

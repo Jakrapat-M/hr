@@ -66,7 +66,7 @@ beforeEach(() => {
     useAuthStore.setState({
       userId: 'TEST',
       username: 'admin',
-      email: 'admin@humi.test',
+      email: 'admin@cnext.test',
       roles: ['hr_admin'],
       isAuthenticated: true,
       originalUser: null,

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 
 interface FieldGroupProps {
  title: string;

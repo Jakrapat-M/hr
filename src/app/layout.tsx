@@ -4,8 +4,8 @@ import { AuthProvider } from '@/lib/auth-provider';
 import { ThemeProvider } from '@/components/shared/theme-provider';
 import { cpnSans, cpnCondensed, anuphan, geistMono } from './fonts';
 
-// Humi — CPN (display+body) + Anuphan (Thai fallback) + Geist Mono (numerics).
-// Ref: specs/humi-frontend-redesign.md — Task 2 design system.
+// Cnext — CPN (display+body) + Anuphan (Thai fallback) + Geist Mono (numerics).
+// Ref: specs/cnext-frontend-redesign.md — Task 2 design system.
 
 export const metadata: Metadata = {
  title:'CneXt — Central Group HR',

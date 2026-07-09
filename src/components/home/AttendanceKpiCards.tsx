@@ -5,12 +5,12 @@
 // onto Home (manager view): อัตราเข้างานตรงเวลา (on-time rate) / การสแกนเข้างานสาย
 // (late scans) / การขาดงาน–ไม่สแกนนิ้ว (absences + missed scans). Derived from the
 // canonical time-domain seeds (schedule + attendance) over the demo period, pinned
-// to DEMO_TODAY — never wall-clock. Mockup only, HUMI tokens, NO-RED (pumpkin).
+// to DEMO_TODAY — never wall-clock. Mockup only, CNEXT tokens, NO-RED (pumpkin).
 
 import { useMemo } from 'react';
 import { useLocale } from 'next-intl';
 import { Clock, AlarmClock, UserX, type LucideIcon } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { getAttendanceForPeriod } from '@/lib/time/attendance-seed';
 import { classifyClock } from '@/lib/time/clock-state';

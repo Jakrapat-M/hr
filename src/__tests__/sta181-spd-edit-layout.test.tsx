@@ -2,7 +2,7 @@
  * STA-181 — SPD edit page layout restructure.
  * The /admin/employees/[id]/edit page adopts the my-profile visual rhythm:
  *  - Save / Cancel actions relocated to a bar at the TOP (before the sections).
- *  - Each field group is rendered as its own card (humi-card).
+ *  - Each field group is rendered as its own card (cnext-card).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
@@ -25,7 +25,7 @@ vi.mock('next-intl', () => ({
 function setRoles(roles: Role[]) {
   const auth = useAuthStore.getState();
   auth.clearUser();
-  auth.setUser({ id: 'TEST', name: 'tester', email: 'tester@humi.test', roles });
+  auth.setUser({ id: 'TEST', name: 'tester', email: 'tester@cnext.test', roles });
   auth.setHasHydrated(true);
 }
 
@@ -51,14 +51,14 @@ describe('STA-181 — SPD edit layout', () => {
   it('the action bar is NOT nested inside a section card', async () => {
     await renderEditPage();
     const save = screen.getByRole('button', { name: 'บันทึกข้อมูล' });
-    expect(save.closest('section.humi-card')).toBeNull();
+    expect(save.closest('section.cnext-card')).toBeNull();
   });
 
   it('renders each field group as its own card (my-profile rhythm)', async () => {
     await renderEditPage();
     for (const title of ['ชื่อ (ภาษาท้องถิ่น)', 'ข้อมูลส่วนตัว', 'ข้อมูลติดต่อ', 'ผู้ติดต่อฉุกเฉิน']) {
       const heading = screen.getByRole('heading', { name: title });
-      expect(heading.closest('.humi-card')).not.toBeNull();
+      expect(heading.closest('.cnext-card')).not.toBeNull();
     }
   });
 

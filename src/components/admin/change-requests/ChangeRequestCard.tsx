@@ -1,9 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Card } from '@/components/humi/Card';
-import { Button } from '@/components/humi/Button';
-import type { PendingChange, FileAttachment, SectionKey } from '@/stores/humi-profile-slice';
+import { Card } from '@/components/cnext/Card';
+import { Button } from '@/components/cnext/Button';
+import type { PendingChange, FileAttachment, SectionKey } from '@/stores/cnext-profile-slice';
 
 // ════════════════════════════════════════════════════════════
 // ChangeRequestCard — displays one pending change with diff,

@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { FileText, Mail, Printer, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { useToast } from '@/components/ui/toast';
 import { DOCUMENT_TEMPLATES, type DeliveryMode, type DocumentTemplate } from '@/data/documents/templates';
 import { DOCUMENT_STORYBOARD_BOUNDARY_EN, DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
@@ -84,7 +84,7 @@ export default function DocumentRequestPage() {
                 type="button"
                 onClick={() => handleSelectTemplate(tpl)}
                 data-testid={`template-${tpl.id}`}
-                className="humi-card text-left transition-shadow hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
+                className="cnext-card text-left transition-shadow hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
                 style={{ padding: 16 }}
               >
                 <div className="flex items-start gap-3">
@@ -122,7 +122,7 @@ export default function DocumentRequestPage() {
         <form onSubmit={handleSubmit} noValidate>
           {/* Selected template summary */}
           <div
-            className="humi-card humi-card--cream mb-6"
+            className="cnext-card cnext-card--cream mb-6"
             style={{ padding: 14 }}
             data-testid="selected-template-summary"
           >

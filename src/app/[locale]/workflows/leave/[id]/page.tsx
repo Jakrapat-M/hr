@@ -10,14 +10,14 @@
 // approve sets `awaitingNext` (stays pending, advances to HR); the second
 // approve finalizes (status=approved) and deducts the reserved quota. Reject at
 // any step releases the reserve. Action is gated to the CURRENT step's roles.
-// Phase: UI mockup. Humi tokens only. Danger = pumpkin (--color-danger).
+// Phase: UI mockup. Cnext tokens only. Danger = pumpkin (--color-danger).
 
 import { use, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, CalendarDays, Paperclip, Users, Wallet, History } from 'lucide-react';
-import { Avatar, Button, Modal, FormField } from '@/components/humi';
+import { Avatar, Button, Modal, FormField } from '@/components/cnext';
 import { useLeaveApprovals, leaveStageLabel, type LeaveRequest } from '@/stores/leave-approvals';
 import { useRemainingFor } from '@/stores/leave-balances';
 import { APPROVAL_REGISTRY, type QueueApproval } from '@/lib/approval-registry';
@@ -196,7 +196,7 @@ export default function LeaveDetailPage({ params }: PageProps) {
           <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-ink">
             {request.employeeName}
           </h1>
-          <span className="humi-tag humi-tag--butter mt-1 inline-block text-xs">{statusLabel}</span>
+          <span className="cnext-tag cnext-tag--butter mt-1 inline-block text-xs">{statusLabel}</span>
         </div>
       </div>
 

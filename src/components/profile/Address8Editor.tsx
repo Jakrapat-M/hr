@@ -5,9 +5,9 @@
 // live cascade from picklist pipeline is a separate task.
 
 import { useTranslations } from 'next-intl';
-import { FormField } from '@/components/humi';
+import { FormField } from '@/components/cnext';
 import { cn } from '@/lib/utils';
-import type { Address8 } from '@/stores/humi-profile-slice';
+import type { Address8 } from '@/stores/cnext-profile-slice';
 
 // ── Validation helper (exported for /profile/me save-button enable) ────────────
 

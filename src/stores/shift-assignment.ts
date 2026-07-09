@@ -147,7 +147,7 @@ export const useShiftAssignment = create<ShiftAssignmentState>()(
       clear: () => set({ groups: [] }),
     }),
     {
-      name: 'humi-shift-assignment',
+      name: 'cnext-shift-assignment',
       storage: createJSONStorage(() => localStorage),
     },
   ),

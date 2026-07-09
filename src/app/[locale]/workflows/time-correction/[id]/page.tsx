@@ -8,14 +8,14 @@
 //
 // Manager (first-line) chain — the routed approver is the team manager (manager+).
 // canActOn parity: a non-approver persona sees this VIEW-ONLY (never hidden).
-// Phase: UI mockup. Humi tokens only. Danger = pumpkin (--color-danger).
+// Phase: UI mockup. Cnext tokens only. Danger = pumpkin (--color-danger).
 
 import { Fragment, use, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Clock3, Paperclip } from 'lucide-react';
-import { Button, Modal, FormField } from '@/components/humi';
+import { Button, Modal, FormField } from '@/components/cnext';
 import {
   useTimeCorrections,
   TIME_CORRECTION_STEP_LABEL,
@@ -148,7 +148,7 @@ export default function TimeCorrectionDetailPage({ params }: PageProps) {
           <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-ink">
             {request.employeeName}
           </h1>
-          <span className="humi-tag humi-tag--butter mt-1 inline-block text-xs">
+          <span className="cnext-tag cnext-tag--butter mt-1 inline-block text-xs">
             {isTh ? stepLabel.th : stepLabel.en}
           </span>
         </div>

@@ -3,11 +3,11 @@
 // ClockLogMapModal — a synthetic <canvas> map for a single clock punch (STA-195).
 // NO real map tiles / geolocation: it draws the work location, the 200 m geofence
 // circle, and the clock pin (pumpkin when out of radius, never red). Every colour
-// is read from a Humi/map token at draw time (no raw hex, transparency via
+// is read from a Cnext/map token at draw time (no raw hex, transparency via
 // globalAlpha); drawMap is guarded for jsdom (null 2D context).
 
 import { useEffect, useRef } from 'react';
-import { Modal } from '@/components/humi';
+import { Modal } from '@/components/cnext';
 import { GEOFENCE_RADIUS_M } from '@/lib/time/geo';
 import type { ClockLogEntry } from '@/lib/time/clock-log-seed';
 import { fmtDayShort } from './format';

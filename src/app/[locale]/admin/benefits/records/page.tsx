@@ -5,7 +5,7 @@ import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Award, Flower2, Gift, Shield, Users, FolderOpen, RefreshCw, type LucideProps } from 'lucide-react';
-import { Card, CardEyebrow, CardTitle, EmptyState } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle, EmptyState } from '@/components/cnext';
 import {
   getPlansByCategory,
   type PlanCategory,

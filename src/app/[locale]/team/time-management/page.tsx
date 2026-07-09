@@ -17,7 +17,7 @@ export default async function TeamTimeManagementPage() {
     <div className="pb-8 flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <span className="font-mono text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-faint">
-          {isTh ? 'HUMI • บริหารทีม • จัดการเวลา' : 'HUMI • TEAM MANAGEMENT • TIME MANAGEMENT'}
+          {isTh ? 'CNEXT • บริหารทีม • จัดการเวลา' : 'CNEXT • TEAM MANAGEMENT • TIME MANAGEMENT'}
         </span>
         <h1 className="font-display text-[length:var(--text-display-h1)] font-semibold leading-[var(--text-display-h1--line-height)] tracking-tight text-ink">
           {isTh ? (

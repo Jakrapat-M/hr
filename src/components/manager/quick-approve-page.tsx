@@ -36,8 +36,8 @@ import {
   UserCheck,
   UserPlus,
 } from 'lucide-react';
-import { Card, CardTitle, Button, DataTable, Modal } from '@/components/humi';
-import type { DataTableColumn } from '@/components/humi';
+import { Card, CardTitle, Button, DataTable, Modal } from '@/components/cnext';
+import type { DataTableColumn } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DelegationModal } from '@/components/quick-approve/DelegationModal';
@@ -290,7 +290,7 @@ function deriveInitials(name: string): string {
   return name.slice(0, 2);
 }
 
-const AVATAR_TONES = ['humi-avatar humi-avatar--teal', 'humi-avatar humi-avatar--sage', 'humi-avatar humi-avatar--butter', 'humi-avatar humi-avatar--ink'] as const;
+const AVATAR_TONES = ['cnext-avatar cnext-avatar--teal', 'cnext-avatar cnext-avatar--sage', 'cnext-avatar cnext-avatar--butter', 'cnext-avatar cnext-avatar--ink'] as const;
 
 function pickTone(seed: string) {
   let h = 0;

@@ -9,15 +9,15 @@
 // ════════════════════════════════════════════════════════════
 
 import { Wallet } from 'lucide-react';
-import { Card, CardEyebrow } from '@/components/humi';
-import { DemoValuesDisclaimer } from '@/components/humi/DemoValuesDisclaimer';
+import { Card, CardEyebrow } from '@/components/cnext';
+import { DemoValuesDisclaimer } from '@/components/cnext/DemoValuesDisclaimer';
 import PayStatements from '@/components/profile/PayStatements';
 import { cn } from '@/lib/utils';
 
 export default function PayslipPage() {
   return (
     <>
-      <header className="humi-page-head mb-8">
+      <header className="cnext-page-head mb-8">
         <div className="flex flex-col gap-1">
           <CardEyebrow>เงินเดือน</CardEyebrow>
           <h1

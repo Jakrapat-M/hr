@@ -18,7 +18,7 @@ This note documents the review checklist and implementation guardrails for the d
 - **Hospital Referral / ขอใบส่งตัว** as a separate Benefit-adjacent domain.
 - **Tax Planning / วางแผนภาษี** as a local estimator domain with PII-safe selectors.
 - **Shell/projections** through profile benefits, `/requests`, SPD inbox, admin benefits, and legacy referral routing.
-- **Humi design/test** expectations for migrated referral and tax surfaces.
+- **Cnext design/test** expectations for migrated referral and tax surfaces.
 - **Verification evidence** needed before this feature is considered complete.
 
 The defining boundary is: reimbursement claims stay in `benefit-claims.ts`; referral and tax planning must not reuse reimbursement receipt, amount, attachment, or claim-state rules as their canonical model.
@@ -40,7 +40,7 @@ This is a good baseline. Referral and tax planning should add selectors beside r
 
 - `src/frontend/src/app/[locale]/hospital-referral/page.tsx` owns a standalone local journey through `useHospitalReferral`.
 - `src/frontend/src/hooks/use-hospital-referral.ts` still uses the older workflow model (`submitted`, `pending_manager`, `pending_hr`) instead of the PRD's SPD-only first-pass states (`draft`, `pending_spd`, `send_back`, `approved`, `rejected`, `letter_issued`, `cancelled`).
-- `src/frontend/src/components/hospital-referral/*` still uses legacy utility color classes for status chips in places, including hardcoded red/orange/purple utility tones. Migrated referral UI should use Humi tokens or Humi primitives.
+- `src/frontend/src/components/hospital-referral/*` still uses legacy utility color classes for status chips in places, including hardcoded red/orange/purple utility tones. Migrated referral UI should use Cnext tokens or Cnext primitives.
 - The profile benefits tab still shows the disabled combined action `ขอใบส่งตัว · วางแผน` instead of separate service cards.
 
 Required integration outcome: `/[locale]/hospital-referral` should redirect or render the same canonical profile-benefits referral surface at `/[locale]/profile/me?tab=benefits&service=referral`; it must not remain a second source of referral state.
@@ -101,7 +101,7 @@ Use this checklist before integrating any worker implementation branch.
 
 ### Profile/shell/projections
 
-- [ ] Replace the disabled combined benefits action with three separate Humi-styled cards/actions: reimbursement, referral, tax planning.
+- [ ] Replace the disabled combined benefits action with three separate Cnext-styled cards/actions: reimbursement, referral, tax planning.
 - [ ] Referral action opens/navigates to `/profile/me?tab=benefits&service=referral`.
 - [ ] Tax planning action opens/navigates to `/profile/me?tab=tax&mode=planning`.
 - [ ] `/hospital-referral` is a compatibility redirect or shared canonical wrapper.
@@ -109,9 +109,9 @@ Use this checklist before integrating any worker implementation branch.
 - [ ] SPD inbox renders reimbursement and referral lanes once each.
 - [ ] Admin benefits adds read-only referral/tax setup previews without enabling real integrations.
 
-### Humi design and accessibility
+### Cnext design and accessibility
 
-- [ ] New/refactored surfaces use Humi `Card`, `Button`, `Modal`, field components, or tokenized `humi-*` classes.
+- [ ] New/refactored surfaces use Cnext `Card`, `Button`, `Modal`, field components, or tokenized `cnext-*` classes.
 - [ ] New/refactored sources do not introduce hardcoded brick/red/crimson utility classes for danger states; use danger tokens.
 - [ ] Status chips fit Thai labels at mobile width.
 - [ ] Forms expose visible labels, focus rings, and at least 44px touch targets for primary actions.

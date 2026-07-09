@@ -99,7 +99,7 @@ function TreeNode({
           background: isSelected ? 'var(--color-accent-soft)' : undefined,
           marginBottom: 1,
         }}
-        className="humi-emp-row"
+        className="cnext-emp-row"
       >
         {/* Expand toggle */}
         <button
@@ -638,12 +638,12 @@ export default function OrganizationPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <div>
-          <div className="humi-eyebrow">ORGANIZATIONAL STRUCTURE</div>
+          <div className="cnext-eyebrow">ORGANIZATIONAL STRUCTURE</div>
           <h1 className="font-display text-2xl font-semibold text-ink">โครงสร้างหน่วยงาน</h1>
         </div>
         <button
           type="button"
-          className="humi-btn humi-btn--primary"
+          className="cnext-btn cnext-btn--primary"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           onClick={openCreate}
         >
@@ -685,7 +685,7 @@ export default function OrganizationPage() {
 
       {/* Tree panel */}
       <div
-        className="humi-card"
+        className="cnext-card"
         style={{ padding: '8px 8px', overflowY: 'auto', maxHeight: 'calc(100vh - 280px)' }}
         role="tree"
         aria-label="โครงสร้างหน่วยงาน"
@@ -722,7 +722,7 @@ export default function OrganizationPage() {
       {editing && (
         <>
           <div
-            className="fixed inset-0 z-30 humi-drawer-scrim"
+            className="fixed inset-0 z-30 cnext-drawer-scrim"
             aria-hidden="true"
             onClick={requestClose}
           />
@@ -747,7 +747,7 @@ export default function OrganizationPage() {
               </h2>
               <button
                 type="button"
-                className="humi-icon-btn"
+                className="cnext-icon-btn"
                 aria-label="ปิด"
                 onClick={requestClose}
               >
@@ -786,19 +786,19 @@ export default function OrganizationPage() {
               {mode === 'edit' && (
                 <button
                   type="button"
-                  className="humi-btn"
+                  className="cnext-btn"
                   style={{ color: 'var(--color-danger-ink, #9A3412)', marginRight: 'auto' }}
                   onClick={handleDelete}
                 >
                   ลบ
                 </button>
               )}
-              <button type="button" className="humi-btn" onClick={requestClose}>
+              <button type="button" className="cnext-btn" onClick={requestClose}>
                 ยกเลิก
               </button>
               <button
                 type="button"
-                className="humi-btn humi-btn--primary"
+                className="cnext-btn cnext-btn--primary"
                 onClick={save}
               >
                 {mode === 'create' ? 'บันทึก' : 'บันทึกการแก้ไข'}

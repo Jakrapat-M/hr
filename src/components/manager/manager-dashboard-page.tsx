@@ -27,7 +27,7 @@ import {
  FileBarChart,
  Download,
 } from 'lucide-react';
-import { Card, CardTitle, Button, Modal } from '@/components/humi';
+import { Card, CardTitle, Button, Modal } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs } from '@/components/ui/tabs';

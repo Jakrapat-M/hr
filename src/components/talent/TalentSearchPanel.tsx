@@ -2,11 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import { Search } from 'lucide-react';
-import { CardEyebrow, CardTitle, FormInput } from '@/components/humi';
+import { CardEyebrow, CardTitle, FormInput } from '@/components/cnext';
 import { TalentFilterPanel } from './TalentFilterPanel';
 import { TalentResultCard, type TalentEmployee } from './TalentResultCard';
-import { SF_REAL_EMPLOYEES } from '@/lib/humi-mock-data-sf-real';
-import { HUMI_EMPLOYEES } from '@/lib/humi-mock-data';
+import { SF_REAL_EMPLOYEES } from '@/lib/cnext-mock-data-sf-real';
+import { CNEXT_EMPLOYEES } from '@/lib/cnext-mock-data';
 import { useTalent } from '@/hooks/use-talent';
 
 // ════════════════════════════════════════════════════════════
@@ -90,7 +90,7 @@ export const EMPTY_FILTERS: TalentFilters = {
   mobility: '',
 };
 
-// ── Merge SF real employees with humi mock employees ─────────
+// ── Merge SF real employees with cnext mock employees ─────────
 
 function buildTalentPool(): TalentEmployee[] {
   // Combine real SF employees + mock talent hook data into one pool
@@ -114,7 +114,7 @@ function buildTalentPool(): TalentEmployee[] {
       : undefined,
   }));
 
-  const humiPool = HUMI_EMPLOYEES.slice(0, 10).map((e) => ({
+  const cnextPool = CNEXT_EMPLOYEES.slice(0, 10).map((e) => ({
     id: e.id,
     employeeCode: e.employeeCode,
     firstNameTh: e.firstNameTh,
@@ -136,7 +136,7 @@ function buildTalentPool(): TalentEmployee[] {
       : undefined,
   }));
 
-  return [...sfPool, ...humiPool];
+  return [...sfPool, ...cnextPool];
 }
 
 const FULL_POOL = buildTalentPool();
@@ -178,7 +178,7 @@ function applyFilters(pool: TalentEmployee[], filters: TalentFilters, query: str
   // BU filter (businessUnitId match or name match)
   if (filters.businessUnit) {
     results = results.filter((e) => {
-      // HUMI employees don't have businessUnitId, do a loose position match
+      // CNEXT employees don't have businessUnitId, do a loose position match
       return (e as unknown as { businessUnitId?: string }).businessUnitId
         ? (e as unknown as { businessUnitId: string }).businessUnitId === filters.businessUnit
         : e.department.toLowerCase().includes(filters.businessUnit.toLowerCase());

@@ -30,23 +30,23 @@ import {
   CardTitle,
   Modal,
   Textarea,
-} from '@/components/humi';
+} from '@/components/cnext';
 import { TerminationRequestSummary } from '@/components/termination/TerminationRequestSummary';
 import { cn } from '@/lib/utils';
 import {
-  HUMI_REQUEST_CATALOG,
-  HUMI_MY_REQUESTS,
+  CNEXT_REQUEST_CATALOG,
+  CNEXT_MY_REQUESTS,
   REQUEST_STATUS_META,
   ACCENT_ICON_CLASS,
   ACCENT_BAR_CLASS,
   type RequestIconKey,
   type RequestStatus,
-  type HumiApprovalStep,
-} from '@/lib/humi-mock-data';
+  type CnextApprovalStep,
+} from '@/lib/cnext-mock-data';
 import {
   useRequestsStore,
   type RequestFilterKey,
-} from '@/stores/humi-requests-slice';
+} from '@/stores/cnext-requests-slice';
 import { useEssRequestActions } from '@/stores/ess-request-actions';
 import { selectBenefitRequestSummaries, useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { selectBenefitReferralRequestSummaries, useBenefitReferralsStore } from '@/stores/benefit-referrals';
@@ -92,7 +92,7 @@ const FILTER_CHIPS: Array<{ key: RequestFilterKey; label: string }> = [
   { key: 'info', label: 'ขอข้อมูลเพิ่ม' },
 ];
 
-const REQUEST_FORM_CATALOG = HUMI_REQUEST_CATALOG.filter((form) => form.id !== 'claim');
+const REQUEST_FORM_CATALOG = CNEXT_REQUEST_CATALOG.filter((form) => form.id !== 'claim');
 
 // Template-specific form fields definition
 type TemplateField = { id: string; label: string; placeholder: string; type?: 'text' | 'textarea' };
@@ -123,7 +123,7 @@ function useToast() {
   return { toast, show };
 }
 
-export default function HumiRequestsPage() {
+export default function CnextRequestsPage() {
   const pathname = usePathname();
   const locale = pathname.startsWith('/th') ? 'th' : 'en';
   const roles = useAuthStore((s) => s.roles);
@@ -150,7 +150,7 @@ export default function HumiRequestsPage() {
   const essActions = useEssRequestActions((s) => s.actions);
 
   const allMine = useMemo<MineRow[]>(() => {
-    const base = HUMI_MY_REQUESTS.map((r) => ({ ...r }));
+    const base = CNEXT_MY_REQUESTS.map((r) => ({ ...r }));
     const store = submissions.map((s) => ({
       id: s.id,
       type: s.type,
@@ -159,7 +159,7 @@ export default function HumiRequestsPage() {
       status: s.status,
       approvalChain: [
         { role: 'หัวหน้างาน', name: 'ปรีชา วัฒนกุล', initials: 'ปว', tone: 'teal' as const, status: 'pending' as const, when: 'รอดำเนินการ' },
-      ] satisfies HumiApprovalStep[],
+      ] satisfies CnextApprovalStep[],
     }));
     const queue = queueRows.map((q) => ({
       id: q.id,
@@ -167,7 +167,7 @@ export default function HumiRequestsPage() {
       sub: q.sub,
       submitted: q.submitted,
       status: q.status as RequestStatus,
-      approvalChain: q.approvalChain satisfies HumiApprovalStep[],
+      approvalChain: q.approvalChain satisfies CnextApprovalStep[],
       // STA-175 — only self-cancellable types carry a cancel adapter; others stay false.
       requestType: q.requestType,
       requesterId: q.requesterId,
@@ -318,7 +318,7 @@ type MineRow = {
   sub: string;
   submitted: string;
   status: RequestStatus;
-  approvalChain: HumiApprovalStep[];
+  approvalChain: CnextApprovalStep[];
   href?: string;
   // STA-175 — self-cancel plumbing (present only on queue-projected rows).
   requestType?: RequestType;
@@ -417,7 +417,7 @@ function MineTab({
       {/* Summary tiles */}
       <section className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {summaryCards.map((s) => (
-          <div key={s.l} className={cn('humi-stat-card', `humi-stat-card--${s.tone}`)}>
+          <div key={s.l} className={cn('cnext-stat-card', `cnext-stat-card--${s.tone}`)}>
             <CardEyebrow>{s.l}</CardEyebrow>
             <p
               className={cn(
@@ -667,14 +667,14 @@ function MineTab({
 // Request detail modal — shows approval chain
 // ────────────────────────────────────────────────────────────
 
-const STEP_TONE: Record<HumiApprovalStep['status'], string> = {
+const STEP_TONE: Record<CnextApprovalStep['status'], string> = {
   approved: 'bg-[color:var(--color-sage-soft)] text-[color:var(--color-sage-ink)]',
   pending: 'bg-[color:var(--color-butter-soft)] text-[color:var(--color-butter-ink)]',
   rejected: 'bg-[color:var(--color-accent-alt-soft)] text-[color:var(--color-accent-alt-ink)]',
   skipped: 'bg-canvas-soft text-ink-muted',
 };
 
-const STEP_LABEL: Record<HumiApprovalStep['status'], string> = {
+const STEP_LABEL: Record<CnextApprovalStep['status'], string> = {
   approved: 'อนุมัติแล้ว',
   pending: 'รออนุมัติ',
   rejected: 'ไม่อนุมัติ',
@@ -804,7 +804,7 @@ function CatalogTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
       <Card
         variant="raised"
         size="lg"
-        className="humi-banner mb-6"
+        className="cnext-banner mb-6"
       >
         <div
           aria-hidden
@@ -917,7 +917,7 @@ function CatalogTab({ onSubmitted }: { onSubmitted: (msg: string) => void }) {
               variant="raised"
               size="md"
               className={cn(
-                'humi-card-lift',
+                'cnext-card-lift',
                 isSelected && 'ring-2 ring-accent ring-offset-2 ring-offset-surface'
               )}
             >

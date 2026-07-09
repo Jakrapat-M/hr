@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { FileText } from 'lucide-react';
 import { useLocale } from 'next-intl';
-import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput, Textarea } from '@/components/humi';
-import { Modal } from '@/components/humi/Modal';
-import { FileUploadField } from '@/components/humi/FileUploadField';
+import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput, Textarea } from '@/components/cnext';
+import { Modal } from '@/components/cnext/Modal';
+import { FileUploadField } from '@/components/cnext/FileUploadField';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import {
   bucketsForPlan,
@@ -165,7 +165,7 @@ export function SimpleClaimForm({
   const [errors, setErrors] = useState<string[]>([]);
   const [lastWorkflowId, setLastWorkflowId] = useState<string | null>(null);
   // STA-145 Phase B — patient-transfer "Yes" opens an error popup that asks the
-  // claimant to close + cancel (E-patient reconciles outside Humi).
+  // claimant to close + cancel (E-patient reconciles outside Cnext).
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   // STA-148 req-2 — selecting Type of Hospital = Clinic opens a not-allowed notice.
   const [clinicModalOpen, setClinicModalOpen] = useState(false);
@@ -586,8 +586,8 @@ export function SimpleClaimForm({
         <div className="space-y-3 text-body text-ink">
           <p>
             {isTh
-              ? 'กรณีใช้สิทธิ E-patient ไม่ต้องเบิกผ่าน Humi ยอดวงเงินค่ารักษาพยาบาลของคุณจะถูกปรับปรุงหลังกระทบยอดกับใบเสร็จจากโรงพยาบาล'
-              : 'In case of using E-patient, reimbursement via Humi is not required. Your medical balance will be updated after reconciliation with the receipt from hospital.'}
+              ? 'กรณีใช้สิทธิ E-patient ไม่ต้องเบิกผ่าน Cnext ยอดวงเงินค่ารักษาพยาบาลของคุณจะถูกปรับปรุงหลังกระทบยอดกับใบเสร็จจากโรงพยาบาล'
+              : 'In case of using E-patient, reimbursement via Cnext is not required. Your medical balance will be updated after reconciliation with the receipt from hospital.'}
           </p>
           <p>
             {isTh

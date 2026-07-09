@@ -81,12 +81,12 @@ vi.mock('next/navigation', () => ({
   useSearchParams: vi.fn().mockReturnValue(new URLSearchParams()),
 }));
 
-import { useHumiProfileStore } from '@/stores/humi-profile-slice';
+import { useCnextProfileStore } from '@/stores/cnext-profile-slice';
 import { ResignationPage } from '@/components/resignation/resignation-page';
 
 function resetStore() {
   localStorageMock.clear();
-  useHumiProfileStore.setState({
+  useCnextProfileStore.setState({
     activeTab: 'personal',
     isEditing: false,
     draft: {
@@ -125,13 +125,13 @@ afterEach(() => {
 
 describe('AC-4: ResignationPage timeline แสดง "submitted" step หลัง submit', () => {
   // TODO: tests below were written against a planned timeline UI (3-step: submitted/in_progress/completed)
-  // using humi-profile-slice.submitChangeRequest. The actual ResignationPage (BRD #172) uses
+  // using cnext-profile-slice.submitChangeRequest. The actual ResignationPage (BRD #172) uses
   // termination-approvals store with a form-first layout — no timeline widget, no empty-state text.
   // Re-enable when the timeline UI is implemented in a future wave.
 
   it.skip('AC-4: หลัง submit สำเร็จ → timeline renders step 1 (submitted) active', async () => {
     act(() => {
-      useHumiProfileStore.getState().submitChangeRequest({
+      useCnextProfileStore.getState().submitChangeRequest({
         sectionKey: 'termination',
         field: 'employmentStatus',
         oldValue: 'active',
@@ -149,7 +149,7 @@ describe('AC-4: ResignationPage timeline แสดง "submitted" step หลั
 
   it.skip('AC-4: step 1 (submitted) ต้องมี active class (bg-brand) — first step always active หลัง submit', async () => {
     act(() => {
-      useHumiProfileStore.getState().submitChangeRequest({
+      useCnextProfileStore.getState().submitChangeRequest({
         sectionKey: 'termination',
         field: 'employmentStatus',
         oldValue: 'active',

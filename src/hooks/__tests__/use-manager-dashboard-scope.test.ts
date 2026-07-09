@@ -12,20 +12,20 @@ import { countDirectReports } from '@/lib/scope-filter';
 import { ALL_PORTED_EMPLOYEES, EMP_BY_LOGIN } from '@/lib/all-ported-employees';
 
 describe('Track A2 — countDirectReports against ALL_PORTED_EMPLOYEES', () => {
-  test('manager@humi.test (emp-002) has non-zero direct reports', () => {
-    const empId = EMP_BY_LOGIN['manager@humi.test'];
+  test('manager@cnext.test (emp-002) has non-zero direct reports', () => {
+    const empId = EMP_BY_LOGIN['manager@cnext.test'];
     const count = countDirectReports(ALL_PORTED_EMPLOYEES, empId);
     expect(count).toBeGreaterThanOrEqual(0);
     // emp-002 = พิชญ์ ม. (Senior Finance Analyst) — per scope-filter T6 wiring
     // intentionally has subordinates in the SF-real pool.
   });
 
-  test('rungrote@humi.test (emp-002) maps to same emp-id as generic manager', () => {
-    expect(EMP_BY_LOGIN['rungrote@humi.test']).toBe(EMP_BY_LOGIN['manager@humi.test']);
+  test('rungrote@cnext.test (emp-002) maps to same emp-id as generic manager', () => {
+    expect(EMP_BY_LOGIN['rungrote@cnext.test']).toBe(EMP_BY_LOGIN['manager@cnext.test']);
   });
 
-  test('admin@humi.test (emp-005) — count is non-negative', () => {
-    const empId = EMP_BY_LOGIN['admin@humi.test'];
+  test('admin@cnext.test (emp-005) — count is non-negative', () => {
+    const empId = EMP_BY_LOGIN['admin@cnext.test'];
     const count = countDirectReports(ALL_PORTED_EMPLOYEES, empId);
     expect(count).toBeGreaterThanOrEqual(0);
   });

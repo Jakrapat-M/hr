@@ -19,7 +19,7 @@ import type {
   ModuleImportConfig,
   ValidationItem,
 } from '@/components/admin/import/ModuleImportWizard';
-import type { DataTableColumn } from '@/components/humi';
+import type { DataTableColumn } from '@/components/cnext';
 import { useEmployees } from '@/lib/admin/store/useEmployees';
 import type { MockEmployee } from '@/mocks/employees';
 import type { ImportJob } from '@/stores/import-jobs-store';

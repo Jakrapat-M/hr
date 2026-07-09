@@ -1,6 +1,6 @@
 'use client'
 
-// Stepper.tsx — Humi-skinned 3-step rail for Hire Wizard
+// Stepper.tsx — Cnext-skinned 3-step rail for Hire Wizard
 // States: locked (disabled) / active (teal bg) / complete (teal ring + ✓)
 // Each step shows ไทย label + short Thai description so the rail acts
 // as a table-of-contents, not a pure progress bar.

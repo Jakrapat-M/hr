@@ -18,7 +18,7 @@ import {
   type ModuleImportConfig,
   type ValidationItem,
 } from '@/components/admin/import/ModuleImportWizard';
-import type { DataTableColumn } from '@/components/humi';
+import type { DataTableColumn } from '@/components/cnext';
 import { AccessDenied } from '@/components/shared/access-denied';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasRole } from '@/lib/rbac';

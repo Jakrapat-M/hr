@@ -37,8 +37,8 @@ describe('i18n structural completeness', () => {
   });
 
   it('EN and TH have identical total key count (2,895)', () => {
-    // Baseline 2,895 — updated to 3,017 after Humi redesign sprint added
-    // humiEmployeeDetail (21 keys) + humiOrgChart (12 keys) + EN completeness fixes
+    // Baseline 2,895 — updated to 3,017 after Cnext redesign sprint added
+    // cnextEmployeeDetail (21 keys) + cnextOrgChart (12 keys) + EN completeness fixes
     expect(enKeys.length).toBe(thKeys.length);
     expect(enKeys.length).toBeGreaterThanOrEqual(2895);
   });

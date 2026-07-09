@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { AdminSidebar } from './AdminSidebar';
-import { Topbar } from '@/components/humi/shell/Topbar';
-import { CommandPalette } from '@/components/humi/shell/CommandPalette';
+import { Topbar } from '@/components/cnext/shell/Topbar';
+import { CommandPalette } from '@/components/cnext/shell/CommandPalette';
 import { useUIStore } from '@/stores/ui-store';
 
 const TITLE_MAP: Array<{ prefix: string; title: string }> = [
@@ -98,19 +98,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="humi-app">
+    <div className="cnext-app">
       <AdminSidebar />
 
       {mobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 z-30 lg:hidden humi-drawer-scrim"
+            className="fixed inset-0 z-30 lg:hidden cnext-drawer-scrim"
             aria-hidden="true"
             onClick={closeMobileMenu}
           />
           <div
             ref={drawerRef}
-            id="humi-mobile-drawer"
+            id="cnext-mobile-drawer"
             role="dialog"
             aria-modal="true"
             aria-label="เมนู Admin"
@@ -119,15 +119,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <AdminSidebar
               onNavigate={closeMobileMenu}
               onClose={closeMobileMenu}
-              className="humi-sidebar--drawer"
+              className="cnext-sidebar--drawer"
             />
           </div>
         </>
       )}
 
-      <div className="humi-main">
+      <div className="cnext-main">
         <Topbar title={title} onSearchClick={() => setPaletteOpen(true)} />
-        <main className="humi-page-wrap">{children}</main>
+        <main className="cnext-page-wrap">{children}</main>
       </div>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>

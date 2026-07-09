@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Briefcase, Building, UserCheck } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/field-group';
 import { Field } from '@/components/ui/field';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { formatDate } from '@/lib/date';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EffectiveDateGate } from '@/components/profile/EffectiveDateGate';

@@ -7,7 +7,7 @@
 // negatives render pumpkin (danger), never red.
 
 import { useMemo } from 'react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { getResultsBreakdown, type DotKind } from '@/lib/time/results-breakdown-seed';
 import { toBase60Dot, resultAmount, resultsTotals } from '@/lib/time/results-display';

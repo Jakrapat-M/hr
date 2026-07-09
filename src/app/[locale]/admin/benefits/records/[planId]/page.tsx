@@ -4,7 +4,7 @@ import { use } from 'react';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { CardEyebrow, CardTitle } from '@/components/humi';
+import { CardEyebrow, CardTitle } from '@/components/cnext';
 import { RecordsFlatForm } from '@/components/benefits/templates/RecordsFlatForm';
 import { RecordsDependentForm } from '@/components/benefits/templates/RecordsDependentForm';
 import { RecordsComputedView } from '@/components/benefits/templates/RecordsComputedView';

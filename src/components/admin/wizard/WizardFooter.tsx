@@ -1,6 +1,6 @@
 'use client'
 
-// WizardFooter.tsx — Humi-skinned Back / Next / Submit
+// WizardFooter.tsx — Cnext-skinned Back / Next / Submit
 // Accent teal primary + outlined secondary. Disabled state uses
 // canvas-soft instead of a loud greyed-out button so it blends.
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
@@ -40,7 +40,7 @@ export function WizardFooter({
           <button
             type="button"
             onClick={onBack}
-            className="humi-button humi-button--ghost"
+            className="cnext-button cnext-button--ghost"
           >
             <ArrowLeft size={14} aria-hidden />
             ย้อนกลับ

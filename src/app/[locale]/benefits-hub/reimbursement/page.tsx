@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ClipboardList } from 'lucide-react';
-import { Card, CardEyebrow, Button, buttonVariants } from '@/components/humi';
+import { Card, CardEyebrow, Button, buttonVariants } from '@/components/cnext';
 import { SimpleClaimForm, type SimpleClaimSubmission } from '@/components/benefits/templates';
 import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry';
 import { benefitsHubRoute } from '@/lib/benefit-routes';
-import { HUMI_CLAIM_ALLOWANCES } from '@/lib/humi-mock-data';
+import { CNEXT_CLAIM_ALLOWANCES } from '@/lib/cnext-mock-data';
 import { useBenefitClaimsStore, type BenefitClaimInput, type BenefitClaimType } from '@/stores/benefit-claims';
 
 // STA-145: BE-MOB-001 is now a canonical claimable plan in the registry
@@ -23,7 +23,7 @@ const SIMPLE_PLANS = BENEFIT_PLAN_REGISTRY.filter(
 );
 
 const allowanceRemaining = (allowanceId: string) => {
-  const allowance = HUMI_CLAIM_ALLOWANCES.find((item) => item.id === allowanceId);
+  const allowance = CNEXT_CLAIM_ALLOWANCES.find((item) => item.id === allowanceId);
   return allowance ? Math.max(0, allowance.limit - allowance.used) : undefined;
 };
 

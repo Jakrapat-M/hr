@@ -12,8 +12,8 @@ const ELIGIBILITY_MANAGED_BENEFIT_KEYS = new Set([
   'training',
   'travel-allowance',
 ]);
-import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal } from '@/components/humi';
-import { Capability } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal } from '@/components/cnext';
+import { Capability } from '@/components/cnext';
 import {
   BENEFIT_PLAN_REGISTRY,
   type BenefitPlan,

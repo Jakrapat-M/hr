@@ -348,44 +348,44 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
       {/* หน่วยธุรกิจ — readonly after cascade */}
       <fieldset>
-        <label className="humi-label">
+        <label className="cnext-label">
           {t('businessUnit')}
           <span className="text-xs text-ink-muted ml-1">{t('fromPosition')}</span>
         </label>
-        <div className="humi-input w-full bg-canvas-soft text-ink-muted">
+        <div className="cnext-input w-full bg-canvas-soft text-ink-muted">
           {job.businessUnitLabel || job.businessUnit || '—'}
         </div>
       </fieldset>
 
       {/* สาขา/สถานที่ — readonly after cascade */}
       <fieldset>
-        <label className="humi-label">
+        <label className="cnext-label">
           {t('branch')}
           <span className="text-xs text-ink-muted ml-1">{t('fromPosition')}</span>
         </label>
-        <div className="humi-input w-full bg-canvas-soft text-ink-muted">
+        <div className="cnext-input w-full bg-canvas-soft text-ink-muted">
           {job.branchLabel || job.branch || '—'}
         </div>
       </fieldset>
 
       {/* รหัสงาน / Job Code — readonly after cascade */}
       <fieldset>
-        <label className="humi-label">
+        <label className="cnext-label">
           {t('jobCode')}
           <span className="text-xs text-ink-muted ml-1">{t('fromPosition')}</span>
         </label>
-        <div className="humi-input w-full bg-canvas-soft text-ink-muted">
+        <div className="cnext-input w-full bg-canvas-soft text-ink-muted">
           {job.jobLabel || job.jobCode || '—'}
         </div>
       </fieldset>
 
       {/* เกรดงาน — readonly after cascade */}
       <fieldset>
-        <label className="humi-label">
+        <label className="cnext-label">
           {t('jobGrade')}
           <span className="text-xs text-ink-muted ml-1">{t('fromPosition')}</span>
         </label>
-        <div className="humi-input w-full bg-canvas-soft text-ink-muted">
+        <div className="cnext-input w-full bg-canvas-soft text-ink-muted">
           {job.jobGradeLabel
             ? `${job.jobGrade} — ${job.jobGradeLabel}`
             : job.jobGrade || '—'}
@@ -395,7 +395,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
       {/* Work Location (customString7) — full 963-option cust_WorkLocation picklist via datalist */}
       {/* Replaces old 8-option STORE_BRANCH_OPTIONS hardcode */}
       <fieldset>
-        <label htmlFor="store-branch-code" className="humi-label">
+        <label htmlFor="store-branch-code" className="cnext-label">
           {t('storeBranchCode')}
         </label>
         <input
@@ -407,7 +407,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
             setStepData('job', { storeBranchCode: e.target.value || null })
           }}
           placeholder="พิมพ์เพื่อค้นหา Work Location..."
-          className="humi-input w-full"
+          className="cnext-input w-full"
           autoComplete="off"
         />
         <datalist id="work-location-list">
@@ -419,7 +419,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
       {/* HR District — customString25 — manual override or cascaded from Position */}
       <fieldset>
-        <label htmlFor="hr-district" className="humi-label">{t('hrDistrict')}</label>
+        <label htmlFor="hr-district" className="cnext-label">{t('hrDistrict')}</label>
         <select
           id="hr-district"
           value={hrDistrict}
@@ -427,7 +427,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
             setHrDistrict(e.target.value)
             setStepData('job', { hrDistrict: e.target.value || null })
           }}
-          className="humi-select w-full"
+          className="cnext-select w-full"
         >
           <option value="">{t('selectHrDistrict')}</option>
           {HR_DISTRICT_OPTIONS.map((opt) => (
@@ -438,11 +438,11 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
       {/* Supervisor ID — auto-derived from Position FO reporting line */}
       <fieldset>
-        <label className="humi-label">
+        <label className="cnext-label">
           {t('supervisorId')}
           <span className="text-xs text-ink-muted ml-1">{t('fromPosition')}</span>
         </label>
-        <div className="humi-input w-full bg-canvas-soft text-ink-muted">
+        <div className="cnext-input w-full bg-canvas-soft text-ink-muted">
           {job.supervisorId
             ? `${job.supervisorId}${job.supervisorLabel ? ` — ${job.supervisorLabel}` : ''}`
             : '—'}
@@ -451,15 +451,15 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
       {/* ── Phase 3: Job Organisation (SF EmpJob mandatory) ─────────────────────── */}
       <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
-        <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">
+        <legend className="cnext-section-legend text-sm font-semibold text-ink mb-3">
           Job Organisation / หน่วยองค์กร
         </legend>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
 
           {/* Department (SF: EmpJob.department = Organization) */}
           <fieldset>
-            <label htmlFor="department" className="humi-label">
-              Department / Organization<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="department" className="cnext-label">
+              Department / Organization<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <input
               id="department"
@@ -467,14 +467,14 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
               placeholder="รหัส department (เช่น D-RETAIL-OPS)"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Division (SF: EmpJob.division = Function) — was unstored in pre-Phase3 */}
           <fieldset>
-            <label htmlFor="division" className="humi-label">
-              Division / Function<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="division" className="cnext-label">
+              Division / Function<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <input
               id="division"
@@ -482,14 +482,14 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               value={division}
               onChange={(e) => setDivision(e.target.value)}
               placeholder="รหัส division (เช่น DIV-RETAIL)"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Cost Center (SF: EmpJob.costCenter) */}
           <fieldset>
-            <label htmlFor="cost-center" className="humi-label">
-              Cost Center<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="cost-center" className="cnext-label">
+              Cost Center<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <input
               id="cost-center"
@@ -497,14 +497,14 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               value={costCenter}
               onChange={(e) => setCostCenter(e.target.value)}
               placeholder="รหัส cost center (เช่น CC-1001)"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Job Family (SF: EmpJob.customString21) — was unstored in pre-Phase3 */}
           <fieldset>
-            <label htmlFor="job-function" className="humi-label">
-              Job Family<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="job-function" className="cnext-label">
+              Job Family<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
               {/* TODO Phase 0.4 — picklist binding TBD; use free-text for now */}
             </label>
             <input
@@ -513,21 +513,21 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               value={jobFunction}
               onChange={(e) => setJobFunction(e.target.value)}
               placeholder="Job Family code"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Corporate Title (SF: EmpJob.customString5) — zNewCorporateTitle 18 opts */}
           {/* NOTE: stakeholder to confirm zNewCorporateTitle vs zCorporateTitle (legacy) */}
           <fieldset>
-            <label htmlFor="corporate-title" className="humi-label">
+            <label htmlFor="corporate-title" className="cnext-label">
               Corporate Title
             </label>
             <select
               id="corporate-title"
               value={corporateTitle}
               onChange={(e) => setCorporateTitle(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก Corporate Title —</option>
               {CORPORATE_TITLE_OPTIONS.map((code) => (
@@ -538,14 +538,14 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Policy Profile (SF: EmpJob.customString1) — zPolicyProfile 27 opts */}
           <fieldset>
-            <label htmlFor="policy-profile" className="humi-label">
-              Policy Profile<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="policy-profile" className="cnext-label">
+              Policy Profile<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <select
               id="policy-profile"
               value={policyProfile}
               onChange={(e) => setPolicyProfile(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก Policy Profile —</option>
               {POLICY_PROFILE_OPTIONS.map((code) => (
@@ -570,19 +570,19 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           <>
             {/* ── Time Information (Area C — SF Image 15) ────────────────────────── */}
             <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
-              <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">{t('timeInfoSection')}</legend>
+              <legend className="cnext-section-legend text-sm font-semibold text-ink mb-3">{t('timeInfoSection')}</legend>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
 
                 {/* ตารางการทำงาน */}
                 <fieldset>
-                  <label htmlFor="work-schedule" className="humi-label">
-                    {t('workSchedule')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                  <label htmlFor="work-schedule" className="cnext-label">
+                    {t('workSchedule')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
                   </label>
                   <select
                     id="work-schedule"
                     value={workSchedule}
                     onChange={(e) => setWorkSchedule(e.target.value)}
-                    className="humi-select w-full"
+                    className="cnext-select w-full"
                   >
                     <option value="">{t('selectWorkSchedule')}</option>
                     <option value="D05H0800">D05H0800 (มาตรฐาน 5 วัน × 8 ชั่วโมง)</option>
@@ -593,14 +593,14 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
                 {/* ประเภทวันหยุด */}
                 <fieldset>
-                  <label htmlFor="holiday-type" className="humi-label">
-                    {t('holidayTypeCondition')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                  <label htmlFor="holiday-type" className="cnext-label">
+                    {t('holidayTypeCondition')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
                   </label>
                   <select
                     id="holiday-type"
                     value={holidayTypeCondition}
                     onChange={(e) => setHolidayTypeCondition(e.target.value)}
-                    className="humi-select w-full"
+                    className="cnext-select w-full"
                   >
                     <option value="">{t('selectHolidayType')}</option>
                     <option value="HO">HO (ปฏิทินสำนักงานใหญ่)</option>
@@ -611,14 +611,14 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
                 {/* สถานะจัดการเวลา */}
                 <fieldset>
-                  <label htmlFor="time-mgmt-status" className="humi-label">
-                    {t('timeManagementStatus')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                  <label htmlFor="time-mgmt-status" className="cnext-label">
+                    {t('timeManagementStatus')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
                   </label>
                   <select
                     id="time-mgmt-status"
                     value={timeManagementStatus}
                     onChange={(e) => setTimeManagementStatus(e.target.value)}
-                    className="humi-select w-full"
+                    className="cnext-select w-full"
                   >
                     <option value="">{t('selectTimeManagement')}</option>
                     <option value="9">9 — Time Eval (มาตรฐาน)</option>
@@ -629,14 +629,14 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
                 {/* สถานะ OT */}
                 <fieldset>
-                  <label htmlFor="ot-flag" className="humi-label">
-                    {t('otFlag')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                  <label htmlFor="ot-flag" className="cnext-label">
+                    {t('otFlag')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
                   </label>
                   <select
                     id="ot-flag"
                     value={otFlag}
                     onChange={(e) => setOtFlag(e.target.value)}
-                    className="humi-select w-full"
+                    className="cnext-select w-full"
                   >
                     <option value="">— เลือก —</option>
                     {OT_FLAG_OPTIONS.map((opt) => (
@@ -647,7 +647,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
                 {/* ชั่วโมงทำงานต่อสัปดาห์ */}
                 <fieldset>
-                  <label htmlFor="weekly-hours" className="humi-label">{t('standardWeeklyHours')}</label>
+                  <label htmlFor="weekly-hours" className="cnext-label">{t('standardWeeklyHours')}</label>
                   <input
                     id="weekly-hours"
                     type="number"
@@ -655,18 +655,18 @@ export default function StepJob({ onValidChange }: StepJobProps) {
                     max={168}
                     value={standardWeeklyHours}
                     onChange={(e) => setStandardWeeklyHours(Number(e.target.value))}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 {/* Override Standard Weekly Hours */}
                 <fieldset>
-                  <label htmlFor="override-weekly-hours" className="humi-label">{t('overrideStandardWeeklyHours')}</label>
+                  <label htmlFor="override-weekly-hours" className="cnext-label">{t('overrideStandardWeeklyHours')}</label>
                   <select
                     id="override-weekly-hours"
                     value={overrideStandardWeeklyHours ? 'YES' : 'NO'}
                     onChange={(e) => setOverrideStandardWeeklyHours(e.target.value === 'YES')}
-                    className="humi-select w-full"
+                    className="cnext-select w-full"
                   >
                     <option value="NO">{t('overrideNo')}</option>
                     <option value="YES">{t('overrideYes')}</option>
@@ -675,12 +675,12 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
                 {/* Day off Type */}
                 <fieldset>
-                  <label htmlFor="day-off-type" className="humi-label">{t('dayOffType')}</label>
+                  <label htmlFor="day-off-type" className="cnext-label">{t('dayOffType')}</label>
                   <select
                     id="day-off-type"
                     value={dayOffType}
                     onChange={(e) => setDayOffType(e.target.value)}
-                    className="humi-select w-full"
+                    className="cnext-select w-full"
                   >
                     <option value="">{t('selectDayOffType')}</option>
                     <option value="FIXED">{t('dayOffFixed')}</option>
@@ -691,7 +691,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
                 {/* ชั่วโมงทำงานต่อวัน (SF: EmpJob.customDouble1 — Daily Working Hours) */}
                 <fieldset>
-                  <label htmlFor="daily-hours" className="humi-label">{t('dailyWorkingHours')}</label>
+                  <label htmlFor="daily-hours" className="cnext-label">{t('dailyWorkingHours')}</label>
                   <input
                     id="daily-hours"
                     type="number"
@@ -699,13 +699,13 @@ export default function StepJob({ onValidChange }: StepJobProps) {
                     max={24}
                     value={dailyWorkingHours}
                     onChange={(e) => setDailyWorkingHours(Number(e.target.value))}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 {/* วันทำงานต่อสัปดาห์ */}
                 <fieldset>
-                  <label htmlFor="work-days" className="humi-label">{t('workingDaysPerWeek')}</label>
+                  <label htmlFor="work-days" className="cnext-label">{t('workingDaysPerWeek')}</label>
                   <input
                     id="work-days"
                     type="number"
@@ -713,13 +713,13 @@ export default function StepJob({ onValidChange }: StepJobProps) {
                     max={7}
                     value={workingDaysPerWeek}
                     onChange={(e) => setWorkingDaysPerWeek(Number(e.target.value))}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 {/* FTE (computed) */}
                 <fieldset>
-                  <label htmlFor="fte" className="humi-label">
+                  <label htmlFor="fte" className="cnext-label">
                     {t('fte')} <span className="text-xs text-ink-muted ml-1">{t('fteHint')}</span>
                   </label>
                   <input
@@ -727,18 +727,18 @@ export default function StepJob({ onValidChange }: StepJobProps) {
                     type="number"
                     value={fte}
                     readOnly
-                    className="humi-input w-full bg-canvas-soft"
+                    className="cnext-input w-full bg-canvas-soft"
                   />
                 </fieldset>
 
                 {/* ปฏิทินวันหยุด */}
                 <fieldset>
-                  <label htmlFor="holiday-cal" className="humi-label">{t('holidayCalendar')}</label>
+                  <label htmlFor="holiday-cal" className="cnext-label">{t('holidayCalendar')}</label>
                   <select
                     id="holiday-cal"
                     value={holidayCalendar}
                     onChange={(e) => setHolidayCalendar(e.target.value)}
-                    className="humi-select w-full"
+                    className="cnext-select w-full"
                   >
                     <option value="">{t('selectHolidayCalendar')}</option>
                     <option value="TH_PUBLIC">ปฏิทินวันหยุดราชการไทย</option>
@@ -748,12 +748,12 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
                 {/* Time Profile */}
                 <fieldset>
-                  <label htmlFor="time-profile" className="humi-label">{t('timeProfile')}</label>
+                  <label htmlFor="time-profile" className="cnext-label">{t('timeProfile')}</label>
                   <select
                     id="time-profile"
                     value={timeProfile}
                     onChange={(e) => setTimeProfile(e.target.value)}
-                    className="humi-select w-full"
+                    className="cnext-select w-full"
                   >
                     <option value="">{t('selectTimeProfile')}</option>
                     <option value="TP_STD">TP_STD — มาตรฐาน</option>
@@ -764,12 +764,12 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
                 {/* รูปแบบการบันทึกเวลา */}
                 <fieldset>
-                  <label htmlFor="time-variant" className="humi-label">{t('timeRecordingVariant')}</label>
+                  <label htmlFor="time-variant" className="cnext-label">{t('timeRecordingVariant')}</label>
                   <select
                     id="time-variant"
                     value={timeRecordingVariant}
                     onChange={(e) => setTimeRecordingVariant(e.target.value)}
-                    className="humi-select w-full"
+                    className="cnext-select w-full"
                   >
                     <option value="">{t('selectTimeVariant')}</option>
                     <option value="01">01 — ระบบสแกนนิ้ว</option>
@@ -786,37 +786,37 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
       {/* ── Phase 3: Classification / Identifiers ───────────────────────────────── */}
       <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
-        <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">
+        <legend className="cnext-section-legend text-sm font-semibold text-ink mb-3">
           Classification / ประเภทการจ้าง
         </legend>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
 
           {/* Employee Group — customString2 — read from employeeInfo slice (already in store) */}
           <fieldset>
-            <label className="humi-label">
+            <label className="cnext-label">
               Employee Group
               <span className="text-xs text-ink-muted ml-1">จาก Employee Info</span>
             </label>
-            <div className="humi-input w-full bg-canvas-soft text-ink-muted">
+            <div className="cnext-input w-full bg-canvas-soft text-ink-muted">
               {formData.employeeInfo.employeeGroup || '—'}
             </div>
           </fieldset>
 
           {/* Employee Subgroup — customString3 — read from employeeInfo slice */}
           <fieldset>
-            <label className="humi-label">
+            <label className="cnext-label">
               Employee Subgroup
               <span className="text-xs text-ink-muted ml-1">จาก Employee Info</span>
             </label>
-            <div className="humi-input w-full bg-canvas-soft text-ink-muted">
+            <div className="cnext-input w-full bg-canvas-soft text-ink-muted">
               {formData.employeeInfo.employeeSubGroup || '—'}
             </div>
           </fieldset>
 
           {/* Group / Company Group (SF: EmpJob.customString16) — zSection 125 opts */}
           <fieldset>
-            <label htmlFor="group-company" className="humi-label">
-              Group / Company Group<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="group-company" className="cnext-label">
+              Group / Company Group<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <input
               id="group-company"
@@ -824,7 +824,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               value={groupCompanyGroup}
               onChange={(e) => setGroupCompanyGroup(e.target.value)}
               placeholder="พิมพ์รหัส Section (เช่น S00001)"
-              className="humi-input w-full"
+              className="cnext-input w-full"
               autoComplete="off"
             />
             <datalist id="section-list">
@@ -850,14 +850,14 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Contract Type (SF: EmpJob.customString24) — contractType 7 opts */}
           <fieldset>
-            <label htmlFor="contract-type" className="humi-label">
-              Contract Type<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="contract-type" className="cnext-label">
+              Contract Type<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <select
               id="contract-type"
               value={contractType}
               onChange={(e) => setContractType(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก Contract Type —</option>
               {CONTRACT_TYPE_OPTIONS.map((code) => (
@@ -868,14 +868,14 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Employment Type (SF: EmpJob.employmentType) — EmploymentType 50 opts */}
           <fieldset>
-            <label htmlFor="employment-type" className="humi-label">
+            <label htmlFor="employment-type" className="cnext-label">
               Employment Type
             </label>
             <select
               id="employment-type"
               value={employmentType}
               onChange={(e) => setEmploymentType(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก Employment Type —</option>
               {EMPLOYMENT_TYPE_OPTIONS.map((code) => (
@@ -886,8 +886,8 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* SSO Location (SF: EmpJob.customString8) — free-text, picklist TBD Phase 0.4 */}
           <fieldset>
-            <label htmlFor="sso-location" className="humi-label">
-              SSO Location<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="sso-location" className="cnext-label">
+              SSO Location<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
               {/* TODO Phase 0.4 — picklist binding TBD; use free-text for now */}
             </label>
             <input
@@ -896,14 +896,14 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               value={ssoLocation}
               onChange={(e) => setSsoLocation(e.target.value)}
               placeholder="SSO Location code"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Zone (SF: EmpJob.customString31) — free-text, picklist TBD Phase 0.4 */}
           <fieldset>
-            <label htmlFor="zone" className="humi-label">
-              Zone<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="zone" className="cnext-label">
+              Zone<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
               {/* TODO Phase 0.4 — picklist binding TBD; use free-text for now */}
             </label>
             <input
@@ -912,13 +912,13 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               value={zone}
               onChange={(e) => setZone(e.target.value)}
               placeholder="Zone code"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Contract End Date */}
           <fieldset>
-            <label htmlFor="contract-end" className="humi-label">
+            <label htmlFor="contract-end" className="cnext-label">
               Contract End Date
             </label>
             <input
@@ -926,13 +926,13 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               type="date"
               value={contractEndDate}
               onChange={(e) => setContractEndDate(e.target.value)}
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Probation End Date */}
           <fieldset>
-            <label htmlFor="probation-end" className="humi-label">
+            <label htmlFor="probation-end" className="cnext-label">
               Probation End Date
             </label>
             <input
@@ -940,7 +940,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               type="date"
               value={probationEndDate}
               onChange={(e) => setProbationEndDate(e.target.value)}
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
@@ -949,45 +949,45 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
       {/* ── STA-82: Job Information additional fields ───────────────────────── */}
       <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
-        <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">
+        <legend className="cnext-section-legend text-sm font-semibold text-ink mb-3">
           ข้อมูลงานเพิ่มเติม / Additional Job Information
         </legend>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
 
           {/* Job Role */}
           <fieldset>
-            <label htmlFor="job-role" className="humi-label">Job Role</label>
+            <label htmlFor="job-role" className="cnext-label">Job Role</label>
             <input
               id="job-role"
               type="text"
               value={jobRole}
               onChange={(e) => setJobRole(e.target.value)}
               placeholder="Job Role"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Job Type */}
           <fieldset>
-            <label htmlFor="job-type" className="humi-label">Job Type</label>
+            <label htmlFor="job-type" className="cnext-label">Job Type</label>
             <input
               id="job-type"
               type="text"
               value={jobType}
               onChange={(e) => setJobType(e.target.value)}
               placeholder="Job Type"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Personnel Grade */}
           <fieldset>
-            <label htmlFor="personnel-grade" className="humi-label">Personnel Grade</label>
+            <label htmlFor="personnel-grade" className="cnext-label">Personnel Grade</label>
             <select
               id="personnel-grade"
               value={personnelGrade}
               onChange={(e) => setPersonnelGrade(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {PERSONNEL_GRADE_OPTIONS.map((opt) => (
@@ -998,12 +998,12 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Band Matching */}
           <fieldset>
-            <label htmlFor="band-matching" className="humi-label">Band Matching</label>
+            <label htmlFor="band-matching" className="cnext-label">Band Matching</label>
             <select
               id="band-matching"
               value={bandMatching}
               onChange={(e) => setBandMatching(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {BAND_MATCHING_OPTIONS.map((opt) => (
@@ -1014,12 +1014,12 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Band */}
           <fieldset>
-            <label htmlFor="band" className="humi-label">Band</label>
+            <label htmlFor="band" className="cnext-label">Band</label>
             <select
               id="band"
               value={band}
               onChange={(e) => setBand(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {BAND_OPTIONS.map((opt) => (
@@ -1030,12 +1030,12 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Transfer out to (LOV) */}
           <fieldset>
-            <label htmlFor="transfer-out-to" className="humi-label">Transfer out to</label>
+            <label htmlFor="transfer-out-to" className="cnext-label">Transfer out to</label>
             <select
               id="transfer-out-to"
               value={transferOutTo}
               onChange={(e) => setTransferOutTo(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {TRANSFER_TARGET_OPTIONS.map((opt) => (
@@ -1046,12 +1046,12 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Transfer in to (LOV) */}
           <fieldset>
-            <label htmlFor="transfer-in-to" className="humi-label">Transfer in to</label>
+            <label htmlFor="transfer-in-to" className="cnext-label">Transfer in to</label>
             <select
               id="transfer-in-to"
               value={transferInTo}
               onChange={(e) => setTransferInTo(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {TRANSFER_TARGET_OPTIONS.map((opt) => (
@@ -1062,25 +1062,25 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Transfer from */}
           <fieldset>
-            <label htmlFor="transfer-from" className="humi-label">Transfer from</label>
+            <label htmlFor="transfer-from" className="cnext-label">Transfer from</label>
             <input
               id="transfer-from"
               type="text"
               value={transferFrom}
               onChange={(e) => setTransferFrom(e.target.value)}
               placeholder="Transfer from"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Special Benefit Group */}
           <fieldset>
-            <label htmlFor="special-benefit-group" className="humi-label">Special Benefit Group</label>
+            <label htmlFor="special-benefit-group" className="cnext-label">Special Benefit Group</label>
             <select
               id="special-benefit-group"
               value={specialBenefitGroup}
               onChange={(e) => setSpecialBenefitGroup(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {SPECIAL_BENEFIT_GROUP_OPTIONS.map((opt) => (
@@ -1091,12 +1091,12 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* OK to Rehire (LOV Yes/No) */}
           <fieldset>
-            <label htmlFor="ok-to-rehire" className="humi-label">OK to Rehire</label>
+            <label htmlFor="ok-to-rehire" className="cnext-label">OK to Rehire</label>
             <select
               id="ok-to-rehire"
               value={okToRehire}
               onChange={(e) => setOkToRehire(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {OK_TO_REHIRE_OPTIONS.map((opt) => (
@@ -1107,25 +1107,25 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Probationary Period End Date */}
           <fieldset>
-            <label htmlFor="probationary-period-end-date" className="humi-label">Probationary Period End Date</label>
+            <label htmlFor="probationary-period-end-date" className="cnext-label">Probationary Period End Date</label>
             <input
               id="probationary-period-end-date"
               type="date"
               value={probationaryPeriodEndDate}
               onChange={(e) => setProbationaryPeriodEndDate(e.target.value)}
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Extended Probation Date */}
           <fieldset>
-            <label htmlFor="extended-probation-date" className="humi-label">Extended Probation Date</label>
+            <label htmlFor="extended-probation-date" className="cnext-label">Extended Probation Date</label>
             <input
               id="extended-probation-date"
               type="date"
               value={extendedProbationDate}
               onChange={(e) => setExtendedProbationDate(e.target.value)}
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
@@ -1134,19 +1134,19 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
       {/* ── STA-82: DVT Subsection ────────────────────────────────────────────── */}
       <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
-        <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">
+        <legend className="cnext-section-legend text-sm font-semibold text-ink mb-3">
           DVT / ทุนการศึกษา
         </legend>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
 
           {/* Scholarship — gates the DVT cluster (AC5). Kept first so the relationship is obvious. */}
           <fieldset>
-            <label htmlFor="scholarship" className="humi-label">Scholarship</label>
+            <label htmlFor="scholarship" className="cnext-label">Scholarship</label>
             <select
               id="scholarship"
               value={scholarship}
               onChange={(e) => setScholarship(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {SCHOLARSHIP_OPTIONS.map((opt) => (
@@ -1159,25 +1159,25 @@ export default function StepJob({ onValidChange }: StepJobProps) {
           {showDvtFields && (<>
           {/* DVT: Project name */}
           <fieldset>
-            <label htmlFor="dvt-project-name" className="humi-label">DVT: Project name</label>
+            <label htmlFor="dvt-project-name" className="cnext-label">DVT: Project name</label>
             <input
               id="dvt-project-name"
               type="text"
               value={dvtProjectName}
               onChange={(e) => setDvtProjectName(e.target.value)}
               placeholder="DVT Project name"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* DVT: Type */}
           <fieldset>
-            <label htmlFor="dvt-type" className="humi-label">DVT: Type</label>
+            <label htmlFor="dvt-type" className="cnext-label">DVT: Type</label>
             <select
               id="dvt-type"
               value={dvtType}
               onChange={(e) => setDvtType(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {DVT_TYPE_OPTIONS.map((opt) => (
@@ -1188,75 +1188,75 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* DVT: Course */}
           <fieldset>
-            <label htmlFor="dvt-course" className="humi-label">DVT: Course</label>
+            <label htmlFor="dvt-course" className="cnext-label">DVT: Course</label>
             <input
               id="dvt-course"
               type="text"
               value={dvtCourse}
               onChange={(e) => setDvtCourse(e.target.value)}
               placeholder="DVT Course"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* DVT: Course of Time */}
           <fieldset>
-            <label htmlFor="dvt-course-of-time" className="humi-label">DVT: Course of Time</label>
+            <label htmlFor="dvt-course-of-time" className="cnext-label">DVT: Course of Time</label>
             <input
               id="dvt-course-of-time"
               type="text"
               value={dvtCourseOfTime}
               onChange={(e) => setDvtCourseOfTime(e.target.value)}
               placeholder="DVT Course of Time"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* DVT: Academic Year */}
           <fieldset>
-            <label htmlFor="dvt-academic-year" className="humi-label">DVT: Academic Year</label>
+            <label htmlFor="dvt-academic-year" className="cnext-label">DVT: Academic Year</label>
             <input
               id="dvt-academic-year"
               type="text"
               value={dvtAcademicYear}
               onChange={(e) => setDvtAcademicYear(e.target.value)}
               placeholder="ปีการศึกษา (เช่น 2568)"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* DVT: Graduation Date */}
           <fieldset>
-            <label htmlFor="dvt-graduation-date" className="humi-label">DVT: Graduation Date</label>
+            <label htmlFor="dvt-graduation-date" className="cnext-label">DVT: Graduation Date</label>
             <input
               id="dvt-graduation-date"
               type="date"
               value={dvtGraduationDate}
               onChange={(e) => setDvtGraduationDate(e.target.value)}
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* DVT: Bonding End date */}
           <fieldset>
-            <label htmlFor="dvt-bonding-end-date" className="humi-label">DVT: Bonding End date</label>
+            <label htmlFor="dvt-bonding-end-date" className="cnext-label">DVT: Bonding End date</label>
             <input
               id="dvt-bonding-end-date"
               type="date"
               value={dvtBondingEndDate}
               onChange={(e) => setDvtBondingEndDate(e.target.value)}
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* DVT: Partner University (BA row 210 — DVT_PARTNER_UNIVERSITY) */}
           <fieldset>
-            <label htmlFor="dvt-partner-university" className="humi-label">DVT: Partner University / มหาวิทยาลัยคู่ร่วม DVT</label>
+            <label htmlFor="dvt-partner-university" className="cnext-label">DVT: Partner University / มหาวิทยาลัยคู่ร่วม DVT</label>
             <select
               id="dvt-partner-university"
               value={dvtPartnerUniversity}
               onChange={(e) => setDvtPartnerUniversity(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {PARTNER_UNIVERSITY_OPTIONS.map((opt) => (
@@ -1267,12 +1267,12 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* DVT: Degree Level (BA row 212 — DVT_DEGREE_LEVEL) */}
           <fieldset>
-            <label htmlFor="dvt-degree-level" className="humi-label">DVT: Degree Level / ระดับการศึกษา</label>
+            <label htmlFor="dvt-degree-level" className="cnext-label">DVT: Degree Level / ระดับการศึกษา</label>
             <select
               id="dvt-degree-level"
               value={dvtDegreeLevel}
               onChange={(e) => setDvtDegreeLevel(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {DEGREE_LEVEL_OPTIONS.map((opt) => (
@@ -1283,7 +1283,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* GPA — Formal Education (BA row 355, process=Hiring per user decision) */}
           <fieldset>
-            <label htmlFor="gpa" className="humi-label">GPA / เกรดเฉลี่ย</label>
+            <label htmlFor="gpa" className="cnext-label">GPA / เกรดเฉลี่ย</label>
             <input
               id="gpa"
               type="text"
@@ -1291,7 +1291,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               value={gpa}
               onChange={(e) => setGpa(e.target.value)}
               placeholder="เช่น 3.50"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
           </>)}
@@ -1301,21 +1301,21 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
       {/* ── STA-82: Organisation Information ─────────────────────────────────── */}
       <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
-        <legend className="humi-section-legend text-sm font-semibold text-ink mb-3">
+        <legend className="cnext-section-legend text-sm font-semibold text-ink mb-3">
           Organisation Information / ข้อมูลองค์กร
         </legend>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
 
           {/* Point of Sales (required) */}
           <fieldset>
-            <label htmlFor="point-of-sales" className="humi-label">
-              Point of Sales<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="point-of-sales" className="cnext-label">
+              Point of Sales<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <select
               id="point-of-sales"
               value={pointOfSales}
               onChange={(e) => setPointOfSales(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {POS_OPTIONS.map((opt) => (
@@ -1326,12 +1326,12 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Store Brand/ Format */}
           <fieldset>
-            <label htmlFor="store-brand-format" className="humi-label">Store Brand / Format</label>
+            <label htmlFor="store-brand-format" className="cnext-label">Store Brand / Format</label>
             <select
               id="store-brand-format"
               value={storeBrandFormat}
               onChange={(e) => setStoreBrandFormat(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {STORE_BRAND_FORMAT_OPTIONS.map((opt) => (
@@ -1342,12 +1342,12 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Brand */}
           <fieldset>
-            <label htmlFor="brand" className="humi-label">Brand</label>
+            <label htmlFor="brand" className="cnext-label">Brand</label>
             <select
               id="brand"
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">— เลือก —</option>
               {BRAND_OPTIONS.map((opt) => (
@@ -1358,8 +1358,8 @@ export default function StepJob({ onValidChange }: StepJobProps) {
 
           {/* Work Location (required) */}
           <fieldset>
-            <label htmlFor="work-location" className="humi-label">
-              Work Location<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="work-location" className="cnext-label">
+              Work Location<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <input
               id="work-location"
@@ -1367,7 +1367,7 @@ export default function StepJob({ onValidChange }: StepJobProps) {
               value={workLocation}
               onChange={(e) => setWorkLocation(e.target.value)}
               placeholder="Work Location"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 

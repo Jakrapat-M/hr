@@ -20,15 +20,15 @@ beforeEach(() => {
 })
 
 describe('StepGlobalInfo design tokens', () => {
-  it('uses the Humi textarea token and stacked full-width layout for Additional Information', () => {
+  it('uses the Cnext textarea token and stacked full-width layout for Additional Information', () => {
     render(<StepGlobalInfo />)
 
     const additionalInfo = screen.getByLabelText('ข้อมูลเพิ่มเติม / Additional Information')
     const field = additionalInfo.closest('fieldset')
 
-    expect(additionalInfo).toHaveClass('humi-textarea')
-    expect(additionalInfo).toHaveClass('humi-input--wide')
-    expect(additionalInfo).not.toHaveClass('humi-input')
+    expect(additionalInfo).toHaveClass('cnext-textarea')
+    expect(additionalInfo).toHaveClass('cnext-input--wide')
+    expect(additionalInfo).not.toHaveClass('cnext-input')
     expect(field).toHaveClass('flex')
     expect(field).toHaveClass('flex-col')
   })

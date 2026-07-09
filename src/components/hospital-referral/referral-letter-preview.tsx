@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Modal, Button } from '@/components/humi';
+import { Modal, Button } from '@/components/cnext';
 import { Printer, Download } from 'lucide-react';
 import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import type { HospitalReferral } from '@/hooks/use-hospital-referral';

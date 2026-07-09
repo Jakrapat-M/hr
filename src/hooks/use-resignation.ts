@@ -1,10 +1,10 @@
 'use client';
 
-// use-resignation.ts — subscribe humi-profile-slice (C7 SSoT)
+// use-resignation.ts — subscribe cnext-profile-slice (C7 SSoT)
 // ไม่ใช้ useState สำหรับ termination state — อ่านจาก store เท่านั้น
 
 import { useCallback } from 'react';
-import { useHumiProfileStore } from '@/stores/humi-profile-slice';
+import { useCnextProfileStore } from '@/stores/cnext-profile-slice';
 
 export type ResignationStatus = 'draft' | 'submitted' | 'in_progress' | 'completed';
 
@@ -50,8 +50,8 @@ const MOCK_CLEARANCE_ITEMS: ClearanceItem[] = [
 
 export function useResignation() {
   // AC-2: อ่านจาก store เท่านั้น — ห้าม useState<ResignationRecord>
-  const pendingChanges = useHumiProfileStore((s) => s.pendingChanges);
-  const submitChangeRequest = useHumiProfileStore((s) => s.submitChangeRequest);
+  const pendingChanges = useCnextProfileStore((s) => s.pendingChanges);
+  const submitChangeRequest = useCnextProfileStore((s) => s.submitChangeRequest);
 
   const terminationChange = pendingChanges.find((pc) => pc.sectionKey === 'termination');
 

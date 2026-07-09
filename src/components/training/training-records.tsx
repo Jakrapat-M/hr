@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { FileText, Clock, Award, Download } from 'lucide-react';
-import { Card, CardTitle, Button } from '@/components/humi';
+import { Card, CardTitle, Button } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTraining } from '@/hooks/use-training';

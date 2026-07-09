@@ -47,7 +47,7 @@ export const PAY_COMPONENTS_SALADJ_SUBSET = [
 ] as const
 
 // MOCK seed: current monthly base salary used for the live salary preview.
-// Matches the value shown in humi-mock-data / CompensationSummary.
+// Matches the value shown in cnext-mock-data / CompensationSummary.
 export const CURRENT_MONTHLY_SALARY = 82_500
 
 // Thai-primary labels for the two compensation reasons surfaced by this form.

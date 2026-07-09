@@ -10,11 +10,11 @@ const STEP_PAUSE_MS = 600; // small pause between actions so the page settles
 const NAV_TIMEOUT_MS = 15_000;
 
 const DEMO = {
-  admin: { email: 'admin@humi.test', password: 'admin2026' },
-  employee: { email: 'employee@humi.test', password: 'employee2026' },
-  manager: { email: 'manager@humi.test', password: 'manager2026' },
-  spd: { email: 'spd@humi.test', password: 'spd2026' },
-  hrbp: { email: 'hrbp@humi.test', password: 'hrbp2026' },
+  admin: { email: 'admin@cnext.test', password: 'admin2026' },
+  employee: { email: 'employee@cnext.test', password: 'employee2026' },
+  manager: { email: 'manager@cnext.test', password: 'manager2026' },
+  spd: { email: 'spd@cnext.test', password: 'spd2026' },
+  hrbp: { email: 'hrbp@cnext.test', password: 'hrbp2026' },
 } as const;
 
 async function loginAs(page: Page, who: keyof typeof DEMO) {

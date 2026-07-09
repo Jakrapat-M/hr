@@ -3,7 +3,7 @@
 // STA-26 PR-A — shared "Coming soon" stub used by exception, import, payment, reports
 import { useLocale } from 'next-intl';
 import { Clock } from 'lucide-react';
-import { EmptyState } from '@/components/humi';
+import { EmptyState } from '@/components/cnext';
 
 export interface BenefitStubPageProps {
   prSlug: string;   // e.g. "PR-B"

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Building, Calendar, DollarSign, Bell, Shield, Palette } from 'lucide-react';
 import { Tabs } from '@/components/ui/tabs';
-import { Card, CardTitle, Button } from '@/components/humi';
+import { Card, CardTitle, Button } from '@/components/cnext';
 import { FormField } from '@/components/ui/form-field';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';

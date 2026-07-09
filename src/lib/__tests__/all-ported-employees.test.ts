@@ -11,7 +11,7 @@ import {
 
 describe('all-ported-employees — shared 212-employee pool', () => {
   test('ALL_PORTED_EMPLOYEES has 12 + 88 + 100 = 212 employees', () => {
-    // 12 HUMI_EMPLOYEES + 88 SF_PARITY_NEW + 100 SF_REAL = 200 in handoff but
+    // 12 CNEXT_EMPLOYEES + 88 SF_PARITY_NEW + 100 SF_REAL = 200 in handoff but
     // synthetic block grew to 88 over sprint. Floor check: ≥ 100 SF-real.
     expect(ALL_PORTED_EMPLOYEES.length).toBeGreaterThanOrEqual(200);
   });
@@ -22,7 +22,7 @@ describe('all-ported-employees — shared 212-employee pool', () => {
     expect(unique.size).toBe(ids.length);
   });
 
-  test('first 12 are existing HUMI emps with emp-NNN ids', () => {
+  test('first 12 are existing CNEXT emps with emp-NNN ids', () => {
     const first12 = ALL_PORTED_EMPLOYEES.slice(0, 12).map((e) => e.id);
     expect(first12.every((id) => /^emp-\d{3}$/.test(id))).toBe(true);
   });
@@ -35,18 +35,18 @@ describe('all-ported-employees — shared 212-employee pool', () => {
 
 describe('EMP_BY_LOGIN — 9 personas (5 generic + 4 SF-canonical)', () => {
   test('contains all 5 generic role logins', () => {
-    expect(EMP_BY_LOGIN['admin@humi.test']).toBe('emp-005');
-    expect(EMP_BY_LOGIN['spd@humi.test']).toBe('emp-001');
-    expect(EMP_BY_LOGIN['hrbp@humi.test']).toBe('emp-007');
-    expect(EMP_BY_LOGIN['manager@humi.test']).toBe('emp-002');
-    expect(EMP_BY_LOGIN['employee@humi.test']).toBe('emp-003');
+    expect(EMP_BY_LOGIN['admin@cnext.test']).toBe('emp-005');
+    expect(EMP_BY_LOGIN['spd@cnext.test']).toBe('emp-001');
+    expect(EMP_BY_LOGIN['hrbp@cnext.test']).toBe('emp-007');
+    expect(EMP_BY_LOGIN['manager@cnext.test']).toBe('emp-002');
+    expect(EMP_BY_LOGIN['employee@cnext.test']).toBe('emp-003');
   });
 
   test('contains all 4 SF-canonical persona logins (T7)', () => {
-    expect(EMP_BY_LOGIN['ken@humi.test']).toBe('emp-005');
-    expect(EMP_BY_LOGIN['apinya@humi.test']).toBe('emp-007');
-    expect(EMP_BY_LOGIN['worawee@humi.test']).toBe('emp-001');
-    expect(EMP_BY_LOGIN['rungrote@humi.test']).toBe('emp-002');
+    expect(EMP_BY_LOGIN['ken@cnext.test']).toBe('emp-005');
+    expect(EMP_BY_LOGIN['apinya@cnext.test']).toBe('emp-007');
+    expect(EMP_BY_LOGIN['worawee@cnext.test']).toBe('emp-001');
+    expect(EMP_BY_LOGIN['rungrote@cnext.test']).toBe('emp-002');
   });
 
   test('is frozen — cannot mutate the persona map', () => {
@@ -54,9 +54,9 @@ describe('EMP_BY_LOGIN — 9 personas (5 generic + 4 SF-canonical)', () => {
   });
 });
 
-describe('employeeForLogin — resolves login → HumiEmployee', () => {
+describe('employeeForLogin — resolves login → CnextEmployee', () => {
   test('returns the mapped employee for known logins', () => {
-    const emp = employeeForLogin('manager@humi.test');
+    const emp = employeeForLogin('manager@cnext.test');
     expect(emp?.id).toBe('emp-002');
   });
 

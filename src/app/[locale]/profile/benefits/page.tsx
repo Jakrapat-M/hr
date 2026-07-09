@@ -1,5 +1,5 @@
-import HumiProfileMePage from '../me/page';
+import CnextProfileMePage from '../me/page';
 
 export default function ProfileBenefitsPage() {
-  return <HumiProfileMePage initialTab="benefits" />;
+  return <CnextProfileMePage initialTab="benefits" />;
 }

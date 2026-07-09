@@ -20,46 +20,46 @@ export type DemoUser = {
 };
 
 export const DEMO_USERS: Record<string, DemoUser> = {
-  'admin@humi.test': {
+  'admin@cnext.test': {
     id: 'ADM001',
     name: 'ผู้ดูแลระบบ HR',
-    email: 'admin@humi.test',
+    email: 'admin@cnext.test',
     password: 'admin2026',
     roles: ['hr_admin', 'hr_manager', 'spd', 'hrbp', 'manager', 'employee'],
     jobTitle: 'HR System Administrator',
     department: 'People Operations',
   },
-  'spd@humi.test': {
+  'spd@cnext.test': {
     id: 'SPD001',
     name: 'ดารณี ล. (SPD)',
-    email: 'spd@humi.test',
+    email: 'spd@cnext.test',
     password: 'spd2026',
     roles: ['spd', 'employee'],
     jobTitle: 'Shared People Desk Officer',
     department: 'People Services',
   },
-  'hrbp@humi.test': {
+  'hrbp@cnext.test': {
     id: 'HRB001',
     name: 'วิทยา ส. (HRBP)',
-    email: 'hrbp@humi.test',
+    email: 'hrbp@cnext.test',
     password: 'hrbp2026',
     roles: ['hrbp', 'employee'],
     jobTitle: 'HR Business Partner',
     department: 'People Partners',
   },
-  'manager@humi.test': {
+  'manager@cnext.test': {
     id: 'MGR001',
     name: 'พิชญ์ ม. (หัวหน้าทีม)',
-    email: 'manager@humi.test',
+    email: 'manager@cnext.test',
     password: 'manager2026',
     roles: ['manager', 'employee'],
     jobTitle: 'Team Manager',
     department: 'Operations',
   },
-  'employee@humi.test': {
+  'employee@cnext.test': {
     id: 'EMP001',
     name: 'สมชาย ใจดี',
-    email: 'employee@humi.test',
+    email: 'employee@cnext.test',
     password: 'employee2026',
     roles: ['employee'],
     jobTitle: 'Associate',
@@ -67,37 +67,37 @@ export const DEMO_USERS: Record<string, DemoUser> = {
   },
 
   // T7 — 4 SF-canonical personas from RBAC V2 probe (sf-rbac-probe-{name}-V2.json)
-  'ken@humi.test': {
+  'ken@cnext.test': {
     id: 'KEN001',
     name: 'จงรักษ์ ทานากะ (HR Admin)',
-    email: 'ken@humi.test',
+    email: 'ken@cnext.test',
     password: 'ken2026',
     roles: ['hr_admin', 'employee'],
     jobTitle: 'Senior HR Administrator',
     department: 'People Operations',
   },
-  'apinya@humi.test': {
+  'apinya@cnext.test': {
     id: 'APN001',
     name: 'อภิญญา (HRBP — BU2)',
-    email: 'apinya@humi.test',
+    email: 'apinya@cnext.test',
     password: 'apinya2026',
     roles: ['hrbp', 'employee'],
     jobTitle: 'HR Business Partner — BU2',
     department: 'People Partners',
   },
-  'worawee@humi.test': {
+  'worawee@cnext.test': {
     id: 'WRW001',
     name: 'วรวี (SPD)',
-    email: 'worawee@humi.test',
+    email: 'worawee@cnext.test',
     password: 'worawee2026',
     roles: ['spd', 'employee'],
     jobTitle: 'Shared People Desk Lead',
     department: 'People Services',
   },
-  'rungrote@humi.test': {
+  'rungrote@cnext.test': {
     id: 'RNG001',
     name: 'รุ่งโรจน์ (Manager — Finance)',
-    email: 'rungrote@humi.test',
+    email: 'rungrote@cnext.test',
     password: 'rungrote2026',
     roles: ['manager', 'employee'],
     jobTitle: 'Finance Manager',
@@ -110,10 +110,10 @@ export const DEMO_USERS: Record<string, DemoUser> = {
   // records; HRIS Admin works with the system itself. Per SF probe, only
   // HRIS Admin can access BenefitProgram / BenefitTaxRule / BenefitEnrollment-
   // ProcessScreenTemplate (HR Admin sees 0 fields).
-  'hris@humi.test': {
+  'hris@cnext.test': {
     id: 'HIS001',
     name: 'นภัสสร (HRIS Admin)',
-    email: 'hris@humi.test',
+    email: 'hris@cnext.test',
     password: 'hris2026',
     roles: ['hr_manager', 'employee'],
     jobTitle: 'HRIS Administrator',
@@ -123,17 +123,17 @@ export const DEMO_USERS: Record<string, DemoUser> = {
 
 // Order used by the switcher UI — employee first (common target), then SF-canonical, admin last.
 export const PERSONA_ORDER: Array<keyof typeof DEMO_USERS> = [
-  'employee@humi.test',
-  'manager@humi.test',
-  'hrbp@humi.test',
-  'spd@humi.test',
-  'admin@humi.test',
-  'hris@humi.test',
+  'employee@cnext.test',
+  'manager@cnext.test',
+  'hrbp@cnext.test',
+  'spd@cnext.test',
+  'admin@cnext.test',
+  'hris@cnext.test',
   // T7 — SF-canonical (per RBAC V2 matrix)
-  'rungrote@humi.test',
-  'apinya@humi.test',
-  'worawee@humi.test',
-  'ken@humi.test',
+  'rungrote@cnext.test',
+  'apinya@cnext.test',
+  'worawee@cnext.test',
+  'ken@cnext.test',
 ];
 
 // Badge = role acronym ONLY (consistent pattern across all 9 personas).
@@ -141,17 +141,17 @@ export const PERSONA_ORDER: Array<keyof typeof DEMO_USERS> = [
 // Tone color encodes role family — repetition (2× Manager / 2× HRBP / 2× SPD)
 // is meaningful: same RBAC scope, different person identity for demo coverage.
 export const PERSONA_BADGE: Record<string, { label: string; tone: string }> = {
-  'admin@humi.test':    { label: 'HR Admin',   tone: 'humi-tag--ink' },
-  'spd@humi.test':      { label: 'SPD',        tone: 'humi-tag--accent' },
-  'hrbp@humi.test':     { label: 'HRBP',       tone: 'humi-tag--butter' },
-  'manager@humi.test':  { label: 'Manager',    tone: 'humi-tag--sage' },
-  'employee@humi.test': { label: 'Employee',   tone: 'humi-tag' },
-  'hris@humi.test':     { label: 'HRIS Admin', tone: 'humi-tag--accent-alt' },
+  'admin@cnext.test':    { label: 'HR Admin',   tone: 'cnext-tag--ink' },
+  'spd@cnext.test':      { label: 'SPD',        tone: 'cnext-tag--accent' },
+  'hrbp@cnext.test':     { label: 'HRBP',       tone: 'cnext-tag--butter' },
+  'manager@cnext.test':  { label: 'Manager',    tone: 'cnext-tag--sage' },
+  'employee@cnext.test': { label: 'Employee',   tone: 'cnext-tag' },
+  'hris@cnext.test':     { label: 'HRIS Admin', tone: 'cnext-tag--accent-alt' },
   // T7 — SF-canonical badges (same role-acronym pattern as generic above)
-  'ken@humi.test':      { label: 'HR Admin',   tone: 'humi-tag--ink' },
-  'apinya@humi.test':   { label: 'HRBP',       tone: 'humi-tag--butter' },
-  'worawee@humi.test':  { label: 'SPD',        tone: 'humi-tag--accent' },
-  'rungrote@humi.test': { label: 'Manager',    tone: 'humi-tag--sage' },
+  'ken@cnext.test':      { label: 'HR Admin',   tone: 'cnext-tag--ink' },
+  'apinya@cnext.test':   { label: 'HRBP',       tone: 'cnext-tag--butter' },
+  'worawee@cnext.test':  { label: 'SPD',        tone: 'cnext-tag--accent' },
+  'rungrote@cnext.test': { label: 'Manager',    tone: 'cnext-tag--sage' },
 };
 
 // Role-priority landing table — shared with login.

@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { GraduationCap, Search, Star, Clock, Award, Download } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { Tabs } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLearning } from '@/hooks/use-learning';

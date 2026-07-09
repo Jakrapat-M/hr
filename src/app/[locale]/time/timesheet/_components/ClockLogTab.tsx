@@ -7,7 +7,7 @@
 
 import { useMemo, useState } from 'react';
 import { MapPin, CircleCheck, TriangleAlert } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import type { ClockLogEntry } from '@/lib/time/clock-log-seed';
 import { DEMO_TODAY } from '@/lib/time/period';

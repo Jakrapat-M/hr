@@ -95,7 +95,7 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-import { useHumiProfileStore } from '@/stores/humi-profile-slice';
+import { useCnextProfileStore } from '@/stores/cnext-profile-slice';
 
 async function renderProfileMePage() {
   const { default: ProfileMePage } = await import(
@@ -110,7 +110,7 @@ async function renderProfileMePage() {
 
 function resetStore() {
   localStorageMock.clear();
-  useHumiProfileStore.setState({
+  useCnextProfileStore.setState({
     activeTab: 'employment',    // Employment tab เปิดอยู่ → job panel แสดง
     isEditing: false,
     draft: {

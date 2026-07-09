@@ -12,7 +12,7 @@ beforeEach(() => {
 })
 
 describe('StepWorkPermit attachment UI', () => {
-  it('uses the Humi attachment dropzone instead of a filename text input', () => {
+  it('uses the Cnext attachment dropzone instead of a filename text input', () => {
     render(<StepWorkPermit />)
 
     expect(screen.getByText('ไฟล์แนบ (Attachment)')).toBeInTheDocument()

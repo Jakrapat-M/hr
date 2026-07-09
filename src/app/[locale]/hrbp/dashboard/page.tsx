@@ -22,14 +22,14 @@ import {
   ListChecks,
   Briefcase,
 } from 'lucide-react';
-import { Capability } from '@/components/humi';
-import { QuickActionsTile, type QuickAction } from '@/components/humi/QuickActionsTile';
+import { Capability } from '@/components/cnext';
+import { QuickActionsTile, type QuickAction } from '@/components/cnext/QuickActionsTile';
 import { ExitFeedbackPanel } from '@/components/hrbp/ExitFeedbackPanel';
 import {
-  HUMI_PENDING_REQUESTS,
-  HUMI_EMPLOYEES,
-  HUMI_RECENT_ACTIVITY,
-} from '@/lib/humi-mock-data';
+  CNEXT_PENDING_REQUESTS,
+  CNEXT_EMPLOYEES,
+  CNEXT_RECENT_ACTIVITY,
+} from '@/lib/cnext-mock-data';
 
 // ─── Mock HRBP KPIs (company-wide scope) ──────────────────────────────────
 
@@ -55,18 +55,18 @@ const SEVERITY_LABELS: Record<string, string> = {
 };
 
 const SEVERITY_TONES: Record<string, string> = {
-  'leave-vacation': 'humi-tag',
-  'leave-sick':     'humi-tag',
-  expense:          'humi-tag humi-tag--butter',
-  overtime:         'humi-tag',
+  'leave-vacation': 'cnext-tag',
+  'leave-sick':     'cnext-tag',
+  expense:          'cnext-tag cnext-tag--butter',
+  overtime:         'cnext-tag',
 };
 
 const AVATAR_TONE_MAP = {
-  teal:   'humi-avatar humi-avatar--teal',
-  sage:   'humi-avatar humi-avatar--sage',
-  butter: 'humi-avatar humi-avatar--butter',
-  ink:    'humi-avatar humi-avatar--ink',
-  indigo: 'humi-avatar humi-avatar--teal',
+  teal:   'cnext-avatar cnext-avatar--teal',
+  sage:   'cnext-avatar cnext-avatar--sage',
+  butter: 'cnext-avatar cnext-avatar--butter',
+  ink:    'cnext-avatar cnext-avatar--ink',
+  indigo: 'cnext-avatar cnext-avatar--teal',
 } as const;
 
 const ACTIVITY_DOT: Record<string, string> = {
@@ -125,37 +125,37 @@ export default function HRBPDashboardPage() {
 
   const username = useAuthStore((s) => s.username);
 
-  const queueItems = HUMI_PENDING_REQUESTS.slice(0, 5);
+  const queueItems = CNEXT_PENDING_REQUESTS.slice(0, 5);
 
   const hrbpActions = makeHRBPActions(locale);
 
   return (
     <div className="pb-8">
       {/* ── Header card ──────────────────────────────────────────────────── */}
-      <div className="humi-card humi-grain mb-5" style={{ overflow: 'hidden' }}>
+      <div className="cnext-card cnext-grain mb-5" style={{ overflow: 'hidden' }}>
         <div
-          className="humi-blob humi-blob--teal hidden lg:block"
+          className="cnext-blob cnext-blob--teal hidden lg:block"
           style={{ width: 110, height: 140, right: -20, top: -20, opacity: 0.75 }}
           aria-hidden
         />
         <div
-          className="humi-blob humi-blob--butter hidden lg:block"
+          className="cnext-blob cnext-blob--butter hidden lg:block"
           style={{ width: 60, height: 80, right: 100, bottom: -15, opacity: 0.7 }}
           aria-hidden
         />
-        <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+        <div className="cnext-eyebrow" style={{ marginBottom: 8 }}>
           {t('eyebrow')}
         </div>
-        <h1 className="humi-hero-title" style={{ maxWidth: 500 }}>
+        <h1 className="cnext-hero-title" style={{ maxWidth: 500 }}>
           {t('greeting')}{username ? ` คุณ${username.split(' ')[0]}` : ''}
         </h1>
         <p style={{ color: 'var(--color-ink-soft)', fontSize: 14, marginTop: 6 }}>
           {t('subtitle')}
         </p>
-        <div className="humi-row" style={{ marginTop: 18, gap: 10, flexWrap: 'wrap' }}>
+        <div className="cnext-row" style={{ marginTop: 18, gap: 10, flexWrap: 'wrap' }}>
           <Link
             href={`/${locale}/quick-approve`}
-            className="humi-button humi-button--primary"
+            className="cnext-button cnext-button--primary"
           >
             <Inbox size={15} />
             {t('ctaApprove')}
@@ -164,7 +164,7 @@ export default function HRBPDashboardPage() {
           <Capability action="talentSearch">
             <Link
               href={`/${locale}/hrbp/talent-search`}
-              className="humi-button humi-button--ghost"
+              className="cnext-button cnext-button--ghost"
               data-testid="talent-search-cta"
             >
               <Search size={15} />
@@ -175,7 +175,7 @@ export default function HRBPDashboardPage() {
           <Capability action="bulkApprove">
             <Link
               href={`/${locale}/quick-approve/bulk`}
-              className="humi-button humi-button--ghost"
+              className="cnext-button cnext-button--ghost"
               data-testid="bulk-approve-cta"
             >
               <ListChecks size={15} />
@@ -195,11 +195,11 @@ export default function HRBPDashboardPage() {
           return (
             <div
               key={kpi.id}
-              className="humi-card"
+              className="cnext-card"
               style={{ padding: '18px 20px' }}
             >
               <div
-                className="humi-eyebrow"
+                className="cnext-eyebrow"
                 style={{ marginBottom: 8, fontSize: 11 }}
               >
                 {t(kpi.labelKey)}
@@ -226,10 +226,10 @@ export default function HRBPDashboardPage() {
       {/* ── Row: Approval queue + Recent activity ────────────────────────── */}
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]" style={{ marginBottom: 20 }}>
         {/* Approval queue snippet */}
-        <div className="humi-card">
-          <div className="humi-row" style={{ marginBottom: 14 }}>
+        <div className="cnext-card">
+          <div className="cnext-row" style={{ marginBottom: 14 }}>
             <div>
-              <div className="humi-eyebrow">{t('queueEyebrow')}</div>
+              <div className="cnext-eyebrow">{t('queueEyebrow')}</div>
               <h2
                 className="mt-1 font-display font-semibold tracking-tight text-ink"
                 style={{ fontSize: 18 }}
@@ -238,22 +238,22 @@ export default function HRBPDashboardPage() {
               </h2>
             </div>
             <span
-              className="humi-tag humi-tag--butter"
+              className="cnext-tag cnext-tag--butter"
               style={{ marginLeft: 'auto' }}
             >
               {queueItems.length} {t('queueBadge')}
             </span>
           </div>
 
-          <ul className="humi-list" role="list">
+          <ul className="cnext-list" role="list">
             {queueItems.map((req) => {
-              const emp = HUMI_EMPLOYEES.find((e) => e.id === req.employeeId);
+              const emp = CNEXT_EMPLOYEES.find((e) => e.id === req.employeeId);
               if (!emp) return null;
               const tone = (emp.avatarTone === 'indigo' ? 'teal' : emp.avatarTone) as keyof typeof AVATAR_TONE_MAP;
               return (
                 <li
                   key={req.id}
-                  className="humi-row-item"
+                  className="cnext-row-item"
                   style={{ paddingTop: 10, paddingBottom: 10 }}
                 >
                   <span className={AVATAR_TONE_MAP[tone]} aria-hidden>
@@ -267,7 +267,7 @@ export default function HRBPDashboardPage() {
                       </span>
                     </div>
                     <div
-                      className="humi-row"
+                      className="cnext-row"
                       style={{ gap: 6, marginTop: 3, flexWrap: 'wrap' }}
                     >
                       <span style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
@@ -344,8 +344,8 @@ export default function HRBPDashboardPage() {
         </div>
 
         {/* Recent activity */}
-        <div className="humi-card">
-          <div className="humi-eyebrow" style={{ marginBottom: 10 }}>
+        <div className="cnext-card">
+          <div className="cnext-eyebrow" style={{ marginBottom: 10 }}>
             {t('activityEyebrow')}
           </div>
           <h2
@@ -354,9 +354,9 @@ export default function HRBPDashboardPage() {
           >
             {t('activityTitle')}
           </h2>
-          <ul className="humi-col" style={{ gap: 12 }} role="list">
-            {HUMI_RECENT_ACTIVITY.slice(0, 5).map((item) => (
-              <li key={item.id} className="humi-row" style={{ gap: 10, alignItems: 'flex-start' }}>
+          <ul className="cnext-col" style={{ gap: 12 }} role="list">
+            {CNEXT_RECENT_ACTIVITY.slice(0, 5).map((item) => (
+              <li key={item.id} className="cnext-row" style={{ gap: 10, alignItems: 'flex-start' }}>
                 <span
                   style={{
                     width: 8,
@@ -385,14 +385,14 @@ export default function HRBPDashboardPage() {
       {/* ── Talent Search nav (HRBP-only) ────────────────────────────────── */}
       <Capability action="talentSearch">
         <div
-          className="humi-card"
+          className="cnext-card"
           style={{ marginBottom: 20 }}
           data-testid="talent-search-nav"
         >
-          <div className="humi-eyebrow" style={{ marginBottom: 10 }}>
+          <div className="cnext-eyebrow" style={{ marginBottom: 10 }}>
             {t('talentEyebrow')}
           </div>
-          <div className="humi-row" style={{ gap: 16, flexWrap: 'wrap' }}>
+          <div className="cnext-row" style={{ gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 200 }}>
               <h2
                 className="font-display font-semibold tracking-tight text-ink"
@@ -406,7 +406,7 @@ export default function HRBPDashboardPage() {
             </div>
             <Link
               href={`/${locale}/hrbp/talent-search`}
-              className="humi-button humi-button--primary"
+              className="cnext-button cnext-button--primary"
               data-testid="talent-search-link"
             >
               <Search size={15} />

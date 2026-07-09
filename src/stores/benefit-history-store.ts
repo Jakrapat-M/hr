@@ -134,6 +134,6 @@ export const useBenefitHistoryStore = create<BenefitHistoryState>()(
         })),
       clear: () => set({ entries: seedEntries }),
     }),
-    { name: 'humi-benefit-history' },
+    { name: 'cnext-benefit-history' },
   ),
 );

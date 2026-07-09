@@ -77,8 +77,8 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-import { useHumiProfileStore, type EmergencyContactRow } from '@/stores/humi-profile-slice';
-import type { HumiDependent } from '@/lib/humi-mock-data';
+import { useCnextProfileStore, type EmergencyContactRow } from '@/stores/cnext-profile-slice';
+import type { CnextDependent } from '@/lib/cnext-mock-data';
 
 async function renderProfileMePage() {
   const { default: ProfileMePage } = await import('@/app/[locale]/profile/me/page');
@@ -100,7 +100,7 @@ const EMPTY_SLICE = {
 
 function resetStore(pendingChanges: unknown[] = []) {
   localStorageMock.clear();
-  useHumiProfileStore.setState({
+  useCnextProfileStore.setState({
     activeTab: 'compensation', // → SLICE_TO_PANEL.compensation === 'emergency' panel
     isEditing: false,
     draft: { ...EMPTY_SLICE },
@@ -122,7 +122,7 @@ const EMERGENCY_FIXTURE: EmergencyContactRow[] = [
   { id: 'ec-fixture-1', name: ORIGINAL_EC_NAME, relation: 'cust_refRelationship_Father', phones: ['0812345678'], primaryFlag: true },
 ];
 const ORIGINAL_DEP_NAME = 'บุตรคนที่หนึ่ง';
-const DEPENDENT_FIXTURE: HumiDependent[] = [
+const DEPENDENT_FIXTURE: CnextDependent[] = [
   {
     id: 'dep-fixture-1',
     fullNameTh: ORIGINAL_DEP_NAME,
@@ -136,7 +136,7 @@ const DEPENDENT_FIXTURE: HumiDependent[] = [
 
 function seedRevertFixture() {
   localStorageMock.clear();
-  useHumiProfileStore.setState({
+  useCnextProfileStore.setState({
     activeTab: 'compensation',
     isEditing: false,
     draft: { ...EMPTY_SLICE, emergencyContacts: EMERGENCY_FIXTURE, dependents: DEPENDENT_FIXTURE },
@@ -250,7 +250,7 @@ describe('STA-186: per-section Cancel reverts only its own slice', () => {
     await act(async () => {
       fireEvent.change(depNameInput, { target: { value: UNSAVED_DEP_NAME } });
     });
-    expect(useHumiProfileStore.getState().draft.dependents?.[0]?.fullNameTh).toBe(
+    expect(useCnextProfileStore.getState().draft.dependents?.[0]?.fullNameTh).toBe(
       UNSAVED_DEP_NAME,
     );
 
@@ -264,7 +264,7 @@ describe('STA-186: per-section Cancel reverts only its own slice', () => {
     // Opening Emergency only reseeds the emergencyContacts slice (plan §9
     // "seed-from-saved on open" mitigation) — the dependents draft edit must
     // NOT be discarded merely by collapsing its section.
-    expect(useHumiProfileStore.getState().draft.dependents?.[0]?.fullNameTh).toBe(
+    expect(useCnextProfileStore.getState().draft.dependents?.[0]?.fullNameTh).toBe(
       UNSAVED_DEP_NAME,
     );
 
@@ -294,7 +294,7 @@ describe('STA-186: per-section Cancel reverts only its own slice', () => {
     //        FAIL if cancelEmergencyEdit() were ever changed to call the
     //        store's whole-draft cancelEdit() instead of the section-scoped
     //        updateDraft({ emergencyContacts: snapshot }).
-    const stateAfterCancel = useHumiProfileStore.getState();
+    const stateAfterCancel = useCnextProfileStore.getState();
     expect(stateAfterCancel.draft.emergencyContacts[0]?.name).toBe(ORIGINAL_EC_NAME);
     expect(stateAfterCancel.draft.dependents?.[0]?.fullNameTh).toBe(UNSAVED_DEP_NAME);
 

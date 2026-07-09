@@ -65,11 +65,11 @@ vi.mock('next-intl', () => ({
       tabGoals: 'เป้าหมายของฉัน',
       tabReviews: 'การประเมิน',
       // login — prevent key fallback as h1 content
-      headline: 'ยินดีต้อนรับสู่ Humi',
+      headline: 'ยินดีต้อนรับสู่ Cnext',
       subline: 'แพลตฟอร์ม HR สำหรับทีมงานยุคใหม่',
       headlineLine1: 'ระบบเบื้องหลังที่',
       headlineLine2: 'ทีมของคุณคู่ควร',
-      formTitle: 'เข้าสู่ระบบ Humi',
+      formTitle: 'เข้าสู่ระบบ Cnext',
       // v2 ess section headings — prevent key fallback in h3 (T2b-v2 additions)
       'sections.address': 'ที่อยู่',
       'sections.contact': 'ข้อมูลติดต่อ',
@@ -97,7 +97,7 @@ vi.mock('next/link', () => ({
 // ── Thai Unicode range + whitelist ────────────────────────────────────────────
 const THAI_RANGE = /[฀-๿]/;
 const WHITELIST_TOKENS =
-  /^(PDF|CSV|API|SSO|URL|HR|KPI|OT|LOA|UUID|HTTP|JSON|JPEG|PNG|GIF|SVG|⌘K|TH|EN|Humi|[\d\s·\-/%.,()'":!])$/;
+  /^(PDF|CSV|API|SSO|URL|HR|KPI|OT|LOA|UUID|HTTP|JSON|JPEG|PNG|GIF|SVG|⌘K|TH|EN|Cnext|[\d\s·\-/%.,()'":!])$/;
 
 /**
  * Returns true if the text contains Thai characters OR consists only of
@@ -108,7 +108,7 @@ function hasThaiOrWhitelist(text: string): boolean {
   // Strip whitelist tokens and check if anything non-Thai remains
   const stripped = text
     .replace(
-      /\b(PDF|CSV|API|SSO|URL|HR|KPI|OT|LOA|UUID|HTTP|JSON|JPEG|PNG|GIF|SVG|TH|EN|Humi)\b/gi,
+      /\b(PDF|CSV|API|SSO|URL|HR|KPI|OT|LOA|UUID|HTTP|JSON|JPEG|PNG|GIF|SVG|TH|EN|Cnext)\b/gi,
       '',
     )
     .replace(/[\d\s·\-/%.,()'":!⌘K]/g, '')

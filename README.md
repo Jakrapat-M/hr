@@ -61,7 +61,7 @@ Auth is mocked. Switch roles live from the shell **Persona Switcher** (top bar) 
 | **C** | Manager                | `manager`              | team views + quick approvals          |
 | **D** | Employee               | `employee`             | ESS baseline (own profile/requests)   |
 
-Seed personas live in `src/lib/demo-users.ts` (e.g. `admin@humi.test`, `hrbp@humi.test`, `manager@humi.test`, `employee@humi.test`, `hris@humi.test`). **Menu RBAC removes inaccessible items entirely** — it never renders them locked/disabled.
+Seed personas live in `src/lib/demo-users.ts` (e.g. `admin@cnext.test`, `hrbp@cnext.test`, `manager@cnext.test`, `employee@cnext.test`, `hris@cnext.test`). **Menu RBAC removes inaccessible items entirely** — it never renders them locked/disabled.
 
 ## Testing
 
@@ -84,12 +84,12 @@ src/
 │   ├── [locale]/...        # ~48 route groups (file-based; locale-prefixed)
 │   │   ├── home, profile/[tab], benefits-hub, payroll, quick-approve/[id],
 │   │   │   timeoff, admin/*, hrbp/*, workflows, performance, org-chart, ...
-│   │   └── globals.css     # Humi design tokens (Tailwind @theme) — source of truth
+│   │   └── globals.css     # Cnext design tokens (Tailwind @theme) — source of truth
 │   └── api/                # minimal (auth redirects)
 ├── components/
-│   ├── humi/               # Humi design system: 20 primitives + shell/ (6 components)
+│   ├── cnext/               # Cnext design system: 20 primitives + shell/ (6 components)
 │   └── <domain>/           # ~35 feature folders (benefits, payroll, leave, time, ...)
-├── stores/                 # ~44 Zustand stores (ui/auth, humi-*-slice, *-approvals, domain)
+├── stores/                 # ~44 Zustand stores (ui/auth, cnext-*-slice, *-approvals, domain)
 ├── lib/                    # ~50 files: rbac, persona-tiers, mock data/seeds, api mocks, date/mask
 ├── i18n/                   # config.ts (locales, default), routing.ts, request.ts
 └── messages/               # en.json + th.json (kept at parity, ~5.6k lines each)
@@ -100,15 +100,15 @@ next.config.ts              # root + legacy-path redirects
 ### Routing
 File-based, no registry. Add a screen = create `src/app/[locale]/<route>/page.tsx`. Locale prefix is handled by `middleware.ts`. `next.config.ts` redirects `/` → `/th/home` and normalizes legacy aliases (`/leave`→`/timeoff`, `/ess`→`/profile/me`, etc.). Keep the active locale on all navigation.
 
-### Humi Design System (canonical)
-Start every UI task from Humi primitives + tokens — no route-local card markup or raw hex.
+### Cnext Design System (canonical)
+Start every UI task from Cnext primitives + tokens — no route-local card markup or raw hex.
 - **Tokens**: `src/app/globals.css` (Tailwind `@theme`, no `tailwind.config.ts` override).
-- **Primitives**: `src/components/humi/` — `Card`, `Button`, `FormField`, `DataTable`, `Modal`, `Nav`, `Avatar`, `Toggle`, `Textarea`, `EmptyState`, `FileUploadField`, etc. (20 total) + shell (`AppShell`, `Sidebar`, `Topbar`, `CommandPalette`, `PersonaSwitcher`, `LoginAsRibbon`).
+- **Primitives**: `src/components/cnext/` — `Card`, `Button`, `FormField`, `DataTable`, `Modal`, `Nav`, `Avatar`, `Toggle`, `Textarea`, `EmptyState`, `FileUploadField`, etc. (20 total) + shell (`AppShell`, `Sidebar`, `Topbar`, `CommandPalette`, `PersonaSwitcher`, `LoginAsRibbon`).
 - **Palette**: cream canvas `#F6F1E8` + navy ink `#0E1B2C`; primary/active = **teal** `#1FA8A0`; info/alt = indigo `#5B6CE0`.
 - **NO-RED guardrail**: danger uses **pumpkin** `#FB923C`, never red/crimson/coral.
 
 ### State (Zustand)
-Stores in `src/stores/` — UI/session (`ui-store`, `auth-store`), Humi slices (`humi-*-slice`), approval queues (`*-approvals` feeding `approval-registry.ts`), plus domain stores (benefit claims/referrals, leave balances, time corrections, import jobs, ...). Use the slice that already owns a domain before adding a store.
+Stores in `src/stores/` — UI/session (`ui-store`, `auth-store`), Cnext slices (`cnext-*-slice`), approval queues (`*-approvals` feeding `approval-registry.ts`), plus domain stores (benefit claims/referrals, leave balances, time corrections, import jobs, ...). Use the slice that already owns a domain before adding a store.
 
 ### RBAC & Demo Personas
 - Roles (`src/lib/rbac.ts`): `employee` < `manager` < `hrbp` < `spd` < `hr_admin` < `hr_manager` (inherited).
@@ -121,8 +121,8 @@ Add keys to **both** `messages/en.json` and `messages/th.json`; keep TH/EN parit
 
 ## Conventions
 - Server Components by default; add `'use client'` only when interactivity/state is needed.
-- Reuse existing Humi primitives, Zustand stores, lib helpers, and routes before introducing new patterns. Keep diffs small and reversible.
-- No new dependencies without an explicit request. No legacy card classes / route-local card styling in Humi routes.
+- Reuse existing Cnext primitives, Zustand stores, lib helpers, and routes before introducing new patterns. Keep diffs small and reversible.
+- No new dependencies without an explicit request. No legacy card classes / route-local card styling in Cnext routes.
 - For route/UI/behavior changes, add or update a Vitest/Playwright regression test alongside the change.
 
 See [`CLAUDE.md`](CLAUDE.md) for the full working agreement and current project phase.

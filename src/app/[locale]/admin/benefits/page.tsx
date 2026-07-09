@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
-import { Card, CardEyebrow, CardTitle, Button, DemoValuesDisclaimer } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle, Button, DemoValuesDisclaimer } from '@/components/cnext';
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard';
 import {
   FileText,
@@ -25,7 +25,7 @@ import { REFERRAL_HOSPITALS, useBenefitReferralsStore } from '@/stores/benefit-r
 //   • a workspace card grid that deep-links to the child pages where real work lives
 //   • a compact integrations/sync section
 //   • the read-only reference tables collapsed by default (edit lives on child pages)
-// Humi tokens only; danger = pumpkin (--color-danger), never red. No backend.
+// Cnext tokens only; danger = pumpkin (--color-danger), never red. No backend.
 
 const masterData = [
   ['BEN-MED-OPD', 'Medical reimbursement', 'Medical', 'Reimbursement', 'INC-MED', '2026-01-01', '2026-12-31', 'Active'],

@@ -195,7 +195,7 @@ export default function QuickActionsPage() {
         <button
           type="button"
           onClick={addNew}
-          className="humi-button humi-button--primary"
+          className="cnext-button cnext-button--primary"
         >
           + เพิ่ม Quick Action
         </button>
@@ -373,8 +373,8 @@ export default function QuickActionsPage() {
             </div>
 
             <div className="flex justify-end gap-3">
-              <button type="button" onClick={() => setEditTarget(null)} className="humi-button humi-button--ghost">ยกเลิก</button>
-              <button type="button" onClick={saveModal} className="humi-button humi-button--primary">บันทึก</button>
+              <button type="button" onClick={() => setEditTarget(null)} className="cnext-button cnext-button--ghost">ยกเลิก</button>
+              <button type="button" onClick={saveModal} className="cnext-button cnext-button--primary">บันทึก</button>
             </div>
           </div>
         </div>

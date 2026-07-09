@@ -6,7 +6,7 @@
 
 import { useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { getAttendanceForPeriod } from '@/lib/time/attendance-seed';
 import { getShiftCode } from '@/lib/time/shift-codes';

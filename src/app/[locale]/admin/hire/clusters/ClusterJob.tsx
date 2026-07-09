@@ -55,7 +55,7 @@ export default function ClusterJob() {
         <StepCompensation onValidChange={onCompensationValid} />
       </CollapsibleSectionCard>
 
-      <p className="humi-required-note"><span className="humi-asterisk">*</span>ช่องที่บังคับกรอก</p>
+      <p className="cnext-required-note"><span className="cnext-asterisk">*</span>ช่องที่บังคับกรอก</p>
     </div>
   )
 }

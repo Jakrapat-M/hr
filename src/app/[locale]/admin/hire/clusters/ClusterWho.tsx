@@ -132,7 +132,7 @@ export default function ClusterWho() {
 
       {!showDependentsSection && (
         <section className="rounded-2xl border border-dashed border-hairline bg-canvas-soft p-4" aria-label="ข้อมูลตามกรณี">
-          <div className="humi-eyebrow">ข้อมูลตามกรณี</div>
+          <div className="cnext-eyebrow">ข้อมูลตามกรณี</div>
           <h3 className="mt-1 font-display text-lg font-semibold leading-[1.2] text-ink">
             เปิดเฉพาะเมื่อมีข้อมูลเสริมที่เกี่ยวข้อง
           </h3>
@@ -142,7 +142,7 @@ export default function ClusterWho() {
           <button
             type="button"
             onClick={addConditionalFamilyData}
-            className="mt-3 humi-button humi-button--secondary"
+            className="mt-3 cnext-button cnext-button--secondary"
           >
             เพิ่มข้อมูลครอบครัวตามกรณี
           </button>
@@ -164,7 +164,7 @@ export default function ClusterWho() {
         </CollapsibleSectionCard>
       )}
 
-      <p className="humi-required-note"><span className="humi-asterisk">*</span>ช่องที่บังคับกรอก</p>
+      <p className="cnext-required-note"><span className="cnext-asterisk">*</span>ช่องที่บังคับกรอก</p>
     </div>
   )
 }

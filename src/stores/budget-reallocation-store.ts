@@ -138,6 +138,6 @@ export const useBudgetReallocationStore = create<BudgetReallocationState>()(
         set((s) => ({ records: s.records.filter((r) => r.id !== id) })),
       clear: () => set({ records: seedRecords, nextYearBases: seedBases }),
     }),
-    { name: 'humi-budget-reallocations' },
+    { name: 'cnext-budget-reallocations' },
   ),
 );

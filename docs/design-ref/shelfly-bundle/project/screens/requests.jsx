@@ -510,7 +510,7 @@ function RequestCompose({ type, catalog, onBack, onPick, Ic }) {
           </div>
           <h1 style={{fontSize: 30, marginTop: 20, position:"relative"}}>ส่งคำร้องเรียบร้อย</h1>
           <p style={{fontSize: 14, color:"var(--ink-2)", marginTop: 8, maxWidth: 480, margin:"8px auto 0", lineHeight: 1.6, position:"relative"}}>
-            รหัสคำร้อง <b>REQ-2492</b> · ส่งให้ผู้จัดการเขตแล้ว คุณจะได้รับการแจ้งเตือนทางอีเมลและใน Humi เมื่อมีการพิจารณา
+            รหัสคำร้อง <b>REQ-2492</b> · ส่งให้ผู้จัดการเขตแล้ว คุณจะได้รับการแจ้งเตือนทางอีเมลและใน Cnext เมื่อมีการพิจารณา
           </p>
           <div className="row" style={{gap: 10, justifyContent:"center", marginTop: 24, position:"relative"}}>
             <button className="btn btn-primary" onClick={onBack}>ดูคำร้องของฉัน</button>

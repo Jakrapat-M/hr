@@ -2,10 +2,10 @@ import localFont from 'next/font/local';
 import { Anuphan, Geist_Mono } from 'next/font/google';
 
 // ════════════════════════════════════════════════════════════
-// Humi — CPN (display + body) + Anuphan fallback (Thai glyph
+// Cnext — CPN (display + body) + Anuphan fallback (Thai glyph
 // coverage) + Geist Mono (numerics). CPN ships with Latin only;
 // Anuphan fills Thai sub-glyphs via next/font fallback stack.
-// Ref: specs/humi-frontend-redesign.md — Task 2 design system.
+// Ref: specs/cnext-frontend-redesign.md — Task 2 design system.
 // ════════════════════════════════════════════════════════════
 
 export const cpnSans = localFont({

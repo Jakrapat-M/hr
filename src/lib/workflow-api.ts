@@ -112,7 +112,7 @@ export async function waitUntilWorkflowReady(
 }
 
 // ---------------------------------------------------------------------------
-// Manager task list (Humi-styled approval page; replaces Camunda Tasklist).
+// Manager task list (Cnext-styled approval page; replaces Camunda Tasklist).
 // ---------------------------------------------------------------------------
 
 export interface PendingTaskSummary {

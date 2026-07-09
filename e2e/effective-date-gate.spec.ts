@@ -10,7 +10,7 @@
  * AC-6: Click Continue → Step 2 renders form children
  * AC-7: Cancel at any step closes gate without submitting
  *
- * Note: Tests use TH locale (/th/...) as primary per Humi convention.
+ * Note: Tests use TH locale (/th/...) as primary per Cnext convention.
  *       baseURL http://localhost:3000 from playwright.config.ts.
  *       mockAuthSession bypasses real auth (dev mode next-auth mock).
  */

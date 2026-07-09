@@ -34,27 +34,27 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
   const nameEn = `${employee.first_name_en} ${employee.last_name_en}`
 
   return (
-    <div className="humi-card humi-card--cream">
-      <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
+    <div className="cnext-card cnext-card--cream">
+      <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
       <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
       <div className="text-small text-ink-muted mb-3">{nameEn}</div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" style={{ marginTop: 8 }}>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>สถานะ</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>สถานะ</div>
           <div className="text-body font-medium text-ink">
             {employee.status === 'active' ? 'ทำงานอยู่' : employee.status === 'terminated' ? 'พ้นสภาพ' : 'ไม่ได้ทำงานอยู่'}
           </div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ประเภทปัจจุบัน</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ประเภทปัจจุบัน</div>
           <div className="text-body font-medium text-ink">{EMPLOYEE_CLASS_LABEL_TH[employee.employee_class]}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
           <div className="text-body font-medium text-ink">{formatDateTh(employee.hire_date)}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
           <div className="text-body font-medium text-ink">{employee.position_title}</div>
         </div>
       </div>
@@ -94,14 +94,14 @@ export default function ChangeTypePage() {
         <div>
           <Link
             href={`/${locale}/admin/employees`}
-            className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+            className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
             style={{ display: 'inline-flex', gap: 6 }}
           >
             <ArrowLeft size={16} aria-hidden />
             <span>รายการพนักงาน</span>
           </Link>
         </div>
-        <div className="humi-card" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">ไม่พบพนักงานรหัส &ldquo;{empId}&rdquo;</p>
         </div>
       </div>
@@ -125,7 +125,7 @@ export default function ChangeTypePage() {
       <div>
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -133,7 +133,7 @@ export default function ChangeTypePage() {
         </Link>
       </div>
 
-      <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+      <div className="cnext-row" style={{ gap: 10, alignItems: 'center' }}>
         <div
           style={{
             width: 36, height: 36, borderRadius: 10,
@@ -145,29 +145,29 @@ export default function ChangeTypePage() {
           <RefreshCw size={18} aria-hidden />
         </div>
         <div>
-          <div className="humi-eyebrow">การดำเนินการ</div>
+          <div className="cnext-eyebrow">การดำเนินการ</div>
           <h1 className="font-display text-xl font-semibold text-ink">เปลี่ยนประเภทการจ้าง</h1>
         </div>
       </div>
 
       <EmployeeSnapshot employee={employee} />
 
-      <div className="humi-card humi-card--cream">
-        <div className="humi-eyebrow" style={{ marginBottom: 6 }}>Demo boundary</div>
+      <div className="cnext-card cnext-card--cream">
+        <div className="cnext-eyebrow" style={{ marginBottom: 6 }}>Demo boundary</div>
         <p className="text-small text-ink-soft">
           หน้านี้อัปเดตประเภทพนักงานใน mock store เพื่อให้ demo ไม่ตก 404; การสร้าง workflow approval และ timeline event สำหรับ change-type ยังไม่มีชนิด event ใน shared TimelineEvent union จึงไม่เขียน timeline ปลอม
         </p>
       </div>
 
-      <div className="humi-card ring-1 ring-accent-soft">
-        <div className="humi-eyebrow" style={{ marginBottom: 16 }}>Employment Type Change</div>
+      <div className="cnext-card ring-1 ring-accent-soft">
+        <div className="cnext-eyebrow" style={{ marginBottom: 16 }}>Employment Type Change</div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <fieldset>
-            <label className="humi-label" htmlFor="current-class">ประเภทปัจจุบัน</label>
+            <label className="cnext-label" htmlFor="current-class">ประเภทปัจจุบัน</label>
             <input
               id="current-class"
-              className="humi-input w-full bg-surface-muted cursor-not-allowed"
+              className="cnext-input w-full bg-surface-muted cursor-not-allowed"
               value={EMPLOYEE_CLASS_LABEL_TH[employee.employee_class]}
               readOnly
             />
@@ -175,10 +175,10 @@ export default function ChangeTypePage() {
           </fieldset>
 
           <fieldset>
-            <label className="humi-label" htmlFor="target-class">ประเภทใหม่</label>
+            <label className="cnext-label" htmlFor="target-class">ประเภทใหม่</label>
             <input
               id="target-class"
-              className="humi-input w-full bg-surface-muted cursor-not-allowed"
+              className="cnext-input w-full bg-surface-muted cursor-not-allowed"
               value={targetClass ? EMPLOYEE_CLASS_LABEL_TH[targetClass] : ''}
               readOnly
             />
@@ -186,8 +186,8 @@ export default function ChangeTypePage() {
           </fieldset>
 
           <fieldset>
-            <label className="humi-label" htmlFor="effective-date">
-              วันที่มีผล<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label className="cnext-label" htmlFor="effective-date">
+              วันที่มีผล<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <input
               id="effective-date"
@@ -195,13 +195,13 @@ export default function ChangeTypePage() {
               min={TODAY}
               value={effectiveDate}
               onChange={(e) => setEffectiveDate(e.target.value)}
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           <fieldset>
-            <label className="humi-label" htmlFor="change-reason">
-              เหตุผล<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label className="cnext-label" htmlFor="change-reason">
+              เหตุผล<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <input
               id="change-reason"
@@ -209,17 +209,17 @@ export default function ChangeTypePage() {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="เช่น ปรับรูปแบบสัญญาจ้างตามข้อตกลงใหม่"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
         </div>
       </div>
 
-      <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 12 }}>
-        <Link href={`/${locale}/admin/employees/${empId}`} className="humi-button humi-button--ghost">
+      <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 12 }}>
+        <Link href={`/${locale}/admin/employees/${empId}`} className="cnext-button cnext-button--ghost">
           ยกเลิก
         </Link>
-        <button type="button" onClick={doSubmit} disabled={!isValid} className="humi-button humi-button--primary disabled:opacity-50">
+        <button type="button" onClick={doSubmit} disabled={!isValid} className="cnext-button cnext-button--primary disabled:opacity-50">
           บันทึกการเปลี่ยนประเภท
         </button>
       </div>

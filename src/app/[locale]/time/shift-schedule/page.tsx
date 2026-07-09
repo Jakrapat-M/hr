@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Check, CalendarCheck, Users } from 'lucide-react';
-import { Card, CardTitle, Button } from '@/components/humi';
+import { Card, CardTitle, Button } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';

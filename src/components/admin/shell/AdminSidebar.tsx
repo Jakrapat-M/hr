@@ -98,9 +98,9 @@ export function AdminSidebar({ onNavigate, onClose, className }: AdminSidebarPro
   };
 
   return (
-    <aside className={cn('humi-sidebar', className)} aria-label="เมนู Admin">
-      <div className="humi-brand">
-        <div className="humi-wordmark">
+    <aside className={cn('cnext-sidebar', className)} aria-label="เมนู Admin">
+      <div className="cnext-brand">
+        <div className="cnext-wordmark">
           {/* STA-187 FU — CneXt text wordmark */}
           <span
             className="font-display text-white"
@@ -113,7 +113,7 @@ export function AdminSidebar({ onNavigate, onClose, className }: AdminSidebarPro
         {onClose && (
           <button
             type="button"
-            className="humi-icon-btn humi-drawer-close"
+            className="cnext-icon-btn cnext-drawer-close"
             aria-label="ปิดเมนู"
             onClick={onClose}
             style={{ marginLeft: 'auto' }}
@@ -123,10 +123,10 @@ export function AdminSidebar({ onNavigate, onClose, className }: AdminSidebarPro
         )}
       </div>
 
-      <nav className="humi-nav" aria-label="เมนู Admin">
+      <nav className="cnext-nav" aria-label="เมนู Admin">
         {NAV.map((section) => (
-          <div key={section.group} className="humi-nav-section">
-            <div className="humi-nav-label">{section.group}</div>
+          <div key={section.group} className="cnext-nav-section">
+            <div className="cnext-nav-label">{section.group}</div>
             {section.items.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -134,40 +134,40 @@ export function AdminSidebar({ onNavigate, onClose, className }: AdminSidebarPro
                 <Link
                   key={item.id}
                   href={item.href}
-                  className={cn('humi-nav-item', active && 'active')}
+                  className={cn('cnext-nav-item', active && 'active')}
                   aria-current={active ? 'page' : undefined}
                   onClick={onNavigate}
                 >
-                  <span className="humi-nav-icon" aria-hidden="true">
+                  <span className="cnext-nav-icon" aria-hidden="true">
                     <Icon size={16} />
                   </span>
-                  <span className="humi-nav-text">{item.label}</span>
+                  <span className="cnext-nav-text">{item.label}</span>
                 </Link>
               );
             })}
           </div>
         ))}
 
-        <div className="humi-nav-section" style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="cnext-nav-section" style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <Link
             href="/th/home"
-            className="humi-nav-item"
+            className="cnext-nav-item"
             onClick={onNavigate}
           >
-            <span className="humi-nav-icon" aria-hidden="true">
+            <span className="cnext-nav-icon" aria-hidden="true">
               <ArrowLeft size={16} />
             </span>
-            <span className="humi-nav-text">กลับสู่พนักงาน</span>
+            <span className="cnext-nav-text">กลับสู่พนักงาน</span>
           </Link>
           <Link
             href="/th/login"
-            className="humi-nav-item"
+            className="cnext-nav-item"
             onClick={onNavigate}
           >
-            <span className="humi-nav-icon" aria-hidden="true">
+            <span className="cnext-nav-icon" aria-hidden="true">
               <LogOut size={16} />
             </span>
-            <span className="humi-nav-text">ออกจากระบบ</span>
+            <span className="cnext-nav-text">ออกจากระบบ</span>
           </Link>
         </div>
       </nav>

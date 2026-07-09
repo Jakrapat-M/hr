@@ -7,7 +7,7 @@
 
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle } from '@/components/cnext';
 
 export interface TimeTile {
   key: string;

@@ -2,7 +2,7 @@
 // 7-day matrix (Mon→Sun, BE dates) where each day cell stacks color-coded chips:
 // Shift (planned) / Clock (actual + state) / OT / Day Off / Holiday. Derived from
 // the canonical time-domain seeds (schedule-template + attendance-seed + OT store
-// + HUMI_TH_HOLIDAYS), keyed on the empId namespace.
+// + CNEXT_TH_HOLIDAYS), keyed on the empId namespace.
 //
 // STA-252 N3 — the 24h hourly Gantt (shift edit / swap-panel-only / bulk / CSV)
 // has been REMOVED; the weekly grid is the only view now. The swap modal stays
@@ -16,7 +16,7 @@ import { useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { CalendarRange, CheckSquare, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card, Button, EmptyState } from '@/components/humi';
+import { Card, Button, EmptyState } from '@/components/cnext';
 import { useAuthStore } from '@/stores/auth-store';
 import { ALL_PORTED_EMPLOYEES, EMP_BY_LOGIN } from '@/lib/all-ported-employees';
 import { pickRosterScope } from '@/lib/roster-scope';
@@ -61,23 +61,23 @@ import {
   breakRangeLabel,
 } from '@/lib/time/shift-time-calc';
 import { ROSTER_ROWS } from '@/data/roster/mock';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
-import type { AvatarProps } from '@/components/humi/Avatar';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
+import type { AvatarProps } from '@/components/cnext/Avatar';
 
-// HumiEmployee.avatarTone → the Avatar primitive's supported tone set.
+// CnextEmployee.avatarTone → the Avatar primitive's supported tone set.
 const AVATAR_TONES: AvatarProps['tone'][] = ['teal', 'sage', 'butter', 'ink'];
-function toAvatarTone(tone: HumiEmployee['avatarTone']): AvatarProps['tone'] {
+function toAvatarTone(tone: CnextEmployee['avatarTone']): AvatarProps['tone'] {
   return (AVATAR_TONES as string[]).includes(tone) ? (tone as AvatarProps['tone']) : 'teal';
 }
 
-function employeeName(e: HumiEmployee, isTh: boolean): string {
+function employeeName(e: CnextEmployee, isTh: boolean): string {
   if (isTh) return `${e.firstNameTh} ${e.lastNameTh}`.trim();
   const en = `${e.firstNameEn ?? e.firstNameTh} ${e.lastNameEn ?? e.lastNameTh}`.trim();
   return en || `${e.firstNameTh} ${e.lastNameTh}`.trim();
 }
 
-/** Map a scoped HumiEmployee to a TimesheetRow (empId-keyed). */
-function toTimesheetRow(e: HumiEmployee, isTh: boolean): TimesheetRow {
+/** Map a scoped CnextEmployee to a TimesheetRow (empId-keyed). */
+function toTimesheetRow(e: CnextEmployee, isTh: boolean): TimesheetRow {
   return {
     id: e.id,
     name: employeeName(e, isTh),
@@ -295,7 +295,7 @@ export default function RosterPage() {
       {/* Header — eyebrow + two-tone title + week range */}
       <header className="flex flex-col gap-1">
         <span className="font-mono text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-faint">
-          {isTh ? 'HUMI • บริหารทีม • ตารางกะ' : 'HUMI • TEAM MANAGEMENT • TEAM TIMESHEET'}
+          {isTh ? 'CNEXT • บริหารทีม • ตารางกะ' : 'CNEXT • TEAM MANAGEMENT • TEAM TIMESHEET'}
         </span>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="font-display text-[length:var(--text-display-h1)] font-semibold leading-[var(--text-display-h1--line-height)] tracking-tight text-ink">

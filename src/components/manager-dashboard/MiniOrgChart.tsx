@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Card, CardTitle, Button } from '@/components/humi';
+import { Card, CardTitle, Button } from '@/components/cnext';
 import { ChevronDown, ChevronRight, User } from 'lucide-react';
 import type { OrgNode } from '@/lib/manager-dashboard-api';
 import { cn } from '@/lib/utils';

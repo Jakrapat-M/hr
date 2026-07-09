@@ -72,7 +72,7 @@ export const useProbationApprovals = create<ProbationApprovalsState>()(
       clear: () => set({ evaluations: [] }),
     }),
     {
-      name: 'humi-probation-approvals',
+      name: 'cnext-probation-approvals',
       storage: createJSONStorage(() => localStorage),
     },
   ),

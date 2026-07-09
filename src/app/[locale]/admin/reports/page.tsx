@@ -35,12 +35,12 @@ interface StatCardProps {
 function StatCard({ icon, label, value, sub }: StatCardProps) {
   return (
     <div
-      className="humi-card"
+      className="cnext-card"
       style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-ink-muted)' }}>
         <span style={{ display: 'inline-flex', color: 'var(--color-brand)' }}>{icon}</span>
-        <span className="humi-eyebrow">{label}</span>
+        <span className="cnext-eyebrow">{label}</span>
       </div>
       <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-ink)', lineHeight: 1.1 }}>
         {typeof value === 'number' ? value.toLocaleString('th-TH') : value}
@@ -82,7 +82,7 @@ function BreakdownRow({ label, count, max }: BreakdownRowProps) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="humi-card" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div className="cnext-card" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
       <h2 className="font-display" style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-ink)' }}>
         {title}
       </h2>
@@ -192,7 +192,7 @@ export default function ReportsPage() {
     <div className="pb-8" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Header */}
       <div>
-        <div className="humi-eyebrow">REPORTS</div>
+        <div className="cnext-eyebrow">REPORTS</div>
         <h1 className="font-display text-2xl font-semibold text-ink">ศูนย์รายงาน</h1>
         <p style={{ fontSize: 13, color: 'var(--color-ink-muted)', marginTop: 4 }}>
           ภาพรวมกำลังคน หน่วยงาน และความเคลื่อนไหวย้อนหลัง 30 วัน

@@ -58,8 +58,8 @@ async function renderGuarded() {
 
 describe('P2 — /hrbp/employees RBAC + BU scope', () => {
   test('HRBP persona renders a scoped employee table (no AccessDenied)', async () => {
-    // hrbp@humi.test → emp-007 (BU-PEOPLE head) — resolves a non-empty BU cohort.
-    setPersona(['hrbp'], 'hrbp@humi.test');
+    // hrbp@cnext.test → emp-007 (BU-PEOPLE head) — resolves a non-empty BU cohort.
+    setPersona(['hrbp'], 'hrbp@cnext.test');
     await renderGuarded();
 
     // Guard passed — denial surface absent.
@@ -73,7 +73,7 @@ describe('P2 — /hrbp/employees RBAC + BU scope', () => {
   });
 
   test('employee persona is denied IN PLACE (AccessDenied, no redirect)', async () => {
-    setPersona(['employee'], 'employee@humi.test');
+    setPersona(['employee'], 'employee@cnext.test');
     await renderGuarded();
 
     expect(screen.getByText(/Access Denied/i)).toBeInTheDocument();

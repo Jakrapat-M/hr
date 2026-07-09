@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { ArrowLeft, ClipboardList } from 'lucide-react';
-import { Card, CardEyebrow, Button, buttonVariants } from '@/components/humi';
+import { Card, CardEyebrow, Button, buttonVariants } from '@/components/cnext';
 import { SimpleClaimForm, type SimpleClaimSubmission } from '@/components/benefits/templates';
 import { getPlan } from '@/data/benefits/plan-registry';
 import { benefitsHubRoute } from '@/lib/benefit-routes';

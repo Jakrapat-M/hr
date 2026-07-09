@@ -151,7 +151,7 @@ function Combobox({ id, options, value, onChange, placeholder, disabled, loading
         aria-expanded={open}
         disabled={disabled || loading}
         onClick={openDropdown}
-        className="humi-input w-full text-left flex items-center justify-between gap-2 disabled:cursor-not-allowed"
+        className="cnext-input w-full text-left flex items-center justify-between gap-2 disabled:cursor-not-allowed"
       >
         <span className={displayText ? 'text-ink' : 'text-ink-soft'}>
           {loading ? 'กำลังโหลด...' : (displayText || placeholder)}
@@ -173,7 +173,7 @@ function Combobox({ id, options, value, onChange, placeholder, disabled, loading
               onChange={(e) => { setFilter(e.target.value); setHighlighted(0) }}
               onKeyDown={handleInputKey}
               placeholder="ค้นหา..."
-              className="humi-input w-full text-sm"
+              className="cnext-input w-full text-sm"
               aria-label="ค้นหาตัวเลือก"
             />
           </div>
@@ -315,8 +315,8 @@ export default function AddressPicklist({ value, onChange, disabled }: AddressPi
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
       {/* จังหวัด */}
       <fieldset>
-        <label htmlFor="addr-province" className="humi-label">
-          จังหวัด<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="addr-province" className="cnext-label">
+          จังหวัด<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <Combobox
           id="addr-province"
@@ -331,8 +331,8 @@ export default function AddressPicklist({ value, onChange, disabled }: AddressPi
 
       {/* เขต/อำเภอ */}
       <fieldset>
-        <label htmlFor="addr-district" className="humi-label">
-          เขต/อำเภอ<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="addr-district" className="cnext-label">
+          เขต/อำเภอ<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         {chunkError ? (
           <p className="text-sm text-error">{chunkError} — กรุณาพิมพ์เขต/อำเภอด้วยตนเอง</p>
@@ -352,8 +352,8 @@ export default function AddressPicklist({ value, onChange, disabled }: AddressPi
 
       {/* แขวง/ตำบล */}
       <fieldset>
-        <label htmlFor="addr-subdistrict" className="humi-label">
-          แขวง/ตำบล<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="addr-subdistrict" className="cnext-label">
+          แขวง/ตำบล<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <Combobox
           id="addr-subdistrict"
@@ -368,8 +368,8 @@ export default function AddressPicklist({ value, onChange, disabled }: AddressPi
 
       {/* รหัสไปรษณีย์ */}
       <fieldset>
-        <label htmlFor="addr-postal" className="humi-label">
-          รหัสไปรษณีย์<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="addr-postal" className="cnext-label">
+          รหัสไปรษณีย์<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         {postalOptions.length > 1 ? (
           <select
@@ -378,7 +378,7 @@ export default function AddressPicklist({ value, onChange, disabled }: AddressPi
             value={value.postalCode}
             onChange={(e) => handlePostalChange(e.target.value)}
             disabled={disabled || !value.district}
-            className="humi-select w-full"
+            className="cnext-select w-full"
           >
             <option value="">เลือกรหัสไปรษณีย์</option>
             {postalOptions.map((z) => (
@@ -396,7 +396,7 @@ export default function AddressPicklist({ value, onChange, disabled }: AddressPi
             placeholder="รหัสไปรษณีย์"
             readOnly={postalOptions.length === 1}
             disabled={disabled}
-            className="humi-input w-full read-only:bg-canvas-soft read-only:text-ink-soft"
+            className="cnext-input w-full read-only:bg-canvas-soft read-only:text-ink-soft"
           />
         )}
       </fieldset>

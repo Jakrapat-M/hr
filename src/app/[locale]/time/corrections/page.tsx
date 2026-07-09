@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { ChevronRight, Clock3 } from 'lucide-react';
-import { DemoValuesDisclaimer } from '@/components/humi';
+import { DemoValuesDisclaimer } from '@/components/cnext';
 import { TimeCorrectionForm } from '@/components/time/TimeCorrectionForm';
 import { type CorrectionType } from '@/stores/time-corrections';
 import { useAuthStore } from '@/stores/auth-store';

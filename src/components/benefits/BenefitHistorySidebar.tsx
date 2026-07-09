@@ -25,7 +25,7 @@ interface BenefitHistorySidebarProps {
   className?: string;
 }
 
-// ── Action chip styles (Humi tokens only — delete = pumpkin, never red) ──────
+// ── Action chip styles (Cnext tokens only — delete = pumpkin, never red) ──────
 const ACTION_CHIP_STYLE: Record<BenefitHistoryAction, string> = {
   create: 'bg-accent-soft text-accent border border-accent/30',
   insert: 'bg-info-tint text-info border border-info/30',

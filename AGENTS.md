@@ -20,11 +20,11 @@ This repository is currently centered on the HRMS frontend in `src/frontend`.
 
 - Framework: Next.js 16 App Router, React 19, TypeScript.
 - Routes: `src/frontend/src/app/[locale]/...`.
-- UI: Humi components and design tokens under `src/frontend/src/components/humi`.
+- UI: Cnext components and design tokens under `src/frontend/src/components/cnext`.
 - State: Zustand stores under `src/frontend/src/stores`.
 - Locales: `src/frontend/messages`.
 - Tests: Vitest unit/integration tests under `src/frontend/src/__tests__` and component test folders; Playwright E2E under `src/frontend/e2e`.
-- Mock/reference data: `src/frontend/src/lib/humi-mock-data.ts` and related `src/frontend/src/lib/*` helpers.
+- Mock/reference data: `src/frontend/src/lib/cnext-mock-data.ts` and related `src/frontend/src/lib/*` helpers.
 
 Older docs or files may mention a static `apps/` SPA. Treat that as legacy unless the task explicitly targets it. For normal product work, inspect and modify `src/frontend`.
 
@@ -97,36 +97,36 @@ Convert work into verifiable success criteria and loop until verified.
 ## Working Agreements
 
 - Lock existing behavior with regression tests before cleanup/refactor work when behavior is not already protected.
-- Prefer existing utilities, stores, routes, and Humi components before introducing new patterns.
+- Prefer existing utilities, stores, routes, and Cnext components before introducing new patterns.
 - Keep diffs small, reviewable, and reversible.
 - No new dependencies without explicit request.
 - Preserve user or generated dirty worktree changes; do not revert files you did not intentionally change.
 - Use `rg`/`rg --files` for search.
 - Use `apply_patch` for manual edits.
-- For frontend UI, follow the existing Humi design system and avoid legacy card/style classes in migrated routes.
+- For frontend UI, follow the existing Cnext design system and avoid legacy card/style classes in migrated routes.
 
-## Humi Design System Contract
+## Cnext Design System Contract
 
-Treat Humi as the canonical product design system for `src/frontend`. The source of truth is:
+Treat Cnext as the canonical product design system for `src/frontend`. The source of truth is:
 
 - Tokens: `src/frontend/src/app/globals.css`
-- Component primitives: `src/frontend/src/components/humi`
-- Token docs: `docs/design-system-humi.md`
-- Component docs: `docs/humi-components.md`
-- Shell port notes: `docs/humi-shell-port-notes.md`
+- Component primitives: `src/frontend/src/components/cnext`
+- Token docs: `docs/design-system-cnext.md`
+- Component docs: `docs/cnext-components.md`
+- Shell port notes: `docs/cnext-shell-port-notes.md`
 
 Implementation rules:
 
-- Start UI work from existing Humi primitives (`Card`, `Button`, `FormField`, `FileUploadField`, shell components, tables, tiles) before writing route-local markup.
+- Start UI work from existing Cnext primitives (`Card`, `Button`, `FormField`, `FileUploadField`, shell components, tables, tiles) before writing route-local markup.
 - Use token utilities and CSS variables such as `bg-canvas`, `bg-canvas-soft`, `bg-surface`, `text-ink`, `text-ink-muted`, `border-hairline`, `shadow-[var(--shadow-card)]`, `rounded-[var(--radius-md)]`, and `ring-accent-soft`.
 - Page baseline should be cream canvas plus navy ink, not stark white/black admin UI.
 - Primary action and active states use teal/accent. Info can use indigo. Danger/error uses pumpkin `--color-danger`, not red.
 - Do not introduce hardcoded color hex values in components unless the existing design docs explicitly allow the exception.
 - Do not add Tailwind red classes, Central retail red, clay/coral red, or legacy crimson/brick tones in `src/frontend`.
-- Do not use legacy card classes or old route-local card styling in migrated Humi routes. Replace mixed legacy surfaces with Humi primitives or token-based `humi-*` classes.
-- Forms should follow Humi field anatomy: label/helper text tied to the control, tokenized borders/focus rings, consistent spacing, and Humi file upload/dropzone styling. Attachments are fields too.
+- Do not use legacy card classes or old route-local card styling in migrated Cnext routes. Replace mixed legacy surfaces with Cnext primitives or token-based `cnext-*` classes.
+- Forms should follow Cnext field anatomy: label/helper text tied to the control, tokenized borders/focus rings, consistent spacing, and Cnext file upload/dropzone styling. Attachments are fields too.
 - Avoid visible implementation notes in product UI, including `SF: ...`, mock field mapping remarks, or internal source labels, unless the user explicitly asks to expose them.
-- For duplicated journeys, keep one canonical Humi surface and redirect/deep-link legacy routes to it instead of maintaining two visually similar pages.
+- For duplicated journeys, keep one canonical Cnext surface and redirect/deep-link legacy routes to it instead of maintaining two visually similar pages.
 
 Verification expectations:
 
@@ -180,7 +180,7 @@ When using `omx team api`, prefer JSON-mode operations and stable envelopes:
 ## Project Conventions
 
 - Route code lives under `src/frontend/src/app/[locale]`.
-- Shared UI should use `src/frontend/src/components/humi` where a Humi component exists.
+- Shared UI should use `src/frontend/src/components/cnext` where a Cnext component exists.
 - Prefer `next/navigation` and App Router conventions already present in nearby files.
 - Keep Thai-first product copy unless the local screen already uses bilingual or English labels.
 - Avoid hardcoding final HR/benefit/payroll taxonomy unless the source requirement or BA/SF artifact provides it.

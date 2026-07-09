@@ -13,7 +13,7 @@
 //     hrbp-reports-mock pool (full pool, not persona-narrowed here). This matches
 //     the report-builder's portfolio-wide posture for benefits subjects.
 
-import type { HumiEmployee } from './humi-mock-data';
+import type { CnextEmployee } from './cnext-mock-data';
 import { getClaimReportData, getEnrollmentByPlan } from './hrbp-reports-mock';
 import { formatDate } from './date';
 import type { ScopeMode } from './scope-filter';
@@ -59,7 +59,7 @@ export interface ReportSubject {
   minScope?: ScopeMode;
   /** Pure aggregation. `employees` is already persona-scoped by the caller. */
   compute: (
-    employees: ReadonlyArray<HumiEmployee>,
+    employees: ReadonlyArray<CnextEmployee>,
     filters: Record<string, string>,
     locale: string,
   ) => ReportRow[];
@@ -80,7 +80,7 @@ const SCOPE_RANK: Record<ScopeMode, number> = {
  * strictly smaller than an admin's.
  */
 export function subjectsForScope(
-  employees: ReadonlyArray<HumiEmployee>,
+  employees: ReadonlyArray<CnextEmployee>,
   mode: ScopeMode,
 ): ReportSubject[] {
   const rank = SCOPE_RANK[mode];
@@ -100,7 +100,7 @@ const STATUS_FILTER: SubjectFilter = {
   ],
 };
 
-function deptFilter(employees: ReadonlyArray<HumiEmployee>): SubjectFilter {
+function deptFilter(employees: ReadonlyArray<CnextEmployee>): SubjectFilter {
   const depts = [...new Set(employees.map((e) => e.department).filter(Boolean))].sort();
   return {
     id: 'department',
@@ -133,9 +133,9 @@ const PLAN_STATUS_FILTER: SubjectFilter = {
 };
 
 function applyDeptStatus(
-  employees: ReadonlyArray<HumiEmployee>,
+  employees: ReadonlyArray<CnextEmployee>,
   filters: Record<string, string>,
-): HumiEmployee[] {
+): CnextEmployee[] {
   return employees.filter((e) => {
     if (filters.department && e.department !== filters.department) return false;
     if (filters.status && e.status !== filters.status) return false;
@@ -145,7 +145,7 @@ function applyDeptStatus(
 
 /** Build the dynamic registry. Filters that depend on the scoped pool (department) are derived per call. */
 export function buildSubjects(
-  employees: ReadonlyArray<HumiEmployee>,
+  employees: ReadonlyArray<CnextEmployee>,
 ): ReportSubject[] {
   const dept = deptFilter(employees);
 

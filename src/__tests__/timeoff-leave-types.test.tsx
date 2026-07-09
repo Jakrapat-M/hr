@@ -24,7 +24,7 @@ vi.mock('@/stores/auth-store', () => ({
     selector({ roles: mockRoles, userId: 'EMP001', username: 'สมชาย ใจดี' }),
 }))
 
-vi.mock('@/stores/humi-timeoff-slice', () => ({
+vi.mock('@/stores/cnext-timeoff-slice', () => ({
   useTimeoffStore: (selector: (s: { history: unknown[]; submit: () => void }) => unknown) =>
     selector({ history: [], submit: () => {} }),
 }))
@@ -33,7 +33,7 @@ vi.mock('@/components/quick-approve/ApprovalChain', () => ({
   ApprovalChain: () => null,
 }))
 
-import HumiTimeoffPage from '@/app/[locale]/timeoff/page'
+import CnextTimeoffPage from '@/app/[locale]/timeoff/page'
 import { LEAVE_TYPES } from '@/lib/time/leave-types'
 
 beforeEach(() => {
@@ -59,13 +59,13 @@ describe('/timeoff — leave types (23-registry driven)', () => {
   })
 
   it(`the type picker offers one radio per selectable type (${EXPECTED_COUNT})`, () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     const group = screen.getByRole('radiogroup', { name: 'ประเภทการลา' })
     expect(within(group).getAllByRole('radio')).toHaveLength(EXPECTED_COUNT)
   })
 
   it('renders sample registry Thai labels', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     const group = screen.getByRole('radiogroup', { name: 'ประเภทการลา' })
     for (const label of SAMPLE_LABELS) {
       expect(within(group).getByText(label)).toBeInTheDocument()
@@ -79,7 +79,7 @@ describe('/timeoff — leave balance cards (STA-150 top-3 default)', () => {
   const cardCount = () => within(balanceSection()).getAllByText('วันคงเหลือ').length
 
   it('defaults to exactly 3 balance cards (Sick / Annual / Personal)', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     expect(cardCount()).toBe(3)
     const section = balanceSection()
     expect(within(section).getByText('ลาป่วย')).toBeInTheDocument()
@@ -88,7 +88,7 @@ describe('/timeoff — leave balance cards (STA-150 top-3 default)', () => {
   })
 
   it('View All reveals all quota-tracked cards; Show Less collapses back to 3', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     const viewAll = screen.getByRole('button', { name: 'ดูยอดวันลาทั้งหมด' })
     expect(viewAll).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(viewAll)

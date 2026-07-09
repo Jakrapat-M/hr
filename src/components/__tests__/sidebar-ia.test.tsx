@@ -1,5 +1,5 @@
 /**
- * sidebar-ia.test.tsx — Humi sidebar IA structure + behaviour
+ * sidebar-ia.test.tsx — Cnext sidebar IA structure + behaviour
  * Framework: Vitest + @testing-library/react + jsdom
  *
  * NOTE: this suite INTENTIONALLY DIVERGES from SF/Blueprint parity. The menu was
@@ -96,7 +96,7 @@ vi.mock('next/image', () => ({
   ),
 }));
 
-import { Sidebar } from '../humi/shell/Sidebar';
+import { Sidebar } from '../cnext/shell/Sidebar';
 
 /** Set the active user's roles for the next render. */
 function asRoles(roles: string[]) {

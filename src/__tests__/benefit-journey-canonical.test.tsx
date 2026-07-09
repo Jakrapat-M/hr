@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { DEFAULT_ESS_ACTIONS } from '@/components/humi/QuickActionsTile';
+import { DEFAULT_ESS_ACTIONS } from '@/components/cnext/QuickActionsTile';
 
 const navigationMocks = vi.hoisted(() => ({
   redirect: vi.fn((href: string) => {
@@ -183,8 +183,8 @@ describe('benefit claim journey canonical route', () => {
   });
 
   it('command palette benefit navigation points to Benefits Hub', async () => {
-    const { HUMI_COMMANDS } = await import('@/lib/humi-command-registry');
-    const benefitCommand = HUMI_COMMANDS.find((command) => command.id === 'benefits');
+    const { CNEXT_COMMANDS } = await import('@/lib/cnext-command-registry');
+    const benefitCommand = CNEXT_COMMANDS.find((command) => command.id === 'benefits');
 
     expect(benefitCommand?.label).toBe('สวัสดิการ');
     expect(benefitCommand?.route).toBe('/benefits-hub');

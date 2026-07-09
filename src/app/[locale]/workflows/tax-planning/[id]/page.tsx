@@ -5,7 +5,7 @@
 // via the unified APPROVAL_REGISTRY adapter so the source store flips and every
 // projection re-derives live. No backend.
 //
-// Phase: UI mockup. Humi tokens only. Danger = pumpkin (--color-danger).
+// Phase: UI mockup. Cnext tokens only. Danger = pumpkin (--color-danger).
 // Sensitive tax id stays masked (maskTaxId / store maskedTaxId).
 
 import { use, useState } from 'react';
@@ -13,7 +13,7 @@ import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Calculator } from 'lucide-react';
-import { Button, Modal, FormField } from '@/components/humi';
+import { Button, Modal, FormField } from '@/components/cnext';
 import {
   useBenefitTaxPlanningStore,
   TAX_PLANNING_STATUS_LABEL,
@@ -118,7 +118,7 @@ export default function TaxPlanningDetailPage({ params }: PageProps) {
           <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-ink">
             {draft.employeeName}
           </h1>
-          <span className="humi-tag humi-tag--butter mt-1 inline-block text-xs">
+          <span className="cnext-tag cnext-tag--butter mt-1 inline-block text-xs">
             {TAX_PLANNING_STATUS_LABEL[draft.status]}
           </span>
         </div>

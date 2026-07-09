@@ -7,7 +7,7 @@ vi.mock('next-intl', () => ({
   useLocale: () => 'th',
 }));
 
-vi.mock('@/components/humi', () => ({
+vi.mock('@/components/cnext', () => ({
   Avatar: ({ name }: { name: string; src?: string; size?: string }) => <div data-testid="avatar">{name}</div>,
   Capability: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));

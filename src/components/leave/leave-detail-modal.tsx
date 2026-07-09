@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
-import { Modal, Button } from '@/components/humi';
+import { Modal, Button } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/date';
 import type { LeaveRequest, LeaveStatus } from '@/hooks/use-leave';

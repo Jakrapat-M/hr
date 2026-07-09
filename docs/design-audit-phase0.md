@@ -19,7 +19,7 @@
 
 | Category | Count |
 |----------|-------|
-| Tokens / Humi style | 12 |
+| Tokens / Cnext style | 12 |
 | Composition / DRY | 5 |
 | Width / Spacing | 3 |
 | React best practices | 5 |
@@ -50,55 +50,55 @@
 
 ---
 
-## Humi Tokens — Hardcoded hex / legacy Tailwind colors
+## Cnext Tokens — Hardcoded hex / legacy Tailwind colors
 
-### StepIdentity.tsx:107,114 — `text-gray-900` / `text-gray-700` ไม่ใช่ Humi token
+### StepIdentity.tsx:107,114 — `text-gray-900` / `text-gray-700` ไม่ใช่ Cnext token
 **Priority**: CRITICAL  
 **Current**: `text-gray-900`, `text-gray-700 mb-1`, `border-gray-300`  
-**Issue**: ทุก Step*.tsx (8 files) ใช้ `text-gray-{700,900}` สำหรับ h2 และ label — ไม่ match Humi ink tokens และ `.humi-step-section` CSS override ทำงานได้เฉพาะ label/h2 ที่มี Tailwind utility class เป็น hook เท่านั้น ถ้า class ไม่ match selector → ไม่ถูก override  
-**Fix**: ทุก Step*.tsx เปลี่ยน label เป็น `className="humi-label"` และ input/select เป็น `className="humi-input"` หรือ `humi-select` — ลบ inline Tailwind chains ทิ้ง
+**Issue**: ทุก Step*.tsx (8 files) ใช้ `text-gray-{700,900}` สำหรับ h2 และ label — ไม่ match Cnext ink tokens และ `.cnext-step-section` CSS override ทำงานได้เฉพาะ label/h2 ที่มี Tailwind utility class เป็น hook เท่านั้น ถ้า class ไม่ match selector → ไม่ถูก override  
+**Fix**: ทุก Step*.tsx เปลี่ยน label เป็น `className="cnext-label"` และ input/select เป็น `className="cnext-input"` หรือ `cnext-select` — ลบ inline Tailwind chains ทิ้ง
 
 ### StepIdentity.tsx:117 — `text-red-500` required asterisk (NO-RED violation)
 **Priority**: CRITICAL  
 **Current**: `<span aria-hidden="true" className="ml-1 text-red-500">*</span>` (ทุก Step*.tsx ทั้ง 8 files)  
-**Issue**: Humi spec ชัดเจน "NO RED constraint" — danger token = pumpkin `#FB923C`, required asterisk = `var(--color-accent)` teal ตาม globals.css `.humi-asterisk`. CSS override ใน `.humi-step-section .text-red-500 { color: var(--color-accent) !important }` แก้ปัญหาผ่าน CSS cascade แต่เป็น workaround เปราะบาง  
-**Fix**: เปลี่ยน span เป็น `<span className="humi-asterisk">*</span>` ในทุก Step*.tsx — ลบ dependency บน CSS override
+**Issue**: Cnext spec ชัดเจน "NO RED constraint" — danger token = pumpkin `#FB923C`, required asterisk = `var(--color-accent)` teal ตาม globals.css `.cnext-asterisk`. CSS override ใน `.cnext-step-section .text-red-500 { color: var(--color-accent) !important }` แก้ปัญหาผ่าน CSS cascade แต่เป็น workaround เปราะบาง  
+**Fix**: เปลี่ยน span เป็น `<span className="cnext-asterisk">*</span>` ในทุก Step*.tsx — ลบ dependency บน CSS override
 
 ### StepIdentity.tsx:132,135 — `ring-blue-500` / `border-red-500` focus/error rings
 **Priority**: CRITICAL  
 **Current**: `'focus:ring-blue-500'`, `'border-red-500 focus:ring-red-500'` (ทุก Step*.tsx)  
-**Issue**: Blue focus ring ไม่ match Humi accent teal, red error border ละเมิด NO-RED — `.humi-step-section input:focus` ใน globals.css แก้ focus ring ได้ แต่ error state `aria-invalid` selector `border-color: var(--color-warning)` ทำงานก็ต่อเมื่อ input มี `aria-invalid="true"` จริงๆ ซึ่ง Step*.tsx set ถูกแล้ว  
-**Fix**: เปลี่ยน input/select ทุก Step*.tsx ให้ใช้ `className="humi-input"` + `className={errors.field ? 'humi-input' : 'humi-input'}` — ลบ conditional Tailwind class chains ออก
+**Issue**: Blue focus ring ไม่ match Cnext accent teal, red error border ละเมิด NO-RED — `.cnext-step-section input:focus` ใน globals.css แก้ focus ring ได้ แต่ error state `aria-invalid` selector `border-color: var(--color-warning)` ทำงานก็ต่อเมื่อ input มี `aria-invalid="true"` จริงๆ ซึ่ง Step*.tsx set ถูกแล้ว  
+**Fix**: เปลี่ยน input/select ทุก Step*.tsx ให้ใช้ `className="cnext-input"` + `className={errors.field ? 'cnext-input' : 'cnext-input'}` — ลบ conditional Tailwind class chains ออก
 
 ### StepCompensation.tsx:26 — `bg-green-700` Toast hardcoded hex
 **Priority**: HIGH  
 **Current**: `bg-green-700 text-white` ใน Toast component  
-**Issue**: Hardcoded green ไม่ใช่ Humi token — ควรใช้ `var(--color-success)` emerald หรือ `bg-accent` teal  
-**Fix**: เปลี่ยน Toast เป็น `style={{ background: 'var(--color-success)', color: '#fff' }}` หรือใช้ `humi-tag humi-tag--accent` pattern
+**Issue**: Hardcoded green ไม่ใช่ Cnext token — ควรใช้ `var(--color-success)` emerald หรือ `bg-accent` teal  
+**Fix**: เปลี่ยน Toast เป็น `style={{ background: 'var(--color-success)', color: '#fff' }}` หรือใช้ `cnext-tag cnext-tag--accent` pattern
 
 ### StepCompensation.tsx:130-133 — Submit button ใช้ `bg-blue-600` (NO-BLUE violation)
 **Priority**: HIGH  
 **Current**: `bg-blue-600 hover:bg-blue-700 active:bg-blue-800` + `bg-gray-400`  
-**Issue**: Submit button ใน StepCompensation ใช้ blue brand แทน Humi teal accent — ทำให้ดู "งาน 2 ทีม" ใน wizard เดียวกัน  
+**Issue**: Submit button ใน StepCompensation ใช้ blue brand แทน Cnext teal accent — ทำให้ดู "งาน 2 ทีม" ใน wizard เดียวกัน  
 **Fix**: เปลี่ยนเป็น `bg-accent text-white hover:bg-[#188A83]` หรือใช้ class เดียวกับ WizardFooter primary button
 
-### globals.css:976 — `.humi-field` defined twice
+### globals.css:976 — `.cnext-field` defined twice
 **Priority**: MEDIUM  
-**Current**: Line 846 และ line 976 ต่างก็ define `.humi-field`  
-**Issue**: Duplicate rule — line 846 มี `gap: 6px` และ line 976 override เป็น `gap: 6px` เหมือนกัน แต่ line 977 เพิ่ม `+ .humi-field { margin-top: 18px }` — อาจ confuse future maintainers  
+**Current**: Line 846 และ line 976 ต่างก็ define `.cnext-field`  
+**Issue**: Duplicate rule — line 846 มี `gap: 6px` และ line 976 override เป็น `gap: 6px` เหมือนกัน แต่ line 977 เพิ่ม `+ .cnext-field { margin-top: 18px }` — อาจ confuse future maintainers  
 **Fix**: รวมเป็น block เดียว หรือ comment อธิบาย intent ของ duplicate
 
 ### globals.css:204 — `!important` workaround สำหรับ responsive grid
 **Priority**: MEDIUM  
-**Current**: `.humi-app { grid-template-columns: 256px 1fr !important; }` + `.humi-sidebar { display: flex !important; }`  
+**Current**: `.cnext-app { grid-template-columns: 256px 1fr !important; }` + `.cnext-sidebar { display: flex !important; }`  
 **Issue**: `!important` ใน component-level CSS = design smell — เกิดจาก `@layer` cascade issue ที่ comment อธิบายไว้แล้ว แต่ยังเป็น maintenance debt  
-**Fix**: ย้าย `.humi-app` default rule เข้า `@layer components` ด้วย เพื่อให้ specificity เท่ากัน และลบ `!important`
+**Fix**: ย้าย `.cnext-app` default rule เข้า `@layer components` ด้วย เพื่อให้ specificity เท่ากัน และลบ `!important`
 
 ### admin/page.tsx:204 — `bg-accent-soft text-accent` hardcoded inline style ซ้ำกับ utility
 **Priority**: LOW  
 **Current**: `className="flex h-10 w-10 ... bg-accent-soft text-accent"` (pattern นี้ซ้ำใน Cluster*.tsx ทุกไฟล์)  
-**Issue**: Pattern icon-in-pill นี้ซ้ำ 6+ ครั้ง แต่ไม่มี `.humi-icon-pill` class  
-**Fix**: เพิ่ม `.humi-icon-pill` ใน globals.css และ reuse
+**Issue**: Pattern icon-in-pill นี้ซ้ำ 6+ ครั้ง แต่ไม่มี `.cnext-icon-pill` class  
+**Fix**: เพิ่ม `.cnext-icon-pill` ใน globals.css และ reuse
 
 ---
 
@@ -128,7 +128,7 @@
 **Issue**: "บันทึกและส่ง" text ไม่บอก context ว่า submit อะไร — ถ้า page มี multiple forms screen reader อาจ confused  
 **Fix**: เพิ่ม `aria-label` หรือ description เช่น `aria-describedby` ชี้ไปยัง form title
 
-### globals.css:1090-1105 — `.humi-step-section h2` visually hidden แต่ยังอยู่ใน heading hierarchy
+### globals.css:1090-1105 — `.cnext-step-section h2` visually hidden แต่ยังอยู่ใน heading hierarchy
 **Priority**: MEDIUM  
 **Current**: h2 ใน Step*.tsx ซ่อนด้วย absolute 1px clip (visually hidden)  
 **Issue**: h2 ยังมีอยู่ใน DOM — AT อ่านได้ว่า "ขั้นตอนที่ 1 — ข้อมูลระบุตัวตน (Identity)" ซึ่งขัดแย้งกับ h3 "ข้อมูลระบุตัวตน" ที่มองเห็น — ทำให้ heading structure เป็น h1 → h2(hidden) → h3 ซ้ำกัน  
@@ -154,7 +154,7 @@
 **Priority**: LOW  
 **Current**: `style={{ padding: '10px 0', borderTop: '1px solid var(--color-hairline-soft)' }}`  
 **Issue**: Pattern นี้ซ้ำ 2 ที่ — ควรเป็น class  
-**Fix**: เพิ่ม `.humi-summary-row` ใน globals.css
+**Fix**: เพิ่ม `.cnext-summary-row` ใน globals.css
 
 ### probation/page.tsx:34 — `useProbationWizard.getState()` เรียกใน event handler
 **Priority**: MEDIUM  
@@ -228,7 +228,7 @@
 
 ## Notes สำหรับ Builder
 
-1. **ปัญหาหลัก** (CRITICAL ×5): Step*.tsx ทั้ง 8 ไฟล์ยังใช้ legacy Tailwind gray/blue/red tokens ที่ `humi-step-section` CSS override พยุงอยู่ — ควร fix ที่ source ไม่ใช่ CSS cascade workaround
+1. **ปัญหาหลัก** (CRITICAL ×5): Step*.tsx ทั้ง 8 ไฟล์ยังใช้ legacy Tailwind gray/blue/red tokens ที่ `cnext-step-section` CSS override พยุงอยู่ — ควร fix ที่ source ไม่ใช่ CSS cascade workaround
 2. **Quick win สูงสุด**: Extract `SectionHeader` component เดียว ลบ 5 duplicates — 10 นาที
 3. **Risk ถ้า CSS override พัง**: ถ้า class ชื่อ `text-gray-700` เปลี่ยนจาก Tailwind upgrade → label ทุกอันกลับเป็นสีเดิมทันที
 4. Screenshots: browser-harness ไม่ available (Chrome CDP ยังไม่ approved) — visual evidence ต้องทำแยกหลัง fix

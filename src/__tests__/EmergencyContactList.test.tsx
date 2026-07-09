@@ -13,7 +13,7 @@ import {
   isRowValid,
   areAllRowsValid,
 } from '@/components/profile/EmergencyContactList';
-import type { EmergencyContactRow } from '@/stores/humi-profile-slice';
+import type { EmergencyContactRow } from '@/stores/cnext-profile-slice';
 
 // ── Mock next-intl ─────────────────────────────────────────────────────────────
 vi.mock('next-intl', () => ({
@@ -26,8 +26,8 @@ vi.mock('lucide-react', () => ({
   Trash2: () => <span data-testid="icon-trash" />,
 }));
 
-// ── Mock humi UI primitives ────────────────────────────────────────────────────
-vi.mock('@/components/humi', () => ({
+// ── Mock cnext UI primitives ────────────────────────────────────────────────────
+vi.mock('@/components/cnext', () => ({
   Button: ({
     children,
     onClick,

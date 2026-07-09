@@ -72,25 +72,25 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
     ?? employee.position_title
 
   return (
-    <div className="humi-card humi-card--cream">
-      <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
+    <div className="cnext-card cnext-card--cream">
+      <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
       <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
       <div className="text-small text-ink-muted mb-3">{nameEn}</div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" style={{ marginTop: 8 }}>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>บริษัท</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>บริษัท</div>
           <div className="text-body font-medium text-ink">{employee.company}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่งปัจจุบัน</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่งปัจจุบัน</div>
           <div className="text-body font-medium text-ink">{currentTitle}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>Job Grade</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>Job Grade</div>
           <div className="text-body font-medium text-ink">{employee.job_grade}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
           <div className="text-body font-medium text-ink">{hireDateFmt}</div>
           <div className="text-small text-ink-muted">{tenure}</div>
         </div>
@@ -110,7 +110,7 @@ function ApprovalChainBanner({ employeeId }: { employeeId: string }) {
     <div
       role="status"
       aria-live="polite"
-      className="humi-card"
+      className="cnext-card"
       style={{
         display: 'flex', flexDirection: 'column', gap: 8,
         background: 'var(--color-accent-soft, #EFF6FF)',
@@ -118,7 +118,7 @@ function ApprovalChainBanner({ employeeId }: { employeeId: string }) {
         padding: 16,
       }}
     >
-      <div className="humi-eyebrow" style={{ color: 'var(--color-accent)' }}>สถานะการอนุมัติ</div>
+      <div className="cnext-eyebrow" style={{ color: 'var(--color-accent)' }}>สถานะการอนุมัติ</div>
       {pending.map((req) => (
         <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Clock size={16} aria-hidden style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
@@ -317,14 +317,14 @@ export default function PayRateChangePage() {
         <div>
           <Link
             href={`/${locale}/admin/employees`}
-            className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+            className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
             style={{ display: 'inline-flex', gap: 6 }}
           >
             <ArrowLeft size={16} aria-hidden />
             <span>รายการพนักงาน</span>
           </Link>
         </div>
-        <div className="humi-card" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">ไม่พบพนักงานรหัส &ldquo;{empId}&rdquo;</p>
         </div>
       </div>
@@ -349,7 +349,7 @@ export default function PayRateChangePage() {
       <div>
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -358,7 +358,7 @@ export default function PayRateChangePage() {
       </div>
 
       {/* Page title */}
-      <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+      <div className="cnext-row" style={{ gap: 10, alignItems: 'center' }}>
         <div
           style={{
             width: 36, height: 36, borderRadius: 10,
@@ -370,7 +370,7 @@ export default function PayRateChangePage() {
           <Wallet size={18} aria-hidden />
         </div>
         <div>
-          <div className="humi-eyebrow">การดำเนินการ</div>
+          <div className="cnext-eyebrow">การดำเนินการ</div>
           <h1 className="font-display text-xl font-semibold text-ink">{t('pageTitle')}</h1>
         </div>
       </div>
@@ -381,8 +381,8 @@ export default function PayRateChangePage() {
       {/* SPD Approval Chain Banner */}
       <ApprovalChainBanner employeeId={empId} />
 
-      <div className="humi-card humi-card--cream">
-        <div className="humi-eyebrow" style={{ marginBottom: 6 }}>การส่งคำขอ</div>
+      <div className="cnext-card cnext-card--cream">
+        <div className="cnext-eyebrow" style={{ marginBottom: 6 }}>การส่งคำขอ</div>
         <p className="text-small text-ink-soft">
           คำขอเลื่อนตำแหน่ง / ปรับเงินเดือนจะถูกส่งให้ฝ่ายค่าตอบแทน (Comp) และ SPD พิจารณา
           โดยต้องระบุวันที่มีผล — ข้อมูลจำนวนเงินและองค์ประกอบค่าตอบแทนเป็นข้อมูลที่ละเอียดอ่อน
@@ -396,8 +396,8 @@ export default function PayRateChangePage() {
         onEffectiveDateChange={(date) => setEffectiveDate(date)}
       >
         {() => (
-          <div className="humi-card ring-1 ring-accent-soft">
-            <div className="humi-eyebrow" style={{ marginBottom: 16 }}>Compensation Information</div>
+          <div className="cnext-card ring-1 ring-accent-soft">
+            <div className="cnext-eyebrow" style={{ marginBottom: 16 }}>Compensation Information</div>
 
             {/* ── Event (read-only chip) ── */}
             <div style={{ marginBottom: 20 }}>
@@ -504,7 +504,7 @@ export default function PayRateChangePage() {
                 value={payrollId}
                 onChange={(e) => setPayrollId(e.target.value)}
                 aria-required
-                className="humi-input"
+                className="cnext-input"
                 style={{ maxWidth: 320 }}
               />
             </div>
@@ -587,7 +587,7 @@ export default function PayRateChangePage() {
                   value={amount}
                   onChange={(e) => { setAmount(e.target.value); setAmountError('') }}
                   placeholder={amountType === 'percent' ? 'เช่น 10' : 'เช่น 5000'}
-                  className="humi-input"
+                  className="cnext-input"
                   style={{ maxWidth: 160 }}
                   aria-label="amount value"
                   aria-required
@@ -610,7 +610,7 @@ export default function PayRateChangePage() {
                 </span>
               </div>
               {amount !== '' && !amountValid && (
-                <p role="alert" className="humi-error text-danger" style={{ marginTop: 4 }}>
+                <p role="alert" className="cnext-error text-danger" style={{ marginTop: 4 }}>
                   {amountError || (amountType === 'percent' ? 'ระบุ 0–50 เท่านั้น' : 'ระบุจำนวนเงินที่มากกว่า 0')}
                 </p>
               )}
@@ -631,7 +631,7 @@ export default function PayRateChangePage() {
                     gap: 8,
                   }}
                 >
-                  <span className="humi-eyebrow" style={{ marginRight: 4 }}>ตัวอย่างเงินเดือน</span>
+                  <span className="cnext-eyebrow" style={{ marginRight: 4 }}>ตัวอย่างเงินเดือน</span>
                   {/* Struck-through current salary */}
                   <span
                     data-testid="salary-preview-current"
@@ -712,12 +712,12 @@ export default function PayRateChangePage() {
 
             {/* ── Recurring Payments table ── */}
             <div style={{ marginBottom: 24 }}>
-              <div className="humi-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <div className="cnext-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <label className="text-body font-semibold text-ink">Recurring Payments</label>
                 <button
                   type="button"
                   onClick={addRecurringRow}
-                  className="humi-btn humi-btn--ghost"
+                  className="cnext-btn cnext-btn--ghost"
                   data-testid="add-recurring-row"
                   aria-label="Add recurring payment row"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
@@ -734,7 +734,7 @@ export default function PayRateChangePage() {
                     <div
                       key={idx}
                       data-testid={`recurring-row-${idx}`}
-                      className="humi-row"
+                      className="cnext-row"
                       style={{
                         gap: 8,
                         padding: 8,
@@ -761,7 +761,7 @@ export default function PayRateChangePage() {
                         value={row.amount}
                         onChange={(e) => updateRecurring(idx, { amount: parseFloat(e.target.value) || 0 })}
                         aria-label={`amount row ${idx}`}
-                        className="humi-input"
+                        className="cnext-input"
                         style={{ flex: '0 1 120px' }}
                       />
                       <select
@@ -780,7 +780,7 @@ export default function PayRateChangePage() {
                         value={row.frequency}
                         onChange={(e) => updateRecurring(idx, { frequency: e.target.value })}
                         aria-label={`frequency row ${idx}`}
-                        className="humi-input"
+                        className="cnext-input"
                         style={{ flex: '0 1 120px' }}
                       />
                       <button
@@ -788,7 +788,7 @@ export default function PayRateChangePage() {
                         onClick={() => removeRecurringRow(idx)}
                         aria-label={`remove recurring row ${idx}`}
                         data-testid={`remove-recurring-row-${idx}`}
-                        className="humi-btn humi-btn--ghost"
+                        className="cnext-btn cnext-btn--ghost"
                         style={{ padding: '4px 8px' }}
                       >
                         <Trash2 size={14} aria-hidden />
@@ -814,7 +814,7 @@ export default function PayRateChangePage() {
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 placeholder="หมายเหตุเพิ่มเติม..."
-                className="humi-input"
+                className="cnext-input"
                 style={{ width: '100%', resize: 'vertical', maxWidth: 560 }}
                 aria-label="หมายเหตุ"
               />
@@ -831,22 +831,22 @@ export default function PayRateChangePage() {
                 border: '1px solid var(--color-hairline)',
               }}
             >
-              <div className="humi-eyebrow" style={{ marginBottom: 10 }}>
+              <div className="cnext-eyebrow" style={{ marginBottom: 10 }}>
                 ตัวอย่างข้อมูลส่งต่อ Payroll
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" style={{ marginBottom: 12 }}>
                 <div>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>เหตุผลการดำเนินการ</div>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>เหตุผลการดำเนินการ</div>
                   <div className="text-body font-medium text-ink">
                     {eventReasonLabel(payrollHandoff.eventReason) || '—'}
                   </div>
                 </div>
                 <div>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>Pay Group</div>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>Pay Group</div>
                   <div className="text-body font-medium text-ink">{payrollHandoff.payGroup || '—'}</div>
                 </div>
                 <div>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่มีผล</div>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันที่มีผล</div>
                   <div className="text-body font-medium text-ink">
                     {payrollHandoff.effectiveDate ? formatDateTh(payrollHandoff.effectiveDate) : '—'}
                   </div>
@@ -857,7 +857,7 @@ export default function PayRateChangePage() {
                   <div
                     key={`${c.component}-${i}`}
                     data-testid={`handoff-component-${i}`}
-                    className="humi-row text-small text-ink"
+                    className="cnext-row text-small text-ink"
                     style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}
                   >
                     <span className="font-medium">{c.component}</span>
@@ -876,10 +876,10 @@ export default function PayRateChangePage() {
             </div>
 
             {/* ── Action buttons ── */}
-            <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
+            <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
               <Link
                 href={`/${locale}/admin/employees/${empId}`}
-                className="humi-btn humi-btn--ghost"
+                className="cnext-btn cnext-btn--ghost"
               >
                 ยกเลิก
               </Link>
@@ -887,7 +887,7 @@ export default function PayRateChangePage() {
                 type="button"
                 onClick={doSubmit}
                 disabled={!isFormValid || submitted}
-                className="humi-btn humi-btn--primary"
+                className="cnext-btn cnext-btn--primary"
                 aria-disabled={!isFormValid || submitted}
               >
                 บันทึกการปรับเงินเดือน

@@ -7,9 +7,9 @@
 
 import { describe, expect, test } from 'vitest';
 import { pickRosterScope, scopeRosterRows } from '@/lib/roster-scope';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
 
-const POOL: HumiEmployee[] = [
+const POOL: CnextEmployee[] = [
   { id: 'emp-002', employeeCode: 'M', firstNameTh: 'A', lastNameTh: 'A', initials: 'AA',
     position: 'Manager', department: 'Finance', status: 'active', avatarTone: 'teal',
     businessUnitId: 'BU-002' },

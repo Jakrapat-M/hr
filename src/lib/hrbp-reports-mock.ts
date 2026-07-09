@@ -20,7 +20,7 @@ const MOCK_EMPLOYEES = [
   { id: 'EMP001', nameEn: 'Arisa Tanaka', nameTh: 'อริสา ทานาคะ', dept: 'Finance' },
   { id: 'EMP002', nameEn: 'Bundit Charoenwong', nameTh: 'บัณฑิต เจริญวงศ์', dept: 'HR' },
   { id: 'EMP003', nameEn: 'Chalinee Siriporn', nameTh: 'ชลินี ศิริพร', dept: 'IT' },
-  { id: 'EMP004', nameEn: 'Dechawat Phumiphat', nameTh: 'เดชวัฒน์ ภูมิพัฒน์', dept: 'Finance' },
+  { id: 'EMP004', nameEn: 'Dechawat Pcnextphat', nameTh: 'เดชวัฒน์ ภูมิพัฒน์', dept: 'Finance' },
   { id: 'EMP005', nameEn: 'Ekkachai Rungrat', nameTh: 'เอกชัย รุ่งรัตน์', dept: 'HR' },
   { id: 'EMP006', nameEn: 'Fah Natthida', nameTh: 'ฟ้า ณัฐธิดา', dept: 'IT' },
   { id: 'EMP007', nameEn: 'Gamon Preeda', nameTh: 'กมล ปรีดา', dept: 'Finance' },

@@ -15,7 +15,7 @@ async function seed(page: Page, roles: string[]) {
   await page.addInitScript(
     ([roles]) => {
       localStorage.setItem(
-        'humi-auth',
+        'cnext-auth',
         JSON.stringify({ state: { userId: 'u1', username: 'Tester', email: 'a@e.com', roles, isAuthenticated: true }, version: 0 }),
       )
     },

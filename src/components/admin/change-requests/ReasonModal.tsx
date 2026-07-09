@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Modal } from '@/components/humi/Modal';
-import { Button } from '@/components/humi/Button';
-import { FormField } from '@/components/humi/FormField';
-import { useHumiProfileStore } from '@/stores/humi-profile-slice';
+import { Modal } from '@/components/cnext/Modal';
+import { Button } from '@/components/cnext/Button';
+import { FormField } from '@/components/cnext/FormField';
+import { useCnextProfileStore } from '@/stores/cnext-profile-slice';
 
 // ════════════════════════════════════════════════════════════
 // ReasonModal — shared approve/reject confirmation dialog.
@@ -34,7 +34,7 @@ export function ReasonModal({ open, mode, changeId, onClose }: ReasonModalProps)
   const rejectWithoutReason = mode === 'reject' && reason.trim() === '';
 
   const handleConfirm = () => {
-    const store = useHumiProfileStore.getState();
+    const store = useCnextProfileStore.getState();
     if (mode === 'approve') {
       store.adminApproveWithReason(changeId, reason.trim() || undefined);
     } else {

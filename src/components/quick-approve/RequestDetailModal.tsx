@@ -10,15 +10,15 @@
 // Decision surface (Q1-a): Approve + Cancel only, plus an "Open full page" link so
 // Reject/Return (which live on the dedicated detail page via ActionPanel /
 // RejectReturnDrawer) are never stranded. We deliberately do NOT mount ActionPanel
-// here — that avoids nesting a second humi Modal (its confirm dialog) inside this
+// here — that avoids nesting a second cnext Modal (its confirm dialog) inside this
 // one and the body-scroll-lock subtlety that comes with it.
 //
-// Mirrors the STA-159 ClaimDetailModal precedent (detail components in a humi Modal).
+// Mirrors the STA-159 ClaimDetailModal precedent (detail components in a cnext Modal).
 
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
-import { Button } from '@/components/humi';
-import { Modal } from '@/components/humi';
+import { Button } from '@/components/cnext';
+import { Modal } from '@/components/cnext';
 import { RequestSummary } from '@/components/quick-approve/detail/RequestSummary';
 import { RequestPayload } from '@/components/quick-approve/detail/RequestPayload';
 import { AttachmentViewPanel } from '@/components/quick-approve/detail/AttachmentViewPanel';
@@ -80,12 +80,12 @@ export function RequestDetailModal({
 
         <HistoryTimeline steps={request.approvalTimeline} />
 
-        {/* Footer — humi Modal has no footer prop, so it lives in children. */}
+        {/* Footer — cnext Modal has no footer prop, so it lives in children. */}
         <div className="flex flex-wrap items-center justify-end gap-3 border-t border-hairline pt-4">
           {fullPageHref && (
             <Link
               href={fullPageHref}
-              className="humi-button humi-button--ghost"
+              className="cnext-button cnext-button--ghost"
               style={{ fontSize: 13, padding: '6px 12px' }}
             >
               {en ? 'Open full page' : 'ดูเต็มหน้า'}

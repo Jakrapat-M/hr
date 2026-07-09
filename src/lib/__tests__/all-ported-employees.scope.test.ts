@@ -40,12 +40,12 @@ describe('P2 — every pooled row carries businessUnitId + managerId seed', () =
 });
 
 describe('P2 — hrbp persona (emp-007) resolves to a BU cohort', () => {
-  const hrbpEmpId = resolveCurrentEmpId('hrbp@humi.test');
+  const hrbpEmpId = resolveCurrentEmpId('hrbp@cnext.test');
 
   test('login map + EMP_BY_LOGIN agree on emp-007', () => {
     expect(hrbpEmpId).toBe('emp-007');
-    expect(EMP_BY_LOGIN['hrbp@humi.test']).toBe('emp-007');
-    expect(EMP_BY_LOGIN_FULL['hrbp@humi.test']).toBe('emp-007');
+    expect(EMP_BY_LOGIN['hrbp@cnext.test']).toBe('emp-007');
+    expect(EMP_BY_LOGIN_FULL['hrbp@cnext.test']).toBe('emp-007');
   });
 
   test('pickScopeMode hrbp → bu', () => {
@@ -65,7 +65,7 @@ describe('P2 — hrbp persona (emp-007) resolves to a BU cohort', () => {
 });
 
 describe('P2 — manager persona (emp-002) resolves to direct reports', () => {
-  const mgrEmpId = resolveCurrentEmpId('manager@humi.test');
+  const mgrEmpId = resolveCurrentEmpId('manager@cnext.test');
 
   test('login resolves to emp-002', () => {
     expect(mgrEmpId).toBe('emp-002');

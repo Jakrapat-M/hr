@@ -14,7 +14,7 @@ import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useParams, useSearchParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { ModuleImportWizard } from '@/components/admin/import/ModuleImportWizard';
 import { SubjectPicker } from '@/components/admin/import/SubjectPicker';
 import { getImportSubject, type ImportSubject } from '@/components/admin/import/subject-registry';

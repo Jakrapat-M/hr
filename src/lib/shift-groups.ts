@@ -9,7 +9,7 @@
 // from SHIFT_CODES (lib/time/shift-codes.ts) — this module never forks it.
 
 import { ALL_PORTED_EMPLOYEES } from '@/lib/all-ported-employees';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
 import { SHIFT_CODES } from '@/lib/time/shift-codes';
 
 /**
@@ -105,7 +105,7 @@ export function canEditShiftGroup(group: ShiftGroup, selfEmpId: string | null): 
 // ── Team / people resolution ───────────────────────────────────────────────────
 
 /** The team (direct reports) that a group's managers own — the grid's rows. */
-export function teamForGroup(group: ShiftGroup): HumiEmployee[] {
+export function teamForGroup(group: ShiftGroup): CnextEmployee[] {
   return ALL_PORTED_EMPLOYEES.filter(
     (e) => e.managerId != null && group.managerIds.includes(e.managerId),
   );
@@ -133,7 +133,7 @@ export function filledCellCount(group: ShiftGroup): number {
 
 // ── Seed (Q2) ──────────────────────────────────────────────────────────────────
 //
-// One manager persona (emp-002 — the BU-FINANCE head / `manager@humi.test`) owns
+// One manager persona (emp-002 — the BU-FINANCE head / `manager@cnext.test`) owns
 // three demo groups across the lifecycle so the grid, the queue row, and the
 // ownership gate all have real data. Cells are built deterministically over the
 // manager's real direct reports so rows always render.

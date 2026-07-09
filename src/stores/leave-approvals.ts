@@ -371,7 +371,7 @@ export const useLeaveApprovals = create<LeaveApprovalsState>()(
       clear: () => set({ requests: [] }),
     }),
     {
-      name: 'humi-leave-approvals',
+      name: 'cnext-leave-approvals',
       version: 1,
       storage: createJSONStorage(() => localStorage),
       // Persist live rows normally so user-submitted requests survive hard

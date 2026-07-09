@@ -155,10 +155,10 @@ export function AttachmentDropzone({
   return (
     <div>
       {/* ── Label ── */}
-      <label htmlFor={dropzoneId} className="humi-label">
+      <label htmlFor={dropzoneId} className="cnext-label">
         {label}
         {required && (
-          <span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+          <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         )}
       </label>
 
@@ -268,7 +268,7 @@ export function AttachmentDropzone({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}
-              className="humi-btn humi-btn--secondary"
+              className="cnext-btn cnext-btn--secondary"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
               <Upload size={14} aria-hidden />

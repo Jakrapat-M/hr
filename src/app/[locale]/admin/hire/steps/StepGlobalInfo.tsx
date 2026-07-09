@@ -82,14 +82,14 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
 
         {/* ประเทศ/ภูมิภาค — BA row 49 (STA-82); reuses PICKLIST_COUNTRY_ISO */}
         <fieldset>
-          <label htmlFor="gi-country-region" className="humi-label">
+          <label htmlFor="gi-country-region" className="cnext-label">
             {t('countryRegion')}
           </label>
           <select
             id="gi-country-region"
             value={gi.countryRegion ?? 'THA'}
             onChange={(e) => patch({ countryRegion: e.target.value || null })}
-            className="humi-input w-full"
+            className="cnext-input w-full"
           >
             <option value="">— {t('selectCountryRegion')} —</option>
             {PICKLIST_COUNTRY_ISO.filter((c) => c.active).map((c) => (
@@ -100,14 +100,14 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
 
         {/* ศาสนา — SF: genericString5 (RELIGION_THA picklist) */}
         <fieldset>
-          <label htmlFor="gi-religion" className="humi-label">
+          <label htmlFor="gi-religion" className="cnext-label">
             ศาสนา / Religion
           </label>
           <select
             id="gi-religion"
             value={gi.religion ?? ''}
             onChange={(e) => patch({ religion: e.target.value || null })}
-            className="humi-input w-full"
+            className="cnext-input w-full"
           >
             <option value="">— เลือกศาสนา / Select Religion —</option>
             {RELIGION_THA_OPTIONS.map((opt) => (
@@ -120,7 +120,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
 
         {/* จำนวนบุตร — SF: genericNumber2 (Edm.Int64) */}
         <fieldset>
-          <label htmlFor="gi-children" className="humi-label">
+          <label htmlFor="gi-children" className="cnext-label">
             จำนวนบุตร / Number of Children
           </label>
           <input
@@ -134,13 +134,13 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
               const val = e.target.value
               patch({ numberOfChildren: val === '' ? null : parseInt(val, 10) })
             }}
-            className="humi-input w-full"
+            className="cnext-input w-full"
           />
         </fieldset>
 
         {/* สถานะความพิการ — SF: customString1 */}
         <fieldset>
-          <label htmlFor="gi-disability-status" className="humi-label">
+          <label htmlFor="gi-disability-status" className="cnext-label">
             สถานะความพิการ / Disability Status
           </label>
           <select
@@ -161,7 +161,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
                 patch({ disabilityStatus: val })
               }
             }}
-            className="humi-input w-full"
+            className="cnext-input w-full"
           >
             <option value="">— เลือก / Select —</option>
             <option value="Y">มีความพิการ / Yes</option>
@@ -172,7 +172,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
         {/* ประเภทความพิการ — SF: genericString2 (conditional: Disability Status = Y) */}
         {showDisabilityFields && (
           <fieldset>
-            <label htmlFor="gi-disability-type" className="humi-label">
+            <label htmlFor="gi-disability-type" className="cnext-label">
               ประเภทความพิการ / Type of Disability
             </label>
             <input
@@ -181,7 +181,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
               placeholder="ระบุประเภทความพิการ"
               value={gi.typeOfDisability}
               onChange={(e) => patch({ typeOfDisability: e.target.value })}
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
         )}
@@ -189,7 +189,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
         {/* เลขที่บัตรผู้พิการ — SF: genericString4 */}
         {showDisabilityFields && (
           <fieldset>
-            <label htmlFor="gi-cert-id" className="humi-label">
+            <label htmlFor="gi-cert-id" className="cnext-label">
               เลขที่บัตรผู้พิการ / Disability Certificate ID
             </label>
             <input
@@ -198,7 +198,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
               placeholder="เลขที่ใบรับรองความพิการ"
               value={gi.certificateId}
               onChange={(e) => patch({ certificateId: e.target.value })}
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
         )}
@@ -206,7 +206,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
         {/* วันที่เริ่มบัตรผู้พิการ — SF: customDate1 */}
         {showDisabilityFields && (
           <fieldset>
-            <label htmlFor="gi-cert-start" className="humi-label">
+            <label htmlFor="gi-cert-start" className="cnext-label">
               วันที่ออกบัตรผู้พิการ / Disability Cert Start Date
             </label>
             <input
@@ -214,7 +214,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
               type="date"
               value={gi.disabilityCertStartDate ?? ''}
               onChange={(e) => patch({ disabilityCertStartDate: e.target.value || null })}
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
         )}
@@ -222,7 +222,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
         {/* วันที่หมดอายุบัตรผู้พิการ — SF: customDate2 */}
         {showDisabilityFields && (
           <fieldset>
-            <label htmlFor="gi-cert-end" className="humi-label">
+            <label htmlFor="gi-cert-end" className="cnext-label">
               วันที่หมดอายุบัตรผู้พิการ / Disability Cert End Date
             </label>
             <input
@@ -230,7 +230,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
               type="date"
               value={gi.disabilityCertEndDate ?? ''}
               onChange={(e) => patch({ disabilityCertEndDate: e.target.value || null })}
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
         )}
@@ -251,7 +251,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
 
         {/* เลขประจำตัวบิดาของคู่สมรส — SF: genericNumber4 (stored as string, 13-digit) */}
         <fieldset>
-          <label htmlFor="gi-spouse-father-id" className="humi-label">
+          <label htmlFor="gi-spouse-father-id" className="cnext-label">
             เลขบัตรบิดาของคู่สมรส / Spouse Father ID Number
           </label>
           <input
@@ -262,13 +262,13 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
             placeholder="เลข 13 หลัก"
             value={gi.spouseFatherIdNumber}
             onChange={(e) => patch({ spouseFatherIdNumber: e.target.value.replace(/\D/g, '').slice(0, 13) })}
-            className="humi-input w-full"
+            className="cnext-input w-full"
           />
         </fieldset>
 
         {/* เลขประจำตัวมารดาของคู่สมรส — SF: genericNumber5 (stored as string, 13-digit) */}
         <fieldset>
-          <label htmlFor="gi-spouse-mother-id" className="humi-label">
+          <label htmlFor="gi-spouse-mother-id" className="cnext-label">
             เลขบัตรมารดาของคู่สมรส / Spouse Mother ID Number
           </label>
           <input
@@ -279,7 +279,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
             placeholder="เลข 13 หลัก"
             value={gi.spouseMotherIdNumber}
             onChange={(e) => patch({ spouseMotherIdNumber: e.target.value.replace(/\D/g, '').slice(0, 13) })}
-            className="humi-input w-full"
+            className="cnext-input w-full"
           />
         </fieldset>
 
@@ -287,7 +287,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
 
       {/* ข้อมูลเพิ่มเติม — SF: customString2 (full-width textarea) */}
       <fieldset className="flex flex-col gap-2">
-        <label htmlFor="gi-additional-info" className="humi-label">
+        <label htmlFor="gi-additional-info" className="cnext-label">
           ข้อมูลเพิ่มเติม / Additional Information
         </label>
         <textarea
@@ -297,7 +297,7 @@ export default function StepGlobalInfo({ onValidChange }: StepGlobalInfoProps) {
           placeholder="ข้อมูลเพิ่มเติม (ถ้ามี)"
           value={gi.additionalInformation}
           onChange={(e) => patch({ additionalInformation: e.target.value })}
-          className="humi-textarea humi-input--wide w-full resize-none"
+          className="cnext-textarea cnext-input--wide w-full resize-none"
         />
       </fieldset>
 

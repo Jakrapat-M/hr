@@ -5,11 +5,11 @@
  *   Employee submits ESS termination → SPD approves → HR Admin sees approved status
  *
  * Auth strategy: storageState from e2e/.auth/<role>.json (set by global-setup).
- * Each persona gets its own browser context so the Zustand humi-auth store is
+ * Each persona gets its own browser context so the Zustand cnext-auth store is
  * isolated per role transition.
  *
- * localStorage clear strategy: only clear non-auth humi-* keys so the
- * humi-auth store (required for routing) is preserved.
+ * localStorage clear strategy: only clear non-auth cnext-* keys so the
+ * cnext-auth store (required for routing) is preserved.
  */
 
 import { test, expect, type Browser, type Page } from '@playwright/test';
@@ -19,7 +19,7 @@ import { authedContext } from './helpers/storage-auth.helper';
 
 // Must match userId in PERSONA_AUTH['employee'] (storage-auth.helper.ts)
 const TEST_EMPLOYEE_ID = 'EMP001';
-const EMPLOYEE_NAME    = 'สมชาย ใจดี';  // DEMO_USERS employee@humi.test
+const EMPLOYEE_NAME    = 'สมชาย ใจดี';  // DEMO_USERS employee@cnext.test
 const RESIGN_REASON_VALUE = 'TERM_RESIGN';
 const RESIGN_REASON_LABEL = 'ลาออกโดยสมัครใจ';
 const THAI_COMMENT        = 'ทดสอบการยื่นคำขอลาออกผ่านระบบ Self-Service';
@@ -30,11 +30,11 @@ function lastWorkingDay(): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Clear all humi-* localStorage keys except humi-auth. */
+/** Clear all cnext-* localStorage keys except cnext-auth. */
 async function clearNonAuthStorage(page: Page): Promise<void> {
   await page.evaluate(() => {
     Object.keys(localStorage)
-      .filter((k) => k.startsWith('humi-') && k !== 'humi-auth')
+      .filter((k) => k.startsWith('cnext-') && k !== 'cnext-auth')
       .forEach((k) => localStorage.removeItem(k));
   });
 }

@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { BarChart3, History } from 'lucide-react';
 import { FieldGroup } from '@/components/ui/field-group';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { EmptyValue } from '@/components/ui/empty-value';
 import { Skeleton } from '@/components/ui/skeleton';

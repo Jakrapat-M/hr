@@ -174,8 +174,8 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
     <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
       {/* เงินเดือนพื้นฐาน */}
       <fieldset>
-        <label htmlFor="base-salary" className="humi-label">
-          {t('baseSalary')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="base-salary" className="cnext-label">
+          {t('baseSalary')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-muted select-none">฿</span>
@@ -192,7 +192,7 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
             value={salaryInput}
             onChange={(e) => setSalaryInput(e.target.value)}
             onBlur={() => setTouched(true)}
-            className="humi-input w-full pl-7"
+            className="cnext-input w-full pl-7"
           />
         </div>
         {touched && error && (
@@ -203,12 +203,12 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
       {/* สกุลเงิน — BRD #96: default THB (THA → THB) */}
       {/* SF source: EmpCompensation.currencyCode — Thailand = THA → THB */}
       <fieldset>
-        <label htmlFor="currency" className="humi-label">{t('currency')}</label>
+        <label htmlFor="currency" className="cnext-label">{t('currency')}</label>
         <select
           id="currency"
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
-          className="humi-select w-full"
+          className="cnext-select w-full"
         >
           <option value="THB">บาทไทย (THB)</option>
           <option value="USD">ดอลลาร์สหรัฐ (USD)</option>
@@ -221,12 +221,12 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
       {/* Pay Group — BRD #27 — SF EmpCompensation.payGroup (8 codes) */}
       {/* SF source: jq '[.d.results[].payGroup] | unique' sf-qas-EmpCompensation-2026-04-26.json */}
       <fieldset>
-        <label htmlFor="pay-group" className="humi-label">{t('payGroup')}</label>
+        <label htmlFor="pay-group" className="cnext-label">{t('payGroup')}</label>
         <select
           id="pay-group"
           value={payGroup}
           onChange={(e) => setPayGroup(e.target.value)}
-          className="humi-select w-full"
+          className="cnext-select w-full"
         >
           <option value="">{t('selectPayGroup')}</option>
           {PICKLIST_PAY_GROUP.filter((g) => g.active).map((g) => (
@@ -238,12 +238,12 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
 
       {/* Pay Frequency — audit #13 / BRD #120 — wired to SF PICKLIST_PAY_FREQUENCY (6 items) */}
       <fieldset>
-        <label htmlFor="pay-frequency" className="humi-label">{t('payFrequency')}</label>
+        <label htmlFor="pay-frequency" className="cnext-label">{t('payFrequency')}</label>
         <select
           id="pay-frequency"
           value={payFrequency}
           onChange={(e) => setPayFrequency(e.target.value)}
-          className="humi-select w-full"
+          className="cnext-select w-full"
         >
           {PICKLIST_PAY_FREQUENCY.filter((f) => f.active).map((f) => (
             <option key={f.id} value={f.id}>{f.labelTh}</option>
@@ -280,18 +280,18 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
       {/* BA Required: Bank Country, Currency (above), Payment Method, Pay Type */}
       {/* SF: PaymentInformationV3.paymentInformationDetailV3Nav deep-insert */}
       <fieldset className="md:col-span-2 mt-4 pt-4 border-t border-hairline-soft">
-        <div className="humi-eyebrow mb-3">ข้อมูลบัญชีจ่ายเงินเดือน</div>
+        <div className="cnext-eyebrow mb-3">ข้อมูลบัญชีจ่ายเงินเดือน</div>
         <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
           {/* Bank Country/Region — BA Required — SF: bankCountry */}
           <fieldset>
-            <label htmlFor="bank-country" className="humi-label">
-              ประเทศของบัญชีธนาคาร<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="bank-country" className="cnext-label">
+              ประเทศของบัญชีธนาคาร<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <select
               id="bank-country"
               value={bankCountry}
               onChange={(e) => setBankCountry(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">เลือกประเทศ</option>
               <option value="THA">ไทย (THA)</option>
@@ -304,14 +304,14 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
 
           {/* Payment Method — BA Required — SF: paymentMethod */}
           <fieldset>
-            <label htmlFor="payment-method" className="humi-label">
-              วิธีการจ่ายเงิน<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="payment-method" className="cnext-label">
+              วิธีการจ่ายเงิน<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <select
               id="payment-method"
               value={paymentMethod}
               onChange={(e) => setPaymentMethod(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">เลือกวิธีการจ่ายเงิน</option>
               <option value="B">โอนเข้าบัญชีธนาคาร</option>
@@ -322,14 +322,14 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
 
           {/* Pay Type — BA Required — SF: payType */}
           <fieldset>
-            <label htmlFor="pay-type" className="humi-label">
-              รูปแบบการจ่าย<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="pay-type" className="cnext-label">
+              รูปแบบการจ่าย<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <select
               id="pay-type"
               value={payType}
               onChange={(e) => setPayType(e.target.value)}
-              className="humi-select w-full"
+              className="cnext-select w-full"
             >
               <option value="">เลือกรูปแบบการจ่าย</option>
               <option value="P">เปอร์เซ็นต์ (%)</option>
@@ -340,40 +340,40 @@ export default function StepCompensation({ onValidChange }: StepCompensationProp
 
           {/* Bank Name — optional — SF: bank */}
           <fieldset>
-            <label htmlFor="bank-name" className="humi-label">ชื่อธนาคาร</label>
+            <label htmlFor="bank-name" className="cnext-label">ชื่อธนาคาร</label>
             <input
               id="bank-name"
               type="text"
               value={bank}
               onChange={(e) => setBank(e.target.value)}
               placeholder="ระบุชื่อธนาคาร"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Account Number — optional — SF: accountNumber */}
           <fieldset>
-            <label htmlFor="account-number" className="humi-label">เลขที่บัญชี</label>
+            <label htmlFor="account-number" className="cnext-label">เลขที่บัญชี</label>
             <input
               id="account-number"
               type="text"
               value={accountNumber}
               onChange={(e) => setAccountNumber(e.target.value)}
               placeholder="ระบุเลขที่บัญชี"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
           {/* Bank Code (BIC/SWIFT) — optional — SF: businessIdentifierCode */}
           <fieldset>
-            <label htmlFor="bank-code" className="humi-label">รหัสธนาคาร (BIC/SWIFT)</label>
+            <label htmlFor="bank-code" className="cnext-label">รหัสธนาคาร (BIC/SWIFT)</label>
             <input
               id="bank-code"
               type="text"
               value={bankCode}
               onChange={(e) => setBankCode(e.target.value)}
               placeholder="ระบุรหัสธนาคาร"
-              className="humi-input w-full"
+              className="cnext-input w-full"
             />
           </fieldset>
 
@@ -427,7 +427,7 @@ function CostDistributionSection({ rows, error, onAdd, onRemove, onUpdate, onCle
       <button
         type="button"
         onClick={() => { setShowSection(true); onAdd() }}
-        className="humi-button humi-button--ghost"
+        className="cnext-button cnext-button--ghost"
         style={{ display: 'inline-flex', gap: 6 }}
       >
         <span>{t('costDistributionToggle')}</span>
@@ -436,10 +436,10 @@ function CostDistributionSection({ rows, error, onAdd, onRemove, onUpdate, onCle
   }
 
   return (
-    <div className="humi-card humi-card--cream" style={{ padding: 16 }}>
-      <div className="humi-row" style={{ marginBottom: 12, gap: 8 }}>
+    <div className="cnext-card cnext-card--cream" style={{ padding: 16 }}>
+      <div className="cnext-row" style={{ marginBottom: 12, gap: 8 }}>
         <div style={{ flex: 1 }}>
-          <div className="humi-eyebrow">{t('costDistributionTitle')}</div>
+          <div className="cnext-eyebrow">{t('costDistributionTitle')}</div>
           <p className="text-small text-ink-muted" style={{ marginTop: 2 }}>
             {t('costDistributionDesc')}
           </p>
@@ -458,12 +458,12 @@ function CostDistributionSection({ rows, error, onAdd, onRemove, onUpdate, onCle
         {rows.map((row) => (
           <div key={row.id} className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_120px_auto] md:items-end">
             <div>
-              <label className="humi-label text-xs" htmlFor={`cc-${row.id}`}>{t('costCenter')}</label>
+              <label className="cnext-label text-xs" htmlFor={`cc-${row.id}`}>{t('costCenter')}</label>
               <select
                 id={`cc-${row.id}`}
                 value={row.costCenter}
                 onChange={(e) => onUpdate(row.id, 'costCenter', e.target.value)}
-                className="humi-select w-full"
+                className="cnext-select w-full"
               >
                 <option value="">{t('selectCostCenter')}</option>
                 {COST_CENTERS.map((cc) => (
@@ -472,7 +472,7 @@ function CostDistributionSection({ rows, error, onAdd, onRemove, onUpdate, onCle
               </select>
             </div>
             <div>
-              <label className="humi-label text-xs" htmlFor={`pct-${row.id}`}>{t('allocation')}</label>
+              <label className="cnext-label text-xs" htmlFor={`pct-${row.id}`}>{t('allocation')}</label>
               <input
                 id={`pct-${row.id}`}
                 type="number"
@@ -482,7 +482,7 @@ function CostDistributionSection({ rows, error, onAdd, onRemove, onUpdate, onCle
                 value={row.pct}
                 onChange={(e) => onUpdate(row.id, 'pct', e.target.value)}
                 placeholder={t('allocationPlaceholder')}
-                className="humi-input w-full"
+                className="cnext-input w-full"
               />
             </div>
             <button
@@ -498,11 +498,11 @@ function CostDistributionSection({ rows, error, onAdd, onRemove, onUpdate, onCle
         ))}
       </div>
 
-      <div className="humi-row" style={{ marginTop: 12, gap: 8, justifyContent: 'space-between' }}>
+      <div className="cnext-row" style={{ marginTop: 12, gap: 8, justifyContent: 'space-between' }}>
         <button
           type="button"
           onClick={onAdd}
-          className="humi-button humi-button--ghost text-sm"
+          className="cnext-button cnext-button--ghost text-sm"
         >
           {t('addRow')}
         </button>
@@ -537,11 +537,11 @@ function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, o
   if (!showSection) {
     return (
       <div>
-        <div className="humi-eyebrow mb-1">{t('recurringOtherTitle')}</div>
+        <div className="cnext-eyebrow mb-1">{t('recurringOtherTitle')}</div>
         <button
           type="button"
           onClick={() => { setShowSection(true); onAdd() }}
-          className="humi-button humi-button--ghost"
+          className="cnext-button cnext-button--ghost"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <span>{t('recurringToggle')}</span>
@@ -552,10 +552,10 @@ function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, o
   }
 
   return (
-    <div className="humi-card humi-card--cream" style={{ padding: 16 }}>
-      <div className="humi-row" style={{ marginBottom: 12, gap: 8 }}>
+    <div className="cnext-card cnext-card--cream" style={{ padding: 16 }}>
+      <div className="cnext-row" style={{ marginBottom: 12, gap: 8 }}>
         <div style={{ flex: 1 }}>
-          <div className="humi-eyebrow">{t('recurringActiveTitle')}</div>
+          <div className="cnext-eyebrow">{t('recurringActiveTitle')}</div>
           <p className="text-small text-ink-muted" style={{ marginTop: 2 }}>
             {t('recurringActiveDesc')}
           </p>
@@ -575,12 +575,12 @@ function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, o
           <div key={row.id} className="grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr_100px_1fr_auto] md:items-end">
             {/* ประเภทค่าตอบแทน — SF: payComponent */}
             <div>
-              <label className="humi-label text-xs" htmlFor={`rpc-type-${row.id}`}>{t('recurringType')}</label>
+              <label className="cnext-label text-xs" htmlFor={`rpc-type-${row.id}`}>{t('recurringType')}</label>
               <select
                 id={`rpc-type-${row.id}`}
                 value={row.payComponent}
                 onChange={(e) => onUpdate(row.id, 'payComponent', e.target.value)}
-                className="humi-select w-full"
+                className="cnext-select w-full"
               >
                 <option value="">{t('selectType')}</option>
                 {PICKLIST_PAY_COMPONENT_GROUP.filter((g) => g.active).map((g) => (
@@ -590,7 +590,7 @@ function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, o
             </div>
             {/* จำนวนเงิน — SF: paycompvalue */}
             <div>
-              <label className="humi-label text-xs" htmlFor={`rpc-amt-${row.id}`}>{t('amount')}</label>
+              <label className="cnext-label text-xs" htmlFor={`rpc-amt-${row.id}`}>{t('amount')}</label>
               <input
                 id={`rpc-amt-${row.id}`}
                 type="number"
@@ -599,17 +599,17 @@ function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, o
                 value={row.amount}
                 onChange={(e) => onUpdate(row.id, 'amount', e.target.value)}
                 placeholder={t('amountPlaceholder')}
-                className="humi-input w-full"
+                className="cnext-input w-full"
               />
             </div>
             {/* สกุลเงิน — SF: currencyCode */}
             <div>
-              <label className="humi-label text-xs" htmlFor={`rpc-cur-${row.id}`}>{t('currency')}</label>
+              <label className="cnext-label text-xs" htmlFor={`rpc-cur-${row.id}`}>{t('currency')}</label>
               <select
                 id={`rpc-cur-${row.id}`}
                 value={row.currencyCode || defaultCurrency}
                 onChange={(e) => onUpdate(row.id, 'currencyCode', e.target.value)}
-                className="humi-select w-full"
+                className="cnext-select w-full"
               >
                 <option value="THB">THB</option>
                 <option value="USD">USD</option>
@@ -619,12 +619,12 @@ function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, o
             </div>
             {/* ความถี่ — SF: frequency */}
             <div>
-              <label className="humi-label text-xs" htmlFor={`rpc-freq-${row.id}`}>{t('frequency')}</label>
+              <label className="cnext-label text-xs" htmlFor={`rpc-freq-${row.id}`}>{t('frequency')}</label>
               <select
                 id={`rpc-freq-${row.id}`}
                 value={row.frequency || defaultFrequency}
                 onChange={(e) => onUpdate(row.id, 'frequency', e.target.value)}
-                className="humi-select w-full"
+                className="cnext-select w-full"
               >
                 {PICKLIST_PAY_FREQUENCY.filter((f) => f.active).map((f) => (
                   <option key={f.id} value={f.id}>{f.labelTh}</option>
@@ -647,7 +647,7 @@ function RecurringPaySection({ rows, defaultCurrency, defaultFrequency, onAdd, o
       <button
         type="button"
         onClick={onAdd}
-        className="humi-button humi-button--ghost text-sm mt-3"
+        className="cnext-button cnext-button--ghost text-sm mt-3"
       >
         {t('addItem')}
       </button>

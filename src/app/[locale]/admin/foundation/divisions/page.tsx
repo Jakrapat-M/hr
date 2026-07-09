@@ -46,18 +46,18 @@ export default function FoundationDivisionsPage() {
 
   return (
     <div className="pb-8">
-      <div className="humi-row" style={{ marginBottom: 20, alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+      <div className="cnext-row" style={{ marginBottom: 20, alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div className="humi-eyebrow">Admin · EC Foundation</div>
+          <div className="cnext-eyebrow">Admin · EC Foundation</div>
           <h1 className="mt-1 font-display text-2xl font-semibold text-ink">หน่วยธุรกิจ</h1>
           <p className="mt-1 text-small text-ink-soft">
             กลุ่มบริษัทและหน่วยธุรกิจระดับสูงสุด {divisions.length} รายการ
           </p>
         </div>
-        <span className="humi-spacer" />
+        <span className="cnext-spacer" />
         <button
           type="button"
-          className="humi-button humi-button--primary"
+          className="cnext-button cnext-button--primary"
           onClick={() => { setShowForm(true); setSaved(false); }}
         >
           <Plus size={15} aria-hidden />
@@ -68,14 +68,14 @@ export default function FoundationDivisionsPage() {
       {/* New Division form */}
       {showForm && (
         <div
-          className="humi-card"
+          className="cnext-card"
           style={{ marginBottom: 20, border: '1.5px solid var(--color-accent)', padding: 20 }}
         >
-          <div className="humi-row" style={{ marginBottom: 14 }}>
+          <div className="cnext-row" style={{ marginBottom: 14 }}>
             <h2 className="font-display text-base font-semibold text-ink">เพิ่มหน่วยธุรกิจใหม่</h2>
             <button
               type="button"
-              className="humi-icon-btn"
+              className="cnext-icon-btn"
               style={{ marginLeft: 'auto' }}
               aria-label="ปิดฟอร์ม"
               onClick={() => { setShowForm(false); setForm(EMPTY_FORM); }}
@@ -85,20 +85,20 @@ export default function FoundationDivisionsPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label className="humi-label">
+            <label className="cnext-label">
               รหัสหน่วยธุรกิจ *
               <input
-                className="humi-input"
+                className="cnext-input"
                 type="text"
                 placeholder="เช่น CEN"
                 value={form.code}
                 onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
               />
             </label>
-            <label className="humi-label">
+            <label className="cnext-label">
               บริษัท
               <select
-                className="humi-input"
+                className="cnext-input"
                 value={form.company}
                 onChange={(e) => setForm((f) => ({ ...f, company: e.target.value as Division['company'] }))}
               >
@@ -107,20 +107,20 @@ export default function FoundationDivisionsPage() {
                 ))}
               </select>
             </label>
-            <label className="humi-label">
+            <label className="cnext-label">
               ชื่อ (TH) *
               <input
-                className="humi-input"
+                className="cnext-input"
                 type="text"
                 placeholder="เช่น เซ็นทรัล กรุ๊ป"
                 value={form.nameTh}
                 onChange={(e) => setForm((f) => ({ ...f, nameTh: e.target.value }))}
               />
             </label>
-            <label className="humi-label">
+            <label className="cnext-label">
               ชื่อ (EN)
               <input
-                className="humi-input"
+                className="cnext-input"
                 type="text"
                 placeholder="e.g. Central Group"
                 value={form.nameEn}
@@ -129,16 +129,16 @@ export default function FoundationDivisionsPage() {
             </label>
           </div>
 
-          <div className="humi-row" style={{ marginTop: 16, gap: 8 }}>
+          <div className="cnext-row" style={{ marginTop: 16, gap: 8 }}>
             {saved ? (
-              <span className="humi-row" style={{ gap: 6, color: 'var(--color-success-ink, #166534)', fontSize: 13 }}>
+              <span className="cnext-row" style={{ gap: 6, color: 'var(--color-success-ink, #166534)', fontSize: 13 }}>
                 <CheckCircle2 size={16} aria-hidden />
                 บันทึกแล้ว (mockup)
               </span>
             ) : (
               <button
                 type="button"
-                className="humi-button humi-button--primary"
+                className="cnext-button cnext-button--primary"
                 disabled={!form.code.trim() || !form.nameTh.trim()}
                 onClick={handleSave}
               >
@@ -147,7 +147,7 @@ export default function FoundationDivisionsPage() {
             )}
             <button
               type="button"
-              className="humi-button humi-button--ghost"
+              className="cnext-button cnext-button--ghost"
               onClick={() => { setShowForm(false); setForm(EMPTY_FORM); }}
             >
               ยกเลิก
@@ -161,19 +161,19 @@ export default function FoundationDivisionsPage() {
         {divisions.map((div) => (
           <div
             key={div.id}
-            className="humi-card"
+            className="cnext-card"
             style={{ padding: '14px 18px' }}
           >
-            <div className="humi-row" style={{ gap: 14, flexWrap: 'wrap' }}>
+            <div className="cnext-row" style={{ gap: 14, flexWrap: 'wrap' }}>
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
                 <Building2 size={18} aria-hidden />
               </div>
               <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                <div className="humi-row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                <div className="cnext-row" style={{ gap: 8, flexWrap: 'wrap' }}>
                   <span className="font-display text-base font-semibold text-ink">
                     {div.nameTh}
                   </span>
-                  <span className="humi-tag" style={{ fontSize: 10 }}>{div.code}</span>
+                  <span className="cnext-tag" style={{ fontSize: 10 }}>{div.code}</span>
                   <StatusBadge active={div.active} />
                 </div>
                 <div className="text-small" style={{ color: 'var(--color-ink-muted)', marginTop: 2 }}>
@@ -182,11 +182,11 @@ export default function FoundationDivisionsPage() {
               </div>
               <div className="grid grid-cols-2 gap-x-12 gap-y-1" style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
                 <div>
-                  <div className="humi-eyebrow" style={{ fontSize: 9 }}>พนักงาน</div>
+                  <div className="cnext-eyebrow" style={{ fontSize: 9 }}>พนักงาน</div>
                   <div className="font-medium text-ink">{div.headCount.toLocaleString('th-TH')}</div>
                 </div>
                 <div>
-                  <div className="humi-eyebrow" style={{ fontSize: 9 }}>แผนก</div>
+                  <div className="cnext-eyebrow" style={{ fontSize: 9 }}>แผนก</div>
                   <div className="font-medium text-ink">{div.deptCount.toLocaleString('th-TH')}</div>
                 </div>
               </div>

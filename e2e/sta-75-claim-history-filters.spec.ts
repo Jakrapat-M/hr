@@ -6,7 +6,7 @@ const SCREENSHOT_PATH = 'e2e/screenshots/sta-75/claim-history-filters.png';
 async function loginAsEmployee(page: Page) {
   await page.goto('/th/login', { timeout: NAV_TIMEOUT_MS });
   await page.waitForLoadState('domcontentloaded');
-  await page.getByLabel(/email|อีเมล/i).fill('employee@humi.test');
+  await page.getByLabel(/email|อีเมล/i).fill('employee@cnext.test');
   await page.getByLabel(/password|รหัส/i).fill('employee2026');
   await page.getByRole('button', { name: 'เข้าสู่ระบบ', exact: true }).click();
   await page.waitForURL((url) => !url.pathname.endsWith('/login'), { timeout: NAV_TIMEOUT_MS });

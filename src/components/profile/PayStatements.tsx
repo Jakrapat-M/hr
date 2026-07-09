@@ -80,15 +80,15 @@ export default function PayStatements({
       }
     >
       <div
-        className="humi-row"
+        className="cnext-row"
         style={{ justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', marginBottom: 10 }}
       >
         <div>
-          <div className="humi-row" style={{ gap: 8, alignItems: 'center', marginBottom: 4 }}>
+          <div className="cnext-row" style={{ gap: 8, alignItems: 'center', marginBottom: 4 }}>
             <div style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>statement เงินเดือน</div>
             {variant === 'embedded' && (
               <span
-                className="humi-tag"
+                className="cnext-tag"
                 data-testid="pay-statements-canonical-mark"
                 style={{
                   color: 'var(--color-accent)',
@@ -108,7 +108,7 @@ export default function PayStatements({
         {variant === 'embedded' ? (
           <Link
             href={employmentRoute}
-            className="humi-row"
+            className="cnext-row"
             style={{ gap: 6, fontSize: 14, color: 'var(--color-accent)', textDecoration: 'underline' }}
             data-testid="comp-payslip-link"
           >
@@ -120,7 +120,7 @@ export default function PayStatements({
             <button
               type="button"
               onClick={() => setSelfMasked((m) => !m)}
-              className="humi-row"
+              className="cnext-row"
               style={{ gap: 6, fontSize: 13, color: 'var(--color-ink-muted)' }}
               aria-label={selfMasked ? 'แสดงเงินเดือนสุทธิ' : 'ซ่อนเงินเดือนสุทธิ'}
               data-testid="payslip-reveal-toggle"
@@ -132,14 +132,14 @@ export default function PayStatements({
         )}
       </div>
 
-      <div className="humi-col" style={{ gap: 8 }}>
+      <div className="cnext-col" style={{ gap: 8 }}>
         {PAY_STATEMENTS.map((statement) =>
           variant === 'embedded' ? (
             <Link
               key={statement.id}
               href={employmentRoute}
               aria-label={`statement เงินเดือน ${statement.monthLabel}`}
-              className="humi-row"
+              className="cnext-row"
               style={{
                 justifyContent: 'space-between',
                 gap: 12,
@@ -149,7 +149,7 @@ export default function PayStatements({
                 textDecoration: 'none',
               }}
             >
-              <span className="humi-row" style={{ gap: 8 }}>
+              <span className="cnext-row" style={{ gap: 8 }}>
                 <FileText size={14} aria-hidden />
                 <span style={{ fontSize: 14, fontWeight: 600 }}>{statement.monthLabel}</span>
               </span>
@@ -161,7 +161,7 @@ export default function PayStatements({
             <div
               key={statement.id}
               data-testid="payslip-row"
-              className="humi-row"
+              className="cnext-row"
               style={{
                 justifyContent: 'space-between',
                 gap: 12,
@@ -170,20 +170,20 @@ export default function PayStatements({
                 color: 'var(--color-ink)',
               }}
             >
-              <span className="humi-row" style={{ gap: 8, alignItems: 'center' }}>
+              <span className="cnext-row" style={{ gap: 8, alignItems: 'center' }}>
                 <FileText size={16} aria-hidden />
                 <span style={{ display: 'flex', flexDirection: 'column' }}>
                   <span style={{ fontSize: 15, fontWeight: 600 }}>{statement.monthLabel}</span>
                   <span style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{statement.status}</span>
                 </span>
               </span>
-              <span className="humi-row" style={{ gap: 16, alignItems: 'center' }}>
+              <span className="cnext-row" style={{ gap: 16, alignItems: 'center' }}>
                 <span className="font-mono tabular-nums" style={{ fontSize: 14, color: 'var(--color-ink-muted)' }}>
                   สุทธิ {effectiveMasked ? maskMoneyText(statement.net) : statement.net}
                 </span>
                 <button
                   type="button"
-                  className="humi-row"
+                  className="cnext-row"
                   style={{
                     gap: 6,
                     fontSize: 13,

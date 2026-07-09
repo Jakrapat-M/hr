@@ -25,7 +25,7 @@ vi.mock('@/stores/auth-store', () => ({
   ) => selector({ roles: mockRoles, userId: 'EMP001', username: 'สมชาย ใจดี' }),
 }))
 
-vi.mock('@/stores/humi-timeoff-slice', () => ({
+vi.mock('@/stores/cnext-timeoff-slice', () => ({
   useTimeoffStore: (selector: (s: { history: unknown[]; submit: () => void }) => unknown) =>
     selector({ history: [], submit: () => {} }),
 }))
@@ -35,7 +35,7 @@ vi.mock('@/components/quick-approve/ApprovalChain', () => ({
   ApprovalChain: () => null,
 }))
 
-import HumiTimeoffPage from '@/app/[locale]/timeoff/page'
+import CnextTimeoffPage from '@/app/[locale]/timeoff/page'
 
 beforeEach(() => {
   mockRoles = []
@@ -45,20 +45,20 @@ afterEach(() => cleanup())
 describe('/timeoff — no inline approve surface (approval lives in /quick-approve)', () => {
   it('employee sees the create form and no approve tab', () => {
     mockRoles = ['employee']
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     expect(screen.queryByRole('tab', { name: /รออนุมัติ/ })).toBeNull()
     expect(screen.getByRole('button', { name: 'ส่งคำขอ' })).toBeInTheDocument()
   })
 
   it('manager also does NOT see an inline approve tab (moved to /quick-approve)', () => {
     mockRoles = ['manager']
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     expect(screen.queryByRole('tab', { name: /รออนุมัติ/ })).toBeNull()
   })
 
   it('renders no tablist at all — the page is create-only', () => {
     mockRoles = ['employee']
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     expect(screen.queryByRole('tablist')).toBeNull()
     expect(screen.queryByRole('tab')).toBeNull()
   })

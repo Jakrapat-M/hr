@@ -13,7 +13,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
 import {
   buildTeamTimeSummary,
   LATE_ALERT_THRESHOLD,
@@ -48,7 +48,7 @@ vi.mock('@/stores/timesheet-submissions', () => ({
 // with two direct reports + one unrelated employee.
 // Defined via vi.hoisted so the vi.mock factory (hoisted to top) can read it.
 const { POOL } = vi.hoisted(() => {
-  const POOL: HumiEmployee[] = [
+  const POOL: CnextEmployee[] = [
     { id: 'emp-002', employeeCode: 'M', firstNameTh: 'หัว', lastNameTh: 'หน้า', initials: 'MM',
       position: 'Manager', department: 'Finance', status: 'active', avatarTone: 'teal' },
     { id: 'emp-003', employeeCode: 'E1', firstNameTh: 'ลูก', lastNameTh: 'ทีมหนึ่ง', initials: 'E1',
@@ -110,7 +110,7 @@ describe('P3 — buildTeamTimeSummary helper', () => {
 describe('P3 — /time/review team-time dashboard RBAC + scope', () => {
   it('manager sees a scoped team-time summary (2 direct reports)', () => {
     mockRoles = ['manager', 'employee'];
-    mockEmail = 'manager@humi.test'; // resolves to emp-002
+    mockEmail = 'manager@cnext.test'; // resolves to emp-002
     render(<TimesheetReviewPage />);
     expect(screen.getByTestId('team-time-dashboard')).toBeInTheDocument();
     // ttScope receives count=2 (direct reports, self dropped)
@@ -119,7 +119,7 @@ describe('P3 — /time/review team-time dashboard RBAC + scope', () => {
 
   it('employee is denied in place — no team-time dashboard', () => {
     mockRoles = ['employee'];
-    mockEmail = 'employee@humi.test';
+    mockEmail = 'employee@cnext.test';
     render(<TimesheetReviewPage />);
     expect(screen.queryByTestId('team-time-dashboard')).toBeNull();
     expect(screen.getByText('noAccessTitle')).toBeInTheDocument();
@@ -127,7 +127,7 @@ describe('P3 — /time/review team-time dashboard RBAC + scope', () => {
 
   it('hrbp may also view the dashboard (BU/all scope)', () => {
     mockRoles = ['hrbp', 'employee'];
-    mockEmail = 'hrbp@humi.test';
+    mockEmail = 'hrbp@cnext.test';
     render(<TimesheetReviewPage />);
     expect(screen.getByTestId('team-time-dashboard')).toBeInTheDocument();
   });

@@ -11,15 +11,15 @@
 // wire-up in /admin/employees + /manager-dashboard (Track A).
 // ════════════════════════════════════════════════════════════
 
-import { HUMI_EMPLOYEES, type HumiEmployee } from './humi-mock-data';
-import { SF_PARITY_NEW_EMPLOYEES, withSfParity } from './humi-mock-data-sf-parity';
-import { SF_REAL_EMPLOYEES } from './humi-mock-data-sf-real';
+import { CNEXT_EMPLOYEES, type CnextEmployee } from './cnext-mock-data';
+import { SF_PARITY_NEW_EMPLOYEES, withSfParity } from './cnext-mock-data-sf-parity';
+import { SF_REAL_EMPLOYEES } from './cnext-mock-data-sf-real';
 
 // ────────────────────────────────────────────────────────────
 // P2 — Deterministic scope seeding (businessUnitId + managerId).
 //
 // The raw source rows carry INCONSISTENT scope fields: synthetic rows use
-// email-valued managerId ('manager@humi.test') + label BUs ('BU-004-CDS'),
+// email-valued managerId ('manager@cnext.test') + label BUs ('BU-004-CDS'),
 // while SF-real rows use emp-sf-X managerId + numeric BUs ('10000001').
 // scope-filter.ts compares `managerId === self.id` and
 // `businessUnitId === self.businessUnitId`, so the mixed shapes never resolve
@@ -109,7 +109,7 @@ const BU_HEAD: Record<string, string> = {
 };
 
 /** Re-derive businessUnitId + managerId deterministically for the whole pool. */
-function seedScopeFields(rows: HumiEmployee[]): HumiEmployee[] {
+function seedScopeFields(rows: CnextEmployee[]): CnextEmployee[] {
   // First pass: assign each row its BU.
   const withBu = rows.map((e) => ({
     ...e,
@@ -146,8 +146,8 @@ function seedScopeFields(rows: HumiEmployee[]): HumiEmployee[] {
   });
 }
 
-export const ALL_PORTED_EMPLOYEES: HumiEmployee[] = seedScopeFields([
-  ...HUMI_EMPLOYEES.map(withSfParity),
+export const ALL_PORTED_EMPLOYEES: CnextEmployee[] = seedScopeFields([
+  ...CNEXT_EMPLOYEES.map(withSfParity),
   ...SF_PARITY_NEW_EMPLOYEES,
   ...SF_REAL_EMPLOYEES,
 ]);
@@ -156,20 +156,20 @@ export const ALL_PORTED_EMPLOYEES: HumiEmployee[] = seedScopeFields([
 // Drives /profile/me, /manager-dashboard subordinate count, and
 // /admin/employees scope filter via TopbarPersonaSwitcher.
 export const EMP_BY_LOGIN: Record<string, string> = Object.freeze({
-  'admin@humi.test':    'emp-005', // ผู้อำนวยการฝ่ายกลยุทธ์
-  'spd@humi.test':      'emp-001', // ผู้จัดการฝ่ายทรัพยากรบุคคล
-  'hrbp@humi.test':     'emp-007', // หัวหน้าทีมพัฒนาองค์กร
-  'manager@humi.test':  'emp-002', // นักวิเคราะห์การเงินอาวุโส
-  'employee@humi.test': 'emp-003', // วิศวกรซอฟต์แวร์อาวุโส
+  'admin@cnext.test':    'emp-005', // ผู้อำนวยการฝ่ายกลยุทธ์
+  'spd@cnext.test':      'emp-001', // ผู้จัดการฝ่ายทรัพยากรบุคคล
+  'hrbp@cnext.test':     'emp-007', // หัวหน้าทีมพัฒนาองค์กร
+  'manager@cnext.test':  'emp-002', // นักวิเคราะห์การเงินอาวุโส
+  'employee@cnext.test': 'emp-003', // วิศวกรซอฟต์แวร์อาวุโส
   // T7 — SF-canonical personas (per RBAC V2 matrix)
-  'ken@humi.test':      'emp-005', // Ken — HR Admin (Director tier)
-  'apinya@humi.test':   'emp-007', // Apinya — HRBP for BU
-  'worawee@humi.test':  'emp-001', // Worawee — SPD final approver
-  'rungrote@humi.test': 'emp-002', // Rungrote — Manager Finance
+  'ken@cnext.test':      'emp-005', // Ken — HR Admin (Director tier)
+  'apinya@cnext.test':   'emp-007', // Apinya — HRBP for BU
+  'worawee@cnext.test':  'emp-001', // Worawee — SPD final approver
+  'rungrote@cnext.test': 'emp-002', // Rungrote — Manager Finance
 });
 
 /** Find ported employee for the current login email. Falls back to null. */
-export function employeeForLogin(email: string | null | undefined): HumiEmployee | null {
+export function employeeForLogin(email: string | null | undefined): CnextEmployee | null {
   if (!email) return null;
   const id = EMP_BY_LOGIN[email];
   if (!id) return null;

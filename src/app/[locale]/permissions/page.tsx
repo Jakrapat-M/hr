@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageShell } from '@/components/shared/page-shell';
 import { Tabs } from '@/components/ui/tabs';
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle } from '@/components/cnext';
 import { AccessDenied } from '@/components/shared/access-denied';
 import { useAuthStore } from '@/stores/auth-store';
 import { RjsfForm } from '@/components/permissions/rjsf-form';

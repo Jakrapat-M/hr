@@ -9,7 +9,7 @@ import {
   type TaxEstimateResult,
 } from '@/lib/tax-planning';
 import { benefitTaxPlanningRoute } from '@/lib/benefit-routes';
-import type { HumiApprovalStep, RequestStatus } from '@/lib/humi-mock-data';
+import type { CnextApprovalStep, RequestStatus } from '@/lib/cnext-mock-data';
 
 export { formatTHB };
 
@@ -179,7 +179,7 @@ function statusToRequestStatus(status: TaxPlanningStatus): RequestStatus | null 
   return null;
 }
 
-function stepStatus(status: TaxPlanningStatus): HumiApprovalStep['status'] {
+function stepStatus(status: TaxPlanningStatus): CnextApprovalStep['status'] {
   if (status === 'approved') return 'approved';
   if (status === 'rejected' || status === 'cancelled') return 'rejected';
   return 'pending';
@@ -220,7 +220,7 @@ export function selectTaxPlanningRequestSummaries(drafts: TaxPlanningDraft[]) {
           when: TAX_PLANNING_STATUS_LABEL[draft.status],
           note: draft.correctionReason ?? draft.rejectionReason,
         },
-      ] satisfies HumiApprovalStep[],
+      ] satisfies CnextApprovalStep[],
     }));
 }
 

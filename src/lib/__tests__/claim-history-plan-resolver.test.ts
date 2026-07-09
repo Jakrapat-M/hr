@@ -8,7 +8,7 @@ import {
   getConditionalFields,
   isClaimFieldRequired,
 } from '@/data/benefits/claim-field-config';
-import { HUMI_CLAIM_HISTORY } from '../humi-mock-data';
+import { CNEXT_CLAIM_HISTORY } from '../cnext-mock-data';
 
 const registryIds = new Set(BENEFIT_PLAN_REGISTRY.map((p) => p.id));
 
@@ -64,8 +64,8 @@ describe('planIdForClaimRow', () => {
   // STA-234 follow-up — Edit must Save with zero manual entry: every claim-
   // history row's seeded `dynamicFields` must already answer every conditional
   // field that is REQUIRED BY DEFAULT (empty values) for its resolved plan.
-  it('every HUMI_CLAIM_HISTORY row seeds all required-by-default conditional fields', () => {
-    for (const row of HUMI_CLAIM_HISTORY) {
+  it('every CNEXT_CLAIM_HISTORY row seeds all required-by-default conditional fields', () => {
+    for (const row of CNEXT_CLAIM_HISTORY) {
       const planId = planIdForClaimRow(row.type, row.claimType);
       const plan = BENEFIT_PLAN_REGISTRY.find((p) => p.id === planId);
       expect(plan).toBeDefined();

@@ -56,7 +56,7 @@ export const useTransferApprovals = create<TransferApprovalsState>()(
       clear: () => set({ entries: [] }),
     }),
     {
-      name: 'humi-transfer-approvals',
+      name: 'cnext-transfer-approvals',
       version: 1,
       storage: createJSONStorage(() => localStorage),
       // PR-1b rehydrate-to-seed: drop persisted entries on every rehydrate so

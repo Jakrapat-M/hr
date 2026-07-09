@@ -247,7 +247,7 @@ export const useTerminationApprovals = create<TerminationApprovalsState>()(
       clear: () => set({ requests: [] }),
     }),
     {
-      name: 'humi-termination-approvals',
+      name: 'cnext-termination-approvals',
       storage: createJSONStorage(() => localStorage),
       // See migrateTerminationApprovals() above for why this migration exists.
       version: 2,

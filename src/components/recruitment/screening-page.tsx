@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { ArrowRight, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardTitle, Button } from '@/components/humi';
+import { Card, CardTitle, Button } from '@/components/cnext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRecruitment, type ApplicationStatus } from '@/hooks/use-recruitment';
 

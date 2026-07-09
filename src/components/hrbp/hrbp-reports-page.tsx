@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Tabs } from '@/components/ui/tabs';
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { useHRBPReports } from '@/hooks/use-hrbp-reports';
 import { CustomSelect } from '@/components/ui/custom-select';

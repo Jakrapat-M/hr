@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ArrowRight, Plus, User, ChevronDown, ChevronRight, FileText } from 'lucide-react';
-import { buttonVariants, EmptyState } from '@/components/humi';
+import { buttonVariants, EmptyState } from '@/components/cnext';
 import { useWorkflowApprovals, STEP_LABEL, type ApprovalStep } from '@/stores/workflow-approvals';
 import { useAuthStore } from '@/stores/auth-store';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
@@ -322,11 +322,11 @@ function RequestRow({ req, locale }: { req: AnyRequest; locale: string }) {
   };
 
   return (
-    <li className="humi-card" style={{ padding: 16 }}>
+    <li className="cnext-card" style={{ padding: 16 }}>
       {/* Header row */}
-      <div className="humi-row" style={{ gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      <div className="cnext-row" style={{ gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>{req.id}</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>{req.id}</div>
           <div className="text-body font-semibold text-ink">{typeTitle}</div>
           <div className="text-small text-ink-muted mt-0.5">
             {locale === 'th' ? 'ส่งเมื่อ' : 'Submitted'} {formatDate(req.submittedAt)} · {req.diffs.length} {locale === 'th' ? 'รายการ' : 'fields'}
@@ -363,7 +363,7 @@ function RequestRow({ req, locale }: { req: AnyRequest; locale: string }) {
         {req.diffs.slice(0, 3).map((d) => (
           <div
             key={d.path}
-            className="humi-row"
+            className="cnext-row"
             style={{ gap: 8, fontSize: 12, flexWrap: 'wrap' }}
           >
             <span className="text-ink-muted" style={{ minWidth: 140 }}>{d.label}</span>
@@ -441,7 +441,7 @@ export default function MyWorkflowsPage() {
 
   return (
     <div className="pb-8" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div className="humi-row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+      <div className="cnext-row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div>
           <h1 className="font-display text-2xl font-semibold text-ink">
             {locale === 'th' ? 'คำขอของฉัน' : 'My Requests'}

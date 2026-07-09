@@ -108,7 +108,7 @@ function queryQueueButtons(name: RegExp) {
 describe('QuickApproveSimple — AC7.1 header', () => {
   it('renders breadcrumb text', () => {
     renderComponent();
-    // th breadcrumb: "HUMI · การจัดการทีม · อนุมัติ" — unique substring
+    // th breadcrumb: "CNEXT · การจัดการทีม · อนุมัติ" — unique substring
     const matches = screen.getAllByText(/การจัดการทีม/);
     expect(matches.length).toBeGreaterThanOrEqual(1);
   });

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { FileText, Paperclip } from 'lucide-react';
-import { Card, CardEyebrow, CardTitle } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle } from '@/components/cnext';
 import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 import {
   TERMINATION_REASON_LABEL,

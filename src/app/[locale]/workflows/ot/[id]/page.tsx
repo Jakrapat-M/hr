@@ -10,14 +10,14 @@
 // gated to the CURRENT step's routed roles via rolesActAtCurrentStep — a
 // non-approver persona sees this VIEW-ONLY (never hidden). On approve, the
 // computed OT hours are shown (payroll posting is a deferred no-op).
-// Phase: UI mockup. Humi tokens only. Danger = pumpkin (--color-danger).
+// Phase: UI mockup. Cnext tokens only. Danger = pumpkin (--color-danger).
 
 import { use, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Clock, Paperclip } from 'lucide-react';
-import { Button, Modal, FormField } from '@/components/humi';
+import { Button, Modal, FormField } from '@/components/cnext';
 import {
   useOvertimeRequests,
   OT_STATUS_LABEL,
@@ -162,7 +162,7 @@ export default function OTDetailPage({ params }: PageProps) {
           <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-ink">
             {request.employeeName}
           </h1>
-          <span className="humi-tag humi-tag--butter mt-1 inline-block text-xs">
+          <span className="cnext-tag cnext-tag--butter mt-1 inline-block text-xs">
             {isTh ? stepLabel.th : stepLabel.en}
           </span>
         </div>

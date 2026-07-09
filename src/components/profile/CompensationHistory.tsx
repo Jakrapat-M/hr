@@ -24,7 +24,7 @@ import { History, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole } from '@/lib/rbac';
 import { formatDate } from '@/lib/date';
-import { DemoValuesDisclaimer } from '@/components/humi/DemoValuesDisclaimer';
+import { DemoValuesDisclaimer } from '@/components/cnext/DemoValuesDisclaimer';
 import {
   SELF_COMP_HISTORY,
   getCompHistory,
@@ -87,26 +87,26 @@ export default function CompensationHistory({
 
   return (
     <section
-      className="humi-card"
+      className="cnext-card"
       style={{ marginTop: 16, padding: '22px 26px' }}
       data-testid="compensation-history"
     >
       <header
-        className="humi-row"
+        className="cnext-row"
         style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}
       >
-        <div className="humi-row" style={{ gap: 8, alignItems: 'center' }}>
+        <div className="cnext-row" style={{ gap: 8, alignItems: 'center' }}>
           <History size={18} aria-hidden />
           <h3 className="font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
             {t('title')}
           </h3>
         </div>
-        <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+        <div className="cnext-row" style={{ gap: 10, alignItems: 'center' }}>
           {canReveal ? (
             <button
               type="button"
               onClick={() => setIsMasked((m) => !m)}
-              className="humi-row"
+              className="cnext-row"
               style={{ gap: 6, fontSize: 13, color: 'var(--color-ink-muted)' }}
               aria-label={isMasked ? 'แสดงค่าตอบแทนย้อนหลัง' : 'ซ่อนค่าตอบแทนย้อนหลัง'}
               data-testid="comp-history-reveal-toggle"
@@ -116,7 +116,7 @@ export default function CompensationHistory({
             </button>
           ) : (
             <span
-              className="humi-tag"
+              className="cnext-tag"
               data-testid="comp-history-locked-badge"
               style={{ gap: 6, fontSize: 12, color: 'var(--color-ink-muted)', borderColor: 'var(--color-hairline)' }}
               aria-label="ค่าตอบแทนย้อนหลังถูกปิดบัง"
@@ -126,7 +126,7 @@ export default function CompensationHistory({
             </span>
           )}
           <span
-            className="humi-tag"
+            className="cnext-tag"
             data-testid="comp-history-readonly-badge"
             style={{
               gap: 6,
@@ -165,7 +165,7 @@ export default function CompensationHistory({
           return (
             <li
               key={entry.id}
-              className="humi-row"
+              className="cnext-row"
               style={{
                 gap: 12,
                 alignItems: 'flex-start',
@@ -185,14 +185,14 @@ export default function CompensationHistory({
                 }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="humi-row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div className="cnext-row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                   <span className="text-body font-semibold text-ink">{TYPE_LABEL[entry.type]}</span>
                   <span className="text-small text-ink-muted">
                     {t('effective')}: {formatDate(entry.effectiveDate, 'long', locale)}
                   </span>
                 </div>
                 <div
-                  className="humi-row font-mono tabular-nums"
+                  className="cnext-row font-mono tabular-nums"
                   style={{ gap: 8, marginTop: 4, fontSize: 14, color: 'var(--color-ink)', flexWrap: 'wrap' }}
                   data-testid="comp-history-amount"
                 >

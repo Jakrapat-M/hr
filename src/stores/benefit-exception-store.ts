@@ -326,6 +326,6 @@ export const useBenefitExceptionStore = create<BenefitExceptionState>()(
         }),
       clear: () => set({ exceptions: seedRecords }),
     }),
-    { name: 'humi-benefit-exceptions' },
+    { name: 'cnext-benefit-exceptions' },
   ),
 );

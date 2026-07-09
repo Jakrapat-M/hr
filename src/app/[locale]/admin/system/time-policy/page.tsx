@@ -1,14 +1,14 @@
 'use client';
 
 // admin/system/time-policy/page.tsx — HRIS Time Policy configuration surface
-// (Humi Journey EC/BE work-item #1, artboard 03.5). Single source of truth for
+// (Cnext Journey EC/BE work-item #1, artboard 03.5). Single source of truth for
 // leave allowances, medical-cert thresholds, carry-over and clock-in rules.
 // UI-MOCKUP phase: static seed rows, no persistence.
 
 import { useLocale, useTranslations } from 'next-intl';
 import { Info } from 'lucide-react';
-import { Card, CardEyebrow, DataTable, Capability } from '@/components/humi';
-import type { DataTableColumn } from '@/components/humi';
+import { Card, CardEyebrow, DataTable, Capability } from '@/components/cnext';
+import type { DataTableColumn } from '@/components/cnext';
 
 type PolicyRow = { id: string; labelTh: string; labelEn: string; value: string };
 

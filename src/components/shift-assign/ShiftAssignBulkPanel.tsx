@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { SHIFT_CODES } from '@/lib/time/shift-codes';
 import { buildTimeOptions } from '@/lib/time/time-options';
 import type { CellPatch } from '@/stores/shift-assignment';

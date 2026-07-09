@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { UserPlus, Briefcase, Users, Clock } from 'lucide-react';
-import { Card, CardTitle, Button, Modal } from '@/components/humi';
+import { Card, CardTitle, Button, Modal } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { Tabs } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';

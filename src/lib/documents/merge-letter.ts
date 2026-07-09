@@ -9,7 +9,7 @@ import {
   LETTER_COMPANY_TH,
   LETTER_COMPANY_EN,
 } from '@/data/documents/templates';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
 import { formatDate, formatCurrency } from '@/lib/date';
 
 export interface MergeOptions {
@@ -27,12 +27,12 @@ export interface MergeOptions {
 /**
  * Deterministic mock monthly salary (THB) for the salary certificate.
  *
- * The `HumiEmployee` pool carries NO salary field (real comp lives only on the
+ * The `CnextEmployee` pool carries NO salary field (real comp lives only on the
  * richer single-profile object). For the mockup we derive a stable, plausible
  * figure from the employee id so the same person always certifies the same
  * amount. Range ≈ ฿28,000–฿98,000, rounded to the nearest ฿500.
  */
-export function mockMonthlySalary(emp: HumiEmployee): number {
+export function mockMonthlySalary(emp: CnextEmployee): number {
   let hash = 0;
   for (const ch of emp.id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   const base = 28000 + (hash % 70001); // 28,000 .. 98,000
@@ -42,12 +42,12 @@ export function mockMonthlySalary(emp: HumiEmployee): number {
 /**
  * Deterministic mock hire date (ISO 'YYYY-MM-DD') for the demo.
  *
- * The synthetic `HumiEmployee` core pool carries NO hireDate, so a certificate
+ * The synthetic `CnextEmployee` core pool carries NO hireDate, so a certificate
  * would otherwise render a blank "เริ่มปฏิบัติงานตั้งแต่วันที่ ____". Derive a
  * stable, plausible date from the employee id — year ≈ 2014..2023, month 1..12,
  * day 1..28 — so the same person always shows the same date. No live clock.
  */
-export function mockHireDate(emp: HumiEmployee): string {
+export function mockHireDate(emp: CnextEmployee): string {
   let hash = 0;
   for (const ch of emp.id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   const year = 2014 + (hash % 10); // 2014..2023
@@ -77,7 +77,7 @@ const BLANK = '____________';
  */
 function resolvePlaceholder(
   key: LetterPlaceholder,
-  emp: HumiEmployee,
+  emp: CnextEmployee,
   locale: 'th' | 'en',
   opts: MergeOptions,
 ): string | null {
@@ -126,7 +126,7 @@ function resolvePlaceholder(
  */
 export function mergeLetter(
   template: GeneratableLetter,
-  emp: HumiEmployee,
+  emp: CnextEmployee,
   locale: 'th' | 'en',
   opts: MergeOptions,
 ): MergeResult {

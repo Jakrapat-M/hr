@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Pencil, Save, X, Eye, Download } from 'lucide-react';
 import { Tabs } from '@/components/ui/tabs';
-import { Card, CardTitle, Button, Modal } from '@/components/humi';
+import { Card, CardTitle, Button, Modal } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { FormField } from '@/components/ui/form-field';
 import { useSpd, type TeamTimeRecord, type TeamOTRecord, type ShiftDay, type TeamSchedule } from '@/hooks/use-spd';

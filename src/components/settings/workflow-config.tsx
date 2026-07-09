@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowRight, ArrowUp, ArrowDown, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Card, CardTitle, Button, Modal } from '@/components/humi';
+import { Card, CardTitle, Button, Modal } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { FormField } from '@/components/ui/form-field';
 import {

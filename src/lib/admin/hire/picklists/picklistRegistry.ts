@@ -81,7 +81,7 @@ import { DEPENDENT_RELATIONSHIP_OPTIONS } from './dependentRelationship'
  * PICKLIST_REGISTRY — canonical id → options map.
  *
  * Keys use the BA Picklist ID column verbatim where present; otherwise the
- * Humi-local code that matches the file name. Consumers should reference by
+ * Cnext-local code that matches the file name. Consumers should reference by
  * the constant (preferred for tree-shake) or by this map (when the id is
  * driven by data — e.g. a generic FormField that just gets a picklistId prop).
  */

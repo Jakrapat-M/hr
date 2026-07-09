@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { AlertTriangle, X } from 'lucide-react';
 import type { UrgentAlert } from '@/lib/manager-dashboard-api';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 
 interface UrgentAlertBannerProps {
   alerts: UrgentAlert[];

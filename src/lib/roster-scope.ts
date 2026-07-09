@@ -17,7 +17,7 @@
  */
 
 import type { Role } from './rbac';
-import type { HumiEmployee } from './humi-mock-data';
+import type { CnextEmployee } from './cnext-mock-data';
 import { filterEmployeesByPersona, type ScopeMode } from './scope-filter';
 
 export interface RosterScope {
@@ -25,7 +25,7 @@ export interface RosterScope {
   /** How many roster rows this persona may see (clamped to total). */
   readonly visibleCount: number;
   /** The scoped employee slice (drives report aggregates). */
-  readonly employees: ReadonlyArray<HumiEmployee>;
+  readonly employees: ReadonlyArray<CnextEmployee>;
 }
 
 /**
@@ -37,7 +37,7 @@ export interface RosterScope {
  * @param totalRows     number of roster rows available to slice (ROSTER_ROWS.length)
  */
 export function pickRosterScope(
-  pool: ReadonlyArray<HumiEmployee>,
+  pool: ReadonlyArray<CnextEmployee>,
   roles: ReadonlyArray<Role>,
   currentEmpId: string | null,
   totalRows: number,

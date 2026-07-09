@@ -6,7 +6,7 @@
 //
 // Geofence is SIMULATED (mockup — no real GPS / notification / backend). A
 // deterministic default (within) drives the result; an admin-only demo selector
-// can flip it to outside / disabled to demo the 3 cases. Humi tokens; success =
+// can flip it to outside / disabled to demo the 3 cases. Cnext tokens; success =
 // teal, warning = amber, error = pumpkin (NO RED). Non-clocking employees see a
 // gate (they have no punches).
 
@@ -14,7 +14,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronRight, Clock, LogIn, LogOut } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { useAuthStore } from '@/stores/auth-store';
 import { personaTiers } from '@/lib/persona-tiers';
 import { resolveCurrentEmpId } from '@/lib/scope-filter';

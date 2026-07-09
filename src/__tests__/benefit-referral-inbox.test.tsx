@@ -59,11 +59,11 @@ describe('benefit referral inbox lane', () => {
     expect(screen.queryByText(/โรงพยาบาลกรุงเทพ/)).not.toBeInTheDocument();
   });
 
-  it('uses Humi primitives rather than legacy card classes or inline styles', () => {
+  it('uses Cnext primitives rather than legacy card classes or inline styles', () => {
     const source = readFileSync(path.join(process.cwd(), 'src/components/workflow/BenefitReferralInbox.tsx'), 'utf8');
 
     expect(source).toMatch(/<Card/);
     expect(source).toMatch(/<FormField/);
-    expect(source).not.toMatch(/style=|humi-card|humi-row|humi-col|#[0-9a-f]{3,8}/i);
+    expect(source).not.toMatch(/style=|cnext-card|cnext-row|cnext-col|#[0-9a-f]{3,8}/i);
   });
 });

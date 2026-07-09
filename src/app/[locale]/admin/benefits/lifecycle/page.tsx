@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { CheckCircle2, Loader2 } from 'lucide-react';
-import { Card, CardEyebrow, Button } from '@/components/humi';
-import { Capability } from '@/components/humi';
+import { Card, CardEyebrow, Button } from '@/components/cnext';
+import { Capability } from '@/components/cnext';
 import { LifecycleAdminForm } from '@/components/benefits/templates/LifecycleAdminForm';
 import { getPlan } from '@/data/benefits/plan-registry';
 import { mockProgress } from '@/lib/mock-async';

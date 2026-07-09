@@ -4,15 +4,15 @@ function OrgChartScreen({ onNav }) {
   const [selected, setSelected] = React.useState("marcus");
 
   const PEOPLE = {
-    grace: {n:"เกรซ หวง", r:"ประธานเจ้าหน้าที่ฝ่ายบุคคล", d:"สำนักงานใหญ่ · กรุงเทพฯ", c:"GH", t:"ink", m:null, reports:["jordan_m"], email:"grace.huang@humi.shop", phone:"+66 2 555 0101", tenure:"4 ปี 2 เดือน", loc:"กรุงเทพฯ", tz:"ICT", title:"CHRO · ผู้บริหาร"},
-    jordan_m: {n:"จอร์แดน เหมย", r:"พันธมิตรฝ่ายบุคคล", d:"สำนักงานใหญ่ · กรุงเทพฯ", c:"JM", t:"sage", m:"grace", reports:["dana","simone"], email:"jordan.mei@humi.shop", phone:"+66 2 555 0112", tenure:"2 ปี 6 เดือน", loc:"กรุงเทพฯ", tz:"ICT", title:"People Ops"},
-    dana: {n:"ดานา หลิว", r:"ผู้จัดการเขต", d:"เขตทองหล่อ", c:"DL", t:"coral", m:"jordan_m", reports:["ava","jess","amir"], email:"dana.liu@humi.shop", phone:"+66 2 555 0133", tenure:"3 ปี 8 เดือน", loc:"กรุงเทพฯ", tz:"ICT", title:"ผู้จัดการเขต"},
-    simone: {n:"ซิโมน ฟอง", r:"ผู้จัดการเขต", d:"เขตตะวันตก", c:"SF", t:"teal", m:"jordan_m", reports:[], email:"simone.fong@humi.shop"},
-    ava: {n:"จงรักษ์ ทานากะ", r:"ผู้จัดการร้าน II", d:"สาขาทองหล่อ", c:"จท", t:"coral", m:"dana", reports:["marcus","priya","taylor","jordan_n"], email:"ava.reyes@humi.shop"},
+    grace: {n:"เกรซ หวง", r:"ประธานเจ้าหน้าที่ฝ่ายบุคคล", d:"สำนักงานใหญ่ · กรุงเทพฯ", c:"GH", t:"ink", m:null, reports:["jordan_m"], email:"grace.huang@cnext.shop", phone:"+66 2 555 0101", tenure:"4 ปี 2 เดือน", loc:"กรุงเทพฯ", tz:"ICT", title:"CHRO · ผู้บริหาร"},
+    jordan_m: {n:"จอร์แดน เหมย", r:"พันธมิตรฝ่ายบุคคล", d:"สำนักงานใหญ่ · กรุงเทพฯ", c:"JM", t:"sage", m:"grace", reports:["dana","simone"], email:"jordan.mei@cnext.shop", phone:"+66 2 555 0112", tenure:"2 ปี 6 เดือน", loc:"กรุงเทพฯ", tz:"ICT", title:"People Ops"},
+    dana: {n:"ดานา หลิว", r:"ผู้จัดการเขต", d:"เขตทองหล่อ", c:"DL", t:"coral", m:"jordan_m", reports:["ava","jess","amir"], email:"dana.liu@cnext.shop", phone:"+66 2 555 0133", tenure:"3 ปี 8 เดือน", loc:"กรุงเทพฯ", tz:"ICT", title:"ผู้จัดการเขต"},
+    simone: {n:"ซิโมน ฟอง", r:"ผู้จัดการเขต", d:"เขตตะวันตก", c:"SF", t:"teal", m:"jordan_m", reports:[], email:"simone.fong@cnext.shop"},
+    ava: {n:"จงรักษ์ ทานากะ", r:"ผู้จัดการร้าน II", d:"สาขาทองหล่อ", c:"จท", t:"coral", m:"dana", reports:["marcus","priya","taylor","jordan_n"], email:"ava.reyes@cnext.shop"},
     jess: {n:"เจส โอคอน", r:"ผู้จัดการร้าน", d:"สาขาสีลม", c:"JO", t:"teal", m:"dana", reports:[]},
     amir: {n:"อาเมียร์ คาลิล", r:"ผู้จัดการร้าน", d:"สาขาอารีย์", c:"AK", t:"butter", m:"dana", reports:[]},
     marcus: {n:"มาร์คัส เคลลี่", r:"หัวหน้ากะ", d:"สาขาทองหล่อ", c:"MK", t:"teal", m:"ava", reports:[],
-      email:"marcus.kelley@humi.shop", phone:"+66 2 555 0177",
+      email:"marcus.kelley@cnext.shop", phone:"+66 2 555 0177",
       title:"หัวหน้ากะ · หน้าร้าน", tenure:"1 ปี 9 เดือน", loc:"กรุงเทพฯ", tz:"ICT (UTC+7)",
       hired:"14 ก.ค. 2567", dob:"3 มี.ค.", pronouns:"เขา/เค้า", language:"ไทย, อังกฤษ",
       emp_type:"เต็มเวลา · รายชั่วโมง", grade:"R-04", cost:"RTL-THL-0412",

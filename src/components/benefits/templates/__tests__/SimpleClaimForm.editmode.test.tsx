@@ -32,12 +32,12 @@ vi.mock('@/hooks/use-capabilities', () => ({
   }),
 }));
 
-// ── humi-profile-slice mock (FileUploadField dependency) ─────────────────────
+// ── cnext-profile-slice mock (FileUploadField dependency) ─────────────────────
 const mockAddAttachment = vi.fn().mockReturnValue('att-test-id');
 const mockRemoveAttachment = vi.fn();
 
-vi.mock('@/stores/humi-profile-slice', () => ({
-  useHumiProfileStore: (selector: (s: unknown) => unknown) =>
+vi.mock('@/stores/cnext-profile-slice', () => ({
+  useCnextProfileStore: (selector: (s: unknown) => unknown) =>
     selector({ addAttachment: mockAddAttachment, removeAttachment: mockRemoveAttachment }),
 }));
 

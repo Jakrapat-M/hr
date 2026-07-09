@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Check, ChevronDown, Clock, Info, XCircle } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 
 export type MessageLevel = 'error' | 'warning' | 'approve' | 'information';

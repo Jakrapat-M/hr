@@ -8,7 +8,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import HumiTimeoffPage from '../page';
+import CnextTimeoffPage from '../page';
 
 let mockTab: string | null = null;
 vi.mock('next/navigation', () => ({
@@ -29,18 +29,18 @@ beforeEach(() => {
 
 describe('Timeoff — approval moved out of /timeoff (spec A6)', () => {
   it('renders NO inline Approve/Reject buttons for a manager', () => {
-    render(<HumiTimeoffPage />);
+    render(<CnextTimeoffPage />);
     expect(screen.queryByRole('button', { name: 'อนุมัติ' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'ปฏิเสธ' })).toBeNull();
   });
 
   it('has no inline approve tab', () => {
-    render(<HumiTimeoffPage />);
+    render(<CnextTimeoffPage />);
     expect(screen.queryByRole('tab', { name: /รออนุมัติ/ })).toBeNull();
   });
 
   it('shows the submit button on the create form', () => {
-    render(<HumiTimeoffPage />);
+    render(<CnextTimeoffPage />);
     expect(screen.getByRole('button', { name: 'ส่งคำขอ' })).toBeInTheDocument();
   });
 });

@@ -61,7 +61,7 @@ async function renderGuarded() {
 
 describe('HR Admin generate-for-employee on /admin/documents', () => {
   test('hr_admin can pick an employee + letter and see a merged preview', async () => {
-    setPersona(['hr_admin'], 'admin@humi.test');
+    setPersona(['hr_admin'], 'admin@cnext.test');
     await renderGuarded();
 
     // Queue is the default view and stays intact.
@@ -100,7 +100,7 @@ describe('HR Admin generate-for-employee on /admin/documents', () => {
   });
 
   test('employee persona is denied IN PLACE — no generator, no queue', async () => {
-    setPersona(['employee'], 'employee@humi.test');
+    setPersona(['employee'], 'employee@cnext.test');
     await renderGuarded();
 
     expect(screen.getByText(/Access Denied/i)).toBeInTheDocument();
@@ -110,7 +110,7 @@ describe('HR Admin generate-for-employee on /admin/documents', () => {
   });
 
   test('employee search narrows the result list', async () => {
-    setPersona(['hr_admin'], 'admin@humi.test');
+    setPersona(['hr_admin'], 'admin@cnext.test');
     await renderGuarded();
     fireEvent.click(screen.getByTestId('docs-view-generate'));
 

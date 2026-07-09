@@ -19,7 +19,7 @@ function signIn(roles: Role[]) {
   auth.setUser({
     id: 'SPD001',
     name: 'SPD QA',
-    email: 'spd@humi.test',
+    email: 'spd@cnext.test',
     roles,
   });
   auth.setHasHydrated(true);

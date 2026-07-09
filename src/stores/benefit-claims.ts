@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { HumiApprovalStep, RequestStatus } from '@/lib/humi-mock-data';
+import type { CnextApprovalStep, RequestStatus } from '@/lib/cnext-mock-data';
 import type { PendingRequest } from '@/lib/quick-approve-api';
 import type { ClaimFieldKey } from '@/data/benefits/claim-field-config';
 
@@ -211,7 +211,7 @@ function statusToRequestStatus(status: BenefitClaimStatus): RequestStatus {
   return 'pending';
 }
 
-function stepStatus(status: BenefitClaimStatus): HumiApprovalStep['status'] {
+function stepStatus(status: BenefitClaimStatus): CnextApprovalStep['status'] {
   if (status === 'approved') return 'approved';
   if (status === 'rejected') return 'rejected';
   return 'pending';
@@ -240,7 +240,7 @@ export function selectBenefitRequestSummaries(claims: BenefitClaimRequest[]) {
     // Build a coherent two-step chain narrating manager → SPD.
     // Step 1 (Manager): pending while awaiting manager; completed once past that stage.
     const managerDone = claim.status !== 'pending_manager_approval';
-    const managerStep: HumiApprovalStep = {
+    const managerStep: CnextApprovalStep = {
       role: 'หัวหน้างาน',
       name: 'หัวหน้างาน',
       initials: 'MG',
@@ -249,7 +249,7 @@ export function selectBenefitRequestSummaries(claims: BenefitClaimRequest[]) {
       when: managerDone ? 'หัวหน้าอนุมัติแล้ว' : 'รออนุมัติจากหัวหน้า',
     };
     // Step 2 (SPD): only active once the manager has approved.
-    const spdStep: HumiApprovalStep = {
+    const spdStep: CnextApprovalStep = {
       role: 'SPD Benefits',
       name: 'ทีม SPD',
       initials: 'SP',
@@ -264,7 +264,7 @@ export function selectBenefitRequestSummaries(claims: BenefitClaimRequest[]) {
       sub: `${claim.benefitCode} · ใบเสร็จ ${claim.receiptNo} · ฿${claim.totalClaimAmount.toLocaleString('th-TH')}`,
       submitted: thaiDate(claim.submittedAt),
       status: statusToRequestStatus(claim.status),
-      approvalChain: [managerStep, spdStep] satisfies HumiApprovalStep[],
+      approvalChain: [managerStep, spdStep] satisfies CnextApprovalStep[],
       claim,
     };
   });
@@ -715,7 +715,7 @@ export const useBenefitClaimsStore = create<BenefitClaimsState>()(
       clear: () => set({ claims: [] }),
     }),
     {
-      name: 'humi-benefit-claims',
+      name: 'cnext-benefit-claims',
       version: BENEFIT_CLAIMS_PERSIST_VERSION,
       migrate: (persistedState) => migrateBenefitClaimsPersistedState(persistedState),
       // PR-1b rehydrate-to-seed: on EVERY rehydrate drop WF-2026-* seed claims

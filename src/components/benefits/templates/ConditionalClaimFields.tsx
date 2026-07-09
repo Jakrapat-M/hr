@@ -7,7 +7,7 @@
 // component only renders the descriptors a caller resolves via
 // getConditionalFields(bucketsForPlan(plan)).
 
-import { FormField, FormInput, Textarea } from '@/components/humi';
+import { FormField, FormInput, Textarea } from '@/components/cnext';
 import {
   type ClaimFieldDescriptor,
   type ClaimFieldKey,

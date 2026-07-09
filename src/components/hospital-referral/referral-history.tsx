@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle } from '@/components/cnext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { ClipboardList } from 'lucide-react';

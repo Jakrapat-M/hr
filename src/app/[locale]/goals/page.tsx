@@ -9,17 +9,17 @@ import {
   CardEyebrow,
   CardTitle,
   Modal,
-} from '@/components/humi';
+} from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import {
-  HUMI_GOALS,
-  HUMI_REVIEW_CYCLES,
-  HUMI_FEEDBACK,
-  HUMI_GOAL_TEAM,
+  CNEXT_GOALS,
+  CNEXT_REVIEW_CYCLES,
+  CNEXT_FEEDBACK,
+  CNEXT_GOAL_TEAM,
   REVIEW_TONE_CLASS,
-  type HumiGoal,
-} from '@/lib/humi-mock-data';
-import { useGoalsStore, type GoalItem } from '@/stores/humi-goals-slice';
+  type CnextGoal,
+} from '@/lib/cnext-mock-data';
+import { useGoalsStore, type GoalItem } from '@/stores/cnext-goals-slice';
 
 // ════════════════════════════════════════════════════════════
 // /goals — Goals + performance review
@@ -234,7 +234,7 @@ function GoalFormModal({
               aria-valuemin={0}
               aria-valuemax={100}
               aria-label="ความคืบหน้า"
-              className="humi-goal-slider w-full accent-[color:var(--color-accent)]"
+              className="cnext-goal-slider w-full accent-[color:var(--color-accent)]"
             />
             <div className="flex justify-between text-[length:var(--text-eyebrow)] text-ink-faint">
               <span>0%</span>
@@ -258,7 +258,7 @@ function GoalFormModal({
 
 // ────────── Page ──────────
 
-export default function HumiGoalsPage() {
+export default function CnextGoalsPage() {
   const [tab, setTab] = useState<TabKey>('goals');
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -300,7 +300,7 @@ export default function HumiGoalsPage() {
       {/* KPI row */}
       <section className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {KPIS.map((s) => (
-          <div key={s.l} className={`humi-stat-card humi-stat-card--${s.accent}`}>
+          <div key={s.l} className={`cnext-stat-card cnext-stat-card--${s.accent}`}>
             <CardEyebrow>{s.l}</CardEyebrow>
             <p
               className={cn(
@@ -439,7 +439,7 @@ function GoalsTab() {
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label={g.title}
-                className="humi-progress mt-4"
+                className="cnext-progress mt-4"
               >
                 <span style={{ width: `${g.progress}%` }} />
               </div>
@@ -447,7 +447,7 @@ function GoalsTab() {
           ))}
 
           {/* Mock goals (from static data) */}
-          {HUMI_GOALS.map((g) => (
+          {CNEXT_GOALS.map((g) => (
             <MockGoalCard key={g.id} goal={g} />
           ))}
         </div>
@@ -509,7 +509,7 @@ function GoalsTab() {
 }
 
 // Read-only card for mock (static) goals
-function MockGoalCard({ goal: g }: { goal: HumiGoal }) {
+function MockGoalCard({ goal: g }: { goal: CnextGoal }) {
   return (
     <Card variant="raised" size="lg">
       <div className="flex items-start justify-between gap-4">
@@ -557,7 +557,7 @@ function MockGoalCard({ goal: g }: { goal: HumiGoal }) {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label={g.title}
-        className="humi-progress mt-4"
+        className="cnext-progress mt-4"
       >
         <span style={{ width: `${g.percent}%` }} />
       </div>
@@ -603,7 +603,7 @@ function ReviewsTab() {
     <Card variant="raised" size="lg">
       <CardTitle>รอบการประเมิน</CardTitle>
       <ul role="list" className="mt-3 divide-y divide-hairline">
-        {HUMI_REVIEW_CYCLES.map((r) => (
+        {CNEXT_REVIEW_CYCLES.map((r) => (
           <li
             key={r.id}
             className="flex flex-col gap-2 py-3.5 sm:flex-row sm:items-center sm:gap-3"
@@ -645,7 +645,7 @@ function ReviewsTab() {
 function FeedbackTab() {
   return (
     <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      {HUMI_FEEDBACK.map((f) => (
+      {CNEXT_FEEDBACK.map((f) => (
         <Card key={f.id} variant="raised" size="md">
           <div className="flex items-center gap-3">
             <Avatar name={f.who} tone={f.tone} size="sm" />
@@ -692,7 +692,7 @@ function TeamTab() {
     <Card variant="raised" size="lg">
       <CardTitle>ลูกทีมของฉัน</CardTitle>
       <ul role="list" className="mt-3 divide-y divide-hairline">
-        {HUMI_GOAL_TEAM.map((m) => (
+        {CNEXT_GOAL_TEAM.map((m) => (
           <li
             key={m.id}
             className="flex flex-col gap-3 py-3.5 sm:flex-row sm:items-center"
@@ -715,7 +715,7 @@ function TeamTab() {
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label={m.name}
-                className="humi-progress w-36"
+                className="cnext-progress w-36"
               >
                 <span style={{ width: `${m.percent}%` }} />
               </div>

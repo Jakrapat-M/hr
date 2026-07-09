@@ -1,6 +1,6 @@
 // lib/employee/empStatus.ts — BRD #87
 //
-// Maps SF emplStatus codes to Humi display values.
+// Maps SF emplStatus codes to Cnext display values.
 // Source: sf-extract/qas-fields-2026-04-26/sf-qas-EmpJob-2026-04-26.json
 //   → .d.results[0].emplStatus = "5581" (active employee in QAS)
 // SF picklist values (EmpJob.emplStatus):
@@ -22,7 +22,7 @@ export const EMPL_STATUS_LABEL: Record<EmplStatusCode, string> = {
   '5600': 'ถูกระงับ',        // Suspended
 }
 
-/** English status key for Humi status field mapping */
+/** English status key for Cnext status field mapping */
 export const EMPL_STATUS_KEY: Record<EmplStatusCode, string> = {
   '5581': 'active',
   '5597': 'terminated',

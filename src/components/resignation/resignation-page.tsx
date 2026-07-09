@@ -15,7 +15,7 @@ import {
   TERMINATION_REASON_LABEL,
 } from '@/stores/termination-approvals';
 import { useAuthStore } from '@/stores/auth-store';
-import { Button, FormField, FormInput, Modal } from '@/components/humi';
+import { Button, FormField, FormInput, Modal } from '@/components/cnext';
 import { AttachmentDropzone } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 import { REASON_LABELS } from '@/components/admin/lifecycle/ReasonPicker';
@@ -26,7 +26,7 @@ import {
   isExitInterviewEmpty,
   type ExitInterviewRecord,
 } from '@/stores/exit-feedback';
-import { HUMI_MY_PROFILE } from '@/lib/humi-mock-data';
+import { CNEXT_MY_PROFILE } from '@/lib/cnext-mock-data';
 import {
   buildTerminationRequestPayload,
   deriveTermination,
@@ -197,7 +197,7 @@ export function ResignationPage() {
         employeeId: userId,
         employeeNameTh: userName,
         employeeNameEn: userName,
-        positionTitle: HUMI_MY_PROFILE.position,
+        positionTitle: CNEXT_MY_PROFILE.position,
         reasonCode,
         resignedDate: lastWorkingDate,
         recordedAt: new Date().toISOString(),
@@ -222,7 +222,7 @@ export function ResignationPage() {
           </p>
         </div>
 
-        <div className="humi-card p-6">
+        <div className="cnext-card p-6">
           <div className="flex items-center gap-3 mb-5">
             <CheckCircle size={28} className="text-success" aria-hidden />
             <div>
@@ -238,28 +238,28 @@ export function ResignationPage() {
           {req && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <div className="humi-eyebrow">วันทำงานวันสุดท้าย</div>
+                <div className="cnext-eyebrow">วันทำงานวันสุดท้าย</div>
                 <div className="text-body font-medium text-ink">
                   {formatDateTh(req.requestedLastDay)}
                 </div>
               </div>
               {req.terminationDate && (
                 <div>
-                  <div className="humi-eyebrow">วันที่สิ้นสุดสภาพ</div>
+                  <div className="cnext-eyebrow">วันที่สิ้นสุดสภาพ</div>
                   <div className="text-body font-medium text-ink">
                     {formatDateTh(req.terminationDate)}
                   </div>
                 </div>
               )}
               <div>
-                <div className="humi-eyebrow">เหตุผล</div>
+                <div className="cnext-eyebrow">เหตุผล</div>
                 <div className="text-body font-medium text-ink">
                   {TERMINATION_REASON_LABEL[normalizeTerminationReason(req.reasonCode)]}
                 </div>
               </div>
               {req.reasonForTermination && (
                 <div>
-                  <div className="humi-eyebrow">เหตุผลย่อย</div>
+                  <div className="cnext-eyebrow">เหตุผลย่อย</div>
                   <div className="text-body font-medium text-ink">
                     {terminationSubReasonLabel(req.reasonCode, req.reasonForTermination)}
                   </div>
@@ -267,19 +267,19 @@ export function ResignationPage() {
               )}
               {req.personalEmail && (
                 <div>
-                  <div className="humi-eyebrow">อีเมลส่วนตัว</div>
+                  <div className="cnext-eyebrow">อีเมลส่วนตัว</div>
                   <div className="text-body font-medium text-ink">{req.personalEmail}</div>
                 </div>
               )}
               {req.additionalInfo && (
                 <div className="sm:col-span-2">
-                  <div className="humi-eyebrow">ข้อมูลเพิ่มเติม</div>
+                  <div className="cnext-eyebrow">ข้อมูลเพิ่มเติม</div>
                   <div className="text-body text-ink">{req.additionalInfo}</div>
                 </div>
               )}
               <div>
-                <div className="humi-eyebrow">สถานะ</div>
-                <span className="humi-tag humi-tag--butter">
+                <div className="cnext-eyebrow">สถานะ</div>
+                <span className="cnext-tag cnext-tag--butter">
                   {req.status === 'pending_manager'
                     ? 'รอ Manager อนุมัติ'
                     : req.status === 'pending_spd'
@@ -290,7 +290,7 @@ export function ResignationPage() {
                 </span>
               </div>
               <div>
-                <div className="humi-eyebrow">ส่งเมื่อ</div>
+                <div className="cnext-eyebrow">ส่งเมื่อ</div>
                 <div className="text-body text-ink">
                   {new Date(req.submittedAt).toLocaleDateString('th-TH', {
                     year: 'numeric', month: 'short', day: 'numeric',
@@ -315,8 +315,8 @@ export function ResignationPage() {
       </div>
 
       {pendingRequest?.status === 'pending_manager' && (
-        <div className="humi-card humi-card--info p-4">
-          <div className="humi-eyebrow">มีคำขอที่ยังรอ Manager อนุมัติ</div>
+        <div className="cnext-card cnext-card--info p-4">
+          <div className="cnext-eyebrow">มีคำขอที่ยังรอ Manager อนุมัติ</div>
           <div className="text-small text-ink">
             รหัส {pendingRequest.id} — รออนุมัติจาก Manager ส่งคำขอใหม่ไม่ได้จนกว่า Manager จะตัดสิน
           </div>
@@ -324,8 +324,8 @@ export function ResignationPage() {
       )}
 
       {pendingRequest?.status === 'pending_spd' && (
-        <div className="humi-card humi-card--info p-4">
-          <div className="humi-eyebrow">มีคำขอที่ยังรอ SPD อนุมัติ</div>
+        <div className="cnext-card cnext-card--info p-4">
+          <div className="cnext-eyebrow">มีคำขอที่ยังรอ SPD อนุมัติ</div>
           <div className="text-small text-ink">
             รหัส {pendingRequest.id} — Manager อนุมัติแล้ว รออนุมัติครั้งสุดท้ายจาก SPD
           </div>
@@ -333,8 +333,8 @@ export function ResignationPage() {
       )}
 
       {sentBackRequest && !pendingRequest && (
-        <div className="humi-card humi-card--warning p-4">
-          <div className="humi-eyebrow">คำขอถูกส่งกลับให้แก้ไข</div>
+        <div className="cnext-card cnext-card--warning p-4">
+          <div className="cnext-eyebrow">คำขอถูกส่งกลับให้แก้ไข</div>
           <div className="text-small text-ink">
             รหัส {sentBackRequest.id}
             {sendBackNote ? ` — เหตุผลจากผู้อนุมัติ: ${sendBackNote}` : ''}
@@ -344,8 +344,8 @@ export function ResignationPage() {
       )}
 
       {approvedRequest && !pendingRequest && (
-        <div className="humi-card humi-card--success p-4">
-          <div className="humi-eyebrow">คำขอลาออกก่อนหน้านี้ได้รับการอนุมัติแล้ว</div>
+        <div className="cnext-card cnext-card--success p-4">
+          <div className="cnext-eyebrow">คำขอลาออกก่อนหน้านี้ได้รับการอนุมัติแล้ว</div>
           <div className="text-small text-ink">
             รหัส {approvedRequest.id} — วันทำงานสุดท้าย {formatDateTh(approvedRequest.requestedLastDay)} — ยื่นคำขอใหม่ได้หากต้องการ
           </div>
@@ -353,8 +353,8 @@ export function ResignationPage() {
       )}
 
       {lastRejected && (
-        <div className="humi-card humi-card--warning p-4">
-          <div className="humi-eyebrow">คำขอก่อนหน้านี้ถูกปฏิเสธ</div>
+        <div className="cnext-card cnext-card--warning p-4">
+          <div className="cnext-eyebrow">คำขอก่อนหน้านี้ถูกปฏิเสธ</div>
           <div className="text-small text-ink">
             รหัส {lastRejected.id} — ส่งใหม่ได้ ปรับเหตุผลหรือเอกสารแนบให้ครบก่อนส่ง
           </div>
@@ -362,8 +362,8 @@ export function ResignationPage() {
       )}
 
       {/* Form */}
-      <div className="humi-card p-6">
-        <div className="humi-eyebrow mb-4">กรอกข้อมูลการลาออก</div>
+      <div className="cnext-card p-6">
+        <div className="cnext-eyebrow mb-4">กรอกข้อมูลการลาออก</div>
 
         <div className="space-y-5">
           {/* วันทำงานวันสุดท้าย */}
@@ -509,7 +509,7 @@ export function ResignationPage() {
       </div>
 
       {/* Info note */}
-      <div className="humi-card humi-card--cream px-4 py-3">
+      <div className="cnext-card cnext-card--cream px-4 py-3">
         <div className="text-small text-ink-muted">
           เมื่อส่งคำขอแล้ว SPD จะรับทราบผ่านกล่องอนุมัติ และดำเนินการกระบวนการสิ้นสุดการจ้างงานต่อไป
         </div>
@@ -575,10 +575,10 @@ export function ResignationPage() {
       >
         <ExitInterviewSection value={exitInterview} onChange={patchExit} />
         <div className="sticky bottom-0 flex justify-end gap-3 border-t border-hairline bg-surface px-6 py-4">
-          <button type="button" className="humi-btn humi-btn--ghost" onClick={handleExitSkip}>
+          <button type="button" className="cnext-btn cnext-btn--ghost" onClick={handleExitSkip}>
             {tf('skip')}
           </button>
-          <button type="button" className="humi-btn humi-btn--primary" onClick={handleExitSave}>
+          <button type="button" className="cnext-btn cnext-btn--primary" onClick={handleExitSave}>
             {tf('save')}
           </button>
         </div>

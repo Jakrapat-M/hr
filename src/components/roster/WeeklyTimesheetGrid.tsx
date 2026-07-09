@@ -6,13 +6,13 @@
 // DayCell that stacks Shift / Clock / OT / Day Off / Holiday chips.
 //
 // Derives every cell from the canonical time-domain seeds (getScheduleForPeriod
-// = planned, getAttendanceForPeriod = actuals, the OT store, HUMI_TH_HOLIDAYS) —
+// = planned, getAttendanceForPeriod = actuals, the OT store, CNEXT_TH_HOLIDAYS) —
 // no parallel weekly mock. Rows are keyed on the empId namespace those seeds use.
 
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
-import { Avatar, type AvatarProps } from '@/components/humi';
+import { Avatar, type AvatarProps } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/date';
 import { getScheduleForPeriod, type DaySchedule } from '@/lib/time/schedule-template';
@@ -21,7 +21,7 @@ import { getLeaveForPeriod, type LeaveDay } from '@/lib/time/leave-seed';
 import { classifyClock } from '@/lib/time/clock-state';
 import { otHoursByDateForWeek, type OtByDate } from '@/lib/time/ot-week';
 import { toIsoDate, type WeekWindow } from '@/lib/time/week';
-import { HUMI_TH_HOLIDAYS } from '@/lib/humi-mock-data';
+import { CNEXT_TH_HOLIDAYS } from '@/lib/cnext-mock-data';
 import type { OTRequest, OtRateType } from '@/stores/overtime-requests';
 import type { BlockedWindow } from '@/lib/time/roster-ot';
 import { DayCell } from './DayCell';
@@ -41,7 +41,7 @@ export const POSITION_FILTER_ALL = 'all';
 
 /**
  * Stable position key for a row (STA-252 N2). `roleTh` is always populated
- * (sourced from `HumiEmployee.position`, a Thai string) and is a 1:1 stand-in
+ * (sourced from `CnextEmployee.position`, a Thai string) and is a 1:1 stand-in
  * for the underlying ตำแหน่ง, unlike `roleEn`/`roleTh` display text which
  * differs per locale — filter on this, not on the locale-rendered label.
  */
@@ -154,7 +154,7 @@ const WEEKDAY_SHORT: { th: string; en: string }[] = [
   { th: 'อาทิตย์', en: 'Sun' },
 ];
 
-const HOLIDAY_SET = new Set(HUMI_TH_HOLIDAYS);
+const HOLIDAY_SET = new Set(CNEXT_TH_HOLIDAYS);
 const EMPTY_SELECTION: ReadonlySet<string> = new Set();
 
 /** Per-employee derivation: indexed schedule + attendance + OT + leave for the week. */
@@ -354,7 +354,7 @@ export function WeeklyTimesheetGrid({
                 {formatDate(d, 'medium', isTh ? 'th' : 'en')}
               </div>
               {/* STA-137 — amber "(Holiday)" pill beneath the date on a public-
-                  holiday column (HUMI_TH_HOLIDAYS). NO-RED: warning-soft amber. */}
+                  holiday column (CNEXT_TH_HOLIDAYS). NO-RED: warning-soft amber. */}
               {isHolidayCol && (
                 <div
                   data-testid="header-holiday-pill"

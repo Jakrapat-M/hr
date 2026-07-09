@@ -8,7 +8,7 @@
 // Design decisions:
 // - Config-object signature (composition-patterns: no boolean props)
 // - Template returns { Page } — caller wraps with AdminShell-route
-// - Drawer uses right-sliding panel (Humi pattern, not modal) — keeps
+// - Drawer uses right-sliding panel (Cnext pattern, not modal) — keeps
 //   list context visible for comparison during edit
 // - Soft delete optional; default = disable button if remove not provided
 
@@ -84,13 +84,13 @@ export function createCrudPage<TItem extends { id: string }>(
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <div>
-            <div className="humi-eyebrow">{config.titleEn.toUpperCase()}</div>
+            <div className="cnext-eyebrow">{config.titleEn.toUpperCase()}</div>
             <h1 className="font-display text-2xl font-semibold text-ink">{config.titleTh}</h1>
           </div>
           <button
             type="button"
             onClick={openCreate}
-            className="humi-btn humi-btn--primary"
+            className="cnext-btn cnext-btn--primary"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
             <Plus size={16} aria-hidden />
@@ -112,7 +112,7 @@ export function createCrudPage<TItem extends { id: string }>(
         </div>
 
         {/* List */}
-        <div className="humi-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="cnext-card" style={{ padding: 0, overflow: 'hidden' }}>
           {/* Header row */}
           <div role="row" style={{ display: 'flex', alignItems: 'center', height: 44, background: 'var(--color-canvas)', borderBottom: '1px solid var(--color-hairline)' }}>
             {config.columns.map((col) => (
@@ -149,7 +149,7 @@ export function createCrudPage<TItem extends { id: string }>(
               <div
                 key={item.id}
                 role="row"
-                className="humi-emp-row"
+                className="cnext-emp-row"
                 style={{ display: 'flex', alignItems: 'center', height: 48, borderBottom: '1px solid var(--color-hairline-soft)' }}
               >
                 {config.columns.map((col) => (
@@ -173,7 +173,7 @@ export function createCrudPage<TItem extends { id: string }>(
                 <div style={{ width: 60, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
                   <button
                     type="button"
-                    className="humi-icon-btn"
+                    className="cnext-icon-btn"
                     aria-label={`แก้ไข${config.titleTh}`}
                     onClick={() => openEdit(item)}
                     style={{ width: 32, height: 32, minWidth: 32, minHeight: 32, padding: 0 }}
@@ -206,7 +206,7 @@ export function createCrudPage<TItem extends { id: string }>(
         {editing && (
           <>
             <div
-              className="fixed inset-0 z-30 humi-drawer-scrim"
+              className="fixed inset-0 z-30 cnext-drawer-scrim"
               aria-hidden="true"
               onClick={close}
             />
@@ -223,7 +223,7 @@ export function createCrudPage<TItem extends { id: string }>(
                 </h2>
                 <button
                   type="button"
-                  className="humi-icon-btn"
+                  className="cnext-icon-btn"
                   aria-label="ปิด"
                   onClick={close}
                 >
@@ -239,7 +239,7 @@ export function createCrudPage<TItem extends { id: string }>(
                 {mode === 'edit' && config.remove && (
                   <button
                     type="button"
-                    className="humi-btn"
+                    className="cnext-btn"
                     style={{ color: 'var(--color-danger-ink, #dc2626)' }}
                     onClick={() => {
                       if (editing.id) {
@@ -251,12 +251,12 @@ export function createCrudPage<TItem extends { id: string }>(
                     ลบ
                   </button>
                 )}
-                <button type="button" className="humi-btn" onClick={close}>
+                <button type="button" className="cnext-btn" onClick={close}>
                   ยกเลิก
                 </button>
                 <button
                   type="button"
-                  className="humi-btn humi-btn--primary"
+                  className="cnext-btn cnext-btn--primary"
                   onClick={save}
                 >
                   {mode === 'create' ? 'บันทึก' : 'บันทึกการแก้ไข'}

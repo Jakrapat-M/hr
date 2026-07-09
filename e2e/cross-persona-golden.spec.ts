@@ -21,7 +21,7 @@ import * as path from 'path';
 //   7. Throughout: fail on a Next.js dev error overlay (nextjs-portal) and on
 //                     React key / getSnapshot console errors.
 //
-// Auth: a super-user is seeded into humi-auth via addInitScript (same idiom as
+// Auth: a super-user is seeded into cnext-auth via addInitScript (same idiom as
 // storage-auth.helper.ts) so Zustand rehydrates before React runs. The journey
 // then drives the REAL PersonaSwitcher UI (avatar menu → "สวมบทบาทแทน…" modal)
 // per the task spec, rather than re-seeding auth for each hop.
@@ -38,7 +38,7 @@ const BASE = 'http://localhost:3000';
 const SUPER_USER = {
   userId: 'ADM-E2E',
   username: 'Demo Super',
-  email: 'admin@humi.test',
+  email: 'admin@cnext.test',
   roles: ['hr_admin', 'hr_manager', 'spd', 'hrbp', 'manager', 'employee'],
   isAuthenticated: true,
   originalUser: null,
@@ -130,7 +130,7 @@ async function assumePersona(page: Page, nameFragment: string) {
 }
 
 // Navigate within the app, preserving the seeded auth (full goto re-runs the
-// addInitScript so humi-auth stays seeded, but we navigate after impersonation so
+// addInitScript so cnext-auth stays seeded, but we navigate after impersonation so
 // we must NOT clear storage again — gotoApp never touches storage).
 async function gotoApp(page: Page, route: string) {
   await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
@@ -146,13 +146,13 @@ test.describe.serial('Cross-persona golden journey (US-16)', () => {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 
     // Seed the super-user BEFORE any script runs (Zustand rehydrates from this).
-    // GUARD: only seed when humi-auth is ABSENT. This init script re-runs on every
+    // GUARD: only seed when cnext-auth is ABSENT. This init script re-runs on every
     // navigation; without the guard it would clobber an active impersonation back
     // to the super-user on each page.goto (the PersonaSwitcher writes the assumed
     // persona into this same key, which we must preserve across navigations).
     await ctx.addInitScript((auth) => {
-      if (!localStorage.getItem('humi-auth')) {
-        localStorage.setItem('humi-auth', JSON.stringify({ state: auth, version: 0 }));
+      if (!localStorage.getItem('cnext-auth')) {
+        localStorage.setItem('cnext-auth', JSON.stringify({ state: auth, version: 0 }));
       }
     }, SUPER_USER);
 
@@ -177,10 +177,10 @@ test.describe.serial('Cross-persona golden journey (US-16)', () => {
       }
 
       // ── Deterministic clean slate — ONCE, then never again ──────────────────
-      // Clear every non-auth humi-* store so reruns start from a known state.
+      // Clear every non-auth cnext-* store so reruns start from a known state.
       await page.evaluate(() => {
         Object.keys(localStorage)
-          .filter((k) => k.startsWith('humi-') && k !== 'humi-auth')
+          .filter((k) => k.startsWith('cnext-') && k !== 'cnext-auth')
           .forEach((k) => localStorage.removeItem(k));
       });
       await page.reload({ waitUntil: 'domcontentloaded' });
@@ -238,7 +238,7 @@ test.describe.serial('Cross-persona golden journey (US-16)', () => {
 
       // Capture the live leave id from the store for later status assertions.
       const leaveId = await page.evaluate((reasonNeedle) => {
-        const raw = localStorage.getItem('humi-leave-approvals');
+        const raw = localStorage.getItem('cnext-leave-approvals');
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         const r = (parsed?.state?.requests ?? []).find(
@@ -279,7 +279,7 @@ test.describe.serial('Cross-persona golden journey (US-16)', () => {
 
       // Sanity: the claim is now in the benefit-claims store, pending manager.
       const claimPending = await page.evaluate(() => {
-        const raw = localStorage.getItem('humi-benefit-claims');
+        const raw = localStorage.getItem('cnext-benefit-claims');
         if (!raw) return false;
         const parsed = JSON.parse(raw);
         return (parsed?.state?.claims ?? []).some(
@@ -327,7 +327,7 @@ test.describe.serial('Cross-persona golden journey (US-16)', () => {
         .poll(
           async () =>
             page.evaluate((id) => {
-              const raw = localStorage.getItem('humi-leave-approvals');
+              const raw = localStorage.getItem('cnext-leave-approvals');
               if (!raw) return null;
               const parsed = JSON.parse(raw);
               const r = (parsed?.state?.requests ?? []).find(
@@ -359,7 +359,7 @@ test.describe.serial('Cross-persona golden journey (US-16)', () => {
       // Belt-and-suspenders: the live claim must still be pending_manager_approval
       // in the persisted store AFTER the reload (not just visually rendered).
       const claimPendingAfterReload = await page.evaluate(() => {
-        const raw = localStorage.getItem('humi-benefit-claims');
+        const raw = localStorage.getItem('cnext-benefit-claims');
         if (!raw) return false;
         const parsed = JSON.parse(raw);
         return (parsed?.state?.claims ?? []).some(

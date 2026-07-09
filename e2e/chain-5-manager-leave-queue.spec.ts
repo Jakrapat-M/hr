@@ -3,7 +3,7 @@ import { authedContext } from './helpers/storage-auth.helper';
 
 // Chain 5 — Manager Leave Queue (out-of-EC, separate from BRD #166 personal-info chain)
 //
-// The leave queue (humi-leave-approvals store) is Manager-owned.
+// The leave queue (cnext-leave-approvals store) is Manager-owned.
 // EC personal-info changes route to SPD per BRD #166 — that is a different chain.
 // ensureDemoSeed() fires on AppShell mount and pre-seeds 3 pending leave requests
 // with Thai employee names. Because beforeEach clears non-auth localStorage before
@@ -28,7 +28,7 @@ test.describe.serial('Chain 5 — Manager Leave Queue (out-of-EC, separate from 
       // Clear non-auth stores so ensureDemoSeed() re-fires cleanly
       await page.evaluate(() => {
         Object.keys(localStorage)
-          .filter((k) => k.startsWith('humi-') && k !== 'humi-auth')
+          .filter((k) => k.startsWith('cnext-') && k !== 'cnext-auth')
           .forEach((k) => localStorage.removeItem(k));
       });
 
@@ -40,9 +40,9 @@ test.describe.serial('Chain 5 — Manager Leave Queue (out-of-EC, separate from 
       // Wait for leave queue card — ensureDemoSeed fires on mount
       await expect(page.getByText(/คิวลา.*รอหัวหน้าอนุมัติ/)).toBeVisible({ timeout: 10_000 });
 
-      // humi-leave-approvals store seeded by ensureDemoSeed on mount
+      // cnext-leave-approvals store seeded by ensureDemoSeed on mount
       const storeSeeded = await page.evaluate(() => {
-        const raw = localStorage.getItem('humi-leave-approvals');
+        const raw = localStorage.getItem('cnext-leave-approvals');
         if (!raw) return false;
         try {
           const parsed = JSON.parse(raw);
@@ -70,10 +70,10 @@ test.describe.serial('Chain 5 — Manager Leave Queue (out-of-EC, separate from 
         return;
       }
 
-      // Clear non-auth humi stores so ensureDemoSeed() re-fires
+      // Clear non-auth cnext stores so ensureDemoSeed() re-fires
       await page.evaluate(() => {
         Object.keys(localStorage)
-          .filter((k) => k.startsWith('humi-') && k !== 'humi-auth')
+          .filter((k) => k.startsWith('cnext-') && k !== 'cnext-auth')
           .forEach((k) => localStorage.removeItem(k));
       });
 
@@ -117,7 +117,7 @@ test.describe.serial('Chain 5 — Manager Leave Queue (out-of-EC, separate from 
       // Clear non-auth stores so seed re-fires
       await page.evaluate(() => {
         Object.keys(localStorage)
-          .filter((k) => k.startsWith('humi-') && k !== 'humi-auth')
+          .filter((k) => k.startsWith('cnext-') && k !== 'cnext-auth')
           .forEach((k) => localStorage.removeItem(k));
       });
 
@@ -157,7 +157,7 @@ test.describe.serial('Chain 5 — Manager Leave Queue (out-of-EC, separate from 
       // Clear non-auth stores so seed re-fires
       await page.evaluate(() => {
         Object.keys(localStorage)
-          .filter((k) => k.startsWith('humi-') && k !== 'humi-auth')
+          .filter((k) => k.startsWith('cnext-') && k !== 'cnext-auth')
           .forEach((k) => localStorage.removeItem(k));
       });
 
@@ -178,7 +178,7 @@ test.describe.serial('Chain 5 — Manager Leave Queue (out-of-EC, separate from 
 
       // Verify localStorage persists rejected status
       const storeData = await page.evaluate(() => {
-        const raw = localStorage.getItem('humi-leave-approvals');
+        const raw = localStorage.getItem('cnext-leave-approvals');
         if (!raw) return null;
         try { return JSON.parse(raw); } catch { return null; }
       });

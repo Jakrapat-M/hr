@@ -2,13 +2,13 @@
 
 // STA-28 PR-D — TeamBenefitsMatrix
 // Manager view: rows = direct reports, columns = 7 common benefit plans.
-// Each cell shows usage chip (used / total) with Humi color tokens per threshold.
+// Each cell shows usage chip (used / total) with Cnext color tokens per threshold.
 
 import { useState, useMemo } from 'react';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { Search, ChevronDown } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDirectReports } from '@/hooks/use-direct-reports';
 import { TeamSummaryTiles } from '@/components/manager/team-summary-tiles';
@@ -27,7 +27,7 @@ type PlanFilterType = 'all' | 'annual' | 'on-demand';
 
 const ANNUAL_PLAN_IDS = new Set(['BE-GAS-001', 'BE-TOL-001', 'BE-PAR-001']);
 
-// ── Usage chip color thresholds (Humi tokens only, no hex) ───────────────
+// ── Usage chip color thresholds (Cnext tokens only, no hex) ───────────────
 
 function usageChipClass(used: number, total: number): string {
   if (total === 0) return 'bg-canvas-soft text-ink-muted';

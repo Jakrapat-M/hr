@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Clock, CalendarOff, Timer, PencilLine, LogIn, ListChecks, BarChart3 } from 'lucide-react';
-import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
+import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/cnext';
 import { useAuthStore } from '@/stores/auth-store';
 import { useLeaveApprovals } from '@/stores/leave-approvals';
 import { useOvertimeRequests } from '@/stores/overtime-requests';

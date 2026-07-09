@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useHumiProfileStore, type SectionKey } from '@/stores/humi-profile-slice';
+import { useCnextProfileStore, type SectionKey } from '@/stores/cnext-profile-slice';
 import { ChangeRequestCard } from '@/components/admin/change-requests/ChangeRequestCard';
 import { ReasonModal } from '@/components/admin/change-requests/ReasonModal';
 import { useAuthStore } from '@/stores/auth-store';
@@ -16,7 +16,7 @@ const APPROVER_ROLES: Role[] = ['spd', 'hr_admin', 'hr_manager'];
 // ════════════════════════════════════════════════════════════
 // /admin/change-requests — HR admin approver queue.
 // Groups pending profile-data CRs by sectionKey, shows history.
-// Uses humi-profile-slice exclusively (C7 SSoT vs use-workflows
+// Uses cnext-profile-slice exclusively (C7 SSoT vs use-workflows
 // and workflow-approvals which own leave/OT domain).
 // ════════════════════════════════════════════════════════════
 
@@ -47,12 +47,12 @@ export default function ChangeRequestsPage() {
     changeId: string | null;
   }>({ open: false, mode: 'approve', changeId: null });
 
-  const pendingChanges = useHumiProfileStore((s) => s.pendingChanges);
-  const attachments = useHumiProfileStore((s) => s.attachments);
+  const pendingChanges = useCnextProfileStore((s) => s.pendingChanges);
+  const attachments = useCnextProfileStore((s) => s.attachments);
 
   if (!canApprove) {
     return (
-      <div className="humi-card" data-testid="change-requests-no-access">
+      <div className="cnext-card" data-testid="change-requests-no-access">
         <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
           ไม่มีสิทธิ์เข้าถึง
         </h3>

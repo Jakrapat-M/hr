@@ -2,15 +2,15 @@
 
 // T2a-v2: BankDetailsEditor — bankCode dropdown + digits-only accountNo + holderName + attachment.
 // Attachment: using FileUploadField (existing repo convention in /profile/me/page.tsx lines 391-410)
-// because FileUploadField is already wired to useHumiProfileStore.addAttachment + preview list
+// because FileUploadField is already wired to useCnextProfileStore.addAttachment + preview list
 // out of the box. AttachmentDropzone requires manual store wiring — cost > threshold for v2.
 // Note: consolidate to AttachmentDropzone in follow-on task (global FileUploadField → Dropzone sweep).
 
 import { useTranslations } from 'next-intl';
-import { FormField } from '@/components/humi';
-import { FileUploadField } from '@/components/humi/FileUploadField';
+import { FormField } from '@/components/cnext';
+import { FileUploadField } from '@/components/cnext/FileUploadField';
 import { cn } from '@/lib/utils';
-import type { BankDetails } from '@/stores/humi-profile-slice';
+import type { BankDetails } from '@/stores/cnext-profile-slice';
 
 // ── Bank list (inlined — picklist pipeline task is separate) ──────────────────
 

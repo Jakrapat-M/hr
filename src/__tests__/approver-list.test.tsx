@@ -13,7 +13,7 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, act, waitFor } from '@testing-library/react';
-import { useHumiProfileStore } from '@/stores/humi-profile-slice';
+import { useCnextProfileStore } from '@/stores/cnext-profile-slice';
 import { useAuthStore } from '@/stores/auth-store';
 
 // ── next-intl mock: t(key) returns key verbatim ───────────────────────────────
@@ -21,13 +21,13 @@ vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-// ── humi component stubs ──────────────────────────────────────────────────────
+// ── cnext component stubs ──────────────────────────────────────────────────────
 // Card renders children; Button renders a <button>; FormField passes children.
-vi.mock('@/components/humi/Card', () => ({
+vi.mock('@/components/cnext/Card', () => ({
   Card: ({ children }: { children: React.ReactNode }) => <div data-testid="card">{children}</div>,
 }));
 
-vi.mock('@/components/humi/Button', () => ({
+vi.mock('@/components/cnext/Button', () => ({
   Button: ({
     children,
     onClick,
@@ -43,7 +43,7 @@ vi.mock('@/components/humi/Button', () => ({
   ),
 }));
 
-vi.mock('@/components/humi/Modal', () => ({
+vi.mock('@/components/cnext/Modal', () => ({
   Modal: ({
     open,
     children,
@@ -61,7 +61,7 @@ vi.mock('@/components/humi/Modal', () => ({
     ) : null,
 }));
 
-vi.mock('@/components/humi/FormField', () => ({
+vi.mock('@/components/cnext/FormField', () => ({
   FormField: ({
     children,
     label,
@@ -114,7 +114,7 @@ const BLANK_DRAFT = {
 };
 
 function resetStore() {
-  useHumiProfileStore.setState({
+  useCnextProfileStore.setState({
     activeTab: 'personal',
     isEditing: false,
     draft: { ...BLANK_DRAFT },
@@ -133,7 +133,7 @@ beforeEach(() => {
   useAuthStore.setState({
     userId: 'TEST-SPD',
     username: 'tester',
-    email: 'spd@humi.test',
+    email: 'spd@cnext.test',
     roles: ['spd', 'employee'],
     isAuthenticated: true,
     originalUser: null,
@@ -152,7 +152,7 @@ afterEach(() => {
 type SectionKey = 'personal' | 'contact' | 'address' | 'emergencyContact' | 'bank';
 
 function seedPending(overrides: { field?: string; sectionKey?: SectionKey } = {}): string {
-  return useHumiProfileStore.getState().submitChangeRequest({
+  return useCnextProfileStore.getState().submitChangeRequest({
     field: overrides.field ?? 'ทดสอบ',
     oldValue: 'เดิม',
     newValue: 'ใหม่',
@@ -163,7 +163,7 @@ function seedPending(overrides: { field?: string; sectionKey?: SectionKey } = {}
 }
 
 function seedApproved(field: string, approvedAt: string): void {
-  const id = useHumiProfileStore.getState().submitChangeRequest({
+  const id = useCnextProfileStore.getState().submitChangeRequest({
     field,
     oldValue: 'เดิม',
     newValue: 'ใหม่',
@@ -171,7 +171,7 @@ function seedApproved(field: string, approvedAt: string): void {
     attachmentIds: [],
   });
   // Directly patch to approved state to bypass time dependency
-  useHumiProfileStore.setState((s) => ({
+  useCnextProfileStore.setState((s) => ({
     pendingChanges: s.pendingChanges.map((pc) =>
       pc.id === id
         ? { ...pc, status: 'approved' as const, approvedAt, reason: 'อนุมัติ' }
@@ -181,14 +181,14 @@ function seedApproved(field: string, approvedAt: string): void {
 }
 
 function seedRejected(field: string, approvedAt: string): void {
-  const id = useHumiProfileStore.getState().submitChangeRequest({
+  const id = useCnextProfileStore.getState().submitChangeRequest({
     field,
     oldValue: 'เดิม',
     newValue: 'ใหม่',
     effectiveDate: '2026-05-01',
     attachmentIds: [],
   });
-  useHumiProfileStore.setState((s) => ({
+  useCnextProfileStore.setState((s) => ({
     pendingChanges: s.pendingChanges.map((pc) =>
       pc.id === id
         ? { ...pc, status: 'rejected' as const, approvedAt, reason: 'ปฏิเสธ' }
@@ -286,7 +286,7 @@ describe('AC-6 live update', () => {
 
     // Simulate approve via store (like modal confirm)
     act(() => {
-      useHumiProfileStore.getState().adminApproveWithReason(id, 'ผ่าน');
+      useCnextProfileStore.getState().adminApproveWithReason(id, 'ผ่าน');
     });
 
     // After Zustand subscription fires, pending group should be gone

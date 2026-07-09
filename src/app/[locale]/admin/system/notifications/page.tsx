@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useLocale } from 'next-intl';
 import { Bell, Mail, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
-import { Card, CardEyebrow, DataTable, Capability } from '@/components/humi';
-import type { DataTableColumn } from '@/components/humi';
+import { Card, CardEyebrow, DataTable, Capability } from '@/components/cnext';
+import type { DataTableColumn } from '@/components/cnext';
 import { MOCK_NOTIFICATION_TEMPLATES, type NotificationTemplate, type NotificationChannel } from '@/data/notifications/mock';
 
 const CHANNEL_ICON: Record<NotificationChannel, React.ReactNode> = {

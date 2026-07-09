@@ -1,7 +1,7 @@
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import { AppShell } from '@/components/humi/AppShell';
+import { AppShell } from '@/components/cnext/AppShell';
 import { ThemeProvider } from '@/components/shared/theme-provider';
 import { assertDemoModeSafe } from '@/lib/demo-mode-guard';
 

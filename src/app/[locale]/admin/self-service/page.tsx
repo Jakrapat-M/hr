@@ -69,7 +69,7 @@ export default function SelfServicePage() {
     >
       {/* Header */}
       <div>
-        <div className="humi-eyebrow">SELF-SERVICE</div>
+        <div className="cnext-eyebrow">SELF-SERVICE</div>
         <h1 className="font-display text-2xl font-semibold text-ink">การตั้งค่าแบบกำหนดเอง</h1>
         <p style={{ fontSize: 13, color: 'var(--color-ink-muted)', marginTop: 4 }}>
           ปรับพื้นที่ Self-Service ของพนักงาน เลือกฟิลด์ที่แสดง บังคับ ล็อค หรือทำเป็นทางลัด
@@ -108,7 +108,7 @@ export default function SelfServicePage() {
             key={href}
             href={href}
             role="listitem"
-            className="humi-card"
+            className="cnext-card"
             style={{
               padding: 20,
               display: 'flex',

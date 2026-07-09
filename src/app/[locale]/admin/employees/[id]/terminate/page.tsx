@@ -27,7 +27,7 @@ import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
 import { useTerminationApprovals, TERMINATION_REASON_LABEL } from '@/stores/termination-approvals'
 import { useAuthStore } from '@/stores/auth-store'
-import { FormField, FormInput } from '@/components/humi'
+import { FormField, FormInput } from '@/components/cnext'
 import {
   TERMINATION_LOGIC,
   TERMINATION_LOGIC_CODES,
@@ -67,17 +67,17 @@ function ApprovalChainStepper() {
         padding: '10px 16px',
       }}
     >
-      <div className="humi-eyebrow" style={{ marginBottom: 8, color: 'var(--color-accent)' }}>
+      <div className="cnext-eyebrow" style={{ marginBottom: 8, color: 'var(--color-accent)' }}>
         ลำดับการอนุมัติ
       </div>
       <div
-        className="humi-row"
+        className="cnext-row"
         style={{ gap: 0, flexWrap: 'wrap', alignItems: 'center' }}
         aria-label="4 ขั้นตอน: พนักงาน → Manager → HRBP → SPD"
       >
         {CHAIN_STEPS.map((step, i) => (
-          <div key={step.id} className="humi-row" style={{ gap: 0, alignItems: 'center' }}>
-            <div className="humi-row" style={{ gap: 5, alignItems: 'center', padding: '4px 8px' }}>
+          <div key={step.id} className="cnext-row" style={{ gap: 0, alignItems: 'center' }}>
+            <div className="cnext-row" style={{ gap: 5, alignItems: 'center', padding: '4px 8px' }}>
               <Circle size={14} aria-hidden style={{ color: 'var(--color-ink-muted)' }} />
               <span className="text-small text-ink-muted">{step.labelTh}</span>
             </div>
@@ -187,8 +187,8 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
   const classFmt = employee.status === 'active' ? 'ทำงานอยู่' : 'ออกจากงาน'
 
   return (
-    <div className="humi-card humi-card--cream">
-      <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+    <div className="cnext-card cnext-card--cream">
+      <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
         {employee.employee_id}
       </div>
       <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
@@ -198,22 +198,22 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
         style={{ marginTop: 8 }}
       >
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>สถานะ</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>สถานะ</div>
           <div className="text-body font-medium text-ink">{classFmt}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ประเภท</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ประเภท</div>
           <div className="text-body font-medium text-ink">
             {employee.employee_class === 'PERMANENT' ? 'Permanent' : 'Part-time'}
           </div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
           <div className="text-body font-medium text-ink">{hireDateFmt}</div>
           <div className="text-small text-ink-muted">{tenure}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
           <div className="text-body font-medium text-ink">{employee.position_title}</div>
         </div>
       </div>
@@ -246,7 +246,7 @@ function ConfirmTerminateDialog({
       }}
     >
       <div
-        className="humi-card"
+        className="cnext-card"
         style={{ maxWidth: 420, width: '100%', margin: 16 }}
       >
         <h2
@@ -262,16 +262,16 @@ function ConfirmTerminateDialog({
         <p className="text-small text-ink-muted" style={{ marginBottom: 20 }}>
           พนักงานจะยังไม่ถูกปรับสถานะเป็นสิ้นสุดสภาพจนกว่าคำขอได้รับอนุมัติครบขั้น
         </p>
-        <div className="humi-row" style={{ gap: 10, justifyContent: 'flex-end' }}>
+        <div className="cnext-row" style={{ gap: 10, justifyContent: 'flex-end' }}>
           <button
             onClick={onCancel}
-            className="humi-btn humi-btn--ghost"
+            className="cnext-btn cnext-btn--ghost"
           >
             ยกเลิก
           </button>
           <button
             onClick={onConfirm}
-            className="humi-btn humi-btn--danger"
+            className="cnext-btn cnext-btn--danger"
           >
             ยืนยัน ส่งคำขออนุมัติ
           </button>
@@ -510,14 +510,14 @@ export default function TerminatePage() {
         <div>
           <Link
             href={`/${locale}/admin/employees`}
-            className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+            className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
             style={{ display: 'inline-flex', gap: 6 }}
           >
             <ArrowLeft size={16} aria-hidden />
             <span>รายการพนักงาน</span>
           </Link>
         </div>
-        <div className="humi-card" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">ไม่พบพนักงานรหัส &ldquo;{empId}&rdquo;</p>
         </div>
       </div>
@@ -551,7 +551,7 @@ export default function TerminatePage() {
         <div>
           <Link
             href={`/${locale}/admin/employees/${empId}`}
-            className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+            className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
             style={{ display: 'inline-flex', gap: 6 }}
           >
             <ArrowLeft size={16} aria-hidden />
@@ -560,7 +560,7 @@ export default function TerminatePage() {
         </div>
 
         {/* Page title */}
-        <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+        <div className="cnext-row" style={{ gap: 10, alignItems: 'center' }}>
           <div
             style={{
               width: 36, height: 36, borderRadius: 10,
@@ -572,7 +572,7 @@ export default function TerminatePage() {
             <UserX size={18} aria-hidden />
           </div>
           <div>
-            <div className="humi-eyebrow">การดำเนินการ</div>
+            <div className="cnext-eyebrow">การดำเนินการ</div>
             <h1 className="font-display text-xl font-semibold text-ink">
               สิ้นสุดสภาพพนักงาน
             </h1>
@@ -584,8 +584,8 @@ export default function TerminatePage() {
 
         {/* Resignation cross-reference: approved or pending ESS resignation */}
         {approvedResignation && (
-          <div className="humi-card humi-card--success" style={{ padding: '12px 16px' }}>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+          <div className="cnext-card cnext-card--success" style={{ padding: '12px 16px' }}>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
               จากคำขอลาออก ESS
             </div>
             <div className="text-small text-ink">
@@ -599,8 +599,8 @@ export default function TerminatePage() {
           </div>
         )}
         {pendingResignation && !approvedResignation && (
-          <div className="humi-card humi-card--info" style={{ padding: '12px 16px' }}>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+          <div className="cnext-card cnext-card--info" style={{ padding: '12px 16px' }}>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
               มีคำขอลาออก ESS ที่รออนุมัติ
             </div>
             <div className="text-small text-ink">
@@ -621,7 +621,7 @@ export default function TerminatePage() {
         <ApprovalChainStepper />
 
         {submitted && (
-          <div className="humi-card humi-card--success" style={{ padding: '12px 16px' }}>
+          <div className="cnext-card cnext-card--success" style={{ padding: '12px 16px' }}>
             <div className="font-display text-body font-semibold text-ink">
               ส่งคำขอเข้าสู่การอนุมัติแล้ว / Request submitted for approval
             </div>
@@ -631,8 +631,8 @@ export default function TerminatePage() {
           </div>
         )}
 
-        <div className="humi-card">
-          <div className="humi-eyebrow" style={{ marginBottom: 16 }}>
+        <div className="cnext-card">
+          <div className="cnext-eyebrow" style={{ marginBottom: 16 }}>
             บันทึกการสิ้นสุดการจ้างงาน
           </div>
 
@@ -674,7 +674,7 @@ export default function TerminatePage() {
             </FormField>
           </div>
 
-          <hr className="humi-divider" />
+          <hr className="cnext-divider" />
 
           {/* ── 3. Termination Reason (LOV — restricted to the 13 spec codes) ── */}
           <div style={{ marginBottom: 20 }}>
@@ -697,7 +697,7 @@ export default function TerminatePage() {
               ประเภทการพ้นสภาพ (Voluntary / Involuntary)
             </label>
             <div
-              className="humi-input"
+              className="cnext-input"
               style={{ maxWidth: 240, opacity: 0.7, display: 'flex', alignItems: 'center' }}
               aria-readonly="true"
             >
@@ -725,7 +725,7 @@ export default function TerminatePage() {
               value={termination.reasonForTermination}
               onChange={(e) => patch({ reasonForTermination: e.target.value })}
               disabled={!activeEntry}
-              className="humi-input"
+              className="cnext-input"
               style={{ width: '100%' }}
               aria-required="true"
             >
@@ -753,7 +753,7 @@ export default function TerminatePage() {
               value={termination.transferOutTo}
               onChange={(e) => patch({ transferOutTo: e.target.value })}
               disabled={!isTransferOutReason}
-              className="humi-input"
+              className="cnext-input"
               style={{ maxWidth: 240, opacity: isTransferOutReason ? 1 : 0.7 }}
               aria-required="true"
             >
@@ -772,7 +772,7 @@ export default function TerminatePage() {
             )}
           </div>
 
-          <hr className="humi-divider" />
+          <hr className="cnext-divider" />
 
           {/* ── 7. OK to Rehire (LOV Yes/No — editable, NOT required) ── */}
           <div style={{ marginBottom: 20 }}>
@@ -793,7 +793,7 @@ export default function TerminatePage() {
                     e.target.value === '' ? null : e.target.value === 'yes',
                 })
               }
-              className="humi-input"
+              className="cnext-input"
               style={{ maxWidth: 240 }}
             >
               <option value="">— ไม่ระบุ —</option>
@@ -818,7 +818,7 @@ export default function TerminatePage() {
               onChange={(e) => patch({ additionalInfo: e.target.value })}
               rows={3}
               placeholder="อธิบายข้อมูลเพิ่มเติม..."
-              className="humi-input"
+              className="cnext-input"
               style={{ width: '100%', resize: 'vertical' }}
               aria-label="ข้อมูลเพิ่มเติม"
             />
@@ -847,7 +847,7 @@ export default function TerminatePage() {
             </FormField>
           </div>
 
-          <hr className="humi-divider" />
+          <hr className="cnext-divider" />
 
           {/* ── 10. Attachment ID (BA row — เอกสารประกอบการเลิกจ้าง) ── */}
           <div style={{ marginBottom: 24 }}>
@@ -861,17 +861,17 @@ export default function TerminatePage() {
           </div>
 
           {/* ── Submit button ── */}
-          <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 24 }}>
+          <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 24 }}>
             <Link
               href={`/${locale}/admin/employees/${empId}`}
-              className="humi-btn humi-btn--ghost"
+              className="cnext-btn cnext-btn--ghost"
             >
               ยกเลิก
             </Link>
             <button
               onClick={handleSubmit}
               disabled={!isValid || submitted}
-              className="humi-btn humi-btn--danger"
+              className="cnext-btn cnext-btn--danger"
               aria-disabled={!isValid || submitted}
             >
               บันทึกการสิ้นสุดสภาพ

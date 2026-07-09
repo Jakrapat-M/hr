@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { CheckCircle2, XCircle, X } from 'lucide-react';
 
 interface BulkActionBarProps {

@@ -12,7 +12,7 @@ import { authedContext } from './helpers/storage-auth.helper';
 // Auth strategy: authedContext() with addInitScript for reliable Zustand init.
 // All three tests share ONE browser context so localStorage (Zustand persist)
 // survives across role transitions. Persona switching is done by injecting
-// humi-auth directly via page.evaluate (synchronous, no navigation needed).
+// cnext-auth directly via page.evaluate (synchronous, no navigation needed).
 
 const EMPLOYEE_ID = 'EMP-0004'; // EMP-0001 is inactive; EMP-0004 is active+passed-probation (deterministic seed 42)
 
@@ -27,7 +27,7 @@ function tomorrowISO(): string {
 const HR_ADMIN_AUTH = {
   userId: 'ADM001',
   username: 'ผู้ดูแลระบบ HR',
-  email: 'admin@humi.test',
+  email: 'admin@cnext.test',
   roles: ['hr_admin', 'hr_manager', 'spd', 'hrbp', 'manager', 'employee'],
   isAuthenticated: true,
   originalUser: null,
@@ -36,19 +36,19 @@ const HR_ADMIN_AUTH = {
 const SPD_AUTH = {
   userId: 'SPD001',
   username: 'ดารณี ล. (SPD)',
-  email: 'spd@humi.test',
+  email: 'spd@cnext.test',
   roles: ['spd', 'employee'],
   isAuthenticated: true,
   originalUser: null,
 };
 
-/** Switch persona on a running page by writing humi-auth synchronously. */
+/** Switch persona on a running page by writing cnext-auth synchronously. */
 async function switchPersona(
   page: Page,
   auth: typeof HR_ADMIN_AUTH | typeof SPD_AUTH,
 ): Promise<void> {
   await page.evaluate((state) => {
-    localStorage.setItem('humi-auth', JSON.stringify({ state, version: 0 }));
+    localStorage.setItem('cnext-auth', JSON.stringify({ state, version: 0 }));
   }, auth);
 }
 
@@ -144,7 +144,7 @@ test.describe.serial('Chain 4 — Promotion → SPD (BRD #103)', () => {
   test('SPD approves the promotion', async () => {
     const page = sharedPage;
 
-    // Switch to SPD persona (localStorage survives — only humi-auth key changes)
+    // Switch to SPD persona (localStorage survives — only cnext-auth key changes)
     await switchPersona(page, SPD_AUTH);
 
     await page.goto('/th/spd/inbox');

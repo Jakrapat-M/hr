@@ -115,7 +115,7 @@ export const useAuthStore = create<AuthState>()(
       setHasHydrated: (v) => set({ _hasHydrated: v }),
     }),
     {
-      name: 'humi-auth',
+      name: 'cnext-auth',
       storage: createJSONStorage(() => localStorage),
       // exclude _hasHydrated from persist so it always starts false and set to true after rehydrate
       partialize: (state) => ({

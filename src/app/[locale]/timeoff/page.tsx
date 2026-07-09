@@ -11,7 +11,7 @@ import {
   CardEyebrow,
   CardTitle,
   LeaveRangeCalendar,
-} from '@/components/humi';
+} from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/date';
 import {
@@ -24,11 +24,11 @@ import {
 } from '@/lib/leave-math';
 import { DOCUMENT_UPLOAD_HELPER_TH, DOCUMENT_UPLOAD_HELPER_EN } from '@/lib/document-boundary';
 import {
-  HUMI_TH_HOLIDAYS,
-  HUMI_MY_PROFILE,
+  CNEXT_TH_HOLIDAYS,
+  CNEXT_MY_PROFILE,
   type LeaveKind,
-} from '@/lib/humi-mock-data';
-import { useTimeoffStore } from '@/stores/humi-timeoff-slice';
+} from '@/lib/cnext-mock-data';
+import { useTimeoffStore } from '@/stores/cnext-timeoff-slice';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
 import type { ApproverStage } from '@/data/benefits/plan-registry';
 import {
@@ -159,7 +159,7 @@ function QuotaCards({ isTh }: { isTh: boolean }) {
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label={label}
-                className="humi-progress mt-3"
+                className="cnext-progress mt-3"
               >
                 <div
                   className={cn('h-full rounded-full', QUOTA_BAR_CLASSES[quotaTypes.indexOf(t) % QUOTA_BAR_CLASSES.length])}
@@ -227,7 +227,7 @@ function useToast() {
   return { toast, show };
 }
 
-export default function HumiTimeoffPage() {
+export default function CnextTimeoffPage() {
   const params = useParams();
   const locale = (params?.locale as string) ?? 'th';
   const isTh = locale !== 'en';
@@ -262,7 +262,7 @@ export default function HumiTimeoffPage() {
       </nav>
 
       {/* Page header */}
-      <header className="humi-page-head mb-8">
+      <header className="cnext-page-head mb-8">
         <div className="flex flex-col gap-1">
           <CardEyebrow>{isTh ? 'ลางาน' : 'Time Off'}</CardEyebrow>
           <h1
@@ -404,7 +404,7 @@ function RequestTab({
       return calendarDayCount(fromISO, end);
     }
     return countLeaveDays(fromISO, end, {
-      holidays: HUMI_TH_HOLIDAYS,
+      holidays: CNEXT_TH_HOLIDAYS,
       halfDay: useHalf ? halfSlot : 'none',
     });
   }, [fromISO, toISO, def?.dayCountMode, useHalf, halfSlot, useHourly, hourlySpanValid, hourlyMinutes]);
@@ -464,16 +464,16 @@ function RequestTab({
   }, [ownIntervals, fromISO, toISO]);
 
   // STA-131 — new restriction predicates (day-off, min/max, service, gender,
-  // marital, one-time). Eligibility from the clean HUMI_MY_PROFILE enums; YoS via
+  // marital, one-time). Eligibility from the clean CNEXT_MY_PROFILE enums; YoS via
   // calcYearOfService. One-time looks at the employee's own non-rejected history
   // for a prior request of the SAME leave code. Each predicate no-ops when the
   // type carries no matching restriction, so the other types are unaffected.
   const eligibility = useMemo(
     () =>
       deriveEmployeeEligibility({
-        gender: HUMI_MY_PROFILE.gender,
-        maritalStatus: HUMI_MY_PROFILE.maritalStatus,
-        hireDate: HUMI_MY_PROFILE.hireDate,
+        gender: CNEXT_MY_PROFILE.gender,
+        maritalStatus: CNEXT_MY_PROFILE.maritalStatus,
+        hireDate: CNEXT_MY_PROFILE.hireDate,
       }),
     [],
   );
@@ -818,7 +818,7 @@ function RequestTab({
         <LeaveRangeCalendar
           from={fromISO}
           to={toISO}
-          holidays={HUMI_TH_HOLIDAYS}
+          holidays={CNEXT_TH_HOLIDAYS}
           locale={locale}
           isDateDisabled={isCalendarDateDisabled}
           overlapDates={overlapDates}
@@ -1070,7 +1070,7 @@ function RequestTab({
           ])
         }
         className={cn(
-          'humi-dropzone mt-3 flex min-h-[44px] items-center justify-center gap-2 text-small text-ink-muted',
+          'cnext-dropzone mt-3 flex min-h-[44px] items-center justify-center gap-2 text-small text-ink-muted',
           'w-full transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface'
         )}

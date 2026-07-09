@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { useLocale } from 'next-intl';
 import { Download } from 'lucide-react';
-import { Card, DemoValuesDisclaimer } from '@/components/humi';
+import { Card, DemoValuesDisclaimer } from '@/components/cnext';
 import { useDirectReports } from '@/hooks/use-direct-reports';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getMonthlySpendByReport, csvExport } from '@/lib/manager-reports-mock';

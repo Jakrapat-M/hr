@@ -114,8 +114,8 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
   const classFmt = employee.status === 'active' ? 'ทำงานอยู่' : 'ออกจากงาน'
 
   return (
-    <div className="humi-card humi-card--cream">
-      <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+    <div className="cnext-card cnext-card--cream">
+      <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
         {employee.employee_id}
       </div>
       <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
@@ -125,20 +125,20 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
         style={{ marginTop: 8 }}
       >
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>สถานะ</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>สถานะ</div>
           <div className="text-body font-medium text-ink">{classFmt}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>บริษัทปัจจุบัน</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>บริษัทปัจจุบัน</div>
           <div className="text-body font-medium text-ink">{employee.company}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
           <div className="text-body font-medium text-ink">{hireDateFmt}</div>
           <div className="text-small text-ink-muted">{tenure}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
           <div className="text-body font-medium text-ink">{employee.position_title}</div>
         </div>
       </div>
@@ -258,14 +258,14 @@ export default function TransferPage() {
         <div>
           <Link
             href={`/${locale}/admin/employees`}
-            className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+            className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
             style={{ display: 'inline-flex', gap: 6 }}
           >
             <ArrowLeft size={16} aria-hidden />
             <span>รายการพนักงาน</span>
           </Link>
         </div>
-        <div className="humi-card" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">ไม่พบพนักงานรหัส &ldquo;{empId}&rdquo;</p>
         </div>
       </div>
@@ -291,7 +291,7 @@ export default function TransferPage() {
       <div>
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -300,7 +300,7 @@ export default function TransferPage() {
       </div>
 
       {/* Page title */}
-      <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+      <div className="cnext-row" style={{ gap: 10, alignItems: 'center' }}>
         <div
           style={{
             width: 36, height: 36, borderRadius: 10,
@@ -312,7 +312,7 @@ export default function TransferPage() {
           <ArrowRightLeft size={18} aria-hidden />
         </div>
         <div>
-          <div className="humi-eyebrow">การดำเนินการ</div>
+          <div className="cnext-eyebrow">การดำเนินการ</div>
           <h1 className="font-display text-xl font-semibold text-ink">
             โอนย้ายพนักงาน
           </h1>
@@ -323,8 +323,8 @@ export default function TransferPage() {
       <EmployeeSnapshot employee={employee} />
 
       {/* Approval chain (SF FOEventReason routing — event 5604 TRN_*: manager → HRBP → HR Admin) */}
-      <div className="humi-card">
-        <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+      <div className="cnext-card">
+        <div className="cnext-eyebrow" style={{ marginBottom: 8 }}>
           {locale === 'en' ? 'Approval Chain' : 'ขั้นตอนอนุมัติ'}
         </div>
         <ApprovalChain
@@ -341,8 +341,8 @@ export default function TransferPage() {
         onEffectiveDateChange={(date) => patch({ effectiveDate: date })}
       >
         {() => (
-      <div className="humi-card">
-        <div className="humi-eyebrow" style={{ marginBottom: 16 }}>
+      <div className="cnext-card">
+        <div className="cnext-eyebrow" style={{ marginBottom: 16 }}>
           ข้อมูลการโอนย้าย
         </div>
 
@@ -359,7 +359,7 @@ export default function TransferPage() {
             id="targetCompany"
             value={movement.targetCompany}
             onChange={(e) => patch({ targetCompany: e.target.value })}
-            className="humi-input"
+            className="cnext-input"
             style={{ maxWidth: 400 }}
             aria-label="เลือกบริษัทปลายทาง"
           >
@@ -385,7 +385,7 @@ export default function TransferPage() {
             id="targetBusinessUnit"
             value={movement.targetBusinessUnit}
             onChange={(e) => patch({ targetBusinessUnit: e.target.value })}
-            className="humi-input w-full"
+            className="cnext-input w-full"
             style={{ maxWidth: 400 }}
             aria-label="หน่วยงานปลายทาง"
           >
@@ -441,13 +441,13 @@ export default function TransferPage() {
             value={movement.targetLocation}
             onChange={(e) => patch({ targetLocation: e.target.value })}
             placeholder="เช่น สำนักงานใหญ่, สาขาเชียงใหม่"
-            className="humi-input"
+            className="cnext-input"
             style={{ maxWidth: 400 }}
             aria-label="สถานที่ปลายทาง"
           />
         </div>
 
-        <hr className="humi-divider" />
+        <hr className="cnext-divider" />
 
         {/* ── Cost Center (optional, English label OK) ── */}
         <div style={{ marginBottom: 20 }}>
@@ -464,13 +464,13 @@ export default function TransferPage() {
             value={movement.costCenter}
             onChange={(e) => patch({ costCenter: e.target.value })}
             placeholder="เช่น CC-1001"
-            className="humi-input"
+            className="cnext-input"
             style={{ maxWidth: 240 }}
             aria-label="Cost Center"
           />
         </div>
 
-        <hr className="humi-divider" />
+        <hr className="cnext-divider" />
 
         {/* ── เหตุผล (optional) ── */}
         <div style={{ marginBottom: 20 }}>
@@ -487,7 +487,7 @@ export default function TransferPage() {
             onChange={(e) => patch({ reason: e.target.value })}
             rows={3}
             placeholder="เหตุผลในการโอนย้าย..."
-            className="humi-input"
+            className="cnext-input"
             style={{ width: '100%', resize: 'vertical' }}
             aria-label="เหตุผลการโอนย้าย"
           />
@@ -507,7 +507,7 @@ export default function TransferPage() {
             type="text"
             value={movement.migrationNote}
             onChange={(e) => patch({ migrationNote: e.target.value })}
-            className="humi-input"
+            className="cnext-input"
             style={{ maxWidth: 400 }}
             aria-label="หมายเหตุการโอนย้าย (auto-filled)"
           />
@@ -517,17 +517,17 @@ export default function TransferPage() {
         </div>
 
         {/* ── Submit button ── */}
-        <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
+        <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
           <Link
             href={`/${locale}/admin/employees/${empId}`}
-            className="humi-btn humi-btn--ghost"
+            className="cnext-btn cnext-btn--ghost"
           >
             ยกเลิก
           </Link>
           <button
             onClick={doSubmit}
             disabled={!isValid || submitted}
-            className="humi-btn humi-btn--primary"
+            className="cnext-btn cnext-btn--primary"
             aria-disabled={!isValid || submitted}
           >
             บันทึกการโอนย้าย

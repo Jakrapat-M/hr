@@ -12,7 +12,7 @@
 //   Child data preserved across gate reopen (I8)
 //
 // API: see EffectiveDateGateProps below (spec §5.1)
-// Humi tokens: uses humi-input, humi-label, humi-card, humi-eyebrow, warning/accent CSS vars
+// Cnext tokens: uses cnext-input, cnext-label, cnext-card, cnext-eyebrow, warning/accent CSS vars
 // NO global * reset — Tailwind utilities only (rule 26b)
 // Thai-primary copy (rule C10 + feedback_no_sf_style_bilingual_labels)
 
@@ -64,7 +64,7 @@ function formatThaiDate(isoDate: string): string {
   })
 }
 
-// ─── Minimal inline Callout (no <Callout> primitive in humi/) ──
+// ─── Minimal inline Callout (no <Callout> primitive in cnext/) ──
 
 interface CalloutProps {
   children: ReactNode
@@ -118,9 +118,9 @@ function GateCard({ label, instructions, min, max, onConfirm, inputId }: GateCar
   }
 
   return (
-    <div className="humi-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="cnext-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <div className="humi-eyebrow" style={{ marginBottom: 6 }}>วันมีผล</div>
+        <div className="cnext-eyebrow" style={{ marginBottom: 6 }}>วันมีผล</div>
         <h2
           className="font-display"
           style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}
@@ -133,9 +133,9 @@ function GateCard({ label, instructions, min, max, onConfirm, inputId }: GateCar
       </div>
 
       <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-        <label htmlFor={inputId} className="humi-label">
+        <label htmlFor={inputId} className="cnext-label">
           {label}
-          <span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+          <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <input
           id={inputId}
@@ -147,11 +147,11 @@ function GateCard({ label, instructions, min, max, onConfirm, inputId }: GateCar
           aria-invalid={!!error || undefined}
           aria-label={label}
           onChange={handleChange}
-          className="humi-input"
+          className="cnext-input"
           style={{ display: 'block', marginTop: 6 }}
         />
         {error && (
-          <p role="alert" className="humi-error" style={{ marginTop: 6 }}>
+          <p role="alert" className="cnext-error" style={{ marginTop: 6 }}>
             {error}
           </p>
         )}
@@ -163,7 +163,7 @@ function GateCard({ label, instructions, min, max, onConfirm, inputId }: GateCar
           onClick={handleConfirm}
           disabled={!isValid}
           aria-disabled={!isValid}
-          className="humi-btn humi-btn--primary w-full sm:w-auto"
+          className="cnext-btn cnext-btn--primary w-full sm:w-auto"
           style={{
             padding: '10px 24px',
             borderRadius: 'var(--radius-md)',
@@ -214,7 +214,7 @@ function GateModal({ label, instructions, min, max, onConfirm, onCancel, inputId
       }}
     >
       <div
-        className="humi-card"
+        className="cnext-card"
         style={{ width: '100%', maxWidth: 480, margin: '0 16px', display: 'flex', flexDirection: 'column', gap: 16 }}
       >
         <GateCard

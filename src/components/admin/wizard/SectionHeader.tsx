@@ -21,8 +21,8 @@ export function SectionHeader({ icon: Icon, eyebrow, title, sub }: SectionHeader
       </div>
       <div className="min-w-0">
         <div className="mb-0.5 text-xs font-semibold tracking-[0.08em] text-ink-muted">{eyebrow}</div>
-        <h3 className="humi-section-title">{title}</h3>
-        <p className="humi-section-sub" style={{ marginBottom: 0 }}>{sub}</p>
+        <h3 className="cnext-section-title">{title}</h3>
+        <p className="cnext-section-sub" style={{ marginBottom: 0 }}>{sub}</p>
       </div>
     </div>
   )

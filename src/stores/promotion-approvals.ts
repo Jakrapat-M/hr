@@ -143,7 +143,7 @@ export const usePromotionApprovals = create<PromotionApprovalsState>()(
       clear: () => set({ requests: [] }),
     }),
     {
-      name: 'humi-promotion-approvals',
+      name: 'cnext-promotion-approvals',
       storage: createJSONStorage(() => localStorage),
     },
   ),

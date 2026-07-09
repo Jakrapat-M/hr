@@ -9,7 +9,7 @@
 // resolves to a parent toast, no backend.
 
 import { useState } from 'react';
-import { Modal, Button } from '@/components/humi';
+import { Modal, Button } from '@/components/cnext';
 import type { ShiftCell } from './WeeklyTimesheetGrid';
 import {
   breakStartFromShiftStart,

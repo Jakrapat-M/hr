@@ -3,7 +3,7 @@
 // LoginScreen.jsx (Thai)
 function LoginScreen({ onNav }) {
   const Ic = window.I;
-  const [email, setEmail] = React.useState("ava.reyes@humi.shop");
+  const [email, setEmail] = React.useState("ava.reyes@cnext.shop");
   const [pw, setPw] = React.useState("••••••••••");
 
   return (
@@ -15,7 +15,7 @@ function LoginScreen({ onNav }) {
 
         <div className="row" style={{gap: 10}}>
           <div style={{fontFamily:"var(--font-display)", fontWeight: 700, fontSize: 36, letterSpacing:"-0.04em", color:"#FCFAF5", display:"flex", alignItems:"center", gap: 2}}>
-            Humi<window.ShelflyMark size={30} color="var(--accent)"/>
+            Cnext<window.ShelflyMark size={30} color="var(--accent)"/>
           </div>
         </div>
 
@@ -30,7 +30,7 @@ function LoginScreen({ onNav }) {
 
           <div style={{marginTop: 36, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: 22, maxWidth: 500, backdropFilter: "blur(4px)"}}>
             <div style={{fontFamily:"var(--font-display)", fontSize: 17, color:"#FCFAF5", lineHeight: 1.6}}>
-              "เราลดเวลาจัดการเงินเดือนได้ถึงหนึ่งในสาม ภายในไตรมาสแรกที่ใช้ Humi ทีมหน้าร้านก็อ่านฟีดข่าวสารจริงๆ แล้ว"
+              "เราลดเวลาจัดการเงินเดือนได้ถึงหนึ่งในสาม ภายในไตรมาสแรกที่ใช้ Cnext ทีมหน้าร้านก็อ่านฟีดข่าวสารจริงๆ แล้ว"
             </div>
             <div className="row" style={{marginTop: 14, gap: 10}}>
               <div className="avatar sage">DL</div>
@@ -46,7 +46,7 @@ function LoginScreen({ onNav }) {
       <div className="login-form">
         <div style={{maxWidth: 400, width:"100%"}}>
           <div className="eyebrow">ยินดีต้อนรับกลับ</div>
-          <h1 style={{fontSize: 34, marginTop: 10}}>เข้าสู่ระบบ Humi</h1>
+          <h1 style={{fontSize: 34, marginTop: 10}}>เข้าสู่ระบบ Cnext</h1>
           <p style={{color:"var(--ink-3)", fontSize: 14, marginTop: 8, lineHeight: 1.6}}>ใช้อีเมลที่ทำงานของคุณ หากคุณเข้างานที่หน้าร้าน กรุณาสแกน QR บนโปสเตอร์ในห้องพนักงาน</p>
 
           <div className="col" style={{gap: 14, marginTop: 28}}>

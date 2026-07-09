@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Modal, Button } from '@/components/humi';
+import { Modal, Button } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import {
  CheckCircle,

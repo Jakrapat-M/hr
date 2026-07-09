@@ -1,14 +1,14 @@
 'use client';
 
 // SubjectPicker — Step 0 of the Bulk Import hub. Renders the IMPORT_SUBJECTS as
-// Humi Card radio-cards. Selecting an enabled card calls onSelect(key); a
+// Cnext Card radio-cards. Selecting an enabled card calls onSelect(key); a
 // disabled subject renders a non-selectable "Coming soon" card.
 //
 // NO-RED: selection uses the teal accent ring (ring-accent-soft); disabled uses
 // muted/neutral tokens. No danger styling here.
 
 import { useTranslations } from 'next-intl';
-import { Card, CardEyebrow } from '@/components/humi';
+import { Card, CardEyebrow } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { IMPORT_SUBJECTS } from '@/components/admin/import/subject-registry';
 

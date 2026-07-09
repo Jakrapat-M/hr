@@ -120,7 +120,7 @@ describe('hire wizard BA attachment rows beyond Work Permit', () => {
 
   for (const section of candidateSections) {
     if (sourceFor(section).includes('AttachmentDropzone')) {
-      it(`${section.name} renders the Humi attachment dropzone instead of a filename text input`, () => {
+      it(`${section.name} renders the Cnext attachment dropzone instead of a filename text input`, () => {
         act(() => {
           section.setup?.()
         })
@@ -137,7 +137,7 @@ describe('hire wizard BA attachment rows beyond Work Permit', () => {
 })
 
 describe('hire compensation payment information copy', () => {
-  it('renders the P0 payment account slice with Thai-primary Humi field labels', () => {
+  it('renders the P0 payment account slice with Thai-primary Cnext field labels', () => {
     render(<StepCompensation />)
 
     expect(screen.getByText('ข้อมูลบัญชีจ่ายเงินเดือน')).toBeInTheDocument()

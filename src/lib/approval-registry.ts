@@ -539,7 +539,7 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
   },
 
   // change_request → workflow-approvals: approve({role,name}) + multi-step nextStep.
-  // NOT humi-requests-slice (which has only submit/setFilter). Default role 'spd'
+  // NOT cnext-requests-slice (which has only submit/setFilter). Default role 'spd'
   // since the canonical personal-info chain is the SPD single step (BRD #166).
   change_request: {
     toQueueItem: (record) =>

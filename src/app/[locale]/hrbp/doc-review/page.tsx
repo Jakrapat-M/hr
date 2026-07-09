@@ -12,7 +12,7 @@
 import { useState, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { FileText, ClipboardCheck, Clock, CheckCircle2 } from 'lucide-react';
-import { Button, Modal } from '@/components/humi';
+import { Button, Modal } from '@/components/cnext';
 import { useToast } from '@/components/ui/toast';
 import {
   DOCUMENT_TEMPLATES,
@@ -137,13 +137,13 @@ export default function HrbpDocReviewPage() {
       {outstanding.length === 0 ? (
         <div
           data-testid="doc-review-empty"
-          className="humi-card p-12 text-center text-ink-muted"
+          className="cnext-card p-12 text-center text-ink-muted"
         >
           <CheckCircle2 size={36} aria-hidden className="mx-auto mb-3 block opacity-30" />
           <p>{t('empty')}</p>
         </div>
       ) : (
-        <div className="humi-card overflow-hidden p-0">
+        <div className="cnext-card overflow-hidden p-0">
           <table className="w-full border-collapse" data-testid="doc-review-table">
             <thead>
               <tr className="bg-surface-muted text-xs text-ink-muted">

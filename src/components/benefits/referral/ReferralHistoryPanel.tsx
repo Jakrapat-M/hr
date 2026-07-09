@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, CardEyebrow, CardTitle } from '@/components/humi';
+import { Button, Card, CardEyebrow, CardTitle } from '@/components/cnext';
 import { BENEFIT_REFERRAL_STATUS_LABEL, useBenefitReferralsStore, type BenefitReferralRequest } from '@/stores/benefit-referrals';
 import { ReferralLetterPreview } from './ReferralLetterPreview';
 
@@ -23,7 +23,7 @@ export function ReferralHistoryPanel() {
                 <div className="mt-1 text-small text-ink-muted">{referral.coveredPersonName} · นัด {referral.preferredVisitDate} · {referral.serviceReason}</div>
                 {(referral.correctionReason || referral.rejectionReason) && <div className="mt-2 rounded-md bg-surface p-2 text-small text-ink">{referral.correctionReason ?? referral.rejectionReason}</div>}
               </div>
-              <span className="humi-tag">{BENEFIT_REFERRAL_STATUS_LABEL[referral.status]}</span>
+              <span className="cnext-tag">{BENEFIT_REFERRAL_STATUS_LABEL[referral.status]}</span>
             </div>
             <div className="mt-3 flex flex-wrap justify-end gap-2">
               <Button variant="ghost" size="sm" disabled={referral.status !== 'letter_issued'} onClick={() => setSelected(referral)}>ดูใบส่งตัว</Button>

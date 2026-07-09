@@ -7,7 +7,7 @@
 import { useState, useMemo } from 'react';
 import { useLocale } from 'next-intl';
 import { Download } from 'lucide-react';
-import { Card, DemoValuesDisclaimer } from '@/components/humi';
+import { Card, DemoValuesDisclaimer } from '@/components/cnext';
 import { getEnrollmentByPlan } from '@/lib/hrbp-reports-mock';
 import { csvExport } from '@/lib/manager-reports-mock';
 import { cn } from '@/lib/utils';

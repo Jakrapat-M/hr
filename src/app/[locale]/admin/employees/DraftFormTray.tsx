@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { FileText, Play, Trash2 } from 'lucide-react';
-import { Button, DataTable, EmptyState, Modal, type DataTableColumn } from '@/components/humi';
+import { Button, DataTable, EmptyState, Modal, type DataTableColumn } from '@/components/cnext';
 import { useHireDraftsStore, type HireDraft } from '@/stores/hire-drafts-store';
 import { useHireWizard } from '@/lib/admin/store/useHireWizard';
 import { formatDate } from '@/lib/date';

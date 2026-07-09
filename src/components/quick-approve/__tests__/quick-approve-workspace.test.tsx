@@ -41,8 +41,8 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-// ── Stub heavy Humi primitives ──────────────────────────────────────────────
-vi.mock('@/components/humi/Card', () => ({
+// ── Stub heavy Cnext primitives ──────────────────────────────────────────────
+vi.mock('@/components/cnext/Card', () => ({
   Card: ({
     children,
     header,
@@ -59,7 +59,7 @@ vi.mock('@/components/humi/Card', () => ({
   cardVariants: {},
 }));
 
-vi.mock('@/components/humi/Button', () => ({
+vi.mock('@/components/cnext/Button', () => ({
   Button: ({
     children,
     onClick,
@@ -83,7 +83,7 @@ vi.mock('@/components/humi/Button', () => ({
   buttonVariants: {},
 }));
 
-vi.mock('@/components/humi/Modal', () => ({
+vi.mock('@/components/cnext/Modal', () => ({
   Modal: ({
     open,
     children,
@@ -101,7 +101,7 @@ vi.mock('@/components/humi/Modal', () => ({
     ) : null,
 }));
 
-vi.mock('@/components/humi/DataTable', () => ({
+vi.mock('@/components/cnext/DataTable', () => ({
   DataTable: ({
     rows,
     emptyState,
@@ -122,18 +122,18 @@ vi.mock('@/components/humi/DataTable', () => ({
 }));
 
 // ── Capability: pass-through to real implementation ─────────────────────────
-// We do NOT mock @/hooks/use-capabilities or @/components/humi/Capability.
+// We do NOT mock @/hooks/use-capabilities or @/components/cnext/Capability.
 // The real Capability component reads from the Zustand auth-store which we
 // control via useAuthStore.setState in each test helper.
 // This avoids all require()-inside-vi.mock patterns.
 
-// ── Barrel re-export of humi — inline stubs matching the individual mocks ───
+// ── Barrel re-export of cnext — inline stubs matching the individual mocks ───
 // NOTE: vi.importActual on already-mocked modules returns the mock, not the
 // original. We inline the stubs here to avoid that confusion.
-vi.mock('@/components/humi', async () => {
+vi.mock('@/components/cnext', async () => {
   // Capability: import the real implementation so RBAC gates work
-  const { Capability } = await vi.importActual<typeof import('@/components/humi/Capability')>(
-    '@/components/humi/Capability',
+  const { Capability } = await vi.importActual<typeof import('@/components/cnext/Capability')>(
+    '@/components/cnext/Capability',
   );
   return {
     Card: ({ children, header }: { children: React.ReactNode; header?: React.ReactNode }) => (
@@ -255,7 +255,7 @@ function setPersona(
   useAuthStore.setState({
     userId: opts?.userId ?? 'TEST-001',
     username: opts?.username ?? 'Test User',
-    email: 'test@humi.test',
+    email: 'test@cnext.test',
     roles,
     isAuthenticated: true,
     originalUser: opts?.originalUser ?? null,
@@ -444,7 +444,7 @@ describe('Delegation banner (proxy mode)', () => {
       originalUser: {
         userId: 'ORIG-001',
         username: 'Original Manager',
-        email: 'orig@humi.test',
+        email: 'orig@cnext.test',
         roles: ['manager'],
       },
     });

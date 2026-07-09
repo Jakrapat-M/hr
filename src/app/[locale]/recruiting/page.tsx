@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { ExternalLink, ArrowRight } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 
 export default function RecruitingPage() {
   const t = useTranslations('pages.recruitingExt');

@@ -63,21 +63,21 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
     ?? employee.position_title
 
   return (
-    <div className="humi-card humi-card--cream">
-      <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
+    <div className="cnext-card cnext-card--cream">
+      <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
       <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
       <div className="text-small text-ink-muted mb-3">{nameEn}</div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" style={{ marginTop: 8 }}>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>บริษัท</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>บริษัท</div>
           <div className="text-body font-medium text-ink">{employee.company}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่งปัจจุบัน</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่งปัจจุบัน</div>
           <div className="text-body font-medium text-ink">{currentTitle}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
           <div className="text-body font-medium text-ink">{hireDateFmt}</div>
           <div className="text-small text-ink-muted">{tenure}</div>
         </div>
@@ -158,14 +158,14 @@ export default function ActingPage() {
         <div>
           <Link
             href={`/${locale}/admin/employees`}
-            className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+            className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
             style={{ display: 'inline-flex', gap: 6 }}
           >
             <ArrowLeft size={16} aria-hidden />
             <span>รายการพนักงาน</span>
           </Link>
         </div>
-        <div className="humi-card" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">ไม่พบพนักงานรหัส &ldquo;{empId}&rdquo;</p>
         </div>
       </div>
@@ -191,7 +191,7 @@ export default function ActingPage() {
       <div>
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -200,7 +200,7 @@ export default function ActingPage() {
       </div>
 
       {/* Page title */}
-      <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+      <div className="cnext-row" style={{ gap: 10, alignItems: 'center' }}>
         <div
           style={{
             width: 36, height: 36, borderRadius: 10,
@@ -212,7 +212,7 @@ export default function ActingPage() {
           <Star size={18} aria-hidden />
         </div>
         <div>
-          <div className="humi-eyebrow">การดำเนินการ</div>
+          <div className="cnext-eyebrow">การดำเนินการ</div>
           <h1 className="font-display text-xl font-semibold text-ink">มอบหมายปฏิบัติการ</h1>
         </div>
       </div>
@@ -221,8 +221,8 @@ export default function ActingPage() {
       <EmployeeSnapshot employee={employee} />
 
       {/* Approval chain (acting: manager nominates, HR Admin confirms) */}
-      <div className="humi-card">
-        <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+      <div className="cnext-card">
+        <div className="cnext-eyebrow" style={{ marginBottom: 8 }}>
           {locale === 'en' ? 'Approval Chain' : 'ขั้นตอนอนุมัติ'}
         </div>
         <ApprovalChain
@@ -239,8 +239,8 @@ export default function ActingPage() {
         onEffectiveDateChange={(date) => setEffectiveDate(date)}
       >
         {() => (
-          <div className="humi-card">
-            <div className="humi-eyebrow" style={{ marginBottom: 16 }}>ข้อมูลรักษาการ</div>
+          <div className="cnext-card">
+            <div className="cnext-eyebrow" style={{ marginBottom: 16 }}>ข้อมูลรักษาการ</div>
 
             {/* ── ตำแหน่งที่รักษาการ (required) — BRD #104: PositionLookup replaces free-text ── */}
             <div style={{ marginBottom: 20 }}>
@@ -281,7 +281,7 @@ export default function ActingPage() {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 min={effectiveDate ?? undefined}
-                className="humi-input"
+                className="cnext-input"
                 style={{ maxWidth: 200 }}
                 aria-label="วันที่สิ้นสุดรักษาการ"
               />
@@ -291,7 +291,7 @@ export default function ActingPage() {
             <div style={{ marginBottom: 20 }}>
               <label
                 htmlFor="isPrimary"
-                className="humi-row text-body font-semibold text-ink"
+                className="cnext-row text-body font-semibold text-ink"
                 style={{ gap: 10, cursor: 'pointer', display: 'inline-flex' }}
               >
                 <input
@@ -324,17 +324,17 @@ export default function ActingPage() {
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 placeholder="หมายเหตุเพิ่มเติม..."
-                className="humi-input"
+                className="cnext-input"
                 style={{ width: '100%', resize: 'vertical', maxWidth: 560 }}
                 aria-label="หมายเหตุ"
               />
             </div>
 
             {/* ── Action buttons ── */}
-            <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
+            <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
               <Link
                 href={`/${locale}/admin/employees/${empId}`}
-                className="humi-btn humi-btn--ghost"
+                className="cnext-btn cnext-btn--ghost"
               >
                 ยกเลิก
               </Link>
@@ -342,7 +342,7 @@ export default function ActingPage() {
                 type="button"
                 onClick={doSubmit}
                 disabled={!isFormValid || submitted}
-                className="humi-btn humi-btn--primary"
+                className="cnext-btn cnext-btn--primary"
                 aria-disabled={!isFormValid || submitted}
               >
                 บันทึกรักษาการ

@@ -19,7 +19,7 @@
 import { useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { ChevronRight, Paperclip, X, Trash2 } from 'lucide-react';
-import { Card, Button, FormField, FormInput, Textarea } from '@/components/humi';
+import { Card, Button, FormField, FormInput, Textarea } from '@/components/cnext';
 import {
   useTimeCorrections,
   CORRECTION_TYPE_LABEL,
@@ -673,7 +673,7 @@ export function TimeCorrectionForm({
 
         <div className="flex items-center justify-end gap-3 pt-1">
           {onCancel && (
-            <button type="button" onClick={onCancel} className="humi-button humi-button--ghost" style={{ fontSize: 14 }}>
+            <button type="button" onClick={onCancel} className="cnext-button cnext-button--ghost" style={{ fontSize: 14 }}>
               {isTh ? 'ยกเลิก' : 'Cancel'}
             </button>
           )}

@@ -135,8 +135,8 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
               {/* ชื่อ — SF: name (sap_required=true) */}
               <fieldset>
-                <label htmlFor={`ec-name-${idx}`} className="humi-label">
-                  ชื่อ / Name<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                <label htmlFor={`ec-name-${idx}`} className="cnext-label">
+                  ชื่อ / Name<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
                 </label>
                 <input
                   id={`ec-name-${idx}`}
@@ -145,7 +145,7 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
                   value={ec.name}
                   onChange={(e) => updateEntry(idx, { name: e.target.value })}
                   aria-invalid={nameError ? 'true' : 'false'}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
                 {nameError && (
                   <p role="alert" className="mt-1 text-xs text-warning">กรุณาระบุชื่อ</p>
@@ -154,8 +154,8 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
 
               {/* ความสัมพันธ์ — SF: relationship (Edm.String maxLength=50, free-text) */}
               <fieldset>
-                <label htmlFor={`ec-rel-${idx}`} className="humi-label">
-                  ความสัมพันธ์ / Relationship<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                <label htmlFor={`ec-rel-${idx}`} className="cnext-label">
+                  ความสัมพันธ์ / Relationship<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
                 </label>
                 <input
                   id={`ec-rel-${idx}`}
@@ -166,7 +166,7 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
                   maxLength={50}
                   onChange={(e) => updateEntry(idx, { relationship: e.target.value })}
                   aria-invalid={relError ? 'true' : 'false'}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
                 <datalist id={`ec-rel-hints-${idx}`}>
                   {RELATIONSHIP_HINTS.map((hint) => (
@@ -180,8 +180,8 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
 
               {/* เบอร์โทร — SF: phone (sap_required=false but UI-required) */}
               <fieldset>
-                <label htmlFor={`ec-phone-${idx}`} className="humi-label">
-                  เบอร์โทร / Phone<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                <label htmlFor={`ec-phone-${idx}`} className="cnext-label">
+                  เบอร์โทร / Phone<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
                 </label>
                 <input
                   id={`ec-phone-${idx}`}
@@ -190,7 +190,7 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
                   value={ec.phone}
                   onChange={(e) => updateEntry(idx, { phone: e.target.value })}
                   aria-invalid={phoneError ? 'true' : 'false'}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
                 {phoneError && (
                   <p role="alert" className="mt-1 text-xs text-warning">กรุณาระบุเบอร์โทร</p>
@@ -234,7 +234,7 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
 
                 {/* ประเทศ — SF: addressCountry (ISO3, default THA) */}
                 <fieldset>
-                  <label htmlFor={`ec-country-${idx}`} className="humi-label">
+                  <label htmlFor={`ec-country-${idx}`} className="cnext-label">
                     ประเทศ / Country
                   </label>
                   <input
@@ -243,13 +243,13 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
                     placeholder="THA"
                     value={ec.addressCountry}
                     onChange={(e) => updateEntry(idx, { addressCountry: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 {/* จังหวัด — SF: addressCustomString1 + addressCustomString12 (Province cascade pair) */}
                 <fieldset>
-                  <label htmlFor={`ec-province-${idx}`} className="humi-label">
+                  <label htmlFor={`ec-province-${idx}`} className="cnext-label">
                     จังหวัด / Province
                   </label>
                   <input
@@ -258,13 +258,13 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
                     placeholder="จังหวัด"
                     value={ec.addressProvince}
                     onChange={(e) => updateEntry(idx, { addressProvince: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 {/* อำเภอ/เขต — SF: addressCustomString2 + addressCustomString13 (District cascade pair) */}
                 <fieldset>
-                  <label htmlFor={`ec-district-${idx}`} className="humi-label">
+                  <label htmlFor={`ec-district-${idx}`} className="cnext-label">
                     อำเภอ/เขต / District
                   </label>
                   <input
@@ -273,13 +273,13 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
                     placeholder="อำเภอ หรือ เขต"
                     value={ec.addressDistrict}
                     onChange={(e) => updateEntry(idx, { addressDistrict: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 {/* ตำบล/แขวง — SF: addressCustomString3 (Sub-District) */}
                 <fieldset>
-                  <label htmlFor={`ec-subdistrict-${idx}`} className="humi-label">
+                  <label htmlFor={`ec-subdistrict-${idx}`} className="cnext-label">
                     ตำบล/แขวง / Sub-District
                   </label>
                   <input
@@ -288,13 +288,13 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
                     placeholder="ตำบล หรือ แขวง"
                     value={ec.addressSubDistrict}
                     onChange={(e) => updateEntry(idx, { addressSubDistrict: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 {/* รหัสไปรษณีย์ — SF: addressCustomString4 (Postal Code) */}
                 <fieldset>
-                  <label htmlFor={`ec-postal-${idx}`} className="humi-label">
+                  <label htmlFor={`ec-postal-${idx}`} className="cnext-label">
                     รหัสไปรษณีย์ / Postal Code
                   </label>
                   <input
@@ -304,7 +304,7 @@ export default function StepEmergencyContacts({ onValidChange }: StepEmergencyCo
                     placeholder="10000"
                     value={ec.addressPostalCode}
                     onChange={(e) => updateEntry(idx, { addressPostalCode: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 

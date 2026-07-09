@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render, screen, fireEvent, within } from '@testing-library/react';
 import { useEssRequestActions } from '@/stores/ess-request-actions';
-import { useRequestsStore } from '@/stores/humi-requests-slice';
+import { useRequestsStore } from '@/stores/cnext-requests-slice';
 import { useBenefitClaimsStore } from '@/stores/benefit-claims';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 import { useBenefitTaxPlanningStore } from '@/stores/benefit-tax-planning';
@@ -29,7 +29,7 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-// The single sent-back mock row (HUMI_MY_REQUESTS, status 'info', no requesterId).
+// The single sent-back mock row (CNEXT_MY_REQUESTS, status 'info', no requesterId).
 const SENT_BACK_ID = 'REQ-2442';
 
 async function renderRequests() {
@@ -91,8 +91,8 @@ describe('STA-193 — ESS withdraw / revise-resubmit on sent-back requests', () 
     const tileValue = (label: string) => {
       const eyebrow = screen
         .getAllByText(label)
-        .find((el) => el.closest('.humi-stat-card'));
-      return Number(eyebrow?.closest('.humi-stat-card')?.querySelector('p')?.textContent ?? 'NaN');
+        .find((el) => el.closest('.cnext-stat-card'));
+      return Number(eyebrow?.closest('.cnext-stat-card')?.querySelector('p')?.textContent ?? 'NaN');
     };
     await renderRequests();
     const infoBefore = tileValue('ขอข้อมูลเพิ่ม');

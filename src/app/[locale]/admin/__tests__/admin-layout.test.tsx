@@ -24,7 +24,7 @@ function setRoles(
   useAuthStore.setState({
     userId: 'TEST',
     username: 'tester',
-    email: 'tester@humi.test',
+    email: 'tester@cnext.test',
     roles,
     isAuthenticated: true,
     originalUser: null,

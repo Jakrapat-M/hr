@@ -24,7 +24,7 @@ import {
 import { useAuthStore } from '@/stores/auth-store';
 import { personaTiers } from '@/lib/persona-tiers';
 import { formatDate } from '@/lib/date';
-import { Modal } from '@/components/humi';
+import { Modal } from '@/components/cnext';
 
 // Probation Manager Approve — ref design layout (prod-probation.jsx · ProbationApprove)
 // reconciled to the BA-approved field set: 3 outcome cards + conditional BA fields.
@@ -215,7 +215,7 @@ function ApprovalChainStep({ step, isLast }: { step: ApprovalStep; isLast: boole
         <div className={`text-sm font-semibold ${isCurrent ? 'text-accent' : 'text-ink'}`}>
           {step.label}
           {isCurrent && (
-            <span className="humi-tag humi-tag--accent ml-1.5 text-xs">กำลังดำเนินการ</span>
+            <span className="cnext-tag cnext-tag--accent ml-1.5 text-xs">กำลังดำเนินการ</span>
           )}
         </div>
         <div className="mt-0.5 text-xs text-ink-muted">{step.sub}</div>
@@ -352,7 +352,7 @@ export default function ProbationDetailPage() {
 
   if (!c) {
     return (
-      <div className="humi-card text-center">
+      <div className="cnext-card text-center">
         <p className="text-ink-muted">ไม่พบเคส {id}</p>
       </div>
     );
@@ -420,9 +420,9 @@ export default function ProbationDetailPage() {
         {/* LEFT — main form */}
         <div className="flex flex-col gap-5">
           {/* Employee snapshot */}
-          <div className="humi-card humi-card--cream">
+          <div className="cnext-card cnext-card--cream">
             <div className="flex items-start gap-3.5">
-              <div className="humi-avatar humi-avatar--teal flex h-14 w-14 flex-shrink-0 items-center justify-center text-base">
+              <div className="cnext-avatar cnext-avatar--teal flex h-14 w-14 flex-shrink-0 items-center justify-center text-base">
                 {initials(c.fullNameEn || c.fullNameTh)}
               </div>
               <div className="min-w-0 flex-1">
@@ -456,7 +456,7 @@ export default function ProbationDetailPage() {
           </div>
 
           {/* Outcome decision */}
-          <div className="humi-card">
+          <div className="cnext-card">
             <div className="mb-2">{eyebrow('การตัดสินใจ')}</div>
             <h3 className="mb-3.5 font-display text-lg font-semibold tracking-tight text-ink">
               ผลการประเมิน <span className="text-accent">*</span>
@@ -611,7 +611,7 @@ export default function ProbationDetailPage() {
         <div className="flex flex-col gap-5">
           {/* HRBP action seam — tier B viewer on a pending_hr case (STA-23) */}
           {isHrbpViewer && c.status === 'pending_hr' && (
-            <div className="humi-card">
+            <div className="cnext-card">
               <div className="mb-2 flex items-center gap-2">
                 <span className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] bg-accent-soft text-accent">
                   <UserCheck className="h-4 w-4" />
@@ -637,7 +637,7 @@ export default function ProbationDetailPage() {
                   <button
                     type="button"
                     onClick={() => markExemptPassed()}
-                    className="humi-button humi-button--primary inline-flex w-full items-center justify-center gap-1.5"
+                    className="cnext-button cnext-button--primary inline-flex w-full items-center justify-center gap-1.5"
                   >
                     <Check className="h-3.5 w-3.5" />
                     {isTh ? 'บรรจุ (ยกเว้นทดลองงาน)' : 'Mark passed (exempt)'}
@@ -653,7 +653,7 @@ export default function ProbationDetailPage() {
                   <button
                     type="button"
                     onClick={() => hrbpApprove()}
-                    className="humi-button humi-button--primary mb-3 inline-flex w-full items-center justify-center gap-1.5"
+                    className="cnext-button cnext-button--primary mb-3 inline-flex w-full items-center justify-center gap-1.5"
                   >
                     <Check className="h-3.5 w-3.5" />
                     {isTh ? 'อนุมัติ (HRBP)' : 'Approve (HRBP)'}
@@ -677,7 +677,7 @@ export default function ProbationDetailPage() {
                       type="button"
                       onClick={() => sendBackToManager(sendBackReason.trim())}
                       disabled={!sendBackReason.trim()}
-                      className="humi-button humi-button--ghost mt-2.5 inline-flex w-full items-center justify-center gap-1.5 border border-warning text-warning-ink disabled:cursor-not-allowed disabled:opacity-50"
+                      className="cnext-button cnext-button--ghost mt-2.5 inline-flex w-full items-center justify-center gap-1.5 border border-warning text-warning-ink disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <CornerUpLeft className="h-3.5 w-3.5" />
                       {isTh ? 'ส่งกลับให้หัวหน้างาน' : 'Send back to manager'}
@@ -689,7 +689,7 @@ export default function ProbationDetailPage() {
           )}
 
           {/* Approval chain */}
-          <div className="humi-card">
+          <div className="cnext-card">
             <div className="mb-3">{eyebrow('ขั้นตอนอนุมัติ')}</div>
             <div className="flex flex-col">
               {approvalSteps.map((step, i) => (
@@ -699,7 +699,7 @@ export default function ProbationDetailPage() {
           </div>
 
           {/* History */}
-          <div className="humi-card humi-card--cream">
+          <div className="cnext-card cnext-card--cream">
             <div className="mb-2.5">{eyebrow('ประวัติเคส')}</div>
             <div className="flex flex-col gap-3">
               {historyEvents.map((h, i) => (
@@ -715,9 +715,9 @@ export default function ProbationDetailPage() {
           </div>
 
           {/* Policy ink-card */}
-          <div className="humi-card humi-card--ink relative overflow-hidden">
+          <div className="cnext-card cnext-card--ink relative overflow-hidden">
             <div
-              className="humi-blob humi-blob--teal"
+              className="cnext-blob cnext-blob--teal"
               style={{ width: 80, height: 100, right: -25, bottom: -30, opacity: 0.5 }}
             />
             <div className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
@@ -755,10 +755,10 @@ export default function ProbationDetailPage() {
               : 'Auto-saved draft · ready to submit'}
         </div>
         <div className="flex-1" />
-        <Link href={`/${locale}/workflows/probation`} className="humi-button humi-button--ghost">
+        <Link href={`/${locale}/workflows/probation`} className="cnext-button cnext-button--ghost">
           ยกเลิก
         </Link>
-        <button type="button" className="humi-button humi-button--ghost">
+        <button type="button" className="cnext-button cnext-button--ghost">
           {isTh ? 'บันทึกร่าง' : 'Save draft'}
         </button>
         {outcome === 'no_pass' ? (
@@ -766,7 +766,7 @@ export default function ProbationDetailPage() {
             type="button"
             onClick={handleSubmit}
             disabled={submitDisabled}
-            className="humi-button inline-flex items-center gap-1.5 bg-danger text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="cnext-button inline-flex items-center gap-1.5 bg-danger text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X className="h-3.5 w-3.5" />
             {isTh ? 'ยืนยัน ไม่ผ่านทดลองงาน' : 'Confirm — did not pass'}
@@ -776,7 +776,7 @@ export default function ProbationDetailPage() {
             type="button"
             onClick={handleSubmit}
             disabled={submitDisabled}
-            className="humi-button humi-button--primary inline-flex items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-50"
+            className="cnext-button cnext-button--primary inline-flex items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Check className="h-3.5 w-3.5" />
             {isTh ? 'อนุมัติและส่งให้ HRBP' : 'Approve & send to HRBP'}

@@ -31,7 +31,7 @@ function setRoles(roles: Role[]) {
   auth.setUser({
     id: 'TEST',
     name: 'tester',
-    email: 'tester@humi.test',
+    email: 'tester@cnext.test',
     roles,
   });
   auth.setHasHydrated(true);

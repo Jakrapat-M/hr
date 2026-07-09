@@ -24,7 +24,7 @@ import { useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Check } from 'lucide-react'
-import { buttonVariants } from '@/components/humi'
+import { buttonVariants } from '@/components/cnext'
 import { createClusterWizard } from '@/lib/admin/wizard-template/createClusterWizard'
 import { useEmployees } from '@/lib/admin/store/useEmployees'
 import type { MockEmployee } from '@/mocks/employees'
@@ -143,9 +143,9 @@ interface SelectProps {
 function PicklistSelect({ id, label, required, readOnly, value, onChange, onBlur, error, options }: SelectProps) {
   return (
     <fieldset>
-      <label htmlFor={id} className="humi-label">
+      <label htmlFor={id} className="cnext-label">
         {label}
-        {required && <span aria-hidden="true" className="humi-asterisk ml-1">*</span>}
+        {required && <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>}
       </label>
       <select
         id={id}
@@ -156,7 +156,7 @@ function PicklistSelect({ id, label, required, readOnly, value, onChange, onBlur
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
-        className="humi-input w-full max-w-sm"
+        className="cnext-input w-full max-w-sm"
         style={readOnly ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
       >
         <option value="">— เลือก —</option>
@@ -187,9 +187,9 @@ interface TextInputProps {
 function TextInput({ id, label, required, readOnly, type = 'text', placeholder, value, onChange, onBlur, error }: TextInputProps) {
   return (
     <fieldset>
-      <label htmlFor={id} className="humi-label">
+      <label htmlFor={id} className="cnext-label">
         {label}
-        {required && <span aria-hidden="true" className="humi-asterisk ml-1">*</span>}
+        {required && <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>}
       </label>
       <input
         id={id}
@@ -202,7 +202,7 @@ function TextInput({ id, label, required, readOnly, type = 'text', placeholder, 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
-        className="humi-input w-full max-w-sm"
+        className="cnext-input w-full max-w-sm"
         style={readOnly ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
       />
       {error && <p role="alert" className="mt-1 text-xs text-warning">{error}</p>}
@@ -393,13 +393,13 @@ export default function EmployeeEditPage() {
       <div className="p-6">
         <Link
           href={`/${locale}/admin/employees`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6, marginBottom: 16 }}
         >
           <ArrowLeft size={16} aria-hidden />
           <span>รายการพนักงาน</span>
         </Link>
-        <div className="humi-card" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">ไม่พบพนักงานรหัส "{empId}"</p>
         </div>
       </div>
@@ -422,7 +422,7 @@ export default function EmployeeEditPage() {
         <div
           role="status"
           aria-live="polite"
-          className="humi-row"
+          className="cnext-row"
           style={{
             gap: 10, padding: '12px 16px', borderRadius: 10,
             background: 'var(--color-accent-soft)',
@@ -439,7 +439,7 @@ export default function EmployeeEditPage() {
       <div>
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -448,8 +448,8 @@ export default function EmployeeEditPage() {
       </div>
 
       {/* Employee snapshot (read-only context) */}
-      <div className="humi-card humi-card--cream">
-        <div className="humi-eyebrow" style={{ marginBottom: 6 }}>
+      <div className="cnext-card cnext-card--cream">
+        <div className="cnext-eyebrow" style={{ marginBottom: 6 }}>
           {employee.employee_id}
         </div>
         <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
@@ -469,7 +469,7 @@ export default function EmployeeEditPage() {
 
       {/* STA-181 — action bar relocated to the top (sticky while scrolling). */}
       <div
-        className="humi-row"
+        className="cnext-row"
         style={{
           // Sit BELOW the global sticky topbar (~76px) and keep a lower z so the
           // topbar always wins any overlap during scroll.
@@ -481,7 +481,7 @@ export default function EmployeeEditPage() {
       >
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-btn-secondary"
+          className="cnext-btn-secondary"
         >
           ยกเลิก
         </Link>
@@ -500,7 +500,7 @@ export default function EmployeeEditPage() {
       <div className="space-y-5">
 
           {/* ── Group 1: Names (Local) ── */}
-          <section aria-labelledby="section-names" className="humi-card">
+          <section aria-labelledby="section-names" className="cnext-card">
             <SectionLabel title="ชื่อ (ภาษาท้องถิ่น)" />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
@@ -573,7 +573,7 @@ export default function EmployeeEditPage() {
           </section>
 
           {/* ── Group 2: Localized Names (EN) — read-only mirror ── */}
-          <section aria-labelledby="section-names-en" className="humi-card">
+          <section aria-labelledby="section-names-en" className="cnext-card">
             <SectionLabel title="ชื่อ (ภาษาอังกฤษ)" />
             <p className="text-small text-ink-muted mb-4">
               ข้อมูลนี้ถูกกำหนดตอน Hire ไม่สามารถแก้ไขได้ที่นี่
@@ -620,7 +620,7 @@ export default function EmployeeEditPage() {
           </section>
 
           {/* ── Group 3: Personal Attributes ── */}
-          <section aria-labelledby="section-attributes" className="humi-card">
+          <section aria-labelledby="section-attributes" className="cnext-card">
             <SectionLabel title="ข้อมูลส่วนตัว" />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
@@ -686,7 +686,7 @@ export default function EmployeeEditPage() {
 
               {/* Marital Status Since — date, optional */}
               <fieldset>
-                <label htmlFor="marital-status-since" className="humi-label">
+                <label htmlFor="marital-status-since" className="cnext-label">
                   วันที่เปลี่ยนสถานภาพ
                 </label>
                 <input
@@ -694,7 +694,7 @@ export default function EmployeeEditPage() {
                   type="date"
                   value={attributes.maritalStatusSince}
                   onChange={(e) => setAttributesLocal((p) => ({ ...p, maritalStatusSince: e.target.value }))}
-                  className="humi-input w-full max-w-sm"
+                  className="cnext-input w-full max-w-sm"
                 />
               </fieldset>
 
@@ -713,7 +713,7 @@ export default function EmployeeEditPage() {
           </section>
 
           {/* ── Group 4: Contact ── */}
-          <section aria-labelledby="section-contact" className="humi-card">
+          <section aria-labelledby="section-contact" className="cnext-card">
             <SectionLabel title="ข้อมูลติดต่อ" />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
@@ -793,7 +793,7 @@ export default function EmployeeEditPage() {
           </section>
 
           {/* ── Group 5: Emergency Contact ── */}
-          <section className="humi-card">
+          <section className="cnext-card">
             <SectionLabel title="ผู้ติดต่อฉุกเฉิน" />
             <div className="grid gap-4 md:grid-cols-2">
               <TextInput
@@ -821,13 +821,13 @@ export default function EmployeeEditPage() {
             </div>
           </section>
 
-          <div className="humi-card">
+          <div className="cnext-card">
             <Sta181ExtendedFields values={sta181Fields} onChange={updateSta181Field} />
           </div>
 
           {/* Required note */}
           <p className="text-xs text-ink-soft">
-            <span className="humi-asterisk">*</span> ช่องที่บังคับกรอก
+            <span className="cnext-asterisk">*</span> ช่องที่บังคับกรอก
           </p>
         </div>
     </div>

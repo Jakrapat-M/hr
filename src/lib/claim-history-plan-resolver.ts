@@ -1,4 +1,4 @@
-// STA-234 — resolve a Benefits-Hub claim-history row (HumiClaimHistoryItem) to
+// STA-234 — resolve a Benefits-Hub claim-history row (CnextClaimHistoryItem) to
 // the BENEFIT_PLAN_REGISTRY plan id that owns its "Start claim" full form, so the
 // claim-detail Edit action can reopen the same SimpleClaimForm prefilled.
 //

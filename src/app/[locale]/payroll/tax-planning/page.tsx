@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Card, CardEyebrow, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle, DemoValuesDisclaimer } from '@/components/cnext';
 import { TaxPlanningPanel } from '@/components/benefits/tax/TaxPlanningPanel';
 
 export default function PayrollTaxPlanningPage() {

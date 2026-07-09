@@ -1,7 +1,7 @@
 /**
  * storage-auth.helper.ts
  *
- * Provides `authedContext()` — creates a BrowserContext with humi-auth
+ * Provides `authedContext()` — creates a BrowserContext with cnext-auth
  * pre-injected via addInitScript so Zustand rehydrates before any React code
  * runs, preventing AppShell from redirecting to /login.
  *
@@ -15,7 +15,7 @@ import type { Browser, BrowserContext } from '@playwright/test';
 
 type Role = 'hr_admin' | 'hr_manager' | 'spd' | 'hrbp' | 'manager' | 'employee';
 
-interface HumiAuthState {
+interface CnextAuthState {
   userId: string;
   username: string;
   email: string;
@@ -24,11 +24,11 @@ interface HumiAuthState {
   originalUser: null;
 }
 
-const PERSONA_AUTH: Record<string, HumiAuthState> = {
+const PERSONA_AUTH: Record<string, CnextAuthState> = {
   employee: {
     userId: 'EMP001',
     username: 'สมชาย ใจดี',
-    email: 'employee@humi.test',
+    email: 'employee@cnext.test',
     roles: ['employee'],
     isAuthenticated: true,
     originalUser: null,
@@ -36,7 +36,7 @@ const PERSONA_AUTH: Record<string, HumiAuthState> = {
   manager: {
     userId: 'MGR001',
     username: 'พิชญ์ ม. (หัวหน้าทีม)',
-    email: 'manager@humi.test',
+    email: 'manager@cnext.test',
     roles: ['manager', 'employee'],
     isAuthenticated: true,
     originalUser: null,
@@ -44,7 +44,7 @@ const PERSONA_AUTH: Record<string, HumiAuthState> = {
   hrbp: {
     userId: 'HRB001',
     username: 'วิทยา ส. (HRBP)',
-    email: 'hrbp@humi.test',
+    email: 'hrbp@cnext.test',
     roles: ['hrbp', 'employee'],
     isAuthenticated: true,
     originalUser: null,
@@ -52,7 +52,7 @@ const PERSONA_AUTH: Record<string, HumiAuthState> = {
   spd: {
     userId: 'SPD001',
     username: 'ดารณี ล. (SPD)',
-    email: 'spd@humi.test',
+    email: 'spd@cnext.test',
     roles: ['spd', 'employee'],
     isAuthenticated: true,
     originalUser: null,
@@ -60,7 +60,7 @@ const PERSONA_AUTH: Record<string, HumiAuthState> = {
   hr_admin: {
     userId: 'ADM001',
     username: 'ผู้ดูแลระบบ HR',
-    email: 'admin@humi.test',
+    email: 'admin@cnext.test',
     roles: ['hr_admin', 'hr_manager', 'spd', 'hrbp', 'manager', 'employee'],
     isAuthenticated: true,
     originalUser: null,
@@ -68,7 +68,7 @@ const PERSONA_AUTH: Record<string, HumiAuthState> = {
 };
 
 /**
- * Create a new browser context with humi-auth pre-seeded via addInitScript.
+ * Create a new browser context with cnext-auth pre-seeded via addInitScript.
  *
  * @param browser - Playwright Browser instance
  * @param role - persona key (employee | manager | hrbp | spd | hr_admin)
@@ -81,11 +81,11 @@ export async function authedContext(
   extraStorage: Array<{ name: string; value: string }> = [],
 ): Promise<BrowserContext> {
   const authState = PERSONA_AUTH[role];
-  const humiAuthValue = JSON.stringify({ state: authState, version: 0 });
+  const cnextAuthValue = JSON.stringify({ state: authState, version: 0 });
 
   const ctx = await browser.newContext();
 
-  // Inject humi-auth before any script on the page executes — prevents the
+  // Inject cnext-auth before any script on the page executes — prevents the
   // Zustand rehydration race that causes AppShell to redirect to /login.
   await ctx.addInitScript(
     ({ key, value, extra }: { key: string; value: string; extra: Array<{ name: string; value: string }> }) => {
@@ -94,27 +94,27 @@ export async function authedContext(
         localStorage.setItem(entry.name, entry.value);
       }
     },
-    { key: 'humi-auth', value: humiAuthValue, extra: extraStorage },
+    { key: 'cnext-auth', value: cnextAuthValue, extra: extraStorage },
   );
 
   return ctx;
 }
 
 /**
- * Extract humi-* localStorage entries from a saved storageState snapshot.
+ * Extract cnext-* localStorage entries from a saved storageState snapshot.
  * Used to hand workflow state from one persona's context to another.
  *
  * @param storageState - result of `context.storageState()`
- * @param keyPattern - optional substring filter (default: 'humi-')
+ * @param keyPattern - optional substring filter (default: 'cnext-')
  */
 export function extractWorkflowEntries(
   storageState: { origins: Array<{ localStorage: Array<{ name: string; value: string }> }> },
-  keyPattern = 'humi-',
+  keyPattern = 'cnext-',
 ): Array<{ name: string; value: string }> {
   const entries: Array<{ name: string; value: string }> = [];
   for (const origin of storageState.origins ?? []) {
     for (const item of origin.localStorage ?? []) {
-      if (item.name.includes(keyPattern) && item.name !== 'humi-auth') {
+      if (item.name.includes(keyPattern) && item.name !== 'cnext-auth') {
         entries.push(item);
       }
     }

@@ -29,8 +29,8 @@ vi.mock('next-intl', () => ({
   useLocale: () => 'th',
 }));
 
-vi.mock('@/components/humi', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/components/humi')>();
+vi.mock('@/components/cnext', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/components/cnext')>();
 
   return {
     ...actual,

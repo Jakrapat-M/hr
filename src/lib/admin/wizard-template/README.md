@@ -1,7 +1,7 @@
 # Cluster Wizard Factory — 30-min Scaffold Guide
 
 > Source: `src/lib/admin/wizard-template/createClusterWizard.ts`  
-> Pattern: Hire Option-1 (3-cluster + Zustand persist + Humi skin) extracted into a reusable factory.
+> Pattern: Hire Option-1 (3-cluster + Zustand persist + Cnext skin) extracted into a reusable factory.
 
 ## Overview
 
@@ -90,7 +90,7 @@ export const useProbationWizard = createClusterWizard({
 src/app/[locale]/admin/<flow>/
 ├── page.tsx                      — wizard entry (imports WizardShell + store)
 └── clusters/
-    ├── ClusterStep1.tsx          — step 1 content (humi-card sections)
+    ├── ClusterStep1.tsx          — step 1 content (cnext-card sections)
     ├── ClusterStep2.tsx          — step 2 content
     └── ClusterReview.tsx         — review/summary (optional: reuse pattern from Hire)
 ```
@@ -214,19 +214,19 @@ export default function ProbationPage() {
 
 ---
 
-## CSS classes (Humi design system)
+## CSS classes (Cnext design system)
 
-Every cluster component must wrap field groups in `.humi-step-section` so global CSS overrides apply:
+Every cluster component must wrap field groups in `.cnext-step-section` so global CSS overrides apply:
 
 ```tsx
-<div className="humi-card">
+<div className="cnext-card">
   <SectionHeader icon={CalendarDays} eyebrow="Probation" title="ข้อมูลทดลองงาน" sub="..." />
-  <div className="humi-step-section">
+  <div className="cnext-step-section">
     {/* form fields here */}
   </div>
 </div>
 ```
 
-Available classes: `.humi-card`, `.humi-card--cream`, `.humi-eyebrow`, `.humi-section-title`,
-`.humi-section-sub`, `.humi-step-section`, `.humi-row`, `.humi-label`, `.humi-input`,
-`.humi-select`, `.humi-required-note`, `.humi-asterisk`, `.humi-draft-chip`.
+Available classes: `.cnext-card`, `.cnext-card--cream`, `.cnext-eyebrow`, `.cnext-section-title`,
+`.cnext-section-sub`, `.cnext-step-section`, `.cnext-row`, `.cnext-label`, `.cnext-input`,
+`.cnext-select`, `.cnext-required-note`, `.cnext-asterisk`, `.cnext-draft-chip`.

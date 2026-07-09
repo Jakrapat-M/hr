@@ -24,9 +24,9 @@ import {
  FileCheck,
  Heart,
 } from 'lucide-react';
-import { Card, CardTitle, Modal } from '@/components/humi';
+import { Card, CardTitle, Modal } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { Tabs } from '@/components/ui/tabs';
 import { FormField } from '@/components/ui/form-field';
 import { Skeleton } from '@/components/ui/skeleton';

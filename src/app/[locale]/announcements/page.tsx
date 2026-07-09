@@ -1,7 +1,7 @@
 'use client';
 
 // ════════════════════════════════════════════════════════════
-// /announcements — Humi team/company feed
+// /announcements — Cnext team/company feed
 // 1:1 port of docs/design-ref/shelfly-bundle/project/screens/announcements.jsx
 // Adapted retail → generic HR (departments/functions, not stores).
 // AppShell owns sidebar+topbar.
@@ -20,22 +20,22 @@ import {
   Filter,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import {
-  HUMI_ANNOUNCEMENTS,
-  HUMI_CHANNELS,
-  HUMI_MY_PROFILE,
-} from '@/lib/humi-mock-data';
+  CNEXT_ANNOUNCEMENTS,
+  CNEXT_CHANNELS,
+  CNEXT_MY_PROFILE,
+} from '@/lib/cnext-mock-data';
 import {
-  useHumiAnnouncementsStore,
+  useCnextAnnouncementsStore,
   type AnnouncementFilter,
-} from '@/stores/humi-announcements-slice';
+} from '@/stores/cnext-announcements-slice';
 
 const AVATAR_TONE_MAP = {
-  teal: 'humi-avatar humi-avatar--teal',
-  sage: 'humi-avatar humi-avatar--sage',
-  butter: 'humi-avatar humi-avatar--butter',
-  ink: 'humi-avatar humi-avatar--ink',
+  teal: 'cnext-avatar cnext-avatar--teal',
+  sage: 'cnext-avatar cnext-avatar--sage',
+  butter: 'cnext-avatar cnext-avatar--butter',
+  ink: 'cnext-avatar cnext-avatar--ink',
 } as const;
 
 const CHANNEL_DOT_COLOR = {
@@ -44,15 +44,15 @@ const CHANNEL_DOT_COLOR = {
   sage: 'var(--color-sage)',
 } as const;
 
-export default function HumiAnnouncementsPage() {
-  const t = useTranslations('humiAnnouncements');
-  const { pinned, activeFilter, togglePin, setFilter } = useHumiAnnouncementsStore();
+export default function CnextAnnouncementsPage() {
+  const t = useTranslations('cnextAnnouncements');
+  const { pinned, activeFilter, togglePin, setFilter } = useCnextAnnouncementsStore();
 
   // Filter posts by active tab
   const baseFiltered =
     activeFilter === 'all'
-      ? HUMI_ANNOUNCEMENTS
-      : HUMI_ANNOUNCEMENTS.filter((p) => p.kind === activeFilter);
+      ? CNEXT_ANNOUNCEMENTS
+      : CNEXT_ANNOUNCEMENTS.filter((p) => p.kind === activeFilter);
 
   // Pinned posts sort to top (optimistic — uses slice pinned set)
   const filtered = [
@@ -82,13 +82,13 @@ export default function HumiAnnouncementsPage() {
         {/* Feed column */}
         <div>
           {/* Composer */}
-          <div className="humi-card mb-4" style={{ padding: 16 }}>
-            <div className="humi-row" style={{ alignItems: 'flex-start' }}>
+          <div className="cnext-card mb-4" style={{ padding: 16 }}>
+            <div className="cnext-row" style={{ alignItems: 'flex-start' }}>
               <span
-                className={AVATAR_TONE_MAP[HUMI_MY_PROFILE.avatarTone]}
+                className={AVATAR_TONE_MAP[CNEXT_MY_PROFILE.avatarTone]}
                 aria-hidden
               >
-                {HUMI_MY_PROFILE.initials}
+                {CNEXT_MY_PROFILE.initials}
               </span>
               <div style={{ flex: 1 }}>
                 <button
@@ -98,7 +98,7 @@ export default function HumiAnnouncementsPage() {
                   {t('composerPlaceholder')}
                 </button>
                 <div
-                  className="humi-row"
+                  className="cnext-row"
                   style={{ marginTop: 10, gap: 6, flexWrap: 'wrap' }}
                 >
                   <Button variant="ghost" size="sm" leadingIcon={<Megaphone size={13} />}>
@@ -110,7 +110,7 @@ export default function HumiAnnouncementsPage() {
                   <Button variant="ghost" size="sm" leadingIcon={<Paperclip size={13} />}>
                     {t('composerAttach')}
                   </Button>
-                  <span className="humi-spacer" />
+                  <span className="cnext-spacer" />
                   <Button variant="primary" size="sm" leadingIcon={<Send size={12} />}>
                     {t('composerSubmit')}
                   </Button>
@@ -126,7 +126,7 @@ export default function HumiAnnouncementsPage() {
               style={{ WebkitOverflowScrolling: 'touch', flex: 1 }}
             >
               <div
-                className="humi-tabs flex-nowrap"
+                className="cnext-tabs flex-nowrap"
                 role="tablist"
                 aria-label={t('filterAll')}
                 style={{ width: 'max-content' }}
@@ -138,14 +138,14 @@ export default function HumiAnnouncementsPage() {
                     role="tab"
                     aria-selected={activeFilter === k}
                     onClick={() => setFilter(k)}
-                    className={cn('humi-tab min-h-[44px]', activeFilter === k && 'humi-tab--active')}
+                    className={cn('cnext-tab min-h-[44px]', activeFilter === k && 'cnext-tab--active')}
                   >
                     {l}
                   </button>
                 ))}
               </div>
             </div>
-            <span className="humi-spacer" />
+            <span className="cnext-spacer" />
             <Button variant="ghost" size="sm" leadingIcon={<Filter size={13} />}>
               {t('filterScope')}
             </Button>
@@ -157,10 +157,10 @@ export default function HumiAnnouncementsPage() {
             return (
               <article
                 key={p.id}
-                className={cn('humi-post', isPinned && 'humi-post--pin')}
+                className={cn('cnext-post', isPinned && 'cnext-post--pin')}
                 style={{ marginBottom: 12 }}
               >
-              <div className="humi-row">
+              <div className="cnext-row">
                 <span className={AVATAR_TONE_MAP[p.authorTone]} aria-hidden>
                   {p.authorInitials}
                 </span>
@@ -173,7 +173,7 @@ export default function HumiAnnouncementsPage() {
                   </div>
                 </div>
                 {isPinned && (
-                  <span className="humi-tag humi-tag--ink">
+                  <span className="cnext-tag cnext-tag--ink">
                     <Pin size={11} /> {t('pinnedTag')}
                   </span>
                 )}
@@ -182,7 +182,7 @@ export default function HumiAnnouncementsPage() {
                   type="button"
                   aria-label={isPinned ? 'เลิกปักหมุด' : 'ปักหมุด'}
                   aria-pressed={isPinned}
-                  className="humi-icon-btn h-11 w-11"
+                  className="cnext-icon-btn h-11 w-11"
                   onClick={() => togglePin(p.id)}
                   style={{
                     background: 'transparent',
@@ -195,7 +195,7 @@ export default function HumiAnnouncementsPage() {
                 <button
                   type="button"
                   aria-label="ตัวเลือกเพิ่มเติม"
-                  className="humi-icon-btn h-11 w-11"
+                  className="cnext-icon-btn h-11 w-11"
                   style={{
                     background: 'transparent',
                     border: 0,
@@ -227,20 +227,20 @@ export default function HumiAnnouncementsPage() {
                 {p.body}
               </p>
               <div
-                className="humi-row"
+                className="cnext-row"
                 style={{ marginTop: 14, gap: 8, flexWrap: 'wrap' }}
               >
-                <div className="humi-reacts">
+                <div className="cnext-reacts">
                   {p.reactions.map((x) => (
-                    <span key={x} className="humi-r">
+                    <span key={x} className="cnext-r">
                       {x}
                     </span>
                   ))}
-                  <span className="humi-r" aria-label="เพิ่มรีแอคชัน">
+                  <span className="cnext-r" aria-label="เพิ่มรีแอคชัน">
                     <Smile size={12} />
                   </span>
                 </div>
-                <span className="humi-spacer" />
+                <span className="cnext-spacer" />
                 <span
                   style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}
                 >
@@ -253,14 +253,14 @@ export default function HumiAnnouncementsPage() {
         </div>
 
         {/* Right column */}
-        <aside className="humi-col" style={{ gap: 16 }}>
-          <div className="humi-card">
-            <div className="humi-eyebrow">{t('channelsEyebrow')}</div>
-            <div className="humi-col" style={{ gap: 6, marginTop: 10 }}>
-              {HUMI_CHANNELS.map((ch) => (
+        <aside className="cnext-col" style={{ gap: 16 }}>
+          <div className="cnext-card">
+            <div className="cnext-eyebrow">{t('channelsEyebrow')}</div>
+            <div className="cnext-col" style={{ gap: 6, marginTop: 10 }}>
+              {CNEXT_CHANNELS.map((ch) => (
                 <div
                   key={ch.id}
-                  className="humi-row"
+                  className="cnext-row"
                   style={{ padding: '8px 4px', borderRadius: 8 }}
                 >
                   <span
@@ -291,13 +291,13 @@ export default function HumiAnnouncementsPage() {
           </div>
 
           <div
-            className="humi-card"
+            className="cnext-card"
             style={{
               background: 'var(--color-warning-soft)',
               border: 0,
             }}
           >
-            <div className="humi-eyebrow" style={{ color: '#6B4E14' }}>
+            <div className="cnext-eyebrow" style={{ color: '#6B4E14' }}>
               {t('draftEyebrow')}
             </div>
             <h3 className="mt-1.5 font-display text-lg font-semibold leading-[1.2] tracking-tight text-ink">
@@ -317,8 +317,8 @@ export default function HumiAnnouncementsPage() {
             </div>
           </div>
 
-          <div className="humi-card">
-            <div className="humi-eyebrow">{t('guideEyebrow')}</div>
+          <div className="cnext-card">
+            <div className="cnext-eyebrow">{t('guideEyebrow')}</div>
             <p
               style={{
                 fontSize: 13,

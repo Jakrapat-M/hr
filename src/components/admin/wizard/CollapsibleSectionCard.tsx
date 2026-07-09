@@ -49,7 +49,7 @@ export function CollapsibleSectionCard({
     <section
       id={id}
       className={cn(
-        `humi-card rounded-[22px] px-[22px] ${dense ? 'py-[14px]' : 'py-[22px]'} shadow-[0_1px_0_rgba(14,27,44,0.03)]`,
+        `cnext-card rounded-[22px] px-[22px] ${dense ? 'py-[14px]' : 'py-[22px]'} shadow-[0_1px_0_rgba(14,27,44,0.03)]`,
         className,
       )}
       aria-labelledby={`${id}-title`}
@@ -84,7 +84,7 @@ export function CollapsibleSectionCard({
         // Keep descendants mounted while visually hiding collapsed sections so
         // field state and validation effects remain active across toggles.
         hidden={collapsed}
-        className="humi-step-section"
+        className="cnext-step-section"
       >
         {children}
       </div>

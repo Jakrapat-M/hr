@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
-import { Card, CardEyebrow, CardTitle } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle } from '@/components/cnext';
 
 // STA-26 PR-F — Benefits Reports landing
 // 5 standard BE_26 report cards + Story Report shell

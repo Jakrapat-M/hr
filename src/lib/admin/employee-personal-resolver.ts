@@ -6,9 +6,9 @@
 // certs, assessments, memberships, projects, documents).
 //
 // FIX M2 (ralplan consensus): this data is served from its OWN seeded by-id map
-// — NOT the live persisted `useHumiProfileStore` (a single-user localStorage
+// — NOT the live persisted `useCnextProfileStore` (a single-user localStorage
 // store whose draft would leak the logged-in HR's own edits into every other
-// employee's admin view). Shapes mirror `humi-profile-slice` so the admin read
+// employee's admin view). Shapes mirror `cnext-profile-slice` so the admin read
 // -only display can reuse the same field structure the employee sees.
 //
 // Un-seeded ids resolve to an EMPTY personal record → the admin view renders
@@ -20,8 +20,8 @@ import type {
   Address8,
   PhoneEntry,
   EmailEntry,
-} from '@/stores/humi-profile-slice'
-import type { HumiDependent } from '@/lib/humi-mock-data'
+} from '@/stores/cnext-profile-slice'
+import type { CnextDependent } from '@/lib/cnext-mock-data'
 
 /** A career/history row shared by the P2 list sections. */
 export interface PersonalHistoryRow {
@@ -39,7 +39,7 @@ export interface EmployeePersonal {
   spouseName?: string              // shown only when married
   bank: BankDetails
   emergencyContacts: EmergencyContactRow[]
-  dependents: HumiDependent[]
+  dependents: CnextDependent[]
   address?: Address8
   phones: PhoneEntry[]
   emails: EmailEntry[]

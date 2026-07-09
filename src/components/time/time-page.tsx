@@ -8,7 +8,7 @@ import {
  Calendar, ArrowRight, FileEdit, ChevronRight, Timer,
  LogIn, LogOut, Palmtree, Coffee, Sun, Moon,
 } from 'lucide-react';
-import { Card, CardTitle, Button, Modal } from '@/components/humi';
+import { Card, CardTitle, Button, Modal } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { FormField } from '@/components/ui/form-field';
 import { Skeleton } from '@/components/ui/skeleton';

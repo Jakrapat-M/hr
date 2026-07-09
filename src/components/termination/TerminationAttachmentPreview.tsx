@@ -1,7 +1,7 @@
 'use client';
 
 import { Download, FileText } from 'lucide-react';
-import { Modal } from '@/components/humi';
+import { Modal } from '@/components/cnext';
 import type { AttachedFile } from '@/components/admin/AttachmentDropzone/AttachmentDropzone';
 import type { TerminationRequest } from '@/stores/termination-approvals';
 

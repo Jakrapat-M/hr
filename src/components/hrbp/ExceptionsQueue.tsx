@@ -60,7 +60,7 @@ interface SummaryTileProps {
   tone: 'warning' | 'success' | 'danger' | 'accent';
 }
 
-// Map tone to Humi token classes (no hex)
+// Map tone to Cnext token classes (no hex)
 const TILE_TONE_CLASS: Record<string, { value: string; bg: string }> = {
   warning: { value: 'text-warning',   bg: 'bg-warning-soft' },
   success: { value: 'text-success',   bg: 'bg-success/10'   },
@@ -71,8 +71,8 @@ const TILE_TONE_CLASS: Record<string, { value: string; bg: string }> = {
 function SummaryTile({ label, value, tone }: SummaryTileProps) {
   const cls = TILE_TONE_CLASS[tone];
   return (
-    <div className={cn('humi-card', cls.bg)} style={{ padding: '16px 20px' }}>
-      <div className="humi-eyebrow" style={{ marginBottom: 6, fontSize: 11 }}>{label}</div>
+    <div className={cn('cnext-card', cls.bg)} style={{ padding: '16px 20px' }}>
+      <div className="cnext-eyebrow" style={{ marginBottom: 6, fontSize: 11 }}>{label}</div>
       <div
         className={cn('font-display font-bold leading-none', cls.value)}
         style={{ fontSize: 30 }}
@@ -197,7 +197,7 @@ export function ExceptionsQueue({ isTh }: ExceptionsQueueProps) {
       </div>
 
       {/* Filter row */}
-      <div className="humi-card">
+      <div className="cnext-card">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           {/* Search */}
           <div className="relative flex-1">
@@ -225,7 +225,7 @@ export function ExceptionsQueue({ isTh }: ExceptionsQueueProps) {
       </div>
 
       {/* Table */}
-      <div className="humi-card overflow-hidden p-0">
+      <div className="cnext-card overflow-hidden p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

@@ -4,7 +4,7 @@
  * Sanity QA for the /admin/hire wizard (Add Employee flow) after Wave 2 changes.
  * Commits under test: cd7c7fb + cdd0e87 + fe8709f
  *
- * Auth strategy: inject humi-auth via localStorage before every navigation
+ * Auth strategy: inject cnext-auth via localStorage before every navigation
  * (same pattern as persona-switch-qa.spec.ts / chain-4-promotion.spec.ts).
  *
  * Steps exercised:
@@ -31,7 +31,7 @@ import * as path from 'path'
 const KEN_AUTH = {
   userId: 'KEN001',
   username: 'จงรักษ์ ทานากะ (HR Admin)',
-  email: 'ken@humi.test',
+  email: 'ken@cnext.test',
   roles: ['hr_admin', 'employee'],
   isAuthenticated: true,
   originalUser: null,
@@ -61,7 +61,7 @@ async function screenshot(page: Page, name: string) {
 
 async function injectKen(page: Page) {
   await page.evaluate((state) => {
-    localStorage.setItem('humi-auth', JSON.stringify({ state, version: 0 }))
+    localStorage.setItem('cnext-auth', JSON.stringify({ state, version: 0 }))
   }, KEN_AUTH as Record<string, unknown>)
 }
 
@@ -648,7 +648,7 @@ test.describe('Add Employee Wizard — Sanity QA (Wave 2)', () => {
 
     // Check that address required fields exist with asterisk indicators
     const houseNoLabel = page.locator('label[for="addr-house-no"]')
-    const hasAsterisk = await houseNoLabel.locator('.humi-asterisk').count() > 0
+    const hasAsterisk = await houseNoLabel.locator('.cnext-asterisk').count() > 0
     await screenshot(page, 'NEG-14-contact-address-empty')
 
     if (hasAsterisk) {

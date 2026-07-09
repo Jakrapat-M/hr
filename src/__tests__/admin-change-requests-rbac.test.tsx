@@ -34,7 +34,7 @@ function setRoles(roles: Array<'employee' | 'manager' | 'hrbp' | 'spd' | 'hr_adm
   useAuthStore.setState({
     userId: 'TEST',
     username: 'tester',
-    email: 'tester@humi.test',
+    email: 'tester@cnext.test',
     roles,
     isAuthenticated: true,
     originalUser: null,

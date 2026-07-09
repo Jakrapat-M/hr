@@ -11,7 +11,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { MODULES, leafVisible } from '@/components/humi/shell/Sidebar';
+import { MODULES, leafVisible } from '@/components/cnext/shell/Sidebar';
 import type { Role } from '@/lib/rbac';
 
 const ALL_LEAVES = MODULES.flatMap((m) => m.leaves);

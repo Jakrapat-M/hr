@@ -3,8 +3,8 @@
  * Framework: Vitest + jsdom + React Testing Library
  *
  * Covers:
- *   AC-1 — HumiDependent shape has all 9 BRD #20 fields
- *   AC-2 — HUMI_DEPENDENTS has >=3 entries with valid relation codes
+ *   AC-1 — CnextDependent shape has all 9 BRD #20 fields
+ *   AC-2 — CNEXT_DEPENDENTS has >=3 entries with valid relation codes
  *   AC-3 — DEPENDENT_RELATION_LABELS all Thai-primary
  *   AC-4 — DependentsEditor renders a row per dependent with editable fields
  *   AC-5 — areAllDependentsValid requires fullNameTh + relation + dateOfBirth
@@ -27,10 +27,10 @@ import {
   areAllDependentsValid,
 } from '@/components/profile/DependentsEditor';
 import {
-  HUMI_DEPENDENTS,
+  CNEXT_DEPENDENTS,
   DEPENDENT_RELATION_LABELS,
-  type HumiDependent,
-} from '@/lib/humi-mock-data';
+  type CnextDependent,
+} from '@/lib/cnext-mock-data';
 
 // ── Stub crypto.randomUUID ────────────────────────────────────────────────────
 let uuidSeq = 0;
@@ -44,8 +44,8 @@ vi.mock('lucide-react', () => ({
   Trash2: () => <span data-testid="icon-trash" />,
 }));
 
-// ── Mock humi UI primitives ───────────────────────────────────────────────────
-vi.mock('@/components/humi', () => ({
+// ── Mock cnext UI primitives ───────────────────────────────────────────────────
+vi.mock('@/components/cnext', () => ({
   Button: ({
     children,
     onClick,
@@ -83,7 +83,7 @@ vi.mock('@/components/humi', () => ({
 }));
 
 // ── Mock FileUploadField ──────────────────────────────────────────────────────
-vi.mock('@/components/humi/FileUploadField', () => ({
+vi.mock('@/components/cnext/FileUploadField', () => ({
   FileUploadField: ({
     label,
     onUpload: _u,
@@ -108,12 +108,12 @@ afterEach(() => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// AC-1: HumiDependent shape has all 9 BRD #20 fields
+// AC-1: CnextDependent shape has all 9 BRD #20 fields
 // ════════════════════════════════════════════════════════════════════════════
 
-describe('hr#85 BRD #20 — HumiDependent shape', () => {
-  it('AC-1 — HUMI_DEPENDENTS[0] has all 9 required fields', () => {
-    const dep = HUMI_DEPENDENTS[0];
+describe('hr#85 BRD #20 — CnextDependent shape', () => {
+  it('AC-1 — CNEXT_DEPENDENTS[0] has all 9 required fields', () => {
+    const dep = CNEXT_DEPENDENTS[0];
     expect(dep.id).toBeDefined();
     expect(dep.fullNameTh).toBeTruthy();
     expect(dep.fullNameEn).toBeTruthy();
@@ -124,7 +124,7 @@ describe('hr#85 BRD #20 — HumiDependent shape', () => {
   });
 
   it('AC-1 — optional fields (nationalId, idCopyFileId) are string or undefined only', () => {
-    HUMI_DEPENDENTS.forEach((dep) => {
+    CNEXT_DEPENDENTS.forEach((dep) => {
       if (dep.nationalId !== undefined) {
         expect(typeof dep.nationalId).toBe('string');
       }
@@ -136,23 +136,23 @@ describe('hr#85 BRD #20 — HumiDependent shape', () => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// AC-2: HUMI_DEPENDENTS has >=3 entries with valid relation codes
+// AC-2: CNEXT_DEPENDENTS has >=3 entries with valid relation codes
 // ════════════════════════════════════════════════════════════════════════════
 
-describe('hr#85 BRD #20 — HUMI_DEPENDENTS data', () => {
+describe('hr#85 BRD #20 — CNEXT_DEPENDENTS data', () => {
   it('AC-2 — has >=3 entries', () => {
-    expect(HUMI_DEPENDENTS.length).toBeGreaterThanOrEqual(3);
+    expect(CNEXT_DEPENDENTS.length).toBeGreaterThanOrEqual(3);
   });
 
   it('AC-2 — every entry has a valid DependentRelation code', () => {
     const validRelations = ['spouse', 'father', 'mother', 'child', 'other'];
-    HUMI_DEPENDENTS.forEach((dep) => {
+    CNEXT_DEPENDENTS.forEach((dep) => {
       expect(validRelations).toContain(dep.relation);
     });
   });
 
   it('AC-2 — every entry has a non-empty ISO dateOfBirth', () => {
-    HUMI_DEPENDENTS.forEach((dep) => {
+    CNEXT_DEPENDENTS.forEach((dep) => {
       expect(dep.dateOfBirth).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
   });
@@ -197,8 +197,8 @@ describe('hr#85 BRD #20 — DEPENDENT_RELATION_LABELS', () => {
 
 describe('hr#85 BRD #20 — DependentsEditor rendering', () => {
   it('AC-4 — renders one fullNameTh input per dependent', () => {
-    render(<DependentsEditor value={HUMI_DEPENDENTS} onChange={vi.fn()} />);
-    HUMI_DEPENDENTS.forEach((dep) => {
+    render(<DependentsEditor value={CNEXT_DEPENDENTS} onChange={vi.fn()} />);
+    CNEXT_DEPENDENTS.forEach((dep) => {
       // fullNameTh input binds value={dep.fullNameTh}
       const inputs = screen.getAllByDisplayValue(dep.fullNameTh);
       expect(inputs.length).toBeGreaterThan(0);
@@ -206,16 +206,16 @@ describe('hr#85 BRD #20 — DependentsEditor rendering', () => {
   });
 
   it('AC-4 — renders row header labels "ผู้อุปการะ 1", "ผู้อุปการะ 2", "ผู้อุปการะ 3"', () => {
-    render(<DependentsEditor value={HUMI_DEPENDENTS} onChange={vi.fn()} />);
+    render(<DependentsEditor value={CNEXT_DEPENDENTS} onChange={vi.fn()} />);
     expect(screen.getByText('ผู้อุปการะ 1')).toBeInTheDocument();
     expect(screen.getByText('ผู้อุปการะ 2')).toBeInTheDocument();
     expect(screen.getByText('ผู้อุปการะ 3')).toBeInTheDocument();
   });
 
   it('AC-4 — each row has a remove (trash) button', () => {
-    render(<DependentsEditor value={HUMI_DEPENDENTS} onChange={vi.fn()} />);
+    render(<DependentsEditor value={CNEXT_DEPENDENTS} onChange={vi.fn()} />);
     const trashIcons = screen.getAllByTestId('icon-trash');
-    expect(trashIcons.length).toBe(HUMI_DEPENDENTS.length);
+    expect(trashIcons.length).toBe(CNEXT_DEPENDENTS.length);
   });
 
   it('AC-4 — renders no rows when value is empty array', () => {
@@ -229,8 +229,8 @@ describe('hr#85 BRD #20 — DependentsEditor rendering', () => {
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('hr#85 BRD #20 — areAllDependentsValid', () => {
-  it('AC-5 — returns true for valid HUMI_DEPENDENTS', () => {
-    expect(areAllDependentsValid(HUMI_DEPENDENTS)).toBe(true);
+  it('AC-5 — returns true for valid CNEXT_DEPENDENTS', () => {
+    expect(areAllDependentsValid(CNEXT_DEPENDENTS)).toBe(true);
   });
 
   it('AC-5 — returns true for empty array (section optional)', () => {
@@ -238,24 +238,24 @@ describe('hr#85 BRD #20 — areAllDependentsValid', () => {
   });
 
   it('AC-5 — returns false when fullNameTh is empty string', () => {
-    const invalid: HumiDependent[] = [{ ...HUMI_DEPENDENTS[0], fullNameTh: '' }];
+    const invalid: CnextDependent[] = [{ ...CNEXT_DEPENDENTS[0], fullNameTh: '' }];
     expect(areAllDependentsValid(invalid)).toBe(false);
   });
 
   it('AC-5 — returns false when fullNameTh is whitespace only', () => {
-    const invalid: HumiDependent[] = [{ ...HUMI_DEPENDENTS[0], fullNameTh: '   ' }];
+    const invalid: CnextDependent[] = [{ ...CNEXT_DEPENDENTS[0], fullNameTh: '   ' }];
     expect(areAllDependentsValid(invalid)).toBe(false);
   });
 
   it('AC-5 — returns false when dateOfBirth is empty string', () => {
-    const noBirth: HumiDependent[] = [{ ...HUMI_DEPENDENTS[0], dateOfBirth: '' }];
+    const noBirth: CnextDependent[] = [{ ...CNEXT_DEPENDENTS[0], dateOfBirth: '' }];
     expect(areAllDependentsValid(noBirth)).toBe(false);
   });
 
   it('AC-5 — returns false when any row in multi-row list is invalid', () => {
-    const mixed: HumiDependent[] = [
-      HUMI_DEPENDENTS[0],
-      { ...HUMI_DEPENDENTS[1], fullNameTh: '' },
+    const mixed: CnextDependent[] = [
+      CNEXT_DEPENDENTS[0],
+      { ...CNEXT_DEPENDENTS[1], fullNameTh: '' },
     ];
     expect(areAllDependentsValid(mixed)).toBe(false);
   });
@@ -268,38 +268,38 @@ describe('hr#85 BRD #20 — areAllDependentsValid', () => {
 describe('hr#85 BRD #20 — DependentsEditor onChange', () => {
   it('AC-6 — onChange called when fullNameTh input edited', () => {
     const onChange = vi.fn();
-    render(<DependentsEditor value={HUMI_DEPENDENTS} onChange={onChange} />);
-    const firstInput = screen.getByDisplayValue(HUMI_DEPENDENTS[0].fullNameTh);
+    render(<DependentsEditor value={CNEXT_DEPENDENTS} onChange={onChange} />);
+    const firstInput = screen.getByDisplayValue(CNEXT_DEPENDENTS[0].fullNameTh);
     fireEvent.change(firstInput, { target: { value: 'ชื่อใหม่' } });
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 
   it('AC-6 — onChange called with updated fullNameTh value', () => {
     const onChange = vi.fn();
-    render(<DependentsEditor value={HUMI_DEPENDENTS} onChange={onChange} />);
-    const firstInput = screen.getByDisplayValue(HUMI_DEPENDENTS[0].fullNameTh);
+    render(<DependentsEditor value={CNEXT_DEPENDENTS} onChange={onChange} />);
+    const firstInput = screen.getByDisplayValue(CNEXT_DEPENDENTS[0].fullNameTh);
     fireEvent.change(firstInput, { target: { value: 'สมหญิง ใจดี' } });
 
     expect(onChange).toHaveBeenCalledTimes(1);
-    const updated: HumiDependent[] = onChange.mock.calls[0][0];
+    const updated: CnextDependent[] = onChange.mock.calls[0][0];
     expect(updated[0].fullNameTh).toBe('สมหญิง ใจดี');
     // other rows unchanged
-    expect(updated[1].fullNameTh).toBe(HUMI_DEPENDENTS[1].fullNameTh);
+    expect(updated[1].fullNameTh).toBe(CNEXT_DEPENDENTS[1].fullNameTh);
   });
 
   it('AC-6 — remove row calls onChange with list minus that row', () => {
     const onChange = vi.fn();
-    render(<DependentsEditor value={HUMI_DEPENDENTS} onChange={onChange} />);
+    render(<DependentsEditor value={CNEXT_DEPENDENTS} onChange={onChange} />);
 
     const trashIcons = screen.getAllByTestId('icon-trash');
     const firstTrashBtn = trashIcons[0].closest('button')!;
     fireEvent.click(firstTrashBtn);
 
     expect(onChange).toHaveBeenCalledTimes(1);
-    const result: HumiDependent[] = onChange.mock.calls[0][0];
-    expect(result).toHaveLength(HUMI_DEPENDENTS.length - 1);
+    const result: CnextDependent[] = onChange.mock.calls[0][0];
+    expect(result).toHaveLength(CNEXT_DEPENDENTS.length - 1);
     // removed row id is not in result
-    expect(result.find((r) => r.id === HUMI_DEPENDENTS[0].id)).toBeUndefined();
+    expect(result.find((r) => r.id === CNEXT_DEPENDENTS[0].id)).toBeUndefined();
   });
 });
 
@@ -332,7 +332,7 @@ describe('hr#85 BRD #20 — Add row button', () => {
     fireEvent.click(screen.getByText(/เพิ่มผู้อุปการะ/));
 
     expect(onChange).toHaveBeenCalledTimes(1);
-    const newRows: HumiDependent[] = onChange.mock.calls[0][0];
+    const newRows: CnextDependent[] = onChange.mock.calls[0][0];
     expect(newRows).toHaveLength(1);
     expect(newRows[0].fullNameTh).toBe('');
     expect(newRows[0].relation).toBe('other');

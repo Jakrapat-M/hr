@@ -3,10 +3,10 @@
 @variant dark (.dark &);
 
 /* ════════════════════════════════════════════════════════════
-   Humi — Central Group HR Design System
-   Ref: specs/humi-frontend-redesign.md + docs/shelfly-hr-design-research.md
+   Cnext — Central Group HR Design System
+   Ref: specs/cnext-frontend-redesign.md + docs/shelfly-hr-design-research.md
 
-   Humi design tokens (cream + teal + ink) — NO RED constraint
+   Cnext design tokens (cream + teal + ink) — NO RED constraint
    ตาม Rungrote guardrail — coral → amber, danger clay → pumpkin,
    legacy brand red → teal. Tailwind v4 `@theme` SSOT (ไม่ใช้
    tailwind.config.ts). Rule 26b: preflight handles reset, ไม่มี
@@ -48,7 +48,7 @@
   /* ── Secondary palette (warm, NO red family) ────────────── */
   --color-sage:           #9BB5A0;
   --color-sage-soft:      #DDE7DE;
-  --color-sage-ink:       #2F5840; /* readable ink on sage-soft (matches .humi-tag--sage) */
+  --color-sage-ink:       #2F5840; /* readable ink on sage-soft (matches .cnext-tag--sage) */
   --color-butter:         #E8C46B;
   --color-butter-soft:    #F4E4B8;
 
@@ -112,7 +112,7 @@
   --radius-lg: 20px;
   --radius-xl: 28px;
   --radius-2xl: 18px;
-  --radius-full: 9999px;  /* pill shape — Humi design uses literal 999px on .humi-tag/.humi-pill; this alias supports legacy `rounded-[var(--radius-full)]` usage. TODO: refactor those callers to `rounded-full` */
+  --radius-full: 9999px;  /* pill shape — Cnext design uses literal 999px on .cnext-tag/.cnext-pill; this alias supports legacy `rounded-[var(--radius-full)]` usage. TODO: refactor those callers to `rounded-full` */
 
   /* ── Shadows — warm navy tint on cream ──────────────────── */
   --shadow-sm:   0 1px 0 rgba(14,27,44,0.04), 0 2px 6px  rgba(14,27,44,0.04);
@@ -127,7 +127,7 @@
   --dur-slow: 380ms;
 }
 
-/* ── Dark mode placeholder — Humi dark palette ยังไม่ spec ─
+/* ── Dark mode placeholder — Cnext dark palette ยังไม่ spec ─
    เก็บ hook ไว้ consistent กับ existing code แต่ใช้ tokens
    cool neutral ชั่วคราว (จะ re-tune ใน Sprint 2) ──────── */
 @layer base {
@@ -176,9 +176,9 @@
 }
 
 /* ════════════════════════════════════════════════════════════
-   Humi Shell — classes ported from
+   Cnext Shell — classes ported from
    docs/design-ref/shelfly-bundle/project/styles.css.
-   Namespaced `humi-*` so they don't collide with existing Nav.tsx
+   Namespaced `cnext-*` so they don't collide with existing Nav.tsx
    primitive. Every token via CSS var (Rule: token-only).
    Line refs cite source styles.css line numbers.
    ════════════════════════════════════════════════════════════ */
@@ -195,7 +195,7 @@
    any chrome that now reads too small is a follow-up "size up px chrome" pass. */
 html { font-size: 18px; }
 
-.humi-app {
+.cnext-app {
   display: grid;
   grid-template-columns: 1fr;
   min-height: 100vh; /* fallback for browsers without dvh */
@@ -211,7 +211,7 @@ html { font-size: 18px; }
      dark-rail sidebar à la Linear/Notion. Pinning to literal hex avoids the
      `--color-ink` flip in dark mode which would otherwise invert the rail
      to cream and hide nav labels (hardcoded `#E7E3D8` text on cream = invisible). */
-  .humi-sidebar {
+  .cnext-sidebar {
     background: #0E1B2C;
     color: #E7E3D8;
     padding: 22px 16px 18px;
@@ -227,37 +227,37 @@ html { font-size: 18px; }
 
 /* lg+ breakpoint: switch app to 2-col grid + show sidebar.
    Bug 2026-04-22: Tailwind v4/PostCSS absorbs this media query into @layer components
-   at build time despite source being un-layered. Un-layered default `.humi-app {
+   at build time despite source being un-layered. Un-layered default `.cnext-app {
    grid-template-columns: 1fr }` then outranks the layered media override → full-viewport
    sidebar overlap. Workaround: !important on the 2 override properties to win regardless
    of layer cascade. Surgical (only 2 properties flagged), safe (no other rule should
    override these at 1024px+). Verified via browser-harness computed styles 2026-04-22. */
 @media (min-width: 1024px) {
   /* Sidebar width is user-adjustable via the drag handle in Sidebar.tsx, which
-     writes --humi-sidebar-w on :root (clamped 200–420px, persisted to
+     writes --cnext-sidebar-w on :root (clamped 200–420px, persisted to
      localStorage). Falls back to 256px before the client effect runs / when the
      drag feature is unavailable. */
-  .humi-app { grid-template-columns: var(--humi-sidebar-w, 256px) 1fr !important; }
+  .cnext-app { grid-template-columns: var(--cnext-sidebar-w, 256px) 1fr !important; }
   /* Ease the rail<->panel fold so collapsing/expanding glides instead of
-     snapping. The drag-resize handle writes --humi-sidebar-w ~60×/s, so the
+     snapping. The drag-resize handle writes --cnext-sidebar-w ~60×/s, so the
      transition is suppressed mid-drag (html.sidebar-resizing, toggled in
      Sidebar.tsx) to keep the column tracking the cursor 1:1; reduced-motion
      users opt out below. */
-  .humi-app { transition: grid-template-columns 0.24s cubic-bezier(0.4, 0, 0.2, 1); }
-  html.sidebar-resizing .humi-app { transition: none !important; }
-  .humi-sidebar { display: flex !important; }
+  .cnext-app { transition: grid-template-columns 0.24s cubic-bezier(0.4, 0, 0.2, 1); }
+  html.sidebar-resizing .cnext-app { transition: none !important; }
+  .cnext-sidebar { display: flex !important; }
   /* Fully-hidden state (legacy sidebarOpen=false; the topbar toggle that drove
      this was removed 2026-05-27, but the rule is kept harmless for any
      programmatic setSidebarOpen(false)) — reclaim full width, drop the column. */
-  .humi-app.sidebar-collapsed { grid-template-columns: 1fr !important; }
-  .humi-app.sidebar-collapsed > .humi-sidebar { display: none !important; }
+  .cnext-app.sidebar-collapsed { grid-template-columns: 1fr !important; }
+  .cnext-app.sidebar-collapsed > .cnext-sidebar { display: none !important; }
   /* Panel collapsed (user folded the leaf panel via the rail toggle) — keep the
      icon rail, drop the leaf column so the grid shrinks to the rail width.
      :has() targets the aside directly, so only the desktop static sidebar is
      affected (the mobile drawer is a position:fixed overlay, never a grid child).
-     Specificity (.humi-app + :has(.humi-sidebar.bp-collapsed)) beats the plain
-     `.humi-app` 256px rule above even though both are !important. */
-  .humi-app:has(> .humi-sidebar.bp-collapsed) { grid-template-columns: 74px 1fr !important; }
+     Specificity (.cnext-app + :has(.cnext-sidebar.bp-collapsed)) beats the plain
+     `.cnext-app` 256px rule above even though both are !important. */
+  .cnext-app:has(> .cnext-sidebar.bp-collapsed) { grid-template-columns: 74px 1fr !important; }
 }
 
 /* Drawer modifier — 2026: rounded right edge + shadow elevation + slide-in.
@@ -266,7 +266,7 @@ html { font-size: 18px; }
    shadow-lg provides depth without harsh border, mount animation slides in
    from left via spring easing (AppShell renders drawer conditionally on open,
    so enter animation fires on every mount — no exit animation needed). */
-.humi-sidebar--drawer {
+.cnext-sidebar--drawer {
   display: flex;
   position: fixed;
   inset: 0 auto 0 0;
@@ -279,10 +279,10 @@ html { font-size: 18px; }
   border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
   box-shadow: var(--shadow-lg);
   will-change: transform;
-  animation: humi-drawer-slide-in var(--dur-slow) var(--ease-spring) both;
+  animation: cnext-drawer-slide-in var(--dur-slow) var(--ease-spring) both;
 }
 
-@keyframes humi-drawer-slide-in {
+@keyframes cnext-drawer-slide-in {
   from { transform: translateX(-100%); }
   to   { transform: translateX(0); }
 }
@@ -291,20 +291,20 @@ html { font-size: 18px; }
    Before: instant opaque dark overlay (harsh / old school).
    After: fade-in over dur-base + backdrop-blur(4px) gives depth
    without full-black overlay — feels like iOS/Figma/Notion. */
-.humi-drawer-scrim {
+.cnext-drawer-scrim {
   background: rgba(14, 27, 44, 0.45);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  animation: humi-scrim-fade-in var(--dur-base) ease both;
+  animation: cnext-scrim-fade-in var(--dur-base) ease both;
 }
 
-@keyframes humi-scrim-fade-in {
+@keyframes cnext-scrim-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
 /* Ported from styles.css:161-164 (.sidebar .brand) */
-.humi-brand {
+.cnext-brand {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -312,7 +312,7 @@ html { font-size: 18px; }
 }
 
 /* Ported from styles.css:165-174 (.sidebar .brand .wordmark) */
-.humi-wordmark {
+.cnext-wordmark {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.7500rem;
@@ -335,7 +335,7 @@ html { font-size: 18px; }
    Nav content is also tightened (gap + padding below) so scroll rarely
    triggers on standard desktop viewports (~1000px) — scroll becomes the
    edge case (expanded submenus) rather than the default state. */
-.humi-nav {
+.cnext-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -345,8 +345,8 @@ html { font-size: 18px; }
   scrollbar-width: none;         /* Firefox */
   -ms-overflow-style: none;       /* legacy Edge/IE */
 }
-.humi-nav::-webkit-scrollbar { display: none; }   /* Chromium/Safari */
-.humi-nav-section {
+.cnext-nav::-webkit-scrollbar { display: none; }   /* Chromium/Safari */
+.cnext-nav-section {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -356,7 +356,7 @@ html { font-size: 18px; }
    Padding tightened 2026-04-23 (14/6 → 10/4) so 17-item nav fits in
    1000px viewports without scrolling — avoids the hidden-scrollbar
    clip cutting the last item (ศูนย์ Admin). */
-.humi-nav-label {
+.cnext-nav-label {
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -365,13 +365,13 @@ html { font-size: 18px; }
   font-weight: 500;
 }
 /* First section label has no top padding — brand header already provides the gap */
-.humi-nav > .humi-nav-section:first-child .humi-nav-label { padding-top: 4px; }
+.cnext-nav > .cnext-nav-section:first-child .cnext-nav-label { padding-top: 4px; }
 
 /* Nav items — 2026: spring transitions + active state accent glow.
    Before: flat `rgba(255,255,255,0.08)` active bg = barely visible (old school).
    After: accent left-border strip + teal tint bg + icon glow for active;
    hover reveals slightly brighter bg with smooth spring easing. */
-.humi-nav-item {
+.cnext-nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -389,23 +389,23 @@ html { font-size: 18px; }
   position: relative;
 }
 /* Drawer mode = mobile/tablet → restore WCAG 2.5.5 touch target */
-.humi-sidebar--drawer .humi-nav-item { min-height: 44px; padding: 9px 12px; }
-.humi-nav-item:hover {
+.cnext-sidebar--drawer .cnext-nav-item { min-height: 44px; padding: 9px 12px; }
+.cnext-nav-item:hover {
   background: rgba(255, 255, 255, 0.07);
   color: rgba(231, 227, 216, 0.95);
 }
-.humi-nav-item.active {
+.cnext-nav-item.active {
   background: rgba(31, 168, 160, 0.15);
   color: #fff;
   box-shadow: inset 3px 0 0 var(--color-accent);
 }
-.humi-nav-item:focus-visible {
+.cnext-nav-item:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
 /* Ported from styles.css:214-219 (.nav-icon + .active .nav-icon) */
-.humi-nav-icon {
+.cnext-nav-icon {
   width: 16px;
   height: 16px;
   display: inline-flex;
@@ -413,12 +413,12 @@ html { font-size: 18px; }
   justify-content: center;
   color: rgba(231, 227, 216, 0.55);
 }
-.humi-nav-item.active .humi-nav-icon {
+.cnext-nav-item.active .cnext-nav-icon {
   color: var(--color-accent);
 }
 
 /* Text label — own addition so pill can sit margin-left:auto. */
-.humi-nav-text {
+.cnext-nav-text {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -429,7 +429,7 @@ html { font-size: 18px; }
 /* Ported from styles.css:220-228 (.nav-item.active .pill)
    — generalized so inactive items show pill too (reference shows
    badges whenever item.badge is set, not only active). */
-.humi-pill {
+.cnext-pill {
   margin-left: auto;
   background: var(--color-accent);
   color: var(--color-ink);
@@ -440,7 +440,7 @@ html { font-size: 18px; }
 }
 
 /* Ported from styles.css:230-236 (.sidebar-foot) */
-.humi-sidebar-foot {
+.cnext-sidebar-foot {
   margin-top: auto;
   padding: 10px;
   display: flex;
@@ -451,7 +451,7 @@ html { font-size: 18px; }
 }
 
 /* Ported from styles.css:237-248 (.avatar + .avatar.coral) */
-.humi-avatar {
+.cnext-avatar {
   width: 34px;
   height: 34px;
   border-radius: 50%;
@@ -464,24 +464,24 @@ html { font-size: 18px; }
   font-size: 0.8125rem;
   flex-shrink: 0;
 }
-.humi-avatar.coral {
+.cnext-avatar.coral {
   background: linear-gradient(135deg, #E08864, #F4E4B8);
 }
 
 /* User meta in sidebar footer — ported from shell.jsx:48-51 inline styles. */
-.humi-user-meta {
+.cnext-user-meta {
   font-size: 0.8125rem;
   line-height: 1.3;
   min-width: 0;
 }
-.humi-user-name {
+.cnext-user-name {
   color: var(--color-canvas-soft);
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.humi-user-role {
+.cnext-user-role {
   color: rgba(231, 227, 216, 0.55);
   font-size: 0.6875rem;
   overflow: hidden;
@@ -493,14 +493,14 @@ html { font-size: 18px; }
    Blueprint sidebar (bp-*) — ported faithfully from HRMS_Blueprint/hrms-shell.css
    (.sidebar / .brand / .tenant / .nav-group / .nav-trigger / .nav-panel /
     .nav-children / .nav-child / .badge / .sb-user). Blueprint vars mapped to
-   the app's Humi tokens:
+   the app's Cnext tokens:
      --color-ink (navy bg), --color-accent (teal), --color-canvas-soft (cream),
      --color-danger family kept off (no red). Blueprint mono var → --font-mono.
      Class names prefixed `bp-` so they layer additively on top of the base
-     `.humi-sidebar` (which supplies bg / sticky / 100vh / display rules).
+     `.cnext-sidebar` (which supplies bg / sticky / 100vh / display rules).
    ════════════════════════════════════════════════════════════════════════ */
 
-/* The Blueprint sidebar is the navy rail; reuse the base .humi-sidebar chrome
+/* The Blueprint sidebar is the navy rail; reuse the base .cnext-sidebar chrome
    (bg #0E1B2C, sticky, 100vh, lg+ display:flex) and tighten padding/gap. */
 .bp-sidebar {
   padding: 20px 12px 14px;
@@ -718,7 +718,7 @@ html { font-size: 18px; }
 /* ════════════════════════════════════════════════════════════════════════
    Blueprint rail + panel shell nav (bp-shellnav / bp-rail / bp-panel) —
    two-column master-detail (wireframe 2026-05-25). Col1 = macro-group icon
-   rail; Col2 = leaves of the selected group. Overrides the base .humi-sidebar
+   rail; Col2 = leaves of the selected group. Overrides the base .cnext-sidebar
    column layout to a row of [rail | panel]. Supersedes the bp-nav* accordion
    rules above (now unused).
    ════════════════════════════════════════════════════════════════════════ */
@@ -727,7 +727,7 @@ html { font-size: 18px; }
   padding: 0 !important;
   gap: 0;
   overflow: hidden;
-  /* Keep the base .humi-sidebar `position: sticky` (top:0, height:100dvh) so the
+  /* Keep the base .cnext-sidebar `position: sticky` (top:0, height:100dvh) so the
      sidebar stays put while the page scrolls — DON'T downgrade to `relative`
      (that clobbered sticky and made the rail scroll away). `sticky` is still a
      containing block for the absolutely-positioned drag-resize handle below. */
@@ -923,26 +923,26 @@ html { font-size: 18px; }
   to   { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .humi-app { transition: none !important; }
+  .cnext-app { transition: none !important; }
 }
 
 /* Ported from styles.css:251 (.main) */
-.humi-main {
+.cnext-main {
   padding: 0 16px 48px;
   min-width: 0;
   /* `clip` (not `hidden`) clips horizontal overflow WITHOUT creating a scroll
      container — otherwise overflow-x:hidden forces overflow-y:auto and silently
-     breaks the sticky .humi-topbar (topbar would scroll away). */
+     breaks the sticky .cnext-topbar (topbar would scroll away). */
   overflow-x: clip;
 }
 @media (min-width: 640px) {
-  .humi-main { padding: 0 36px 48px; }
+  .cnext-main { padding: 0 36px 48px; }
 }
 
-/* Humi page wrapper — single source of truth for page max-width + padding.
+/* Cnext page wrapper — single source of truth for page max-width + padding.
    Replaces per-page `<main className="mx-auto max-w-[var(--max-width-page)]...">`
    duplication so all 11 screens align consistently. */
-.humi-page-wrap {
+.cnext-page-wrap {
   margin-left: auto;
   margin-right: auto;
   width: 100%;
@@ -955,7 +955,7 @@ html { font-size: 18px; }
    at 0.88 opacity lets content scroll behind with readable depth; blur(16px)
    provides the frosted-glass separation used by Linear/Vercel/Stripe toolbars.
    Border-bottom hairline replaces the hard canvas gradient cut. */
-.humi-topbar {
+.cnext-topbar {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -974,11 +974,11 @@ html { font-size: 18px; }
    resolves @theme tokens at build time, baking the light-mode value into
    literal hex — so color-mix() loses runtime flip. Keep both modes as
    literal rgba so .dark selector wins at cascade time. */
-.dark .humi-topbar {
+.dark .cnext-topbar {
   background: rgba(14, 27, 44, 0.88);
 }
 /* Elevate topbar when page has scrolled — JS adds data-scrolled */
-.humi-topbar[data-scrolled="true"] {
+.cnext-topbar[data-scrolled="true"] {
   box-shadow: var(--shadow-md);
   border-bottom-color: transparent;
 }
@@ -986,7 +986,7 @@ html { font-size: 18px; }
 /* Search pill — 2026: shadow replaces hard border, hover lift feedback.
    Shadow-sm is warm navy tinted from token — reads as card elevation not outline. */
 @layer components {
-.humi-search {
+.cnext-search {
   flex: 1;
   max-width: 420px;
   display: flex;
@@ -1003,11 +1003,11 @@ html { font-size: 18px; }
               border-color var(--dur-fast);
   cursor: pointer;
 }
-.humi-search:hover {
+.cnext-search:hover {
   border-color: var(--color-accent-soft);
   box-shadow: var(--shadow-md);
 }
-.humi-search-placeholder {
+.cnext-search-placeholder {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -1017,7 +1017,7 @@ html { font-size: 18px; }
 }
 
 /* Ported from styles.css:269-278 (.search kbd) */
-.humi-search kbd {
+.cnext-search kbd {
   margin-left: auto;
   font-family: var(--font-sans);
   font-size: 0.6875rem;
@@ -1033,7 +1033,7 @@ html { font-size: 18px; }
    lighter and more modern (Linear, Notion, Vercel pattern). Touch target 44×44
    preserved for WCAG 2.5.5. Added transition for all interactive states. */
 @layer components {
-.humi-icon-btn {
+.cnext-icon-btn {
   width: 44px;
   height: 44px;
   min-width: 44px;
@@ -1053,16 +1053,16 @@ html { font-size: 18px; }
               border-color var(--dur-fast),
               box-shadow var(--dur-fast) var(--ease-spring);
 }
-.humi-icon-btn:hover {
+.cnext-icon-btn:hover {
   background: var(--color-surface);
   border-color: var(--color-hairline-soft);
   color: var(--color-ink-soft);
   box-shadow: var(--shadow-sm);
 }
-.humi-icon-btn:active {
+.cnext-icon-btn:active {
   transform: scale(0.94);
 }
-.humi-icon-btn:focus-visible {
+.cnext-icon-btn:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
@@ -1072,7 +1072,7 @@ html { font-size: 18px; }
    Before: `border: 1px solid accent` = Bootstrap chip feel (2018).
    After:  shadow glow + borderless chip, `font-display` on "เมนู" text
    — reads as intentional UI affordance not a form field. */
-.humi-menu-btn {
+.cnext-menu-btn {
   height: 44px;
   min-height: 44px;
   padding: 0 16px;
@@ -1094,29 +1094,29 @@ html { font-size: 18px; }
               box-shadow var(--dur-fast) var(--ease-spring),
               transform var(--dur-fast) var(--ease-spring);
 }
-.humi-menu-btn:hover {
+.cnext-menu-btn:hover {
   background: var(--color-accent);
   color: var(--color-canvas-soft);
   box-shadow: 0 0 0 1.5px var(--color-accent), var(--shadow-md);
 }
-.humi-menu-btn:active {
+.cnext-menu-btn:active {
   transform: scale(0.96);
 }
-.humi-menu-btn:focus-visible {
+.cnext-menu-btn:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
-} /* end @layer components for humi-icon-btn */
+} /* end @layer components for cnext-icon-btn */
 
 /* ─── Button token — unified across app ─────────────────────────────────────
    Single source of truth for all action buttons. Two name aliases:
-   `.humi-button` (new — StepCompensation, ActionGuardBanner) and
-   `.humi-btn`    (legacy — all B-action pages + createCrudPage factory).
+   `.cnext-button` (new — StepCompensation, ActionGuardBanner) and
+   `.cnext-btn`    (legacy — all B-action pages + createCrudPage factory).
    Both share identical base; variants are BEM modifiers.
    --color-accent-hover not in :root → use filter:brightness(0.93) on primary. */
 @layer components {
-.humi-button,
-.humi-btn {
+.cnext-button,
+.cnext-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1133,73 +1133,73 @@ html { font-size: 18px; }
   text-decoration: none;
   font-family: inherit;
 }
-.humi-button:focus-visible,
-.humi-btn:focus-visible {
+.cnext-button:focus-visible,
+.cnext-btn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-accent);
 }
-.humi-button:disabled,
-.humi-btn:disabled {
+.cnext-button:disabled,
+.cnext-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
 /* -- primary (teal solid) -- */
-.humi-button--primary,
-.humi-btn--primary,
-.humi-btn-primary {
+.cnext-button--primary,
+.cnext-btn--primary,
+.cnext-btn-primary {
   background: var(--color-accent);
   color: white;
   box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
-.humi-button--primary:hover:not(:disabled),
-.humi-btn--primary:hover:not(:disabled),
-.humi-btn-primary:hover:not(:disabled) {
+.cnext-button--primary:hover:not(:disabled),
+.cnext-btn--primary:hover:not(:disabled),
+.cnext-btn-primary:hover:not(:disabled) {
   filter: brightness(0.93);
   box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
 
 /* -- ghost (bordered) -- */
-.humi-button--ghost,
-.humi-btn--ghost,
-.humi-btn-secondary {
+.cnext-button--ghost,
+.cnext-btn--ghost,
+.cnext-btn-secondary {
   background: transparent;
   color: var(--color-ink);
   border-color: var(--color-hairline);
 }
-.humi-button--ghost:hover:not(:disabled),
-.humi-btn--ghost:hover:not(:disabled),
-.humi-btn-secondary:hover:not(:disabled) {
+.cnext-button--ghost:hover:not(:disabled),
+.cnext-btn--ghost:hover:not(:disabled),
+.cnext-btn-secondary:hover:not(:disabled) {
   background: var(--color-canvas-soft);
 }
 
 /* -- danger (pumpkin solid) -- */
-.humi-button--danger,
-.humi-btn--danger {
+.cnext-button--danger,
+.cnext-btn--danger {
   background: var(--color-danger);
   color: white;
 }
-.humi-button--danger:hover:not(:disabled),
-.humi-btn--danger:hover:not(:disabled) {
+.cnext-button--danger:hover:not(:disabled),
+.cnext-btn--danger:hover:not(:disabled) {
   filter: brightness(0.95);
 }
 
 /* -- danger-soft (text only) -- */
-.humi-button--danger-soft,
-.humi-btn--danger-soft {
+.cnext-button--danger-soft,
+.cnext-btn--danger-soft {
   background: transparent;
   color: var(--color-danger);
   border-color: transparent;
 }
-.humi-button--danger-soft:hover:not(:disabled),
-.humi-btn--danger-soft:hover:not(:disabled) {
+.cnext-button--danger-soft:hover:not(:disabled),
+.cnext-btn--danger-soft:hover:not(:disabled) {
   background: var(--color-danger-soft);
 }
-} /* end @layer components for humi-button/humi-btn */
+} /* end @layer components for cnext-button/cnext-btn */
 
 /* Ported from styles.css:289-294 (.icon-btn .dot-badge) — using
-   warning amber (no coral in Humi token palette per NO-RED). */
-.humi-dot-badge {
+   warning amber (no coral in Cnext token palette per NO-RED). */
+.cnext-dot-badge {
   position: absolute;
   top: 8px;
   right: 9px;
@@ -1210,10 +1210,10 @@ html { font-size: 18px; }
   border: 2px solid var(--color-surface);
 }
 
-/* Ported from styles.css:328-334 (.eyebrow) — humi-scoped duplicate
+/* Ported from styles.css:328-334 (.eyebrow) — cnext-scoped duplicate
    of existing token so usage inside Topbar doesn't require a new
    global utility class. */
-.humi-eyebrow {
+.cnext-eyebrow {
   font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -1222,21 +1222,21 @@ html { font-size: 18px; }
 }
 
 /* Ported from styles.css:395 (.spacer) */
-.humi-spacer {
+.cnext-spacer {
   flex: 1;
 }
 
 /* ════════════════════════════════════════════════════════════
-   Humi Screens — ported classes (home / profile / announcements
+   Cnext Screens — ported classes (home / profile / announcements
    / login).  Source: docs/design-ref/shelfly-bundle/project/
-   styles.css.  Namespaced .humi-* so they coexist with existing
+   styles.css.  Namespaced .cnext-* so they coexist with existing
    primitives.  NO-RED: coral → var(--color-warning) amber, cream
    tokens → --color-canvas family.  Line refs cite source line.
    ════════════════════════════════════════════════════════════ */
 
 /* Ported from styles.css:127-135 (.grain::before) */
-.humi-grain { position: relative; }
-.humi-grain::before {
+.cnext-grain { position: relative; }
+.cnext-grain::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -1251,22 +1251,22 @@ html { font-size: 18px; }
 /* Ported from styles.css:439-449 (.blob variants).
    Retained original warm palette (teal/coral-as-amber/sage/butter)
    per reference visuals, but .coral remapped to amber per NO-RED. */
-.humi-blob {
+.cnext-blob {
   position: absolute;
   border-radius: 50% 50% 46% 46% / 60% 60% 40% 40%;
   filter: blur(0.3px);
   z-index: 0;
   pointer-events: none;
 }
-.humi-blob--teal   { background: var(--color-accent); }
-.humi-blob--coral  { background: var(--color-warning); }
-.humi-blob--sage   { background: var(--color-sage); }
-.humi-blob--butter { background: var(--color-butter); }
+.cnext-blob--teal   { background: var(--color-accent); }
+.cnext-blob--coral  { background: var(--color-warning); }
+.cnext-blob--sage   { background: var(--color-sage); }
+.cnext-blob--butter { background: var(--color-butter); }
 
-/* Ported from styles.css:315-326 (.card variants). Humi `Card`
+/* Ported from styles.css:315-326 (.card variants). Cnext `Card`
    primitive already covers the base surface; these variants are
    for in-page inline cards (hero card, cream card, ink card). */
-.humi-card {
+.cnext-card {
   background: var(--color-surface);
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-lg, 20px);
@@ -1274,16 +1274,16 @@ html { font-size: 18px; }
   position: relative;
   isolation: isolate;
 }
-.humi-card--tight  { padding: 18px; }
-.humi-card--cream  { background: var(--color-canvas-soft); }
-.humi-card--ink    { background: var(--color-ink); color: #E7E3D8; border-color: var(--color-ink-soft); }
-.humi-card--accent { background: var(--color-accent-soft); border-color: transparent; }
+.cnext-card--tight  { padding: 18px; }
+.cnext-card--cream  { background: var(--color-canvas-soft); }
+.cnext-card--ink    { background: var(--color-ink); color: #E7E3D8; border-color: var(--color-ink-soft); }
+.cnext-card--accent { background: var(--color-accent-soft); border-color: transparent; }
 /* Raise non-blob children above decorative blobs (styles.css:451-456) */
-.humi-card > *:not(.humi-blob) { position: relative; z-index: 1; }
+.cnext-card > *:not(.cnext-blob) { position: relative; z-index: 1; }
 
 /* Ported from styles.css:336-350 (.tag variants).  .tag.coral →
    amber for NO-RED compliance. */
-.humi-tag {
+.cnext-tag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1295,32 +1295,32 @@ html { font-size: 18px; }
   color: var(--color-ink-soft);
   border: 1px solid var(--color-hairline);
 }
-.humi-tag--accent { background: var(--color-accent-soft); color: var(--color-ink); border-color: transparent; }
-.humi-tag--coral  { background: var(--color-warning-soft); color: #6B4E14; border-color: transparent; }
-.humi-tag--sage   { background: var(--color-sage-soft); color: #2F5840; border-color: transparent; }
-.humi-tag--butter { background: var(--color-butter-soft); color: #6B4E14; border-color: transparent; }
-.humi-tag--ink    { background: var(--color-ink); color: var(--color-canvas-soft); border-color: transparent; }
+.cnext-tag--accent { background: var(--color-accent-soft); color: var(--color-ink); border-color: transparent; }
+.cnext-tag--coral  { background: var(--color-warning-soft); color: #6B4E14; border-color: transparent; }
+.cnext-tag--sage   { background: var(--color-sage-soft); color: #2F5840; border-color: transparent; }
+.cnext-tag--butter { background: var(--color-butter-soft); color: #6B4E14; border-color: transparent; }
+.cnext-tag--ink    { background: var(--color-ink); color: var(--color-canvas-soft); border-color: transparent; }
 
 /* Ported from styles.css:237-248 (.avatar base + tone variants).
-   Sibling of the existing .humi-avatar used in sidebar footer;
+   Sibling of the existing .cnext-avatar used in sidebar footer;
    we extend it with tone modifiers here (the sidebar avatar
    definition already lives at globals.css:307). */
-.humi-avatar--sage   { background: linear-gradient(135deg, #9BB5A0, #D6EEEC); color: var(--color-ink); }
-.humi-avatar--teal   { background: linear-gradient(135deg, #1FA8A0, #9BB5A0); color: #fff; }
-.humi-avatar--coral  { background: linear-gradient(135deg, #E08864, #F4E4B8); color: var(--color-ink); }
-.humi-avatar--butter { background: linear-gradient(135deg, #E8C46B, #F4E4B8); color: var(--color-ink); }
-.humi-avatar--ink    { background: linear-gradient(135deg, #243447, #5A6A7E); color: #fff; }
+.cnext-avatar--sage   { background: linear-gradient(135deg, #9BB5A0, #D6EEEC); color: var(--color-ink); }
+.cnext-avatar--teal   { background: linear-gradient(135deg, #1FA8A0, #9BB5A0); color: #fff; }
+.cnext-avatar--coral  { background: linear-gradient(135deg, #E08864, #F4E4B8); color: var(--color-ink); }
+.cnext-avatar--butter { background: linear-gradient(135deg, #E8C46B, #F4E4B8); color: var(--color-ink); }
+.cnext-avatar--ink    { background: linear-gradient(135deg, #243447, #5A6A7E); color: #fff; }
 
 /* Ported from styles.css:352 (.divider). */
-.humi-divider { height: 1px; background: var(--color-hairline-soft); border: 0; margin: 16px 0; }
+.cnext-divider { height: 1px; background: var(--color-hairline-soft); border: 0; margin: 16px 0; }
 
 /* Ported from styles.css:393-395 (.row / .col) — page-local
-   flex helpers. Scoped .humi-* so they don't collide. */
-.humi-row { display: flex; align-items: center; gap: 12px; }
-.humi-col { display: flex; flex-direction: column; gap: 12px; }
+   flex helpers. Scoped .cnext-* so they don't collide. */
+.cnext-row { display: flex; align-items: center; gap: 12px; }
+.cnext-col { display: flex; flex-direction: column; gap: 12px; }
 
 /* Ported from styles.css:488-493 (.tabs + .tab). */
-.humi-tabs {
+.cnext-tabs {
   display: flex;
   gap: 4px;
   background: var(--color-canvas-soft);
@@ -1329,7 +1329,7 @@ html { font-size: 18px; }
   padding: 4px;
   width: fit-content;
 }
-.humi-tab {
+.cnext-tab {
   padding: 7px 14px;
   border-radius: 9px;
   font-size: 0.8125rem;
@@ -1340,17 +1340,17 @@ html { font-size: 18px; }
   border: 0;
   font-family: inherit;
 }
-.humi-tab:hover { color: var(--color-ink); }
-.humi-tab--active {
+.cnext-tab:hover { color: var(--color-ink); }
+.cnext-tab--active {
   background: var(--color-surface);
   color: var(--color-ink);
   box-shadow: 0 1px 2px rgba(14, 27, 44, 0.06);
 }
-.humi-tab:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.cnext-tab:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
 /* Ported from styles.css:496-504 (.list + .row-item). */
-.humi-list { display: flex; flex-direction: column; }
-.humi-row-item {
+.cnext-list { display: flex; flex-direction: column; }
+.cnext-row-item {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 14px;
@@ -1358,10 +1358,10 @@ html { font-size: 18px; }
   padding: 14px 0;
   border-bottom: 1px solid var(--color-hairline-soft);
 }
-.humi-row-item:last-child { border-bottom: 0; }
+.cnext-row-item:last-child { border-bottom: 0; }
 
 /* Ported from styles.css:507-519 (.ring). */
-.humi-ring {
+.cnext-ring {
   --p: 62;
   --size: 104px;
   width: var(--size);
@@ -1373,14 +1373,14 @@ html { font-size: 18px; }
   justify-content: center;
   position: relative;
 }
-.humi-ring::after {
+.cnext-ring::after {
   content: '';
   position: absolute;
   inset: 10px;
   border-radius: 50%;
   background: var(--color-surface);
 }
-.humi-ring-val {
+.cnext-ring-val {
   position: relative;
   z-index: 1;
   font-family: var(--font-display);
@@ -1389,13 +1389,13 @@ html { font-size: 18px; }
 }
 
 /* Ported from styles.css:522-542 (.cal + variants). */
-.humi-cal {
+.cnext-cal {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
   font-size: 0.7500rem;
 }
-.humi-cal-dow {
+.cnext-cal-dow {
   color: var(--color-ink-faint);
   text-align: center;
   font-weight: 600;
@@ -1403,7 +1403,7 @@ html { font-size: 18px; }
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-.humi-cal-day {
+.cnext-cal-day {
   aspect-ratio: 1;
   display: flex;
   align-items: center;
@@ -1413,8 +1413,8 @@ html { font-size: 18px; }
   font-weight: 500;
   position: relative;
 }
-.humi-cal-day--off { color: var(--color-ink-faint); }
-.humi-cal-day--has::after {
+.cnext-cal-day--off { color: var(--color-ink-faint); }
+.cnext-cal-day--has::after {
   content: '';
   width: 4px;
   height: 4px;
@@ -1423,23 +1423,23 @@ html { font-size: 18px; }
   position: absolute;
   bottom: 4px;
 }
-.humi-cal-day--sel   { background: var(--color-ink); color: var(--color-canvas-soft); }
-.humi-cal-day--range { background: var(--color-accent-soft); }
+.cnext-cal-day--sel   { background: var(--color-ink); color: var(--color-canvas-soft); }
+.cnext-cal-day--range { background: var(--color-accent-soft); }
 
 /* Ported from styles.css:564-570 (.post). */
-.humi-post {
+.cnext-post {
   padding: 18px;
   background: var(--color-surface);
   border: 1px solid var(--color-hairline);
   border-radius: 16px;
 }
-.humi-post + .humi-post { margin-top: 12px; }
-.humi-post--pin { border-color: transparent; background: var(--color-accent-soft); }
+.cnext-post + .cnext-post { margin-top: 12px; }
+.cnext-post--pin { border-color: transparent; background: var(--color-accent-soft); }
 
 /* Ported from styles.css:421-436 (.field). */
-.humi-field { display: flex; flex-direction: column; gap: 6px; }
-.humi-field label { font-size: 0.8125rem; font-weight: 500; color: var(--color-ink-soft); }
-.humi-field input {
+.cnext-field { display: flex; flex-direction: column; gap: 6px; }
+.cnext-field label { font-size: 0.8125rem; font-weight: 500; color: var(--color-ink-soft); }
+.cnext-field input {
   padding: 12px 14px;
   border: 1px solid var(--color-hairline);
   border-radius: 12px;
@@ -1450,7 +1450,7 @@ html { font-size: 18px; }
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.humi-field input:focus {
+.cnext-field input:focus {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 4px var(--color-accent-soft);
 }
@@ -1459,7 +1459,7 @@ html { font-size: 18px; }
    .login-form).  Full-viewport overlay so it visually covers the
    AppShell wrapper at /[locale]/login — no shell layout opt-out
    is needed. */
-.humi-login-wrap {
+.cnext-login-wrap {
   position: fixed;
   inset: 0;
   z-index: 40;
@@ -1468,7 +1468,7 @@ html { font-size: 18px; }
   background: var(--color-canvas);
   overflow: auto;
 }
-.humi-login-art {
+.cnext-login-art {
   background: var(--color-ink);
   color: #E7E3D8;
   padding: 40px;
@@ -1478,7 +1478,7 @@ html { font-size: 18px; }
   flex-direction: column;
   align-items: flex-start;
 }
-.humi-login-form {
+.cnext-login-form {
   padding: 60px clamp(40px, 6vw, 80px);
   display: flex;
   flex-direction: column;
@@ -1486,13 +1486,13 @@ html { font-size: 18px; }
   background: var(--color-canvas);
 }
 @media (max-width: 900px) {
-  .humi-login-wrap { grid-template-columns: 1fr; }
-  .humi-login-art  { min-height: 40vh; }
+  .cnext-login-wrap { grid-template-columns: 1fr; }
+  .cnext-login-art  { min-height: 40vh; }
 }
 
 /* Hero card eyebrow/H1 typography helpers (home hero + login
    headline). Ported inline styles from home.jsx:14 / login.jsx:22. */
-.humi-hero-title {
+.cnext-hero-title {
   font-family: var(--font-display);
   font-size: 2.0625rem;
   font-weight: 600;
@@ -1500,9 +1500,9 @@ html { font-size: 18px; }
   letter-spacing: -0.015em;
   color: var(--color-ink);
 }
-.humi-hero-title-soft { color: var(--color-ink-muted); }
+.cnext-hero-title-soft { color: var(--color-ink-muted); }
 
-.humi-login-headline {
+.cnext-login-headline {
   font-family: var(--font-display);
   font-size: clamp(36px, 5vw, 52px);
   font-weight: 700;
@@ -1511,14 +1511,14 @@ html { font-size: 18px; }
   color: var(--color-canvas-soft);
   margin: 14px 0 0;
 }
-.humi-login-body {
+.cnext-login-body {
   color: rgba(231, 227, 216, 0.75);
   font-size: 1.0000rem;
   line-height: 1.65;
   margin-top: 18px;
   max-width: 480px;
 }
-.humi-login-quote {
+.cnext-login-quote {
   margin-top: 36px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1527,7 +1527,7 @@ html { font-size: 18px; }
   max-width: 500px;
   backdrop-filter: blur(4px);
 }
-.humi-login-quote-body {
+.cnext-login-quote-body {
   font-family: var(--font-display);
   font-size: 1.0625rem;
   color: var(--color-canvas-soft);
@@ -1535,12 +1535,12 @@ html { font-size: 18px; }
 }
 
 /* ── Goals slider — 44×44 thumb touch target (WCAG 2.5.5, issue #5 b12)
-   Scoped to .humi-goal-slider so it doesn't affect other range inputs. ── */
-.humi-goal-slider {
+   Scoped to .cnext-goal-slider so it doesn't affect other range inputs. ── */
+.cnext-goal-slider {
   height: 44px;
   cursor: pointer;
 }
-.humi-goal-slider::-webkit-slider-thumb {
+.cnext-goal-slider::-webkit-slider-thumb {
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -1551,7 +1551,7 @@ html { font-size: 18px; }
   appearance: none;
   cursor: grab;
 }
-.humi-goal-slider::-moz-range-thumb {
+.cnext-goal-slider::-moz-range-thumb {
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -1568,31 +1568,31 @@ html { font-size: 18px; }
    Kept as CSS classes (not Tailwind chains) so a single edit here
    re-skins all forms — no sed sweep across 30+ files.
    ════════════════════════════════════════════════════════════ */
-.humi-field { display: flex; flex-direction: column; gap: 6px; }
-.humi-field + .humi-field { margin-top: 18px; }
+.cnext-field { display: flex; flex-direction: column; gap: 6px; }
+.cnext-field + .cnext-field { margin-top: 18px; }
 
-.humi-label {
+.cnext-label {
   font-family: var(--font-display);
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-ink);
   letter-spacing: -0.005em;
 }
-.humi-label-hint {
+.cnext-label-hint {
   font-size: 0.7500rem;
   color: var(--color-ink-muted);
   font-weight: 400;
   margin-left: 4px;
 }
-.humi-asterisk {
+.cnext-asterisk {
   color: var(--color-accent);
   margin-left: 4px;
   font-weight: 600;
 }
 
-.humi-input,
-.humi-select,
-.humi-textarea {
+.cnext-input,
+.cnext-select,
+.cnext-textarea {
   width: 100%;
   max-width: 480px;
   border-radius: var(--radius-md);
@@ -1604,64 +1604,64 @@ html { font-size: 18px; }
   font-family: inherit;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
-.humi-input:hover,
-.humi-select:hover,
-.humi-textarea:hover { border-color: var(--color-ink-faint); }
-.humi-input:focus,
-.humi-select:focus,
-.humi-textarea:focus {
+.cnext-input:hover,
+.cnext-select:hover,
+.cnext-textarea:hover { border-color: var(--color-ink-faint); }
+.cnext-input:focus,
+.cnext-select:focus,
+.cnext-textarea:focus {
   outline: none;
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
-.humi-input[aria-invalid="true"],
-.humi-select[aria-invalid="true"],
-.humi-textarea[aria-invalid="true"] {
+.cnext-input[aria-invalid="true"],
+.cnext-select[aria-invalid="true"],
+.cnext-textarea[aria-invalid="true"] {
   border-color: var(--color-warning);
 }
-.humi-input[aria-invalid="true"]:focus,
-.humi-select[aria-invalid="true"]:focus,
-.humi-textarea[aria-invalid="true"]:focus {
+.cnext-input[aria-invalid="true"]:focus,
+.cnext-select[aria-invalid="true"]:focus,
+.cnext-textarea[aria-invalid="true"]:focus {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-warning) 22%, transparent);
 }
-.humi-input:disabled,
-.humi-select:disabled,
-.humi-textarea:disabled {
+.cnext-input:disabled,
+.cnext-select:disabled,
+.cnext-textarea:disabled {
   background: var(--color-canvas-soft);
   color: var(--color-ink-muted);
   cursor: not-allowed;
 }
-.humi-select {
+.cnext-select {
   appearance: none;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5l5-5' stroke='%230E1B2C' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 32px;
 }
-.humi-input--sm { max-width: 220px; }
-.humi-input--wide { max-width: 100%; }
+.cnext-input--sm { max-width: 220px; }
+.cnext-input--wide { max-width: 100%; }
 
-.humi-help {
+.cnext-help {
   font-size: 0.7500rem;
   color: var(--color-ink-muted);
 }
-.humi-error {
+.cnext-error {
   font-size: 0.7500rem;
   color: var(--color-warning);
   font-weight: 500;
 }
-.humi-required-note {
+.cnext-required-note {
   font-size: 0.7500rem;
   color: var(--color-ink-muted);
   margin-top: 18px;
 }
-.humi-required-note .humi-asterisk { margin-left: 0; margin-right: 4px; }
+.cnext-required-note .cnext-asterisk { margin-left: 0; margin-right: 4px; }
 
 /* Section inside a merged wizard step (Who / Job / Review).
-   Each section = independent `humi-card` with its own eyebrow so
+   Each section = independent `cnext-card` with its own eyebrow so
    the 3-step shell still feels like a curated dashboard rather
    than one giant scrolling form. */
-.humi-section-title {
+.cnext-section-title {
   font-family: var(--font-display);
   font-size: 1.1250rem;
   font-weight: 600;
@@ -1669,20 +1669,20 @@ html { font-size: 18px; }
   letter-spacing: -0.015em;
   margin-bottom: 4px;
 }
-.humi-section-sub {
+.cnext-section-sub {
   font-size: 0.8125rem;
   color: var(--color-ink-muted);
   margin-bottom: 16px;
 }
 
 /* ──────────────────────────────────────────────────────────
-   .humi-step-section — CSS overrides that re-skin every existing
-   Step*.tsx (Identity, Name, Biographical, …) to Humi tokens
+   .cnext-step-section — CSS overrides that re-skin every existing
+   Step*.tsx (Identity, Name, Biographical, …) to Cnext tokens
    WITHOUT editing the 8 component files. The wrapper passes
-   className="humi-step-section" to a container, and descendant
-   selectors here map plain Tailwind utilities → Humi primitives.
+   className="cnext-step-section" to a container, and descendant
+   selectors here map plain Tailwind utilities → Cnext primitives.
    ────────────────────────────────────────────────────────── */
-.humi-step-section h2 {
+.cnext-step-section h2 {
   /* Visually hidden — Step*.tsx h2 says "ขั้นตอนที่ N — …" which is
      redundant (and now misleading) when composed under Who/Job/Review
      wrappers. Keep in DOM so text-presence tests still find the heading.
@@ -1702,12 +1702,12 @@ html { font-size: 18px; }
    provides a single consolidated note for the whole section so
    dedupe by hiding the inner repeats. Use :has() to only hide the
    paragraph that wraps the asterisk+required text (not error messages). */
-.humi-step-section p.text-gray-400 { display: none !important; }
+.cnext-step-section p.text-gray-400 { display: none !important; }
 
 /* Labels — override Tailwind `text-gray-700` inside Step*.tsx
-   with Humi label styling. Covers both `<label>` and inline
+   with Cnext label styling. Covers both `<label>` and inline
    `<fieldset><label>` patterns used across Step*.tsx. */
-.humi-step-section label.text-gray-700 {
+.cnext-step-section label.text-gray-700 {
   font-family: var(--font-display);
   font-size: 0.8125rem;
   font-weight: 600;
@@ -1715,27 +1715,27 @@ html { font-size: 18px; }
   letter-spacing: -0.005em;
 }
 /* The asterisk span inside each label → accent teal (warmer than
-   red-500 and matches Humi required-indicator on /th/profile). */
-.humi-step-section .text-red-500 {
+   red-500 and matches Cnext required-indicator on /th/profile). */
+.cnext-step-section .text-red-500 {
   color: var(--color-accent) !important;
   font-weight: 600;
 }
 /* Error messages under fields — swap rose-red to pumpkin warning
-   which is NO-RED-compliant and part of Humi tokens. */
-.humi-step-section .text-red-600 {
+   which is NO-RED-compliant and part of Cnext tokens. */
+.cnext-step-section .text-red-600 {
   color: var(--color-warning) !important;
 }
 
 /* Text inputs + date + number + select — map the plain rounded
-   borders to Humi surface + hairline + accent focus ring. Use
+   borders to Cnext surface + hairline + accent focus ring. Use
    Tailwind utility-class as hook since Step*.tsx hard-codes them. */
-.humi-step-section input[type="text"],
-.humi-step-section input[type="date"],
-.humi-step-section input[type="number"],
-.humi-step-section input[type="email"],
-.humi-step-section input[type="tel"],
-.humi-step-section select,
-.humi-step-section textarea {
+.cnext-step-section input[type="text"],
+.cnext-step-section input[type="date"],
+.cnext-step-section input[type="number"],
+.cnext-step-section input[type="email"],
+.cnext-step-section input[type="tel"],
+.cnext-step-section select,
+.cnext-step-section textarea {
   border-radius: var(--radius-md);
   border: 1px solid var(--color-hairline);
   background: var(--color-surface);
@@ -1745,24 +1745,24 @@ html { font-size: 18px; }
   font-family: inherit;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
-.humi-step-section input:hover:not(:disabled),
-.humi-step-section select:hover:not(:disabled),
-.humi-step-section textarea:hover:not(:disabled) {
+.cnext-step-section input:hover:not(:disabled),
+.cnext-step-section select:hover:not(:disabled),
+.cnext-step-section textarea:hover:not(:disabled) {
   border-color: var(--color-ink-faint);
 }
-.humi-step-section input:focus,
-.humi-step-section select:focus,
-.humi-step-section textarea:focus {
+.cnext-step-section input:focus,
+.cnext-step-section select:focus,
+.cnext-step-section textarea:focus {
   outline: none;
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
-.humi-step-section input[aria-invalid="true"],
-.humi-step-section select[aria-invalid="true"],
-.humi-step-section textarea[aria-invalid="true"] {
+.cnext-step-section input[aria-invalid="true"],
+.cnext-step-section select[aria-invalid="true"],
+.cnext-step-section textarea[aria-invalid="true"] {
   border-color: var(--color-warning) !important;
 }
-.humi-step-section select {
+.cnext-step-section select {
   appearance: none;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5l5-5' stroke='%230E1B2C' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
   background-repeat: no-repeat;
@@ -1772,7 +1772,7 @@ html { font-size: 18px; }
 
 /* Draft auto-save chip for wizard header. Small teal pill with a
    pulse dot — reassures admins their work is safe between tabs. */
-.humi-draft-chip {
+.cnext-draft-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1784,23 +1784,23 @@ html { font-size: 18px; }
   font-weight: 600;
   letter-spacing: 0.02em;
 }
-.humi-draft-chip::before {
+.cnext-draft-chip::before {
   content: '';
   width: 6px;
   height: 6px;
   border-radius: 999px;
   background: var(--color-accent);
   box-shadow: 0 0 0 0 currentColor;
-  animation: humi-draft-pulse 2s ease-in-out infinite;
+  animation: cnext-draft-pulse 2s ease-in-out infinite;
 }
-@keyframes humi-draft-pulse {
+@keyframes cnext-draft-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%      { opacity: 0.4; transform: scale(0.7); }
 }
 
 /* ════════════════════════════════════════════════════════════
-   Humi Design Pack 2026-04-27 — net-new patterns ported from
-   /Downloads/HRMS/styles.css. 14 target groups, Humi-namespaced.
+   Cnext Design Pack 2026-04-27 — net-new patterns ported from
+   /Downloads/HRMS/styles.css. 14 target groups, Cnext-namespaced.
    Token aliases added below where absent from @theme above.
    ════════════════════════════════════════════════════════════ */
 
@@ -1817,24 +1817,24 @@ html { font-size: 18px; }
 
 /* 1. Buttons — Ported from styles.css:296-312 (.btn / .btn-primary / .btn-accent / .btn-ghost)
    Base + accent variant only; --primary and --ghost already exist in @layer components above.
-   .humi-btn--accent is the net-new variant from the pack. */
-.humi-btn--accent {
+   .cnext-btn--accent is the net-new variant from the pack. */
+.cnext-btn--accent {
   background: var(--color-accent);
   color: var(--color-accent-ink, var(--color-ink));
 }
-.humi-btn--accent:hover:not(:disabled) {
+.cnext-btn--accent:hover:not(:disabled) {
   filter: brightness(0.93);
 }
 
 /* 2. Progress bar — Ported from styles.css:397-400 (.progress / .progress > span) */
-.humi-progress {
+.cnext-progress {
   height: 6px;
   width: 100%;
   border-radius: 999px;
   background: var(--color-hairline-soft);
   overflow: hidden;
 }
-.humi-progress > span {
+.cnext-progress > span {
   display: block;
   height: 100%;
   background: var(--color-accent);
@@ -1842,7 +1842,7 @@ html { font-size: 18px; }
 }
 
 /* 3. Toggle switch — Ported from styles.css:544-550 (.toggle / .toggle.on) */
-.humi-toggle {
+.cnext-toggle {
   width: 38px;
   height: 22px;
   border-radius: 999px;
@@ -1852,7 +1852,7 @@ html { font-size: 18px; }
   transition: background 150ms ease;
   flex-shrink: 0;
 }
-.humi-toggle::after {
+.cnext-toggle::after {
   content: '';
   position: absolute;
   top: 2px;
@@ -1864,15 +1864,15 @@ html { font-size: 18px; }
   box-shadow: var(--shadow-sm);
   transition: transform 150ms ease;
 }
-.humi-toggle--on {
+.cnext-toggle--on {
   background: var(--color-accent);
 }
-.humi-toggle--on::after {
+.cnext-toggle--on::after {
   transform: translateX(16px);
 }
 
 /* 4. Feature card — Ported from styles.css:459-477 (.feature / .feature .ico-wrap / tone variants) */
-.humi-feature {
+.cnext-feature {
   background: var(--color-surface);
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-lg);
@@ -1883,7 +1883,7 @@ html { font-size: 18px; }
   position: relative;
   overflow: hidden;
 }
-.humi-ico-wrap {
+.cnext-ico-wrap {
   width: 44px;
   height: 44px;
   border-radius: 14px;
@@ -1893,21 +1893,21 @@ html { font-size: 18px; }
   justify-content: center;
   color: var(--color-accent);
 }
-.humi-feature--coral .humi-ico-wrap {
+.cnext-feature--coral .cnext-ico-wrap {
   background: var(--color-warning-soft);
   color: #B35A34;
 }
-.humi-feature--sage .humi-ico-wrap {
+.cnext-feature--sage .cnext-ico-wrap {
   background: var(--color-sage-soft);
   color: #3E6A4E;
 }
-.humi-feature--butter .humi-ico-wrap {
+.cnext-feature--butter .cnext-ico-wrap {
   background: var(--color-butter-soft);
   color: #6B4E14;
 }
 
 /* 5. Page head — Ported from styles.css:479-486 (.page-head) */
-.humi-page-head {
+.cnext-page-head {
   display: flex;
   align-items: flex-end;
   gap: 18px;
@@ -1915,10 +1915,10 @@ html { font-size: 18px; }
   margin-bottom: 22px;
   border-bottom: 1px solid var(--color-hairline-soft);
 }
-.humi-page-head .humi-spacer { flex: 1; }
+.cnext-page-head .cnext-spacer { flex: 1; }
 
 /* 6. Logo chip — Ported from styles.css:552-561 (.logo-chip) */
-.humi-logo-chip {
+.cnext-logo-chip {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -1931,12 +1931,12 @@ html { font-size: 18px; }
 }
 
 /* 7. Reacts — Ported from styles.css:573-581 (.reacts / .reacts .r) */
-.humi-reacts {
+.cnext-reacts {
   display: inline-flex;
   align-items: center;
   gap: -4px;
 }
-.humi-r {
+.cnext-r {
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -1948,38 +1948,38 @@ html { font-size: 18px; }
   border: 1.5px solid var(--color-surface);
   margin-left: -6px;
 }
-.humi-r:first-child { margin-left: 0; }
+.cnext-r:first-child { margin-left: 0; }
 
 /* 8. Banner — Ported from styles.css inline screens (extracted as utility) */
-.humi-banner {
+.cnext-banner {
   background: linear-gradient(120deg, var(--color-accent-soft) 0%, var(--color-canvas-soft) 80%);
   border: 0;
   position: relative;
   overflow: hidden;
 }
-.humi-banner--ink {
+.cnext-banner--ink {
   background: linear-gradient(110deg, var(--color-ink) 0%, #1a2b42 100%);
   color: var(--color-canvas-soft);
 }
 
 /* 9. Stat card — Ported from styles.css inline screens (extracted as utility) */
-.humi-stat-card {
+.cnext-stat-card {
   background: var(--color-surface);
   border: 1px solid var(--color-hairline);
   border-left-width: 4px;
   border-radius: var(--radius-lg);
   padding: 14px 18px;
 }
-.humi-stat-card--accent { border-left-color: var(--color-accent); }
-.humi-stat-card--warn   { border-left-color: var(--color-warning); }
-.humi-stat-card--sage   { border-left-color: var(--color-sage); }
-.humi-stat-card--butter { border-left-color: var(--color-butter); }
+.cnext-stat-card--accent { border-left-color: var(--color-accent); }
+.cnext-stat-card--warn   { border-left-color: var(--color-warning); }
+.cnext-stat-card--sage   { border-left-color: var(--color-sage); }
+.cnext-stat-card--butter { border-left-color: var(--color-butter); }
 
 /* 10. Card lift hover — Ported from styles.css inline screens (extracted as utility) */
-.humi-card-lift {
+.cnext-card-lift {
   transition: transform 180ms ease, border-color 180ms ease;
 }
-.humi-card-lift:hover {
+.cnext-card-lift:hover {
   transform: translateY(-2px);
   border-color: var(--color-ink);
 }
@@ -1987,19 +1987,19 @@ html { font-size: 18px; }
 /* 12. Coral aliases — added as :root block above (see top of this section) */
 
 /* 13. Dropzone — Ported from styles.css inline screens (extracted as utility) */
-.humi-dropzone {
+.cnext-dropzone {
   border: 2px dashed var(--color-hairline);
   border-radius: var(--radius-md);
   padding: 24px;
   text-align: center;
   background: var(--color-canvas-soft);
 }
-.humi-dropzone:hover {
+.cnext-dropzone:hover {
   border-color: var(--color-accent);
 }
 
 /* 14. Frosted glass — Ported from styles.css login-art testimonial (.login-quote) */
-.humi-frosted {
+.cnext-frosted {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(4px);

@@ -29,7 +29,7 @@ function setAdmin() {
   useAuthStore.setState({
     userId: 'TEST',
     username: 'admin',
-    email: 'admin@humi.test',
+    email: 'admin@cnext.test',
     roles: ['hr_admin'],
     isAuthenticated: true,
     originalUser: null,
@@ -41,7 +41,7 @@ function setManager() {
   useAuthStore.setState({
     userId: 'TEST',
     username: 'manager',
-    email: 'manager@humi.test',
+    email: 'manager@cnext.test',
     roles: ['manager'],
     isAuthenticated: true,
     originalUser: null,

@@ -9,8 +9,8 @@ describe('demo user landing routes', () => {
   });
 
   it('lands both manager demo personas on home when proxy switching', () => {
-    expect(landingForDemoUser('manager@humi.test', 'th')).toBe('/th/home');
-    expect(landingForDemoUser('rungrote@humi.test', 'th')).toBe('/th/home');
+    expect(landingForDemoUser('manager@cnext.test', 'th')).toBe('/th/home');
+    expect(landingForDemoUser('rungrote@cnext.test', 'th')).toBe('/th/home');
   });
 
   it('keeps stale manager dashboard URLs from falling through to 404', () => {

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Avatar, Button, Card } from '@/components/humi';
+import { Avatar, Button, Card } from '@/components/cnext';
 
 // ════════════════════════════════════════════════════════════
 // TalentResultCard — one employee in the talent search result grid.
@@ -23,7 +23,7 @@ export interface TalentEmployee {
   branch?: string;
   hireDate?: string;
   jobTitle?: string;
-  /** Raw avatarTone from HumiEmployee — includes 'indigo' which maps to 'teal' for Avatar. */
+  /** Raw avatarTone from CnextEmployee — includes 'indigo' which maps to 'teal' for Avatar. */
   avatarTone?: 'teal' | 'sage' | 'butter' | 'ink' | 'indigo';
   performanceRating?: number;
   isHiPo?: boolean;

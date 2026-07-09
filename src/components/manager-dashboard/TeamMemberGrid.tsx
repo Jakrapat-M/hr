@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { User } from 'lucide-react';
 import type { TeamMember } from '@/lib/manager-dashboard-api';

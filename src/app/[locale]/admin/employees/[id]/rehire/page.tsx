@@ -126,8 +126,8 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
   const hireDateFmt = formatDateTh(employee.hire_date)
 
   return (
-    <div className="humi-card humi-card--cream">
-      <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+    <div className="cnext-card cnext-card--cream">
+      <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
         {employee.employee_id} · {employee.company}
       </div>
       <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
@@ -137,22 +137,22 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
         style={{ marginTop: 8 }}
       >
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>สถานะ</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>สถานะ</div>
           <div className="text-body font-medium text-ink">ออกจากงาน</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ประเภท</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ประเภท</div>
           <div className="text-body font-medium text-ink">
             {employee.employee_class === 'PERMANENT' ? 'Permanent' : 'Part-time'}
           </div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงานเดิม</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงานเดิม</div>
           <div className="text-body font-medium text-ink">{hireDateFmt}</div>
           <div className="text-small text-ink-muted">{tenure}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
           <div className="text-body font-medium text-ink">{employee.position_title}</div>
         </div>
       </div>
@@ -327,14 +327,14 @@ export default function RehirePage() {
         <div>
           <Link
             href={`/${locale}/admin/employees`}
-            className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+            className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
             style={{ display: 'inline-flex', gap: 6 }}
           >
             <ArrowLeft size={16} aria-hidden />
             <span>รายการพนักงาน</span>
           </Link>
         </div>
-        <div className="humi-card" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">ไม่พบพนักงานรหัส &ldquo;{empId}&rdquo;</p>
         </div>
       </div>
@@ -348,7 +348,7 @@ export default function RehirePage() {
         <div>
           <Link
             href={`/${locale}/admin/employees/${empId}`}
-            className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+            className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
             style={{ display: 'inline-flex', gap: 6 }}
           >
             <ArrowLeft size={16} aria-hidden />
@@ -358,7 +358,7 @@ export default function RehirePage() {
         <EmployeeSnapshot employee={employee} />
         <div
           role="alert"
-          className="humi-card"
+          className="cnext-card"
           style={{
             display: 'flex', gap: 12, alignItems: 'flex-start',
             background: 'var(--color-warning-soft, #fffbeb)',
@@ -390,7 +390,7 @@ export default function RehirePage() {
       <div>
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -399,7 +399,7 @@ export default function RehirePage() {
       </div>
 
       {/* Page title */}
-      <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+      <div className="cnext-row" style={{ gap: 10, alignItems: 'center' }}>
         <div
           style={{
             width: 36, height: 36, borderRadius: 10,
@@ -411,7 +411,7 @@ export default function RehirePage() {
           <UserCheck size={18} aria-hidden />
         </div>
         <div>
-          <div className="humi-eyebrow">การดำเนินการ</div>
+          <div className="cnext-eyebrow">การดำเนินการ</div>
           <h1 className="font-display text-xl font-semibold text-ink">
             รับกลับเข้าทำงาน
           </h1>
@@ -422,8 +422,8 @@ export default function RehirePage() {
       <EmployeeSnapshot employee={employee} />
 
       {/* Approval chain (rehire: no manager — outside team, HRBP initiates) */}
-      <div className="humi-card">
-        <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+      <div className="cnext-card">
+        <div className="cnext-eyebrow" style={{ marginBottom: 8 }}>
           {locale === 'en' ? 'Approval Chain' : 'ขั้นตอนอนุมัติ'}
         </div>
         <ApprovalChain
@@ -445,12 +445,12 @@ export default function RehirePage() {
         label="วันที่กลับมาทำงาน"
       >
         {() => (
-      <div className="humi-card">
-        <div className="humi-eyebrow" style={{ marginBottom: 16 }}>
+      <div className="cnext-card">
+        <div className="cnext-eyebrow" style={{ marginBottom: 16 }}>
           ข้อมูลการจ้างซ้ำ
         </div>
 
-        <hr className="humi-divider" />
+        <hr className="cnext-divider" />
 
         {/* ── ใช้รหัสพนักงานใหม่? ── */}
         <div style={{ marginBottom: 20 }}>
@@ -468,7 +468,7 @@ export default function RehirePage() {
           >
             {/* ใช่ — new code */}
             <label
-              className="humi-row"
+              className="cnext-row"
               style={{
                 gap: 10, cursor: 'pointer', padding: '10px 14px',
                 borderRadius: 10,
@@ -495,7 +495,7 @@ export default function RehirePage() {
 
             {/* ไม่ — same code */}
             <label
-              className="humi-row"
+              className="cnext-row"
               style={{
                 gap: 10, cursor: 'pointer', padding: '10px 14px',
                 borderRadius: 10,
@@ -537,7 +537,7 @@ export default function RehirePage() {
               type="text"
               value={rehire.newEmployeeCode}
               onChange={(e) => patch({ newEmployeeCode: e.target.value })}
-              className="humi-input"
+              className="cnext-input"
               style={{ maxWidth: 240 }}
               aria-describedby="newEmployeeCode-hint"
             />
@@ -559,7 +559,7 @@ export default function RehirePage() {
           </div>
         )}
 
-        <hr className="humi-divider" />
+        <hr className="cnext-divider" />
 
         {/* ── วันเริ่มอายุงาน (Seniority) ── */}
         <div style={{ marginBottom: 20 }}>
@@ -577,7 +577,7 @@ export default function RehirePage() {
             value={rehire.seniorityDateOverride ?? ''}
             max={rehire.newHireDate ?? undefined}
             onChange={(e) => patch({ seniorityDateOverride: e.target.value || null })}
-            className="humi-input"
+            className="cnext-input"
             style={{ maxWidth: 240 }}
             aria-describedby="seniority-hint"
           />
@@ -595,7 +595,7 @@ export default function RehirePage() {
           )}
         </div>
 
-        <hr className="humi-divider" />
+        <hr className="cnext-divider" />
 
         {/* ── วันที่เริ่มงานเดิม (originalStartDate) — BRD #102 ── */}
         {/* SF source: EmpJob.originalStartDate — preserved from prior employment (before termination) */}
@@ -613,7 +613,7 @@ export default function RehirePage() {
             type="date"
             value={rehire.originalStartDate ?? ''}
             onChange={(e) => patch({ originalStartDate: e.target.value || null })}
-            className="humi-input"
+            className="cnext-input"
             style={{ maxWidth: 240 }}
             aria-describedby="orig-start-hint"
           />
@@ -622,17 +622,17 @@ export default function RehirePage() {
           </p>
         </div>
 
-        <hr className="humi-divider" />
+        <hr className="cnext-divider" />
 
         {/* ── เหตุผลการจ้างกลับ (eventReason) ── */}
         <div className="flex flex-col gap-1" style={{ marginBottom: 20 }}>
-          <label className="humi-label">
+          <label className="cnext-label">
             เหตุผลการจ้างกลับ <span className="text-danger">*</span>
           </label>
           <select
             value={rehire.eventReason}
             onChange={(e) => patch({ eventReason: e.target.value })}
-            className="humi-input w-full"
+            className="cnext-input w-full"
             aria-required="true"
           >
             <option value="">— เลือกเหตุผล —</option>
@@ -642,7 +642,7 @@ export default function RehirePage() {
           </select>
         </div>
 
-        <hr className="humi-divider" />
+        <hr className="cnext-divider" />
 
         {/* ── เหตุผล ── */}
         <div style={{ marginBottom: 24 }}>
@@ -659,24 +659,24 @@ export default function RehirePage() {
             onChange={(e) => patch({ reason: e.target.value })}
             rows={3}
             placeholder="เหตุผลที่รับกลับเข้าทำงาน..."
-            className="humi-input"
+            className="cnext-input"
             style={{ width: '100%', resize: 'vertical' }}
             aria-label="เหตุผลการรับกลับเข้าทำงาน"
           />
         </div>
 
         {/* ── Submit ── */}
-        <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
+        <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
           <Link
             href={`/${locale}/admin/employees/${empId}`}
-            className="humi-btn humi-btn--ghost"
+            className="cnext-btn cnext-btn--ghost"
           >
             ยกเลิก
           </Link>
           <button
             onClick={handleSubmit}
             disabled={!isValid || submitted}
-            className="humi-btn humi-btn--primary"
+            className="cnext-btn cnext-btn--primary"
             aria-disabled={!isValid || submitted}
           >
             บันทึกการจ้างซ้ำ

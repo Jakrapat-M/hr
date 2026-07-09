@@ -13,9 +13,9 @@ import {
   countDirectReports,
   resolveCurrentEmpId,
 } from '@/lib/scope-filter';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
 
-const POOL: HumiEmployee[] = [
+const POOL: CnextEmployee[] = [
   { id: 'emp-002', employeeCode: 'M', firstNameTh: 'A', lastNameTh: 'A', initials: 'AA',
     position: 'Manager', department: 'Finance', status: 'active', avatarTone: 'teal',
     businessUnitId: 'BU-002' },
@@ -127,20 +127,20 @@ describe('T6 — countDirectReports', () => {
 
 describe('T6 — resolveCurrentEmpId', () => {
   test('5 demo logins resolve correctly', () => {
-    expect(resolveCurrentEmpId('admin@humi.test')).toBe('emp-005');
-    expect(resolveCurrentEmpId('spd@humi.test')).toBe('emp-001');
-    expect(resolveCurrentEmpId('hrbp@humi.test')).toBe('emp-007');
-    expect(resolveCurrentEmpId('manager@humi.test')).toBe('emp-002');
-    expect(resolveCurrentEmpId('employee@humi.test')).toBe('emp-003');
+    expect(resolveCurrentEmpId('admin@cnext.test')).toBe('emp-005');
+    expect(resolveCurrentEmpId('spd@cnext.test')).toBe('emp-001');
+    expect(resolveCurrentEmpId('hrbp@cnext.test')).toBe('emp-007');
+    expect(resolveCurrentEmpId('manager@cnext.test')).toBe('emp-002');
+    expect(resolveCurrentEmpId('employee@cnext.test')).toBe('emp-003');
   });
   test('T7 — 4 SF-canonical logins resolve correctly', () => {
-    expect(resolveCurrentEmpId('ken@humi.test')).toBe('emp-005');       // Ken — HR Admin
-    expect(resolveCurrentEmpId('apinya@humi.test')).toBe('emp-007');    // Apinya — HRBP
-    expect(resolveCurrentEmpId('worawee@humi.test')).toBe('emp-001');   // Worawee — SPD
-    expect(resolveCurrentEmpId('rungrote@humi.test')).toBe('emp-002');  // Rungrote — Manager
+    expect(resolveCurrentEmpId('ken@cnext.test')).toBe('emp-005');       // Ken — HR Admin
+    expect(resolveCurrentEmpId('apinya@cnext.test')).toBe('emp-007');    // Apinya — HRBP
+    expect(resolveCurrentEmpId('worawee@cnext.test')).toBe('emp-001');   // Worawee — SPD
+    expect(resolveCurrentEmpId('rungrote@cnext.test')).toBe('emp-002');  // Rungrote — Manager
   });
   test('unknown email → null', () => {
-    expect(resolveCurrentEmpId('stranger@humi.test')).toBeNull();
+    expect(resolveCurrentEmpId('stranger@cnext.test')).toBeNull();
     expect(resolveCurrentEmpId(null)).toBeNull();
   });
 });

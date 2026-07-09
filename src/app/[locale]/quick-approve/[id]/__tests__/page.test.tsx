@@ -25,7 +25,7 @@ vi.mock('@/hooks/use-capabilities', () => ({
   }),
 }));
 
-vi.mock('@/components/humi', () => ({
+vi.mock('@/components/cnext', () => ({
   Button: ({
     children,
     onClick,

@@ -40,14 +40,14 @@ const TEST_USERS: Record<UserRole, TestUser> = {
     roles: ['employee', 'hr_admin', 'hr_manager'],
   },
   spd: {
-    username: 'spd@humi.test',
+    username: 'spd@cnext.test',
     password: 'spd2026',
     name: 'SPD Approver',
     employeeId: 'SPD001',
     roles: ['spd', 'employee'],
   },
   hrbp: {
-    username: 'hrbp@humi.test',
+    username: 'hrbp@cnext.test',
     password: 'hrbp2026',
     name: 'วิทยา ส. (HRBP)',
     employeeId: 'HRB001',
@@ -88,7 +88,7 @@ export async function mockAuthSession(
   role: UserRole,
 ): Promise<TestUser> {
   const user = TEST_USERS[role];
-  const humiAuthState = {
+  const cnextAuthState = {
     userId: user.employeeId,
     username: user.name,
     email: user.username,
@@ -98,8 +98,8 @@ export async function mockAuthSession(
   };
 
   await page.addInitScript((authState) => {
-    localStorage.setItem('humi-auth', JSON.stringify({ state: authState, version: 0 }));
-  }, humiAuthState);
+    localStorage.setItem('cnext-auth', JSON.stringify({ state: authState, version: 0 }));
+  }, cnextAuthState);
 
   // Set a mock session cookie that next-auth recognizes in dev mode
   await page.context().addCookies([

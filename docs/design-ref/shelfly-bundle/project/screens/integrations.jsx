@@ -108,19 +108,19 @@ function FeaturesScreen({ onNav }) {
     {tone:"coral", t:"เชื่อม POS และเงินเดือน", b:"เชื่อมต่อระบบเดียวคลิกสำหรับเครื่องมือที่ร้านคุณใช้อยู่", i:"plug"},
     {tone:"sage", t:"มือถือพร้อมใช้หน้าร้าน", b:"พนักงานเข้างาน ยื่นลา อ่านข่าวสารจากโทรศัพท์ได้ทันที", i:"clock"},
     {tone:"butter", t:"ติดตามการฝึกอบรม", b:"มอบหมาย เตือน ตรวจสอบ รู้ว่าพนักงานทุกคนผ่านการอบรมก่อนเปิดร้าน", i:"book"},
-    {tone:"", t:"ปรับสีธีม", b:"ปรับ Humi ให้เข้ากับแบรนด์ของคุณ — หรืออัตลักษณ์ของร้าน", i:"palette"},
+    {tone:"", t:"ปรับสีธีม", b:"ปรับ Cnext ให้เข้ากับแบรนด์ของคุณ — หรืออัตลักษณ์ของร้าน", i:"palette"},
   ];
 
   return (
     <>
-      <window.Topbar title="ฟีเจอร์ทั้งหมด" subtitle="ทุกอย่างที่ Humi ช่วยทีมค้าปลีกของคุณ" onNav={onNav}
+      <window.Topbar title="ฟีเจอร์ทั้งหมด" subtitle="ทุกอย่างที่ Cnext ช่วยทีมค้าปลีกของคุณ" onNav={onNav}
         actions={<button className="btn btn-primary" onClick={() => onNav && onNav('requests')}><Ic.plus size={14}/> สร้างคำร้องใหม่</button>}/>
 
       <div className="card grain" style={{background: "linear-gradient(110deg, var(--ink) 0%, #1a2b42 100%)", color:"#FCFAF5", border: 0, padding: 40, marginBottom: 22, overflow:"hidden", position:"relative"}}>
         <div className="blob teal"   style={{width: 160, height: 200, right: -30, top: -40, opacity:.45}}/>
         <div className="blob coral"  style={{width: 100, height: 120, right: 140, bottom: -30, opacity:.5}}/>
         <div className="eyebrow" style={{color:"var(--accent)"}}>ออกแบบสำหรับค้าปลีก</div>
-        <h1 style={{fontSize: 52, marginTop: 10, maxWidth: 700, color:"#FCFAF5"}}>Humi อยู่เคียงข้างทีมหน้าร้านของคุณ</h1>
+        <h1 style={{fontSize: 52, marginTop: 10, maxWidth: 700, color:"#FCFAF5"}}>Cnext อยู่เคียงข้างทีมหน้าร้านของคุณ</h1>
         <p style={{fontSize: 16, color:"rgba(231,227,216,0.8)", marginTop: 12, maxWidth: 560, lineHeight: 1.6, textWrap:"pretty"}}>
           ที่เดียวครบสำหรับแบบฟอร์ม นโยบาย สลิปเงินเดือน และประกาศที่ทีมของคุณต้องใช้จริง — โดยไม่ต้องใช้ระบบใหญ่โตแบบองค์กรยักษ์
         </p>

@@ -2,11 +2,11 @@
 
 // STA-27 PR-C — SpdBranchSummaryTiles
 // 4 summary tiles at the top of the SPD Branch View page.
-// Pattern mirrors team-summary-tiles.tsx (PR-D). Humi tokens only.
+// Pattern mirrors team-summary-tiles.tsx (PR-D). Cnext tokens only.
 
 import { useLocale } from 'next-intl';
 import { GitBranch, Users, Clock, ShieldCheck } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { getBranchPendingEnrolmentCount } from '@/lib/spd-branch-mock';
 import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry';
 

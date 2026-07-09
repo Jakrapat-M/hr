@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { useLocale } from 'next-intl';
 import { Download } from 'lucide-react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { getThroughputStats, csvExport } from '@/lib/manager-reports-mock';
 import { cn } from '@/lib/utils';
 

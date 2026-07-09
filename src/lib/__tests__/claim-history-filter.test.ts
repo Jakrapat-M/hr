@@ -3,7 +3,7 @@ import {
   CLAIM_STATUS_SORT_RANK,
   claimStatusSortRank,
   sortByClaimStatus,
-  filterHumiClaimHistory,
+  filterCnextClaimHistory,
   formatClaimDate,
   CLAIM_TYPE_OPTIONS,
   CLAIM_STATUS_BUCKET_OPTIONS,
@@ -11,7 +11,7 @@ import {
   benefitClaimStatusToBucket,
   deriveAdminClaimType,
 } from '@/lib/claim-history-filter';
-import { HUMI_CLAIM_HISTORY, type ClaimStatus } from '@/lib/humi-mock-data';
+import { CNEXT_CLAIM_HISTORY, type ClaimStatus } from '@/lib/cnext-mock-data';
 
 // STA-194 — ME claim-history status sort mirrors the admin `claimStatusRank`:
 //   info (ขอข้อมูลเพิ่ม) → pending (รออนุมัติ) → approved (อนุมัติแล้ว) → rest.
@@ -79,20 +79,20 @@ describe('sortByClaimStatus', () => {
 });
 
 // STA-194 — 3-filter AND logic (benefit name, claim type, status). Empty = all.
-describe('filterHumiClaimHistory', () => {
+describe('filterCnextClaimHistory', () => {
   it('returns all rows when no filter is set', () => {
-    expect(filterHumiClaimHistory(HUMI_CLAIM_HISTORY, {})).toHaveLength(HUMI_CLAIM_HISTORY.length);
+    expect(filterCnextClaimHistory(CNEXT_CLAIM_HISTORY, {})).toHaveLength(CNEXT_CLAIM_HISTORY.length);
   });
 
   it('filters by benefit name (exact)', () => {
-    const out = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { benefit: 'ค่าน้ำมันรถ' });
+    const out = filterCnextClaimHistory(CNEXT_CLAIM_HISTORY, { benefit: 'ค่าน้ำมันรถ' });
     expect(out.length).toBeGreaterThan(0);
     expect(out.every((r) => r.type === 'ค่าน้ำมันรถ')).toBe(true);
   });
 
   it('filters by benefit name as a partial substring match', () => {
     // "น้ำมัน" is a substring of "ค่าน้ำมันรถ" → matches all three fuel claims.
-    const out = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { benefit: 'น้ำมัน' });
+    const out = filterCnextClaimHistory(CNEXT_CLAIM_HISTORY, { benefit: 'น้ำมัน' });
     expect(out.length).toBe(3);
     expect(out.every((r) => r.type.includes('น้ำมัน'))).toBe(true);
   });
@@ -102,7 +102,7 @@ describe('filterHumiClaimHistory', () => {
       { type: 'Medical Reimbursement', status: 'approved' as const, submittedAt: '2026-04-01' },
       { type: 'Mobile Allowance', status: 'approved' as const, submittedAt: '2026-04-02' },
     ];
-    const out = filterHumiClaimHistory(rows, { benefit: '  MEDICAL  ' });
+    const out = filterCnextClaimHistory(rows, { benefit: '  MEDICAL  ' });
     expect(out).toHaveLength(1);
     expect(out[0].type).toBe('Medical Reimbursement');
   });
@@ -110,34 +110,34 @@ describe('filterHumiClaimHistory', () => {
   it('benefit search ALSO matches the claim-type label (not only the name)', () => {
     // The three fuel rows all share the name "ค่าน้ำมันรถ"; typing a claim-type
     // term must still find the matching row via its claim-type label.
-    const toll = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { benefit: 'ทางด่วน' });
+    const toll = filterCnextClaimHistory(CNEXT_CLAIM_HISTORY, { benefit: 'ทางด่วน' });
     expect(toll.length).toBe(1);
     expect(toll[0].claimType).toBe('toll');
-    const parking = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { benefit: 'parking' });
+    const parking = filterCnextClaimHistory(CNEXT_CLAIM_HISTORY, { benefit: 'parking' });
     expect(parking.length).toBe(1);
     expect(parking[0].claimType).toBe('parking');
   });
 
   it('benefit search matches the row description too', () => {
     // e.g. "AIS" appears only in the ค่าโทรศัพท์ row's description.
-    const out = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { benefit: 'ais' });
+    const out = filterCnextClaimHistory(CNEXT_CLAIM_HISTORY, { benefit: 'ais' });
     expect(out.length).toBe(1);
     expect(out[0].type).toBe('ค่าโทรศัพท์');
   });
 
   it('filters by claim type (toll)', () => {
-    const out = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { claimType: 'toll' });
+    const out = filterCnextClaimHistory(CNEXT_CLAIM_HISTORY, { claimType: 'toll' });
     expect(out.every((r) => r.claimType === 'toll')).toBe(true);
     expect(out.length).toBe(1);
   });
 
   it('filters by status', () => {
-    const out = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { status: 'info' });
+    const out = filterCnextClaimHistory(CNEXT_CLAIM_HISTORY, { status: 'info' });
     expect(out.every((r) => r.status === 'info')).toBe(true);
   });
 
   it('ANDs the three filters together', () => {
-    const out = filterHumiClaimHistory(HUMI_CLAIM_HISTORY, {
+    const out = filterCnextClaimHistory(CNEXT_CLAIM_HISTORY, {
       benefit: 'ค่าน้ำมันรถ',
       claimType: 'parking',
       status: 'pending',
@@ -148,14 +148,14 @@ describe('filterHumiClaimHistory', () => {
 
     // Conflicting AND (parking is never approved) → empty.
     expect(
-      filterHumiClaimHistory(HUMI_CLAIM_HISTORY, { claimType: 'parking', status: 'approved' }),
+      filterCnextClaimHistory(CNEXT_CLAIM_HISTORY, { claimType: 'parking', status: 'approved' }),
     ).toHaveLength(0);
   });
 });
 
 // STA-194 FU — Start/End date range filter over the ISO `submittedAt`. Bounds are
 // inclusive; an empty bound is open. String compare of `YYYY-MM-DD` is ordered.
-describe('filterHumiClaimHistory — date range', () => {
+describe('filterCnextClaimHistory — date range', () => {
   const rows = [
     { type: 'A', status: 'approved' as const, submittedAt: '2026-04-01' },
     { type: 'B', status: 'approved' as const, submittedAt: '2026-04-15' },
@@ -164,21 +164,21 @@ describe('filterHumiClaimHistory — date range', () => {
   ];
 
   it('open range (both empty) matches every row', () => {
-    expect(filterHumiClaimHistory(rows, { dateFrom: '', dateTo: '' })).toHaveLength(4);
+    expect(filterCnextClaimHistory(rows, { dateFrom: '', dateTo: '' })).toHaveLength(4);
   });
 
   it('filters on an inclusive lower bound (dateFrom)', () => {
-    const out = filterHumiClaimHistory(rows, { dateFrom: '2026-04-15' });
+    const out = filterCnextClaimHistory(rows, { dateFrom: '2026-04-15' });
     expect(out.map((r) => r.type)).toEqual(['B', 'C', 'D']);
   });
 
   it('filters on an inclusive upper bound (dateTo)', () => {
-    const out = filterHumiClaimHistory(rows, { dateTo: '2026-04-28' });
+    const out = filterCnextClaimHistory(rows, { dateTo: '2026-04-28' });
     expect(out.map((r) => r.type)).toEqual(['A', 'B', 'C']);
   });
 
   it('filters on a closed inclusive range and compares the ISO date only', () => {
-    const out = filterHumiClaimHistory(rows, { dateFrom: '2026-04-15', dateTo: '2026-05-10' });
+    const out = filterCnextClaimHistory(rows, { dateFrom: '2026-04-15', dateTo: '2026-05-10' });
     // The 2026-05-10 timestamp row is included because only the date part is compared.
     expect(out.map((r) => r.type)).toEqual(['B', 'C', 'D']);
   });
@@ -206,30 +206,30 @@ describe('formatClaimDate', () => {
 
 // STA-194 — the ME mock grows 5 → 7 with a toll(info) and parking(pending) row,
 // covering all 3 statuses and all 3 claim types.
-describe('HUMI_CLAIM_HISTORY mock', () => {
+describe('CNEXT_CLAIM_HISTORY mock', () => {
   it('has 7 rows', () => {
-    expect(HUMI_CLAIM_HISTORY).toHaveLength(7);
+    expect(CNEXT_CLAIM_HISTORY).toHaveLength(7);
   });
 
   it('includes a toll row with info (ขอข้อมูลเพิ่ม) status', () => {
-    const toll = HUMI_CLAIM_HISTORY.find((r) => r.claimType === 'toll');
+    const toll = CNEXT_CLAIM_HISTORY.find((r) => r.claimType === 'toll');
     expect(toll).toBeDefined();
     expect(toll?.status).toBe('info');
   });
 
   it('includes a parking row with pending (รออนุมัติ) status', () => {
-    const parking = HUMI_CLAIM_HISTORY.find((r) => r.claimType === 'parking');
+    const parking = CNEXT_CLAIM_HISTORY.find((r) => r.claimType === 'parking');
     expect(parking).toBeDefined();
     expect(parking?.status).toBe('pending');
   });
 
   it('represents all 3 statuses', () => {
-    const statuses = new Set(HUMI_CLAIM_HISTORY.map((r) => r.status));
+    const statuses = new Set(CNEXT_CLAIM_HISTORY.map((r) => r.status));
     expect(statuses).toEqual(new Set<ClaimStatus>(['approved', 'pending', 'info']));
   });
 
   it('represents all 3 claim types', () => {
-    const types = new Set(HUMI_CLAIM_HISTORY.map((r) => r.claimType).filter(Boolean));
+    const types = new Set(CNEXT_CLAIM_HISTORY.map((r) => r.claimType).filter(Boolean));
     expect(types).toEqual(new Set(['gasoline', 'toll', 'parking']));
   });
 });

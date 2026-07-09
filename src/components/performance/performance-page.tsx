@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Flag, Plus, TrendingUp, Target, ClipboardCheck } from 'lucide-react';
-import { Card, Button, Modal } from '@/components/humi';
+import { Card, Button, Modal } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { Tabs } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';

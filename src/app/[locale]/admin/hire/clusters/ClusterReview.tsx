@@ -16,7 +16,7 @@ import { ClipboardCheck, Check, AlertCircle, UserCheck, PhoneCall, Users } from 
 
 function SummaryRow({ label, value, ok }: { label: string; value: string; ok: boolean }) {
   return (
-    <div className="humi-row" style={{ padding: '10px 0', borderTop: '1px solid var(--color-hairline-soft)' }}>
+    <div className="cnext-row" style={{ padding: '10px 0', borderTop: '1px solid var(--color-hairline-soft)' }}>
       <span
         className={ok ? 'text-accent' : 'text-warning'}
         style={{ display: 'inline-flex', width: 20 }}
@@ -118,75 +118,75 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
   return (
     <div id="review" className="space-y-5">
       {/* ── ยืนยันชื่อ (EN) — 4 readonly mirror fields in 2-col grid ─── */}
-      <div id="review.enName" className="humi-card scroll-mt-6">
+      <div id="review.enName" className="cnext-card scroll-mt-6">
         <ReviewCheckpointHeader
           icon={UserCheck}
           title={t('enNameSectionTitle')}
           sub={t('enNameSectionSub')}
         />
-        <div className="humi-step-section grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
+        <div className="cnext-step-section grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
           <fieldset>
-            <label htmlFor="review-salutation-en" className="humi-label">{t('salutationEn')}</label>
+            <label htmlFor="review-salutation-en" className="cnext-label">{t('salutationEn')}</label>
             <input id="review-salutation-en" type="text" readOnly
               value={salutationEnReview}
-              className="humi-input w-full bg-surface-muted cursor-not-allowed" />
+              className="cnext-input w-full bg-surface-muted cursor-not-allowed" />
           </fieldset>
 
           <fieldset>
-            <label htmlFor="review-first-name-en" className="humi-label">{t('firstNameEn')}</label>
+            <label htmlFor="review-first-name-en" className="cnext-label">{t('firstNameEn')}</label>
             <input id="review-first-name-en" type="text" readOnly
               value={firstNameEnReview}
-              className="humi-input w-full bg-surface-muted cursor-not-allowed" />
+              className="cnext-input w-full bg-surface-muted cursor-not-allowed" />
           </fieldset>
 
           <fieldset>
-            <label htmlFor="review-middle-name-en" className="humi-label">{t('middleNameEn')}</label>
+            <label htmlFor="review-middle-name-en" className="cnext-label">{t('middleNameEn')}</label>
             <input id="review-middle-name-en" type="text" readOnly
               value={middleNameEnReview}
-              className="humi-input w-full bg-surface-muted cursor-not-allowed" />
+              className="cnext-input w-full bg-surface-muted cursor-not-allowed" />
           </fieldset>
 
           <fieldset>
-            <label htmlFor="review-last-name-en" className="humi-label">{t('lastNameEn')}</label>
+            <label htmlFor="review-last-name-en" className="cnext-label">{t('lastNameEn')}</label>
             <input id="review-last-name-en" type="text" readOnly
               value={lastNameEnReview}
-              className="humi-input w-full bg-surface-muted cursor-not-allowed" />
+              className="cnext-input w-full bg-surface-muted cursor-not-allowed" />
           </fieldset>
         </div>
       </div>
 
       {/* ── Direct Manager approval + HRBP notification — audit #14 / BRD #109 ─────────── */}
-      <div id="review.hrbp" className="humi-card scroll-mt-6">
+      <div id="review.hrbp" className="cnext-card scroll-mt-6">
         <ReviewCheckpointHeader
           icon={UserCheck}
           title={t('hrbpSectionTitle')}
           sub={t('hrbpSectionSub')}
         />
-        <div className="humi-step-section grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
+        <div className="cnext-step-section grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
           <fieldset>
-            <label htmlFor="direct-manager-approver" className="humi-label">
-              {t('directManagerApprover')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="direct-manager-approver" className="cnext-label">
+              {t('directManagerApprover')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <input
               id="direct-manager-approver"
               type="text"
               readOnly
               value={directManagerValue}
-              className="humi-input w-full bg-surface-muted cursor-not-allowed"
+              className="cnext-input w-full bg-surface-muted cursor-not-allowed"
             />
             <p className="mt-1 text-xs text-ink-faint">{t('directManagerHelp')}</p>
           </fieldset>
 
           <fieldset>
-            <label htmlFor="hrbp-assignee" className="humi-label">
-              {t('hrbpAssignee')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="hrbp-assignee" className="cnext-label">
+              {t('hrbpAssignee')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <select id="hrbp-assignee"
               value={hrbpAssignee}
               onChange={(e) => setHrbpAssignee(e.target.value)}
               aria-required="true"
               aria-invalid={hrbpError && !hrbpAssignee ? true : undefined}
-              className="humi-select w-full">
+              className="cnext-select w-full">
               <option value="">{t('selectHrbp')}</option>
               {hrbpRoster.map((h) => (
                 <option key={h.id} value={h.id}>
@@ -202,7 +202,7 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
           </fieldset>
 
           <fieldset className="md:col-span-2">
-            <label className="humi-row" style={{ gap: 8 }}>
+            <label className="cnext-row" style={{ gap: 8 }}>
               <input type="checkbox"
                 checked
                 readOnly
@@ -215,7 +215,7 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
       </div>
 
       {/* ── สรุปข้อมูลก่อนส่ง ─────────────────────────────────────────── */}
-      <div id="review.summary" className="humi-card humi-card--cream scroll-mt-6">
+      <div id="review.summary" className="cnext-card cnext-card--cream scroll-mt-6">
         <ReviewCheckpointHeader
           icon={ClipboardCheck}
           title={t('summarySectionTitle')}
@@ -258,7 +258,7 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
       </div>
 
       {/* ── STA-82 AC7: รายละเอียดงาน / องค์กร เพิ่มเติม + cross-step rule surfacing ─── */}
-      <div id="review.jobDetails" className="humi-card scroll-mt-6">
+      <div id="review.jobDetails" className="cnext-card scroll-mt-6">
         <ReviewCheckpointHeader
           icon={ClipboardCheck}
           title={t('jobDetailsSectionTitle')}
@@ -311,13 +311,13 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
 
       {/* ── ผู้ติดต่อฉุกเฉิน (Phase 1.4) — read-only mirror ─────────────── */}
       {emergencyContacts && emergencyContacts.length > 0 && (
-        <div className="humi-card">
+        <div className="cnext-card">
           <ReviewCheckpointHeader
             icon={PhoneCall}
             title="ผู้ติดต่อฉุกเฉิน / Emergency Contacts"
             sub={`${emergencyContacts.length} รายการ`}
           />
-          <div className="humi-step-section space-y-3">
+          <div className="cnext-step-section space-y-3">
             {emergencyContacts.map((ec, idx) => (
               <div
                 key={idx}
@@ -349,13 +349,13 @@ export default function ClusterReview({ hrbpError = false }: ClusterReviewProps)
 
       {/* ── บุคคลในอุปการะ (Phase 5b-4) — read-only mirror ──────────────── */}
       {dependents && dependents.length > 0 && (
-        <div className="humi-card">
+        <div className="cnext-card">
           <ReviewCheckpointHeader
             icon={Users}
             title="บุคคลในอุปการะ / Dependents"
             sub={`${dependents.length} รายการ`}
           />
-          <div className="humi-step-section space-y-3">
+          <div className="cnext-step-section space-y-3">
             {dependents.map((dep, idx) => {
               const nameEn = [dep.salutationEn, dep.firstNameEn, dep.lastNameEn].filter(Boolean).join(' ')
               const nameLocal = [dep.salutationLocal, dep.firstNameLocal, dep.lastNameLocal].filter(Boolean).join(' ')

@@ -4,7 +4,7 @@
  *
  * Covers:
  *   AC-1 — page renders with all docs by default (filter = 'all')
- *   AC-2 — HUMI_HR_DOCS shape: >=4 entries spanning all 4 types
+ *   AC-2 — CNEXT_HR_DOCS shape: >=4 entries spanning all 4 types
  *   AC-3 — clicking a type filter narrows list to that type only
  *   AC-4 — each row shows Thai type label + Buddhist year from formatDate
  *   AC-5 — download anchor has correct href + target=_blank + rel=noopener
@@ -15,7 +15,7 @@
  *   All 4 HrDocTypes are present in the mock data, so no real filter yields 0.
  *   We verify the conditional render contract by confirming docs-empty is absent
  *   and docs-list is present on default render. A full empty-state render path
- *   requires mocking HUMI_HR_DOCS = [] which is covered in the separate module-shape
+ *   requires mocking CNEXT_HR_DOCS = [] which is covered in the separate module-shape
  *   test at AC-7b below.
  */
 
@@ -43,7 +43,7 @@ vi.mock('lucide-react', () => ({
 }))
 
 import MeDocumentsPage from '@/app/[locale]/me/documents/page'
-import { HUMI_HR_DOCS, HR_DOC_TYPE_LABELS } from '@/lib/humi-mock-data'
+import { CNEXT_HR_DOCS, HR_DOC_TYPE_LABELS } from '@/lib/cnext-mock-data'
 
 afterEach(() => {
   cleanup()
@@ -66,7 +66,7 @@ describe('hr#84 BRD #173 — /me/documents', () => {
 
   it('AC-1 — all 5 mock docs visible by default (filter = all)', () => {
     render(<MeDocumentsPage />)
-    HUMI_HR_DOCS.forEach((doc) => {
+    CNEXT_HR_DOCS.forEach((doc) => {
       expect(screen.getByTestId(`doc-row-${doc.id}`)).toBeInTheDocument()
     })
   })
@@ -77,15 +77,15 @@ describe('hr#84 BRD #173 — /me/documents', () => {
   })
 
   // ════════════════════════════════════════════════════════════
-  // AC-2: HUMI_HR_DOCS shape valid
+  // AC-2: CNEXT_HR_DOCS shape valid
   // ════════════════════════════════════════════════════════════
 
-  it('AC-2 — HUMI_HR_DOCS has >=4 entries', () => {
-    expect(HUMI_HR_DOCS.length).toBeGreaterThanOrEqual(4)
+  it('AC-2 — CNEXT_HR_DOCS has >=4 entries', () => {
+    expect(CNEXT_HR_DOCS.length).toBeGreaterThanOrEqual(4)
   })
 
-  it('AC-2 — HUMI_HR_DOCS spans all 4 doc types', () => {
-    const types = new Set(HUMI_HR_DOCS.map((d) => d.type))
+  it('AC-2 — CNEXT_HR_DOCS spans all 4 doc types', () => {
+    const types = new Set(CNEXT_HR_DOCS.map((d) => d.type))
     expect(types.has('employment-letter')).toBe(true)
     expect(types.has('income-cert')).toBe(true)
     expect(types.has('tax-form')).toBe(true)
@@ -93,7 +93,7 @@ describe('hr#84 BRD #173 — /me/documents', () => {
   })
 
   it('AC-2 — every entry has required fields: id, name, type, issuedDate (ISO), downloadUrl', () => {
-    HUMI_HR_DOCS.forEach((doc) => {
+    CNEXT_HR_DOCS.forEach((doc) => {
       expect(doc.id).toBeTruthy()
       expect(doc.name).toBeTruthy()
       expect(doc.type).toBeTruthy()
@@ -110,12 +110,12 @@ describe('hr#84 BRD #173 — /me/documents', () => {
     render(<MeDocumentsPage />)
     fireEvent.click(screen.getByTestId('docs-filter-tax-form'))
 
-    const taxForms = HUMI_HR_DOCS.filter((d) => d.type === 'tax-form')
+    const taxForms = CNEXT_HR_DOCS.filter((d) => d.type === 'tax-form')
     taxForms.forEach((d) => {
       expect(screen.getByTestId(`doc-row-${d.id}`)).toBeInTheDocument()
     })
 
-    const otherDocs = HUMI_HR_DOCS.filter((d) => d.type !== 'tax-form')
+    const otherDocs = CNEXT_HR_DOCS.filter((d) => d.type !== 'tax-form')
     otherDocs.forEach((d) => {
       expect(screen.queryByTestId(`doc-row-${d.id}`)).toBeNull()
     })
@@ -125,13 +125,13 @@ describe('hr#84 BRD #173 — /me/documents', () => {
     render(<MeDocumentsPage />)
     fireEvent.click(screen.getByTestId('docs-filter-employment-letter'))
 
-    const empLetters = HUMI_HR_DOCS.filter((d) => d.type === 'employment-letter')
+    const empLetters = CNEXT_HR_DOCS.filter((d) => d.type === 'employment-letter')
     expect(empLetters.length).toBeGreaterThanOrEqual(1)
     empLetters.forEach((d) => {
       expect(screen.getByTestId(`doc-row-${d.id}`)).toBeInTheDocument()
     })
 
-    const otherDocs = HUMI_HR_DOCS.filter((d) => d.type !== 'employment-letter')
+    const otherDocs = CNEXT_HR_DOCS.filter((d) => d.type !== 'employment-letter')
     otherDocs.forEach((d) => {
       expect(screen.queryByTestId(`doc-row-${d.id}`)).toBeNull()
     })
@@ -143,7 +143,7 @@ describe('hr#84 BRD #173 — /me/documents', () => {
     fireEvent.click(screen.getByTestId('docs-filter-income-cert'))
     // restore all
     fireEvent.click(screen.getByTestId('docs-filter-all'))
-    HUMI_HR_DOCS.forEach((doc) => {
+    CNEXT_HR_DOCS.forEach((doc) => {
       expect(screen.getByTestId(`doc-row-${doc.id}`)).toBeInTheDocument()
     })
   })
@@ -154,7 +154,7 @@ describe('hr#84 BRD #173 — /me/documents', () => {
 
   it('AC-4 — first row shows Thai type label from HR_DOC_TYPE_LABELS', () => {
     render(<MeDocumentsPage />)
-    const firstDoc = HUMI_HR_DOCS[0]
+    const firstDoc = CNEXT_HR_DOCS[0]
     const row = screen.getByTestId(`doc-row-${firstDoc.id}`)
     expect(row.textContent).toContain(HR_DOC_TYPE_LABELS[firstDoc.type])
   })
@@ -169,7 +169,7 @@ describe('hr#84 BRD #173 — /me/documents', () => {
 
   it('AC-4 — first row shows doc name', () => {
     render(<MeDocumentsPage />)
-    const firstDoc = HUMI_HR_DOCS[0]
+    const firstDoc = CNEXT_HR_DOCS[0]
     const row = screen.getByTestId(`doc-row-${firstDoc.id}`)
     expect(row.textContent).toContain(firstDoc.name)
   })
@@ -180,28 +180,28 @@ describe('hr#84 BRD #173 — /me/documents', () => {
 
   it('AC-5 — download anchor href matches doc.downloadUrl', () => {
     render(<MeDocumentsPage />)
-    const firstDoc = HUMI_HR_DOCS[0]
+    const firstDoc = CNEXT_HR_DOCS[0]
     const anchor = screen.getByTestId(`doc-download-${firstDoc.id}`)
     expect(anchor.getAttribute('href')).toBe(firstDoc.downloadUrl)
   })
 
   it('AC-5 — download anchor has target="_blank"', () => {
     render(<MeDocumentsPage />)
-    const firstDoc = HUMI_HR_DOCS[0]
+    const firstDoc = CNEXT_HR_DOCS[0]
     const anchor = screen.getByTestId(`doc-download-${firstDoc.id}`)
     expect(anchor.getAttribute('target')).toBe('_blank')
   })
 
   it('AC-5 — download anchor rel contains "noopener"', () => {
     render(<MeDocumentsPage />)
-    const firstDoc = HUMI_HR_DOCS[0]
+    const firstDoc = CNEXT_HR_DOCS[0]
     const anchor = screen.getByTestId(`doc-download-${firstDoc.id}`)
     expect(anchor.getAttribute('rel')).toMatch(/noopener/)
   })
 
   it('AC-5 — every doc row has a download anchor testid', () => {
     render(<MeDocumentsPage />)
-    HUMI_HR_DOCS.forEach((doc) => {
+    CNEXT_HR_DOCS.forEach((doc) => {
       expect(screen.getByTestId(`doc-download-${doc.id}`)).toBeInTheDocument()
     })
   })
@@ -262,10 +262,10 @@ describe('hr#84 BRD #173 — /me/documents', () => {
   // review (page.tsx). Visual evidence captured in Phase 5 walkthrough.
   // Tracked at hr#86 as a Playwright E2E candidate (filter that yields zero — would need
   // synthetic 'unknown' type or zero-entry mock data via a separate test setup file).
-  it.skip('AC-7b — docs-empty renders when HUMI_HR_DOCS is empty (module mock)', async () => {
+  it.skip('AC-7b — docs-empty renders when CNEXT_HR_DOCS is empty (module mock)', async () => {
     // Temporarily mock the module to return empty array
-    vi.doMock('@/lib/humi-mock-data', () => ({
-      HUMI_HR_DOCS: [],
+    vi.doMock('@/lib/cnext-mock-data', () => ({
+      CNEXT_HR_DOCS: [],
       HR_DOC_TYPE_LABELS: {
         'employment-letter': 'หนังสือรับรองการทำงาน',
         'income-cert': 'หนังสือรับรองเงินเดือน',

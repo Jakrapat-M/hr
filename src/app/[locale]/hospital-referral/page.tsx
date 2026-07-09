@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { ArrowLeft, ChevronDown, ChevronRight } from 'lucide-react';
-import { CardEyebrow, buttonVariants } from '@/components/humi';
+import { CardEyebrow, buttonVariants } from '@/components/cnext';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';
 import type { ApproverStage } from '@/data/benefits/plan-registry';
 import { benefitsHubRoute, benefitReferralRoute } from '@/lib/benefit-routes';
@@ -131,11 +131,11 @@ function ReferralRow({ referral, locale }: { referral: MockReferral; locale: str
   };
 
   return (
-    <li className="humi-card" style={{ padding: 16 }}>
+    <li className="cnext-card" style={{ padding: 16 }}>
       <div className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <div className="humi-eyebrow mb-0.5">{referral.id}</div>
+            <div className="cnext-eyebrow mb-0.5">{referral.id}</div>
             <p className="text-body font-semibold text-ink">{referral.serviceReason}</p>
             <p className="text-small text-ink-muted mt-0.5">
               {referral.coveredPersonName} · {referral.hospitalName}

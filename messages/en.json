@@ -3234,7 +3234,7 @@
       "clearSelection": "Clear Selection"
     },
     "simple": {
-      "breadcrumb": "HUMI · TEAM MANAGEMENT · APPROVALS",
+      "breadcrumb": "CNEXT · TEAM MANAGEMENT · APPROVALS",
       "title": "Manage workflow request",
       "moduleFilter": {
         "label": "Filter by module",
@@ -3677,7 +3677,7 @@
     "restricted": "Restricted",
     "pending": "Pending approval"
   },
-  "humiHome": {
+  "cnextHome": {
     "eyebrow": "CneXt HR",
     "title": "Overview",
     "subtitle": "Activity and pending actions at a glance",
@@ -3700,7 +3700,7 @@
     "reject": "Reject",
     "viewAll": "View all"
   },
-  "humiEmployees": {
+  "cnextEmployees": {
     "eyebrow": "CneXt HR",
     "title": "Employees",
     "subtitle": "{count} people in the organization",
@@ -3724,7 +3724,7 @@
     "emptyTitle": "No employees match",
     "emptyBody": "Try adjusting your search or pick a different status"
   },
-  "humiSettings": {
+  "cnextSettings": {
     "title": "Settings",
     "subtitle": "Manage organization data, users, permissions, and notifications.",
     "sections": {
@@ -3792,7 +3792,7 @@
       "saveHint": "Changes apply immediately to all users."
     }
   },
-  "humiEmployeeDetail": {
+  "cnextEmployeeDetail": {
     "backToList": "Employees",
     "actionMessage": "Send Message",
     "actionViewProfile": "View Full Profile",
@@ -3814,7 +3814,7 @@
     "fieldAddress": "Address",
     "placeholder": "In Development — Coming soon"
   },
-  "humiOrgChart": {
+  "cnextOrgChart": {
     "title": "Org Chart",
     "subtitle": "Reporting lines and full team structure",
     "viewTree": "Tree View",
@@ -3828,7 +3828,7 @@
     "detailNoSubTeams": "No sub-teams",
     "detailViewAll": "View All Members"
   },
-  "humiHero": {
+  "cnextHero": {
     "dateEyebrow": "Tuesday · 21 April",
     "greetingTitle": "Welcome back, Jongrak",
     "greetingSub": "You have 2 things to action today",
@@ -3948,7 +3948,7 @@
     "typeAdjustment": "Market adjustment",
     "typeHire": "Initial hire"
   },
-  "humiProfile": {
+  "cnextProfile": {
     "subtitle": "Employee ID",
     "save": "Save changes",
     "statusActive": "Active",
@@ -4016,7 +4016,7 @@
     "compensationExtraEyebrow": "Compensation benchmarking",
     "compensationExtraTitle": "Compa-ratio & pay positioning"
   },
-  "humiAnnouncements": {
+  "cnextAnnouncements": {
     "pageTitle": "Announcements",
     "subtitle": "Team and company feed",
     "newPost": "New post",
@@ -4042,7 +4042,7 @@
     "pinPost": "Pin post",
     "unpinPost": "Unpin post"
   },
-  "humiLogin": {
+  "cnextLogin": {
     "brand": "CneXt",
     "eyebrow": "HR for Thai enterprises",
     "headlineLine1": "The back-office",
@@ -5823,7 +5823,7 @@
       "swap": "Request swap",
       "bulkAssign": "Bulk assign"
     },
-    "breadcrumb": "HUMI • TEAM MANAGEMENT • ROSTER & SHIFTS",
+    "breadcrumb": "CNEXT • TEAM MANAGEMENT • ROSTER & SHIFTS",
     "subtitle": "Click a shift to override times.",
     "hourlySchedule": "Hourly schedule",
     "footerHint": "Click a shift to override",

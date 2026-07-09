@@ -2,7 +2,7 @@
  * ec-maintain-regression.test.tsx — STA-244 (HIGHEST-PRIORITY regression)
  *
  * Guards zero-regression on the live /profile/me edit flows after wiring the maintain
- * registry to drive AFFORDANCES. Asserts against the humi-profile SLICE (NOT
+ * registry to drive AFFORDANCES. Asserts against the cnext-profile SLICE (NOT
  * quick-approve):
  *   - approval section (contact modal) submit → submitChangeRequest once,
  *     pendingChanges += 1, and save() is NOT called.
@@ -85,13 +85,13 @@ vi.mock('next/link', () => ({
 }));
 
 import {
-  useHumiProfileStore,
+  useCnextProfileStore,
   type EmergencyContactRow,
   type EducationEntry,
   type LanguageSkillEntry,
   type WorkPermitEntry,
   type CertificationEntry,
-} from '@/stores/humi-profile-slice';
+} from '@/stores/cnext-profile-slice';
 
 async function renderProfileMePage() {
   const { default: ProfileMePage } = await import('@/app/[locale]/profile/me/page');
@@ -131,7 +131,7 @@ const EMPTY_SLICE = {
 
 function resetStore(activeTab: 'personal' | 'compensation', seed: Partial<typeof EMPTY_SLICE> = {}) {
   localStorageMock.clear();
-  useHumiProfileStore.setState({
+  useCnextProfileStore.setState({
     activeTab,
     isEditing: false,
     draft: { ...EMPTY_SLICE, ...seed },
@@ -159,7 +159,7 @@ describe('STA-244: approval section submit → CR only, no save()', () => {
   it('contact modal submit calls submitChangeRequest once (pendingChanges += 1) and does NOT call save()', async () => {
     mockSearchParams.current = new URLSearchParams('');
     resetStore('personal');
-    const saveSpy = vi.spyOn(useHumiProfileStore.getState(), 'save');
+    const saveSpy = vi.spyOn(useCnextProfileStore.getState(), 'save');
 
     await renderProfileMePage();
 
@@ -186,7 +186,7 @@ describe('STA-244: approval section submit → CR only, no save()', () => {
       fireEvent.click(saveBtn);
     });
 
-    const pending = useHumiProfileStore.getState().pendingChanges;
+    const pending = useCnextProfileStore.getState().pendingChanges;
     expect(pending).toHaveLength(1);
     expect(pending[0].sectionKey).toBe('contact');
     expect(saveSpy).not.toHaveBeenCalled();
@@ -208,7 +208,7 @@ describe('STA-244: direct section submit → CR AND save() (dual behavior preser
       primaryFlag: true,
     };
     resetStore('compensation', { emergencyContacts: [seedRow] });
-    const saveSpy = vi.spyOn(useHumiProfileStore.getState(), 'save');
+    const saveSpy = vi.spyOn(useCnextProfileStore.getState(), 'save');
 
     await renderProfileMePage();
 
@@ -224,7 +224,7 @@ describe('STA-244: direct section submit → CR AND save() (dual behavior preser
       fireEvent.click(submitBtn);
     });
 
-    const pending = useHumiProfileStore.getState().pendingChanges;
+    const pending = useCnextProfileStore.getState().pendingChanges;
     expect(pending).toHaveLength(1);
     expect(pending[0].sectionKey).toBe('emergencyContact');
     // Dual behavior: save() committed draft → saved.
@@ -251,7 +251,7 @@ describe('STA-244: repeatable section (Formal Education) submit → CR AND save(
   it('Formal Education submit calls submitChangeRequest once (sectionKey formalEducation) AND save()', async () => {
     mockSearchParams.current = new URLSearchParams('');
     resetStore('personal', { formalEducation: [validEducationRow] });
-    const saveSpy = vi.spyOn(useHumiProfileStore.getState(), 'save');
+    const saveSpy = vi.spyOn(useCnextProfileStore.getState(), 'save');
 
     await renderProfileMePage();
 
@@ -267,7 +267,7 @@ describe('STA-244: repeatable section (Formal Education) submit → CR AND save(
       fireEvent.click(submitBtn);
     });
 
-    const pending = useHumiProfileStore.getState().pendingChanges;
+    const pending = useCnextProfileStore.getState().pendingChanges;
     expect(pending).toHaveLength(1);
     expect(pending[0].sectionKey).toBe('formalEducation');
     expect(saveSpy).toHaveBeenCalledTimes(1);

@@ -12,7 +12,7 @@ import {
   type TerminationRequest,
 } from '@/stores/termination-approvals';
 import { useAuthStore } from '@/stores/auth-store';
-import { Button, FormField } from '@/components/humi';
+import { Button, FormField } from '@/components/cnext';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('th-TH', {
@@ -47,7 +47,7 @@ export function TerminationInbox() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Header */}
       <div>
-        <div className="humi-eyebrow" style={{ marginBottom: 4 }}>งานที่รอดำเนินการ</div>
+        <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>งานที่รอดำเนินการ</div>
         <h2 className="font-display text-lg font-semibold text-ink">
           คำขอลาออก — รอ SPD อนุมัติ
         </h2>
@@ -57,9 +57,9 @@ export function TerminationInbox() {
       </div>
 
       {/* KPI chips */}
-      <div className="humi-row" style={{ gap: 12, flexWrap: 'wrap' }}>
-        <div className="humi-card humi-card--cream" style={{ padding: '10px 16px', minWidth: 140 }}>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>
+      <div className="cnext-row" style={{ gap: 12, flexWrap: 'wrap' }}>
+        <div className="cnext-card cnext-card--cream" style={{ padding: '10px 16px', minWidth: 140 }}>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>
             <Clock size={10} className="inline mr-1" aria-hidden />
             รอดำเนินการ
           </div>
@@ -69,9 +69,9 @@ export function TerminationInbox() {
 
       {/* Pending list */}
       <section>
-        <div className="humi-eyebrow" style={{ marginBottom: 10 }}>คำขอรอการอนุมัติ</div>
+        <div className="cnext-eyebrow" style={{ marginBottom: 10 }}>คำขอรอการอนุมัติ</div>
         {pending.length === 0 ? (
-          <div className="humi-card humi-card--cream" style={{ textAlign: 'center', padding: 32 }}>
+          <div className="cnext-card cnext-card--cream" style={{ textAlign: 'center', padding: 32 }}>
             <p className="text-body text-ink-muted">ไม่มีคำขอลาออกรอการอนุมัติ</p>
           </div>
         ) : (
@@ -91,21 +91,21 @@ export function TerminationInbox() {
       {/* History */}
       {history.length > 0 && (
         <section>
-          <div className="humi-eyebrow" style={{ marginBottom: 10 }}>ประวัติล่าสุด</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 10 }}>ประวัติล่าสุด</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {history.map((req) => (
               <div
                 key={req.id}
-                className="humi-card humi-card--cream"
+                className="cnext-card cnext-card--cream"
                 style={{ padding: '10px 14px', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}
               >
-                <span className="humi-eyebrow" style={{ minWidth: 160 }}>{req.id}</span>
+                <span className="cnext-eyebrow" style={{ minWidth: 160 }}>{req.id}</span>
                 <span className="text-small text-ink">{req.employeeName}</span>
                 <span className="text-small text-ink-muted">
                   {TERMINATION_REASON_LABEL[req.reasonCode]}
                 </span>
-                <span className="humi-spacer" style={{ flex: 1 }} />
-                <span className="humi-tag">{TERMINATION_STEP_LABEL[req.status]}</span>
+                <span className="cnext-spacer" style={{ flex: 1 }} />
+                <span className="cnext-tag">{TERMINATION_STEP_LABEL[req.status]}</span>
               </div>
             ))}
           </div>
@@ -143,10 +143,10 @@ function TerminationCard({
   });
 
   return (
-    <div className="humi-card" style={{ padding: 18 }}>
-      <div className="humi-row" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+    <div className="cnext-card" style={{ padding: 18 }}>
+      <div className="cnext-row" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>{req.id}</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>{req.id}</div>
           <div className="text-body font-semibold text-ink">
             คำขอลาออก — {req.employeeName}
           </div>
@@ -154,7 +154,7 @@ function TerminationCard({
             {req.employeeId} · ส่งเมื่อ {formatDate(req.submittedAt)}
           </div>
         </div>
-        <span className="humi-tag humi-tag--butter" style={{ alignSelf: 'center' }}>
+        <span className="cnext-tag cnext-tag--butter" style={{ alignSelf: 'center' }}>
           {TERMINATION_STEP_LABEL[req.status]}
         </span>
       </div>
@@ -171,18 +171,18 @@ function TerminationCard({
         }}
       >
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 4 }}>วันทำงานวันสุดท้าย</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>วันทำงานวันสุดท้าย</div>
           <div className="text-body font-medium text-ink">{lastDayFmt}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 4 }}>เหตุผล</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>เหตุผล</div>
           <div className="text-body font-medium text-ink">
             {TERMINATION_REASON_LABEL[req.reasonCode]}
           </div>
         </div>
         {req.reasonText && (
           <div style={{ gridColumn: '1 / -1' }}>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>หมายเหตุ</div>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>หมายเหตุ</div>
             <div className="text-body text-ink-muted">{req.reasonText}</div>
           </div>
         )}
@@ -190,7 +190,7 @@ function TerminationCard({
 
       {/* Actions */}
       {mode === 'none' ? (
-        <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+        <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
           <Button
             variant="ghost"
             size="sm"
@@ -229,7 +229,7 @@ function TerminationCard({
               />
             )}
           </FormField>
-          <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+          <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
             <Button
               variant="ghost"
               size="sm"

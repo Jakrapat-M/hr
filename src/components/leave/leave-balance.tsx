@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Sun, Stethoscope, User, Baby, Users, Sparkles, Shield, FileText } from 'lucide-react';
 import type { LeaveBalance as LeaveBalanceType, LeaveType } from '@/hooks/use-leave';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 
 const LEAVE_TYPE_COLORS: Record<LeaveType, { bg: string; text: string; bar: string; icon: ReactNode }> = {
   annual: { bg: 'bg-accent-tint', text: 'text-accent', bar: 'bg-accent', icon: <Sun className="h-5 w-5" /> },

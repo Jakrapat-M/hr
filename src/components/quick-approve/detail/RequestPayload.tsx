@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { ExternalLink } from 'lucide-react';
-import { Capability } from '@/components/humi';
+import { Capability } from '@/components/cnext';
 import { formatDate } from '@/lib/date';
 import type {
   PendingRequest,

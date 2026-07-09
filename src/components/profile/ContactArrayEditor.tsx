@@ -6,10 +6,10 @@
 
 import { useTranslations } from 'next-intl';
 import { Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/humi';
-import { FormField } from '@/components/humi';
+import { Button } from '@/components/cnext';
+import { FormField } from '@/components/cnext';
 import { cn } from '@/lib/utils';
-import type { PhoneEntry, EmailEntry } from '@/stores/humi-profile-slice';
+import type { PhoneEntry, EmailEntry } from '@/stores/cnext-profile-slice';
 
 // ── Validation helpers ─────────────────────────────────────────────────────────
 

@@ -240,8 +240,8 @@ export default function StepContact() {
 
       {/* ─── เบอร์ติดต่อ (BRD #16: countryCode + extension) ─────────────────── */}
       <section aria-label={t('phoneSection')}>
-        <p className="humi-label mb-3">
-          {t('phoneSection')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <p className="cnext-label mb-3">
+          {t('phoneSection')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </p>
         {/* SF cite: qas-fields-2026-04-26/sf-qas-PerPhone-2026-04-26.json#.d.results[0].countryCode */}
 
@@ -253,7 +253,7 @@ export default function StepContact() {
                 aria-label={`${t('phoneType')} ${idx + 1}`}
                 value={phone.type}
                 onChange={(e) => updatePhone(idx, { type: e.target.value })}
-                className="humi-select w-40 shrink-0"
+                className="cnext-select w-40 shrink-0"
               >
                 {SF_PHONE_TYPES.map((pt) => (
                   <option key={pt} value={pt}>{PHONE_TYPE_LABELS[pt]}</option>
@@ -271,7 +271,7 @@ export default function StepContact() {
                 placeholder={t('countryCodePlaceholder')}
                 value={phone.countryCode ?? '66'}
                 onChange={(e) => updatePhone(idx, { countryCode: e.target.value })}
-                className="humi-input w-16 shrink-0"
+                className="cnext-input w-16 shrink-0"
               />
 
               {/* เบอร์ */}
@@ -282,7 +282,7 @@ export default function StepContact() {
                 placeholder={t('phonePlaceholder')}
                 value={phone.value}
                 onChange={(e) => updatePhone(idx, { value: e.target.value })}
-                className="humi-input min-w-0 flex-1"
+                className="cnext-input min-w-0 flex-1"
               />
 
               {/* ต่อ (extension) — SF PerPhone.extension */}
@@ -292,7 +292,7 @@ export default function StepContact() {
                 placeholder={t('extensionPlaceholder')}
                 value={phone.extension ?? ''}
                 onChange={(e) => updatePhone(idx, { extension: e.target.value })}
-                className="humi-input w-16 shrink-0"
+                className="cnext-input w-16 shrink-0"
               />
 
               {/* หลัก */}
@@ -332,8 +332,8 @@ export default function StepContact() {
 
       {/* ─── อีเมล (BRD #15: SF ecEmailType, no 5-cap) ───────────────────── */}
       <section aria-label={t('emailSection')}>
-        <p className="humi-label mb-3">
-          {t('emailSection')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <p className="cnext-label mb-3">
+          {t('emailSection')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </p>
         {/* SF cite: qas-fields-2026-04-26/sf-qas-PerEmail-2026-04-26.json#.d.results[0].emailType */}
 
@@ -347,7 +347,7 @@ export default function StepContact() {
                   aria-label={`${t('emailType')} ${idx + 1}`}
                   value={email.type}
                   onChange={(e) => updateEmail(idx, { type: e.target.value as EmailEntry['type'] })}
-                  className="humi-select w-44 shrink-0"
+                  className="cnext-select w-44 shrink-0"
                 >
                   {SF_EMAIL_TYPES.map((et) => (
                     <option key={et} value={et}>{EMAIL_TYPE_LABELS[et]}</option>
@@ -366,7 +366,7 @@ export default function StepContact() {
                   placeholder={t('emailPlaceholder')}
                   value={email.value}
                   onChange={(e) => updateEmail(idx, { value: e.target.value })}
-                  className="humi-input min-w-0 flex-1"
+                  className="cnext-input min-w-0 flex-1"
                 />
 
                 {/* หลัก */}
@@ -407,7 +407,7 @@ export default function StepContact() {
 
       {/* ─── ที่อยู่ที่พักอาศัย (BRD #17: PerAddressDEFLT — Phase 2 picklist cascade) ─── */}
       <section aria-label={t('addressSection')}>
-        <p className="humi-label mb-3">
+        <p className="cnext-label mb-3">
           {t('addressSection')}
         </p>
         {/* SF cite: customString1=province, customString2=district, customString3=subdistrict, customString4=postalCode
@@ -416,14 +416,14 @@ export default function StepContact() {
         {/* STA-82: ประเภทที่อยู่ (addressType) — SF PerAddressDEFLT.addressType LOV */}
         <div className="mb-4">
           <fieldset>
-            <label htmlFor="addr-type" className="humi-label">
-              {t('addressType')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="addr-type" className="cnext-label">
+              {t('addressType')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <select
               id="addr-type"
               value={address.addressType}
               onChange={(e) => updateAddress({ addressType: e.target.value })}
-              className="humi-select w-full md:w-56"
+              className="cnext-select w-full md:w-56"
             >
               <option value="">— เลือก —</option>
               {ADDRESS_TYPE_OPTIONS.map((opt) => (
@@ -436,13 +436,13 @@ export default function StepContact() {
         {/* ประเทศ — SF country (shown first; controls THA vs non-THA path) */}
         <div className="mb-4">
           <fieldset>
-            <label htmlFor="addr-country" className="humi-label">
+            <label htmlFor="addr-country" className="cnext-label">
               {t('country')}
             </label>
             <input id="addr-country" type="text" placeholder={t('countryPlaceholder')}
               value={address.country}
               onChange={(e) => updateAddress({ country: e.target.value })}
-              className="humi-input w-full md:w-48" />
+              className="cnext-input w-full md:w-48" />
           </fieldset>
         </div>
 
@@ -450,38 +450,38 @@ export default function StepContact() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 mb-4">
           {/* ชั้น — SF address2 */}
           <fieldset>
-            <label htmlFor="addr-floor" className="humi-label">{t('floor')}</label>
+            <label htmlFor="addr-floor" className="cnext-label">{t('floor')}</label>
             <input id="addr-floor" type="text" placeholder={t('floorPlaceholder')}
               value={address.floor}
               onChange={(e) => updateAddress({ floor: e.target.value })}
-              className="humi-input w-full" />
+              className="cnext-input w-full" />
           </fieldset>
 
           {/* ห้องที่ — SF address3 */}
           <fieldset>
-            <label htmlFor="addr-room" className="humi-label">{t('roomNo')}</label>
+            <label htmlFor="addr-room" className="cnext-label">{t('roomNo')}</label>
             <input id="addr-room" type="text" placeholder={t('roomNoPlaceholder')}
               value={address.roomNo}
               onChange={(e) => updateAddress({ roomNo: e.target.value })}
-              className="humi-input w-full" />
+              className="cnext-input w-full" />
           </fieldset>
 
           {/* อาคาร — SF address6 */}
           <fieldset>
-            <label htmlFor="addr-building" className="humi-label">{t('building')}</label>
+            <label htmlFor="addr-building" className="cnext-label">{t('building')}</label>
             <input id="addr-building" type="text" placeholder={t('buildingPlaceholder')}
               value={address.building}
               onChange={(e) => updateAddress({ building: e.target.value })}
-              className="humi-input w-full" />
+              className="cnext-input w-full" />
           </fieldset>
 
           {/* ถนน — SF address8 */}
           <fieldset>
-            <label htmlFor="addr-street" className="humi-label">{t('street')}</label>
+            <label htmlFor="addr-street" className="cnext-label">{t('street')}</label>
             <input id="addr-street" type="text" placeholder={t('streetPlaceholder')}
               value={address.street}
               onChange={(e) => updateAddress({ street: e.target.value })}
-              className="humi-input w-full" />
+              className="cnext-input w-full" />
           </fieldset>
         </div>
 
@@ -489,50 +489,50 @@ export default function StepContact() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 mb-4">
           {/* บ้านเลขที่ — SF address5 */}
           <fieldset>
-            <label htmlFor="addr-house-no" className="humi-label">
-              {t('houseNo')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+            <label htmlFor="addr-house-no" className="cnext-label">
+              {t('houseNo')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
             </label>
             <input id="addr-house-no" type="text" placeholder={t('houseNoPlaceholder')}
               autoComplete="address-line1"
               value={address.houseNo}
               onChange={(e) => updateAddress({ houseNo: e.target.value })}
-              className="humi-input w-full" />
+              className="cnext-input w-full" />
           </fieldset>
 
           {/* หมู่บ้าน — SF address4 */}
           <fieldset>
-            <label htmlFor="addr-village" className="humi-label">
+            <label htmlFor="addr-village" className="cnext-label">
               {t('village')}
             </label>
             <input id="addr-village" type="text" placeholder={t('villagePlaceholder')}
               autoComplete="address-line2"
               value={address.village}
               onChange={(e) => updateAddress({ village: e.target.value })}
-              className="humi-input w-full" />
+              className="cnext-input w-full" />
           </fieldset>
 
           {/* หมู่ที่ — SF address11 */}
           <fieldset>
-            <label htmlFor="addr-moo" className="humi-label">
+            <label htmlFor="addr-moo" className="cnext-label">
               {t('moo')}
             </label>
             <input id="addr-moo" type="text" placeholder={t('mooPlaceholder')}
               autoComplete="address-line3"
               value={address.moo}
               onChange={(e) => updateAddress({ moo: e.target.value })}
-              className="humi-input w-full" />
+              className="cnext-input w-full" />
           </fieldset>
 
           {/* ซอย — SF address7 */}
           <fieldset>
-            <label htmlFor="addr-soi" className="humi-label">
+            <label htmlFor="addr-soi" className="cnext-label">
               {t('soi')}
             </label>
             <input id="addr-soi" type="text" placeholder={t('soiPlaceholder')}
               autoComplete="address-line3"
               value={address.soi}
               onChange={(e) => updateAddress({ soi: e.target.value })}
-              className="humi-input w-full" />
+              className="cnext-input w-full" />
           </fieldset>
         </div>
 
@@ -547,32 +547,32 @@ export default function StepContact() {
           /* Non-THA path: free-text fallback */
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
             <fieldset>
-              <label htmlFor="addr-province-text" className="humi-label">{t('province')}</label>
+              <label htmlFor="addr-province-text" className="cnext-label">{t('province')}</label>
               <input id="addr-province-text" type="text" placeholder={t('provincePlaceholder')}
                 value={address.province}
                 onChange={(e) => updateAddress({ province: e.target.value })}
-                className="humi-input w-full" />
+                className="cnext-input w-full" />
             </fieldset>
             <fieldset>
-              <label htmlFor="addr-district-text" className="humi-label">{t('district')}</label>
+              <label htmlFor="addr-district-text" className="cnext-label">{t('district')}</label>
               <input id="addr-district-text" type="text" placeholder={t('districtPlaceholder')}
                 value={address.district}
                 onChange={(e) => updateAddress({ district: e.target.value })}
-                className="humi-input w-full" />
+                className="cnext-input w-full" />
             </fieldset>
             <fieldset>
-              <label htmlFor="addr-subdistrict-text" className="humi-label">{t('subdistrict')}</label>
+              <label htmlFor="addr-subdistrict-text" className="cnext-label">{t('subdistrict')}</label>
               <input id="addr-subdistrict-text" type="text" placeholder={t('subdistrictPlaceholder')}
                 value={address.subdistrict}
                 onChange={(e) => updateAddress({ subdistrict: e.target.value })}
-                className="humi-input w-full" />
+                className="cnext-input w-full" />
             </fieldset>
             <fieldset>
-              <label htmlFor="addr-zip-text" className="humi-label">{t('zipCode')}</label>
+              <label htmlFor="addr-zip-text" className="cnext-label">{t('zipCode')}</label>
               <input id="addr-zip-text" type="text" inputMode="numeric" placeholder={t('zipCodePlaceholder')}
                 value={address.zipCode}
                 onChange={(e) => updateAddress({ zipCode: e.target.value })}
-                className="humi-input w-full" />
+                className="cnext-input w-full" />
             </fieldset>
           </div>
         )}
@@ -585,7 +585,7 @@ export default function StepContact() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
             {/* sys_EC-PY_ProvinceCode */}
             <fieldset>
-              <label htmlFor="addr-ec-province-code" className="humi-label text-ink-muted">
+              <label htmlFor="addr-ec-province-code" className="cnext-label text-ink-muted">
                 {t('ecPyProvinceCode')}
               </label>
               <input
@@ -595,13 +595,13 @@ export default function StepContact() {
                 readOnly
                 disabled
                 aria-readonly="true"
-                className="humi-input w-full cursor-not-allowed opacity-60"
+                className="cnext-input w-full cursor-not-allowed opacity-60"
               />
             </fieldset>
 
             {/* sys_EC-PY_ProvinceText */}
             <fieldset>
-              <label htmlFor="addr-ec-province-text" className="humi-label text-ink-muted">
+              <label htmlFor="addr-ec-province-text" className="cnext-label text-ink-muted">
                 {t('ecPyProvinceText')}
               </label>
               <input
@@ -611,13 +611,13 @@ export default function StepContact() {
                 readOnly
                 disabled
                 aria-readonly="true"
-                className="humi-input w-full cursor-not-allowed opacity-60"
+                className="cnext-input w-full cursor-not-allowed opacity-60"
               />
             </fieldset>
 
             {/* sys_EC-PY_PostalCode */}
             <fieldset>
-              <label htmlFor="addr-ec-postal-code" className="humi-label text-ink-muted">
+              <label htmlFor="addr-ec-postal-code" className="cnext-label text-ink-muted">
                 {t('ecPyPostalCode')}
               </label>
               <input
@@ -627,7 +627,7 @@ export default function StepContact() {
                 readOnly
                 disabled
                 aria-readonly="true"
-                className="humi-input w-full cursor-not-allowed opacity-60"
+                className="cnext-input w-full cursor-not-allowed opacity-60"
               />
             </fieldset>
           </div>
@@ -648,7 +648,7 @@ export default function StepContact() {
 
       {/* ─── Social Accounts (STA-82: SF PerSocialAccountNav — domain LOV + IM ID + URL) ─── */}
       <section aria-label={t('socialSection')}>
-        <p className="humi-label mb-3">{t('socialSection')}</p>
+        <p className="cnext-label mb-3">{t('socialSection')}</p>
         {/* SF cite: PerSocialAccountNav — domain (imdomain LOV), instantMessagingID, url */}
 
         <div className="space-y-3">
@@ -659,7 +659,7 @@ export default function StepContact() {
                 aria-label={`${t('socialDomain')} ${idx + 1}`}
                 value={acct.domain}
                 onChange={(e) => updateSocialAccount(idx, { domain: e.target.value })}
-                className="humi-select w-36 shrink-0"
+                className="cnext-select w-36 shrink-0"
               >
                 {SOCIAL_DOMAIN_OPTIONS.map((opt) => (
                   <option key={opt.id} value={opt.id}>{pickLabel(opt, locale)}</option>
@@ -673,7 +673,7 @@ export default function StepContact() {
                 placeholder={t('socialImIdPlaceholder')}
                 value={acct.imId}
                 onChange={(e) => updateSocialAccount(idx, { imId: e.target.value })}
-                className="humi-input min-w-0 flex-1"
+                className="cnext-input min-w-0 flex-1"
               />
 
               {/* URL — SF url */}
@@ -683,7 +683,7 @@ export default function StepContact() {
                 placeholder={t('socialUrlPlaceholder')}
                 value={acct.url}
                 onChange={(e) => updateSocialAccount(idx, { url: e.target.value })}
-                className="humi-input min-w-0 flex-1"
+                className="cnext-input min-w-0 flex-1"
               />
 
               {/* ลบ */}
@@ -710,7 +710,7 @@ export default function StepContact() {
 
       {/* ─── บุคคลที่เกี่ยวข้อง ───────────────────────────────────────────── */}
       <section aria-label={t('relationsSection')}>
-        <p className="humi-label mb-3">{t('relationsSection')}</p>
+        <p className="cnext-label mb-3">{t('relationsSection')}</p>
 
         {jobRelationships.length > 0 && (
           <table className="mb-3 w-full text-sm">
@@ -731,7 +731,7 @@ export default function StepContact() {
                       placeholder={t('relationshipTypePlaceholder')}
                       value={rel.relationshipType}
                       onChange={(e) => updateRelationship(idx, { relationshipType: e.target.value })}
-                      className="humi-input w-full"
+                      className="cnext-input w-full"
                     />
                   </td>
                   <td className="py-2 pr-4">
@@ -741,7 +741,7 @@ export default function StepContact() {
                       placeholder={t('personNamePlaceholder')}
                       value={rel.name}
                       onChange={(e) => updateRelationship(idx, { name: e.target.value })}
-                      className="humi-input w-full"
+                      className="cnext-input w-full"
                     />
                   </td>
                   <td className="py-2">

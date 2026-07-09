@@ -1,5 +1,5 @@
 /**
- * Humi Journey EC/BE work-item #1 — HRIS System-Settings config surfaces.
+ * Cnext Journey EC/BE work-item #1 — HRIS System-Settings config surfaces.
  *
  * IA simplification (2026-06-10): the two HRIS configuration screens (Time
  * Policy, Benefit Catalog) were REMOVED as standalone System-group menu leaves
@@ -19,7 +19,7 @@ import { join } from 'node:path';
 
 import { describe, expect, test } from 'vitest';
 
-import { MODULES } from '@/components/humi/shell/Sidebar';
+import { MODULES } from '@/components/cnext/shell/Sidebar';
 
 const ALL_LEAF_IDS = MODULES.flatMap((m) => m.leaves).map((l) => l.id);
 const CONFIG_IDS = ['time-policy', 'benefit-catalog'] as const;

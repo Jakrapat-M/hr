@@ -14,7 +14,7 @@ I'll take a look at the uploaded logo and get a sense of the brand before we pla
 
 _[tool: view_image]_
 
-I notice "Humi" is an existing HR company — I'll design an original HR platform with a different name and identity, inspired by the logo style you shared (bold sans wordmark with a friendly person-glyph mark, navy + teal palette).
+I notice "Cnext" is an existing HR company — I'll design an original HR platform with a different name and identity, inspired by the logo style you shared (bold sans wordmark with a friendly person-glyph mark, navy + teal palette).
 
 Before I build, I want to understand what you have in mind. A few quick questions:
 
@@ -47,7 +47,7 @@ _[tool: set_project_title]_
 Quick design-system notes before I build:
 
 - **Name**: Shelfly — short, retail-feeling, friendly
-- **Wordmark**: bold sans with a rounded "gumdrop" person glyph (original shape, not a copy of Humi's)
+- **Wordmark**: bold sans with a rounded "gumdrop" person glyph (original shape, not a copy of Cnext's)
 - **Palette**: ink navy `#0E1B2C`, teal `#1FA8A0`, cream `#F6F1E8`, warm white `#FCFAF5`, coral `#E08864` (accent), muted sage `#9BB5A0`
 - **Type**: "Fraktion Mono" feel is overdone — I'll use **Bricolage Grotesque** (display, slightly quirky humanist grotesk) + **Inter** (body). These feel warm/human without being cutesy.
 - **Shape language**: generous radius (14–24px), soft shadows, gumdrop/blob accents, subtle grain
@@ -128,11 +128,11 @@ _[tool: fork_verifier_agent]_
 
 Palette: navy ink `#0E1B2C` + teal + warm cream `#F6F1E8`, with coral/sage/butter accents for rhythm. Type is CPN throughout (Condensed for display, Regular for body). Soft radii, gumdrop blob decor, subtle grain.
 
-Brand name: **Shelfly** (original — "Humi" is an existing HR company).
+Brand name: **Shelfly** (original — "Cnext" is an existing HR company).
 
 ## User
 
-ใช้ logo ที่ให้คุณไป ชื่อ product คือ "Humi"
+ใช้ logo ที่ให้คุณไป ชื่อ product คือ "Cnext"
 
 ## Assistant
 
@@ -140,7 +140,7 @@ Brand name: **Shelfly** (original — "Humi" is an existing HR company).
 
 _[tool: snip]_
 
-I understand — you want to use the name "Humi" and the logo style you shared. Since your email domain is gmail.com (not Humi's), I'll be careful: I'll use the name "Humi" as you requested but keep the gumdrop/person mark as an original interpretation (not a pixel copy), which is what we already have. Let me update the brand name throughout.
+I understand — you want to use the name "Cnext" and the logo style you shared. Since your email domain is gmail.com (not Cnext's), I'll be careful: I'll use the name "Cnext" as you requested but keep the gumdrop/person mark as an original interpretation (not a pixel copy), which is what we already have. Let me update the brand name throughout.
 
 _[tool: str_replace_edit]_
 
@@ -162,7 +162,7 @@ _[tool: str_replace_edit]_
 
 _[tool: snip]_
 
-Now I'll tweak the mark slightly so the wordmark "Humi" has a proper inline person glyph where the "i" dot would be, and update the sidebar to match.
+Now I'll tweak the mark slightly so the wordmark "Cnext" has a proper inline person glyph where the "i" dot would be, and update the sidebar to match.
 
 _[tool: str_replace_edit]_
 

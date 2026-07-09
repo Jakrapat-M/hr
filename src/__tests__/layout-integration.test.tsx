@@ -1,6 +1,6 @@
 /**
  * layout-integration.test.tsx
- * AC-1, AC-2 — AppShell shell elements present across all 11 Humi routes
+ * AC-1, AC-2 — AppShell shell elements present across all 11 Cnext routes
  *
  * Tests that sidebar (<aside>), wordmark "Hum", ⌘K kbd, bell icon,
  * and user avatar chip are rendered regardless of current pathname.
@@ -67,7 +67,7 @@ vi.mock('next/image', () => ({
   ),
 }));
 
-// ── Route fixtures (10 Humi shell routes) ───────────────────────────────────
+// ── Route fixtures (10 Cnext shell routes) ───────────────────────────────────
 // /th/login is intentionally excluded — AppShell short-circuits on login page
 // (returns <>{children}</> without sidebar/topbar) per AppShell.tsx:183-185.
 const ROUTES = [
@@ -87,7 +87,7 @@ const ROUTES = [
 async function renderShellAtRoute(pathname: string) {
   mockPathname.mockReturnValue(pathname);
   // Re-import to pick up updated mock
-  const { AppShell } = await import('@/components/humi/shell/AppShell');
+  const { AppShell } = await import('@/components/cnext/shell/AppShell');
   return render(<AppShell><div data-testid="page-slot">page</div></AppShell>);
 }
 
@@ -123,7 +123,7 @@ describe('AC-2 — wordmark "Hum" present on all routes', () => {
     it(`wordmark visible at ${route}`, async () => {
       const { container, unmount } = await renderShellAtRoute(route);
       // Sidebar was ported to Blueprint rail+panel (2026-05-25). The brand logo
-      // now lives in .bp-rail-brand (the icon-rail col-1 brand cell), not .humi-wordmark.
+      // now lives in .bp-rail-brand (the icon-rail col-1 brand cell), not .cnext-wordmark.
       const wordmarkEl = container.querySelector('.bp-rail-brand');
       expect(wordmarkEl).toBeTruthy();
       // Brand mark = img with alt matching "CneXt"

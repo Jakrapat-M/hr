@@ -6,7 +6,7 @@
  *        Routes: /performance-form, /development, /succession,
  *                /careers, /recruiting, /reports
  *
- * Note: Tests use TH locale (/th/...) as primary locale per Humi convention.
+ * Note: Tests use TH locale (/th/...) as primary locale per Cnext convention.
  *       baseURL is http://localhost:3000 (from playwright.config.ts).
  */
 

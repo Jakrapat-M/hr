@@ -27,12 +27,12 @@ async function seed(page: Page) {
   await page.addInitScript(
     ([row]) => {
       localStorage.setItem(
-        'humi-auth',
+        'cnext-auth',
         JSON.stringify({ state: { userId: 'EMP001', username: 'สมชาย ใจดี', email: 'e@e.com', roles: ['employee'], isAuthenticated: true }, version: 0 }),
       )
       // Pre-seed one pending first-approval leave so the Cancel action is present
       // deterministically (seedFromQueue only seeds when requests.length === 0).
-      localStorage.setItem('humi-leave-approvals', JSON.stringify({ state: { requests: [row] }, version: 1 }))
+      localStorage.setItem('cnext-leave-approvals', JSON.stringify({ state: { requests: [row] }, version: 1 }))
     },
     [PENDING_ROW],
   )

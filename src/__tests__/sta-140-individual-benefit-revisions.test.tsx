@@ -33,8 +33,8 @@ vi.mock('next-intl', () => ({
 }));
 
 // ── isolate FileUploadField's Zustand store ───────────────────────────────────
-vi.mock('@/stores/humi-profile-slice', () => ({
-  useHumiProfileStore: (selector: (s: unknown) => unknown) =>
+vi.mock('@/stores/cnext-profile-slice', () => ({
+  useCnextProfileStore: (selector: (s: unknown) => unknown) =>
     selector({ addAttachment: vi.fn(), removeAttachment: vi.fn() }),
 }));
 
@@ -122,7 +122,7 @@ describe('STA-141 — InsertChangePopup renders date-only (attachment relocated)
 
   it('page.tsx imports FileUploadField directly (not the barrel)', () => {
     expect(PAGE_SRC).toContain(
-      "import { FileUploadField } from '@/components/humi/FileUploadField'",
+      "import { FileUploadField } from '@/components/cnext/FileUploadField'",
     );
   });
 });

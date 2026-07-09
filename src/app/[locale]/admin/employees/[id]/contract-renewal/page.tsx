@@ -101,8 +101,8 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
   const hireDateFmt = formatDateTh(employee.hire_date)
 
   return (
-    <div className="humi-card humi-card--cream">
-      <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+    <div className="cnext-card cnext-card--cream">
+      <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
         {employee.employee_id}
       </div>
       <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
@@ -112,24 +112,24 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
         style={{ marginTop: 8 }}
       >
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>สถานะ</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>สถานะ</div>
           <div className="text-body font-medium text-ink">
             {employee.status === 'active' ? 'ทำงานอยู่' : 'ออกจากงาน'}
           </div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ประเภท</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ประเภท</div>
           <div className="text-body font-medium text-ink">
             {employee.employee_class === 'PERMANENT' ? 'Permanent' : 'Part-time'}
           </div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงาน</div>
           <div className="text-body font-medium text-ink">{hireDateFmt}</div>
           <div className="text-small text-ink-muted">{tenure}</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
           <div className="text-body font-medium text-ink">{employee.position_title}</div>
         </div>
       </div>
@@ -228,13 +228,13 @@ export default function ContractRenewalPage() {
         <div>
           <Link
             href={`/${locale}/admin/employees`}
-            className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+            className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
             style={{ display: 'inline-flex', gap: 6 }}
           >
             <span>← รายการพนักงาน</span>
           </Link>
         </div>
-        <div className="humi-card" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">ไม่พบพนักงานรหัส &ldquo;{empId}&rdquo;</p>
         </div>
       </div>
@@ -264,7 +264,7 @@ export default function ContractRenewalPage() {
       <div>
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <span aria-hidden>←</span>
@@ -273,7 +273,7 @@ export default function ContractRenewalPage() {
       </div>
 
       {/* Page title */}
-      <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+      <div className="cnext-row" style={{ gap: 10, alignItems: 'center' }}>
         <div
           style={{
             width: 36, height: 36, borderRadius: 10,
@@ -285,7 +285,7 @@ export default function ContractRenewalPage() {
           <RefreshCcw size={18} aria-hidden />
         </div>
         <div>
-          <div className="humi-eyebrow">การดำเนินการ</div>
+          <div className="cnext-eyebrow">การดำเนินการ</div>
           <h1 className="font-display text-xl font-semibold text-ink">
             ต่อสัญญาจ้าง
           </h1>
@@ -296,8 +296,8 @@ export default function ContractRenewalPage() {
       <EmployeeSnapshot employee={employee} />
 
       {/* Approval chain (contract renewal: manager → HRBP → HR Admin) */}
-      <div className="humi-card">
-        <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+      <div className="cnext-card">
+        <div className="cnext-eyebrow" style={{ marginBottom: 8 }}>
           {locale === 'en' ? 'Approval Chain' : 'ขั้นตอนอนุมัติ'}
         </div>
         <ApprovalChain
@@ -336,8 +336,8 @@ export default function ContractRenewalPage() {
         onEffectiveDateChange={setGatedEffectiveDate}
       >
         {() => (
-      <div className="humi-card">
-        <div className="humi-eyebrow" style={{ marginBottom: 16 }}>
+      <div className="cnext-card">
+        <div className="cnext-eyebrow" style={{ marginBottom: 16 }}>
           รายละเอียดการต่อสัญญา
         </div>
 
@@ -350,7 +350,7 @@ export default function ContractRenewalPage() {
             วันสิ้นสุดสัญญาปัจจุบัน
           </label>
           <div
-            className="humi-input"
+            className="cnext-input"
             style={{
               maxWidth: 300,
               background: 'var(--color-surface-muted, #f5f5f4)',
@@ -368,7 +368,7 @@ export default function ContractRenewalPage() {
           </p>
         </div>
 
-        <hr className="humi-divider" />
+        <hr className="cnext-divider" />
 
         {/* วันสิ้นสุดสัญญาใหม่ (required) */}
         <div style={{ marginBottom: 20 }}>
@@ -386,7 +386,7 @@ export default function ContractRenewalPage() {
             value={newEndDate}
             min={currentEndDate ? addYears(currentEndDate, 0).slice(0, 10) : undefined}
             onChange={(e) => setNewEndDate(e.target.value)}
-            className="humi-input"
+            className="cnext-input"
             aria-describedby="newEndDate-hint"
             style={{ maxWidth: 240 }}
             aria-required="true"
@@ -419,7 +419,7 @@ export default function ContractRenewalPage() {
             onChange={(e) => setRenewalReason(e.target.value)}
             rows={3}
             placeholder="รายละเอียดเหตุผลการต่อสัญญา..."
-            className="humi-input"
+            className="cnext-input"
             style={{ width: '100%', resize: 'vertical' }}
             aria-label="เหตุผลการต่อสัญญา"
           />
@@ -435,7 +435,7 @@ export default function ContractRenewalPage() {
             ค่าตอบแทนเพิ่มเติม (THB){' '}
             <span className="text-small text-ink-muted">(ถ้ามี ตามสัญญา)</span>
           </label>
-          <div className="humi-row" style={{ gap: 8, alignItems: 'center', maxWidth: 240 }}>
+          <div className="cnext-row" style={{ gap: 8, alignItems: 'center', maxWidth: 240 }}>
             <input
               id="newAllowanceAmount"
               type="number"
@@ -449,7 +449,7 @@ export default function ContractRenewalPage() {
                 }
               }}
               placeholder="0"
-              className="humi-input"
+              className="cnext-input"
               style={{ flex: 1 }}
               aria-label="ค่าตอบแทนเพิ่มเติม (บาท)"
             />
@@ -477,7 +477,7 @@ export default function ContractRenewalPage() {
               onChange={(e) => setNewAllowanceNote(e.target.value)}
               rows={2}
               placeholder="รายละเอียดค่าตอบแทนเพิ่มเติม..."
-              className="humi-input"
+              className="cnext-input"
               style={{ width: '100%', resize: 'vertical' }}
               aria-label="หมายเหตุค่าตอบแทนเพิ่มเติม"
             />
@@ -485,17 +485,17 @@ export default function ContractRenewalPage() {
         )}
 
         {/* Submit row */}
-        <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
+        <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
           <Link
             href={`/${locale}/admin/employees/${empId}`}
-            className="humi-btn humi-btn--ghost"
+            className="cnext-btn cnext-btn--ghost"
           >
             ยกเลิก
           </Link>
           <button
             onClick={handleSubmit}
             disabled={!isValid || submitted}
-            className="humi-btn humi-btn--primary"
+            className="cnext-btn cnext-btn--primary"
             aria-disabled={!isValid || submitted}
           >
             บันทึกการต่อสัญญา

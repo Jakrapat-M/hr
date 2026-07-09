@@ -36,7 +36,7 @@ export function validateThaiNationalIdMod11(id: string): boolean {
 }
 
 /**
- * Maps Humi cardType IDs to SF PerNationalId.cardType codes.
+ * Maps Cnext cardType IDs to SF PerNationalId.cardType codes.
  * SF cite: qas-fields-2026-04-26/sf-qas-PerNationalId-2026-04-26.json#.d.results[0].cardType
  */
 export const SF_CARD_TYPE_MAP: Record<string, string> = {

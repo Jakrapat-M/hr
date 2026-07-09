@@ -5,7 +5,7 @@
 // Per leave bucket, in days: Total quota · Pending · Debits · Ending. Live from
 // the leave-balances store via useTimeOffLedger. Mockup: no backend.
 
-import { Card, CardTitle } from '@/components/humi';
+import { Card, CardTitle } from '@/components/cnext';
 import { useTimeOffLedger } from '@/hooks/use-time-off-ledger';
 import { endingBalance } from '@/lib/time/time-off-ledger';
 

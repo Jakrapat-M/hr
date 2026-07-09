@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Save } from 'lucide-react'
-import { Button } from '@/components/humi'
+import { Button } from '@/components/cnext'
 import { WizardShell } from '@/components/admin/wizard/WizardShell'
 import { HireCheckpointSidebar } from '@/components/admin/wizard/HireCheckpointSidebar'
 import { useHireWizard, HIRE_WIZARD_VERSION } from '@/lib/admin/store/useHireWizard'
@@ -221,8 +221,8 @@ export default function HirePage() {
     const employeeId = nextEmployeeCode(allEmployees)
 
     // Resolve selected HRBP email from roster if available
-    const hrbpEmail = hrbpAssignee ? `${hrbpAssignee}@humi.test` : 'hrbp@humi.test'
-    const directManagerEmail = `${directManagerId}@humi.test`
+    const hrbpEmail = hrbpAssignee ? `${hrbpAssignee}@cnext.test` : 'hrbp@cnext.test'
+    const directManagerEmail = `${directManagerId}@cnext.test`
 
     appendHireAudit({
       candidateName,
@@ -292,7 +292,7 @@ export default function HirePage() {
   if (submittedEmployeeId) {
     return (
       <div className="h-full flex items-start justify-center pt-16 px-4">
-        <div className="humi-card max-w-lg w-full text-center space-y-6 p-8">
+        <div className="cnext-card max-w-lg w-full text-center space-y-6 p-8">
           <div className="flex justify-center">
             <span className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 text-accent text-3xl">✓</span>
           </div>
@@ -300,7 +300,7 @@ export default function HirePage() {
             <h2 className="text-xl font-semibold text-ink mb-1">บันทึกเรียบร้อย</h2>
             <p className="text-sm text-ink-soft">Employee saved successfully</p>
           </div>
-          <div className="humi-card humi-card--cream py-4 px-5 text-left space-y-1">
+          <div className="cnext-card cnext-card--cream py-4 px-5 text-left space-y-1">
             <p className="text-xs text-ink-muted uppercase tracking-wide">รหัสพนักงาน / Employee ID</p>
             <p className="text-lg font-mono font-semibold text-ink">{submittedEmployeeId}</p>
             {submittedName && <p className="text-sm text-ink-soft">{submittedName}</p>}
@@ -322,8 +322,8 @@ export default function HirePage() {
         </div>
       )}
       {candidateContext && (
-        <section className="mb-4 humi-card humi-card--cream" aria-label="Frozen candidate context">
-          <div className="humi-eyebrow">Candidate snapshot</div>
+        <section className="mb-4 cnext-card cnext-card--cream" aria-label="Frozen candidate context">
+          <div className="cnext-eyebrow">Candidate snapshot</div>
           <h2 className="mt-1 font-display text-base font-semibold text-ink">
             {candidateContext.displayName}
           </h2>

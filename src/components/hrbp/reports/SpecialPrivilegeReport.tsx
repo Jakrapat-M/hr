@@ -7,7 +7,7 @@
 import { useState, useMemo } from 'react';
 import { useLocale } from 'next-intl';
 import { Download } from 'lucide-react';
-import { Card, DemoValuesDisclaimer } from '@/components/humi';
+import { Card, DemoValuesDisclaimer } from '@/components/cnext';
 import { useHrbpScope } from '@/hooks/use-hrbp-scope';
 import { getSpecialPrivilegeRecords } from '@/lib/hrbp-reports-mock';
 import { filterByDept } from '@/lib/benefit-scope-filter';

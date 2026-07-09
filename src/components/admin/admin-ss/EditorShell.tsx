@@ -6,7 +6,7 @@
 import { useState } from 'react'
 import { useAdminSelfService } from '@/lib/admin/store/useAdminSelfService'
 import type { EditorName } from '@/lib/admin/types/adminSelfService'
-import { Button } from '@/components/humi'
+import { Button } from '@/components/cnext'
 import { AuditLogTab } from './AuditLogTab'
 
 interface EditorShellProps {

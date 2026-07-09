@@ -10,20 +10,20 @@ import {
   Users as UsersIcon,
   type LucideIcon,
 } from 'lucide-react';
-import { Button, Card, CardEyebrow, CardTitle } from '@/components/humi';
+import { Button, Card, CardEyebrow, CardTitle } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import {
-  HUMI_LEARNING_CERTIFICATIONS,
-  HUMI_LEARNING_COURSES,
-  HUMI_LEARNING_PATH,
-  HUMI_LEARNING_TEAM_READINESS,
-  type HumiLearningCourse,
+  CNEXT_LEARNING_CERTIFICATIONS,
+  CNEXT_LEARNING_COURSES,
+  CNEXT_LEARNING_PATH,
+  CNEXT_LEARNING_TEAM_READINESS,
+  type CnextLearningCourse,
   type LearningCourseIcon,
-} from '@/lib/humi-mock-data';
-import { useLearningStore, type LearningFilter } from '@/stores/humi-learning-slice';
+} from '@/lib/cnext-mock-data';
+import { useLearningStore, type LearningFilter } from '@/stores/cnext-learning-slice';
 
 // ════════════════════════════════════════════════════════════
-// Humi /learning-directory (A12)
+// Cnext /learning-directory (A12)
 // Port of screens/learning_directory.jsx — retail → generic HR.
 // Phase C: search + filter tabs + enroll state wired via Zustand slice.
 // ════════════════════════════════════════════════════════════
@@ -45,16 +45,16 @@ const ICON_MAP: Record<LearningCourseIcon, LucideIcon> = {
   heart: Heart,
 };
 
-// Maps course tone to humi-feature modifier class; teal uses base (default teal ico-wrap)
-const COURSE_FEATURE_TONE: Record<HumiLearningCourse['tone'], string> = {
+// Maps course tone to cnext-feature modifier class; teal uses base (default teal ico-wrap)
+const COURSE_FEATURE_TONE: Record<CnextLearningCourse['tone'], string> = {
   teal: '',
-  sage: 'humi-feature--sage',
-  butter: 'humi-feature--butter',
-  coral: 'humi-feature--coral',
+  sage: 'cnext-feature--sage',
+  butter: 'cnext-feature--butter',
+  coral: 'cnext-feature--coral',
   ink: '',
 };
 
-const TAG_TONE: Record<NonNullable<HumiLearningCourse['tag']>, string> = {
+const TAG_TONE: Record<NonNullable<CnextLearningCourse['tag']>, string> = {
   required: 'bg-warning-soft text-[color:var(--color-warning)]',
   live: 'bg-accent-soft text-accent-ink',
   self: 'bg-canvas-soft text-ink-muted',
@@ -62,7 +62,7 @@ const TAG_TONE: Record<NonNullable<HumiLearningCourse['tag']>, string> = {
 };
 
 const CERT_DOT_TONE: Record<
-  (typeof HUMI_LEARNING_CERTIFICATIONS)[number]['tone'],
+  (typeof CNEXT_LEARNING_CERTIFICATIONS)[number]['tone'],
   string
 > = {
   sage: 'bg-[color:var(--color-sage)]',
@@ -76,7 +76,7 @@ export default function LearningDirectoryPage() {
 
   // Filter courses by search query (title case-insensitive) and active tab
   const q = query.trim().toLowerCase();
-  const visibleCourses = HUMI_LEARNING_COURSES.filter((course) => {
+  const visibleCourses = CNEXT_LEARNING_COURSES.filter((course) => {
     if (q && !course.title.toLowerCase().includes(q)) return false;
     if (filter === 'enrolled') return enrolled.has(course.id);
     if (filter === 'new') return course.actionLabel !== 'เรียนต่อ' && course.tag !== 'required';
@@ -127,31 +127,31 @@ export default function LearningDirectoryPage() {
           {/* Learning path — accent hero card */}
           <Card
             size="lg"
-            className="humi-banner relative overflow-hidden"
+            className="cnext-banner relative overflow-hidden"
           >
             <div
               aria-hidden
               className="pointer-events-none absolute -bottom-8 -right-6 h-28 w-24 rounded-full bg-[color:var(--color-accent)] opacity-40 blur-xl"
             />
-            <CardEyebrow>{HUMI_LEARNING_PATH.eyebrow}</CardEyebrow>
+            <CardEyebrow>{CNEXT_LEARNING_PATH.eyebrow}</CardEyebrow>
             <h2 className="mt-2 font-display text-[length:var(--text-display-h2)] font-semibold tracking-tight text-ink">
-              {HUMI_LEARNING_PATH.title}
+              {CNEXT_LEARNING_PATH.title}
             </h2>
             <p className="mt-2 text-small text-ink-soft">
-              {HUMI_LEARNING_PATH.progressLabel}
+              {CNEXT_LEARNING_PATH.progressLabel}
             </p>
             <div
-              className="humi-progress mt-4"
+              className="cnext-progress mt-4"
               role="progressbar"
-              aria-valuenow={HUMI_LEARNING_PATH.progressPct}
+              aria-valuenow={CNEXT_LEARNING_PATH.progressPct}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-label="ความคืบหน้าเส้นทางการเรียนรู้"
             >
-              <span style={{ width: `${HUMI_LEARNING_PATH.progressPct}%` }} />
+              <span style={{ width: `${CNEXT_LEARNING_PATH.progressPct}%` }} />
             </div>
             <Button variant="primary" size="sm" className="mt-5">
-              {HUMI_LEARNING_PATH.ctaLabel}
+              {CNEXT_LEARNING_PATH.ctaLabel}
             </Button>
           </Card>
 
@@ -160,7 +160,7 @@ export default function LearningDirectoryPage() {
             <CardEyebrow>ใบรับรองของฉัน</CardEyebrow>
             <CardTitle className="mt-2">ใช้งานอยู่ 3 ใบ</CardTitle>
             <ul className="mt-4 flex flex-col gap-3">
-              {HUMI_LEARNING_CERTIFICATIONS.map((cert) => (
+              {CNEXT_LEARNING_CERTIFICATIONS.map((cert) => (
                 <li
                   key={cert.name}
                   className="flex items-center gap-3 text-small"
@@ -185,18 +185,18 @@ export default function LearningDirectoryPage() {
 
           {/* Team readiness */}
           <Card size="lg">
-            <CardEyebrow>{HUMI_LEARNING_TEAM_READINESS.eyebrow}</CardEyebrow>
+            <CardEyebrow>{CNEXT_LEARNING_TEAM_READINESS.eyebrow}</CardEyebrow>
             <CardTitle className="mt-2">
-              {HUMI_LEARNING_TEAM_READINESS.title}
+              {CNEXT_LEARNING_TEAM_READINESS.title}
             </CardTitle>
             <p className="mt-2 text-small text-ink-muted">
-              {HUMI_LEARNING_TEAM_READINESS.subtitle}
+              {CNEXT_LEARNING_TEAM_READINESS.subtitle}
             </p>
             <div
               className="mt-4 flex items-center"
               aria-label="สมาชิกทีมที่อบรมตรงเวลา"
             >
-              {HUMI_LEARNING_TEAM_READINESS.teamInitials.map((member, i) => (
+              {CNEXT_LEARNING_TEAM_READINESS.teamInitials.map((member, i) => (
                 <span
                   key={member.initials + i}
                   className={cn(
@@ -261,10 +261,10 @@ export default function LearningDirectoryPage() {
             return (
               <div
                 key={course.id}
-                className={cn('humi-feature', COURSE_FEATURE_TONE[course.tone])}
+                className={cn('cnext-feature', COURSE_FEATURE_TONE[course.tone])}
               >
                 <div className="flex items-start gap-3">
-                  <span aria-hidden className="humi-ico-wrap shrink-0">
+                  <span aria-hidden className="cnext-ico-wrap shrink-0">
                     <Icon className="h-5 w-5" />
                   </span>
                   {course.tag && course.tag_label && (

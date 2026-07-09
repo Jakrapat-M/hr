@@ -7,26 +7,26 @@
 //              nationalId / idCopyFileId / hasInsurance / isCentralEmployee.
 
 import { Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/humi';
-import { FormField } from '@/components/humi';
-import { FileUploadField } from '@/components/humi/FileUploadField';
+import { Button } from '@/components/cnext';
+import { FormField } from '@/components/cnext';
+import { FileUploadField } from '@/components/cnext/FileUploadField';
 import { cn } from '@/lib/utils';
 import {
   DEPENDENT_RELATION_LABELS,
-  type HumiDependent,
+  type CnextDependent,
   type DependentRelation,
-} from '@/lib/humi-mock-data';
+} from '@/lib/cnext-mock-data';
 
 // ── Validation helpers (exported for /profile/me save-button enable) ──────────
 
-export function isDependentValid(dep: HumiDependent): boolean {
+export function isDependentValid(dep: CnextDependent): boolean {
   if (!dep.fullNameTh.trim()) return false;
   if (!dep.relation) return false;
   if (!dep.dateOfBirth) return false;
   return true;
 }
 
-export function areAllDependentsValid(rows: HumiDependent[]): boolean {
+export function areAllDependentsValid(rows: CnextDependent[]): boolean {
   if (rows.length === 0) return true; // optional section
   return rows.every(isDependentValid);
 }
@@ -34,8 +34,8 @@ export function areAllDependentsValid(rows: HumiDependent[]): boolean {
 // ── Props ──────────────────────────────────────────────────────────────────────
 
 interface DependentsEditorProps {
-  value: HumiDependent[];
-  onChange: (rows: HumiDependent[]) => void;
+  value: CnextDependent[];
+  onChange: (rows: CnextDependent[]) => void;
   disabled?: boolean;
 }
 
@@ -56,7 +56,7 @@ export function DependentsEditor({
   );
 
   const addRow = () => {
-    const newRow: HumiDependent = {
+    const newRow: CnextDependent = {
       id: crypto.randomUUID(),
       fullNameTh: '',
       fullNameEn: '',
@@ -74,7 +74,7 @@ export function DependentsEditor({
     onChange(value.filter((r) => r.id !== id));
   };
 
-  const updateRow = (id: string, patch: Partial<HumiDependent>) => {
+  const updateRow = (id: string, patch: Partial<CnextDependent>) => {
     onChange(value.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   };
 

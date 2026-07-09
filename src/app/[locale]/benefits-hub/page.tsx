@@ -28,11 +28,11 @@ import {
   FormField,
   Modal,
   buttonVariants,
-} from '@/components/humi';
-import type { DataTableColumn } from '@/components/humi';
+} from '@/components/cnext';
+import type { DataTableColumn } from '@/components/cnext';
 import { ClaimDetailModal } from '@/components/benefits/ClaimDetailModal';
 import { SimpleClaimForm, type SimpleClaimSubmission } from '@/components/benefits/templates';
-import { humiClaimHistoryToClaimRequest } from '@/lib/humi-claim-history-to-claim';
+import { cnextClaimHistoryToClaimRequest } from '@/lib/cnext-claim-history-to-claim';
 import { planIdForClaimRow } from '@/lib/claim-history-plan-resolver';
 import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry';
 import { cn } from '@/lib/utils';
@@ -40,7 +40,7 @@ import {
   CLAIM_TYPE_OPTIONS,
   CLAIM_STATUS_BUCKET_OPTIONS,
   benefitClaimRowActions,
-  filterHumiClaimHistory,
+  filterCnextClaimHistory,
   formatClaimDate,
   sortByClaimStatus,
 } from '@/lib/claim-history-filter';
@@ -53,11 +53,11 @@ import {
 import {
   ACCENT_BAR_CLASS,
   CLAIM_STATUS_META,
-  HUMI_CLAIM_ALLOWANCES,
-  HUMI_CLAIM_HISTORY,
-  HUMI_DEPENDENTS,
-  type HumiClaimHistoryItem,
-} from '@/lib/humi-mock-data';
+  CNEXT_CLAIM_ALLOWANCES,
+  CNEXT_CLAIM_HISTORY,
+  CNEXT_DEPENDENTS,
+  type CnextClaimHistoryItem,
+} from '@/lib/cnext-mock-data';
 import { useBenefitReferralsStore } from '@/stores/benefit-referrals';
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -163,7 +163,7 @@ const SERVICES: ServiceCardSpec[] = [
   },
 ];
 
-// Eligibility badge tone → Humi token classes (NO-RED: warning = pumpkin).
+// Eligibility badge tone → Cnext token classes (NO-RED: warning = pumpkin).
 const BADGE_TONE_CLASS: Record<NonNullable<ServiceCardSpec['badgeTone']>, string> = {
   success: 'bg-success-soft text-[color:var(--color-success)]',
   accent: 'bg-accent-soft text-accent-ink',
@@ -200,22 +200,22 @@ function claimAmountValue(amount: string) {
 // Page
 // ────────────────────────────────────────────────────────────────────────────
 
-export default function HumiBenefitsHubPage() {
+export default function CnextBenefitsHubPage() {
   const params = useParams<{ locale?: string }>();
   const locale = typeof params.locale === 'string' ? params.locale : 'th';
   const referrals = useBenefitReferralsStore((s) => s.referrals);
 
   const allowanceTotal = useMemo(
-    () => HUMI_CLAIM_ALLOWANCES.reduce((sum, a) => sum + a.limit, 0),
+    () => CNEXT_CLAIM_ALLOWANCES.reduce((sum, a) => sum + a.limit, 0),
     [],
   );
   const allowanceUsed = useMemo(
-    () => HUMI_CLAIM_ALLOWANCES.reduce((sum, a) => sum + a.used, 0),
+    () => CNEXT_CLAIM_ALLOWANCES.reduce((sum, a) => sum + a.used, 0),
     [],
   );
   const usedPercent = Math.round((allowanceUsed / allowanceTotal) * 100);
 
-  const pendingClaimsCount = HUMI_CLAIM_HISTORY.filter(
+  const pendingClaimsCount = CNEXT_CLAIM_HISTORY.filter(
     (r) => CLAIM_STATUS_META[r.status]?.label !== 'Approved',
   ).length;
   const pendingReferralCount = referrals.filter((r) =>
@@ -275,7 +275,7 @@ export default function HumiBenefitsHubPage() {
         <Card variant="raised" size="md" className="border-l-4 border-l-[color:var(--color-info)]">
           <CardEyebrow>ผู้รับสิทธิ์ร่วม</CardEyebrow>
           <p className="mt-1 font-display text-[length:var(--text-display-h3)] font-semibold text-ink tabular-nums">
-            {HUMI_DEPENDENTS.length}
+            {CNEXT_DEPENDENTS.length}
           </p>
           <p className="text-small text-ink-muted">ครอบครัวในแผนของคุณ</p>
         </Card>
@@ -375,7 +375,7 @@ export default function HumiBenefitsHubPage() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {HUMI_CLAIM_ALLOWANCES.map((b) => {
+          {CNEXT_CLAIM_ALLOWANCES.map((b) => {
             const pct = Math.min(100, Math.round((b.used / b.limit) * 100));
             return (
               <Link
@@ -445,7 +445,7 @@ export default function HumiBenefitsHubPage() {
             </Link>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {HUMI_DEPENDENTS.map((d) => (
+            {CNEXT_DEPENDENTS.map((d) => (
               <div
                 key={d.id}
                 className="flex items-center gap-3 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-3"
@@ -485,7 +485,7 @@ function useToast() {
 }
 
 // STA-194 — Claim history with Benefit name / Claim Type / Status filters over
-// HUMI_CLAIM_HISTORY, sorted by status group (ขอข้อมูลเพิ่ม → รออนุมัติ → อนุมัติแล้ว).
+// CNEXT_CLAIM_HISTORY, sorted by status group (ขอข้อมูลเพิ่ม → รออนุมัติ → อนุมัติแล้ว).
 function ClaimHistorySection() {
   const t = useTranslations('benefits');
   const params = useParams<{ locale?: string }>();
@@ -497,12 +497,12 @@ function ClaimHistorySection() {
   const [dateFromFilter, setDateFromFilter] = useState('');
   const [dateToFilter, setDateToFilter] = useState('');
   // STA-182 — "more detail" row action opens a read-only detail modal.
-  const [detailRow, setDetailRow] = useState<HumiClaimHistoryItem | null>(null);
+  const [detailRow, setDetailRow] = useState<CnextClaimHistoryItem | null>(null);
   // STA-234 — local mutable copy so cancel/edit produce visible state transitions
-  // (HUMI_CLAIM_HISTORY is a const; never mutate it). Sub-flow targets + toast.
-  const [rows, setRows] = useState(() => HUMI_CLAIM_HISTORY);
-  const [cancelTarget, setCancelTarget] = useState<HumiClaimHistoryItem | null>(null);
-  const [editTarget, setEditTarget] = useState<HumiClaimHistoryItem | null>(null);
+  // (CNEXT_CLAIM_HISTORY is a const; never mutate it). Sub-flow targets + toast.
+  const [rows, setRows] = useState(() => CNEXT_CLAIM_HISTORY);
+  const [cancelTarget, setCancelTarget] = useState<CnextClaimHistoryItem | null>(null);
+  const [editTarget, setEditTarget] = useState<CnextClaimHistoryItem | null>(null);
   const { toast, show: showToast } = useToast();
 
   // STA-234 — Edit opens the SAME full SimpleClaimForm used by "Start claim" for
@@ -513,7 +513,7 @@ function ClaimHistorySection() {
         (p) => p.id === planIdForClaimRow(editTarget.type, editTarget.claimType),
       ) ?? null
     : null;
-  // Prefill mirrors the humi-claim-history-to-claim adapter convention.
+  // Prefill mirrors the cnext-claim-history-to-claim adapter convention.
   const editInitialValues = editTarget
     ? {
         receiptNo: `RCPT-${editTarget.id}`,
@@ -525,7 +525,7 @@ function ClaimHistorySection() {
     : undefined;
 
   const filteredClaimHistory = useMemo(() => {
-    const filtered = filterHumiClaimHistory(rows, {
+    const filtered = filterCnextClaimHistory(rows, {
       benefit: benefitFilter,
       claimType: claimTypeFilter,
       status: statusFilter,
@@ -579,7 +579,7 @@ function ClaimHistorySection() {
     showToast(t('claimUpdatedToast'));
   };
 
-  const claimHistoryColumns = useMemo<DataTableColumn<HumiClaimHistoryItem>[]>(() => [
+  const claimHistoryColumns = useMemo<DataTableColumn<CnextClaimHistoryItem>[]>(() => [
     {
       id: 'benefitName',
       header: 'ชื่อสวัสดิการ / Benefit Name',
@@ -799,7 +799,7 @@ function ClaimHistorySection() {
           BenefitClaimRequest for the shared modal.
           STA-234 — opt-in Cancel/Edit footer, gated on the row's native status. */}
       <ClaimDetailModal
-        claim={detailRow ? humiClaimHistoryToClaimRequest(detailRow) : null}
+        claim={detailRow ? cnextClaimHistoryToClaimRequest(detailRow) : null}
         open={detailRow !== null}
         onClose={() => setDetailRow(null)}
         onCancel={rowActions?.canCancel ? openCancel : undefined}

@@ -7,7 +7,7 @@
 // `ClaimStatus` sort plus the shared filter vocabularies (claim type + the
 // 3 status buckets) used by both filter UIs.
 
-import type { ClaimStatus } from '@/lib/humi-mock-data';
+import type { ClaimStatus } from '@/lib/cnext-mock-data';
 import type { BenefitClaimStatus } from '@/stores/benefit-claims';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ export function sortByClaimStatus<T extends { status: ClaimStatus; submittedAt: 
 }
 
 /** ME claim-history filter state — empty string means "no filter" (show all). */
-export interface HumiClaimFilterState {
+export interface CnextClaimFilterState {
   benefit?: string;
   claimType?: string;
   status?: string;
@@ -76,7 +76,7 @@ export interface HumiClaimFilterState {
  * either bound open when empty. An empty/omitted value for any dimension
  * matches every row.
  */
-export function filterHumiClaimHistory<
+export function filterCnextClaimHistory<
   T extends {
     type: string;
     desc?: string;
@@ -86,7 +86,7 @@ export function filterHumiClaimHistory<
   },
 >(
   rows: readonly T[],
-  { benefit, claimType, status, dateFrom, dateTo }: HumiClaimFilterState,
+  { benefit, claimType, status, dateFrom, dateTo }: CnextClaimFilterState,
 ): T[] {
   return rows.filter((row) => {
     // Free-text search covers the benefit NAME + description + claim-type label

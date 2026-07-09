@@ -13,9 +13,9 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { Card } from '@/components/humi';
-import { Button } from '@/components/humi';
-import { DataTable, type DataTableColumn } from '@/components/humi';
+import { Card } from '@/components/cnext';
+import { Button } from '@/components/cnext';
+import { DataTable, type DataTableColumn } from '@/components/cnext';
 import { isTerminationId, useSelectPendingApprovals, type QueueApproval } from '@/lib/approval-registry';
 import { moduleOf, type PendingRequest, type ClaimDetails, type WorkflowModule } from '@/lib/quick-approve-api';
 import { useAuthStore } from '@/stores/auth-store';
@@ -214,7 +214,7 @@ export function QuickApproveSimple() {
       cell: (row) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span
-            className="humi-avatar humi-avatar--teal"
+            className="cnext-avatar cnext-avatar--teal"
             style={{ width: 28, height: 28, fontSize: 11, flexShrink: 0 }}
             aria-hidden
           >
@@ -235,7 +235,7 @@ export function QuickApproveSimple() {
       id: 'type',
       header: t('columns.type'),
       cell: (row) => (
-        <span className="humi-tag" style={{ fontSize: 12 }}>
+        <span className="cnext-tag" style={{ fontSize: 12 }}>
           {row.type === 'change_request' && isTerminationId(row.id) ? 'ลาออก' : typeLabel(row.type)}
         </span>
       ),
@@ -292,7 +292,7 @@ export function QuickApproveSimple() {
         if (status === 'pending' && awaitingNext[row.id]) {
           return (
             <div>
-              <span className="humi-tag humi-tag--butter" style={{ fontSize: 12 }}>
+              <span className="cnext-tag cnext-tag--butter" style={{ fontSize: 12 }}>
                 {t('status.awaitingNext')}
               </span>
               {nextHint}
@@ -300,9 +300,9 @@ export function QuickApproveSimple() {
           );
         }
         const badgeClass =
-          status === 'approved' ? 'humi-tag humi-tag--accent' :
-          status === 'rejected' ? 'humi-tag' :
-          'humi-tag humi-tag--butter';
+          status === 'approved' ? 'cnext-tag cnext-tag--accent' :
+          status === 'rejected' ? 'cnext-tag' :
+          'cnext-tag cnext-tag--butter';
         return (
           <div>
             <span className={badgeClass} style={{ fontSize: 12 }}>{t(`status.${status}`)}</span>
@@ -342,7 +342,7 @@ export function QuickApproveSimple() {
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span
-              className="humi-avatar humi-avatar--teal"
+              className="cnext-avatar cnext-avatar--teal"
               style={{ width: 24, height: 24, fontSize: 10, flexShrink: 0 }}
               aria-hidden
             >
@@ -398,7 +398,7 @@ export function QuickApproveSimple() {
         if (!actable) {
           return (
             <span
-              className="humi-tag"
+              className="cnext-tag"
               style={{ fontSize: 12 }}
               data-testid="view-only-badge"
             >
@@ -435,7 +435,7 @@ export function QuickApproveSimple() {
   return (
     <div className="pb-8">
       {/* Breadcrumb */}
-      <div className="humi-eyebrow" style={{ marginBottom: 6 }}>
+      <div className="cnext-eyebrow" style={{ marginBottom: 6 }}>
         {t('breadcrumb')}
       </div>
 

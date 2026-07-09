@@ -17,8 +17,8 @@ import { formatCurrency } from '@/lib/date'
 import { useAuthStore } from '@/stores/auth-store'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
-import { Toggle, Textarea } from '@/components/humi'
-import { FileUploadField } from '@/components/humi/FileUploadField'
+import { Toggle, Textarea } from '@/components/cnext'
+import { FileUploadField } from '@/components/cnext/FileUploadField'
 import {
   BENEFIT_PLAN_REGISTRY,
   getPlan,
@@ -122,14 +122,14 @@ export default function SpecialPrivilegePage() {
         <div>
           <Link
             href={`/${locale}/admin/employees`}
-            className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+            className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
             style={{ display: 'inline-flex', gap: 6 }}
           >
             <ArrowLeft size={16} aria-hidden />
             <span>รายการพนักงาน</span>
           </Link>
         </div>
-        <div className="humi-card" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">ไม่พบพนักงานรหัส &ldquo;{empId}&rdquo;</p>
         </div>
       </div>
@@ -158,7 +158,7 @@ export default function SpecialPrivilegePage() {
       <div>
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -167,7 +167,7 @@ export default function SpecialPrivilegePage() {
       </div>
 
       {/* Page title */}
-      <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+      <div className="cnext-row" style={{ gap: 10, alignItems: 'center' }}>
         <div
           style={{
             width: 36, height: 36, borderRadius: 10,
@@ -179,21 +179,21 @@ export default function SpecialPrivilegePage() {
           <BadgePlus size={18} aria-hidden />
         </div>
         <div>
-          <div className="humi-eyebrow">{t('pageTitle')}</div>
+          <div className="cnext-eyebrow">{t('pageTitle')}</div>
           <h1 className="font-display text-xl font-semibold text-ink">{t('title')}</h1>
         </div>
       </div>
 
       {/* Employee snapshot */}
-      <div className="humi-card humi-card--cream">
-        <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
+      <div className="cnext-card cnext-card--cream">
+        <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
         <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
         <div className="text-small text-ink-muted">{nameEn}</div>
         <p className="text-small text-ink-soft" style={{ marginTop: 8 }}>{t('subtitle')}</p>
       </div>
 
       {/* Form */}
-      <div className="humi-card ring-1 ring-accent-soft">
+      <div className="cnext-card ring-1 ring-accent-soft">
         {/* Special Benefit Group */}
         <div style={{ marginBottom: 20 }}>
           <Toggle
@@ -273,7 +273,7 @@ export default function SpecialPrivilegePage() {
             min={0}
             value={entitlementAmount}
             onChange={(e) => setEntitlementAmount(e.target.value)}
-            className="humi-input"
+            className="cnext-input"
             style={{ maxWidth: 240 }}
           />
         </div>
@@ -293,13 +293,13 @@ export default function SpecialPrivilegePage() {
             min={0}
             value={maxPerClaim}
             onChange={(e) => setMaxPerClaim(e.target.value)}
-            className="humi-input"
+            className="cnext-input"
             style={{ maxWidth: 240 }}
           />
         </div>
 
         {/* Effective dates */}
-        <div className="humi-row" style={{ gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div className="cnext-row" style={{ gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 200px' }}>
             <label
               htmlFor="sp-start"
@@ -313,7 +313,7 @@ export default function SpecialPrivilegePage() {
               type="date"
               value={effectiveStart}
               onChange={(e) => setEffectiveStart(e.target.value)}
-              className="humi-input"
+              className="cnext-input"
               style={{ maxWidth: 240 }}
             />
           </div>
@@ -330,7 +330,7 @@ export default function SpecialPrivilegePage() {
               type="date"
               value={effectiveEnd}
               onChange={(e) => setEffectiveEnd(e.target.value)}
-              className="humi-input"
+              className="cnext-input"
               style={{ maxWidth: 240 }}
             />
           </div>
@@ -370,10 +370,10 @@ export default function SpecialPrivilegePage() {
         </div>
 
         {/* Actions */}
-        <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
+        <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
           <Link
             href={`/${locale}/admin/employees/${empId}`}
-            className="humi-btn humi-btn--ghost"
+            className="cnext-btn cnext-btn--ghost"
           >
             {t('buttons.cancel')}
           </Link>
@@ -381,7 +381,7 @@ export default function SpecialPrivilegePage() {
             type="button"
             onClick={doSubmit}
             disabled={submitted}
-            className="humi-btn humi-btn--primary"
+            className="cnext-btn cnext-btn--primary"
             aria-disabled={submitted}
           >
             {t('buttons.submit')}

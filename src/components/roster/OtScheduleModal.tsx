@@ -2,7 +2,7 @@
 
 // OtScheduleModal — STA-260 (Team Timesheet Draft 4).
 // The per-day "+OverTime" popup on /roster: a manager schedules (or edits) an
-// OT window for one (employee, day). Same Humi modal aesthetic as
+// OT window for one (employee, day). Same Cnext modal aesthetic as
 // ShiftTimeEditModal. Rules per the ticket:
 //   • start/end times required, same-day (end after start)
 //   • the window must NOT overlap any existing block that day — the scheduled
@@ -11,7 +11,7 @@
 // Errors render inline in pumpkin (--color-danger) — NO RED. Mockup only.
 
 import { useState } from 'react';
-import { Modal, Button } from '@/components/humi';
+import { Modal, Button } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { OT_RATE_TYPES, type OtRateType } from '@/stores/overtime-requests';
 import {

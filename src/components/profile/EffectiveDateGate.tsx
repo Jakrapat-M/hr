@@ -3,7 +3,7 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Modal, Button } from '@/components/humi';
+import { Modal, Button } from '@/components/cnext';
 
 interface EffectiveDateGateProps {
   open: boolean;

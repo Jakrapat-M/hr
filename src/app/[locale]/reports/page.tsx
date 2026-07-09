@@ -11,11 +11,11 @@ import { useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { BarChart3, Users, Wrench } from 'lucide-react';
 import Link from 'next/link';
-import { Card, DataTable, EmptyState, type DataTableColumn } from '@/components/humi';
+import { Card, DataTable, EmptyState, type DataTableColumn } from '@/components/cnext';
 import { useAuthStore } from '@/stores/auth-store';
 import { ALL_PORTED_EMPLOYEES, EMP_BY_LOGIN } from '@/lib/all-ported-employees';
 import { filterEmployeesByPersona } from '@/lib/scope-filter';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
 
 interface DeptRollup {
   department: string;
@@ -24,7 +24,7 @@ interface DeptRollup {
   leave: number;
 }
 
-function rollupByDepartment(emps: ReadonlyArray<HumiEmployee>): DeptRollup[] {
+function rollupByDepartment(emps: ReadonlyArray<CnextEmployee>): DeptRollup[] {
   const map = new Map<string, DeptRollup>();
   for (const e of emps) {
     const key = e.department || '—';
@@ -109,7 +109,7 @@ export default function ReportsPage() {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
           <span className="font-mono text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-faint">
-            {isTh ? 'HUMI • รายงาน' : 'HUMI • REPORTS'}
+            {isTh ? 'CNEXT • รายงาน' : 'CNEXT • REPORTS'}
           </span>
           <h1 className="font-display text-[length:var(--text-display-h1)] font-semibold leading-[var(--text-display-h1--line-height)] tracking-tight text-ink">
             {t('pages.reports.title')}

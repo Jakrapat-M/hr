@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { Button, Card, FormField, FormInput } from '@/components/humi';
+import { Button, Card, FormField, FormInput } from '@/components/cnext';
 import type { TalentFilters } from './TalentSearchPanel';
 
 // ════════════════════════════════════════════════════════════

@@ -10,7 +10,7 @@ import type { PendingRequest } from '@/lib/quick-approve-api';
 //   Employee submit → pending_spd → approved | rejected
 //
 // Earlier drafts routed requests through manager → hrbp → spd. That was an
-// enterprise-style assumption, not grounded in Humi's BRD. Leave / lifecycle
+// enterprise-style assumption, not grounded in Cnext's BRD. Leave / lifecycle
 // workflows (Manager approves leave, HRBP manages lifecycle) are separate
 // queues handled by different stores — not this one.
 
@@ -297,7 +297,7 @@ export const useWorkflowApprovals = create<WorkflowState>()(
       clear: () => set({ requests: [] }),
     }),
     {
-      name: 'humi-workflow-approvals',
+      name: 'cnext-workflow-approvals',
       version: 1, // PR-1b: bumped alongside the rehydrate-to-seed persist contract.
       storage: createJSONStorage(() => localStorage),
       // PR-1b persist contract (rehydrate-to-seed): drop persisted requests on

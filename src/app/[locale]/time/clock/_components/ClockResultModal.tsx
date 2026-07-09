@@ -5,12 +5,12 @@
 //   warning → punched but outside the geofence, supervisor notified (amber)
 //   error   → blocked (GPS off / denied), offers Try Again (pumpkin — NO RED)
 //
-// Built on the Humi Modal (portal + Esc/backdrop close). All copy comes from the
+// Built on the Cnext Modal (portal + Esc/backdrop close). All copy comes from the
 // `clock` next-intl namespace so the popups stay TH/EN in parity.
 
 import { useTranslations } from 'next-intl';
 import { CheckCircle2, AlertTriangle, MapPinOff } from 'lucide-react';
-import { Modal, Button } from '@/components/humi';
+import { Modal, Button } from '@/components/cnext';
 import type { PunchType } from '@/stores/clock-punches';
 
 export type ClockResultVariant = 'success' | 'warning' | 'error';

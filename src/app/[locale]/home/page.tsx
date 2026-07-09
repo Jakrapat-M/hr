@@ -1,7 +1,7 @@
 'use client';
 
 // ════════════════════════════════════════════════════════════
-// /home — Humi dashboard landing
+// /home — Cnext dashboard landing
 // 1:1 port of docs/design-ref/shelfly-bundle/project/screens/home.jsx
 // Adapted retail → generic HR (HQ workforce, not single store).
 // NO raw hex, NO red, AppShell owns sidebar+topbar.
@@ -38,18 +38,18 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isManager } from '@/lib/rbac';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { AttendanceKpiCards } from '@/components/home/AttendanceKpiCards';
-import { QuickActionsTile, DEFAULT_ESS_ACTIONS, type QuickAction } from '@/components/humi/QuickActionsTile';
+import { QuickActionsTile, DEFAULT_ESS_ACTIONS, type QuickAction } from '@/components/cnext/QuickActionsTile';
 import { useAdminSelfService } from '@/lib/admin/store/useAdminSelfService';
 import type { QuickActionSize } from '@/lib/admin/types/adminSelfService';
 import {
-  HUMI_PENDING_REQUESTS,
-  HUMI_EMPLOYEES,
-  HUMI_PENDING_DOCS,
-  HUMI_ANNOUNCEMENTS,
-  HUMI_WEEK_RECOGNITION,
-} from '@/lib/humi-mock-data';
+  CNEXT_PENDING_REQUESTS,
+  CNEXT_EMPLOYEES,
+  CNEXT_PENDING_DOCS,
+  CNEXT_ANNOUNCEMENTS,
+  CNEXT_WEEK_RECOGNITION,
+} from '@/lib/cnext-mock-data';
 
 // Lucide icon map for adminSelfService QuickActionTile icon strings.
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -99,11 +99,11 @@ export function makeAdminQuickActions(
 }
 
 const AVATAR_TONE_MAP = {
-  teal: 'humi-avatar humi-avatar--teal',
-  sage: 'humi-avatar humi-avatar--sage',
-  butter: 'humi-avatar humi-avatar--butter',
-  ink: 'humi-avatar humi-avatar--ink',
-  indigo: 'humi-avatar humi-avatar--teal',
+  teal: 'cnext-avatar cnext-avatar--teal',
+  sage: 'cnext-avatar cnext-avatar--sage',
+  butter: 'cnext-avatar cnext-avatar--butter',
+  ink: 'cnext-avatar cnext-avatar--ink',
+  indigo: 'cnext-avatar cnext-avatar--teal',
 } as const;
 
 function getTimeGreeting(): string {
@@ -114,8 +114,8 @@ function getTimeGreeting(): string {
 
 }
 
-export default function HumiHomePage() {
-  const t = useTranslations('humiHero');
+export default function CnextHomePage() {
+  const t = useTranslations('cnextHero');
   const router = useRouter();
   const username = useAuthStore((s) => s.username);
   const roles = useAuthStore((s) => s.roles);
@@ -128,8 +128,8 @@ export default function HumiHomePage() {
     ? makeAdminQuickActions(publishedQuickActions)
     : DEFAULT_ESS_ACTIONS;
 
-  const top2 = HUMI_PENDING_REQUESTS.slice(0, 2);
-  const feed = HUMI_ANNOUNCEMENTS.slice(0, 2);
+  const top2 = CNEXT_PENDING_REQUESTS.slice(0, 2);
+  const feed = CNEXT_ANNOUNCEMENTS.slice(0, 2);
 
   return (
     <div className="pb-8">
@@ -153,43 +153,43 @@ export default function HumiHomePage() {
 
       {/* Row 1 — hero greeting (today-presence card moved to /time, STA-248) */}
       <div
-        className="humi-card humi-grain"
+        className="cnext-card cnext-grain"
         style={{ overflow: 'hidden', paddingRight: 'clamp(0px, 9.375vw, 150px)' }}
       >
         <div
-          className="humi-blob humi-blob--teal hidden lg:block"
+          className="cnext-blob cnext-blob--teal hidden lg:block"
           style={{ width: 120, height: 150, right: -30, top: -30, opacity: 0.85 }}
           aria-hidden
         />
         <div
-          className="humi-blob humi-blob--coral hidden lg:block"
+          className="cnext-blob cnext-blob--coral hidden lg:block"
           style={{ width: 80, height: 100, right: 60, bottom: -20, opacity: 0.7 }}
           aria-hidden
         />
         <div
-          className="humi-blob humi-blob--butter hidden lg:block"
+          className="cnext-blob cnext-blob--butter hidden lg:block"
           style={{ width: 44, height: 56, right: 110, top: 80, opacity: 0.9 }}
           aria-hidden
         />
-        <div className="humi-eyebrow" style={{ marginBottom: 10 }}>
+        <div className="cnext-eyebrow" style={{ marginBottom: 10 }}>
           {t('dateEyebrow')}
         </div>
-        <h1 className="humi-hero-title" style={{ maxWidth: 460 }}>
+        <h1 className="cnext-hero-title" style={{ maxWidth: 460 }}>
           {greeting}{username ? ` คุณ${username.split(' ')[0]}` : ''}
           <br />
-          <span className="humi-hero-title-soft">{t('greetingSub')}</span>
+          <span className="cnext-hero-title-soft">{t('greetingSub')}</span>
         </h1>
-        <div className="humi-row" style={{ marginTop: 22, gap: 10, flexWrap: 'wrap' }}>
+        <div className="cnext-row" style={{ marginTop: 22, gap: 10, flexWrap: 'wrap' }}>
           <Link
             href="/th/timeoff"
-            className="humi-button humi-button--primary"
+            className="cnext-button cnext-button--primary"
           >
             <Check size={16} />
             {t('ctaApprove')}
           </Link>
           <Link
             href="/th/announcements"
-            className="humi-button humi-button--ghost"
+            className="cnext-button cnext-button--ghost"
           >
             <Megaphone size={16} />
             {t('ctaAnnouncements')}
@@ -207,28 +207,28 @@ export default function HumiHomePage() {
         className="grid gap-5 lg:grid-cols-[1.35fr_1fr]"
         style={{ marginTop: 20 }}
       >
-        <div className="humi-card">
-          <div className="humi-row" style={{ marginBottom: 6 }}>
+        <div className="cnext-card">
+          <div className="cnext-row" style={{ marginBottom: 6 }}>
             <div>
-              <div className="humi-eyebrow">{t('pendingEyebrow')}</div>
+              <div className="cnext-eyebrow">{t('pendingEyebrow')}</div>
               <h3 className="mt-1.5 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
                 {t('pendingTitle')}
               </h3>
             </div>
             <span
-              className="humi-tag humi-tag--coral"
+              className="cnext-tag cnext-tag--coral"
               style={{ marginLeft: 'auto' }}
             >
               {t('pendingTag')}
             </span>
           </div>
-          <ul className="humi-list" role="list">
+          <ul className="cnext-list" role="list">
             {top2.map((req) => {
-              const emp = HUMI_EMPLOYEES.find((e) => e.id === req.employeeId);
+              const emp = CNEXT_EMPLOYEES.find((e) => e.id === req.employeeId);
               if (!emp) return null;
               const tone = emp.avatarTone === 'indigo' ? 'teal' : emp.avatarTone;
               return (
-                <li key={req.id} className="humi-row-item">
+                <li key={req.id} className="cnext-row-item">
                   <span className={AVATAR_TONE_MAP[tone]} aria-hidden>
                     {emp.initials}
                   </span>
@@ -243,7 +243,7 @@ export default function HumiHomePage() {
                       {req.dateRangeLabel} &nbsp;•&nbsp; {req.submittedLabel}
                     </div>
                   </div>
-                  <div className="humi-row" style={{ gap: 8 }}>
+                  <div className="cnext-row" style={{ gap: 8 }}>
                     <Button
                       variant="secondary"
                       size="sm"
@@ -265,15 +265,15 @@ export default function HumiHomePage() {
           </ul>
         </div>
 
-        <div className="humi-card humi-card--cream">
-          <div className="humi-eyebrow">{t('docsEyebrow')}</div>
+        <div className="cnext-card cnext-card--cream">
+          <div className="cnext-eyebrow">{t('docsEyebrow')}</div>
           <h3 className="mt-1.5 mb-3.5 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
             {t('docsTitle')}
           </h3>
-          {HUMI_PENDING_DOCS.map((d) => (
+          {CNEXT_PENDING_DOCS.map((d) => (
             <div
               key={d.id}
-              className="humi-row"
+              className="cnext-row"
               style={{
                 padding: '12px 0',
                 borderTop: '1px solid var(--color-hairline-soft)',
@@ -304,7 +304,7 @@ export default function HumiHomePage() {
                 </div>
               </div>
               {d.nearDue && (
-                <span className="humi-tag humi-tag--butter">{t('docsNearDue')}</span>
+                <span className="cnext-tag cnext-tag--butter">{t('docsNearDue')}</span>
               )}
             </div>
           ))}
@@ -322,10 +322,10 @@ export default function HumiHomePage() {
         className="grid gap-5 lg:grid-cols-[1.35fr_1fr]"
         style={{ marginTop: 20 }}
       >
-        <div className="humi-card">
-          <div className="humi-row" style={{ marginBottom: 12 }}>
+        <div className="cnext-card">
+          <div className="cnext-row" style={{ marginBottom: 12 }}>
             <div>
-              <div className="humi-eyebrow">{t('feedEyebrow')}</div>
+              <div className="cnext-eyebrow">{t('feedEyebrow')}</div>
               <h3 className="mt-1.5 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
                 {t('feedTitle')}
               </h3>
@@ -341,9 +341,9 @@ export default function HumiHomePage() {
           {feed.map((p) => (
             <article
               key={p.id}
-              className={cn('humi-post', p.pinned && 'humi-post--pin')}
+              className={cn('cnext-post', p.pinned && 'cnext-post--pin')}
             >
-              <div className="humi-row">
+              <div className="cnext-row">
                 <span className={AVATAR_TONE_MAP[p.authorTone]} aria-hidden>
                   {p.authorInitials}
                 </span>
@@ -354,7 +354,7 @@ export default function HumiHomePage() {
                   </div>
                 </div>
                 {p.pinned && (
-                  <span className="humi-tag humi-tag--ink">
+                  <span className="cnext-tag cnext-tag--ink">
                     <Pin size={11} /> {t('pinnedTag')}
                   </span>
                 )}
@@ -382,15 +382,15 @@ export default function HumiHomePage() {
                 {p.body}
               </p>
               <div
-                className="humi-row"
+                className="cnext-row"
                 style={{ marginTop: 12, gap: 10, flexWrap: 'wrap' }}
               >
                 {p.reactions.map((x) => (
-                  <span key={x} className="humi-tag">
+                  <span key={x} className="cnext-tag">
                     {x}
                   </span>
                 ))}
-                <span className="humi-spacer" />
+                <span className="cnext-spacer" />
                 <Button variant="ghost" size="sm">
                   {t('replyCta')}
                 </Button>
@@ -402,16 +402,16 @@ export default function HumiHomePage() {
         {/* Week recognition (ink card) — promoted up; calendar removed per Req3 */}
         <div
           data-testid="week-recognition"
-          className="humi-card humi-card--ink"
+          className="cnext-card cnext-card--ink"
           style={{ overflow: 'hidden', position: 'relative' }}
         >
           <div
-            className="humi-blob humi-blob--teal"
+            className="cnext-blob cnext-blob--teal"
             style={{ width: 90, height: 110, right: -20, bottom: -30, opacity: 0.55 }}
             aria-hidden
           />
           <div
-            className="humi-eyebrow"
+            className="cnext-eyebrow"
             style={{ color: 'var(--color-accent)' }}
           >
             <PartyPopper
@@ -419,13 +419,13 @@ export default function HumiHomePage() {
               style={{ display: 'inline-block', verticalAlign: -2, marginRight: 4 }}
               aria-hidden
             />
-            {HUMI_WEEK_RECOGNITION.eyebrow}
+            {CNEXT_WEEK_RECOGNITION.eyebrow}
           </div>
           <h3 className="mt-2 font-display text-xl font-semibold leading-snug tracking-tight text-[color:var(--color-canvas-soft)]">
-            {HUMI_WEEK_RECOGNITION.title}
+            {CNEXT_WEEK_RECOGNITION.title}
           </h3>
-          <div className="humi-row" style={{ marginTop: 14, gap: 0 }}>
-            {HUMI_WEEK_RECOGNITION.initials.map((a, idx) => (
+          <div className="cnext-row" style={{ marginTop: 14, gap: 0 }}>
+            {CNEXT_WEEK_RECOGNITION.initials.map((a, idx) => (
               <span
                 key={a.i}
                 className={AVATAR_TONE_MAP[a.tone]}

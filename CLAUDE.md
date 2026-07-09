@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 🎯 **Goal**: Deliver a complete, clickable UI mockup that HR Team can demo end-to-end and approve before any production-grade implementation begins.
 - ⏭️ **Backend: SKIP for now** — workflow-engine endpoints, API contracts, real persistence, auth wiring, payroll integration: all out of scope at this stage. Do NOT spend cycles wiring real POST/PUT handlers.
-- ✅ **In scope**: clickable flows (modals open, tables render, filters work, navigation between screens, state transitions visible), realistic static / registry-backed data, Humi design conformance, bilingual TH/EN parity.
+- ✅ **In scope**: clickable flows (modals open, tables render, filters work, navigation between screens, state transitions visible), realistic static / registry-backed data, Cnext design conformance, bilingual TH/EN parity.
 - ❌ **Out of scope**: real API integration, optimistic-vs-pessimistic update logic, retry/error UX beyond basic states, observability, RBAC enforcement against a real IAM.
 - 🚫 **Mockup data caveat** — "ข้อมูลจำลอง ไม่ต้องมี" applies to *internal registry artifacts* (TTT codes, template names, schemaVersion, etc.) showing up in user-facing **input forms** on the LEGACY CreatePlanModal / EditPlanModal pattern (PRs #148/#149). It does NOT mean we strip the realistic seed data from tables/lists — that's how HR will judge the design. Use existing registry/static seeds (`BENEFIT_PLAN_REGISTRY`, mock claim history, etc.) freely.
 - 🔁 **STA-25 carveout (2026-05-15)** — Linear ticket **STA-25 Configuration-Based Plan Setup** explicitly REQUIRES `TTT`, `template`, and `schemaVersion` as **user-input fields** inside the 9-tab configurator Identity tab. STA-25 supersedes the prior CreateModal carveout because admin "Benefit Administrator" persona must configure these for SF parity. Apply the "no internal artifacts" rule only to non-STA-25 surfaces.
@@ -80,10 +80,10 @@ src/frontend/src/
 ├── app/
 │   ├── [locale]/...          # all product routes (file-based; ~48 route groups)
 │   │   ├── home, profile/[tab], benefits-hub, payroll, quick-approve/[id], timeoff, admin/*, hrbp/*, ...
-│   │   └── globals.css       # Humi design tokens (Tailwind @theme) — source of truth
+│   │   └── globals.css       # Cnext design tokens (Tailwind @theme) — source of truth
 │   └── api/                  # minimal (auth redirects)
 ├── components/
-│   ├── humi/                 # Humi design system: 20 primitives + index.ts
+│   ├── cnext/                 # Cnext design system: 20 primitives + index.ts
 │   │   └── shell/            # 6 shell components: AppShell, Sidebar, Topbar, CommandPalette, LoginAsRibbon, PersonaSwitcher
 │   └── <domain>/             # ~35 feature folders (benefits, payroll, leave, time, quick-approve, roster, ...)
 ├── stores/                   # ~44 Zustand stores (see State below)
@@ -104,17 +104,17 @@ No route registry. To add a screen, create a folder + `page.tsx` under `src/app/
 Stores live in `src/frontend/src/stores/`:
 
 - UI/session: `ui-store.ts`, `auth-store.ts`
-- Humi feature slices: `humi-*-slice.ts` (announcements, benefits, goals, integrations, learning, orgchart, profile, requests, timeoff)
+- Cnext feature slices: `cnext-*-slice.ts` (announcements, benefits, goals, integrations, learning, orgchart, profile, requests, timeoff)
 - Approval queues: `*-approvals.ts` (leave, pay-rate, probation, promotion, termination, transfer, workflow), plus benefit claim/referral/exception stores
 
 Use the existing slice that owns the domain before adding a new store.
 
-### Humi Design System (canonical)
+### Cnext Design System (canonical)
 
-Start every UI task from Humi primitives and tokens — do not write route-local card/markup or raw hex.
+Start every UI task from Cnext primitives and tokens — do not write route-local card/markup or raw hex.
 
-- **Tokens**: `src/frontend/src/app/globals.css` (CSS variables). Docs: `docs/design-system-humi.md`, `docs/humi-components.md`, `docs/humi-shell-port-notes.md`.
-- **Primitives**: `src/components/humi/` — `Card`, `Button`, `FormField`, `FileUploadField`, `DataTable`, `Modal`, `Nav`, `Avatar`, `Toggle`, `Textarea`, `EmptyState`, etc. (import via `components/humi/index.ts`).
+- **Tokens**: `src/frontend/src/app/globals.css` (CSS variables). Docs: `docs/design-system-cnext.md`, `docs/cnext-components.md`, `docs/cnext-shell-port-notes.md`.
+- **Primitives**: `src/components/cnext/` — `Card`, `Button`, `FormField`, `FileUploadField`, `DataTable`, `Modal`, `Nav`, `Avatar`, `Toggle`, `Textarea`, `EmptyState`, etc. (import via `components/cnext/index.ts`).
 - **Palette**: cream canvas (`--color-canvas` `#F6F1E8`) + navy ink (`--color-ink` `#0E1B2C`). Primary/active = **teal** (`--color-accent` `#1FA8A0`). Info/alt = **indigo** `#5B6CE0`.
 - **NO-RED guardrail**: danger/error uses **pumpkin** `--color-danger` `#FB923C`, never red, Central-retail red, crimson, clay, or coral. No hardcoded hex in components unless the design docs explicitly allow it.
 - Use token utilities/vars: `bg-canvas`, `bg-canvas-soft`, `bg-surface`, `text-ink`, `text-ink-muted`, `border-hairline`, `shadow-[var(--shadow-card)]`, `rounded-[var(--radius-md)]`, `ring-accent-soft`. Radii: `--radius-xs 6px` … `--radius-xl 28px`.
@@ -128,7 +128,7 @@ Start every UI task from Humi primitives and tokens — do not write route-local
 
 ### Mock data
 
-Static/registry-backed seeds (no real backend this phase): `src/lib/humi-mock-data.ts` (+ `humi-mock-data-sf-parity.ts`, `humi-mock-data-sf-real.ts`), `demo-seed.ts`, `demo-users.ts`, plus domain mocks (`*-mock.ts`) and `approval-registry.ts`. `lib/api.ts` / `*-api.ts` simulate async against these seeds.
+Static/registry-backed seeds (no real backend this phase): `src/lib/cnext-mock-data.ts` (+ `cnext-mock-data-sf-parity.ts`, `cnext-mock-data-sf-real.ts`), `demo-seed.ts`, `demo-users.ts`, plus domain mocks (`*-mock.ts`) and `approval-registry.ts`. `lib/api.ts` / `*-api.ts` simulate async against these seeds.
 
 ### MCP Servers (`.mcp.json`)
 
@@ -151,10 +151,10 @@ Docker Compose (`docker-compose.yml`) starts: **PostgreSQL** (5432), **Redis** (
 ## Key Conventions
 
 - **TypeScript + React 19 + App Router** — Server Components by default; add `'use client'` only when a component needs interactivity/state.
-- Reuse existing Humi primitives, Zustand stores, lib helpers, and routes before introducing new patterns. Keep diffs small and reversible.
+- Reuse existing Cnext primitives, Zustand stores, lib helpers, and routes before introducing new patterns. Keep diffs small and reversible.
 - i18n: add keys to **both** `messages/en.json` and `messages/th.json`; keep TH/EN parity. Default locale is `th`.
 - Thai Buddhist Era dates: use `src/lib/date.ts` helpers. Sensitive fields (bank accounts, national IDs) use the masking helpers.
-- No new dependencies without explicit request. No legacy card classes / route-local card styling in migrated Humi routes.
+- No new dependencies without explicit request. No legacy card classes / route-local card styling in migrated Cnext routes.
 - E2E and manual verification target the Next.js app at `http://localhost:3000` only (never the removed vanilla SPA).
 
 ## Communication style (สำคัญ — ผู้ใช้ต้องการ)

@@ -12,7 +12,7 @@ import {
   ContactArrayEditor,
   isContactArrayValid,
 } from '@/components/profile/ContactArrayEditor';
-import type { PhoneEntry, EmailEntry } from '@/stores/humi-profile-slice';
+import type { PhoneEntry, EmailEntry } from '@/stores/cnext-profile-slice';
 
 // ── Mock next-intl ─────────────────────────────────────────────────────────────
 vi.mock('next-intl', () => ({
@@ -29,8 +29,8 @@ vi.mock('next-intl', () => ({
   },
 }));
 
-// ── Mock humi UI primitives ────────────────────────────────────────────────────
-vi.mock('@/components/humi', () => ({
+// ── Mock cnext UI primitives ────────────────────────────────────────────────────
+vi.mock('@/components/cnext', () => ({
   Button: ({
     children,
     onClick,

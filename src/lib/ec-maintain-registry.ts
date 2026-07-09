@@ -14,7 +14,7 @@
 // guards the 7 live edit flows.
 
 import type { SectionId } from '@/app/[locale]/profile/me/page'; // 'personal'|'marital'|'contact'|'advanced'
-import type { SectionKey } from '@/stores/humi-profile-slice'; // slice discriminator
+import type { SectionKey } from '@/stores/cnext-profile-slice'; // slice discriminator
 
 export type Cardinality = 1 | 'N';
 export type EditMode = 'direct' | 'approval' | 'view'; // 'view' reserved; NOT wired this ticket

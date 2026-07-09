@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { ArrowLeft } from 'lucide-react';
-import { CardEyebrow, buttonVariants } from '@/components/humi';
+import { CardEyebrow, buttonVariants } from '@/components/cnext';
 import { RecordsComputedView } from '@/components/benefits/templates/RecordsComputedView';
 import { getPlan } from '@/data/benefits/plan-registry';
 import { benefitsHubRoute } from '@/lib/benefit-routes';

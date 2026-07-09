@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Download, FileText, Filter, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { HUMI_HR_DOCS, HR_DOC_TYPE_LABELS, type HrDocType, type HumiHrDoc } from '@/lib/humi-mock-data';
+import { CNEXT_HR_DOCS, HR_DOC_TYPE_LABELS, type HrDocType, type CnextHrDoc } from '@/lib/cnext-mock-data';
 import { formatDate } from '@/lib/date';
 import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import { useAuthStore } from '@/stores/auth-store';
@@ -37,9 +37,9 @@ export default function MeDocumentsPage() {
   const email = useAuthStore((s) => s.email);
   const selfEmployee = employeeForLogin(email) ?? ALL_PORTED_EMPLOYEES[0] ?? null;
 
-  const filtered: HumiHrDoc[] = filter === 'all'
-    ? HUMI_HR_DOCS
-    : HUMI_HR_DOCS.filter((d) => d.type === filter);
+  const filtered: CnextHrDoc[] = filter === 'all'
+    ? CNEXT_HR_DOCS
+    : CNEXT_HR_DOCS.filter((d) => d.type === filter);
 
   return (
     <div data-testid="me-documents-page">
@@ -88,7 +88,7 @@ export default function MeDocumentsPage() {
             type="button"
             onClick={() => setFilter(opt.value)}
             data-testid={`docs-filter-${opt.value}`}
-            className={`humi-tag cursor-pointer${filter === opt.value ? ' humi-tag--accent' : ''}`}
+            className={`cnext-tag cursor-pointer${filter === opt.value ? ' cnext-tag--accent' : ''}`}
             aria-pressed={filter === opt.value}
           >
             {opt.label}
@@ -100,13 +100,13 @@ export default function MeDocumentsPage() {
       {filtered.length === 0 ? (
         <div
           data-testid="docs-empty"
-          className="humi-card p-12 text-center text-ink-muted"
+          className="cnext-card p-12 text-center text-ink-muted"
         >
           <FileText size={36} aria-hidden className="mx-auto mb-3 opacity-40 block" />
           <p>ไม่พบเอกสาร</p>
         </div>
       ) : (
-        <div data-testid="docs-list" className="humi-card overflow-hidden p-0">
+        <div data-testid="docs-list" className="cnext-card overflow-hidden p-0">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-surface-muted text-xs text-ink-muted">
@@ -136,7 +136,7 @@ export default function MeDocumentsPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       data-testid={`doc-download-${doc.id}`}
-                      className="humi-row gap-1 text-xs text-accent justify-end no-underline"
+                      className="cnext-row gap-1 text-xs text-accent justify-end no-underline"
                     >
                       <Download size={14} aria-hidden />
                       ดาวน์โหลด

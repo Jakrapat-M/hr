@@ -41,7 +41,7 @@ The product model is now documented as one destination per user intent:
 - Reimbursement remains in `benefit-claims.ts` and the reimbursement modal.
 - Hospital referral remains in `benefit-referrals.ts` plus referral panels; it does not require reimbursement receipt/amount fields.
 - Tax planning remains in `benefit-tax-planning.ts` and the tax panel; selectors expose masked/safe tax data and do not create reimbursement or request rows.
-- Humi tokens/primitives are preserved; no new hardcoded legacy danger/red utility styling was introduced.
+- Cnext tokens/primitives are preserved; no new hardcoded legacy danger/red utility styling was introduced.
 
 ## Regression coverage added/confirmed
 

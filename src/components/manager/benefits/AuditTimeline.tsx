@@ -17,7 +17,7 @@ const ROLE_CHIP_STYLE: Record<BenefitClaimAuditEntry['actorRole'], string> = {
   employee: 'bg-teal-50 text-teal-700 border border-teal-200',
   manager:  'bg-accent-soft text-accent border border-accent/20',
   spd:      'bg-warning-soft text-warning border border-warning/20',
-  // STA-27 PR-A — HRBP audit chip (indigo-tinted Humi accent variant)
+  // STA-27 PR-A — HRBP audit chip (indigo-tinted Cnext accent variant)
   hrbp:     'bg-info-tint text-info border border-info/20',
   system:   'bg-canvas-soft text-ink-muted border border-hairline',
 };

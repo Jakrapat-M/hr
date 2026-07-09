@@ -214,10 +214,10 @@ export default function PositionLookup({
   if (master.length === 0 && !isLoading) {
     return (
       <fieldset>
-        <label htmlFor={inputId} className="humi-label">
-          {label}{required && <span aria-hidden="true" className="humi-asterisk ml-1">*</span>}
+        <label htmlFor={inputId} className="cnext-label">
+          {label}{required && <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>}
         </label>
-        <div className="humi-input w-full max-w-sm flex items-center text-ink-soft text-sm" aria-disabled="true">
+        <div className="cnext-input w-full max-w-sm flex items-center text-ink-soft text-sm" aria-disabled="true">
           ไม่มีข้อมูล Position Master
         </div>
       </fieldset>
@@ -233,8 +233,8 @@ export default function PositionLookup({
 
     return (
       <fieldset>
-        <label className="humi-label">
-          {label}{required && <span aria-hidden="true" className="humi-asterisk ml-1">*</span>}
+        <label className="cnext-label">
+          {label}{required && <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>}
         </label>
         <div
           data-testid="position-chip"
@@ -255,7 +255,7 @@ export default function PositionLookup({
           <button
             type="button"
             onClick={handleClear}
-            className="humi-link shrink-0 text-xs"
+            className="cnext-link shrink-0 text-xs"
             aria-label="เปลี่ยนตำแหน่งงาน"
           >
             เปลี่ยน
@@ -269,8 +269,8 @@ export default function PositionLookup({
   if (selected && disabled) {
     return (
       <fieldset>
-        <label className="humi-label">
-          {label}{required && <span aria-hidden="true" className="humi-asterisk ml-1">*</span>}
+        <label className="cnext-label">
+          {label}{required && <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>}
         </label>
         <div className="text-sm text-ink">{selected.titleTh}</div>
         <div className="text-xs text-ink-soft">{selected.titleEn}</div>
@@ -282,10 +282,10 @@ export default function PositionLookup({
   if (isLoading) {
     return (
       <fieldset>
-        <label className="humi-label">
-          {label}{required && <span aria-hidden="true" className="humi-asterisk ml-1">*</span>}
+        <label className="cnext-label">
+          {label}{required && <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>}
         </label>
-        <div className="humi-input w-full max-w-sm animate-pulse bg-surface-muted h-10" aria-busy="true" />
+        <div className="cnext-input w-full max-w-sm animate-pulse bg-surface-muted h-10" aria-busy="true" />
       </fieldset>
     )
   }
@@ -298,8 +298,8 @@ export default function PositionLookup({
 
   return (
     <fieldset className="relative">
-      <label htmlFor={inputId} className="humi-label">
-        {label}{required && <span aria-hidden="true" className="humi-asterisk ml-1">*</span>}
+      <label htmlFor={inputId} className="cnext-label">
+        {label}{required && <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>}
       </label>
       <input
         ref={inputRef}
@@ -325,7 +325,7 @@ export default function PositionLookup({
           setTimeout(() => setOpen(false), 150)
         }}
         onKeyDown={handleKeyDown}
-        className="humi-input w-full max-w-sm"
+        className="cnext-input w-full max-w-sm"
         autoComplete="off"
       />
 

@@ -27,7 +27,7 @@ vi.mock('next-intl', () => ({
 import type { Role } from '@/lib/rbac';
 
 let mockRoles: Role[] = ['manager'];
-let mockEmail: string | null = 'manager@humi.test';
+let mockEmail: string | null = 'manager@cnext.test';
 let mockHydrated = true;
 let mockAuthed = true;
 
@@ -55,7 +55,7 @@ import ManagerTeamPage from '../page';
 import ManagerTeamLayout from '../layout';
 import { ALL_PORTED_EMPLOYEES } from '@/lib/all-ported-employees';
 
-// emp-002 is the Manager persona (manager@humi.test) and the BU-FINANCE head,
+// emp-002 is the Manager persona (manager@cnext.test) and the BU-FINANCE head,
 // so it has direct reports seeded in the pool.
 const EMP_002_REPORTS = ALL_PORTED_EMPLOYEES.filter(
   (e) => e.managerId === 'emp-002' && (e.status === 'active' || e.status === 'leave'),
@@ -66,7 +66,7 @@ describe('ManagerTeamPage — direct-reports scoped table', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRoles = ['manager'];
-    mockEmail = 'manager@humi.test';
+    mockEmail = 'manager@cnext.test';
   });
 
   it('manager sees a scoped direct-reports table (non-empty, excludes self)', () => {

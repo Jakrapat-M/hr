@@ -22,7 +22,7 @@ vi.mock('@/stores/auth-store', () => ({
   ) => selector({ roles: mockRoles, userId: 'EMP001', username: 'สมชาย ใจดี' }),
 }))
 
-vi.mock('@/stores/humi-timeoff-slice', () => ({
+vi.mock('@/stores/cnext-timeoff-slice', () => ({
   useTimeoffStore: (selector: (s: { history: unknown[]; submit: () => void }) => unknown) =>
     selector({ history: [], submit: () => {} }),
 }))
@@ -49,7 +49,7 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-import HumiTimeoffPage from '@/app/[locale]/timeoff/page'
+import CnextTimeoffPage from '@/app/[locale]/timeoff/page'
 
 beforeEach(() => {
   mockRoles = ['employee']
@@ -58,7 +58,7 @@ afterEach(() => cleanup())
 
 describe('Time Off hub — no resignation entry', () => {
   it('renders no /resignation link', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
 
     const resignLinks = screen
       .queryAllByRole('link')
@@ -67,7 +67,7 @@ describe('Time Off hub — no resignation entry', () => {
   })
 
   it('renders no resignation entry copy', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
 
     expect(screen.queryByText(/ดูคำขอลาออก/i)).not.toBeInTheDocument()
   })

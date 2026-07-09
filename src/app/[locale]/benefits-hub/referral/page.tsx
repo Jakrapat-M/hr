@@ -23,7 +23,7 @@ import {
   Button,
   buttonVariants,
   EmptyState,
-} from '@/components/humi';
+} from '@/components/cnext';
 import { ReferralRequestPanel } from '@/components/benefits/referral/ReferralRequestPanel';
 import { benefitsHubRoute } from '@/lib/benefit-routes';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';

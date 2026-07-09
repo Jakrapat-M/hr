@@ -12,7 +12,7 @@ import {
   RotateCcw,
   Users,
 } from 'lucide-react';
-import { Modal } from '@/components/humi';
+import { Modal } from '@/components/cnext';
 import { TerminationRequestSummary } from '@/components/termination/TerminationRequestSummary';
 import {
   useTerminationApprovals,
@@ -179,7 +179,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
         <p className="text-sm text-ink-muted">
           {isTh ? `ไม่พบคำขอรหัส ${id}` : `No request with ID ${id}`}
         </p>
-        <Link href={`/${locale}/quick-approve`} className="humi-button humi-button--secondary">
+        <Link href={`/${locale}/quick-approve`} className="cnext-button cnext-button--secondary">
           {isTh ? 'กลับไปคิวอนุมัติ' : 'Back to approvals'}
         </Link>
       </div>
@@ -235,7 +235,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
       {/* Page head — breadcrumb + title + SLA tag */}
       <div className="mb-5 flex flex-wrap items-end justify-between gap-6">
         <div>
-          <nav className="humi-eyebrow flex items-center gap-1.5" aria-label="breadcrumb">
+          <nav className="cnext-eyebrow flex items-center gap-1.5" aria-label="breadcrumb">
             <Link href={`/${locale}/quick-approve`} className="transition hover:text-ink">
               {isTh ? 'กล่องงาน' : 'Workbox'}
             </Link>
@@ -249,7 +249,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
             <span className="ml-2.5 font-medium text-ink-muted">· {request.employeeName}</span>
           </h1>
         </div>
-        <span className="humi-tag humi-tag--butter inline-flex items-center gap-1.5">
+        <span className="cnext-tag cnext-tag--butter inline-flex items-center gap-1.5">
           <AlertTriangle className="h-3 w-3" />
           {isTh ? `รอตอบกลับ ${submitWaitDays} วัน` : `Awaiting ${submitWaitDays} d`}
         </span>
@@ -260,9 +260,9 @@ export default function ResignationDetailPage({ params }: PageProps) {
         {/* LEFT — case detail */}
         <div className="flex flex-col gap-4">
           {/* Employee header card */}
-          <div className="humi-card">
+          <div className="cnext-card">
             <div className="flex items-center gap-4">
-              <div className="humi-avatar humi-avatar--ink flex h-16 w-16 flex-shrink-0 items-center justify-center font-display text-xl font-bold">
+              <div className="cnext-avatar cnext-avatar--ink flex h-16 w-16 flex-shrink-0 items-center justify-center font-display text-xl font-bold">
                 {initials(request.employeeName)}
               </div>
               <div className="min-w-0 flex-1">
@@ -321,7 +321,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
         <div className="flex flex-col gap-4">
           {/* Process timeline — NOT sticky: a sticky card here overlaps the
               Backfill card below it on scroll (sticky-sibling overlap). */}
-          <div className="humi-card humi-card--cream">
+          <div className="cnext-card cnext-card--cream">
             <Eyebrow>{isTh ? 'กระบวนการ Offboarding' : 'Offboarding process'}</Eyebrow>
             <h3 className="mb-4 mt-1.5 font-display text-base font-semibold tracking-tight text-ink">
               {isTh ? '4 ขั้นตอน' : '4 steps'}
@@ -365,7 +365,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
           </div>
 
           {/* Replacement plan */}
-          <div className="humi-card">
+          <div className="cnext-card">
             <div className="mb-2.5 flex items-center justify-between">
               <h3 className="font-display text-base font-semibold tracking-tight text-ink">
                 {isTh ? 'แผนทดแทน' : 'Backfill plan'}
@@ -408,7 +408,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
             type="button"
             onClick={() => setSendBackOpen(true)}
             disabled={!canAct}
-            className="humi-button humi-button--ghost disabled:cursor-not-allowed disabled:opacity-50"
+            className="cnext-button cnext-button--ghost disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             {isTh ? 'ส่งกลับ' : 'Send back'}
@@ -417,7 +417,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
             type="button"
             onClick={handleApprove}
             disabled={!canAct}
-            className="humi-button humi-button--primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="cnext-button cnext-button--primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ArrowRight className="h-3.5 w-3.5" />
             {isTh ? 'อนุมัติและส่งกลับ' : 'Approve & send back'}
@@ -457,7 +457,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
             <button
               type="button"
               onClick={() => setSendBackOpen(false)}
-              className="humi-button humi-button--ghost"
+              className="cnext-button cnext-button--ghost"
             >
               {isTh ? 'ยกเลิก' : 'Cancel'}
             </button>
@@ -465,7 +465,7 @@ export default function ResignationDetailPage({ params }: PageProps) {
               type="button"
               onClick={handleSendBack}
               disabled={!sendBackReason.trim()}
-              className="humi-button humi-button--danger disabled:cursor-not-allowed disabled:opacity-50"
+              className="cnext-button cnext-button--danger disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               {isTh ? 'ยืนยันส่งกลับ' : 'Confirm send back'}

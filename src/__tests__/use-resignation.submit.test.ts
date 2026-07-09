@@ -1,6 +1,6 @@
 /**
  * use-resignation.submit.test.ts
- * AC-1: submitResignation → PendingChange ที่ sectionKey='termination' ถูกสร้างใน humi-profile-slice
+ * AC-1: submitResignation → PendingChange ที่ sectionKey='termination' ถูกสร้างใน cnext-profile-slice
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -25,12 +25,12 @@ const localStorageMock = (() => {
 
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
 
-import { useHumiProfileStore } from '@/stores/humi-profile-slice';
+import { useCnextProfileStore } from '@/stores/cnext-profile-slice';
 import { useResignation } from '@/hooks/use-resignation';
 
 function resetStore() {
   localStorageMock.clear();
-  useHumiProfileStore.setState({
+  useCnextProfileStore.setState({
     activeTab: 'personal',
     isEditing: false,
     draft: {
@@ -79,7 +79,7 @@ describe('AC-1: submitResignation เพิ่ม PendingChange ที่ sectio
       });
     });
 
-    const { pendingChanges } = useHumiProfileStore.getState();
+    const { pendingChanges } = useCnextProfileStore.getState();
     expect(pendingChanges).toHaveLength(1);
     // AC-1: sectionKey ต้องเป็น 'termination' เท่านั้น
     expect(pendingChanges[0].sectionKey).toBe('termination');
@@ -96,7 +96,7 @@ describe('AC-1: submitResignation เพิ่ม PendingChange ที่ sectio
       });
     });
 
-    const { pendingChanges } = useHumiProfileStore.getState();
+    const { pendingChanges } = useCnextProfileStore.getState();
     const change = pendingChanges[0];
     expect(change.field).toBe('employmentStatus');
     expect(change.oldValue).toBe('active');
@@ -114,7 +114,7 @@ describe('AC-1: submitResignation เพิ่ม PendingChange ที่ sectio
       });
     });
 
-    const { pendingChanges } = useHumiProfileStore.getState();
+    const { pendingChanges } = useCnextProfileStore.getState();
     // AC-1: effectiveDate = lastWorkingDate
     expect(pendingChanges[0].effectiveDate).toBe('2026-08-15');
   });
@@ -130,7 +130,7 @@ describe('AC-1: submitResignation เพิ่ม PendingChange ที่ sectio
       });
     });
 
-    const { pendingChanges } = useHumiProfileStore.getState();
+    const { pendingChanges } = useCnextProfileStore.getState();
     expect(pendingChanges[0].status).toBe('pending');
   });
 });

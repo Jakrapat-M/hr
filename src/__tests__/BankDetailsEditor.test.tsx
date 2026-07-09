@@ -9,7 +9,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BankDetailsEditor, isBankValid } from '@/components/profile/BankDetailsEditor';
-import type { BankDetails } from '@/stores/humi-profile-slice';
+import type { BankDetails } from '@/stores/cnext-profile-slice';
 
 // ── Mock next-intl ─────────────────────────────────────────────────────────────
 vi.mock('next-intl', () => ({
@@ -25,8 +25,8 @@ vi.mock('next-intl', () => ({
   },
 }));
 
-// ── Mock humi UI primitives ────────────────────────────────────────────────────
-vi.mock('@/components/humi', () => ({
+// ── Mock cnext UI primitives ────────────────────────────────────────────────────
+vi.mock('@/components/cnext', () => ({
   FormField: ({
     children,
     label,
@@ -46,7 +46,7 @@ vi.mock('@/components/humi', () => ({
 }));
 
 // ── Mock FileUploadField ───────────────────────────────────────────────────────
-vi.mock('@/components/humi/FileUploadField', () => ({
+vi.mock('@/components/cnext/FileUploadField', () => ({
   FileUploadField: ({ label }: { label?: React.ReactNode }) => (
     <div data-testid="file-upload-field">{label}</div>
   ),

@@ -66,7 +66,7 @@ export function validateDwsPeriod(days: DaySchedule[]): {
   };
 }
 
-/** Humi token classes for each level — green=success, yellow=warning, red=pumpkin danger. */
+/** Cnext token classes for each level — green=success, yellow=warning, red=pumpkin danger. */
 export const DWS_LEVEL_CLASS: Record<DwsLevel, string> = {
   green: 'bg-success-soft text-success',
   yellow: 'bg-warning-soft text-warning',

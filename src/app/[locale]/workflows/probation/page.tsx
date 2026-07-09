@@ -5,13 +5,13 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { CheckCircle, ChevronRight, Download, ArrowRight } from 'lucide-react';
-import { Card, Button, Avatar } from '@/components/humi';
+import { Card, Button, Avatar } from '@/components/cnext';
 import { useProbationCases } from '@/hooks/use-probation';
 import { formatDate } from '@/lib/date';
 
 type TierKey = 'all' | 'urgent' | 'warn' | 'normal';
 
-// Avatar tones to cycle through (Humi token-backed, NO raw hex).
+// Avatar tones to cycle through (Cnext token-backed, NO raw hex).
 const AVATAR_TONES = ['teal', 'sage', 'butter', 'ink'] as const;
 
 // Shared CSS grid template — header + body rows stay column-aligned (ref prod-probation.jsx).
@@ -204,7 +204,7 @@ export default function ProbationListPage() {
       {/* Title block */}
       <div className="mb-5 flex items-start gap-4">
         <div className="min-w-0">
-          <div className="humi-eyebrow">{t('probation.inbox.eyebrow')}</div>
+          <div className="cnext-eyebrow">{t('probation.inbox.eyebrow')}</div>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-ink mt-1">
             {t('probation.inbox.title')}
           </h1>

@@ -11,7 +11,7 @@ import { useTimelines } from '@/lib/admin/store/useTimelines';
 import type { Role } from '@/lib/rbac';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEssRequestActions } from '@/stores/ess-request-actions';
-import { useRequestsStore } from '@/stores/humi-requests-slice';
+import { useRequestsStore } from '@/stores/cnext-requests-slice';
 import { useTerminationApprovals } from '@/stores/termination-approvals';
 
 const pushSpy = vi.fn();

@@ -331,8 +331,8 @@ export default function TilesPage() {
             </div>
 
             <div className="flex justify-end gap-3">
-              <button type="button" onClick={() => setEditTarget(null)} className="humi-button humi-button--ghost">ยกเลิก</button>
-              <button type="button" onClick={saveModal} className="humi-button humi-button--primary">บันทึก</button>
+              <button type="button" onClick={() => setEditTarget(null)} className="cnext-button cnext-button--ghost">ยกเลิก</button>
+              <button type="button" onClick={saveModal} className="cnext-button cnext-button--primary">บันทึก</button>
             </div>
           </div>
         </div>

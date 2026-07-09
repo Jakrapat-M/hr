@@ -182,7 +182,7 @@ describe('I9 — seedFromEmployees idempotent', () => {
 
 // ── I10: persistence (via renderHook) ─────────────────────────
 describe('I10 — store persists via zustand persist config', () => {
-  it('store has persist name = humi-employment-events-v1', () => {
+  it('store has persist name = cnext-employment-events-v1', () => {
     // ตรวจ localStorage key name ผ่าน persist middleware config
     // (RTL + jsdom = localStorage available; full reload test = manual smoke)
     const state = useEmploymentEvents.getState()

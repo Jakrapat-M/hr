@@ -12,7 +12,7 @@
  * No write paths. No persistence. Pure functions only.
  */
 
-import type { HumiEmployee } from './humi-mock-data';
+import type { CnextEmployee } from './cnext-mock-data';
 
 export interface TeamTimeRow {
   readonly employeeId: string;
@@ -61,7 +61,7 @@ function seedFromId(id: string): number {
 
 const TREND_MONTHS = ['Feb', 'Mar', 'Apr', 'May'] as const;
 
-function displayName(e: HumiEmployee): string {
+function displayName(e: CnextEmployee): string {
   const th = `${e.firstNameTh ?? ''} ${e.lastNameTh ?? ''}`.trim();
   return th || e.employeeCode || e.id;
 }
@@ -71,7 +71,7 @@ function displayName(e: HumiEmployee): string {
  * (i.e. the caller has run filterEmployeesByPersona and dropped self).
  */
 export function buildTeamTimeSummary(
-  employees: ReadonlyArray<HumiEmployee>,
+  employees: ReadonlyArray<CnextEmployee>,
 ): TeamTimeSummary {
   const rows: TeamTimeRow[] = employees.map((e) => {
     const s = seedFromId(e.id);

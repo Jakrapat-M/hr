@@ -1,9 +1,9 @@
 'use client';
 
-// admin/page.tsx — Humi Admin Center landing
-// Adopts the same vocabulary as /th/home (humi-grain, humi-blob,
-// humi-eyebrow, humi-hero-title, humi-tag, humi-row, humi-divider,
-// humi-card--cream, humi-card--ink) so admins land on a page that
+// admin/page.tsx — Cnext Admin Center landing
+// Adopts the same vocabulary as /th/home (cnext-grain, cnext-blob,
+// cnext-eyebrow, cnext-hero-title, cnext-tag, cnext-row, cnext-divider,
+// cnext-card--cream, cnext-card--ink) so admins land on a page that
 // feels like a sibling of the staff dashboard instead of a foreign
 // admin-only surface. 5 entry groups cover BRD-EC Parts A-E.
 
@@ -125,45 +125,45 @@ export default function AdminDashboardPage() {
       {/* Row 1 — hero greeting (grain + blobs) + live workload tag */}
       <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
         <div
-          className="humi-card humi-grain"
+          className="cnext-card cnext-grain"
           style={{ overflow: 'hidden', paddingRight: 'clamp(0px, 9.375vw, 150px)' }}
         >
           <div
-            className="humi-blob humi-blob--teal hidden lg:block"
+            className="cnext-blob cnext-blob--teal hidden lg:block"
             style={{ width: 120, height: 150, right: -30, top: -30, opacity: 0.85 }}
             aria-hidden
           />
           <div
-            className="humi-blob humi-blob--coral hidden lg:block"
+            className="cnext-blob cnext-blob--coral hidden lg:block"
             style={{ width: 80, height: 100, right: 60, bottom: -20, opacity: 0.7 }}
             aria-hidden
           />
           <div
-            className="humi-blob humi-blob--butter hidden lg:block"
+            className="cnext-blob cnext-blob--butter hidden lg:block"
             style={{ width: 44, height: 56, right: 110, top: 80, opacity: 0.9 }}
             aria-hidden
           />
-          <div className="humi-eyebrow" style={{ marginBottom: 10 }}>
+          <div className="cnext-eyebrow" style={{ marginBottom: 10 }}>
             Admin Center
           </div>
-          <h1 className="humi-hero-title" style={{ maxWidth: 460 }}>
+          <h1 className="cnext-hero-title" style={{ maxWidth: 460 }}>
             ศูนย์จัดการพนักงาน
             <br />
-            <span className="humi-hero-title-soft">
+            <span className="cnext-hero-title-soft">
               จัดการข้อมูล การจ้าง และการตั้งค่าระบบ EC
             </span>
           </h1>
-          <div className="humi-row" style={{ marginTop: 22, gap: 10, flexWrap: 'wrap' }}>
+          <div className="cnext-row" style={{ marginTop: 22, gap: 10, flexWrap: 'wrap' }}>
             <Link
               href={`/${locale}/admin/hire`}
-              className="humi-button humi-button--primary"
+              className="cnext-button cnext-button--primary"
             >
               <UserPlus size={16} />
               จ้างพนักงานใหม่
             </Link>
             <Link
               href={`/${locale}/admin/employees`}
-              className="humi-button humi-button--ghost"
+              className="cnext-button cnext-button--ghost"
             >
               <Users size={16} />
               ดูข้อมูลพนักงาน
@@ -172,22 +172,22 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Live stats card */}
-        <div className="humi-card">
-          <div className="humi-row" style={{ alignItems: 'flex-start' }}>
+        <div className="cnext-card">
+          <div className="cnext-row" style={{ alignItems: 'flex-start' }}>
             <div>
-              <div className="humi-eyebrow">ภาพรวม</div>
+              <div className="cnext-eyebrow">ภาพรวม</div>
               <h3 className="mt-1.5 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
                 สถานะระบบ
               </h3>
             </div>
-            <span className="humi-tag humi-tag--accent" style={{ marginLeft: 'auto' }}>
+            <span className="cnext-tag cnext-tag--accent" style={{ marginLeft: 'auto' }}>
               Live
             </span>
           </div>
           <div className="grid grid-cols-2 gap-4" style={{ marginTop: 18 }}>
             {STATS.map((s) => (
               <div key={s.label}>
-                <div className="humi-eyebrow" style={{ fontSize: 10 }}>
+                <div className="cnext-eyebrow" style={{ fontSize: 10 }}>
                   {s.label}
                 </div>
                 <div
@@ -204,9 +204,9 @@ export default function AdminDashboardPage() {
               </div>
             ))}
           </div>
-          <hr className="humi-divider" />
+          <hr className="cnext-divider" />
           <div
-            className="humi-row"
+            className="cnext-row"
             style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}
           >
             <Sparkles size={12} aria-hidden />
@@ -217,9 +217,9 @@ export default function AdminDashboardPage() {
 
       {/* Row 2 — section grid */}
       <div style={{ marginTop: 20 }}>
-        <div className="humi-row" style={{ marginBottom: 12 }}>
+        <div className="cnext-row" style={{ marginBottom: 12 }}>
           <div>
-            <div className="humi-eyebrow">Admin Tools</div>
+            <div className="cnext-eyebrow">Admin Tools</div>
             <h3 className="mt-1.5 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
               เครื่องมือการจัดการ
             </h3>
@@ -229,29 +229,29 @@ export default function AdminDashboardPage() {
           {visibleSections.map((section) => {
             const Icon = section.icon;
             const cardClass =
-              section.tone === 'cream' ? 'humi-card humi-card--cream' : 'humi-card';
+              section.tone === 'cream' ? 'cnext-card cnext-card--cream' : 'cnext-card';
             return (
               <Link
                 key={section.path}
                 href={`/${locale}${section.path}`}
                 className={`${cardClass} group relative transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2`}
               >
-                <div className="humi-row" style={{ alignItems: 'flex-start', gap: 12 }}>
+                <div className="cnext-row" style={{ alignItems: 'flex-start', gap: 12 }}>
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
                     <Icon size={20} aria-hidden="true" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="humi-eyebrow">{section.eyebrow}</div>
+                    <div className="cnext-eyebrow">{section.eyebrow}</div>
                     <h4 className="mt-1 font-display text-base font-semibold text-ink group-hover:text-accent">
                       {section.title}
                     </h4>
                     <p className="mt-1 text-small text-ink-soft">{section.desc}</p>
                     <div
-                      className="humi-row"
+                      className="cnext-row"
                       style={{ marginTop: 10, gap: 8, fontSize: 12, color: 'var(--color-ink-muted)' }}
                     >
-                      <span className="humi-tag">{section.stat}</span>
-                      <span className="humi-spacer" />
+                      <span className="cnext-tag">{section.stat}</span>
+                      <span className="cnext-spacer" />
                       <ArrowRight
                         size={14}
                         className="text-ink-muted group-hover:text-accent"
@@ -268,15 +268,15 @@ export default function AdminDashboardPage() {
 
       {/* Row 3 — recent activity (ink card, matching home.tsx week-recognition pattern) */}
       <div
-        className="humi-card humi-card--ink"
+        className="cnext-card cnext-card--ink"
         style={{ overflow: 'hidden', position: 'relative', marginTop: 20 }}
       >
         <div
-          className="humi-blob humi-blob--teal"
+          className="cnext-blob cnext-blob--teal"
           style={{ width: 90, height: 110, right: -20, bottom: -30, opacity: 0.55 }}
           aria-hidden
         />
-        <div className="humi-eyebrow" style={{ color: 'var(--color-accent)' }}>
+        <div className="cnext-eyebrow" style={{ color: 'var(--color-accent)' }}>
           <Sparkles
             size={12}
             style={{ display: 'inline-block', verticalAlign: -2, marginRight: 4 }}

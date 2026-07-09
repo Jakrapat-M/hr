@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { CalendarDays, ClipboardList, PlusCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 
 export type LeaveTabId = 'balances' | 'request' | 'history' | 'calendar';
 

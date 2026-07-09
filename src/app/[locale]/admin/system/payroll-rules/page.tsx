@@ -1,14 +1,14 @@
 'use client';
 
 // admin/system/payroll-rules/page.tsx — HRIS Payroll Rules configuration surface
-// (Humi Journey EC/BE work-item #1, artboard 05.1). Single source of truth for
+// (Cnext Journey EC/BE work-item #1, artboard 05.1). Single source of truth for
 // bonus, OT multiplier, provident fund and withholding tax.
 // UI-MOCKUP phase: static seed rows, no persistence.
 
 import { useLocale, useTranslations } from 'next-intl';
 import { Info } from 'lucide-react';
-import { Card, CardEyebrow, DataTable, Capability } from '@/components/humi';
-import type { DataTableColumn } from '@/components/humi';
+import { Card, CardEyebrow, DataTable, Capability } from '@/components/cnext';
+import type { DataTableColumn } from '@/components/cnext';
 
 type RuleRow = { id: string; labelTh: string; labelEn: string; value: string };
 

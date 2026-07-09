@@ -33,7 +33,7 @@ export type SalutationEnId = typeof SALUTATION_EN_IDS[number]
 
 // National ID Card Type — BA row 13, Picklist ID: idType_ID_Card
 // SF cite: qas-fields-2026-04-26/sf-qas-PerNationalId-2026-04-26.json#.d.results[0].cardType = "tni2"
-// Humi keeps human-readable IDs; SF mapping is in thaiNationalId.ts SF_CARD_TYPE_MAP
+// Cnext keeps human-readable IDs; SF mapping is in thaiNationalId.ts SF_CARD_TYPE_MAP
 export const ID_CARD_TYPE_IDS = ['NATIONAL_ID', 'PASSPORT', 'WORK_PERMIT', 'ALIEN_ID', 'OTHER'] as const
 export type IdCardTypeId = typeof ID_CARD_TYPE_IDS[number]
 
@@ -44,8 +44,8 @@ export type EmployeeClassId = typeof EMPLOYEE_CLASSES[number]
 // Gender — BA Personal Info row 12
 // SF cite: qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.gender
 // SF QAS has exactly 2 codes: externalCode='Female' / 'Male'.
-// Humi uses internal IDs 'M'/'F' (PICKLIST_GENDER.id). 'X' has no SF counterpart — dropped from enum.
-// SF-to-Humi mapping: Female→'F', Male→'M'. Schema enforces M/F only (was M/F/X).
+// Cnext uses internal IDs 'M'/'F' (PICKLIST_GENDER.id). 'X' has no SF counterpart — dropped from enum.
+// SF-to-Cnext mapping: Female→'F', Male→'M'. Schema enforces M/F only (was M/F/X).
 export const GENDER_IDS = ['M', 'F'] as const
 
 // Foreigner — BA Personal Info row 14, Picklist: Yes/No (PICKLIST_YES_NO D1.3)
@@ -54,7 +54,7 @@ export const YES_NO_IDS = ['YES', 'NO'] as const
 // Marital status SF codes — 5 codes
 // SF cite: qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.ecMaritalStatus
 // M=Married, E=Engaged (added — was missing), D=Divorced, S=Single, N=Common-law/Unregistered
-// Humi kept WIDOWED/SEPARATED as extensions; these are NOT in SF QAS and are kept as local extras.
+// Cnext kept WIDOWED/SEPARATED as extensions; these are NOT in SF QAS and are kept as local extras.
 // Schema accepts SF codes + local extras to remain backward-compatible with existing drafts.
 export const MARITAL_STATUS_SF_CODES = ['M', 'E', 'D', 'S', 'N'] as const
 // 'SINGLE' (legacy) maps to SF 'S'; 'MARRIED'→'M'; 'DIVORCED'→'D'; 'WIDOWED'/'SEPARATED' are local only

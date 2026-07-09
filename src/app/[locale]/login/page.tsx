@@ -2,10 +2,10 @@
 'use client';
 
 // ════════════════════════════════════════════════════════════
-// /login — Humi sign-in screen
+// /login — Cnext sign-in screen
 // Visual shell = 1:1 port of docs/design-ref/shelfly-bundle/project/screens/login.jsx
 // Auth layer (2026-04-24 jarvis/login-admin):
-//   - Real Humi logo (humi-logo-white-v3.png, Rungrote-locked G8)
+//   - Real Cnext logo (cnext-logo-white-v3.png, Rungrote-locked G8)
 //   - Mock credentials map → sets Zustand auth-store
 //   - Role-based redirect: hr_admin → /{locale}/admin, else /{locale}/home
 // Replace DEMO_USERS + handleSubmit when MSAL/NextAuth-Keycloak is wired.
@@ -18,14 +18,14 @@ import { ArrowRight, Check } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { DEMO_USERS, landingForRoles } from '@/lib/demo-users';
 
-export default function HumiLoginPage() {
-  const t = useTranslations('humiLogin');
+export default function CnextLoginPage() {
+  const t = useTranslations('cnextLogin');
   const router = useRouter();
   const params = useParams<{ locale: string }>();
   const locale = params?.locale ?? 'th';
   const setUser = useAuthStore((s) => s.setUser);
 
-  const [email, setEmail] = useState('admin@humi.test');
+  const [email, setEmail] = useState('admin@cnext.test');
   const [pw, setPw] = useState('');
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,19 +52,19 @@ export default function HumiLoginPage() {
   }
 
   return (
-    <div className="humi-login-wrap">
+    <div className="cnext-login-wrap">
       {/* Art panel */}
-      <section className="humi-login-art humi-grain" aria-hidden>
+      <section className="cnext-login-art cnext-grain" aria-hidden>
         <div
-          className="humi-blob humi-blob--teal"
+          className="cnext-blob cnext-blob--teal"
           style={{ width: 280, height: 350, right: -80, top: -60, opacity: 0.35 }}
         />
         <div
-          className="humi-blob humi-blob--coral"
+          className="cnext-blob cnext-blob--coral"
           style={{ width: 180, height: 220, left: -40, bottom: 80, opacity: 0.45 }}
         />
         <div
-          className="humi-blob humi-blob--butter"
+          className="cnext-blob cnext-blob--butter"
           style={{ width: 80, height: 100, right: 120, bottom: 180, opacity: 0.6 }}
         />
 
@@ -91,17 +91,17 @@ export default function HumiLoginPage() {
           >
             {t('eyebrow')}
           </div>
-          <h1 className="humi-login-headline">
+          <h1 className="cnext-login-headline">
             {t('headlineLine1')}
             <br />
             {t('headlineLine2')}
           </h1>
-          <p className="humi-login-body">{t('intro')}</p>
+          <p className="cnext-login-body">{t('intro')}</p>
         </div>
       </section>
 
       {/* Form panel */}
-      <section className="humi-login-form">
+      <section className="cnext-login-form">
         <form
           onSubmit={handleSubmit}
           style={{ maxWidth: 400, width: '100%' }}
@@ -146,8 +146,8 @@ export default function HumiLoginPage() {
             </div>
           )}
 
-          <div className="humi-col mt-7" style={{ gap: 14 }}>
-            <label className="humi-field">
+          <div className="cnext-col mt-7" style={{ gap: 14 }}>
+            <label className="cnext-field">
               <span>{t('emailLabel')}</span>
               <input
                 type="email"
@@ -157,7 +157,7 @@ export default function HumiLoginPage() {
                 required
               />
             </label>
-            <label className="humi-field">
+            <label className="cnext-field">
               <span className="flex items-center">
                 {t('pwLabel')}
                 <button
@@ -178,7 +178,7 @@ export default function HumiLoginPage() {
               />
             </label>
             <label
-              className="humi-row cursor-pointer"
+              className="cnext-row cursor-pointer"
               style={{ fontSize: 13, color: 'var(--color-ink-soft)' }}
             >
               <input
@@ -206,14 +206,14 @@ export default function HumiLoginPage() {
             </label>
             <button
               type="submit"
-              className="mt-1.5 w-full humi-button humi-button--primary"
+              className="mt-1.5 w-full cnext-button cnext-button--primary"
             >
               {t('submit')} <ArrowRight size={14} />
             </button>
           </div>
 
           <div
-            className="humi-row"
+            className="cnext-row"
             style={{ margin: '22px 0', gap: 10 }}
             aria-hidden
           >
@@ -242,7 +242,7 @@ export default function HumiLoginPage() {
             />
           </div>
 
-          <div className="humi-col" style={{ gap: 10 }}>
+          <div className="cnext-col" style={{ gap: 10 }}>
             <button
               type="button"
               className="inline-flex items-center justify-center gap-2 rounded-md border border-hairline bg-surface px-4 py-3 text-body font-medium text-ink transition-colors hover:bg-canvas-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"

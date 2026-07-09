@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Check, FileText, RotateCcw, X } from 'lucide-react';
-import { Button, Card, CardEyebrow, FormField } from '@/components/humi';
+import { Button, Card, CardEyebrow, FormField } from '@/components/cnext';
 import { useAuthStore } from '@/stores/auth-store';
 import { BENEFIT_REFERRAL_STATUS_LABEL, selectReferralInboxRows, useBenefitReferralsStore, type BenefitReferralRequest } from '@/stores/benefit-referrals';
 
@@ -65,7 +65,7 @@ function ReferralCard({ referral, onStartReview, onApprove, onReject, onSendBack
           <div className="text-body font-semibold text-ink">{referral.employeeName} — {referral.hospital.name}</div>
           <div className="text-small text-ink-muted mt-0.5">{referral.coveredPersonName} · นัด {referral.preferredVisitDate} · {formatDate(referral.submittedAt ?? referral.updatedAt)}</div>
         </div>
-        <span className="humi-tag humi-tag--butter">{BENEFIT_REFERRAL_STATUS_LABEL[referral.status]}</span>
+        <span className="cnext-tag cnext-tag--butter">{BENEFIT_REFERRAL_STATUS_LABEL[referral.status]}</span>
       </div>
       <dl className="mt-4 grid gap-2 md:grid-cols-2 text-small">
         <Info label="เหตุผล" value={referral.serviceReason} />

@@ -12,7 +12,7 @@ async function seed(page: Page) {
   await page.route('**/api/auth/session', (r) => r.fulfill({ status: 200, body: '{}' }))
   await page.addInitScript(() => {
     localStorage.setItem(
-      'humi-auth',
+      'cnext-auth',
       JSON.stringify({ state: { userId: 'u1', username: 'HR Admin', email: 'a@e.com', roles: ['hr_admin'], isAuthenticated: true }, version: 0 }),
     )
   })

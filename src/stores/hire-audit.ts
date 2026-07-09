@@ -49,7 +49,7 @@ export const useHireAudit = create<HireAuditState>()(
       clear: () => set({ entries: [] }),
     }),
     {
-      name: 'humi-hire-audit',
+      name: 'cnext-hire-audit',
       storage: createJSONStorage(() => localStorage),
     },
   ),

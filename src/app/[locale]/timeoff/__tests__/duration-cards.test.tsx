@@ -21,7 +21,7 @@ vi.mock('@/stores/auth-store', () => ({
   ) => selector({ roles: mockRoles, userId: 'EMP001', username: 'สมชาย ใจดี' }),
 }))
 
-vi.mock('@/stores/humi-timeoff-slice', () => ({
+vi.mock('@/stores/cnext-timeoff-slice', () => ({
   useTimeoffStore: (selector: (s: { history: unknown[]; submit: () => void }) => unknown) =>
     selector({ history: [], submit: () => {} }),
 }))
@@ -30,7 +30,7 @@ vi.mock('@/components/quick-approve/ApprovalChain', () => ({
   ApprovalChain: () => null,
 }))
 
-import HumiTimeoffPage from '@/app/[locale]/timeoff/page'
+import CnextTimeoffPage from '@/app/[locale]/timeoff/page'
 
 beforeEach(() => {
   mockRoles = ['employee']
@@ -66,7 +66,7 @@ function durationRadios() {
 
 describe('STA-151 — duration cards (Full / Half / Hourly)', () => {
   it('Sick Leave renders 3 duration cards with all enabled', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     selectType('ลาป่วย') // sick_leave
     pickFirstBookableDay()
 
@@ -80,7 +80,7 @@ describe('STA-151 — duration cards (Full / Half / Hourly)', () => {
   })
 
   it('a 1-day-min non-Sick type still shows 3 cards but Hourly is disabled', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     selectType('ลาคลอดบุตร') // maternity_leave — minUnit '1-day', not Sick
     pickFirstBookableDay()
 
@@ -94,7 +94,7 @@ describe('STA-151 — duration cards (Full / Half / Hourly)', () => {
   })
 
   it('STA-152 — Unpaid Sick Leave renders 3 cards with all enabled (same as paid Sick)', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     selectType('ลาป่วยไม่รับเงิน') // sick_leave_unpaid — quotaTracked:false
     pickFirstBookableDay()
 
@@ -107,7 +107,7 @@ describe('STA-151 — duration cards (Full / Half / Hourly)', () => {
   })
 
   it('STA-152 — Unpaid Sick Hourly gates end-options identically (no 4.5h)', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     selectType('ลาป่วยไม่รับเงิน')
     pickFirstBookableDay()
 
@@ -130,7 +130,7 @@ describe('STA-151 — duration cards (Full / Half / Hourly)', () => {
   })
 
   it('Sick Hourly reveals Start/End selects and a 4.5h end is not offered', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     selectType('ลาป่วย')
     pickFirstBookableDay()
 

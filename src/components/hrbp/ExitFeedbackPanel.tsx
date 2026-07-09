@@ -137,8 +137,8 @@ export function ExitFeedbackPanel() {
   const rankWord = t('panelRankWord')
 
   return (
-    <div className="humi-card" style={{ marginBottom: 20 }} data-testid="hrbp-exit-feedback-panel">
-      <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+    <div className="cnext-card" style={{ marginBottom: 20 }} data-testid="hrbp-exit-feedback-panel">
+      <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
         {t('panelEyebrow')}
       </div>
       <h2
@@ -151,7 +151,7 @@ export function ExitFeedbackPanel() {
       {entries.length === 0 ? (
         <p className="text-small text-ink-muted">{t('panelEmpty')}</p>
       ) : (
-        <ul className="humi-col" style={{ gap: 16 }} role="list">
+        <ul className="cnext-col" style={{ gap: 16 }} role="list">
           {entries.map((entry) => (
             <li
               key={entry.employeeId}
@@ -161,10 +161,10 @@ export function ExitFeedbackPanel() {
                 paddingTop: 12,
               }}
             >
-              <div className="humi-row" style={{ gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
+              <div className="cnext-row" style={{ gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
                 <span className="text-body font-semibold text-ink">{entry.employeeNameTh}</span>
                 <span className="text-small text-ink-muted">{entry.employeeNameEn}</span>
-                <span className="humi-tag" style={{ marginLeft: 'auto' }}>
+                <span className="cnext-tag" style={{ marginLeft: 'auto' }}>
                   {entry.employeeId}
                 </span>
               </div>

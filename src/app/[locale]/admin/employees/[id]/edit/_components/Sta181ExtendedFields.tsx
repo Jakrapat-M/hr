@@ -26,7 +26,7 @@ export function Sta181ExtendedFields({ values, onChange }: Sta181ExtendedFieldsP
           className="border-t border-[color:var(--color-hairline-soft)] pt-6"
         >
           <div className="mb-4">
-            <div className="humi-eyebrow">{section.process}</div>
+            <div className="cnext-eyebrow">{section.process}</div>
             <h3 id={`sta181-${section.id}`} className="mt-1 text-base font-semibold text-ink">
               {section.section}
             </h3>
@@ -37,7 +37,7 @@ export function Sta181ExtendedFields({ values, onChange }: Sta181ExtendedFieldsP
               const value = values[field.key] ?? ''
               return (
                 <fieldset key={field.key}>
-                  <label htmlFor={field.key} className="humi-label">
+                  <label htmlFor={field.key} className="cnext-label">
                     {field.label}
                   </label>
                   <input
@@ -45,7 +45,7 @@ export function Sta181ExtendedFields({ values, onChange }: Sta181ExtendedFieldsP
                     type={field.kind ?? 'text'}
                     value={value}
                     onChange={(event) => onChange(field.key, event.target.value)}
-                    className="humi-input w-full max-w-sm"
+                    className="cnext-input w-full max-w-sm"
                   />
                 </fieldset>
               )

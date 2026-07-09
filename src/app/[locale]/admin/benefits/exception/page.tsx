@@ -11,8 +11,8 @@ import {
   DataTable,
   Button,
   EmptyState,
-} from '@/components/humi';
-import type { DataTableColumn } from '@/components/humi';
+} from '@/components/cnext';
+import type { DataTableColumn } from '@/components/cnext';
 import { AsOfDatePicker } from '@/components/benefits/AsOfDatePicker';
 import { RecordsFlatForm } from '@/components/benefits/templates/RecordsFlatForm';
 import type { RecordsFlatFormExceptionSource } from '@/components/benefits/templates/RecordsFlatForm';

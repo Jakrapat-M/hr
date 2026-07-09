@@ -25,20 +25,20 @@ import {
   Users,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Avatar, Button, Card, CardEyebrow } from '@/components/humi';
+import { Avatar, Button, Card, CardEyebrow } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import {
-  HUMI_ORG_PEOPLE,
-  type HumiOrgPerson,
-  type HumiOrgTone,
-} from '@/lib/humi-mock-data';
-import { useOrgChartStore } from '@/stores/humi-orgchart-slice';
+  CNEXT_ORG_PEOPLE,
+  type CnextOrgPerson,
+  type CnextOrgTone,
+} from '@/lib/cnext-mock-data';
+import { useOrgChartStore } from '@/stores/cnext-orgchart-slice';
 // BRD #8, #9, #11: bind department detail panel to FODepartment store (OrgUnits)
 // SF cite: sf-extract/qas-fields-2026-04-26/sf-qas-FODepartment-2026-04-26.json
 import { useOrgUnits } from '@/lib/admin/store/useOrgUnits';
 
 // ════════════════════════════════════════════════════════════
-// Humi /org-chart — Teams/Viva-style egocentric lineage view.
+// Cnext /org-chart — Teams/Viva-style egocentric lineage view.
 //
 // LEFT  = single centered column: breadcrumb nav → collapsed/visible
 //         ancestor cards (manager chain) → focused person (emphasized)
@@ -51,7 +51,7 @@ import { useOrgUnits } from '@/lib/admin/store/useOrgUnits';
 // ════════════════════════════════════════════════════════════
 
 // ── Avatar helpers ──────────────────────────────────────────
-function avatarTone(tone: HumiOrgTone): 'teal' | 'sage' | 'butter' | 'ink' {
+function avatarTone(tone: CnextOrgTone): 'teal' | 'sage' | 'butter' | 'ink' {
   return tone === 'coral' ? 'butter' : tone;
 }
 
@@ -72,14 +72,14 @@ const CERT_DOT_TONE: Record<'sage' | 'butter' | 'teal', string> = {
 // ── Tree model (retained from prior version) ────────────────
 function buildChildIndex(): Record<string, string[]> {
   const byManager: Record<string, string[]> = {};
-  for (const p of Object.values(HUMI_ORG_PEOPLE)) {
-    if (p.managerId && HUMI_ORG_PEOPLE[p.managerId]) {
+  for (const p of Object.values(CNEXT_ORG_PEOPLE)) {
+    if (p.managerId && CNEXT_ORG_PEOPLE[p.managerId]) {
       (byManager[p.managerId] ??= []).push(p.id);
     }
   }
   const index: Record<string, string[]> = {};
-  for (const p of Object.values(HUMI_ORG_PEOPLE)) {
-    const explicit = (p.reportIds ?? []).filter((id) => HUMI_ORG_PEOPLE[id]);
+  for (const p of Object.values(CNEXT_ORG_PEOPLE)) {
+    const explicit = (p.reportIds ?? []).filter((id) => CNEXT_ORG_PEOPLE[id]);
     index[p.id] = explicit.length > 0 ? explicit : byManager[p.id] ?? [];
   }
   return index;
@@ -98,10 +98,10 @@ function subtreeSize(
 }
 
 function pickRoot(childIndex: Record<string, string[]>): string {
-  const roots = Object.values(HUMI_ORG_PEOPLE)
-    .filter((p) => p.managerId === null || !HUMI_ORG_PEOPLE[p.managerId])
+  const roots = Object.values(CNEXT_ORG_PEOPLE)
+    .filter((p) => p.managerId === null || !CNEXT_ORG_PEOPLE[p.managerId])
     .map((p) => p.id);
-  if (roots.length === 0) return Object.keys(HUMI_ORG_PEOPLE)[0];
+  if (roots.length === 0) return Object.keys(CNEXT_ORG_PEOPLE)[0];
   if (roots.length === 1) return roots[0];
   return roots
     .map((id) => ({ id, size: subtreeSize(id, childIndex) }))
@@ -111,10 +111,10 @@ function pickRoot(childIndex: Record<string, string[]>): string {
 // Returns ancestor ids ordered root → ... → direct manager of targetId.
 function ancestorsOf(targetId: string): string[] {
   const chain: string[] = [];
-  let cur: string | null | undefined = HUMI_ORG_PEOPLE[targetId]?.managerId;
-  while (cur && HUMI_ORG_PEOPLE[cur]) {
+  let cur: string | null | undefined = CNEXT_ORG_PEOPLE[targetId]?.managerId;
+  while (cur && CNEXT_ORG_PEOPLE[cur]) {
     chain.unshift(cur);
-    cur = HUMI_ORG_PEOPLE[cur].managerId;
+    cur = CNEXT_ORG_PEOPLE[cur].managerId;
   }
   return chain;
 }
@@ -134,7 +134,7 @@ function AvatarWithPresence({
   person,
   size,
 }: {
-  person: HumiOrgPerson;
+  person: CnextOrgPerson;
   size: 'sm' | 'md' | 'lg';
 }) {
   return (
@@ -152,7 +152,7 @@ function LineCard({
   onClick,
   focused = false,
 }: {
-  person: HumiOrgPerson;
+  person: CnextOrgPerson;
   childIndex: Record<string, string[]>;
   onClick: () => void;
   focused?: boolean;
@@ -196,7 +196,7 @@ function PeerCard({
   person,
   onClick,
 }: {
-  person: HumiOrgPerson;
+  person: CnextOrgPerson;
   onClick: () => void;
 }) {
   return (
@@ -314,15 +314,15 @@ export default function OrgChartPage() {
   );
 
   // ── Direct reports + peers ─────────────────────────────────
-  const focusedPerson = HUMI_ORG_PEOPLE[resolvedFocus] ?? HUMI_ORG_PEOPLE.marcus;
+  const focusedPerson = CNEXT_ORG_PEOPLE[resolvedFocus] ?? CNEXT_ORG_PEOPLE.marcus;
   const directReportIds = childIndex[resolvedFocus] ?? [];
   const peers = useMemo(() => {
     const mgr = focusedPerson.managerId;
-    if (!mgr || !HUMI_ORG_PEOPLE[mgr]) return [];
+    if (!mgr || !CNEXT_ORG_PEOPLE[mgr]) return [];
     return (childIndex[mgr] ?? [])
       .filter((id) => id !== resolvedFocus)
-      .map((id) => HUMI_ORG_PEOPLE[id])
-      .filter((p): p is HumiOrgPerson => !!p);
+      .map((id) => CNEXT_ORG_PEOPLE[id])
+      .filter((p): p is CnextOrgPerson => !!p);
   }, [focusedPerson.managerId, childIndex, resolvedFocus]);
 
   // ── Search: jump-focus to first match synchronously in the handler.
@@ -333,7 +333,7 @@ export default function OrgChartPage() {
       setQuery(value);
       const qLower = value.trim().toLowerCase();
       if (!qLower) return;
-      for (const p of Object.values(HUMI_ORG_PEOPLE)) {
+      for (const p of Object.values(CNEXT_ORG_PEOPLE)) {
         if (
           p.name.toLowerCase().includes(qLower) ||
           p.role.toLowerCase().includes(qLower) ||
@@ -377,7 +377,7 @@ export default function OrgChartPage() {
     );
   }, [allOrgUnits, person.department]);
 
-  const manager = person.managerId ? HUMI_ORG_PEOPLE[person.managerId] : null;
+  const manager = person.managerId ? CNEXT_ORG_PEOPLE[person.managerId] : null;
 
   const firstName = person.name.split(' ')[0];
 
@@ -467,7 +467,7 @@ export default function OrgChartPage() {
                   >
                     <span className="sforg-avatar-stack">
                       {collapsedAncestors.slice(0, 3).reverse().map((aid) => {
-                        const ap = HUMI_ORG_PEOPLE[aid];
+                        const ap = CNEXT_ORG_PEOPLE[aid];
                         return ap ? (
                           <Avatar
                             key={aid}
@@ -487,7 +487,7 @@ export default function OrgChartPage() {
 
             {/* ── Visible ancestors (2 closest or all if expanded) */}
             {visibleAncestors.map((aid, i) => {
-              const ap = HUMI_ORG_PEOPLE[aid];
+              const ap = CNEXT_ORG_PEOPLE[aid];
               if (!ap) return null;
               return (
                 <div key={aid}>
@@ -532,7 +532,7 @@ export default function OrgChartPage() {
                 </SectionDivider>
 
                 {directReportIds.map((rid, i) => {
-                  const rp = HUMI_ORG_PEOPLE[rid];
+                  const rp = CNEXT_ORG_PEOPLE[rid];
                   if (!rp) return null;
                   return (
                     <div key={rid}>
@@ -751,7 +751,7 @@ export default function OrgChartPage() {
                   )}
                   {/* BRD #9: status A/I from FODepartment store .active field */}
                   <span
-                    className={`humi-tag ${(matchedOrgUnit?.active ?? person.unitStatus === 'A') ? 'humi-tag--accent' : ''}`}
+                    className={`cnext-tag ${(matchedOrgUnit?.active ?? person.unitStatus === 'A') ? 'cnext-tag--accent' : ''}`}
                   >
                     {(matchedOrgUnit?.active ?? person.unitStatus !== 'I')
                       ? 'Active'
@@ -909,4 +909,4 @@ export default function OrgChartPage() {
   );
 }
 
-export type { HumiOrgTone };
+export type { CnextOrgTone };

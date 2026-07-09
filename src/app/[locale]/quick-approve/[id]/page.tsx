@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { RequestSummary } from '@/components/quick-approve/detail/RequestSummary';
 import { RequestPayload } from '@/components/quick-approve/detail/RequestPayload';
 import { AttachmentViewPanel } from '@/components/quick-approve/detail/AttachmentViewPanel';

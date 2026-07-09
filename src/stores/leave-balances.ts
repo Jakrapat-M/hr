@@ -121,7 +121,7 @@ export const useLeaveBalances = create<LeaveBalancesState>()(
       clear: () => set({ balances: {} }),
     }),
     {
-      name: 'humi-leave-balances',
+      name: 'cnext-leave-balances',
       storage: createJSONStorage(() => localStorage),
     },
   ),

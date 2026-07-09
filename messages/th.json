@@ -3195,7 +3195,7 @@
       "clearSelection": "ยกเลิกการเลือก"
     },
     "simple": {
-      "breadcrumb": "HUMI · การจัดการทีม · อนุมัติ",
+      "breadcrumb": "CNEXT · การจัดการทีม · อนุมัติ",
       "title": "จัดการคำขอเวิร์กโฟลว์",
       "moduleFilter": {
         "label": "กรองตามโมดูล",
@@ -3633,7 +3633,7 @@
     "restricted": "ข้อมูลจำกัดสิทธิ์",
     "pending": "รอการอนุมัติ"
   },
-  "humiSettings": {
+  "cnextSettings": {
     "title": "ตั้งค่าระบบ",
     "subtitle": "ปรับแต่งข้อมูลองค์กร ผู้ใช้ สิทธิ์ และการแจ้งเตือน",
     "sections": {
@@ -3701,7 +3701,7 @@
       "saveHint": "การเปลี่ยนแปลงจะมีผลทันทีกับทุกผู้ใช้"
     }
   },
-  "humiHome": {
+  "cnextHome": {
     "eyebrow": "CneXt HR",
     "title": "ภาพรวม",
     "subtitle": "สรุปกิจกรรมและคำขอที่ต้องดำเนินการ",
@@ -3724,7 +3724,7 @@
     "reject": "ปฏิเสธ",
     "viewAll": "ดูทั้งหมด"
   },
-  "humiEmployees": {
+  "cnextEmployees": {
     "eyebrow": "CneXt HR",
     "title": "พนักงาน",
     "subtitle": "ทั้งหมด {count} คนในองค์กร",
@@ -3748,7 +3748,7 @@
     "emptyTitle": "ไม่พบพนักงานตามเงื่อนไข",
     "emptyBody": "ลองปรับคำค้นหาหรือเลือกสถานะอื่น"
   },
-  "humiEmployeeDetail": {
+  "cnextEmployeeDetail": {
     "backToList": "พนักงาน",
     "actionMessage": "ส่งข้อความ",
     "actionViewProfile": "ดูโปรไฟล์ละเอียด",
@@ -3770,7 +3770,7 @@
     "fieldAddress": "ที่อยู่",
     "placeholder": "กำลังพัฒนา — เร็วๆ นี้"
   },
-  "humiOrgChart": {
+  "cnextOrgChart": {
     "title": "แผนผังองค์กร",
     "subtitle": "สายบังคับบัญชาและโครงสร้างทีมทั้งหมด",
     "viewTree": "มุมมองผัง",
@@ -3784,7 +3784,7 @@
     "detailNoSubTeams": "ไม่มีทีมย่อย",
     "detailViewAll": "ดูพนักงานทั้งหมด"
   },
-  "humiHero": {
+  "cnextHero": {
     "dateEyebrow": "วันอังคาร · 21 เมษายน",
     "greetingTitle": "ยินดีต้อนรับกลับมา คุณจงรักษ์",
     "greetingSub": "มี 2 เรื่องที่ต้องดำเนินการวันนี้",
@@ -3827,7 +3827,7 @@
     "typeAdjustment": "ปรับตามตลาด",
     "typeHire": "เริ่มงาน"
   },
-  "humiProfile": {
+  "cnextProfile": {
     "subtitle": "รหัสพนักงาน",
     "save": "บันทึกการเปลี่ยนแปลง",
     "statusActive": "กำลังทำงาน",
@@ -3895,7 +3895,7 @@
     "compensationExtraEyebrow": "เปรียบเทียบค่าตอบแทน",
     "compensationExtraTitle": "Compa-Ratio และตำแหน่งในกลุ่มเงินเดือน"
   },
-  "humiAnnouncements": {
+  "cnextAnnouncements": {
     "pageTitle": "ประกาศและข่าวสาร",
     "subtitle": "ฟีดของทีมและบริษัท",
     "newPost": "โพสต์ใหม่",
@@ -3921,7 +3921,7 @@
     "pinPost": "ปักหมุดโพสต์",
     "unpinPost": "เลิกปักหมุด"
   },
-  "humiLogin": {
+  "cnextLogin": {
     "brand": "CneXt",
     "eyebrow": "จัดการเรื่องคนให้เป็นเรื่องง่าย",
     "headlineLine1": "ผ่านระบบเบื้องหลังที่",
@@ -5746,7 +5746,7 @@
       "swap": "ขอสลับกะ",
       "bulkAssign": "กำหนดกะแบบกลุ่ม"
     },
-    "breadcrumb": "HUMI • บริหารทีม • ตารางกะ",
+    "breadcrumb": "CNEXT • บริหารทีม • ตารางกะ",
     "subtitle": "คลิกที่กะเพื่อแก้ไขเวลา",
     "hourlySchedule": "ตารางรายชั่วโมง",
     "footerHint": "คลิกที่กะเพื่อแก้ไข",

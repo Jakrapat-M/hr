@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { HumiApprovalStep, RequestStatus } from '@/lib/humi-mock-data';
+import type { CnextApprovalStep, RequestStatus } from '@/lib/cnext-mock-data';
 import { addReferralValidityWindow } from '@/lib/benefit-referral-adapters';
 
 export type BenefitReferralStatus = 'draft' | 'pending_spd' | 'spd_reviewing' | 'send_back' | 'approved' | 'rejected' | 'letter_issued' | 'cancelled';
@@ -157,7 +157,7 @@ function statusToRequestStatus(status: BenefitReferralStatus): RequestStatus {
   return 'pending';
 }
 
-function stepStatus(status: BenefitReferralStatus): HumiApprovalStep['status'] {
+function stepStatus(status: BenefitReferralStatus): CnextApprovalStep['status'] {
   if (status === 'letter_issued') return 'approved';
   if (status === 'rejected' || status === 'cancelled') return 'rejected';
   return 'pending';
@@ -182,7 +182,7 @@ export function selectBenefitReferralRequestSummaries(referrals: BenefitReferral
           when: BENEFIT_REFERRAL_STATUS_LABEL[referral.status],
           note: referral.correctionReason ?? referral.rejectionReason,
         },
-      ] satisfies HumiApprovalStep[],
+      ] satisfies CnextApprovalStep[],
       referral: {
         id: referral.id,
         workflowRequestId: referral.workflowRequestId,

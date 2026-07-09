@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { ChevronRight, Download } from 'lucide-react';
-import { Button, Card, CardEyebrow, CardTitle } from '@/components/humi';
+import { Button, Card, CardEyebrow, CardTitle } from '@/components/cnext';
 import { useSpdBranches } from '@/hooks/use-spd-branches';
 import { csvExport } from '@/lib/manager-reports-mock';
 import { cn } from '@/lib/utils';

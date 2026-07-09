@@ -16,9 +16,9 @@ The baseline inspected by this worker keeps the existing 3-step wizard model and
 | Requirement | Baseline state | Integration expectation |
 | --- | --- | --- |
 | Frozen candidate/applicant context | `useHireWizard` persists `formData`, step metadata, and HRBP-related state only. No top-level `candidateContext` exists yet. | Add top-level `candidateContext` with idempotent `freezeCandidateContext`, non-overwriting conflict behavior, and reset/migration defaults. |
-| Collapsible form sections | `ClusterWho.tsx` and `ClusterJob.tsx` render repeated `humi-card` + `SectionHeader` blocks. No reusable collapsible card exists yet. | Replace the repeated cards with `CollapsibleSectionCard` while keeping children mounted and preserving validation callback effects. |
+| Collapsible form sections | `ClusterWho.tsx` and `ClusterJob.tsx` render repeated `cnext-card` + `SectionHeader` blocks. No reusable collapsible card exists yet. | Replace the repeated cards with `CollapsibleSectionCard` while keeping children mounted and preserving validation callback effects. |
 | Browser back/forward step navigation | `HirePage` imports only `useRouter`; navigation is store-only through `goNext`, `goBack`, and `jumpTo`. | Add `?step=1|2|3` synchronization using store as source of truth, with locked-step canonicalization and loop guards. |
-| Humi design-system contract | Existing cards use `humi-card`, `humi-step-section`, and token classes. | New UI must continue using token classes and avoid hardcoded colors / forbidden Tailwind red classes. |
+| Cnext design-system contract | Existing cards use `cnext-card`, `cnext-step-section`, and token classes. | New UI must continue using token classes and avoid hardcoded colors / forbidden Tailwind red classes. |
 | Existing validation invariants | Final submit still calls `isStepValid(1, true)`, `isStepValid(2, true)`, and HRBP validation. | Refactor must not let hidden/collapsed sections bypass strict submit checks. |
 
 ## Code quality checklist for implementation merge

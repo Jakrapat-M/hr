@@ -87,10 +87,10 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-// ── Humi component stubs ───────────────────────────────────────────────────
-vi.mock('@/components/humi', async () => {
-  const { Capability } = await vi.importActual<typeof import('@/components/humi/Capability')>(
-    '@/components/humi/Capability',
+// ── Cnext component stubs ───────────────────────────────────────────────────
+vi.mock('@/components/cnext', async () => {
+  const { Capability } = await vi.importActual<typeof import('@/components/cnext/Capability')>(
+    '@/components/cnext/Capability',
   );
   return {
     Card: ({ children }: any) => <div>{children}</div>,
@@ -145,7 +145,7 @@ function setRoles(roles: string[], id = 'TEST-SPD', name = 'SPD Test') {
   useAuthStore.setState({
     userId: id,
     username: name,
-    email: 'spd@humi.test',
+    email: 'spd@cnext.test',
     roles,
     isAuthenticated: true,
     originalUser: null,

@@ -6,11 +6,11 @@
 
 import { useTranslations } from 'next-intl';
 import { Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/humi';
-import { FormField } from '@/components/humi';
+import { Button } from '@/components/cnext';
+import { FormField } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { ContactArrayEditor } from './ContactArrayEditor';
-import type { EmergencyContactRow, PhoneEntry } from '@/stores/humi-profile-slice';
+import type { EmergencyContactRow, PhoneEntry } from '@/stores/cnext-profile-slice';
 
 // ── Relation options ───────────────────────────────────────────────────────────
 // SF source: cust_refRelationship picklist (7 codes)

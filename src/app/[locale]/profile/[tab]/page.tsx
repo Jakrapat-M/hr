@@ -1,6 +1,6 @@
-import HumiProfileMePage from '../me/page';
+import CnextProfileMePage from '../me/page';
 import Performance from '../../performance/page';
-import type { ProfileTab } from '@/stores/humi-profile-slice';
+import type { ProfileTab } from '@/stores/cnext-profile-slice';
 
 const LEGACY_PROFILE_TAB: Record<string, ProfileTab> = {
   personal: 'personal',
@@ -27,5 +27,5 @@ export default async function ProfileTabPage({
     return <Performance />;
   }
 
-  return <HumiProfileMePage initialTab={LEGACY_PROFILE_TAB[normalizedTab] ?? 'personal'} />;
+  return <CnextProfileMePage initialTab={LEGACY_PROFILE_TAB[normalizedTab] ?? 'personal'} />;
 }

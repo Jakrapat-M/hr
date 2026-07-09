@@ -144,7 +144,7 @@ describe('benefit deferred services profile launchpad', () => {
     expect(useBenefitTaxPlanningStore.getState().drafts).toHaveLength(0);
   });
 
-  it('keeps referral and tax forms on Humi field primitives without implementation copy', () => {
+  it('keeps referral and tax forms on Cnext field primitives without implementation copy', () => {
     const files = [
       'src/components/benefits/referral/ReferralRequestPanel.tsx',
       'src/components/benefits/tax/TaxPlanningPanel.tsx',

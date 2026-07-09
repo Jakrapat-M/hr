@@ -27,7 +27,7 @@ import type {
   ModuleImportConfig,
   ValidationItem,
 } from '@/components/admin/import/ModuleImportWizard';
-import type { DataTableColumn } from '@/components/humi';
+import type { DataTableColumn } from '@/components/cnext';
 import { useEmployees } from '@/lib/admin/store/useEmployees';
 import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry';
 import type { ImportJob } from '@/stores/import-jobs-store';

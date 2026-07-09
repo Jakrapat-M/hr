@@ -21,8 +21,8 @@ import {
   DataTable,
   Button,
   Modal,
-} from '@/components/humi';
-import type { DataTableColumn } from '@/components/humi';
+} from '@/components/cnext';
+import type { DataTableColumn } from '@/components/cnext';
 import { Stepper } from '@/components/admin/wizard/Stepper';
 import { AsOfDatePicker } from '@/components/benefits/AsOfDatePicker';
 import { mockProgress } from '@/lib/mock-async';

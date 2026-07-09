@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
-import { Card, CardEyebrow, Button, DataTable } from '@/components/humi';
-import type { DataTableColumn } from '@/components/humi';
+import { Card, CardEyebrow, Button, DataTable } from '@/components/cnext';
+import type { DataTableColumn } from '@/components/cnext';
 
 // ── Benefit Payment Dashboard — แดชบอร์ดการจ่ายสวัสดิการ ──────────────────
 // STA-67 — Interactive mock lifecycle + payload preview (parent: STA-61).

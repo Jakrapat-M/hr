@@ -144,7 +144,7 @@ export const usePayRateApprovals = create<PayRateApprovalsState>()(
       clear: () => set({ requests: [] }),
     }),
     {
-      name: 'humi-pay-rate-approvals',
+      name: 'cnext-pay-rate-approvals',
       storage: createJSONStorage(() => localStorage),
     },
   ),

@@ -6,7 +6,7 @@
  * error labels on own-data routes, no "Access Denied" on routes the persona
  * should access.
  *
- * Auth strategy: inject humi-auth via localStorage before every navigation
+ * Auth strategy: inject cnext-auth via localStorage before every navigation
  * (same pattern as chain-4-promotion.spec.ts). Re-inject before each route
  * because Next.js navigation can trigger rehydration from persisted state.
  *
@@ -25,7 +25,7 @@ const PERSONAS = {
   employee: {
     userId: 'EMP001',
     username: 'สมชาย ใจดี',
-    email: 'employee@humi.test',
+    email: 'employee@cnext.test',
     roles: ['employee'],
     isAuthenticated: true,
     originalUser: null,
@@ -33,7 +33,7 @@ const PERSONAS = {
   ken: {
     userId: 'KEN001',
     username: 'จงรักษ์ ทานากะ (HR Admin)',
-    email: 'ken@humi.test',
+    email: 'ken@cnext.test',
     roles: ['hr_admin', 'employee'],
     isAuthenticated: true,
     originalUser: null,
@@ -41,7 +41,7 @@ const PERSONAS = {
   apinya: {
     userId: 'APN001',
     username: 'อภิญญา (HRBP — BU2)',
-    email: 'apinya@humi.test',
+    email: 'apinya@cnext.test',
     roles: ['hrbp', 'employee'],
     isAuthenticated: true,
     originalUser: null,
@@ -49,7 +49,7 @@ const PERSONAS = {
   worawee: {
     userId: 'WRW001',
     username: 'วรวี (SPD)',
-    email: 'worawee@humi.test',
+    email: 'worawee@cnext.test',
     roles: ['spd', 'employee'],
     isAuthenticated: true,
     originalUser: null,
@@ -57,7 +57,7 @@ const PERSONAS = {
   rungrote: {
     userId: 'RNG001',
     username: 'รุ่งโรจน์ (Manager — Finance)',
-    email: 'rungrote@humi.test',
+    email: 'rungrote@cnext.test',
     roles: ['manager', 'employee'],
     isAuthenticated: true,
     originalUser: null,
@@ -107,7 +107,7 @@ function ensureArtifactsDir() {
 async function injectPersona(page: Page, key: PersonaKey) {
   const state = PERSONAS[key];
   await page.evaluate((s) => {
-    localStorage.setItem('humi-auth', JSON.stringify({ state: s, version: 0 }));
+    localStorage.setItem('cnext-auth', JSON.stringify({ state: s, version: 0 }));
   }, state as Record<string, unknown>);
 }
 

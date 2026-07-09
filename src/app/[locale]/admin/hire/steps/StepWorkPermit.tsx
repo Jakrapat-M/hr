@@ -166,15 +166,15 @@ export default function StepWorkPermit({ onValidChange }: StepWorkPermitProps) {
 
       {/* ─── Document Type * ─── */}
       <fieldset>
-        <label htmlFor="wp-document-type" className="humi-label">
-          ประเภทเอกสาร (Document Type)<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="wp-document-type" className="cnext-label">
+          ประเภทเอกสาร (Document Type)<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <select id="wp-document-type" required aria-required="true"
           aria-invalid={touched.documentType && !!errors.documentType}
           value={documentType}
           onChange={(e) => setDocumentType(e.target.value)}
           onBlur={() => touch('documentType')}
-          className="humi-select w-full">
+          className="cnext-select w-full">
           <option value="">-- เลือกประเภทเอกสาร --</option>
           {DOCUMENT_TYPE_OPTIONS.map((opt) => (
             <option key={opt.id} value={opt.id}>{opt.labelTh}</option>
@@ -185,15 +185,15 @@ export default function StepWorkPermit({ onValidChange }: StepWorkPermitProps) {
 
       {/* ─── Country * ─── */}
       <fieldset>
-        <label htmlFor="wp-country" className="humi-label">
-          ประเทศ (Country)<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="wp-country" className="cnext-label">
+          ประเทศ (Country)<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <select id="wp-country" required aria-required="true"
           aria-invalid={touched.country && !!errors.country}
           value={country}
           onChange={(e) => setCountry(e.target.value)}
           onBlur={() => touch('country')}
-          className="humi-select w-full">
+          className="cnext-select w-full">
           <option value="">-- เลือกประเทศ --</option>
           {PICKLIST_COUNTRY_ISO.filter((c) => c.active).map((c) => (
             <option key={c.id} value={c.id}>{c.labelTh}</option>
@@ -204,8 +204,8 @@ export default function StepWorkPermit({ onValidChange }: StepWorkPermitProps) {
 
       {/* ─── Document Number * ─── */}
       <fieldset>
-        <label htmlFor="wp-document-number" className="humi-label">
-          เลขที่เอกสาร (Document Number)<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="wp-document-number" className="cnext-label">
+          เลขที่เอกสาร (Document Number)<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <input id="wp-document-number" type="text" required aria-required="true"
           aria-invalid={touched.documentNumber && !!errors.documentNumber}
@@ -213,61 +213,61 @@ export default function StepWorkPermit({ onValidChange }: StepWorkPermitProps) {
           value={documentNumber}
           onChange={(e) => setDocumentNumber(e.target.value)}
           onBlur={() => touch('documentNumber')}
-          className="humi-input w-full" />
+          className="cnext-input w-full" />
         {errMsg('documentNumber')}
       </fieldset>
 
       {/* ─── Issue Date * ─── */}
       <fieldset>
-        <label htmlFor="wp-issue-date" className="humi-label">
-          วันที่ออก (Issue Date)<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="wp-issue-date" className="cnext-label">
+          วันที่ออก (Issue Date)<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <input id="wp-issue-date" type="date" required aria-required="true"
           aria-invalid={touched.issueDate && !!errors.issueDate}
           value={issueDate}
           onChange={(e) => setIssueDate(e.target.value)}
           onBlur={() => touch('issueDate')}
-          className="humi-input w-full" />
+          className="cnext-input w-full" />
         {errMsg('issueDate')}
       </fieldset>
 
       {/* ─── Expiry Date (optional) ─── */}
       <fieldset>
-        <label htmlFor="wp-expiry-date" className="humi-label">
+        <label htmlFor="wp-expiry-date" className="cnext-label">
           วันหมดอายุ (Expiry Date)
         </label>
         <input id="wp-expiry-date" type="date"
           value={expiryDate}
           onChange={(e) => setExpiryDate(e.target.value)}
           onBlur={() => touch('expiryDate')}
-          className="humi-input w-full" />
+          className="cnext-input w-full" />
       </fieldset>
 
       {/* ─── Arrival Date VISA (conditional on VISA/PASSPORT_VISA) ─── */}
       {isVisa && (
         <fieldset>
-          <label htmlFor="wp-arrival-date-visa" className="humi-label">
+          <label htmlFor="wp-arrival-date-visa" className="cnext-label">
             วันที่เดินทางเข้าประเทศ (Arrival Date)
           </label>
           <input id="wp-arrival-date-visa" type="date"
             value={arrivalDateVisa}
             onChange={(e) => setArrivalDateVisa(e.target.value)}
             onBlur={() => touch('arrivalDateVisa')}
-            className="humi-input w-full" />
+            className="cnext-input w-full" />
         </fieldset>
       )}
 
       {/* ─── 90-day Report (conditional on VISA/PASSPORT_VISA) ─── */}
       {isVisa && (
         <fieldset>
-          <label htmlFor="wp-ninety-day-report" className="humi-label">
+          <label htmlFor="wp-ninety-day-report" className="cnext-label">
             วันรายงานตัว 90 วัน (90-day Report)
           </label>
           <input id="wp-ninety-day-report" type="date"
             value={ninetyDayReportVisa}
             onChange={(e) => setNinetyDayReportVisa(e.target.value)}
             onBlur={() => touch('ninetyDayReportVisa')}
-            className="humi-input w-full" />
+            className="cnext-input w-full" />
         </fieldset>
       )}
 

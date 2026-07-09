@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { FormField, FormInput, Button } from '@/components/humi';
+import { FormField, FormInput, Button } from '@/components/cnext';
 import {
   deriveRecordTypeFromBenefitTypeGroup,
   type PlanCategory,

@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 // STA-248 — the hub now renders TeamAttendanceSummary, which calls
-// useTranslations('humiHero'); this suite doesn't assert its copy, so a
+// useTranslations('cnextHero'); this suite doesn't assert its copy, so a
 // pass-through stub avoids requiring a NextIntlClientProvider here.
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,

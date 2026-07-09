@@ -1,9 +1,9 @@
-// VALIDATION_EXEMPT: validation in Zustand humi-profile-slice + emergency/dependents/address editors (per design-gates Track C 2026-04-26)
+// VALIDATION_EXEMPT: validation in Zustand cnext-profile-slice + emergency/dependents/address editors (per design-gates Track C 2026-04-26)
 'use client';
 /* eslint-disable react-hooks/static-components -- existing profile editor subcomponents are declared inside the page to close over draft/update handlers. */
 
 // ════════════════════════════════════════════════════════════
-// /profile/me — Humi employee self-service profile
+// /profile/me — Cnext employee self-service profile
 // 1:1 port of docs/design-ref/shelfly-bundle/project/screens/profile.jsx
 // Adapted retail persona → generic HR persona (HQ manager).
 // AppShell owns sidebar+topbar; this file renders main-column only.
@@ -23,14 +23,14 @@ import {
   benefitTaxPlanningRoute,
   benefitsHubRoute,
 } from '@/lib/benefit-routes';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import {
   CLAIM_STATUS_META,
   DEPENDENT_RELATION_LABELS,
-  HUMI_MY_PROFILE,
-  type HumiEmployee,
-  type HumiDependent,
-} from '@/lib/humi-mock-data';
+  CNEXT_MY_PROFILE,
+  type CnextEmployee,
+  type CnextDependent,
+} from '@/lib/cnext-mock-data';
 import { calcYearOfService } from '@/lib/calculations/calcYearOfService';
 import {
   ALL_PORTED_EMPLOYEES,
@@ -47,14 +47,14 @@ import {
 import { getPlan } from '@/data/benefits/plan-registry';
 import { formatCurrency, formatDate } from '@/lib/date';
 import {
-  useHumiProfileStore,
+  useCnextProfileStore,
   type ProfileTab,
   type PendingChange,
   type SectionKey,
   type EmergencyContactRow,
-} from '@/stores/humi-profile-slice';
-import { FileUploadField } from '@/components/humi/FileUploadField';
-import { Modal, FormField } from '@/components/humi';
+} from '@/stores/cnext-profile-slice';
+import { FileUploadField } from '@/components/cnext/FileUploadField';
+import { Modal, FormField } from '@/components/cnext';
 import { EmergencyContactList, areAllRowsValid } from '@/components/profile/EmergencyContactList';
 import { DependentsEditor, areAllDependentsValid } from '@/components/profile/DependentsEditor';
 import { Address8Editor, isAddress8Valid } from '@/components/profile/Address8Editor';
@@ -69,7 +69,7 @@ import type {
   LanguageSkillEntry,
   WorkPermitEntry,
   CertificationEntry,
-} from '@/stores/humi-profile-slice';
+} from '@/stores/cnext-profile-slice';
 
 // Map slice tab keys → display keys used by existing tab panels
 type TabKey = 'personal' | 'job' | 'emergency' | 'benefits' | 'docs' | 'tax';
@@ -145,10 +145,10 @@ export function resolveProfileTab(
 }
 
 const AVATAR_TONE_MAP = {
-  teal: 'humi-avatar humi-avatar--teal',
-  sage: 'humi-avatar humi-avatar--sage',
-  butter: 'humi-avatar humi-avatar--butter',
-  ink: 'humi-avatar humi-avatar--ink',
+  teal: 'cnext-avatar cnext-avatar--teal',
+  sage: 'cnext-avatar cnext-avatar--sage',
+  butter: 'cnext-avatar cnext-avatar--butter',
+  ink: 'cnext-avatar cnext-avatar--ink',
 } as const;
 
 // Fields that require attachment before submit (Section A/B)
@@ -253,7 +253,7 @@ const RELIGION_OPTIONS = ['buddhist', 'christian', 'muslim', 'hindu', 'other', '
 const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const MILITARY_OPTIONS = ['completed', 'exempted', 'deferred', 'not_applicable'];
 // BRD #165: SF BLOODGROUP picklist = 4 codes (AB/A/O/B).
-// Humi extends with Rh factor (+/-) for clinical completeness — intentional superset.
+// Cnext extends with Rh factor (+/-) for clinical completeness — intentional superset.
 // SF cite: qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json BLOODGROUP optionIds AB/A/O/B
 const DISABILITY_OPTIONS = ['none', 'physical', 'visual', 'hearing', 'cognitive', 'other'];
 
@@ -390,8 +390,8 @@ const NATIONALITY_TH: Record<string, string> = {
 export { maskNationalId, employeeForLogin };
 
 /** Derive form defaults from a ported employee (T2 #89). Existing FORM_DEFAULTS
- *  serves as fallback for fields not covered by HumiEmployee shape. */
-export function deriveFormValuesFromEmployee(emp: HumiEmployee | null): EditFormValues {
+ *  serves as fallback for fields not covered by CnextEmployee shape. */
+export function deriveFormValuesFromEmployee(emp: CnextEmployee | null): EditFormValues {
   if (!emp) return FORM_DEFAULTS;
   return {
     ...FORM_DEFAULTS,
@@ -415,14 +415,14 @@ export function deriveFormValuesFromEmployee(emp: HumiEmployee | null): EditForm
 // ── PendingSectionBadge — shared chip shown on section headers with pending CR ──
 
 function PendingSectionBadge({ section }: { section: SectionKey }) {
-  const pending = useHumiProfileStore((s) =>
+  const pending = useCnextProfileStore((s) =>
     s.pendingChanges.find((pc) => pc.sectionKey === section && pc.status === 'pending'),
   );
   const tEss = useTranslations('ess');
   if (!pending) return null;
   return (
     <span
-      className="humi-chip"
+      className="cnext-chip"
       style={{
         background: 'var(--color-butter-50)',
         color: 'var(--color-ink-soft)',
@@ -466,12 +466,12 @@ function CardinalityLabel({
   );
 }
 
-export default function HumiProfileMePage({
+export default function CnextProfileMePage({
   initialTab = 'personal',
 }: {
   initialTab?: ProfileTab;
 } = {}) {
-  const t = useTranslations('humiProfile');
+  const t = useTranslations('cnextProfile');
   const tEdit = useTranslations('profileEdit');
   const tPending = useTranslations('pending');
   const tToast = useTranslations('profileToast');
@@ -482,7 +482,7 @@ export default function HumiProfileMePage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const locale = (params?.locale as string) ?? 'th';
-  const p = HUMI_MY_PROFILE;
+  const p = CNEXT_MY_PROFILE;
 
   // Tenure — reuse calcYearOfService bound to the Original Start Date (p.hireDate),
   // the SAME semantic shown on the Job tab (_yos). .display is TH-only, so format
@@ -507,7 +507,7 @@ export default function HumiProfileMePage({
     attachments,
     submitChangeRequest,
     withdrawPendingChange,
-  } = useHumiProfileStore();
+  } = useCnextProfileStore();
 
   // Live count of change requests still awaiting the employee (pending state).
   const pendingTaskCount = pendingChanges.filter((c) => c.status === 'pending').length;
@@ -516,7 +516,7 @@ export default function HumiProfileMePage({
   const [showToastOk, setShowToastOk] = useState(false);
 
   // Full form state (local — submitted via single-step modal)
-  // T2 #89 — derive defaults from ported HUMI_EMPLOYEES + SF parity, keyed by current login (auth-store
+  // T2 #89 — derive defaults from ported CNEXT_EMPLOYEES + SF parity, keyed by current login (auth-store
   //          email reflects view-as persona via switchPersona). Falls back to FORM_DEFAULTS.
   const currentEmail = useAuthStore((s) => s.email);
   // STA-90: demo seam — surface seeded special privilege for EMP-0005 on the
@@ -551,7 +551,7 @@ export default function HumiProfileMePage({
   // Open-time snapshots so a per-section Cancel reverts ONLY its own slice (store
   // cancelEdit() would revert the whole draft).
   const [emergencySnapshot, setEmergencySnapshot] = useState<EmergencyContactRow[]>([]);
-  const [dependentsSnapshot, setDependentsSnapshot] = useState<HumiDependent[]>([]);
+  const [dependentsSnapshot, setDependentsSnapshot] = useState<CnextDependent[]>([]);
   // STA-244 — per-section edit toggles for the 4 repeatable groups. Each opens
   // independently over the shared draft with its own open-time snapshot so Cancel
   // reverts only its slice (never the whole draft).
@@ -807,7 +807,7 @@ export default function HumiProfileMePage({
 
   // ── Inline section editor sub-components (v2 additive) ────────────────────
   // Each captures draft/updateDraft/saved/submitChangeRequest/showToast/save from closure.
-  // Hooks order: all hooks are declared at top of HumiProfileMePage above; these
+  // Hooks order: all hooks are declared at top of CnextProfileMePage above; these
   // sub-components are plain function objects, not React components — they are
   // called via JSX only inside the return block, so no conditional hooks issue.
 
@@ -841,7 +841,7 @@ export default function HumiProfileMePage({
           value={rows}
           onChange={(updated) => updateDraft({ emergencyContacts: updated })}
         />
-        <div className="humi-row" style={{ marginTop: 12, justifyContent: 'flex-end', gap: 8 }}>
+        <div className="cnext-row" style={{ marginTop: 12, justifyContent: 'flex-end', gap: 8 }}>
           <Button variant="ghost" size="sm" onClick={onCancel}>
             {t('profileCancelEdit')}
           </Button>
@@ -888,7 +888,7 @@ export default function HumiProfileMePage({
           value={rows}
           onChange={(updated) => updateDraft({ dependents: updated })}
         />
-        <div className="humi-row" style={{ marginTop: 12, justifyContent: 'flex-end', gap: 8 }}>
+        <div className="cnext-row" style={{ marginTop: 12, justifyContent: 'flex-end', gap: 8 }}>
           <Button variant="ghost" size="sm" onClick={onCancel}>
             {t('profileCancelEdit')}
           </Button>
@@ -1055,7 +1055,7 @@ export default function HumiProfileMePage({
     disabled: boolean;
   }) {
     return (
-      <div className="humi-row" style={{ marginTop: 12, justifyContent: 'flex-end', gap: 8 }}>
+      <div className="cnext-row" style={{ marginTop: 12, justifyContent: 'flex-end', gap: 8 }}>
         <Button variant="ghost" size="sm" onClick={onCancel}>
           {t('profileCancelEdit')}
         </Button>
@@ -1411,9 +1411,9 @@ export default function HumiProfileMePage({
     read: ReactNode;
   }) {
     return (
-      <div className="humi-card" style={{ marginTop: 16 }}>
+      <div className="cnext-card" style={{ marginTop: 16 }}>
         <div
-          className="humi-row"
+          className="cnext-row"
           style={{ alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
         >
           <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
@@ -1451,11 +1451,11 @@ export default function HumiProfileMePage({
     }
     const shown = rows.slice(0, 8);
     return (
-      <div className="humi-col" style={{ gap: 10 }}>
+      <div className="cnext-col" style={{ gap: 10 }}>
         {shown.map((row, index) => (
           <div
             key={index}
-            className="humi-card humi-card--tight"
+            className="cnext-card cnext-card--tight"
             style={{ background: 'var(--color-canvas-soft)' }}
           >
             {renderOne(row, index)}
@@ -1702,11 +1702,11 @@ export default function HumiProfileMePage({
 
       {/* Header card */}
       <div
-        className="humi-card mb-5 flex flex-wrap items-center gap-5"
+        className="cnext-card mb-5 flex flex-wrap items-center gap-5"
         style={{ padding: '22px 26px', position: 'relative', overflow: 'hidden' }}
       >
         <div
-          className="humi-blob"
+          className="cnext-blob"
           style={{
             width: 180,
             height: 180,
@@ -1732,7 +1732,7 @@ export default function HumiProfileMePage({
           {p.initials}
         </span>
         <div style={{ flex: '1 1 260px', minWidth: 0, position: 'relative' }}>
-          <div className="humi-row" style={{ gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
+          <div className="cnext-row" style={{ gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
             <h2 className="font-display text-2xl font-semibold leading-[1.1] tracking-tight text-ink">
               {p.nameTh}
             </h2>
@@ -1752,14 +1752,14 @@ export default function HumiProfileMePage({
           </div>
         </div>
         <div
-          className="humi-row"
+          className="cnext-row"
           style={{ gap: 8, flexShrink: 0, position: 'relative', flexWrap: 'wrap' }}
         >
-          <span className="humi-tag humi-tag--sage">{t('statusActive')}</span>
-          <span className="humi-tag">{p.employmentType}</span>
-          <span className="humi-tag">{p.startLabel}</span>
+          <span className="cnext-tag cnext-tag--sage">{t('statusActive')}</span>
+          <span className="cnext-tag">{p.employmentType}</span>
+          <span className="cnext-tag">{p.startLabel}</span>
           {/* Tenure — bound to Original Start Date (matches Job tab _yos), no red */}
-          <span className="humi-tag" data-testid="profile-tenure">
+          <span className="cnext-tag" data-testid="profile-tenure">
             {t('tenurePrefix')} {tenureLabel}
           </span>
         </div>
@@ -1796,7 +1796,7 @@ export default function HumiProfileMePage({
       {/* Tabs — controlled by Zustand slice */}
       <div className="mb-5 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div
-          className="humi-tabs flex-nowrap"
+          className="cnext-tabs flex-nowrap"
           role="tablist"
           aria-label={t('personalEyebrow')}
           style={{ width: 'max-content' }}
@@ -1807,7 +1807,7 @@ export default function HumiProfileMePage({
               key={k}
               role="tab"
               aria-selected={activeTab === k}
-              className={cn('humi-tab min-h-[44px]', activeTab === k && 'humi-tab--active')}
+              className={cn('cnext-tab min-h-[44px]', activeTab === k && 'cnext-tab--active')}
               onClick={() => handleProfileTabClick(k)}
             >
               {l}
@@ -1822,7 +1822,7 @@ export default function HumiProfileMePage({
           {/* Always render full 4-section form; FullEditField gates input+pencil by isEditing
               (display mode = read-only value, edit mode = input + pencil → single-step modal) */}
           {true && (
-            <div className="humi-card md:col-span-2">
+            <div className="cnext-card md:col-span-2">
               <h3 className="mb-4 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
                 {t('personalTitle')}
               </h3>
@@ -1851,7 +1851,7 @@ export default function HumiProfileMePage({
                 ))}
                 {/* BRD #29: personIdExternal — PerPerson stable external ID, read-only */}
                 {/* SF cite: sf-extract/qas-fields-2026-04-26/sf-qas-PerPerson-2026-04-26.json .d.results[0].personIdExternal */}
-                <div className="humi-col" style={{ gap: 4 }}>
+                <div className="cnext-col" style={{ gap: 4 }}>
                   <span style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
                     {tEdit('field.personIdExternal')}
                   </span>
@@ -1904,7 +1904,7 @@ export default function HumiProfileMePage({
               />
               <div className="grid gap-3 sm:grid-cols-2" style={{ marginBottom: 20 }}>
                 {/* Business email = read-only (edited by HR only) */}
-                <div className="humi-col" style={{ gap: 4 }}>
+                <div className="cnext-col" style={{ gap: 4 }}>
                   <span style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
                     {tEdit('field.businessEmail')}
                   </span>
@@ -1984,7 +1984,7 @@ export default function HumiProfileMePage({
 
       {/* ── Personal tab — Address card (v2 additive) ─────────────────────── */}
       {panelKey === 'personal' && (
-        <div className="humi-card" style={{ marginTop: 16 }}>
+        <div className="cnext-card" style={{ marginTop: 16 }}>
           <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
             {tEss('sections.address')}
             <PendingSectionBadge section="address" />
@@ -2015,7 +2015,7 @@ export default function HumiProfileMePage({
 
       {/* ── Personal tab — Contact Info multi-value card (v2 additive) ───── */}
       {panelKey === 'personal' && (
-        <div className="humi-card" style={{ marginTop: 16 }}>
+        <div className="cnext-card" style={{ marginTop: 16 }}>
           <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
             {tEss('sections.contact')}
             <PendingSectionBadge section="contact" />
@@ -2047,7 +2047,7 @@ export default function HumiProfileMePage({
 
       {/* ── Personal tab — Bank card (v2 additive) ───────────────────────── */}
       {panelKey === 'personal' && (
-        <div className="humi-card" style={{ marginTop: 16 }}>
+        <div className="cnext-card" style={{ marginTop: 16 }}>
           <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
             {tEss('sections.bank')}
             <PendingSectionBadge section="bank" />
@@ -2126,17 +2126,17 @@ export default function HumiProfileMePage({
         <>
           <div className="grid gap-4 md:grid-cols-2">
             <FieldCard eyebrow={t('jobEyebrow')} title={t('jobTitle')} rows={p.job} labelW={160} paired />
-            <div className="humi-col" style={{ gap: 16 }}>
+            <div className="cnext-col" style={{ gap: 16 }}>
               {/* Raw 'ค่าตอบแทน 82,500 / เดือน' card removed — duplicated the
                 BRD #170 CompensationSummary which is the canonical default-masked
                 surface (Ken UAT 2026-04-26: 'salary has double show and it must
                 mark as default'). CompensationSummary lives lower in this same
                 column when bottom panels render. */}
-              <div className="humi-card">
-                <div className="humi-eyebrow">{t('historyEyebrow')}</div>
-                <div className="humi-col" style={{ gap: 14, marginTop: 10 }}>
+              <div className="cnext-card">
+                <div className="cnext-eyebrow">{t('historyEyebrow')}</div>
+                <div className="cnext-col" style={{ gap: 14, marginTop: 10 }}>
                   {p.workHistory.map((r) => (
-                    <div key={r.title} className="humi-row">
+                    <div key={r.title} className="cnext-row">
                       <div
                         style={{
                           width: 6,
@@ -2170,13 +2170,13 @@ export default function HumiProfileMePage({
               (not a sidebar leaf, not on the Time Off / Leave hub): resigning is a
               sensitive lifecycle action, so it stays discoverable-but-not-prominent
               here rather than one click away. ── */}
-          <div className="humi-card" style={{ marginTop: 16 }}>
-            <div className="humi-eyebrow">{t('resignationSectionEyebrow')}</div>
+          <div className="cnext-card" style={{ marginTop: 16 }}>
+            <div className="cnext-eyebrow">{t('resignationSectionEyebrow')}</div>
             <div
-              className="humi-row"
+              className="cnext-row"
               style={{ marginTop: 10, justifyContent: 'space-between', alignItems: 'center' }}
             >
-              <div className="humi-row" style={{ gap: 10 }}>
+              <div className="cnext-row" style={{ gap: 10 }}>
                 <FileX className="h-5 w-5 text-ink-muted" aria-hidden />
                 <span style={{ fontSize: 14, color: 'var(--color-ink)' }}>
                   {t('resignationSectionDesc')}
@@ -2194,8 +2194,8 @@ export default function HumiProfileMePage({
           {/* ── BRD #168: disabilityStatus on employment tab ──────────────────
             SF cite: PerPersonal.customString9 disability code
             sf-extract/qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json */}
-          <div className="humi-card" style={{ marginTop: 16 }}>
-            <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+          <div className="cnext-card" style={{ marginTop: 16 }}>
+            <div className="cnext-eyebrow" style={{ marginBottom: 8 }}>
               {tEdit('field.disabilityStatus')}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -2275,7 +2275,7 @@ export default function HumiProfileMePage({
           })}
 
           {/* ── STA-244: Certifications / Licenses (read-only card upgraded to
-              repeatable N editor; source is now the store, not HUMI_MY_PROFILE) ── */}
+              repeatable N editor; source is now the store, not CNEXT_MY_PROFILE) ── */}
           {RepeatableSectionCard({
             title: tEss('sections.certification'),
             maintainKey: 'certification',
@@ -2378,9 +2378,9 @@ export default function HumiProfileMePage({
       {/* ── Emergency contacts tab ────────────────────────────────────────── */}
       {panelKey === 'emergency' && (
         <>
-          <div className="humi-card">
+          <div className="cnext-card">
             <div
-              className="humi-row"
+              className="cnext-row"
               style={{ alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
             >
               <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
@@ -2413,10 +2413,10 @@ export default function HumiProfileMePage({
                 {p.emergency.map((c) => (
                   <div
                     key={c.name}
-                    className="humi-card humi-card--tight"
+                    className="cnext-card cnext-card--tight"
                     style={{ background: 'var(--color-canvas-soft)' }}
                   >
-                    <div className="humi-row">
+                    <div className="cnext-row">
                       <span className={AVATAR_TONE_MAP[c.tone]} aria-hidden>
                         {c.initials}
                       </span>
@@ -2434,9 +2434,9 @@ export default function HumiProfileMePage({
           </div>
 
           {/* ── ผู้อุปการะ (BRD #20) ────────────────────────────────────────── */}
-          <div className="humi-card" style={{ marginTop: 16 }}>
+          <div className="cnext-card" style={{ marginTop: 16 }}>
             <div
-              className="humi-row"
+              className="cnext-row"
               style={{ alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
             >
               <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
@@ -2469,10 +2469,10 @@ export default function HumiProfileMePage({
                 {(saved.dependents ?? []).map((dep) => (
                   <div
                     key={dep.id}
-                    className="humi-card humi-card--tight"
+                    className="cnext-card cnext-card--tight"
                     style={{ background: 'var(--color-canvas-soft)' }}
                   >
-                    <div className="humi-row">
+                    <div className="cnext-row">
                       {dep.tone && dep.initials ? (
                         <span className={AVATAR_TONE_MAP[dep.tone]} aria-hidden>
                           {dep.initials}
@@ -2509,10 +2509,10 @@ export default function HumiProfileMePage({
       {panelKey === 'docs' && (
         <>
           {/* BRD #173 — link to full Documents library */}
-          <div className="humi-row" style={{ justifyContent: 'flex-end', marginBottom: 12 }}>
+          <div className="cnext-row" style={{ justifyContent: 'flex-end', marginBottom: 12 }}>
             <Link
               href={`/${locale}/me/documents`}
-              className="humi-tag"
+              className="cnext-tag"
               style={{
                 padding: '6px 12px',
                 color: 'var(--color-accent)',
@@ -2524,20 +2524,20 @@ export default function HumiProfileMePage({
               ดูเอกสารทั้งหมด →
             </Link>
           </div>
-          <div className="humi-card">
+          <div className="cnext-card">
             <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
               {t('docsTitle')}
             </h3>
             <p className="mt-2 text-small text-ink-muted" data-testid="profile-documents-boundary">
               {DOCUMENT_STORYBOARD_BOUNDARY_TH}
             </p>
-            <ul className="humi-list mt-2.5" role="list">
+            <ul className="cnext-list mt-2.5" role="list">
               {[
                 { n: 'สัญญาจ้างงานที่ลงนาม', d: 'ก.พ. 2568' },
                 { n: 'เอกสารรับรองสิทธิทำงาน', d: 'ม.ค. 2568' },
                 { n: 'ใบรับรองการอบรมปฐมนิเทศ', d: 'ธ.ค. 2567' },
               ].map((d) => (
-                <li key={d.n} className="humi-row-item">
+                <li key={d.n} className="cnext-row-item">
                   <div
                     style={{
                       width: 34,
@@ -2575,7 +2575,7 @@ export default function HumiProfileMePage({
       {/* ── Activity tab (tax panel key = activity) — shows pendingChanges ─ */}
       {panelKey === 'tax' && (
         <div className="grid gap-4">
-          <div className="humi-card">
+          <div className="cnext-card">
             <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink mb-4">
               {tActivity('title')}
             </h3>
@@ -2585,7 +2585,7 @@ export default function HumiProfileMePage({
                 {tActivity('noChanges')}
               </p>
             ) : (
-              <ul className="humi-col" style={{ gap: 16 }} role="list">
+              <ul className="cnext-col" style={{ gap: 16 }} role="list">
                 {pendingChanges.map((pc) => (
                   <PendingChangeCard
                     key={pc.id}
@@ -2600,20 +2600,20 @@ export default function HumiProfileMePage({
             )}
 
             {/* Legacy tax documents */}
-            <hr className="humi-divider" style={{ marginTop: 24, marginBottom: 16 }} />
+            <hr className="cnext-divider" style={{ marginTop: 24, marginBottom: 16 }} />
             <h4
               className="font-display text-base font-semibold leading-[1.2] tracking-tight text-ink mb-3"
               style={{ color: 'var(--color-ink-muted)' }}
             >
               {t('taxTitle')}
             </h4>
-            <ul className="humi-list" role="list">
+            <ul className="cnext-list" role="list">
               {[
                 { n: 'ภ.ง.ด. 91 ปี 2568', d: 'ก.พ. 2568' },
                 { n: 'หนังสือรับรองการหักภาษี ณ ที่จ่าย', d: 'ม.ค. 2568' },
                 { n: '50 ทวิ — ปี 2567', d: 'ธ.ค. 2567' },
               ].map((d) => (
-                <li key={d.n} className="humi-row-item">
+                <li key={d.n} className="cnext-row-item">
                   <div
                     style={{
                       width: 34,
@@ -2671,7 +2671,7 @@ function SectionEditHeader({
 }) {
   return (
     <div
-      className="humi-row"
+      className="cnext-row"
       style={{ alignItems: 'center', justifyContent: 'space-between', marginTop: 4, marginBottom: 10 }}
     >
       <span
@@ -2708,10 +2708,10 @@ function ReadOnlyField({
 }) {
   return (
     <div
-      className="humi-col"
+      className="cnext-col"
       style={{ gap: 4, borderBottom: '1px solid var(--color-hairline-soft)', paddingBottom: 12 }}
     >
-      <div className="humi-row" style={{ gap: 6, alignItems: 'center' }}>
+      <div className="cnext-row" style={{ gap: 6, alignItems: 'center' }}>
         <span style={{ fontSize: 12, color: 'var(--color-ink-muted)', flex: 1 }}>{label}</span>
         {pendingChange && (
           <span
@@ -2744,7 +2744,7 @@ function PendingChangeCard({
   onWithdraw,
 }: {
   pc: PendingChange;
-  attachments: ReturnType<typeof useHumiProfileStore.getState>['attachments'];
+  attachments: ReturnType<typeof useCnextProfileStore.getState>['attachments'];
   tPending: ReturnType<typeof useTranslations>;
   tActivity: ReturnType<typeof useTranslations>;
   onWithdraw: (id: string) => void;
@@ -2778,7 +2778,7 @@ function PendingChangeCard({
         background: 'var(--color-canvas-soft)',
       }}
     >
-      <div className="humi-row" style={{ gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      <div className="cnext-row" style={{ gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}
@@ -2814,7 +2814,7 @@ function PendingChangeCard({
         </span>
       </div>
 
-      <div className="humi-row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+      <div className="cnext-row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
         <span className="text-small text-ink-muted">
           {pc.status === 'pending'
             ? 'รออนุมัติ — ถอนคำขอได้ก่อนผู้อนุมัติตัดสินเท่านั้น'
@@ -2833,7 +2833,7 @@ function PendingChangeCard({
 
       {/* Attachment thumbnails */}
       {pcAttachments.length > 0 && (
-        <div className="humi-row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+        <div className="cnext-row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
           {pcAttachments.map((att) => (
             <a
               key={att.id}
@@ -2879,13 +2879,13 @@ function FieldCard({
   paired?: boolean;
 }) {
   return (
-    <div className="humi-card">
-      <div className="humi-eyebrow">{eyebrow}</div>
+    <div className="cnext-card">
+      <div className="cnext-eyebrow">{eyebrow}</div>
       <h3 className="mt-1.5 mb-4 font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
         {title}
       </h3>
       <div
-        className={paired ? 'grid gap-x-8 gap-y-3.5 sm:grid-cols-2' : 'humi-col'}
+        className={paired ? 'grid gap-x-8 gap-y-3.5 sm:grid-cols-2' : 'cnext-col'}
         style={paired ? undefined : { gap: 14 }}
       >
         {rows.map(([l, v], i) => {
@@ -2921,7 +2921,7 @@ function FieldCard({
           return (
             <div
               key={i}
-              className={paired && !isDateOrYearsField ? 'humi-row sm:col-span-2' : 'humi-row'}
+              className={paired && !isDateOrYearsField ? 'cnext-row sm:col-span-2' : 'cnext-row'}
               style={{
                 borderBottom: '1px solid var(--color-hairline-soft)',
                 paddingBottom: 10,
@@ -2948,9 +2948,9 @@ function FieldCard({
 
 function CompRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="humi-row">
+    <div className="cnext-row">
       <span style={{ color: 'var(--color-ink-muted)' }}>{label}</span>
-      <span className="humi-spacer" />
+      <span className="cnext-spacer" />
       <b style={{ color: 'var(--color-ink)' }}>{value}</b>
     </div>
   );
@@ -2967,7 +2967,7 @@ function EditField({
 }) {
   return (
     <div
-      className="humi-row"
+      className="cnext-row"
       style={{
         borderBottom: '1px solid var(--color-hairline-soft)',
         paddingBottom: 10,

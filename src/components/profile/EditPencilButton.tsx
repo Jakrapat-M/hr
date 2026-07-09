@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Pencil } from 'lucide-react';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 
 interface EditPencilButtonProps {
   onClick: () => void;

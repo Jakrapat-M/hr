@@ -2,7 +2,7 @@
 
 // /time/my-requests — STA-183
 // Self-service unified view of the employee's OWN Leave + Overtime +
-// Time-Correction requests. One Humi DataTable with type / status / cycle
+// Time-Correction requests. One Cnext DataTable with type / status / cycle
 // filters and a per-row Cancel gated by the cycle-window rule. Reads the three
 // stores reactively and unifies them via the pure `buildMyRequests` adapter.
 
@@ -10,8 +10,8 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ListChecks } from 'lucide-react';
-import { Button, CardEyebrow, DataTable, EmptyState, FormField, Modal } from '@/components/humi';
-import type { DataTableColumn } from '@/components/humi';
+import { Button, CardEyebrow, DataTable, EmptyState, FormField, Modal } from '@/components/cnext';
+import type { DataTableColumn } from '@/components/cnext';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/stores/auth-store';
 import { useLeaveApprovals } from '@/stores/leave-approvals';

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { AlertCircle, CheckCircle2, RotateCcw, ShieldCheck, XCircle } from 'lucide-react';
-import { Button, Card, CardEyebrow, CardTitle, DemoValuesDisclaimer, FormField, FormInput } from '@/components/humi';
+import { Button, Card, CardEyebrow, CardTitle, DemoValuesDisclaimer, FormField, FormInput } from '@/components/cnext';
 import { useAuthStore } from '@/stores/auth-store';
 import { canAccessModule } from '@/lib/rbac';
 import * as taxPlanning from '@/stores/benefit-tax-planning';

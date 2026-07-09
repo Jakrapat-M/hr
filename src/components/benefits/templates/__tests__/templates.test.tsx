@@ -30,12 +30,12 @@ vi.mock('@/hooks/use-capabilities', () => ({
   }),
 }));
 
-// ── humi-profile-slice mock (FileUploadField dependency) ─────────────────────
+// ── cnext-profile-slice mock (FileUploadField dependency) ─────────────────────
 const mockAddAttachment = vi.fn().mockReturnValue('att-test-id');
 const mockRemoveAttachment = vi.fn();
 
-vi.mock('@/stores/humi-profile-slice', () => ({
-  useHumiProfileStore: (selector: (s: unknown) => unknown) =>
+vi.mock('@/stores/cnext-profile-slice', () => ({
+  useCnextProfileStore: (selector: (s: unknown) => unknown) =>
     selector({ addAttachment: mockAddAttachment, removeAttachment: mockRemoveAttachment }),
 }));
 
@@ -46,7 +46,7 @@ vi.mock('@/stores/auth-store', () => ({
 }));
 
 // ── lucide-react mock — pass through all icons as stub spans ──────────────────
-// Use importOriginal so any icon QuickActionsTile or other humi primitives need
+// Use importOriginal so any icon QuickActionsTile or other cnext primitives need
 // is automatically satisfied without listing them all by name.
 vi.mock('lucide-react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('lucide-react')>();

@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useParams } from 'next/navigation';
-import { Button, Card, CardEyebrow, CardTitle, Modal, Toggle } from '@/components/humi';
-import { Capability } from '@/components/humi';
+import { Button, Card, CardEyebrow, CardTitle, Modal, Toggle } from '@/components/cnext';
+import { Capability } from '@/components/cnext';
 import { RecordsFlatForm } from '@/components/benefits/templates/RecordsFlatForm';
 import { getPlan } from '@/data/benefits/plan-registry';
 import {

@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useLocale } from 'next-intl';
-import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/humi';
-import { Capability } from '@/components/humi';
+import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/cnext';
+import { Capability } from '@/components/cnext';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import type { BenefitTemplateProps } from './SimpleClaimForm';
 import { ApprovalChain } from '@/components/quick-approve/ApprovalChain';

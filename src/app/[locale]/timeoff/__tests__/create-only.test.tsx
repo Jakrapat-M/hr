@@ -22,7 +22,7 @@ vi.mock('@/stores/auth-store', () => ({
   ) => selector({ roles: ['employee'], userId: 'EMP001', username: 'สมชาย ใจดี' }),
 }))
 
-vi.mock('@/stores/humi-timeoff-slice', () => ({
+vi.mock('@/stores/cnext-timeoff-slice', () => ({
   useTimeoffStore: (selector: (s: { history: unknown[]; submit: () => void }) => unknown) =>
     selector({ history: [], submit: () => {} }),
 }))
@@ -49,7 +49,7 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-import HumiTimeoffPage from '@/app/[locale]/timeoff/page'
+import CnextTimeoffPage from '@/app/[locale]/timeoff/page'
 
 beforeEach(() => {
   pushMock.mockClear()
@@ -83,13 +83,13 @@ function pickFirstBookableDay() {
 
 describe('Time Off — create-only page', () => {
   it('renders no status/history tab', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     expect(screen.queryByRole('tab')).toBeNull()
     expect(screen.queryByText(/สถานะคำขอของฉัน/i)).not.toBeInTheDocument()
   })
 
   it('renders no leave-policy card', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     expect(screen.queryByText(/นโยบายวันลา/i)).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'อ่านนโยบายฉบับเต็ม' }),
@@ -97,7 +97,7 @@ describe('Time Off — create-only page', () => {
   })
 
   it('renders no /resignation link', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     const resignLinks = screen
       .queryAllByRole('link')
       .filter((a) => (a.getAttribute('href') ?? '').includes('/resignation'))
@@ -105,7 +105,7 @@ describe('Time Off — create-only page', () => {
   })
 
   it('on submit, routes to the my-requests list (not the detail route)', () => {
-    render(<HumiTimeoffPage />)
+    render(<CnextTimeoffPage />)
     // Unpaid sick leave is quota-untracked + reason-optional, so a single full
     // day is submittable without seeding a balance or attaching documents.
     selectType('ลาป่วยไม่รับเงิน')

@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, FileText, Hospital, Shield } from 'lucide-react';
-import { Card, CardEyebrow, CardTitle, buttonVariants } from '@/components/humi';
-import { Capability } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle, buttonVariants } from '@/components/cnext';
+import { Capability } from '@/components/cnext';
 import {
   benefitReferralRoute,
   benefitReimbursementRoute,

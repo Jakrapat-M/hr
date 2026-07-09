@@ -4,7 +4,7 @@
  * ActionTagChip — small teal-accent pill rendered as the first child inside a
  * benefit Create / Make Correction / Insert popup, naming the action that opened
  * the form. Shared by the benefit plan catalog and the eligibility rule manager
- * so both surfaces use identical action framing. Humi tokens only (teal accent,
+ * so both surfaces use identical action framing. Cnext tokens only (teal accent,
  * never red).
  */
 

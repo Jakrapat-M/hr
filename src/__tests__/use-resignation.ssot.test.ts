@@ -1,6 +1,6 @@
 /**
  * use-resignation.ssot.test.ts
- * AC-2: useResignation อ่านจาก useHumiProfileStore.pendingChanges เท่านั้น
+ * AC-2: useResignation อ่านจาก useCnextProfileStore.pendingChanges เท่านั้น
  *       ห้าม local useState<ResignationRecord> — C7 SSoT invariant
  */
 
@@ -28,12 +28,12 @@ const localStorageMock = (() => {
 
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
 
-import { useHumiProfileStore } from '@/stores/humi-profile-slice';
+import { useCnextProfileStore } from '@/stores/cnext-profile-slice';
 import { useResignation } from '@/hooks/use-resignation';
 
 function resetStore() {
   localStorageMock.clear();
-  useHumiProfileStore.setState({
+  useCnextProfileStore.setState({
     activeTab: 'personal',
     isEditing: false,
     draft: {
@@ -85,13 +85,13 @@ describe('AC-2 (static): use-resignation.ts ต้องไม่มี useState
     expect(codeOnly).not.toMatch(/useState\s*<\s*ResignationRecord/);
   });
 
-  it('AC-2: use-resignation.ts ต้องมี useHumiProfileStore (subscribe to store)', () => {
+  it('AC-2: use-resignation.ts ต้องมี useCnextProfileStore (subscribe to store)', () => {
     const hookPath = path.resolve(
       __dirname,
       '../hooks/use-resignation.ts',
     );
     const source = fs.readFileSync(hookPath, 'utf-8');
-    expect(source).toContain('useHumiProfileStore');
+    expect(source).toContain('useCnextProfileStore');
   });
 });
 
@@ -111,7 +111,7 @@ describe('AC-2 (runtime): store update → hook re-renders พร้อม recor
 
     // inject ผ่าน store โดยตรง (ไม่ผ่าน hook) — ทดสอบว่า hook reactive ต่อ store
     act(() => {
-      useHumiProfileStore.getState().submitChangeRequest({
+      useCnextProfileStore.getState().submitChangeRequest({
         sectionKey: 'termination',
         field: 'employmentStatus',
         oldValue: 'active',
@@ -130,7 +130,7 @@ describe('AC-2 (runtime): store update → hook re-renders พร้อม recor
     const { result } = renderHook(() => useResignation());
 
     act(() => {
-      useHumiProfileStore.getState().submitChangeRequest({
+      useCnextProfileStore.getState().submitChangeRequest({
         sectionKey: 'termination',
         field: 'employmentStatus',
         oldValue: 'active',

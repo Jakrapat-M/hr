@@ -76,8 +76,8 @@ import {
   type BenefitClaimRequest,
   type BenefitClaimStatus,
 } from '@/stores/benefit-claims'
-import { EmptyState, Modal, Button, FormField, FormInput } from '@/components/humi'
-import { FileUploadField } from '@/components/humi/FileUploadField'
+import { EmptyState, Modal, Button, FormField, FormInput } from '@/components/cnext'
+import { FileUploadField } from '@/components/cnext/FileUploadField'
 import { CollapsibleSectionCard } from '@/components/admin/wizard/CollapsibleSectionCard'
 import { SectionJumpNav, type JumpItem } from '@/components/admin/employees/SectionJumpNav'
 import { EmployeePersonalSections } from '@/components/admin/EmployeePersonalSections'
@@ -89,9 +89,9 @@ import {
 // ── Avatar color by status ───────────────────────────────────
 function avatarClass(status: string): string {
   switch (status) {
-    case 'active': return 'humi-avatar humi-avatar--teal'
-    case 'terminated': return 'humi-avatar humi-avatar--ink'
-    default: return 'humi-avatar humi-avatar--sage'
+    case 'active': return 'cnext-avatar cnext-avatar--teal'
+    case 'terminated': return 'cnext-avatar cnext-avatar--ink'
+    default: return 'cnext-avatar cnext-avatar--sage'
   }
 }
 
@@ -106,11 +106,11 @@ function avatarInitials(emp: { first_name_th: string; last_name_th: string }): s
 // BRD #87: emplStatusDisplay derived from SF emplStatus code via mapEmplStatusCode()
 function StatusBadge({ status, emplStatusDisplay }: { status: string; emplStatusDisplay?: string | null }) {
   const map: Record<string, string> = {
-    active: 'humi-tag humi-tag--accent',
-    terminated: 'humi-tag humi-tag--coral',
-    inactive: 'humi-tag',
+    active: 'cnext-tag cnext-tag--accent',
+    terminated: 'cnext-tag cnext-tag--coral',
+    inactive: 'cnext-tag',
   }
-  const cls = map[status] ?? 'humi-tag'
+  const cls = map[status] ?? 'cnext-tag'
   const fallbackLabel: Record<string, string> = {
     active: 'ทำงานอยู่',
     terminated: 'ออกจากงานแล้ว',
@@ -124,7 +124,7 @@ function StatusBadge({ status, emplStatusDisplay }: { status: string; emplStatus
 // ── ClassBadge (PERMANENT / PARTIME) ────────────────────────
 function ClassBadge({ empClass }: { empClass?: string }) {
   const label = empClass === 'PARTIME' ? 'Part-time' : 'Permanent'
-  const cls = empClass === 'PARTIME' ? 'humi-tag humi-tag--butter' : 'humi-tag humi-tag--sage'
+  const cls = empClass === 'PARTIME' ? 'cnext-tag cnext-tag--butter' : 'cnext-tag cnext-tag--sage'
   return <span className={cls}>{label}</span>
 }
 
@@ -176,7 +176,7 @@ function TimelineRow({ event }: { event: TimelineEvent }) {
         />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="humi-row" style={{ gap: 8, flexWrap: 'wrap' }}>
+        <div className="cnext-row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <span className="text-body font-semibold text-ink">{label}</span>
           <span className="text-small text-ink-muted">วันที่มีผล: {effectiveFormatted}</span>
         </div>
@@ -1219,12 +1219,12 @@ export default function EmployeeDetailPage() {
       <div className="p-6">
         <button
           onClick={() => router.back()}
-          className="humi-row text-body text-ink-muted mb-4 hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted mb-4 hover:text-accent transition-colors"
         >
           <ArrowLeft size={16} aria-hidden />
           <span>กลับ</span>
         </button>
-        <div className="humi-card" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">ไม่พบพนักงานรหัส {empId}</p>
         </div>
       </div>
@@ -1372,7 +1372,7 @@ export default function EmployeeDetailPage() {
       <div>
         <Link
           href={`/${locale}/admin/employees`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -1381,17 +1381,17 @@ export default function EmployeeDetailPage() {
       </div>
 
       {/* ── Section A1: ข้อมูลส่วนตัว (Person-level — A3 split) ──── */}
-      <div className="humi-card humi-grain" style={{ overflow: 'hidden' }}>
+      <div className="cnext-card cnext-grain" style={{ overflow: 'hidden' }}>
         <div
-          className="humi-blob humi-blob--teal hidden lg:block"
+          className="cnext-blob cnext-blob--teal hidden lg:block"
           style={{ width: 100, height: 130, right: -20, top: -30, opacity: 0.7 }}
           aria-hidden
         />
 
-        <div className="humi-eyebrow" style={{ marginBottom: 12 }}>ข้อมูลส่วนตัว</div>
+        <div className="cnext-eyebrow" style={{ marginBottom: 12 }}>ข้อมูลส่วนตัว</div>
 
         {/* top row: avatar + name + badges */}
-        <div className="humi-row" style={{ alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+        <div className="cnext-row" style={{ alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
           {/* Avatar */}
           <div
             className={avatarClass(employee.status)}
@@ -1403,7 +1403,7 @@ export default function EmployeeDetailPage() {
 
           {/* Name + ID + badges */}
           <div style={{ flex: 1, minWidth: 180 }}>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
               {/* BRD #85: employmentId alongside HR employee_id
                   Source: sf-qas-EmpJob-2026-04-26.json → .d.results[0].employmentId */}
               {employee.employee_id}
@@ -1417,7 +1417,7 @@ export default function EmployeeDetailPage() {
               {nameTh}
             </h1>
             <div className="text-small text-ink-muted">{nameEn}</div>
-            <div className="humi-row mt-2" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <div className="cnext-row mt-2" style={{ gap: 8, flexWrap: 'wrap' }}>
               {/* BRD #87: emplStatus from SF code (5581=active, 5597=terminated)
                   Source: sf-qas-EmpJob-2026-04-26.json → .d.results[0].emplStatus */}
               <StatusBadge status={employee.status} emplStatusDisplay={emplStatusDisplay} />
@@ -1429,17 +1429,17 @@ export default function EmployeeDetailPage() {
         {/* Person-level chips: อายุ + Generation */}
         {(ageResult || genResult) && (
           <>
-            <hr className="humi-divider" />
-            <div className="humi-row" style={{ gap: 12, flexWrap: 'wrap' }}>
+            <hr className="cnext-divider" />
+            <div className="cnext-row" style={{ gap: 12, flexWrap: 'wrap' }}>
               {ageResult && (
-                <div className="humi-card humi-card--cream" style={{ padding: '8px 14px', minWidth: 100 }}>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>อายุ</div>
+                <div className="cnext-card cnext-card--cream" style={{ padding: '8px 14px', minWidth: 100 }}>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>อายุ</div>
                   <div className="text-body font-semibold text-ink">{ageResult.display}</div>
                 </div>
               )}
               {genResult && (
-                <div className="humi-card humi-card--cream" style={{ padding: '8px 14px', minWidth: 100 }}>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>Generation</div>
+                <div className="cnext-card cnext-card--cream" style={{ padding: '8px 14px', minWidth: 100 }}>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>Generation</div>
                   <div className="text-body font-semibold text-ink">{genResult}</div>
                 </div>
               )}
@@ -1481,15 +1481,15 @@ export default function EmployeeDetailPage() {
       >
         <div className="grid gap-3 md:grid-cols-2">
           <div>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'อีเมลส่วนตัว' : 'Personal Email'}</div>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'อีเมลส่วนตัว' : 'Personal Email'}</div>
             <div className="text-body text-ink">{employee.personal_email ?? '—'}</div>
           </div>
           <div>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'โทรศัพท์มือถือ' : 'Mobile Phone'}</div>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'โทรศัพท์มือถือ' : 'Mobile Phone'}</div>
             <div className="text-body text-ink">{employee.personal_phone ?? '—'}</div>
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'ที่อยู่' : 'Address'}</div>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'ที่อยู่' : 'Address'}</div>
             <div className="text-body text-ink">
               {employee.address_line1 ? (
                 <>
@@ -1535,7 +1535,7 @@ export default function EmployeeDetailPage() {
           style={{ marginTop: 4 }}
         >
           <div>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
               <CalendarDays size={10} className="inline mr-1" aria-hidden />
               วันที่เริ่มงาน
             </div>
@@ -1550,7 +1550,7 @@ export default function EmployeeDetailPage() {
           </div>
 
           <div>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
               <Building2 size={10} className="inline mr-1" aria-hidden />
               บริษัท
             </div>
@@ -1559,7 +1559,7 @@ export default function EmployeeDetailPage() {
           </div>
 
           <div>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
               <Briefcase size={10} className="inline mr-1" aria-hidden />
               ตำแหน่ง
             </div>
@@ -1580,7 +1580,7 @@ export default function EmployeeDetailPage() {
               Source: sf-qas-EmpJob-2026-04-26.json → .d.results[0].payGrade="08", regularTemporary=null */}
           {(employee.pay_grade || employee.regular_temporary) && (
             <div>
-              <div className="humi-eyebrow" style={{ marginBottom: 4 }}>Pay Grade / ประเภท</div>
+              <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>Pay Grade / ประเภท</div>
               {employee.pay_grade && (
                 <div className="text-body font-medium text-ink">PG-{employee.pay_grade}</div>
               )}
@@ -1594,11 +1594,11 @@ export default function EmployeeDetailPage() {
 
           {/* STA-93: Special benefit group — beside Pay Grade (display-only Yes/No) */}
           <div>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
               Special benefit group / กลุ่มสิทธิพิเศษ
             </div>
             <select
-              className="humi-select"
+              className="cnext-select"
               value={employee.special_benefit_group ? 'yes' : 'no'}
               disabled
               aria-label="Special benefit group / กลุ่มสิทธิพิเศษ"
@@ -1611,7 +1611,7 @@ export default function EmployeeDetailPage() {
           {/* Retail chips — audit A6/#11: conditional on non-null */}
           {employee.store_branch_code && (
             <div>
-              <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+              <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
                 <MapPin size={10} className="inline mr-1" aria-hidden />
                 สาขา/หน่วยงาน
               </div>
@@ -1620,7 +1620,7 @@ export default function EmployeeDetailPage() {
           )}
           {employee.hr_district && (
             <div>
-              <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+              <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
                 <Network size={10} className="inline mr-1" aria-hidden />
                 เขต HR
               </div>
@@ -1646,9 +1646,9 @@ export default function EmployeeDetailPage() {
 
           if (openActingRoles.length === 0) return null
           return (
-            <div className="humi-row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
+            <div className="cnext-row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
               <span
-                className="humi-tag humi-tag--accent"
+                className="cnext-tag cnext-tag--accent"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
               >
                 <Star size={11} aria-hidden />
@@ -1664,13 +1664,13 @@ export default function EmployeeDetailPage() {
                     assignmentClass, hiringNotCompleted */}
         {(employee.original_start_date || employee.service_date || employee.ok_to_rehire !== undefined || employee.assignment_class || employee.hiring_not_completed) && (
           <>
-            <hr className="humi-divider" />
-            <div className="humi-eyebrow" style={{ marginBottom: 8 }}>ข้อมูลการจ้างงาน (EmpEmployment)</div>
+            <hr className="cnext-divider" />
+            <div className="cnext-eyebrow" style={{ marginBottom: 8 }}>ข้อมูลการจ้างงาน (EmpEmployment)</div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" style={{ marginTop: 4 }}>
               {/* BRD #21: originalStartDate — earliest employment start incl. prior rehires */}
               {employee.original_start_date && employee.original_start_date !== employee.hire_date && (
                 <div>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันเริ่มงานครั้งแรก</div>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันเริ่มงานครั้งแรก</div>
                   <div className="text-body font-medium text-ink">
                     {new Date(employee.original_start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
                   </div>
@@ -1679,7 +1679,7 @@ export default function EmployeeDetailPage() {
               {/* BRD #21: serviceDate — for PF vesting calc */}
               {employee.service_date && employee.service_date !== employee.hire_date && (
                 <div>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่นับอายุงาน (Service)</div>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันที่นับอายุงาน (Service)</div>
                   <div className="text-body font-medium text-ink">
                     {new Date(employee.service_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
                   </div>
@@ -1687,7 +1687,7 @@ export default function EmployeeDetailPage() {
               )}
               {employee.ok_to_rehire !== undefined && (
                 <div>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>รับกลับได้?</div>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>รับกลับได้?</div>
                   <div className="text-body font-medium text-ink">
                     {employee.ok_to_rehire ? 'ใช่' : 'ไม่ใช่'}
                   </div>
@@ -1695,7 +1695,7 @@ export default function EmployeeDetailPage() {
               )}
               {employee.assignment_class && (
                 <div>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ประเภทการมอบหมาย</div>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ประเภทการมอบหมาย</div>
                   <div className="text-body font-medium text-ink">
                     {employee.assignment_class === 'ST' ? 'Standard' : employee.assignment_class}
                   </div>
@@ -1703,7 +1703,7 @@ export default function EmployeeDetailPage() {
               )}
               {employee.hiring_not_completed && (
                 <div>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>สถานะ Onboarding</div>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>สถานะ Onboarding</div>
                   <div className="text-body font-medium" style={{ color: 'var(--color-warning)' }}>
                     ยังไม่เสร็จสิ้น
                   </div>
@@ -1719,10 +1719,10 @@ export default function EmployeeDetailPage() {
           const sorted = [...employee.job_grade_history].sort((a, b) => b.seqNumber - a.seqNumber)
           return (
             <>
-              <hr className="humi-divider" />
+              <hr className="cnext-divider" />
               <details>
                 <summary
-                  className="humi-eyebrow"
+                  className="cnext-eyebrow"
                   style={{ cursor: 'pointer', marginBottom: 8, userSelect: 'none' }}
                 >
                   ประวัติ Job Grade ({employee.job_grade_history.length} รายการ)
@@ -1731,10 +1731,10 @@ export default function EmployeeDetailPage() {
                   {sorted.map((jg) => (
                     <div
                       key={jg.seqNumber}
-                      className="humi-row"
+                      className="cnext-row"
                       style={{ gap: 12, padding: '6px 10px', borderRadius: 6, background: 'var(--color-canvas-soft)' }}
                     >
-                      <span className="humi-tag">{jg.grade}</span>
+                      <span className="cnext-tag">{jg.grade}</span>
                       <span className="text-small text-ink-muted">
                         มีผลตั้งแต่ {new Date(jg.startDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </span>
@@ -1753,10 +1753,10 @@ export default function EmployeeDetailPage() {
           const sorted = [...employee.bu_history].sort((a, b) => b.seqNumber - a.seqNumber)
           return (
             <>
-              <hr className="humi-divider" />
+              <hr className="cnext-divider" />
               <details>
                 <summary
-                  className="humi-eyebrow"
+                  className="cnext-eyebrow"
                   style={{ cursor: 'pointer', marginBottom: 8, userSelect: 'none' }}
                 >
                   ประวัติหน่วยงาน / BU ({employee.bu_history.length} รายการ)
@@ -1765,7 +1765,7 @@ export default function EmployeeDetailPage() {
                   {sorted.map((bu) => (
                     <div
                       key={bu.seqNumber}
-                      className="humi-row"
+                      className="cnext-row"
                       style={{ gap: 12, padding: '6px 10px', borderRadius: 6, background: 'var(--color-canvas-soft)' }}
                     >
                       <span className="text-body font-medium text-ink">{bu.businessUnit}</span>
@@ -1797,40 +1797,40 @@ export default function EmployeeDetailPage() {
 
           return (
             <>
-              <hr className="humi-divider" />
-              <div className="humi-row" style={{ gap: 12, flexWrap: 'wrap' }}>
+              <hr className="cnext-divider" />
+              <div className="cnext-row" style={{ gap: 12, flexWrap: 'wrap' }}>
                 {collapsed ? (
-                  <div className="humi-card humi-card--cream" style={{ padding: '8px 14px', minWidth: 100 }}>
-                    <div className="humi-eyebrow" style={{ marginBottom: 2 }}>อายุงาน</div>
+                  <div className="cnext-card cnext-card--cream" style={{ padding: '8px 14px', minWidth: 100 }}>
+                    <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>อายุงาน</div>
                     <div className="text-body font-semibold text-ink">{yosResult.display}</div>
                   </div>
                 ) : (
                   <>
-                    <div className="humi-card humi-card--cream" style={{ padding: '8px 14px', minWidth: 100 }}>
-                      <div className="humi-eyebrow" style={{ marginBottom: 2 }}>อายุงาน (บริษัท)</div>
+                    <div className="cnext-card cnext-card--cream" style={{ padding: '8px 14px', minWidth: 100 }}>
+                      <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>อายุงาน (บริษัท)</div>
                       <div className="text-body font-semibold text-ink">{yosResult.display}</div>
                     </div>
                     {yijResult && (
-                      <div className="humi-card humi-card--cream" style={{ padding: '8px 14px', minWidth: 120 }}>
-                        <div className="humi-eyebrow" style={{ marginBottom: 2 }}>อายุงานในสายงาน</div>
+                      <div className="cnext-card cnext-card--cream" style={{ padding: '8px 14px', minWidth: 120 }}>
+                        <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>อายุงานในสายงาน</div>
                         <div className="text-body font-semibold text-ink">{yijResult.display}</div>
                       </div>
                     )}
                     {yipResult && (
-                      <div className="humi-card humi-card--cream" style={{ padding: '8px 14px', minWidth: 130 }}>
-                        <div className="humi-eyebrow" style={{ marginBottom: 2 }}>อายุงานในตำแหน่ง</div>
+                      <div className="cnext-card cnext-card--cream" style={{ padding: '8px 14px', minWidth: 130 }}>
+                        <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>อายุงานในตำแหน่ง</div>
                         <div className="text-body font-semibold text-ink">{yipResult.display}</div>
                       </div>
                     )}
                     {yictResult && (
-                      <div className="humi-card humi-card--cream" style={{ padding: '8px 14px', minWidth: 120 }}>
-                        <div className="humi-eyebrow" style={{ marginBottom: 2 }}>อายุงานในระดับ</div>
+                      <div className="cnext-card cnext-card--cream" style={{ padding: '8px 14px', minWidth: 120 }}>
+                        <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>อายุงานในระดับ</div>
                         <div className="text-body font-semibold text-ink">{yictResult.display}</div>
                       </div>
                     )}
                     {yibuResult && (
-                      <div className="humi-card humi-card--cream" style={{ padding: '8px 14px', minWidth: 130 }}>
-                        <div className="humi-eyebrow" style={{ marginBottom: 2 }}>อายุงานใน BU</div>
+                      <div className="cnext-card cnext-card--cream" style={{ padding: '8px 14px', minWidth: 130 }}>
+                        <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>อายุงานใน BU</div>
                         <div className="text-body font-semibold text-ink">{yibuResult.display}</div>
                       </div>
                     )}
@@ -1853,19 +1853,19 @@ export default function EmployeeDetailPage() {
 
       {/* ── Workflow status snapshot (Chains 1 + 4) ─────────── */}
       {(latestTermination ?? latestPromotion) && (
-        <div className="humi-card" style={{ padding: 16 }}>
-          <div className="humi-eyebrow" style={{ marginBottom: 12 }}>คำขอที่เกี่ยวข้อง</div>
+        <div className="cnext-card" style={{ padding: 16 }}>
+          <div className="cnext-eyebrow" style={{ marginBottom: 12 }}>คำขอที่เกี่ยวข้อง</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {latestTermination && (
               <div
-                className="humi-row"
+                className="cnext-row"
                 style={{
                   gap: 12, padding: '10px 14px', borderRadius: 8,
                   background: 'var(--color-canvas-soft)', flexWrap: 'wrap',
                 }}
               >
                 <div style={{ flex: 1, minWidth: 160 }}>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>คำขอลาออก</div>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>คำขอลาออก</div>
                   <div className="text-body font-medium text-ink">
                     {TERMINATION_REASON_LABEL[latestTermination.reasonCode]}
                   </div>
@@ -1874,7 +1874,7 @@ export default function EmployeeDetailPage() {
                   </div>
                 </div>
                 <span
-                  className={`humi-tag ${latestTermination.status === 'approved' ? 'humi-tag--accent' : latestTermination.status === 'rejected' ? 'humi-tag--coral' : 'humi-tag--butter'}`}
+                  className={`cnext-tag ${latestTermination.status === 'approved' ? 'cnext-tag--accent' : latestTermination.status === 'rejected' ? 'cnext-tag--coral' : 'cnext-tag--butter'}`}
                 >
                   {TERMINATION_STEP_LABEL[latestTermination.status]}
                 </span>
@@ -1882,14 +1882,14 @@ export default function EmployeeDetailPage() {
             )}
             {latestPromotion && (
               <div
-                className="humi-row"
+                className="cnext-row"
                 style={{
                   gap: 12, padding: '10px 14px', borderRadius: 8,
                   background: 'var(--color-canvas-soft)', flexWrap: 'wrap',
                 }}
               >
                 <div style={{ flex: 1, minWidth: 160 }}>
-                  <div className="humi-eyebrow" style={{ marginBottom: 2 }}>คำขอเลื่อนตำแหน่ง</div>
+                  <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>คำขอเลื่อนตำแหน่ง</div>
                   <div className="text-body font-medium text-ink">
                     {latestPromotion.fromPosition} → {latestPromotion.toPosition}
                   </div>
@@ -1898,7 +1898,7 @@ export default function EmployeeDetailPage() {
                   </div>
                 </div>
                 <span
-                  className={`humi-tag ${latestPromotion.status === 'approved' ? 'humi-tag--accent' : latestPromotion.status === 'rejected' ? 'humi-tag--coral' : 'humi-tag--butter'}`}
+                  className={`cnext-tag ${latestPromotion.status === 'approved' ? 'cnext-tag--accent' : latestPromotion.status === 'rejected' ? 'cnext-tag--coral' : 'cnext-tag--butter'}`}
                 >
                   {PROMOTION_STEP_LABEL[latestPromotion.status]}
                 </span>
@@ -2111,7 +2111,7 @@ export default function EmployeeDetailPage() {
         dense
       >
         {/* Export action (top-right) — mirrors /benefits-hub claim history */}
-        <div className="humi-row" style={{ justifyContent: 'flex-end', marginBottom: 12 }}>
+        <div className="cnext-row" style={{ justifyContent: 'flex-end', marginBottom: 12 }}>
           <Button variant="ghost" size="sm" type="button">
             <Download size={14} aria-hidden />
             <span style={{ marginLeft: 4 }}>{isTh ? 'ส่งออกรายการ' : 'Export'}</span>
@@ -2576,15 +2576,15 @@ export default function EmployeeDetailPage() {
           Fields: originalStartDate, seniorityDate, retirementDate, religion,
                   ethnicity, placeOfBirth, countryOfBirth, nativePreferredLang */}
       {isHRBPPlus && (
-        <div className="humi-card" style={{ padding: 16 }}>
-          <div className="humi-eyebrow" style={{ marginBottom: 12 }}>
+        <div className="cnext-card" style={{ padding: 16 }}>
+          <div className="cnext-eyebrow" style={{ marginBottom: 12 }}>
             ข้อมูลส่วนตัว HRBP (PerPersonal)
-            <span className="humi-tag humi-tag--butter" style={{ marginLeft: 8, fontSize: 11 }}>HRBP+</span>
+            <span className="cnext-tag cnext-tag--butter" style={{ marginLeft: 8, fontSize: 11 }}>HRBP+</span>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" style={{ marginTop: 4 }}>
             {employee?.original_start_date && (
               <div>
-                <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงานครั้งแรก</div>
+                <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันที่เริ่มงานครั้งแรก</div>
                 <div className="text-body font-medium text-ink">
                   {new Date(employee.original_start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
                 </div>
@@ -2592,7 +2592,7 @@ export default function EmployeeDetailPage() {
             )}
             {employee?.seniority_date && (
               <div>
-                <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันที่อาวุโส</div>
+                <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันที่อาวุโส</div>
                 <div className="text-body font-medium text-ink">
                   {new Date(employee.seniority_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
                 </div>
@@ -2600,7 +2600,7 @@ export default function EmployeeDetailPage() {
             )}
             {employee?.retirement_date && (
               <div>
-                <div className="humi-eyebrow" style={{ marginBottom: 2 }}>วันเกษียณ</div>
+                <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>วันเกษียณ</div>
                 <div className="text-body font-medium text-ink">
                   {new Date(employee.retirement_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
                 </div>
@@ -2608,31 +2608,31 @@ export default function EmployeeDetailPage() {
             )}
             {employee?.religion && (
               <div>
-                <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ศาสนา</div>
+                <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ศาสนา</div>
                 <div className="text-body font-medium text-ink">{employee.religion}</div>
               </div>
             )}
             {employee?.ethnicity && (
               <div>
-                <div className="humi-eyebrow" style={{ marginBottom: 2 }}>เชื้อชาติ</div>
+                <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>เชื้อชาติ</div>
                 <div className="text-body font-medium text-ink">{employee.ethnicity}</div>
               </div>
             )}
             {employee?.place_of_birth && (
               <div>
-                <div className="humi-eyebrow" style={{ marginBottom: 2 }}>สถานที่เกิด</div>
+                <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>สถานที่เกิด</div>
                 <div className="text-body font-medium text-ink">{employee.place_of_birth}</div>
               </div>
             )}
             {employee?.country_of_birth && (
               <div>
-                <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ประเทศที่เกิด</div>
+                <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ประเทศที่เกิด</div>
                 <div className="text-body font-medium text-ink">{employee.country_of_birth}</div>
               </div>
             )}
             {employee?.native_preferred_lang && (
               <div>
-                <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ภาษาหลัก</div>
+                <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ภาษาหลัก</div>
                 <div className="text-body font-medium text-ink">{employee.native_preferred_lang}</div>
               </div>
             )}
@@ -2641,16 +2641,16 @@ export default function EmployeeDetailPage() {
       )}
 
       {/* ── Section B: Timeline event log ─────────────────── */}
-      <div id="emp-timeline" className="humi-card scroll-mt-[var(--jumpnav-anchor)]">
-        <div className="humi-row" style={{ marginBottom: 16 }}>
+      <div id="emp-timeline" className="cnext-card scroll-mt-[var(--jumpnav-anchor)]">
+        <div className="cnext-row" style={{ marginBottom: 16 }}>
           <div>
-            <div className="humi-eyebrow">ประวัติการเปลี่ยนแปลง</div>
+            <div className="cnext-eyebrow">ประวัติการเปลี่ยนแปลง</div>
             <h2 className="mt-1 font-display text-lg font-semibold text-ink">
               Timeline
             </h2>
           </div>
-          <span className="humi-spacer" />
-          <span className="humi-tag">{sortedEvents.length} รายการ</span>
+          <span className="cnext-spacer" />
+          <span className="cnext-tag">{sortedEvents.length} รายการ</span>
         </div>
 
         {/* Scrollable event list */}
@@ -2684,8 +2684,8 @@ export default function EmployeeDetailPage() {
       </div>
 
       {/* ── Section C: Action menu (see ACTION_CARDS, C8 guardrail) ── */}
-      <div id="emp-actions" className="humi-card scroll-mt-[var(--jumpnav-anchor)]">
-        <div className="humi-eyebrow" style={{ marginBottom: 14 }}>
+      <div id="emp-actions" className="cnext-card scroll-mt-[var(--jumpnav-anchor)]">
+        <div className="cnext-eyebrow" style={{ marginBottom: 14 }}>
           การดำเนินการ
         </div>
         <div className="mb-4 rounded-[var(--radius-md)] border border-hairline bg-canvas-soft p-3 text-small text-ink-soft">
@@ -2700,7 +2700,7 @@ export default function EmployeeDetailPage() {
               return (
                 <div
                   key={card.label}
-                  className="humi-card humi-card--cream"
+                  className="cnext-card cnext-card--cream"
                   style={{
                     padding: 16,
                     opacity: 0.65,
@@ -2710,7 +2710,7 @@ export default function EmployeeDetailPage() {
                   aria-disabled="true"
                   title={card.lockReason ?? 'ยังไม่พร้อมใช้งาน'}
                 >
-                  <div className="humi-row" style={{ gap: 10, alignItems: 'flex-start' }}>
+                  <div className="cnext-row" style={{ gap: 10, alignItems: 'flex-start' }}>
                     <div
                       style={{
                         width: 36, height: 36, borderRadius: 10,
@@ -2722,7 +2722,7 @@ export default function EmployeeDetailPage() {
                       <Icon size={18} aria-hidden />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="humi-row" style={{ gap: 6 }}>
+                      <div className="cnext-row" style={{ gap: 6 }}>
                         <span className="text-body font-semibold text-ink-muted">{card.label}</span>
                         <Lock size={12} className="text-ink-faint" aria-hidden />
                       </div>
@@ -2742,10 +2742,10 @@ export default function EmployeeDetailPage() {
               <Link
                 key={card.label}
                 href={card.href!}
-                className="humi-card group transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2"
+                className="cnext-card group transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2"
                 style={{ padding: 16 }}
               >
-                <div className="humi-row" style={{ gap: 10, alignItems: 'flex-start' }}>
+                <div className="cnext-row" style={{ gap: 10, alignItems: 'flex-start' }}>
                   <div
                     style={{
                       width: 36, height: 36, borderRadius: 10,

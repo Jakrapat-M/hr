@@ -3,14 +3,14 @@
 // Shared date-gate pop-up for the benefit Insert flow. Both the Benefit Plan
 // catalog and the Eligibility Rule manager open this first when Insert is
 // clicked: it asks for the effective date of the new change, then Proceed opens
-// the existing detail/edit modal pre-filled and carrying that date. Humi tokens
+// the existing detail/edit modal pre-filled and carrying that date. Cnext tokens
 // only (NO-RED). Locale is derived internally via next-intl so neither caller
 // has to thread an isTh flag.
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
-import { Modal, Button, FormField } from '@/components/humi';
+import { Modal, Button, FormField } from '@/components/cnext';
 
 interface InsertChangePopupProps {
   open: boolean;

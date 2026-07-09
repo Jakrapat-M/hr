@@ -22,11 +22,11 @@ import {
   EmptyState,
   Avatar,
   type DataTableColumn,
-} from '@/components/humi';
+} from '@/components/cnext';
 import { useAuthStore } from '@/stores/auth-store';
 import { ALL_PORTED_EMPLOYEES, EMP_BY_LOGIN } from '@/lib/all-ported-employees';
 import { filterEmployeesByPersona } from '@/lib/scope-filter';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
 
 // Bilingual labels for the canonical BU ids seeded in all-ported-employees.ts.
 // Data-derived chrome (not free text) — kept local, parallel to the seed map.
@@ -47,10 +47,10 @@ const STATUS_LABELS: Record<string, { th: string; en: string }> = {
   terminated: { th: 'พ้นสภาพ', en: 'Terminated' },
 };
 
-// HumiEmployee.avatarTone carries 'indigo', which the Avatar tone variant does
+// CnextEmployee.avatarTone carries 'indigo', which the Avatar tone variant does
 // not expose — map it onto the nearest supported tone.
 type AvatarTone = 'teal' | 'sage' | 'butter' | 'ink';
-function avatarTone(tone: HumiEmployee['avatarTone']): AvatarTone {
+function avatarTone(tone: CnextEmployee['avatarTone']): AvatarTone {
   return tone === 'indigo' ? 'teal' : tone;
 }
 
@@ -83,7 +83,7 @@ export default function HrbpEmployeesPage() {
   const count = scope.employees.length;
   const headerLine = scope.mode === 'all' ? t('scopeAll', { count }) : t('scopeBu', { count });
 
-  const columns: DataTableColumn<HumiEmployee>[] = [
+  const columns: DataTableColumn<CnextEmployee>[] = [
     {
       id: 'name',
       header: t('colName'),
@@ -153,7 +153,7 @@ export default function HrbpEmployeesPage() {
             caption={t('caption')}
             captionVisuallyHidden
             columns={columns}
-            rows={scope.employees as HumiEmployee[]}
+            rows={scope.employees as CnextEmployee[]}
             rowKey={(r) => r.id}
           />
         )}

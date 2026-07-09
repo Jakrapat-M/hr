@@ -32,7 +32,7 @@ import {
 import { FieldGroup } from '@/components/ui/field-group';
 import { Field } from '@/components/ui/field';
 import { Badge } from '@/components/ui/badge';
-import { Button, Modal } from '@/components/humi';
+import { Button, Modal } from '@/components/cnext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/date';
 import { isHR } from '@/lib/rbac';

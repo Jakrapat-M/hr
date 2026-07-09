@@ -49,7 +49,7 @@ function formatDateTh(isoDate: string): string {
 function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <label className="humi-label" style={{ display: 'block', marginBottom: 6 }}>
+      <label className="cnext-label" style={{ display: 'block', marginBottom: 6 }}>
         {label}
       </label>
       <input
@@ -57,7 +57,7 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
         value={value}
         readOnly
         aria-readonly="true"
-        className="humi-input"
+        className="cnext-input"
         style={{ width: '100%', opacity: 0.7, cursor: 'default' }}
       />
     </div>
@@ -72,7 +72,7 @@ function InfoCard({ locale, empId, message }: { locale: string; empId: string; m
       <div>
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -81,7 +81,7 @@ function InfoCard({ locale, empId, message }: { locale: string; empId: string; m
       </div>
       <div
         role="status"
-        className="humi-card humi-card--cream"
+        className="cnext-card cnext-card--cream"
         style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}
       >
         <Info size={20} aria-hidden style={{ color: 'var(--color-ink-muted)', flexShrink: 0, marginTop: 2 }} />
@@ -107,13 +107,13 @@ function ConfirmRevertDialog({ open, empId, onConfirm, onCancel }: ConfirmRevert
       role="dialog"
       aria-modal="true"
       aria-labelledby="revert-dialog-title"
-      className="humi-drawer-scrim"
+      className="cnext-drawer-scrim"
       style={{
         position: 'fixed', inset: 0, zIndex: 50,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
-      <div className="humi-card" style={{ maxWidth: 420, width: '100%', margin: 16 }}>
+      <div className="cnext-card" style={{ maxWidth: 420, width: '100%', margin: 16 }}>
         <div
           style={{
             width: 44, height: 44, borderRadius: 12,
@@ -137,13 +137,13 @@ function ConfirmRevertDialog({ open, empId, onConfirm, onCancel }: ConfirmRevert
         <p className="text-small text-ink-muted" style={{ marginBottom: 20 }}>
           Employee will return to active status.
         </p>
-        <div className="humi-row" style={{ gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={onCancel} className="humi-btn humi-btn--ghost">
+        <div className="cnext-row" style={{ gap: 10, justifyContent: 'flex-end' }}>
+          <button onClick={onCancel} className="cnext-btn cnext-btn--ghost">
             ยกเลิก
           </button>
           <button
             onClick={onConfirm}
-            className="humi-btn humi-btn--primary"
+            className="cnext-btn cnext-btn--primary"
             style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
           >
             ยืนยัน — คืนสถานะทำงาน
@@ -160,25 +160,25 @@ function EmployeeSnapshot({ employee }: { employee: MockEmployee }) {
   const nameTh = `${employee.first_name_th} ${employee.last_name_th}`
   const nameEn = `${employee.first_name_en} ${employee.last_name_en}`
   return (
-    <div className="humi-card humi-card--cream">
-      <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+    <div className="cnext-card cnext-card--cream">
+      <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
         {employee.employee_id} · {employee.company}
       </div>
       <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
       <div className="text-small text-ink-muted mb-3">{nameEn}</div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" style={{ marginTop: 8 }}>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>สถานะปัจจุบัน</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>สถานะปัจจุบัน</div>
           <div className="text-body font-medium text-ink">ออกจากงาน</div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ประเภท</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ประเภท</div>
           <div className="text-body font-medium text-ink">
             {employee.employee_class === 'PERMANENT' ? 'Permanent' : 'Part-time'}
           </div>
         </div>
         <div>
-          <div className="humi-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
+          <div className="cnext-eyebrow" style={{ marginBottom: 2 }}>ตำแหน่ง</div>
           <div className="text-body font-medium text-ink">{employee.position_title}</div>
         </div>
       </div>
@@ -295,7 +295,7 @@ export default function RevertTerminationPage() {
       <div>
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -304,7 +304,7 @@ export default function RevertTerminationPage() {
       </div>
 
       {/* Page title */}
-      <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+      <div className="cnext-row" style={{ gap: 10, alignItems: 'center' }}>
         <div
           style={{
             width: 36, height: 36, borderRadius: 10,
@@ -316,7 +316,7 @@ export default function RevertTerminationPage() {
           <Undo2 size={18} aria-hidden />
         </div>
         <div>
-          <div className="humi-eyebrow">การดำเนินการ</div>
+          <div className="cnext-eyebrow">การดำเนินการ</div>
           <h1 className="font-display text-xl font-semibold text-ink">
             ยกเลิกการสิ้นสุดสภาพ (Revert Termination)
           </h1>
@@ -327,8 +327,8 @@ export default function RevertTerminationPage() {
       <EmployeeSnapshot employee={employee} />
 
       {/* Original approved termination — read-only prefill */}
-      <div className="humi-card">
-        <div className="humi-eyebrow" style={{ marginBottom: 4 }}>
+      <div className="cnext-card">
+        <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>
           ข้อมูลการสิ้นสุดสภาพเดิม (อ่านอย่างเดียว)
         </div>
         <p className="text-small text-ink-muted" style={{ marginBottom: 16 }}>
@@ -348,8 +348,8 @@ export default function RevertTerminationPage() {
       </div>
 
       {/* Revert inputs */}
-      <div className="humi-card">
-        <div className="humi-eyebrow" style={{ marginBottom: 16 }}>
+      <div className="cnext-card">
+        <div className="cnext-eyebrow" style={{ marginBottom: 16 }}>
           ข้อมูลการยกเลิก (Revert details)
         </div>
 
@@ -363,7 +363,7 @@ export default function RevertTerminationPage() {
           />
         </div>
 
-        <hr className="humi-divider" />
+        <hr className="cnext-divider" />
 
         {/* Optional free-text reason */}
         <div style={{ marginTop: 20, marginBottom: 24 }}>
@@ -381,17 +381,17 @@ export default function RevertTerminationPage() {
             onChange={(e) => setReasonForRevert(e.target.value)}
             rows={3}
             placeholder="เหตุผลที่ยกเลิกการสิ้นสุดสภาพ..."
-            className="humi-input"
+            className="cnext-input"
             style={{ width: '100%', resize: 'vertical' }}
             aria-label="เหตุผลในการยกเลิกการสิ้นสุดสภาพ"
           />
         </div>
 
         {/* Submit */}
-        <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
+        <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
           <Link
             href={`/${locale}/admin/employees/${empId}`}
-            className="humi-btn humi-btn--ghost"
+            className="cnext-btn cnext-btn--ghost"
           >
             ยกเลิก
           </Link>
@@ -399,7 +399,7 @@ export default function RevertTerminationPage() {
             onClick={() => setDialogOpen(true)}
             disabled={!canSubmit || submitted}
             aria-disabled={!canSubmit || submitted}
-            className="humi-btn humi-btn--primary"
+            className="cnext-btn cnext-btn--primary"
             style={{ background: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}
           >
             ยืนยันการยกเลิกการสิ้นสุดสภาพ

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { CheckCircle2, XCircle, RotateCcw, Route, ShieldAlert, Eye } from 'lucide-react';
-import { Button, Modal, FormField, Capability } from '@/components/humi';
+import { Button, Modal, FormField, Capability } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import { moduleOf, type RequestType } from '@/lib/quick-approve-api';
 

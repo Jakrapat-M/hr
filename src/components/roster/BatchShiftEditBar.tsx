@@ -7,7 +7,7 @@
 // on long grids and on mobile. MOCKUP ONLY — the edit applies to local state.
 
 import { CheckSquare, X } from 'lucide-react';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 
 export interface BatchShiftEditBarProps {
   count: number;

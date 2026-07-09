@@ -1,13 +1,13 @@
 'use client'
 
-// WizardShell.tsx — Hire Wizard container (Humi-skinned, 3-step)
+// WizardShell.tsx — Hire Wizard container (Cnext-skinned, 3-step)
 //
 // Option 1 restructure (2026-04-23): 8 visible steps → 3 clusters.
 // formData slice shape unchanged so inner Step*.tsx components
 // still dispatch setStepData('identity' | 'name' | ...) as before.
 //
 // Layout: stepper rail (left, desktop) / mobile progress bar,
-// content area centred inside humi-card, draft-chip in header
+// content area centred inside cnext-card, draft-chip in header
 // so admin sees "บันทึกร่างอัตโนมัติ · HH:MM" at a glance.
 import { useEffect, useState } from 'react'
 import { Stepper } from './Stepper'
@@ -86,11 +86,11 @@ export function WizardShell({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Header — humi-card style without the card chrome so it reads as page section */}
+      {/* Header — cnext-card style without the card chrome so it reads as page section */}
       <div className="border-b border-hairline bg-surface px-6 py-4 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <div className="humi-eyebrow">{flowEyebrow}</div>
+            <div className="cnext-eyebrow">{flowEyebrow}</div>
             <h1 className="mt-1 font-display text-2xl font-semibold leading-tight text-ink">
               {flowTitleTh}
             </h1>
@@ -100,7 +100,7 @@ export function WizardShell({
           </div>
           {lastSavedAt != null && (
             <span
-              className="humi-draft-chip"
+              className="cnext-draft-chip"
               title={new Date(lastSavedAt).toLocaleString('th-TH')}
               aria-live="polite"
             >

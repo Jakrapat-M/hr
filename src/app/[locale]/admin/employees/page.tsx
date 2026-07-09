@@ -179,16 +179,16 @@ const EmployeeRow = ({
           onClick(employee.employee_id)
         }
       }}
-      className="humi-emp-row"
+      className="cnext-emp-row"
       // CSS var so sticky cells inherit hover state without overriding row class
       data-row="true"
     >
       {/* Employee ID — sticky-left so identity stays visible during horizontal scroll */}
-      <div className="humi-emp-sticky" style={{ width: COLUMNS[0].width, flexShrink: 0, padding: '0 12px', fontSize: 12, fontWeight: 600, color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)', position: 'sticky', left: 0, zIndex: 1, background: 'var(--row-bg)' }}>
+      <div className="cnext-emp-sticky" style={{ width: COLUMNS[0].width, flexShrink: 0, padding: '0 12px', fontSize: 12, fontWeight: 600, color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)', position: 'sticky', left: 0, zIndex: 1, background: 'var(--row-bg)' }}>
         {employee.employee_id}
       </div>
       {/* Name TH — sticky-left, pinned right after Employee ID */}
-      <div className="humi-emp-sticky" style={{ width: COLUMNS[1].width, flexShrink: 0, padding: '0 12px', fontSize: 13, fontWeight: 500, color: 'var(--color-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'sticky', left: COLUMNS[0].width, zIndex: 1, background: 'var(--row-bg)' }}>
+      <div className="cnext-emp-sticky" style={{ width: COLUMNS[1].width, flexShrink: 0, padding: '0 12px', fontSize: 13, fontWeight: 500, color: 'var(--color-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'sticky', left: COLUMNS[0].width, zIndex: 1, background: 'var(--row-bg)' }}>
         {employee.first_name_th} {employee.last_name_th}
       </div>
       {/* Employee class */}
@@ -371,7 +371,7 @@ export default function EmployeesPage() {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100vh - 64px)', // humi-main top padding consumed by sticky topbar
+        height: 'calc(100vh - 64px)', // cnext-main top padding consumed by sticky topbar
         minHeight: 0,
       }}
     >
@@ -406,7 +406,7 @@ export default function EmployeesPage() {
             <Users2 size={20} aria-hidden />
           </div>
           <div>
-            <div className="humi-eyebrow">Employee Data</div>
+            <div className="cnext-eyebrow">Employee Data</div>
             <h1
               style={{
                 fontFamily: 'var(--font-display)',
@@ -744,9 +744,9 @@ export default function EmployeesPage() {
 
       {/* Row hover + sticky-left cell bg — injected once */}
       <style>{`
-        .humi-emp-row { --row-bg: var(--color-surface); }
-        .humi-emp-row:hover { background: var(--color-canvas); --row-bg: var(--color-canvas); }
-        .humi-emp-row:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+        .cnext-emp-row { --row-bg: var(--color-surface); }
+        .cnext-emp-row:hover { background: var(--color-canvas); --row-bg: var(--color-canvas); }
+        .cnext-emp-row:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
       `}</style>
     </div>
   )

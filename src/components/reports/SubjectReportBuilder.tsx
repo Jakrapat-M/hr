@@ -18,7 +18,7 @@ import {
   DataTable,
   EmptyState,
   type DataTableColumn,
-} from '@/components/humi';
+} from '@/components/cnext';
 import { Inbox } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { ALL_PORTED_EMPLOYEES, EMP_BY_LOGIN } from '@/lib/all-ported-employees';
@@ -142,7 +142,7 @@ export function SubjectReportBuilder() {
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <span className="font-mono text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.14em] text-ink-faint">
-          {isTh ? 'HUMI • เครื่องมือสร้างรายงาน' : 'HUMI • REPORT BUILDER'}
+          {isTh ? 'CNEXT • เครื่องมือสร้างรายงาน' : 'CNEXT • REPORT BUILDER'}
         </span>
         <h1 className="font-display text-[length:var(--text-display-h2)] font-semibold tracking-tight text-ink">
           {t('title')}

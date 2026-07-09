@@ -2,50 +2,50 @@
 
 // TeamAttendanceSummary — "TODAY ACROSS HQ / Team is ready" card, extracted from
 // the home dashboard (STA-248) so it lives on the Time & Attendance hub instead.
-// JSX moved verbatim from home/page.tsx; i18n keeps the `humiHero` namespace
+// JSX moved verbatim from home/page.tsx; i18n keeps the `cnextHero` namespace
 // (behavioral no-op — can be relocated to a time-scoped namespace later).
 
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import { HUMI_TODAY_PRESENCE } from '@/lib/humi-mock-data';
+import { CNEXT_TODAY_PRESENCE } from '@/lib/cnext-mock-data';
 
 const AVATAR_TONE_MAP = {
-  teal: 'humi-avatar humi-avatar--teal',
-  sage: 'humi-avatar humi-avatar--sage',
-  butter: 'humi-avatar humi-avatar--butter',
-  ink: 'humi-avatar humi-avatar--ink',
-  indigo: 'humi-avatar humi-avatar--teal',
+  teal: 'cnext-avatar cnext-avatar--teal',
+  sage: 'cnext-avatar cnext-avatar--sage',
+  butter: 'cnext-avatar cnext-avatar--butter',
+  ink: 'cnext-avatar cnext-avatar--ink',
+  indigo: 'cnext-avatar cnext-avatar--teal',
 } as const;
 
 export function TeamAttendanceSummary() {
-  const t = useTranslations('humiHero');
+  const t = useTranslations('cnextHero');
   const ringPct = Math.round(
-    (HUMI_TODAY_PRESENCE.workingCount / HUMI_TODAY_PRESENCE.totalCount) * 100,
+    (CNEXT_TODAY_PRESENCE.workingCount / CNEXT_TODAY_PRESENCE.totalCount) * 100,
   );
 
   return (
-    <div className="humi-card">
-      <div className="humi-row" style={{ alignItems: 'flex-start' }}>
+    <div className="cnext-card">
+      <div className="cnext-row" style={{ alignItems: 'flex-start' }}>
         <div>
-          <div className="humi-eyebrow">{t('todayEyebrow')}</div>
+          <div className="cnext-eyebrow">{t('todayEyebrow')}</div>
           <h3 className="mt-1.5 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
             {t('todayTitle')}
           </h3>
         </div>
-        <span className="humi-tag humi-tag--accent" style={{ marginLeft: 'auto' }}>
+        <span className="cnext-tag cnext-tag--accent" style={{ marginLeft: 'auto' }}>
           {t('tagLive')}
         </span>
       </div>
-      <div className="humi-row" style={{ marginTop: 18, gap: 20 }}>
+      <div className="cnext-row" style={{ marginTop: 18, gap: 20 }}>
         <div
-          className="humi-ring"
+          className="cnext-ring"
           style={{ ['--p' as string]: ringPct } as React.CSSProperties}
           role="img"
-          aria-label={`${HUMI_TODAY_PRESENCE.workingCount} / ${HUMI_TODAY_PRESENCE.totalCount} ${t('ringWorkingUnit')}`}
+          aria-label={`${CNEXT_TODAY_PRESENCE.workingCount} / ${CNEXT_TODAY_PRESENCE.totalCount} ${t('ringWorkingUnit')}`}
         >
           <div style={{ position: 'relative', textAlign: 'center', zIndex: 1 }}>
-            <div className="humi-ring-val">
-              {HUMI_TODAY_PRESENCE.workingCount.toLocaleString()}
+            <div className="cnext-ring-val">
+              {CNEXT_TODAY_PRESENCE.workingCount.toLocaleString()}
             </div>
             <div
               style={{
@@ -59,27 +59,27 @@ export function TeamAttendanceSummary() {
             </div>
           </div>
         </div>
-        <div className="humi-col" style={{ gap: 10, flex: 1 }}>
+        <div className="cnext-col" style={{ gap: 10, flex: 1 }}>
           <LegendRow
             dotColor="var(--color-accent)"
             label={t('legendPresent')}
-            value={HUMI_TODAY_PRESENCE.present}
+            value={CNEXT_TODAY_PRESENCE.present}
           />
           <LegendRow
             dotColor="var(--color-warning)"
             label={t('legendAbsent')}
-            value={HUMI_TODAY_PRESENCE.absent}
+            value={CNEXT_TODAY_PRESENCE.absent}
           />
           <LegendRow
             dotColor="var(--color-hairline)"
             label={t('legendOffShift')}
-            value={HUMI_TODAY_PRESENCE.offShift}
+            value={CNEXT_TODAY_PRESENCE.offShift}
           />
         </div>
       </div>
-      <hr className="humi-divider" />
-      <div className="humi-row" style={{ gap: 0 }}>
-        {HUMI_TODAY_PRESENCE.teamInitials.map((initials, idx) => (
+      <hr className="cnext-divider" />
+      <div className="cnext-row" style={{ gap: 0 }}>
+        {CNEXT_TODAY_PRESENCE.teamInitials.map((initials, idx) => (
           <span
             key={initials}
             className={cn(
@@ -106,7 +106,7 @@ export function TeamAttendanceSummary() {
             marginLeft: 8,
           }}
         >
-          {HUMI_TODAY_PRESENCE.moreLabel}
+          {CNEXT_TODAY_PRESENCE.moreLabel}
         </span>
       </div>
     </div>
@@ -123,8 +123,8 @@ function LegendRow({
   value: number;
 }) {
   return (
-    <div className="humi-row" style={{ justifyContent: 'space-between' }}>
-      <div className="humi-row">
+    <div className="cnext-row" style={{ justifyContent: 'space-between' }}>
+      <div className="cnext-row">
         <span
           style={{
             width: 8,

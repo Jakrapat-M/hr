@@ -56,7 +56,7 @@ describe('deferred benefit journey and token compliance', () => {
     expect(taxPanel).not.toMatch(/\bModal\b|role=["']dialog["']/);
   });
 
-  it('renders accessible Humi-style labels and helper copy for referral fields without reimbursement receipt anatomy', () => {
+  it('renders accessible Cnext-style labels and helper copy for referral fields without reimbursement receipt anatomy', () => {
     render(<ReferralRequestPanel />);
 
     expect(screen.getByText(/กรอกข้อมูลใบส่งตัวโดยไม่ต้องใช้เลขใบเสร็จ/)).toBeInTheDocument();
@@ -70,7 +70,7 @@ describe('deferred benefit journey and token compliance', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('uses Humi FileUploadField for reimbursement attachments instead of a filename textbox', () => {
+  it('uses Cnext FileUploadField for reimbursement attachments instead of a filename textbox', () => {
     render(<ReimbursementRequestPanel />);
 
     expect(screen.getByRole('button', { name: 'เอกสารแนบเบิกย้อนหลัง' })).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe('deferred benefit journey and token compliance', () => {
     expect(screen.queryByLabelText('ชื่อไฟล์แนบ')).not.toBeInTheDocument();
   });
 
-  it('renders accessible Humi-style labels and helper copy for tax planning with Payroll review controls', () => {
+  it('renders accessible Cnext-style labels and helper copy for tax planning with Payroll review controls', () => {
     render(<TaxPlanningPanel />);
 
     expect(screen.getByText(/ประมาณการส่วนตัวเพื่อวางแผน ไม่ใช่คำแนะนำภาษี/)).toBeInTheDocument();

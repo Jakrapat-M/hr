@@ -30,9 +30,9 @@ import {
   PICKLIST_RELIGION,
 } from '@hrms/shared/picklists'
 
-// SF-aligned gender options — Female/Male only (SF externalCode: Female/Male; Humi id: F/M)
+// SF-aligned gender options — Female/Male only (SF externalCode: Female/Male; Cnext id: F/M)
 // SF cite: qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.gender
-// PICKLIST_GENDER uses Humi IDs 'M'/'F'/'X'; filter to M/F only (drop X — no SF counterpart)
+// PICKLIST_GENDER uses Cnext IDs 'M'/'F'/'X'; filter to M/F only (drop X — no SF counterpart)
 const SF_GENDER_OPTIONS = PICKLIST_GENDER.filter((g) => g.id === 'M' || g.id === 'F')
 
 // SF-aligned marital status — keep only SF-mapped codes: SINGLE/MARRIED/DIVORCED/N
@@ -210,15 +210,15 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
     <div className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
       {/* ─── BA Personal Info row 2 — Other Title (TH) * — LOV picklist (zOtherTitle) ─── */}
       <fieldset>
-        <label htmlFor="other-title-th" className="humi-label">
-          {t('otherTitleTh')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="other-title-th" className="cnext-label">
+          {t('otherTitleTh')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <select id="other-title-th" required aria-required="true"
           aria-invalid={touched.otherTitleTh && !!errors.otherTitleTh}
           value={otherTitleTh}
           onChange={(e) => setOtherTitleTh(e.target.value)}
           onBlur={() => touch('otherTitleTh')}
-          className="humi-select w-full">
+          className="cnext-select w-full">
           <option value="">{t('selectOtherTitleTh')}</option>
           {OTHER_TITLE_TH_OPTIONS.map((o) => (
             <option key={o.id} value={o.id}>{pickLabel(o, locale)}</option>
@@ -229,8 +229,8 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
 
       {/* ─── BA Personal Info row 3 — Firstname (Local) * ─── */}
       <fieldset>
-        <label htmlFor="first-name-local" className="humi-label">
-          {t('firstNameLocal')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="first-name-local" className="cnext-label">
+          {t('firstNameLocal')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <input id="first-name-local" type="text" required aria-required="true"
           aria-invalid={touched.firstNameLocal && !!errors.firstNameLocal}
@@ -238,14 +238,14 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           value={firstNameLocal}
           onChange={(e) => setFirstNameLocal(e.target.value)}
           onBlur={() => touch('firstNameLocal')}
-          className="humi-input w-full" />
+          className="cnext-input w-full" />
         {errMsg('firstNameLocal')}
       </fieldset>
 
       {/* ─── BA Personal Info row 4 — Lastname (Local) * ─── */}
       <fieldset>
-        <label htmlFor="last-name-local" className="humi-label">
-          {t('lastNameLocal')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="last-name-local" className="cnext-label">
+          {t('lastNameLocal')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <input id="last-name-local" type="text" required aria-required="true"
           aria-invalid={touched.lastNameLocal && !!errors.lastNameLocal}
@@ -253,13 +253,13 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           value={lastNameLocal}
           onChange={(e) => setLastNameLocal(e.target.value)}
           onBlur={() => touch('lastNameLocal')}
-          className="humi-input w-full" />
+          className="cnext-input w-full" />
         {errMsg('lastNameLocal')}
       </fieldset>
 
       {/* ─── BA Personal Info row 5 — Middle Name (Local) — optional (SF PerPersonal.secondLastName sap_required=false) ─── */}
       <fieldset>
-        <label htmlFor="middle-name-local" className="humi-label">
+        <label htmlFor="middle-name-local" className="cnext-label">
           {t('middleNameLocal')}
         </label>
         <input id="middle-name-local" type="text"
@@ -268,7 +268,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           value={middleNameLocal}
           onChange={(e) => setMiddleNameLocal(e.target.value)}
           onBlur={() => touch('middleNameLocal')}
-          className="humi-input w-full" />
+          className="cnext-input w-full" />
         {errMsg('middleNameLocal')}
         {/* D1 — SF mapping note (SF parity 2026-04-27) */}
         <p className="mt-1 text-xs text-ink-soft">
@@ -278,7 +278,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
 
       {/* ─── BA Personal Info row 10 — Nickname — optional (SF PerPersonal.preferredName sap_required=false) ─── */}
       <fieldset>
-        <label htmlFor="nickname" className="humi-label">
+        <label htmlFor="nickname" className="cnext-label">
           {t('nickname')}
         </label>
         <input id="nickname" type="text"
@@ -287,7 +287,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
           onBlur={() => touch('nickname')}
-          className="humi-input w-full" />
+          className="cnext-input w-full" />
         {errMsg('nickname')}
       </fieldset>
 
@@ -296,7 +296,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
            but SF/BRD evidence still maps it to PerPersonal.customString5.
            Keep visible until Ken/BA explicitly decide BA removal should hide it. ─── */}
       <fieldset>
-        <label htmlFor="military-status" className="humi-label">
+        <label htmlFor="military-status" className="cnext-label">
           {t('militaryStatus')}
         </label>
         <select id="military-status"
@@ -304,7 +304,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           value={militaryStatus}
           onChange={(e) => setMilitaryStatus(e.target.value)}
           onBlur={() => touch('militaryStatus')}
-          className="humi-select w-full">
+          className="cnext-select w-full">
           <option value="">{t('selectMilitaryStatus')}</option>
           {PICKLIST_MILITARY_STATUS.filter((m) => m.active).map((m) => (
             <option key={m.id} value={m.id}>{m.labelTh}</option>
@@ -317,7 +317,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
            SF cite: qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.gender
            SF codes: Female / Male only (BRD #12) ─── */}
       <fieldset>
-        <label htmlFor="gender" className="humi-label">
+        <label htmlFor="gender" className="cnext-label">
           {t('gender')}
         </label>
         <select id="gender"
@@ -325,7 +325,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           value={gender}
           onChange={(e) => setGender(e.target.value)}
           onBlur={() => touch('gender')}
-          className="humi-select w-full">
+          className="cnext-select w-full">
           <option value="">{t('selectGender')}</option>
           {SF_GENDER_OPTIONS.filter((g) => g.active).map((g) => (
             <option key={g.id} value={g.id}>{g.labelTh}</option>
@@ -336,15 +336,15 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
 
       {/* ─── BA Personal Info row 13 — Nationality * ─── */}
       <fieldset>
-        <label htmlFor="nationality" className="humi-label">
-          {t('nationality')}<span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+        <label htmlFor="nationality" className="cnext-label">
+          {t('nationality')}<span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
         </label>
         <select id="nationality" required aria-required="true"
           aria-invalid={touched.nationality && !!errors.nationality}
           value={nationality}
           onChange={(e) => setNationality(e.target.value)}
           onBlur={() => touch('nationality')}
-          className="humi-select w-full">
+          className="cnext-select w-full">
           <option value="">{t('selectNationality')}</option>
           {PICKLIST_NATIONALITY.filter((n) => n.active).map((n) => (
             <option key={n.id} value={n.id}>{n.labelTh}</option>
@@ -359,7 +359,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
 
       {/* ─── BA Personal Info row 15 — Blood Type — optional (not in SF schema; Thai-locale custom) ─── */}
       <fieldset>
-        <label htmlFor="blood-type" className="humi-label">
+        <label htmlFor="blood-type" className="cnext-label">
           {t('bloodType')}
         </label>
         <select id="blood-type"
@@ -367,7 +367,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           value={bloodType}
           onChange={(e) => setBloodType(e.target.value)}
           onBlur={() => touch('bloodType')}
-          className="humi-select w-full">
+          className="cnext-select w-full">
           <option value="">{t('selectBloodType')}</option>
           {PICKLIST_BLOOD_TYPE.filter((b) => b.active).map((b) => (
             <option key={b.id} value={b.id}>{b.labelTh}</option>
@@ -380,7 +380,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
            SF cite: qas-fields-2026-04-25/sf-qas-picklist-options-LINKED-2026-04-26.json#aggregationByPicklist.ecMaritalStatus
            SF codes: M/E/D/S/N — added E (Engaged) which was missing (BRD #12) ─── */}
       <fieldset>
-        <label htmlFor="marital-status" className="humi-label">
+        <label htmlFor="marital-status" className="cnext-label">
           {t('maritalStatus')}
         </label>
         <select id="marital-status"
@@ -388,7 +388,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           value={maritalStatus}
           onChange={(e) => setMaritalStatus(e.target.value)}
           onBlur={() => touch('maritalStatus')}
-          className="humi-select w-full">
+          className="cnext-select w-full">
           <option value="">{t('selectMaritalStatus')}</option>
           {MARITAL_OPTIONS.filter((m) => m.active).map((m) => (
             <option key={m.id} value={m.id}>{m.labelTh}</option>
@@ -400,9 +400,9 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
       {/* ─── BA Personal Info row 17 — Marital Status Since * (conditional: required when ≠ SINGLE)
            Fix per AUDIT #7 — asterisk and aria-required now reflect conditional rule ─── */}
       <fieldset>
-        <label htmlFor="marital-status-since" className="humi-label">
+        <label htmlFor="marital-status-since" className="cnext-label">
           {t('maritalStatusSince')}
-          {maritalStatus && maritalStatus !== 'SINGLE' && maritalStatus !== 'S' && <span aria-hidden="true" className="humi-asterisk ml-1">*</span>}
+          {maritalStatus && maritalStatus !== 'SINGLE' && maritalStatus !== 'S' && <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>}
         </label>
         <input id="marital-status-since" type="date"
           required={!!(maritalStatus && maritalStatus !== 'SINGLE' && maritalStatus !== 'S')}
@@ -411,7 +411,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           value={maritalStatusSince}
           onChange={(e) => setMaritalStatusSince(e.target.value)}
           onBlur={() => touch('maritalStatusSince')}
-          className="humi-input w-full" />
+          className="cnext-input w-full" />
         {errMsg('maritalStatusSince')}
       </fieldset>
 
@@ -420,7 +420,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
            SF cite: qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json#.d.results[0].partnerName ─── */}
       {(maritalStatus === 'MARRIED' || maritalStatus === 'M' || maritalStatus === 'E') && (
         <fieldset>
-          <label htmlFor="spouse-name-th" className="humi-label">
+          <label htmlFor="spouse-name-th" className="cnext-label">
             {t('spouseNameTh')}
           </label>
           <input id="spouse-name-th" type="text"
@@ -428,7 +428,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
             value={spouseNameTh}
             onChange={(e) => setSpouseNameTh(e.target.value)}
             onBlur={() => touch('spouseNameTh')}
-            className="humi-input w-full" />
+            className="cnext-input w-full" />
           {errMsg('spouseNameTh')}
           <p className="mt-1 text-xs text-ink-soft">
             {t('spouseNameThHelp')}
@@ -440,7 +440,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
            SF: PerPersonal.customString5 = nativePreferredLang code
            SF cite: qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json#.d.results[0].nativePreferredLang ─── */}
       <fieldset>
-        <label htmlFor="native-preferred-lang" className="humi-label">
+        <label htmlFor="native-preferred-lang" className="cnext-label">
           {t('nativePreferredLang')}
         </label>
         <input id="native-preferred-lang" type="text"
@@ -448,7 +448,7 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
           value={nativePreferredLang}
           onChange={(e) => setNativePreferredLang(e.target.value)}
           onBlur={() => touch('nativePreferredLang')}
-          className="humi-input w-full" />
+          className="cnext-input w-full" />
         {errMsg('nativePreferredLang')}
         <p className="mt-1 text-xs text-ink-soft">
           {t('nativePreferredLangHelp')}
@@ -459,14 +459,14 @@ export default function StepBiographical({ onValidChange }: StepBiographicalProp
            SF: PerPersonal.customString1 = RELIGION_THA code (29/24/99/46/43/36)
            SF cite: qas-fields-2026-04-26/sf-qas-PerPersonal-2026-04-26.json#.d.results[0].customString1 ─── */}
       <fieldset>
-        <label htmlFor="religion" className="humi-label">
+        <label htmlFor="religion" className="cnext-label">
           {t('religion')}
         </label>
         <select id="religion"
           value={religion}
           onChange={(e) => setReligion(e.target.value)}
           onBlur={() => touch('religion')}
-          className="humi-select w-full">
+          className="cnext-select w-full">
           <option value="">{t('selectReligion')}</option>
           {PICKLIST_RELIGION.filter((r) => r.active).map((r) => (
             <option key={r.id} value={r.id}>{r.labelTh}</option>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/humi';
+import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/cnext';
 import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import { validateBenefitReferralInput, useBenefitReferralsStore } from '@/stores/benefit-referrals';
 

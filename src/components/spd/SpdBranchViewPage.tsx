@@ -4,12 +4,12 @@
 // SPD Branch View: 4 summary tiles + branch selector pills + enrollment matrix.
 // Rows = mock employees per selected branch, columns = 6 benefit plan codes.
 // DVT Variant plans (dvtVariant: true) get a "DVT" badge in the column header.
-// Humi tokens only. Bilingual TH/EN via isTh ternary. No new npm deps.
+// Cnext tokens only. Bilingual TH/EN via isTh ternary. No new npm deps.
 
 import { useState, useMemo } from 'react';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSpdBranches } from '@/hooks/use-spd-branches';
 import { SpdBranchSummaryTiles } from '@/components/spd/SpdBranchSummaryTiles';
@@ -22,7 +22,7 @@ import {
 } from '@/lib/spd-branch-mock';
 import { cn } from '@/lib/utils';
 
-// ── Usage chip color thresholds (Humi tokens only, no hex) ───────────────────
+// ── Usage chip color thresholds (Cnext tokens only, no hex) ───────────────────
 
 function usageChipClass(used: number, total: number): string {
   if (total === 0) return 'bg-canvas-soft text-ink-muted';

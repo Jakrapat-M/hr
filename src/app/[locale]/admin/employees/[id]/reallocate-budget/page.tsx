@@ -28,7 +28,7 @@ import { formatDate } from '@/lib/date'
 import { useAuthStore } from '@/stores/auth-store'
 import { ActionGuardBanner } from '@/components/admin/ActionGuardBanner'
 import { actionAvailability } from '@/lib/admin/actionAvailability'
-import { FileUploadField } from '@/components/humi/FileUploadField'
+import { FileUploadField } from '@/components/cnext/FileUploadField'
 import { BENEFIT_PLAN_REGISTRY } from '@/data/benefits/plan-registry'
 import {
   useBenefitExceptionFormStore,
@@ -139,14 +139,14 @@ export default function ReallocateBudgetPage() {
         <div>
           <Link
             href={`/${locale}/admin/employees`}
-            className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+            className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
             style={{ display: 'inline-flex', gap: 6 }}
           >
             <ArrowLeft size={16} aria-hidden />
             <span>รายการพนักงาน</span>
           </Link>
         </div>
-        <div className="humi-card" style={{ textAlign: 'center', padding: 40 }}>
+        <div className="cnext-card" style={{ textAlign: 'center', padding: 40 }}>
           <p className="text-body text-ink-muted">ไม่พบพนักงานรหัส &ldquo;{empId}&rdquo;</p>
         </div>
       </div>
@@ -175,7 +175,7 @@ export default function ReallocateBudgetPage() {
       <div>
         <Link
           href={`/${locale}/admin/employees/${empId}`}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{ display: 'inline-flex', gap: 6 }}
         >
           <ArrowLeft size={16} aria-hidden />
@@ -184,7 +184,7 @@ export default function ReallocateBudgetPage() {
       </div>
 
       {/* Page title (kept from #268) */}
-      <div className="humi-row" style={{ gap: 10, alignItems: 'center' }}>
+      <div className="cnext-row" style={{ gap: 10, alignItems: 'center' }}>
         <div
           style={{
             width: 36, height: 36, borderRadius: 10,
@@ -196,14 +196,14 @@ export default function ReallocateBudgetPage() {
           <ArrowLeftRight size={18} aria-hidden />
         </div>
         <div>
-          <div className="humi-eyebrow">{t('pageTitle')}</div>
+          <div className="cnext-eyebrow">{t('pageTitle')}</div>
           <h1 className="font-display text-xl font-semibold text-ink">{t('title')}</h1>
         </div>
       </div>
 
       {/* Employee snapshot (kept from #268) */}
-      <div className="humi-card humi-card--cream">
-        <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
+      <div className="cnext-card cnext-card--cream">
+        <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{employee.employee_id}</div>
         <div className="font-display text-lg font-semibold text-ink">{nameTh}</div>
         <div className="text-small text-ink-muted">{nameEn}</div>
         <p className="text-small text-ink-soft" style={{ marginTop: 8 }}>{tx('subtitle')}</p>
@@ -213,7 +213,7 @@ export default function ReallocateBudgetPage() {
       {submitted && (
         <div
           role="status"
-          className="humi-row"
+          className="cnext-row"
           style={{
             gap: 10, alignItems: 'center', padding: '12px 16px', borderRadius: 10,
             background: 'var(--color-accent-soft)', color: 'var(--color-accent)',
@@ -227,11 +227,11 @@ export default function ReallocateBudgetPage() {
       )}
 
       {/* Form */}
-      <div className="humi-card ring-1 ring-accent-soft">
+      <div className="cnext-card ring-1 ring-accent-soft">
         {/* ── Header fields ── */}
-        <div className="humi-eyebrow" style={{ marginBottom: 12 }}>{tx('headerSection')}</div>
+        <div className="cnext-eyebrow" style={{ marginBottom: 12 }}>{tx('headerSection')}</div>
 
-        <div className="humi-row" style={{ gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div className="cnext-row" style={{ gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
           {/* Worker ID (read-only) */}
           <div style={{ flex: '1 1 220px' }}>
             <label htmlFor="bex-worker" className="text-body font-semibold text-ink" style={{ display: 'block', marginBottom: 6 }}>
@@ -242,7 +242,7 @@ export default function ReallocateBudgetPage() {
               type="text"
               value={employee.employee_id}
               readOnly
-              className="humi-input"
+              className="cnext-input"
               style={{ maxWidth: 240, background: 'var(--color-canvas-soft)' }}
             />
           </div>
@@ -275,7 +275,7 @@ export default function ReallocateBudgetPage() {
               type="text"
               value={creationDate}
               readOnly
-              className="humi-input"
+              className="cnext-input"
               style={{ maxWidth: 240, background: 'var(--color-canvas-soft)' }}
             />
           </div>
@@ -290,14 +290,14 @@ export default function ReallocateBudgetPage() {
               type="text"
               value={tx('legalEntityOptions.ris')}
               readOnly
-              className="humi-input"
+              className="cnext-input"
               style={{ maxWidth: 240, background: 'var(--color-canvas-soft)' }}
             />
           </div>
         </div>
 
         {/* ── Benefit Exception Details — editable grid ── */}
-        <div className="humi-eyebrow" style={{ marginBottom: 12 }}>{tx('detailsSection')}</div>
+        <div className="cnext-eyebrow" style={{ marginBottom: 12 }}>{tx('detailsSection')}</div>
 
         <div style={{ overflowX: 'auto', marginBottom: 12 }}>
           <table className="w-full" style={{ borderCollapse: 'collapse', minWidth: 880 }}>
@@ -308,7 +308,7 @@ export default function ReallocateBudgetPage() {
                 ].map((c) => (
                   <th
                     key={c}
-                    className="humi-eyebrow"
+                    className="cnext-eyebrow"
                     style={{ textAlign: 'left', padding: '8px 10px', whiteSpace: 'nowrap' }}
                   >
                     {tx(`columns.${c}`)}
@@ -364,7 +364,7 @@ export default function ReallocateBudgetPage() {
                         onChange={(e) =>
                           updateRow(row.id, { adjustmentAmount: Number(e.target.value) })
                         }
-                        className="humi-input tabular-nums"
+                        className="cnext-input tabular-nums"
                         style={negative ? { color: 'var(--color-danger)' } : undefined}
                         aria-label={tx('columns.adjustmentAmount')}
                       />
@@ -379,7 +379,7 @@ export default function ReallocateBudgetPage() {
 
                     {/* Actions */}
                     <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
-                      <div className="humi-row" style={{ gap: 6 }}>
+                      <div className="cnext-row" style={{ gap: 6 }}>
                         <button
                           type="button"
                           onClick={() => moveRow(row.id, -1)}
@@ -422,7 +422,7 @@ export default function ReallocateBudgetPage() {
         <button
           type="button"
           onClick={addRow}
-          className="humi-row text-body text-ink-muted hover:text-accent transition-colors"
+          className="cnext-row text-body text-ink-muted hover:text-accent transition-colors"
           style={{
             gap: 8, alignItems: 'center', width: '100%', justifyContent: 'flex-start',
             padding: '10px 12px', borderRadius: 10, marginBottom: 20,
@@ -445,14 +445,14 @@ export default function ReallocateBudgetPage() {
         </div>
 
         {/* Actions */}
-        <div className="humi-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
-          <Link href={`/${locale}/admin/employees/${empId}`} className="humi-btn humi-btn--ghost">
+        <div className="cnext-row" style={{ justifyContent: 'flex-end', gap: 10 }}>
+          <Link href={`/${locale}/admin/employees/${empId}`} className="cnext-btn cnext-btn--ghost">
             {tx('buttons.cancel')}
           </Link>
           <button
             type="button"
             onClick={doSubmit}
-            className="humi-btn humi-btn--primary"
+            className="cnext-btn cnext-btn--primary"
           >
             {tx('buttons.save')}
           </button>

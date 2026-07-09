@@ -38,8 +38,8 @@ describe('ProfileEditPage — 4 sections render', () => {
   it('แสดง section headings: ข้อมูลส่วนตัว, ที่อยู่, ผู้ติดต่อฉุกเฉิน', () => {
     const { container } = renderPage()
 
-    // sections ใช้ humi-eyebrow class (div) ไม่ใช่ h2
-    const eyebrows = container.querySelectorAll('.humi-eyebrow')
+    // sections ใช้ cnext-eyebrow class (div) ไม่ใช่ h2
+    const eyebrows = container.querySelectorAll('.cnext-eyebrow')
     const texts = Array.from(eyebrows).map((el) => el.textContent ?? '')
 
     expect(texts.some((t) => t.includes('ข้อมูลส่วนตัว'))).toBe(true)

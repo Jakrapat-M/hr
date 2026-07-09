@@ -88,40 +88,40 @@ export default function FoundationLandingPage() {
   return (
     <div className="pb-8">
       {/* Hero */}
-      <div className="humi-card humi-grain" style={{ overflow: 'hidden', marginBottom: 20 }}>
+      <div className="cnext-card cnext-grain" style={{ overflow: 'hidden', marginBottom: 20 }}>
         <div
-          className="humi-blob humi-blob--teal hidden lg:block"
+          className="cnext-blob cnext-blob--teal hidden lg:block"
           style={{ width: 100, height: 130, right: -20, top: -20, opacity: 0.7 }}
           aria-hidden
         />
-        <div className="humi-eyebrow" style={{ marginBottom: 8 }}>
+        <div className="cnext-eyebrow" style={{ marginBottom: 8 }}>
           Admin · EC Foundation
         </div>
-        <h1 className="humi-hero-title" style={{ maxWidth: 500 }}>
+        <h1 className="cnext-hero-title" style={{ maxWidth: 500 }}>
           โครงสร้างองค์กร
           <br />
-          <span className="humi-hero-title-soft">
+          <span className="cnext-hero-title-soft">
             จัดการแผนก ตำแหน่ง และหน่วยธุรกิจ
           </span>
         </h1>
         <div
-          className="humi-row"
+          className="cnext-row"
           style={{ marginTop: 16, gap: 24, flexWrap: 'wrap' }}
         >
           <div>
-            <div className="humi-eyebrow" style={{ fontSize: 10 }}>หน่วยงานทั้งหมด</div>
+            <div className="cnext-eyebrow" style={{ fontSize: 10 }}>หน่วยงานทั้งหมด</div>
             <div className="font-display text-2xl font-semibold text-ink">
               {summary.orgUnitCount}
             </div>
           </div>
           <div>
-            <div className="humi-eyebrow" style={{ fontSize: 10 }}>ตำแหน่ง</div>
+            <div className="cnext-eyebrow" style={{ fontSize: 10 }}>ตำแหน่ง</div>
             <div className="font-display text-2xl font-semibold text-ink">
               {summary.positionCount}
             </div>
           </div>
           <div>
-            <div className="humi-eyebrow" style={{ fontSize: 10 }}>พนักงานในระบบ</div>
+            <div className="cnext-eyebrow" style={{ fontSize: 10 }}>พนักงานในระบบ</div>
             <div className="font-display text-2xl font-semibold" style={{ color: 'var(--color-accent)' }}>
               {summary.totalHeadcount.toLocaleString('th-TH')}
             </div>
@@ -137,23 +137,23 @@ export default function FoundationLandingPage() {
             <Link
               key={tile.href}
               href={tile.href}
-              className="humi-card group relative transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2"
+              className="cnext-card group relative transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2"
             >
-              <div className="humi-row" style={{ alignItems: 'flex-start', gap: 12 }}>
+              <div className="cnext-row" style={{ alignItems: 'flex-start', gap: 12 }}>
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
                   <Icon size={20} aria-hidden />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="humi-eyebrow">{tile.eyebrow}</div>
+                  <div className="cnext-eyebrow">{tile.eyebrow}</div>
                   <h2 className="mt-1 font-display text-base font-semibold text-ink group-hover:text-accent">
                     {tile.title}
                   </h2>
                   <p className="mt-1 text-small text-ink-soft">{tile.desc}</p>
-                  <div className="humi-row" style={{ marginTop: 10, gap: 8 }}>
-                    <span className="humi-tag">
+                  <div className="cnext-row" style={{ marginTop: 10, gap: 8 }}>
+                    <span className="cnext-tag">
                       {tile.statKey ? `${summary[tile.statKey]} ${tile.statLabel}` : tile.tag}
                     </span>
-                    <span className="humi-spacer" />
+                    <span className="cnext-spacer" />
                     <ArrowRight size={14} className="text-ink-muted group-hover:text-accent" aria-hidden />
                   </div>
                 </div>

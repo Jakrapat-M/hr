@@ -1,4 +1,4 @@
-// Humi-themed 404 page — replaces Next.js default black screen for missing
+// Cnext-themed 404 page — replaces Next.js default black screen for missing
 // routes. Most common hit today: /th/manager-dashboard (deleted in Path C-4
 // per SF concept; users have stale bookmarks).
 //
@@ -37,7 +37,7 @@ export default function LocaleNotFound() {
         <Compass size={28} aria-hidden />
       </div>
 
-      <div className="humi-eyebrow">404 — ไม่พบหน้าที่ค้นหา</div>
+      <div className="cnext-eyebrow">404 — ไม่พบหน้าที่ค้นหา</div>
 
       <h1
         style={{
@@ -59,7 +59,7 @@ export default function LocaleNotFound() {
           lineHeight: 1.6,
         }}
       >
-        บางฟีเจอร์ของ Humi ถูกจัดเรียงใหม่ตาม SuccessFactors design pattern —
+        บางฟีเจอร์ของ Cnext ถูกจัดเรียงใหม่ตาม SuccessFactors design pattern —
         เมนูผู้จัดการรวมอยู่ใน &quot;เมนูลัดของผู้จัดการ&quot; บนหน้าแรก. ลองกลับไปยังหน้าหลัก
         หรือดูข้อมูลของคุณเอง:
       </p>

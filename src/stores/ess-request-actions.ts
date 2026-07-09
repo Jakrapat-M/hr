@@ -32,6 +32,6 @@ export const useEssRequestActions = create<EssRequestActionsState>()(
         set((s) => ({ actions: { ...s.actions, [id]: 'resubmitted' } })),
       clear: () => set({ actions: {} }),
     }),
-    { name: 'humi-ess-request-actions' },
+    { name: 'cnext-ess-request-actions' },
   ),
 );

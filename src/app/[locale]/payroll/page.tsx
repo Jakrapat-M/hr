@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { DollarSign, Calculator, BarChart3, Calendar, ShieldCheck } from 'lucide-react';
-import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/humi';
+import { Card, CardTitle, DemoValuesDisclaimer } from '@/components/cnext';
 import { useAuthStore } from '@/stores/auth-store';
 import { canAccessModule } from '@/lib/rbac';
 

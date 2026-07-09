@@ -177,7 +177,7 @@ export const useClockPunches = create<ClockPunchesState>()(
       clear: () => set({ punches: [] }),
     }),
     {
-      name: 'humi-clock-punches',
+      name: 'cnext-clock-punches',
       storage: createJSONStorage(() => localStorage),
     },
   ),

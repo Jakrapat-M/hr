@@ -63,14 +63,14 @@ export async function switchLanguage(
 /**
  * Open mobile hamburger menu.
  *
- * Topbar's toggle button (`.humi-menu-btn`) always renders its aria-label in
+ * Topbar's toggle button (`.cnext-menu-btn`) always renders its aria-label in
  * Thai ("เปิดเมนู"/"ปิดเมนู" — not locale-aware), so an English `aria-label*=menu`
  * selector never matches; use the stable class instead. Waits for the drawer
- * (`#humi-mobile-drawer`, rendered conditionally by AppShell) to finish its
+ * (`#cnext-mobile-drawer`, rendered conditionally by AppShell) to finish its
  * slide-in animation before returning, so callers can assert against it
  * immediately.
  */
 export async function openMobileMenu(page: Page): Promise<void> {
-  await page.locator('.humi-menu-btn').click();
-  await page.locator('#humi-mobile-drawer').waitFor({ state: 'visible' });
+  await page.locator('.cnext-menu-btn').click();
+  await page.locator('#cnext-mobile-drawer').waitFor({ state: 'visible' });
 }

@@ -54,7 +54,7 @@ afterEach(() => {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-/** HUMI_MY_PROFILE.comp.base = '฿ 82,500'
+/** CNEXT_MY_PROFILE.comp.base = '฿ 82,500'
  *  maskCurrency now hides EVERY digit (no trailing-digit leak):
  *  masked output = '฿ ••,•••'
  */

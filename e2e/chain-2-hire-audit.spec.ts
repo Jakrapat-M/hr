@@ -66,7 +66,7 @@ async function seedWizardAtReviewStep(page: import('@playwright/test').Page): Pr
       },
       contact: {
         phones: [{ type: 'mobile', value: '0812345678', isPrimary: true }],
-        emails: [{ type: 'personal', value: 'somchai.test@humi.test', isPrimary: true }],
+        emails: [{ type: 'personal', value: 'somchai.test@cnext.test', isPrimary: true }],
         jobRelationships: [],
       },
       name: { firstNameTh: 'สมชาย', lastNameTh: 'ใจดี', firstNameEn: 'Somchai', lastNameEn: 'Jaidee' },
@@ -112,7 +112,7 @@ async function seedWizardAtReviewStep(page: import('@playwright/test').Page): Pr
 }
 
 /**
- * Seed the humi-hire-audit localStorage key with one canonical entry so that
+ * Seed the cnext-hire-audit localStorage key with one canonical entry so that
  * HRBP report tests never depend on the HR Admin test having run first.
  */
 async function seedHireAudit(page: import('@playwright/test').Page): Promise<void> {
@@ -124,21 +124,21 @@ async function seedHireAudit(page: import('@playwright/test').Page): Promise<voi
         position: 'Software Engineer',
         company: 'CEN',
         hireDate: '2026-05-01',
-        hrbpEmail: 'hrbp@humi.test',
+        hrbpEmail: 'hrbp@cnext.test',
         hrAdminName: 'Narong Prasert',
         hrAdminId: 'HRA001',
         sentAt: '2026-05-01T05:00:00.000Z',
       },
     ],
   });
-  await page.evaluate((v) => localStorage.setItem('humi-hire-audit', v), audit);
+  await page.evaluate((v) => localStorage.setItem('cnext-hire-audit', v), audit);
 }
 
-/** Clear all humi-* localStorage keys except humi-auth. */
+/** Clear all cnext-* localStorage keys except cnext-auth. */
 async function clearNonAuthStorage(page: import('@playwright/test').Page): Promise<void> {
   await page.evaluate(() => {
     Object.keys(localStorage)
-      .filter((k) => k.startsWith('humi-') && k !== 'humi-auth')
+      .filter((k) => k.startsWith('cnext-') && k !== 'cnext-auth')
       .forEach((k) => localStorage.removeItem(k));
   });
 }
@@ -165,7 +165,7 @@ test.describe.serial('Chain 2 — Hire → HRBP audit panel (BRD #109)', () => {
 
       // Clear audit store, then pre-seed wizard at step 3 (Review)
       await clearNonAuthStorage(page);
-      await page.evaluate(() => localStorage.removeItem('humi-hire-audit'));
+      await page.evaluate(() => localStorage.removeItem('cnext-hire-audit'));
       await seedWizardAtReviewStep(page);
 
       // Navigate to hire page — wizard loads seeded state (step 3, valid).
@@ -183,7 +183,7 @@ test.describe.serial('Chain 2 — Hire → HRBP audit panel (BRD #109)', () => {
 
       // Capture audit entries count before submit
       const countBefore: number = await page.evaluate(() => {
-        const raw = localStorage.getItem('humi-hire-audit');
+        const raw = localStorage.getItem('cnext-hire-audit');
         if (!raw) return 0;
         try {
           const parsed = JSON.parse(raw);
@@ -200,7 +200,7 @@ test.describe.serial('Chain 2 — Hire → HRBP audit panel (BRD #109)', () => {
         .poll(
           async () => {
             const raw: string | null = await page.evaluate(() =>
-              localStorage.getItem('humi-hire-audit'),
+              localStorage.getItem('cnext-hire-audit'),
             );
             if (!raw) return 0;
             try {
@@ -217,7 +217,7 @@ test.describe.serial('Chain 2 — Hire → HRBP audit panel (BRD #109)', () => {
       // Verify the new entry has expected fields
       const entries: Array<{ candidateName: string; position: string }> =
         await page.evaluate(() => {
-          const raw = localStorage.getItem('humi-hire-audit');
+          const raw = localStorage.getItem('cnext-hire-audit');
           if (!raw) return [];
           try {
             return JSON.parse(raw)?.state?.entries ?? [];

@@ -4,7 +4,7 @@
  * SmartTabs — 3-tab nav for /quick-approve (STA-28 PR-B v2)
  *
  * Tabs: Action Required / Watching / History / All (for HR personas)
- * Active tab: bg-accent-soft text-accent (Humi tokens only)
+ * Active tab: bg-accent-soft text-accent (Cnext tokens only)
  * Count badges derived from parent's single useMemo (AC-3)
  */
 

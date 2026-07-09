@@ -33,7 +33,7 @@ const DEP_RELATION_LABEL: Record<string, { th: string; en: string }> = {
 function ReadOnlyField({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
-      <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{label}</div>
+      <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{label}</div>
       <div className="text-body text-ink">{value && value.length > 0 ? value : '—'}</div>
     </div>
   )
@@ -47,7 +47,7 @@ function HistoryList({ rows, isTh }: { rows: PersonalHistoryRow[]; isTh: boolean
   return (
     <div className="grid gap-3 md:grid-cols-2">
       {rows.map((row) => (
-        <div key={row.id} className="humi-card humi-card--tight" style={{ background: 'var(--color-canvas-soft)' }}>
+        <div key={row.id} className="cnext-card cnext-card--tight" style={{ background: 'var(--color-canvas-soft)' }}>
           <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>{row.primary}</div>
           <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', marginTop: 2 }}>
             {[row.secondary, row.meta].filter(Boolean).join(' · ')}
@@ -146,11 +146,11 @@ export function EmployeePersonalSections({ employeeId, isTh, roles }: EmployeePe
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {p.emergencyContacts.map((c) => (
-              <div key={c.id} className="humi-card humi-card--tight" style={{ background: 'var(--color-canvas-soft)' }}>
+              <div key={c.id} className="cnext-card cnext-card--tight" style={{ background: 'var(--color-canvas-soft)' }}>
                 <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
                   {c.name}
                   {c.primaryFlag && (
-                    <span className="humi-tag humi-tag--teal" style={{ marginLeft: 8, fontSize: 11 }}>
+                    <span className="cnext-tag cnext-tag--teal" style={{ marginLeft: 8, fontSize: 11 }}>
                       {isTh ? 'หลัก' : 'Primary'}
                     </span>
                   )}
@@ -177,7 +177,7 @@ export function EmployeePersonalSections({ employeeId, isTh, roles }: EmployeePe
             {p.dependents.map((dep) => {
               const rel = DEP_RELATION_LABEL[dep.relation] ?? DEP_RELATION_LABEL.other
               return (
-                <div key={dep.id} className="humi-card humi-card--tight" style={{ background: 'var(--color-canvas-soft)' }}>
+                <div key={dep.id} className="cnext-card cnext-card--tight" style={{ background: 'var(--color-canvas-soft)' }}>
                   <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
                     {isTh ? dep.fullNameTh : dep.fullNameEn || dep.fullNameTh}
                   </div>
@@ -200,7 +200,7 @@ export function EmployeePersonalSections({ employeeId, isTh, roles }: EmployeePe
         isTh ? 'การติดต่อและที่อยู่' : 'Contact & address',
         <div className="grid gap-3 md:grid-cols-2">
           <div>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'โทรศัพท์' : 'Phone'}</div>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'โทรศัพท์' : 'Phone'}</div>
             {p.phones.length === 0 ? (
               <div className="text-body text-ink">—</div>
             ) : (
@@ -214,7 +214,7 @@ export function EmployeePersonalSections({ employeeId, isTh, roles }: EmployeePe
             )}
           </div>
           <div>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'อีเมล' : 'Email'}</div>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'อีเมล' : 'Email'}</div>
             {p.emails.length === 0 ? (
               <div className="text-body text-ink">—</div>
             ) : (
@@ -227,7 +227,7 @@ export function EmployeePersonalSections({ employeeId, isTh, roles }: EmployeePe
             )}
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
-            <div className="humi-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'ที่อยู่' : 'Address'}</div>
+            <div className="cnext-eyebrow" style={{ marginBottom: 4 }}>{isTh ? 'ที่อยู่' : 'Address'}</div>
             <div className="text-body text-ink">
               {p.address && p.address.houseNo
                 ? [

@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Trash2, Plus, Pencil, Layers, Upload, Download, ChevronDown } from 'lucide-react';
 
-import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal, Capability } from '@/components/humi';
+import { Card, CardEyebrow, CardTitle, Button, DataTable, Modal, Capability } from '@/components/cnext';
 import { rulesToCsv, downloadCsv, parseRulesCsv } from './rules-csv';
-import type { DataTableColumn } from '@/components/humi/DataTable';
+import type { DataTableColumn } from '@/components/cnext/DataTable';
 import { useToast } from '@/components/ui/toast';
 import { useAuthStore } from '@/stores/auth-store';
 import { useBenefitHistoryStore } from '@/stores/benefit-history-store';
@@ -354,7 +354,7 @@ export function EntitlementRulesManager() {
         </div>
       </div>
 
-      {/* Add modal — RuleForm in a Humi Modal (matches the benefit plan module) */}
+      {/* Add modal — RuleForm in a Cnext Modal (matches the benefit plan module) */}
       <Modal open={showAddForm} onClose={() => setShowAddForm(false)} title={t('createRule')} widthClass="max-w-3xl">
         <div className="space-y-4">
           <ActionTagChip mode="create" label={t('tagCreate')} />

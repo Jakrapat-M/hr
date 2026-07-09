@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useLocale } from 'next-intl';
-import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/humi';
-import { FileUploadField } from '@/components/humi/FileUploadField';
-import { Capability } from '@/components/humi';
+import { Button, Card, CardEyebrow, CardTitle, FormField, FormInput } from '@/components/cnext';
+import { FileUploadField } from '@/components/cnext/FileUploadField';
+import { Capability } from '@/components/cnext';
 import type { BenefitPlan } from '@/data/benefits/plan-registry';
 import {
   bucketsForPlan,

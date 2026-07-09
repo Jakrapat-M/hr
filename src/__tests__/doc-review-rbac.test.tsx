@@ -60,7 +60,7 @@ async function renderGuarded() {
 
 describe('P4 — /hrbp/doc-review RBAC (SPD reaches it)', () => {
   test('SPD persona reaches the review queue (no AccessDenied)', async () => {
-    setPersona(['spd'], 'spd@humi.test');
+    setPersona(['spd'], 'spd@cnext.test');
     await renderGuarded();
 
     // Guard passed — denial surface absent.
@@ -71,7 +71,7 @@ describe('P4 — /hrbp/doc-review RBAC (SPD reaches it)', () => {
   });
 
   test('employee persona is denied IN PLACE (AccessDenied, no redirect)', async () => {
-    setPersona(['employee'], 'employee@humi.test');
+    setPersona(['employee'], 'employee@cnext.test');
     await renderGuarded();
 
     expect(screen.getByText(/Access Denied/i)).toBeInTheDocument();

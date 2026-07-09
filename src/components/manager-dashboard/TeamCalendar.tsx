@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Card, CardTitle, Button } from '@/components/humi';
+import { Card, CardTitle, Button } from '@/components/cnext';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CalendarEvent } from '@/lib/manager-dashboard-api';
 import { cn } from '@/lib/utils';

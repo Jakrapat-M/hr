@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Download, Upload, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { Card, CardTitle, Button, DataTable, type DataTableColumn } from '@/components/humi';
+import { Card, CardTitle, Button, DataTable, type DataTableColumn } from '@/components/cnext';
 import { useAuthStore } from '@/stores/auth-store';
 import { hasAnyRole, hasRole } from '@/lib/rbac';
 import { exportToCSV, type CsvColumn } from '@/lib/admin/utils/csvExport';

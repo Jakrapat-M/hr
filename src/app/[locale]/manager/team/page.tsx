@@ -26,11 +26,11 @@ import {
   EmptyState,
   Avatar,
   type DataTableColumn,
-} from '@/components/humi';
+} from '@/components/cnext';
 import { useAuthStore } from '@/stores/auth-store';
 import { ALL_PORTED_EMPLOYEES } from '@/lib/all-ported-employees';
 import { filterEmployeesByPersona, resolveCurrentEmpId } from '@/lib/scope-filter';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
 
 const STATUS_LABELS: Record<string, { th: string; en: string }> = {
   active: { th: 'ทำงานอยู่', en: 'Active' },
@@ -39,10 +39,10 @@ const STATUS_LABELS: Record<string, { th: string; en: string }> = {
   terminated: { th: 'พ้นสภาพ', en: 'Terminated' },
 };
 
-// HumiEmployee.avatarTone carries 'indigo', which the Avatar tone variant does
+// CnextEmployee.avatarTone carries 'indigo', which the Avatar tone variant does
 // not expose — map it onto the nearest supported tone.
 type AvatarTone = 'teal' | 'sage' | 'butter' | 'ink';
-function avatarTone(tone: HumiEmployee['avatarTone']): AvatarTone {
+function avatarTone(tone: CnextEmployee['avatarTone']): AvatarTone {
   return tone === 'indigo' ? 'teal' : tone;
 }
 
@@ -82,7 +82,7 @@ export default function ManagerTeamPage() {
   const count = reports.length;
   const headerLine = t('scope', { count });
 
-  const columns: DataTableColumn<HumiEmployee>[] = [
+  const columns: DataTableColumn<CnextEmployee>[] = [
     {
       id: 'name',
       header: t('colName'),
@@ -144,7 +144,7 @@ export default function ManagerTeamPage() {
             caption={t('caption')}
             captionVisuallyHidden
             columns={columns}
-            rows={reports as HumiEmployee[]}
+            rows={reports as CnextEmployee[]}
             rowKey={(r) => r.id}
           />
         )}

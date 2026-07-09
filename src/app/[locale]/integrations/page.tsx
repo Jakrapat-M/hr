@@ -2,28 +2,28 @@
 
 import { useMemo, useState } from 'react';
 import { Check, Link2, Plus, Search } from 'lucide-react';
-import { Button, CardEyebrow } from '@/components/humi';
+import { Button, CardEyebrow } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 import {
-  HUMI_INTEGRATION_CATEGORIES,
-  HUMI_INTEGRATION_KPIS,
-  HUMI_INTEGRATIONS,
+  CNEXT_INTEGRATION_CATEGORIES,
+  CNEXT_INTEGRATION_KPIS,
+  CNEXT_INTEGRATIONS,
   type IntegrationShape,
-} from '@/lib/humi-mock-data';
-import { useIntegrationsStore } from '@/stores/humi-integrations-slice';
+} from '@/lib/cnext-mock-data';
+import { useIntegrationsStore } from '@/stores/cnext-integrations-slice';
 
-// Maps KPI accentClass → humi-stat-card tone modifier
+// Maps KPI accentClass → cnext-stat-card tone modifier
 const KPI_TONE_MAP: Record<string, string> = {
-  'bg-accent': 'humi-stat-card--accent',
-  'bg-[color:var(--color-warning)]': 'humi-stat-card--warn',
-  'bg-[color:var(--color-sage)]': 'humi-stat-card--sage',
-  'bg-[color:var(--color-butter)]': 'humi-stat-card--butter',
+  'bg-accent': 'cnext-stat-card--accent',
+  'bg-[color:var(--color-warning)]': 'cnext-stat-card--warn',
+  'bg-[color:var(--color-sage)]': 'cnext-stat-card--sage',
+  'bg-[color:var(--color-butter)]': 'cnext-stat-card--butter',
 };
 
-// Maps integration markToneClass → humi-feature tone modifier
+// Maps integration markToneClass → cnext-feature tone modifier
 const MARK_FEATURE_TONE: Record<string, string> = {
-  'bg-[color:var(--color-sage)]': 'humi-feature--sage',
-  'bg-[color:var(--color-butter)]': 'humi-feature--butter',
+  'bg-[color:var(--color-sage)]': 'cnext-feature--sage',
+  'bg-[color:var(--color-butter)]': 'cnext-feature--butter',
   'bg-[color:var(--color-accent)]': '',
   'bg-ink': '',
   'bg-[color:var(--color-ink-soft)]': '',
@@ -31,7 +31,7 @@ const MARK_FEATURE_TONE: Record<string, string> = {
 };
 
 // ════════════════════════════════════════════════════════════
-// Humi /integrations (A14)
+// Cnext /integrations (A14)
 // Port of screens/integrations.jsx — retail → generic HR.
 // Phase C: toggle switch + category filter bound to Zustand slice.
 // ════════════════════════════════════════════════════════════
@@ -116,7 +116,7 @@ export default function IntegrationsPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return HUMI_INTEGRATIONS.filter((i) => {
+    return CNEXT_INTEGRATIONS.filter((i) => {
       const matchCat = category === 'all' || i.category === category;
       const matchQuery =
         !q ||
@@ -151,10 +151,10 @@ export default function IntegrationsPage() {
           aria-label="สรุปการเชื่อมต่อ"
           className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4"
         >
-          {HUMI_INTEGRATION_KPIS.map((kpi) => (
+          {CNEXT_INTEGRATION_KPIS.map((kpi) => (
             <div
               key={kpi.key}
-              className={cn('humi-stat-card', KPI_TONE_MAP[kpi.accentClass])}
+              className={cn('cnext-stat-card', KPI_TONE_MAP[kpi.accentClass])}
             >
               <CardEyebrow>{kpi.label}</CardEyebrow>
               <p className="mt-1.5 font-display text-3xl font-semibold leading-none tracking-tight text-ink">
@@ -171,7 +171,7 @@ export default function IntegrationsPage() {
             aria-label="หมวดหมู่ระบบ"
             className="flex overflow-x-auto flex-nowrap gap-1"
           >
-            {HUMI_INTEGRATION_CATEGORIES.map((cat) => {
+            {CNEXT_INTEGRATION_CATEGORIES.map((cat) => {
               const active = cat.key === category;
               return (
                 <button
@@ -212,7 +212,7 @@ export default function IntegrationsPage() {
           className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
         >
           {filtered.map((item) => {
-            const categoryLabel = HUMI_INTEGRATION_CATEGORIES.find(
+            const categoryLabel = CNEXT_INTEGRATION_CATEGORIES.find(
               (c) => c.key === item.category
             )?.label;
             const isEnabled = enabled.has(item.id);
@@ -220,11 +220,11 @@ export default function IntegrationsPage() {
             return (
               <div
                 key={item.id}
-                className={cn('humi-feature flex flex-col', MARK_FEATURE_TONE[item.markToneClass] ?? '')}
+                className={cn('cnext-feature flex flex-col', MARK_FEATURE_TONE[item.markToneClass] ?? '')}
               >
                 <div className="flex items-start gap-3">
                   {/* Logo chip — square ~44px with bg + rounded-md */}
-                  <span aria-hidden className="humi-logo-chip shrink-0 p-0 !gap-0 !font-normal h-11 w-11 justify-center rounded-[var(--radius-sm)]">
+                  <span aria-hidden className="cnext-logo-chip shrink-0 p-0 !gap-0 !font-normal h-11 w-11 justify-center rounded-[var(--radius-sm)]">
                     <IntegrationMark
                       shape={item.shape}
                       toneClass={item.markToneClass}
@@ -251,7 +251,7 @@ export default function IntegrationsPage() {
                       <span className="text-sm text-ink-muted">
                         ซิงค์ล่าสุด · 4 นาทีที่แล้ว
                       </span>
-                      {/* humi-toggle — ml-auto tap region min-h-[44px] for mobile touch-target */}
+                      {/* cnext-toggle — ml-auto tap region min-h-[44px] for mobile touch-target */}
                       <span className="ml-auto inline-flex min-h-[44px] items-center">
                         <button
                           type="button"
@@ -259,7 +259,7 @@ export default function IntegrationsPage() {
                           aria-checked={isEnabled}
                           aria-label={`สลับการซิงค์ของ ${item.name}`}
                           onClick={() => toggle(item.id)}
-                          className={cn('humi-toggle', isEnabled && 'humi-toggle--on')}
+                          className={cn('cnext-toggle', isEnabled && 'cnext-toggle--on')}
                         />
                       </span>
                     </>

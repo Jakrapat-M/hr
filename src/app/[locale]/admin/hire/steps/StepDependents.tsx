@@ -146,9 +146,9 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
             {/* ─── Relationship ─────────────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
               <fieldset className="md:col-span-2">
-                <label htmlFor={`dep-rel-${idx}`} className="humi-label">
+                <label htmlFor={`dep-rel-${idx}`} className="cnext-label">
                   ความสัมพันธ์ / Relationship
-                  <span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                  <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
                 </label>
                 <input
                   id={`dep-rel-${idx}`}
@@ -158,7 +158,7 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                   value={dep.relationshipType}
                   onChange={(e) => updateEntry(idx, { relationshipType: e.target.value })}
                   aria-invalid={relError ? 'true' : 'false'}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
                 <datalist id={`dep-rel-hints-${idx}`}>
                   {RELATIONSHIP_HINTS.map((hint) => (
@@ -174,7 +174,7 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
 
               {/* ─── EN Name block ──────────────────────────────────────── */}
               <fieldset>
-                <label htmlFor={`dep-sal-en-${idx}`} className="humi-label">
+                <label htmlFor={`dep-sal-en-${idx}`} className="cnext-label">
                   คำนำหน้า (EN) / Salutation (EN)
                 </label>
                 <input
@@ -183,15 +183,15 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                   placeholder="Mr. / Ms. / Mrs."
                   value={dep.salutationEn ?? ''}
                   onChange={(e) => updateEntry(idx, { salutationEn: e.target.value || null })}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
               </fieldset>
 
               <fieldset>
-                <label htmlFor={`dep-fn-en-${idx}`} className="humi-label">
+                <label htmlFor={`dep-fn-en-${idx}`} className="cnext-label">
                   ชื่อ (EN) / First Name (EN)
                   {dep.firstNameLocal.trim() === '' && (
-                    <span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                    <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
                   )}
                 </label>
                 <input
@@ -201,12 +201,12 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                   value={dep.firstNameEn}
                   onChange={(e) => updateEntry(idx, { firstNameEn: e.target.value })}
                   aria-invalid={nameError ? 'true' : 'false'}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
               </fieldset>
 
               <fieldset>
-                <label htmlFor={`dep-ln-en-${idx}`} className="humi-label">
+                <label htmlFor={`dep-ln-en-${idx}`} className="cnext-label">
                   นามสกุล (EN) / Last Name (EN)
                 </label>
                 <input
@@ -215,13 +215,13 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                   placeholder="Last Name"
                   value={dep.lastNameEn}
                   onChange={(e) => updateEntry(idx, { lastNameEn: e.target.value })}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
               </fieldset>
 
               {/* ─── Local Name block ────────────────────────────────────── */}
               <fieldset>
-                <label htmlFor={`dep-sal-local-${idx}`} className="humi-label">
+                <label htmlFor={`dep-sal-local-${idx}`} className="cnext-label">
                   คำนำหน้า (ไทย) / Salutation (Local)
                 </label>
                 <input
@@ -230,15 +230,15 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                   placeholder="นาย / นางสาว / นาง"
                   value={dep.salutationLocal ?? ''}
                   onChange={(e) => updateEntry(idx, { salutationLocal: e.target.value || null })}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
               </fieldset>
 
               <fieldset>
-                <label htmlFor={`dep-fn-local-${idx}`} className="humi-label">
+                <label htmlFor={`dep-fn-local-${idx}`} className="cnext-label">
                   ชื่อ (ไทย) / First Name (Local)
                   {dep.firstNameEn.trim() === '' && (
-                    <span aria-hidden="true" className="humi-asterisk ml-1">*</span>
+                    <span aria-hidden="true" className="cnext-asterisk ml-1">*</span>
                   )}
                 </label>
                 <input
@@ -248,12 +248,12 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                   value={dep.firstNameLocal}
                   onChange={(e) => updateEntry(idx, { firstNameLocal: e.target.value })}
                   aria-invalid={nameError ? 'true' : 'false'}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
               </fieldset>
 
               <fieldset>
-                <label htmlFor={`dep-ln-local-${idx}`} className="humi-label">
+                <label htmlFor={`dep-ln-local-${idx}`} className="cnext-label">
                   นามสกุล (ไทย) / Last Name (Local)
                 </label>
                 <input
@@ -262,7 +262,7 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                   placeholder="นามสกุล"
                   value={dep.lastNameLocal}
                   onChange={(e) => updateEntry(idx, { lastNameLocal: e.target.value })}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
               </fieldset>
 
@@ -274,7 +274,7 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
 
               {/* ─── Personal details ────────────────────────────────────── */}
               <fieldset>
-                <label htmlFor={`dep-nat-${idx}`} className="humi-label">
+                <label htmlFor={`dep-nat-${idx}`} className="cnext-label">
                   สัญชาติ / Nationality (ISO3)
                 </label>
                 <input
@@ -284,12 +284,12 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                   maxLength={3}
                   value={dep.nationality ?? ''}
                   onChange={(e) => updateEntry(idx, { nationality: e.target.value.toUpperCase() || null })}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
               </fieldset>
 
               <fieldset>
-                <label htmlFor={`dep-dob-${idx}`} className="humi-label">
+                <label htmlFor={`dep-dob-${idx}`} className="cnext-label">
                   วันเกิด / Date of Birth
                 </label>
                 <input
@@ -297,12 +297,12 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                   type="date"
                   value={dep.dateOfBirth ?? ''}
                   onChange={(e) => updateEntry(idx, { dateOfBirth: e.target.value || null })}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
               </fieldset>
 
               <fieldset>
-                <label htmlFor={`dep-country-${idx}`} className="humi-label">
+                <label htmlFor={`dep-country-${idx}`} className="cnext-label">
                   ประเทศ / Country (ISO3)
                 </label>
                 <input
@@ -312,7 +312,7 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                   maxLength={3}
                   value={dep.country ?? 'THA'}
                   onChange={(e) => updateEntry(idx, { country: e.target.value.toUpperCase() || null })}
-                  className="humi-input w-full"
+                  className="cnext-input w-full"
                 />
               </fieldset>
 
@@ -339,7 +339,7 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
 
                 <fieldset>
-                  <label htmlFor={`dep-nid-type-${idx}`} className="humi-label">
+                  <label htmlFor={`dep-nid-type-${idx}`} className="cnext-label">
                     ประเภทบัตร / Card Type
                   </label>
                   <input
@@ -348,12 +348,12 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="เช่น Thai National ID, Passport"
                     value={dep.nationalIdCardType ?? ''}
                     onChange={(e) => updateEntry(idx, { nationalIdCardType: e.target.value || null })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 <fieldset>
-                  <label htmlFor={`dep-nid-country-${idx}`} className="humi-label">
+                  <label htmlFor={`dep-nid-country-${idx}`} className="cnext-label">
                     ประเทศออกบัตร / ID Country (ISO3)
                   </label>
                   <input
@@ -363,12 +363,12 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     maxLength={3}
                     value={dep.nationalIdCountry ?? ''}
                     onChange={(e) => updateEntry(idx, { nationalIdCountry: e.target.value.toUpperCase() || null })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 <fieldset className="md:col-span-2">
-                  <label htmlFor={`dep-nid-${idx}`} className="humi-label">
+                  <label htmlFor={`dep-nid-${idx}`} className="cnext-label">
                     เลขบัตร / ID Number
                   </label>
                   <input
@@ -377,7 +377,7 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="หมายเลขบัตรประจำตัว"
                     value={dep.nationalId}
                     onChange={(e) => updateEntry(idx, { nationalId: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
@@ -392,7 +392,7 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
 
                 <fieldset>
-                  <label htmlFor={`dep-phone-${idx}`} className="humi-label">
+                  <label htmlFor={`dep-phone-${idx}`} className="cnext-label">
                     เบอร์โทร / Phone
                   </label>
                   <input
@@ -401,12 +401,12 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="0812345678"
                     value={dep.phone}
                     onChange={(e) => updateEntry(idx, { phone: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 <fieldset>
-                  <label htmlFor={`dep-email-${idx}`} className="humi-label">
+                  <label htmlFor={`dep-email-${idx}`} className="cnext-label">
                     อีเมล / Email
                   </label>
                   <input
@@ -415,7 +415,7 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="example@email.com"
                     value={dep.email}
                     onChange={(e) => updateEntry(idx, { email: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
@@ -433,7 +433,7 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                 </fieldset>
 
                 <fieldset className="md:col-span-2">
-                  <label htmlFor={`dep-addr-${idx}`} className="humi-label">
+                  <label htmlFor={`dep-addr-${idx}`} className="cnext-label">
                     ที่อยู่ / Address
                   </label>
                   <input
@@ -442,13 +442,13 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="บ้านเลขที่ ถนน แขวง เขต จังหวัด"
                     value={dep.addressLine1}
                     onChange={(e) => updateEntry(idx, { addressLine1: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 {/* STA-82: Building / Floor / Street */}
                 <fieldset>
-                  <label htmlFor={`dep-building-${idx}`} className="humi-label">
+                  <label htmlFor={`dep-building-${idx}`} className="cnext-label">
                     อาคาร / Building
                   </label>
                   <input
@@ -457,12 +457,12 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="ชื่ออาคาร"
                     value={dep.building}
                     onChange={(e) => updateEntry(idx, { building: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 <fieldset>
-                  <label htmlFor={`dep-floor-${idx}`} className="humi-label">
+                  <label htmlFor={`dep-floor-${idx}`} className="cnext-label">
                     ชั้น / Floor
                   </label>
                   <input
@@ -471,13 +471,13 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="เช่น 3, ชั้น 3"
                     value={dep.floor}
                     onChange={(e) => updateEntry(idx, { floor: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 {/* BA row 130: Moo (หมู่ที่) */}
                 <fieldset>
-                  <label htmlFor={`dep-moo-${idx}`} className="humi-label">
+                  <label htmlFor={`dep-moo-${idx}`} className="cnext-label">
                     หมู่ที่ / Moo
                   </label>
                   <input
@@ -486,13 +486,13 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="เช่น 5"
                     value={dep.moo}
                     onChange={(e) => updateEntry(idx, { moo: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 {/* BA row 131: Lane/Soi (ซอย) */}
                 <fieldset>
-                  <label htmlFor={`dep-soi-${idx}`} className="humi-label">
+                  <label htmlFor={`dep-soi-${idx}`} className="cnext-label">
                     ซอย / Lane / Soi
                   </label>
                   <input
@@ -501,12 +501,12 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="เช่น สนามบินน้ำ"
                     value={dep.soi}
                     onChange={(e) => updateEntry(idx, { soi: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 
                 <fieldset className="md:col-span-2">
-                  <label htmlFor={`dep-street-${idx}`} className="humi-label">
+                  <label htmlFor={`dep-street-${idx}`} className="cnext-label">
                     ถนน / Street
                   </label>
                   <input
@@ -515,7 +515,7 @@ export default function StepDependents({ onValidChange }: StepDependentsProps) {
                     placeholder="ชื่อถนน"
                     value={dep.street}
                     onChange={(e) => updateEntry(idx, { street: e.target.value })}
-                    className="humi-input w-full"
+                    className="cnext-input w-full"
                   />
                 </fieldset>
 

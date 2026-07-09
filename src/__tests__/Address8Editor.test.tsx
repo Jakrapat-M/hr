@@ -9,7 +9,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Address8Editor, isAddress8Valid } from '@/components/profile/Address8Editor';
-import type { Address8 } from '@/stores/humi-profile-slice';
+import type { Address8 } from '@/stores/cnext-profile-slice';
 
 // ── Mock next-intl ─────────────────────────────────────────────────────────────
 vi.mock('next-intl', () => ({
@@ -28,8 +28,8 @@ vi.mock('next-intl', () => ({
   },
 }));
 
-// ── Mock humi FormField ────────────────────────────────────────────────────────
-vi.mock('@/components/humi', () => ({
+// ── Mock cnext FormField ────────────────────────────────────────────────────────
+vi.mock('@/components/cnext', () => ({
   FormField: ({
     children,
     label,

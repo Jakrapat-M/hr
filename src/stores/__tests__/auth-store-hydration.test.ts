@@ -89,7 +89,7 @@ describe('auth-store partialize allowlist', () => {
     useAuthStore.getState().setUser({
       id: 'U1',
       name: 'Test User',
-      email: 'test@humi.test',
+      email: 'test@cnext.test',
       roles: ['manager'],
     });
     const fullState = useAuthStore.getState();
@@ -99,7 +99,7 @@ describe('auth-store partialize allowlist', () => {
     expect(partial).toMatchObject({
       userId: 'U1',
       username: 'Test User',
-      email: 'test@humi.test',
+      email: 'test@cnext.test',
       roles: ['manager'],
       isAuthenticated: true,
     });

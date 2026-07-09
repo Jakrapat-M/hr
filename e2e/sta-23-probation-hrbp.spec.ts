@@ -11,7 +11,7 @@ async function asRole(browser: Browser, roles: string[]) {
   await ctx.route('**/api/auth/session', (r) => r.fulfill({ status: 200, body: '{}' }))
   await ctx.addInitScript((roles) => {
     localStorage.setItem(
-      'humi-auth',
+      'cnext-auth',
       JSON.stringify({ state: { userId: 'u1', username: 'U', email: 'a@e.com', roles, isAuthenticated: true }, version: 0 }),
     )
   }, roles)

@@ -1,6 +1,6 @@
 /**
- * screens.smoke.test.tsx — Humi 4-screen smoke tests
- * AC-2: ≥ 5 core Humi screens implemented (render ไม่ crash)
+ * screens.smoke.test.tsx — Cnext 4-screen smoke tests
+ * AC-2: ≥ 5 core Cnext screens implemented (render ไม่ crash)
  * AC-6: Thai-primary — primary headings ต้องเป็นภาษาไทย
  *
  * Strategy: mock next-intl useTranslations ด้วย th.json keys จริง
@@ -52,7 +52,7 @@ vi.mock('next/navigation', () => ({
 // ใช้ lookup map แทน dynamic import เพื่อ test speed
 vi.mock('next-intl', () => {
   const translations: Record<string, Record<string, string>> = {
-    humiHome: {
+    cnextHome: {
       eyebrow: 'CneXt HR',
       title: 'ภาพรวม',
       subtitle: 'สรุปกิจกรรมและคำขอที่ต้องดำเนินการ',
@@ -99,21 +99,21 @@ vi.mock('next-intl', () => {
 // Import screens (after mocks are set up)
 // ────────────────────────────────────────────────────────────
 // Screens import ต้องอยู่หลัง vi.mock calls
-let HumiHomePage: React.ComponentType;
-let HumiProfilePage: React.ComponentType;
-let HumiIntegrationsPage: React.ComponentType;
+let CnextHomePage: React.ComponentType;
+let CnextProfilePage: React.ComponentType;
+let CnextIntegrationsPage: React.ComponentType;
 let OrgChartPage: React.ComponentType;
 
 beforeEach(async () => {
   // Dynamic import หลัง mocks ถูก apply
   const homeModule = await import('../home/page');
-  HumiHomePage = homeModule.default;
+  CnextHomePage = homeModule.default;
 
   const profileModule = await import('../profile/me/page');
-  HumiProfilePage = profileModule.default;
+  CnextProfilePage = profileModule.default;
 
   const integrationsModule = await import('../integrations/page');
-  HumiIntegrationsPage = integrationsModule.default;
+  CnextIntegrationsPage = integrationsModule.default;
 
   const orgModule = await import('../org-chart/page');
   OrgChartPage = orgModule.default;
@@ -124,32 +124,32 @@ beforeEach(async () => {
 // ────────────────────────────────────────────────────────────
 describe('Dashboard — home/page.tsx (AC-2, AC-6)', () => {
   it('render ไม่ crash (no throw)', () => {
-    expect(() => render(<HumiHomePage />)).not.toThrow();
+    expect(() => render(<CnextHomePage />)).not.toThrow();
   });
 
   it('h1 มี Thai text (greeting dynamic — Phase C ใช้ greeting แทน page title)', () => {
-    render(<HumiHomePage />);
+    render(<CnextHomePage />);
     const h1 = screen.getByRole('heading', { level: 1 });
     // Phase C: h1 เป็น greeting dynamic "สวัสดีตอน..." ไม่ใช่ static title
     expect(h1.textContent).toMatch(/[฀-๿]/);
   });
 
   it('แสดง Thai content ใน page (AC-2 content present)', () => {
-    render(<HumiHomePage />);
+    render(<CnextHomePage />);
     const pageText = document.body.textContent ?? '';
     // ต้องมี Thai text ในหน้า
     expect(pageText).toMatch(/[฀-๿]/);
   });
 
   it('แสดง button elements (action area present — AC-2)', () => {
-    render(<HumiHomePage />);
+    render(<CnextHomePage />);
     const buttons = screen.queryAllByRole('button');
     // Home page มี buttons (approve, shortcut tiles)
     expect(buttons.length).toBeGreaterThan(0);
   });
 
   it('ไม่มี English-only primary heading (Thai-primary sweep — AC-6)', () => {
-    render(<HumiHomePage />);
+    render(<CnextHomePage />);
     const h1 = screen.getByRole('heading', { level: 1 });
     // หัว h1 ต้องมี Thai character อย่างน้อย 1 ตัว
     expect(h1.textContent).toMatch(/[฀-๿]/);
@@ -161,17 +161,17 @@ describe('Dashboard — home/page.tsx (AC-2, AC-6)', () => {
 // ────────────────────────────────────────────────────────────
 describe('Profile/Me — profile/me/page.tsx (AC-2)', () => {
   it('render ไม่ crash (no throw)', () => {
-    expect(() => render(<HumiProfilePage />)).not.toThrow();
+    expect(() => render(<CnextProfilePage />)).not.toThrow();
   });
 
   it('แสดง Thai content (AC-6 Thai-primary)', () => {
-    render(<HumiProfilePage />);
+    render(<CnextProfilePage />);
     const pageText = document.body.textContent ?? '';
     expect(pageText).toMatch(/[฀-๿]/);
   });
 
   it('แสดง tab-like buttons สำหรับ switching sections (AC-2)', () => {
-    render(<HumiProfilePage />);
+    render(<CnextProfilePage />);
     const tabLikeButtons = screen.queryAllByRole('button');
     expect(tabLikeButtons.length).toBeGreaterThan(0);
   });
@@ -217,17 +217,17 @@ describe('Org Chart — org-chart/page.tsx (AC-2)', () => {
 // ────────────────────────────────────────────────────────────
 describe('Integrations — integrations/page.tsx (AC-2)', () => {
   it('render ไม่ crash (no throw)', () => {
-    expect(() => render(<HumiIntegrationsPage />)).not.toThrow();
+    expect(() => render(<CnextIntegrationsPage />)).not.toThrow();
   });
 
   it('แสดง Thai content (AC-6)', () => {
-    render(<HumiIntegrationsPage />);
+    render(<CnextIntegrationsPage />);
     const pageText = document.body.textContent ?? '';
     expect(pageText).toMatch(/[฀-๿]/);
   });
 
   it('แสดง toggle switches หรือ buttons (AC-2 interaction elements)', () => {
-    render(<HumiIntegrationsPage />);
+    render(<CnextIntegrationsPage />);
     const buttons = screen.queryAllByRole('button');
     expect(buttons.length).toBeGreaterThan(0);
   });
@@ -238,19 +238,19 @@ describe('Integrations — integrations/page.tsx (AC-2)', () => {
 // ────────────────────────────────────────────────────────────
 describe('All 4 screens — render without throwing (AC-2)', () => {
   const screenNames = [
-    'HumiHomePage',
-    'HumiProfilePage',
+    'CnextHomePage',
+    'CnextProfilePage',
     'OrgChartPage',
-    'HumiIntegrationsPage',
+    'CnextIntegrationsPage',
   ] as const;
 
   it('ทั้ง 4 screens render ได้โดยไม่มี error', () => {
     // เราทดสอบทีละ screen เพื่อ isolate errors
     const components = [
-      HumiHomePage,
-      HumiProfilePage,
+      CnextHomePage,
+      CnextProfilePage,
       OrgChartPage,
-      HumiIntegrationsPage,
+      CnextIntegrationsPage,
     ];
     components.forEach((Component) => {
       const { unmount } = render(<Component />);
@@ -267,20 +267,20 @@ describe('All 4 screens — render without throwing (AC-2)', () => {
 // ────────────────────────────────────────────────────────────
 describe('Thai-primary headings sweep (AC-6)', () => {
   it('Dashboard h1 มี Thai text (greeting dynamic — Phase C)', () => {
-    render(<HumiHomePage />);
+    render(<CnextHomePage />);
     const h1 = screen.getByRole('heading', { level: 1 });
     // Phase C: h1 = greeting dynamic ไม่ใช่ static page title "ภาพรวม"
     expect(h1.textContent).toMatch(/[฀-๿]/);
   });
 
   it('Profile page มี Thai content', () => {
-    render(<HumiProfilePage />);
+    render(<CnextProfilePage />);
     const pageText = document.body.textContent ?? '';
     expect(pageText).toMatch(/[฀-๿]/);
   });
 
   it('Integrations page มี Thai content', () => {
-    render(<HumiIntegrationsPage />);
+    render(<CnextIntegrationsPage />);
     const pageText = document.body.textContent ?? '';
     expect(pageText).toMatch(/[฀-๿]/);
   });

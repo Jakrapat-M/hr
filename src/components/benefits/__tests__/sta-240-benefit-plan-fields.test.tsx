@@ -100,7 +100,7 @@ function setAdmin() {
   useAuthStore.setState({
     userId: 'TEST',
     username: 'tester',
-    email: 'tester@humi.test',
+    email: 'tester@cnext.test',
     roles: ['hr_admin'],
     isAuthenticated: true,
     originalUser: null,

@@ -12,7 +12,7 @@ vi.mock('next-intl', () => ({ useLocale: () => mockLocale }));
 vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams() }));
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: (sel: (s: { username: string | null; userId: string | null; email: string | null }) => unknown) =>
-    sel({ username: 'สมชาย ใจดี', userId: 'EMP001', email: 'emp@humi.test' }),
+    sel({ username: 'สมชาย ใจดี', userId: 'EMP001', email: 'emp@cnext.test' }),
 }));
 vi.mock('@/lib/scope-filter', () => ({ resolveCurrentEmpId: () => 'EMP001' }));
 // Mock the form so we can trigger onSubmitted without driving full validation.

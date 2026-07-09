@@ -15,15 +15,15 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { useHumiProfileStore } from '@/stores/humi-profile-slice';
+import { useCnextProfileStore } from '@/stores/cnext-profile-slice';
 
 // ── next-intl mock ────────────────────────────────────────────────────────────
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-// ── humi primitive stubs ──────────────────────────────────────────────────────
-vi.mock('@/components/humi/Modal', () => ({
+// ── cnext primitive stubs ──────────────────────────────────────────────────────
+vi.mock('@/components/cnext/Modal', () => ({
   Modal: ({
     open,
     children,
@@ -43,7 +43,7 @@ vi.mock('@/components/humi/Modal', () => ({
     ) : null,
 }));
 
-vi.mock('@/components/humi/Button', () => ({
+vi.mock('@/components/cnext/Button', () => ({
   Button: ({
     children,
     onClick,
@@ -66,7 +66,7 @@ vi.mock('@/components/humi/Button', () => ({
   ),
 }));
 
-vi.mock('@/components/humi/FormField', () => ({
+vi.mock('@/components/cnext/FormField', () => ({
   FormField: ({
     children,
     label,
@@ -119,7 +119,7 @@ const BLANK_DRAFT = {
 };
 
 function resetStore() {
-  useHumiProfileStore.setState({
+  useCnextProfileStore.setState({
     activeTab: 'personal',
     isEditing: false,
     draft: { ...BLANK_DRAFT },
@@ -131,7 +131,7 @@ function resetStore() {
 }
 
 function seedPendingChange(): string {
-  return useHumiProfileStore.getState().submitChangeRequest({
+  return useCnextProfileStore.getState().submitChangeRequest({
     field: 'ชื่อ',
     oldValue: 'เดิม',
     newValue: 'ใหม่',
@@ -225,7 +225,7 @@ describe('confirm interaction', () => {
       fireEvent.click(screen.getByTestId('confirm-btn'));
     });
 
-    const { pendingChanges } = useHumiProfileStore.getState();
+    const { pendingChanges } = useCnextProfileStore.getState();
     const change = pendingChanges.find((pc) => pc.id === changeId)!;
     expect(change.status).toBe('approved');
     // trimmed: 'ผ่านแล้ว'
@@ -246,7 +246,7 @@ describe('confirm interaction', () => {
       fireEvent.click(screen.getByTestId('confirm-btn'));
     });
 
-    const { pendingChanges } = useHumiProfileStore.getState();
+    const { pendingChanges } = useCnextProfileStore.getState();
     const change = pendingChanges.find((pc) => pc.id === changeId)!;
     expect(change.status).toBe('approved');
     expect(change.reason).toBeUndefined();

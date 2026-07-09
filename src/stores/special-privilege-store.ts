@@ -221,6 +221,6 @@ export const useSpecialPrivilegeStore = create<SpecialPrivilegeState>()(
         })),
       clear: () => set({ records: seedRecords }),
     }),
-    { name: 'humi-special-privileges' },
+    { name: 'cnext-special-privileges' },
   ),
 );

@@ -18,8 +18,8 @@ vi.mock('@/stores/auth-store', () => ({
     selector({ roles: ['employee'], userId: 'EMP001', username: 'สมชาย ใจดี' }),
 }))
 const mockAddAttachment = vi.fn().mockReturnValue('att-1')
-vi.mock('@/stores/humi-profile-slice', () => ({
-  useHumiProfileStore: (selector: (s: unknown) => unknown) =>
+vi.mock('@/stores/cnext-profile-slice', () => ({
+  useCnextProfileStore: (selector: (s: unknown) => unknown) =>
     selector({ addAttachment: mockAddAttachment, removeAttachment: vi.fn() }),
 }))
 vi.mock('lucide-react', async (importOriginal) => {

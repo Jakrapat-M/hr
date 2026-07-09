@@ -12,7 +12,7 @@
 import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Search, FileText, Download, Printer, User } from 'lucide-react';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { useToast } from '@/components/ui/toast';
 import { ALL_PORTED_EMPLOYEES } from '@/lib/all-ported-employees';
 import { GENERATABLE_LETTERS, type GeneratableLetter } from '@/data/documents/templates';
@@ -25,9 +25,9 @@ import {
   type MergeResult,
 } from '@/lib/documents/merge-letter';
 import { formatDate } from '@/lib/date';
-import type { HumiEmployee } from '@/lib/humi-mock-data';
+import type { CnextEmployee } from '@/lib/cnext-mock-data';
 
-function employeeLabel(emp: HumiEmployee, locale: string): string {
+function employeeLabel(emp: CnextEmployee, locale: string): string {
   const name =
     locale === 'th'
       ? `${emp.firstNameTh} ${emp.lastNameTh}`
@@ -112,7 +112,7 @@ export function LetterGenerator() {
       {/* ── Left: pickers ───────────────────────────────────── */}
       <div className="space-y-5">
         {/* Employee picker */}
-        <div className="humi-card p-4">
+        <div className="cnext-card p-4">
           <label className="mb-2 block text-sm font-semibold text-ink" htmlFor="lg-emp-search">
             {t('employeeLabel')}
           </label>
@@ -162,7 +162,7 @@ export function LetterGenerator() {
         </div>
 
         {/* Letter picker */}
-        <div className="humi-card p-4">
+        <div className="cnext-card p-4">
           <span className="mb-2 block text-sm font-semibold text-ink">{t('letterLabel')}</span>
           <div className="space-y-1.5" role="radiogroup" aria-label={t('letterLabel')}>
             {GENERATABLE_LETTERS.map((l) => {
@@ -191,7 +191,7 @@ export function LetterGenerator() {
       </div>
 
       {/* ── Right: preview + actions ────────────────────────── */}
-      <div className="humi-card flex flex-col p-4">
+      <div className="cnext-card flex flex-col p-4">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <h2 className="flex-1 text-sm font-semibold text-ink">{t('previewTitle')}</h2>
           <Button

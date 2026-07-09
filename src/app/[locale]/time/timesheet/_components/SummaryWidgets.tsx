@@ -6,7 +6,7 @@
 // classes. Hour figures are always decimal X.XX (never X:XX).
 
 import { useRef, useState } from 'react';
-import { Card } from '@/components/humi';
+import { Card } from '@/components/cnext';
 import { cn } from '@/lib/utils';
 
 export interface SummaryWidgetItem {

@@ -9,12 +9,12 @@
 // on /profile/me reuses the same tested collection logic.
 //
 // It never wires a submit handler — the owning section editor submits (direct+dual).
-// Humi primitives only; danger uses pumpkin --color-danger (NO red); no raw hex.
+// Cnext primitives only; danger uses pumpkin --color-danger (NO red); no raw hex.
 // ════════════════════════════════════════════════════════════
 
 import type { ReactNode } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 
 export interface RepeatableEntriesEditorProps<T> {
   /** Current rows. */
@@ -103,7 +103,7 @@ export function RepeatableEntriesEditor<T>({
   const hiddenCount = entries.length - visible.length;
 
   return (
-    <div className="humi-col" style={{ gap: 12 }}>
+    <div className="cnext-col" style={{ gap: 12 }}>
       {entries.length === 0 && emptyLabel && (
         <p style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{emptyLabel}</p>
       )}
@@ -112,10 +112,10 @@ export function RepeatableEntriesEditor<T>({
         <div
           key={index}
           data-testid="repeatable-row"
-          className="humi-card humi-card--tight"
+          className="cnext-card cnext-card--tight"
           style={{ background: 'var(--color-canvas-soft)' }}
         >
-          <div className="humi-row" style={{ alignItems: 'flex-start', gap: 12 }}>
+          <div className="cnext-row" style={{ alignItems: 'flex-start', gap: 12 }}>
             {primaryKey && (
               <div className="flex flex-col items-center gap-1 pt-1 shrink-0">
                 <input

@@ -234,7 +234,7 @@ export const useOvertimeRequests = create<OvertimeRequestsState>()(
       clear: () => set({ requests: [] }),
     }),
     {
-      name: 'humi-overtime-requests',
+      name: 'cnext-overtime-requests',
       storage: createJSONStorage(() => localStorage),
     },
   ),

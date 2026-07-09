@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useLocale } from 'next-intl';
-import { Modal, Button } from '@/components/humi';
+import { Modal, Button } from '@/components/cnext';
 import { ROSTER_ROWS } from '@/data/roster/mock';
 
 export interface ShiftSwapModalProps {

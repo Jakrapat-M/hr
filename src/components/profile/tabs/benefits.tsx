@@ -9,7 +9,7 @@ import { EmptyValue } from '@/components/ui/empty-value';
 import { formatDate } from '@/lib/date';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatChip } from '@/components/ui/stat-chip';
-import { Card, DemoValuesDisclaimer } from '@/components/humi';
+import { Card, DemoValuesDisclaimer } from '@/components/cnext';
 
 interface BenefitsTabProps {
  employee: Record<string, unknown> | null;

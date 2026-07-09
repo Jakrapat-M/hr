@@ -8,7 +8,7 @@
 import { useState, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { FileText, Printer, Filter, Clock, CheckCircle, PackageCheck, Send } from 'lucide-react';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { useToast } from '@/components/ui/toast';
 import { LetterGenerator } from '@/components/documents/letter-generator';
 import {
@@ -194,7 +194,7 @@ export default function AdminDocumentsPage() {
             type="button"
             onClick={() => { setFilter(opt.value); setSelected(new Set()); }}
             data-testid={`filter-${opt.value}`}
-            className={`humi-tag cursor-pointer${filter === opt.value ? ' humi-tag--accent' : ''}`}
+            className={`cnext-tag cursor-pointer${filter === opt.value ? ' cnext-tag--accent' : ''}`}
             aria-pressed={filter === opt.value}
           >
             {locale === 'th' ? opt.labelTh : opt.labelEn}
@@ -206,13 +206,13 @@ export default function AdminDocumentsPage() {
       {filtered.length === 0 ? (
         <div
           data-testid="admin-docs-empty"
-          className="humi-card p-12 text-center text-ink-muted"
+          className="cnext-card p-12 text-center text-ink-muted"
         >
           <CheckCircle size={36} aria-hidden className="mx-auto mb-3 opacity-30 block" />
           <p>{locale === 'th' ? 'ไม่มีคำขอในหมวดนี้' : 'No requests in this category'}</p>
         </div>
       ) : (
-        <div className="humi-card overflow-hidden p-0">
+        <div className="cnext-card overflow-hidden p-0">
           <table className="w-full border-collapse" data-testid="admin-docs-table">
             <thead>
               <tr className="bg-surface-muted text-xs text-ink-muted">

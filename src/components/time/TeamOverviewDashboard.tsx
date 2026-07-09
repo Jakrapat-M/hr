@@ -12,7 +12,7 @@
 //    down smoothly via a grid-rows transition) to reveal its topic details
 //    (per-employee late/absent, OT multiplier buckets + per-employee OT, leave).
 // Numbers are persona-scoped like /roster and pinned to DEMO_TODAY — never
-// wall-clock. Mockup only, HUMI tokens, NO-RED (pumpkin).
+// wall-clock. Mockup only, CNEXT tokens, NO-RED (pumpkin).
 
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useLocale } from 'next-intl';
@@ -25,7 +25,7 @@ import {
   ChevronDown,
   type LucideIcon,
 } from 'lucide-react';
-import { Card, EmptyState } from '@/components/humi';
+import { Card, EmptyState } from '@/components/cnext';
 import { CustomSelect } from '@/components/ui/custom-select';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';

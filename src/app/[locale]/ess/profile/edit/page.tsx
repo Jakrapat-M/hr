@@ -1,4 +1,4 @@
-// VALIDATION_EXEMPT: validation in Zustand humi-profile-slice + emergency/dependents/address editors (per design-gates Track C 2026-04-26)
+// VALIDATION_EXEMPT: validation in Zustand cnext-profile-slice + emergency/dependents/address editors (per design-gates Track C 2026-04-26)
 'use client'
 
 // ess/profile/edit/page.tsx — ESS Personal Information edit
@@ -15,7 +15,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { ChevronDown, UploadCloud, FileText, X, CalendarDays, ShieldCheck } from 'lucide-react'
 import { useProfileEdit } from '@/lib/admin/store/useProfileEdit'
 import type { Attachment } from '@/stores/workflow-approvals'
-import { Button } from '@/components/humi'
+import { Button } from '@/components/cnext'
 import { cn } from '@/lib/utils'
 import mockEmployee from '@/data/admin/mockEmployee.json'
 
@@ -187,7 +187,7 @@ export default function ProfileEditPage() {
           {/* Change-request affordance badge — clarifies these edits are not instant
               and route through SPD approval (tooltip on hover via title). */}
           <span
-            className="humi-tag humi-tag--accent inline-flex items-center gap-1"
+            className="cnext-tag cnext-tag--accent inline-flex items-center gap-1"
             title={tCr('badgeHint')}
           >
             <ShieldCheck size={12} aria-hidden />
@@ -199,7 +199,7 @@ export default function ProfileEditPage() {
 
       <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* ── Effective Date bar (SF mandatory top field) ────────────── */}
-        <section className="humi-card" style={{ padding: 16 }}>
+        <section className="cnext-card" style={{ padding: 16 }}>
           <Label htmlFor="effective-date" required>
             <CalendarDays size={12} className="inline mr-1" aria-hidden />
             การเปลี่ยนแปลงนี้จะมีผลเมื่อไหร่?
@@ -215,8 +215,8 @@ export default function ProfileEditPage() {
         </section>
 
         {/* ── Personal Information ───────────────────────────────────── */}
-        <section className="humi-card" style={{ padding: 20 }}>
-          <div className="humi-eyebrow mb-4">ข้อมูลส่วนตัว (Personal Information)</div>
+        <section className="cnext-card" style={{ padding: 20 }}>
+          <div className="cnext-eyebrow mb-4">ข้อมูลส่วนตัว (Personal Information)</div>
 
           {/* Row 1: EN salutation + EN name trio + nickname */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
@@ -450,14 +450,14 @@ export default function ProfileEditPage() {
         {/* ── Attachment ─────────────────────────────────────────────── */}
         <section
           className={cn(
-            'humi-card transition-colors',
+            'cnext-card transition-colors',
             nameChanged && 'border-amber-300',
           )}
           style={{ padding: 20 }}
         >
           <div className="flex items-start justify-between gap-3 mb-3">
             <div>
-              <div className="humi-eyebrow mb-1">
+              <div className="cnext-eyebrow mb-1">
                 เอกสารแนบ (Attachment)
                 {nameChanged && (
                   <span className="ml-2 text-xs font-semibold text-amber-700 normal-case">
@@ -575,7 +575,7 @@ export default function ProfileEditPage() {
         </section>
 
         {/* ── Global Information (collapsible) ───────────────────────── */}
-        <section className="humi-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <section className="cnext-card" style={{ padding: 0, overflow: 'hidden' }}>
           <button
             type="button"
             onClick={() => setGlobalOpen((o) => !o)}
@@ -642,8 +642,8 @@ export default function ProfileEditPage() {
         </section>
 
         {/* ── Address ────────────────────────────────────────────────── */}
-        <section className="humi-card" style={{ padding: 20 }}>
-          <div className="humi-eyebrow mb-4">ที่อยู่ปัจจุบัน (Current Address)</div>
+        <section className="cnext-card" style={{ padding: 20 }}>
+          <div className="cnext-eyebrow mb-4">ที่อยู่ปัจจุบัน (Current Address)</div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="addressHouseNo" required>บ้านเลขที่</Label>
@@ -681,8 +681,8 @@ export default function ProfileEditPage() {
         </section>
 
         {/* ── Emergency ──────────────────────────────────────────────── */}
-        <section className="humi-card" style={{ padding: 20 }}>
-          <div className="humi-eyebrow mb-4">ผู้ติดต่อฉุกเฉิน (Emergency Contact)</div>
+        <section className="cnext-card" style={{ padding: 20 }}>
+          <div className="cnext-eyebrow mb-4">ผู้ติดต่อฉุกเฉิน (Emergency Contact)</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="emergencyContactName" required>ชื่อ-นามสกุล</Label>
@@ -696,8 +696,8 @@ export default function ProfileEditPage() {
         </section>
 
         {/* National ID — readonly */}
-        <section className="humi-card humi-card--cream" style={{ padding: 20 }}>
-          <div className="humi-eyebrow mb-1">
+        <section className="cnext-card cnext-card--cream" style={{ padding: 20 }}>
+          <div className="cnext-eyebrow mb-1">
             เลขบัตรประชาชน (National ID)
             <span className="ml-2 text-xs font-normal text-ink-muted normal-case">แก้ไขไม่ได้ — ติดต่อ HR</span>
           </div>
@@ -708,7 +708,7 @@ export default function ProfileEditPage() {
 
         {/* ── Sticky footer ──────────────────────────────────────────── */}
         <div
-          className="humi-card"
+          className="cnext-card"
           style={{
             position: 'sticky',
             bottom: 0,

@@ -2,7 +2,7 @@
 //
 // MOCK ONLY. The single source/seam for the Thai 2026 public-holiday calendar the
 // Results tab reads to mark HOLIDAY pay-code rows. Authored from the dates in
-// `HUMI_TH_HOLIDAYS` (humi-mock-data.ts) — their names live only in `//` comments
+// `CNEXT_TH_HOLIDAYS` (cnext-mock-data.ts) — their names live only in `//` comments
 // there, so this module restates them as structured `{ date, nameTh, nameEn }`
 // rows (do NOT parse the comments at runtime). A future backend swap replaces only
 // `TIME_HOLIDAYS_2026` / `getHolidaysForPeriod`. Pure + deterministic (no Date.now).

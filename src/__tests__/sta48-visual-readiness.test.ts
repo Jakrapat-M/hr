@@ -28,7 +28,7 @@ function read(path: string): string {
 }
 
 describe('STA-48 executive visual readiness cleanup', () => {
-  it.each(visualReadinessFiles)('keeps %s on tokenized Humi visual language', (file) => {
+  it.each(visualReadinessFiles)('keeps %s on tokenized Cnext visual language', (file) => {
     const source = read(file);
 
     for (const pattern of forbiddenVisualPatterns) {

@@ -19,13 +19,13 @@
  */
 
 import { hasAnyRole, hasRole, type Role } from './rbac';
-import type { HumiEmployee } from './humi-mock-data';
+import type { CnextEmployee } from './cnext-mock-data';
 
 export type ScopeMode = 'self' | 'direct-reports' | 'bu' | 'all';
 
 export interface ScopeResult {
   readonly mode: ScopeMode;
-  readonly employees: ReadonlyArray<HumiEmployee>;
+  readonly employees: ReadonlyArray<CnextEmployee>;
   readonly canEdit: boolean;
 }
 
@@ -38,7 +38,7 @@ export function pickScopeMode(roles: ReadonlyArray<Role>): ScopeMode {
 }
 
 /** Drop terminated employees unless caller opts in. Default = active-only. */
-function activeOnly(emps: ReadonlyArray<HumiEmployee>): HumiEmployee[] {
+function activeOnly(emps: ReadonlyArray<CnextEmployee>): CnextEmployee[] {
   return emps.filter((e) => e.status === 'active' || e.status === 'leave');
 }
 
@@ -51,7 +51,7 @@ function activeOnly(emps: ReadonlyArray<HumiEmployee>): HumiEmployee[] {
  * @param opts.includeTerminated drop terminated rows by default
  */
 export function filterEmployeesByPersona(
-  allEmployees: ReadonlyArray<HumiEmployee>,
+  allEmployees: ReadonlyArray<CnextEmployee>,
   currentRoles: ReadonlyArray<Role>,
   currentEmployeeId: string | null,
   opts: { includeTerminated?: boolean } = {},
@@ -100,7 +100,7 @@ export function filterEmployeesByPersona(
 
 /** Count subordinates (direct reports) of a given employee. */
 export function countDirectReports(
-  allEmployees: ReadonlyArray<HumiEmployee>,
+  allEmployees: ReadonlyArray<CnextEmployee>,
   empId: string,
 ): number {
   return allEmployees.filter((e) => e.managerId === empId).length;
@@ -108,16 +108,16 @@ export function countDirectReports(
 
 /** Resolve employee record for a login email — 5 demo + 4 SF-canonical (T7). */
 export const EMP_BY_LOGIN_FULL: Record<string, string> = Object.freeze({
-  'admin@humi.test':    'emp-005',
-  'spd@humi.test':      'emp-001',
-  'hrbp@humi.test':     'emp-007',
-  'manager@humi.test':  'emp-002',
-  'employee@humi.test': 'emp-003',
+  'admin@cnext.test':    'emp-005',
+  'spd@cnext.test':      'emp-001',
+  'hrbp@cnext.test':     'emp-007',
+  'manager@cnext.test':  'emp-002',
+  'employee@cnext.test': 'emp-003',
   // T7 — SF-canonical personas slot natural in hierarchy
-  'ken@humi.test':      'emp-005',  // Ken = HR Director-like (org strategy)
-  'apinya@humi.test':   'emp-007',  // Apinya = HR team head (HRBP role)
-  'worawee@humi.test':  'emp-001',  // Worawee = HR Manager (SPD final-approver)
-  'rungrote@humi.test': 'emp-002',  // Rungrote = Finance Senior Analyst (Manager)
+  'ken@cnext.test':      'emp-005',  // Ken = HR Director-like (org strategy)
+  'apinya@cnext.test':   'emp-007',  // Apinya = HR team head (HRBP role)
+  'worawee@cnext.test':  'emp-001',  // Worawee = HR Manager (SPD final-approver)
+  'rungrote@cnext.test': 'emp-002',  // Rungrote = Finance Senior Analyst (Manager)
 });
 
 export function resolveCurrentEmpId(email: string | null | undefined): string | null {

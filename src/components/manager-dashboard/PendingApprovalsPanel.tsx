@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
-import { Card, CardTitle, Button } from '@/components/humi';
+import { Card, CardTitle, Button } from '@/components/cnext';
 import { UrgencyBadge } from '@/components/quick-approve/UrgencyBadge';
 import { CheckCircle2, XCircle, ArrowRight, Clock, Palmtree, Receipt, ArrowLeftRight, FilePen, ClipboardList } from 'lucide-react';
 import type { PendingRequest } from '@/lib/quick-approve-api';

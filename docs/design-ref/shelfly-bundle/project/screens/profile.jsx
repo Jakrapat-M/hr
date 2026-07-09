@@ -59,7 +59,7 @@ function ProfileScreen({ onNav }) {
             <h3 style={{marginTop: 6, marginBottom: 16}}>วิธีติดต่อคุณ</h3>
             <div className="col" style={{gap: 14}}>
               {[
-                ["อีเมลที่ทำงาน","jongrak.tanaka@humi.shop"],
+                ["อีเมลที่ทำงาน","jongrak.tanaka@cnext.shop"],
                 ["อีเมลส่วนตัว","jongrak.tanaka@proton.me"],
                 ["เบอร์มือถือ","+66 (02) 555-0188"],
                 ["ที่อยู่","241 ถ.สุขุมวิท แขวงคลองตัน กรุงเทพฯ 10110"],

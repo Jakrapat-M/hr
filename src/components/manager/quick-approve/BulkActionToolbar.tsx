@@ -14,7 +14,7 @@
 
 import { useLocale } from 'next-intl';
 import { CheckCircle2, XCircle, X } from 'lucide-react';
-import { Button } from '@/components/humi';
+import { Button } from '@/components/cnext';
 import { isHighRiskType } from './predicates';
 import { cn } from '@/lib/utils';
 

@@ -1,7 +1,7 @@
 // useEmploymentEvents.ts — B2 Zustand store สำหรับ employment event history
 //
 // Append-only event log per employee — Stark "ไม่ลบ" principle (I1).
-// Persist via localStorage key 'humi-employment-events-v1' (I10).
+// Persist via localStorage key 'cnext-employment-events-v1' (I10).
 // Validation on append: validateAppend() throws Thai-primary errors on violation.
 // Seed: idempotent HIRE event generation from existing employee list (I9).
 
@@ -154,7 +154,7 @@ export const useEmploymentEvents = create<EmploymentEventsState>()(
       _reset: () => set({ events: [] }),
     }),
     {
-      name: 'humi-employment-events-v1',         // I10: localStorage key
+      name: 'cnext-employment-events-v1',         // I10: localStorage key
       storage: createJSONStorage(() => localStorage),
       // persist events array only — methods ถูก recreate ทุก hydration
       partialize: (state) => ({ events: state.events }),
