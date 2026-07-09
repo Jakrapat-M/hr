@@ -50,19 +50,6 @@ export default function ChangeRequestsPage() {
   const pendingChanges = useCnextProfileStore((s) => s.pendingChanges);
   const attachments = useCnextProfileStore((s) => s.attachments);
 
-  if (!canApprove) {
-    return (
-      <div className="cnext-card" data-testid="change-requests-no-access">
-        <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
-          ไม่มีสิทธิ์เข้าถึง
-        </h3>
-        <p className="mt-2 text-ink-soft" style={{ fontSize: 14 }}>
-          คิวอนุมัติคำขอแก้ไขข้อมูลส่วนบุคคล สงวนสิทธิ์เฉพาะผู้อนุมัติ (SPD)
-        </p>
-      </div>
-    );
-  }
-
   // Group pending CRs by sectionKey; items without sectionKey fall into 'personal'
   const grouped = useMemo(() => {
     const pending = pendingChanges.filter((pc) => pc.status === 'pending');
@@ -105,6 +92,20 @@ export default function ChangeRequestsPage() {
 
   const closeModal = () =>
     setModalState({ open: false, mode: 'approve', changeId: null });
+
+  // RBAC gate — placed after all hooks so hook order stays stable (rules-of-hooks)
+  if (!canApprove) {
+    return (
+      <div className="cnext-card" data-testid="change-requests-no-access">
+        <h3 className="font-display text-xl font-semibold leading-[1.2] tracking-tight text-ink">
+          ไม่มีสิทธิ์เข้าถึง
+        </h3>
+        <p className="mt-2 text-ink-soft" style={{ fontSize: 14 }}>
+          คิวอนุมัติคำขอแก้ไขข้อมูลส่วนบุคคล สงวนสิทธิ์เฉพาะผู้อนุมัติ (SPD)
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
