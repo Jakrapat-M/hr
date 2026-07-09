@@ -2,35 +2,17 @@
   "name": "central-hrms",
   "version": "1.0.0",
   "private": true,
-  "description": "Central Retail Next-Gen HRMS - Monorepo",
+  "description": "Central Retail Next-Gen HRMS — Next.js frontend workspace",
   "workspaces": [
-    "src/frontend",
-    "src/services/*"
+    "src/frontend"
   ],
   "scripts": {
     "audit:fields": "tsx scripts/audit-field-coverage.ts",
-    "dev": "concurrently \"docker compose up -d\" \"echo 'Services starting...'\"",
-    "test": "node tests/scripts/verification-test.js",
-    "test:verification": "node tests/scripts/verification-test.js",
-    "test:additional": "node tests/scripts/test-additional-modules.js",
-    "test:profile": "node tests/scripts/test-profile-details.js",
-    "test:scorecard": "node tests/scripts/test-scorecard-tab.js",
-    "test:benefits": "node tests/scripts/test-benefits-tab-node.js",
-    "test:all": "npm run test:verification && npm run test:additional && npm run test:profile && npm run test:scorecard && npm run test:benefits",
-    "test:services": "npm run test --workspaces --if-present",
-    "build": "npm run build --workspaces --if-present",
-    "seed": "ts-node src/infra/seed/index.ts",
-    "infra:up": "docker compose up -d",
-    "infra:down": "docker compose down",
-    "lint": "eslint \"src/**/*.ts\"",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "db:migrate": "bash src/infra/migrations/migrate-all.sh dev",
-    "db:migrate:deploy": "bash src/infra/migrations/migrate-all.sh deploy",
-    "db:migrate:reset": "bash src/infra/migrations/migrate-all.sh reset",
-    "db:migrate:status": "bash src/infra/migrations/migrate-all.sh status",
-    "db:generate": "bash src/infra/migrations/generate-all.sh",
-    "db:seed": "cd src/infra/seed && ts-node seed-all.ts",
-    "db:validate": "bash src/infra/migrations/check-schemas.sh"
+    "dev": "npm run dev --workspace src/frontend",
+    "build": "npm run build --workspace src/frontend",
+    "test": "npm run test --workspace src/frontend",
+    "lint": "npm run lint --workspace src/frontend",
+    "test:e2e": "npm run test:e2e --workspace src/frontend"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

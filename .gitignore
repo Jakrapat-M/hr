@@ -50,3 +50,12 @@ chrome/
 # Generated framework/debug artifacts
 .next/
 src/frontend/test-artifacts/**/debug-*.png
+
+# secrets & local state (never track)
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+.omo/
+artifacts/
+plan-assets/

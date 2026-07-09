@@ -13,8 +13,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@hrms/shared/picklists': path.resolve(__dirname, '../services/shared/src/picklists/index.ts'),
-      '@hrms/shared/field-catalog': path.resolve(__dirname, '../services/shared/src/field-catalog/index.ts'),
+      '@hrms/shared/picklists': path.resolve(__dirname, './src/shared/picklists/index.ts'),
+      '@hrms/shared/field-catalog': path.resolve(__dirname, './src/shared/field-catalog/index.ts'),
     },
   },
 });
