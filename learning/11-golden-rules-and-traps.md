@@ -38,7 +38,8 @@
 ### 🚫 A9. เฟสนี้ไม่ต่อ backend จริง
 อย่าเสียเวลาเขียน POST/PUT จริง ต่อ DB จริง — โฟกัสหน้าจอกดได้ + ข้อมูลจำลอง
 
-### 🔧 A10. แก้แค่ `src/frontend/` (ไม่ยุ่ง `src/services/`)
+### 🔧 A10. โค้ดทั้งหมดอยู่ที่รากของ repo แล้ว
+เมื่อก่อนเคยเป็น monorepo (`src/frontend/` + `src/services/*` microservices) แต่ตอนนี้ flatten มาไว้ที่ root แล้ว (`src/app`, `src/components`, `package.json` อยู่ที่รากทั้งหมด) — ไม่มี `src/services/` ให้ยุ่งอีกต่อไป
 
 ---
 
