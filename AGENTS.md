@@ -1,5 +1,13 @@
 # AGENTS.md
 
+<!-- BEGIN:nextjs-agent-rules -->
+
+# Next.js: ALWAYS read docs before coding
+
+Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+
+<!-- END:nextjs-agent-rules -->
+
 Guidance for AI coding agents (Codex, Claude Code, or others) working in this repository.
 
 ## What this repo is
@@ -37,7 +45,7 @@ npm run dev            # → http://localhost:3000
 npm run build          # production build; also the TS typecheck gate
 npm test                # Vitest unit/integration
 npm run test:e2e       # Playwright E2E
-npm run lint           # ESLint — scoped to the glob in package.json scripts.lint, not the whole tree
+npm run lint           # whole-tree ESLint (src + e2e) — 0 errors policy; React-Compiler advisories stay warnings
 npm run i18n:parity    # asserts en.json/th.json have identical keys
 npm run verify         # lint + build + i18n:parity — run before opening a PR
 ```
@@ -67,6 +75,6 @@ Focused runs: `npm test -- --run <pattern>`, `npm run test:e2e -- --project=chro
 - `specs/` — plans and decision records (see `specs/README.md`).
 - `.claude/commands/*.md` — reusable slash-command prompts (`/chore`, `/implement`, `/plan`, `/build`, `/prime`, `/test_e2e`, etc.).
 
-## Planned
+## Version-matched Next.js docs
 
-- Next.js is currently `^16.0.0` (16.1.6 installed). A follow-up upgrade to Next ≥16.2 will adopt the Vercel AI-agents convention (bundled docs at `node_modules/next/dist/docs/` plus a marker-delimited block in this file). Not applicable yet — do not add the marker block until that upgrade lands.
+Next.js 16.2+ is installed, so the full documentation ships inside the package at `node_modules/next/dist/docs/` (mirrors nextjs.org/docs). The marker-delimited block at the top of this file is the Next.js-managed section per the official AI-agents convention — keep project rules outside the markers.
