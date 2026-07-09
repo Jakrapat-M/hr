@@ -177,13 +177,13 @@ vi.mock('@/components/humi', async () => {
   };
 });
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@/components/humi/atoms/badge', () => ({
   Badge: ({ children }: { children: React.ReactNode }) => (
     <span data-testid="badge">{children}</span>
   ),
 }));
 
-vi.mock('@/components/ui/skeleton', () => ({
+vi.mock('@/components/humi/atoms/skeleton', () => ({
   Skeleton: ({ className }: { className?: string }) => (
     <div className={className} aria-hidden />
   ),

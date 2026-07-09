@@ -36,10 +36,10 @@ export default [
     },
   },
 
-  // dark: ban applies outside components/ui/
+  // dark: ban applies tree-wide (the former components/ui/ exemption is gone —
+  // ui/ was merged into components/humi/ during the cleanup, Phase 7b)
   {
     files: ["**/*.{ts,tsx,js,jsx}"],
-    ignores: ["**/components/ui/**"],
     rules: {
       "no-restricted-syntax": ["warn", ...driftBans, darkModeBan],
     },

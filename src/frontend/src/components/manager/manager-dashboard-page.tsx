@@ -28,9 +28,9 @@ import {
  Download,
 } from 'lucide-react';
 import { Card, CardTitle, Button, Modal } from '@/components/humi';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs } from '@/components/ui/tabs';
+import { Badge } from '@/components/humi/atoms/badge';
+import { Skeleton } from '@/components/humi/atoms/skeleton';
+import { Tabs } from '@/components/humi/molecules/tabs';
 import { useManagerDashboard } from '@/hooks/use-manager-dashboard';
 import type { TeamMember, PendingApproval, OrgNode, Position, MovementEvent } from '@/hooks/use-manager-dashboard';
 import { useAuthStore } from '@/stores/auth-store';
