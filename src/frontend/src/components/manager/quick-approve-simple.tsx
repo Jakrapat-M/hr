@@ -30,7 +30,7 @@ const MANAGER_NAME = 'ผู้จัดการ / Manager';
 
 // ── Types ────────────────────────────────────────────────────
 
-type FilterTab = 'all' | 'pending' | 'approved' | 'rejected';
+type FilterTab = 'all' | 'pending' | 'approved' | 'rejected' | 'cancelled';
 // STA-178 — module filter dimension ('ALL' + the 4 workflow modules).
 type ModuleFilter = WorkflowModule | 'ALL';
 const MODULE_FILTERS: ModuleFilter[] = ['ALL', 'EC', 'BE', 'TM', 'PY'];
@@ -120,7 +120,7 @@ export function QuickApproveSimple() {
   // PR-1c: status DERIVES from the store (via the selector) — no local override
   // map. Approve/reject dispatch to the source store and the row re-renders from
   // the new store status.
-  const seededStatus = useMemo<Record<string, 'pending' | 'approved' | 'rejected'>>(
+  const seededStatus = useMemo<Record<string, 'pending' | 'approved' | 'rejected' | 'cancelled'>>(
     () => Object.fromEntries(queue.map((q) => [q.row.id, q.status])),
     [queue],
   );
@@ -160,7 +160,7 @@ export function QuickApproveSimple() {
   const [selected, setSelected] = useState<PendingRequest | null>(null);
 
   // Effective status = the collapsed store status (no local override).
-  function effectiveStatus(req: PendingRequest): 'pending' | 'approved' | 'rejected' {
+  function effectiveStatus(req: PendingRequest): 'pending' | 'approved' | 'rejected' | 'cancelled' {
     return seededStatus[req.id] ?? 'pending';
   }
 
@@ -188,6 +188,7 @@ export function QuickApproveSimple() {
   const pendingCount  = rows.filter((r) => effectiveStatus(r) === 'pending').length;
   const approvedCount = rows.filter((r) => effectiveStatus(r) === 'approved').length;
   const rejectedCount = rows.filter((r) => effectiveStatus(r) === 'rejected').length;
+  const cancelledCount = rows.filter((r) => effectiveStatus(r) === 'cancelled').length;
 
   // Filtered rows — module scope (STA-178) intersected with the status tab.
   const visibleRows = rows.filter((r) => {
@@ -197,6 +198,7 @@ export function QuickApproveSimple() {
     if (activeTab === 'pending')  return status === 'pending';
     if (activeTab === 'approved') return status === 'approved';
     if (activeTab === 'rejected') return status === 'rejected';
+    if (activeTab === 'cancelled') return status === 'cancelled';
     return true;
   });
 
@@ -336,7 +338,7 @@ export function QuickApproveSimple() {
         }
         const badgeClass =
           status === 'approved' ? 'humi-tag humi-tag--accent' :
-          status === 'rejected' ? 'humi-tag' :
+          (status === 'rejected' || status === 'cancelled') ? 'humi-tag' :
           'humi-tag humi-tag--butter';
         return (
           <div>
@@ -475,6 +477,7 @@ export function QuickApproveSimple() {
     { key: 'pending',  count: actionableCount },
     { key: 'approved', count: approvedCount },
     { key: 'rejected', count: rejectedCount },
+    { key: 'cancelled', count: cancelledCount },
   ];
 
   // STA-178 — per-module row counts for the module filter strip.

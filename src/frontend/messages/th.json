@@ -3210,7 +3210,8 @@
         "all": "ทั้งหมด",
         "pending": "รออนุมัติ",
         "approved": "อนุมัติแล้ว",
-        "rejected": "ส่งกลับ"
+        "rejected": "ส่งกลับ",
+        "cancelled": "ยกเลิกแล้ว"
       },
       "columns": {
         "ref": "เลขที่",
@@ -3238,6 +3239,7 @@
         "review": "กำลังตรวจสอบ",
         "approved": "อนุมัติแล้ว",
         "rejected": "ปฏิเสธแล้ว",
+        "cancelled": "ยกเลิกแล้ว",
         "awaitingNext": "รอผู้อนุมัติถัดไป"
       },
       "subtitleActionable": "คุณตัดสินใจได้ {actionable} จาก {total} รายการที่รออนุมัติ",

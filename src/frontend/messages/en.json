@@ -3249,7 +3249,8 @@
         "all": "All",
         "pending": "Pending",
         "approved": "Approved",
-        "rejected": "Send back"
+        "rejected": "Send back",
+        "cancelled": "Cancelled"
       },
       "columns": {
         "ref": "REF",
@@ -3277,6 +3278,7 @@
         "review": "In Review",
         "approved": "Approved",
         "rejected": "Rejected",
+        "cancelled": "Cancelled",
         "awaitingNext": "Awaiting next approver"
       },
       "subtitleActionable": "{actionable} of {total} pending items you can decide",

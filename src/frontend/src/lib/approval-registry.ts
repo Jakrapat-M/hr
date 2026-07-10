@@ -699,8 +699,8 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
 // `queueSnapshot` (the canonical PendingRequest) so the rendered row is identical;
 // the store's own status enum drives the collapse.
 
-/** Collapsed 3-state status for the unified inbox's filter tabs (AC-1b.1). */
-export type QueueStatus = 'pending' | 'approved' | 'rejected';
+/** Collapsed 4-state status for the unified inbox's filter tabs (AC-1b.1). */
+export type QueueStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
 export interface QueueApproval {
   /** Canonical display row (verbatim from the seed). */
@@ -725,6 +725,7 @@ export interface QueueApproval {
 export function collapseQueueStatus(raw: string | undefined): QueueStatus {
   if (raw === 'approved') return 'approved';
   if (raw === 'rejected') return 'rejected';
+  if (raw === 'cancelled') return 'cancelled';
   return 'pending';
 }
 
@@ -812,7 +813,8 @@ function claimQueueRow(claim: BenefitClaimRequest): PendingRequest | null {
  */
 function collapseTaxPlanStatus(raw: string): QueueStatus {
   if (raw === 'approved') return 'approved';
-  if (raw === 'rejected' || raw === 'cancelled') return 'rejected';
+  if (raw === 'rejected') return 'rejected';
+  if (raw === 'cancelled') return 'cancelled';
   return 'pending'; // submitted_payroll / payroll_reviewing / send_back
 }
 
@@ -840,7 +842,7 @@ export function selectPendingApprovals(input: {
     // STA-157 — a request the employee cancelled is terminal; drop it from the
     // approver queue (collapseQueueStatus's catch-all would otherwise re-tag it
     // 'pending' and keep it actionable).
-    if (r.status === 'cancelled') continue;
+    // if (r.status === 'cancelled') continue; // Now keeping cancelled requests in the queue
     if (r.queueSnapshot)
       out.push({
         row: r.queueSnapshot,
@@ -856,7 +858,7 @@ export function selectPendingApprovals(input: {
   // moves pending_manager_approval → pending_spd once the manager approves: it
   // stays collapsed-`pending`, but is now awaiting the NEXT approver (AC-1c.2).
   for (const r of input.claims) {
-    if (isCancelledStatus(r.status)) continue;
+    // if (isCancelledStatus(r.status)) continue; // Now keeping cancelled requests in the queue
     const row = claimQueueRow(r);
     if (row) {
       out.push({
@@ -891,7 +893,7 @@ export function selectPendingApprovals(input: {
   // time_correction rows derive natively from the time-corrections store. Status
   // maps cleanly: pending_manager → pending, approved/rejected passthrough.
   for (const r of input.timeCorrections ?? []) {
-    if (isCancelledStatus(r.status)) continue;
+    // if (isCancelledStatus(r.status)) continue;
     out.push({
       row: APPROVAL_REGISTRY.time_correction.toQueueItem(r),
       status: collapseQueueStatus(r.status),
@@ -901,7 +903,7 @@ export function selectPendingApprovals(input: {
   // overtime rows derive natively from the overtime-requests store (Group B).
   // Status maps cleanly: pending → pending, approved/rejected passthrough.
   for (const r of input.overtime ?? []) {
-    if (isCancelledStatus(r.status)) continue;
+    // if (isCancelledStatus(r.status)) continue;
     out.push({
       row: APPROVAL_REGISTRY.overtime.toQueueItem(r),
       status: collapseQueueStatus(r.status),
