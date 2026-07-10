@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Strict UI Development Rules (AI Assistant Guidelines)
+1. **Read `COMPONENTS.md` First:** Before generating any new UI code, you must review the `COMPONENTS.md` file to identify if an existing component can be reused for the task.
+2. **Strict DRY Principles:** Never duplicate Tailwind utility strings or rebuild UI elements if a base component already exists in our design system.
+3. **Exclusive Icon Library:** You must use `lucide-react` exclusively for all icons in the project. Do not introduce other icon libraries or raw SVG icons unless strictly necessary.
+4. **Styling Utility:** You must use our class-merging utility for all dynamic styling.
+   - The `cn` utility function is located at: `src/frontend/src/lib/utils.ts`
+   - Import it via relative path or alias, e.g., `import { cn } from '@/lib/utils';`
 ## Current Project Phase (2026-05-15)
 
 **Phase: UI Mockup สมบูรณ์ — เพื่อให้ HR Team confirm direction ก่อนเริ่มงานจริง**

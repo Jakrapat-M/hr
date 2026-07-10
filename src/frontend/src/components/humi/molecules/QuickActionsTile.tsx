@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import {
   CalendarPlus,
   FileText,
@@ -218,7 +219,7 @@ export function QuickActionsTile({
               className="humi-quick-action-item"
             >
               <span
-                className={`${bgClass} ${textClass}`}
+                className={cn(bgClass, textClass)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

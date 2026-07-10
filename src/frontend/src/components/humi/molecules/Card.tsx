@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 // ════════════════════════════════════════════════════════════
 
 const cardVariants = cva(
-  ['bg-surface text-ink', 'transition-shadow duration-[var(--dur-base)] ease-[var(--ease-spring)]'].join(' '),
+  ['bg-surface text-ink', 'transition-shadow duration-[var(--dur-base)] ease-[var(--ease-spring)]'],
   {
     variants: {
       variant: {

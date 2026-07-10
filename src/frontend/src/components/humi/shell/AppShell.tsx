@@ -24,6 +24,7 @@ import { CommandPalette } from './CommandPalette';
 import { useUIStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { ensureDemoSeed } from '@/lib/demo-seed';
+import { cn } from '@/lib/utils';
 
 /** href prefix → page title shown in topbar h2.
  *  Keep 1:1 with Sidebar.tsx NAV items — every sidebar destination MUST have a
@@ -271,7 +272,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const title = resolveTitle(pathname, searchParams);
 
   return (
-    <div className={`humi-app${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
+    <div className={cn('humi-app', !sidebarOpen && 'sidebar-collapsed')}>
       {/* Acting-as impersonation band — full-width grid row (grid-column 1/-1)
           ABOVE the sidebar + main, so it covers the whole session chrome.
           Renders only while impersonating. */}
