@@ -12,7 +12,7 @@ const avatarVariants = cva(
     'inline-flex items-center justify-center shrink-0 select-none overflow-hidden',
     'font-display font-semibold tracking-tight',
     'bg-accent-soft text-accent-ink',
-  ],
+  ].join(' '),
   {
     variants: {
       size: {

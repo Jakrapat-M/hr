@@ -18,7 +18,7 @@ const buttonVariants = cva(
     'focus-visible:ring-accent focus-visible:ring-offset-canvas',
     'disabled:pointer-events-none disabled:opacity-50',
     'select-none whitespace-nowrap',
-  ],
+  ].join(' '),
   {
     variants: {
       variant: {
@@ -27,23 +27,23 @@ const buttonVariants = cva(
           'shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]',
           'hover:bg-[color-mix(in_oklab,var(--color-accent)_92%,black)]',
           'active:bg-[color-mix(in_oklab,var(--color-accent)_85%,black)]',
-        ],
+        ].join(' '),
         secondary: [
           'bg-transparent text-accent border border-accent',
           'hover:bg-accent-soft',
           'active:bg-[color-mix(in_oklab,var(--color-accent-soft)_85%,var(--color-accent))]',
-        ],
+        ].join(' '),
         ghost: [
           'bg-transparent text-accent border border-transparent',
           'hover:bg-accent-soft/70',
           'active:bg-accent-soft',
-        ],
+        ].join(' '),
         danger: [
           'bg-danger text-white',
           'shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]',
           'hover:bg-[color-mix(in_oklab,var(--color-danger)_92%,black)]',
           'active:bg-[color-mix(in_oklab,var(--color-danger)_85%,black)]',
-        ],
+        ].join(' '),
       },
       size: {
         sm: 'h-8 px-3 text-small',

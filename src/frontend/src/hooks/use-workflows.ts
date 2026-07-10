@@ -24,7 +24,7 @@ export type WorkflowType =
  |'resignation'
  |'overtime'
  |'time_correction';
-export type WorkflowStatus ='pending' |'approved' |'rejected' |'sent_back';
+export type WorkflowStatus ='pending' |'approved' |'rejected' |'sent_back' |'cancelled';
 export type WorkflowUrgency ='low' |'normal' |'high' |'critical';
 
 export interface WorkflowStep {

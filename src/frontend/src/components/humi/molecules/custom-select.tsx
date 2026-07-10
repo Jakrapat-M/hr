@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export interface SelectOption<T extends string | number = string> {
   value: T;
@@ -91,7 +90,7 @@ export function CustomSelect<T extends string | number = string>({
   };
 
   return (
-    <div ref={containerRef} className={cn('relative', className)}>
+    <div ref={containerRef} className={`relative ${className}`}>
       <button
         type="button"
         id={id}
@@ -101,22 +100,22 @@ export function CustomSelect<T extends string | number = string>({
         aria-label={ariaLabel}
         onClick={() => !disabled && setOpen(!open)}
         onKeyDown={handleKeyDown}
-        className={cn(
+        className={[
           'w-full flex items-center justify-between',
           'px-3 py-2 text-sm text-left',
           'bg-surface border border-hairline rounded-md',
           'text-ink transition-colors',
           'hover:border-ink-muted',
           'focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25',
-          'disabled:bg-surface-raised disabled:cursor-not-allowed disabled:text-ink-muted'
-        )}
+          'disabled:bg-surface-raised disabled:cursor-not-allowed disabled:text-ink-muted',
+        ].join(' ')}
       >
         <span className={displayLabel ? 'text-ink' : 'text-ink-muted'}>
           {displayLabel || placeholder || '— Select —'}
         </span>
         <ChevronDown
           size={16}
-          className={cn('text-ink-soft transition-transform shrink-0 ml-2', open && 'rotate-180')}
+          className={`text-ink-soft transition-transform shrink-0 ml-2 ${open ? 'rotate-180' : ''}`}
           aria-hidden
         />
       </button>
@@ -125,13 +124,13 @@ export function CustomSelect<T extends string | number = string>({
         <ul
           role="listbox"
           aria-labelledby={id}
-          className={cn(
+          className={[
             'absolute z-20 mt-1 w-full',
             'bg-surface border border-hairline rounded-md',
             'shadow-2',
             'max-h-64 overflow-auto',
-            'py-1'
-          )}
+            'py-1',
+          ].join(' ')}
         >
           {options.length === 0 && (
             <li className="px-3 py-2 text-sm text-ink-muted">No options</li>
@@ -150,11 +149,11 @@ export function CustomSelect<T extends string | number = string>({
                   onChange(opt.value);
                   setOpen(false);
                 }}
-                className={cn(
+                className={[
                   'px-3 py-2 text-sm cursor-pointer flex items-center justify-between',
                   'transition-colors',
-                  isHighlighted ? 'bg-accent-tint text-ink' : 'text-ink'
-                )}
+                  isHighlighted ? 'bg-accent-tint text-ink' : 'text-ink',
+                ].join(' ')}
               >
                 <span>{opt.label}</span>
                 {isSelected && (

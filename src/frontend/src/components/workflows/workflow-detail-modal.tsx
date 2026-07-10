@@ -25,6 +25,7 @@ const STATUS_VARIANTS: Record<WorkflowStatus,'warning' |'success' |'error' |'inf
  approved:'success',
  rejected:'error',
  sent_back:'info',
+ cancelled:'neutral',
 };
 
 const TYPE_ICONS: Record<WorkflowType, React.ReactNode> = {

@@ -1317,7 +1317,7 @@ export interface QueueWorkflowRow {
   description: string;
   submittedDate: string;
   urgency: 'low' | 'normal' | 'high' | 'critical';
-  status: 'pending' | 'approved' | 'rejected' | 'sent_back';
+  status: 'pending' | 'approved' | 'rejected' | 'sent_back' | 'cancelled';
   currentStep: number;
   totalSteps: number;
   steps: {
