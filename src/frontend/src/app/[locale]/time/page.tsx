@@ -143,21 +143,21 @@ export default function TimeLandingPage() {
     tile.badgeKey === 'pending-requests' ? pendingRequests : undefined;
 
   return (
-    <div className="p-6 space-y-8">
-      {/* Hero */}
-      <div className="rounded-[var(--radius-md)] bg-canvas-soft border border-hairline p-6">
-        <p className="text-xs font-semibold uppercase tracking-widest text-ink-muted mb-1">
+    <div className="space-y-6 pb-8">
+      {/* 1. Page Header Section */}
+      <header>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
           {isTh ? 'เวลาและการเข้างาน' : 'Time & Attendance'}
-        </p>
-        <h1 className="text-2xl font-bold text-ink">
+        </span>
+        <h1 className="font-display text-3xl font-semibold text-ink mt-1">
           {isTh ? 'โมดูลเวลางาน' : 'Time Module'}
         </h1>
-        <p className="mt-2 text-sm text-ink-muted max-w-xl">
+        <p className="mt-1 text-small text-ink-muted max-w-xl">
           {isTh
             ? 'บันทึกเวลางาน ยื่นคำขอลา และขอทำงานล่วงเวลา — ครบถ้วนในที่เดียว'
             : 'Log hours, request leave, and submit overtime — all in one place.'}
         </p>
-      </div>
+      </header>
 
       <DemoValuesDisclaimer />
 

@@ -8,6 +8,7 @@ import { useState, useMemo } from 'react'
 import { useDataManagement } from '@/lib/admin/store/useDataManagement'
 import { exportToCSV, type CsvColumn } from '@/lib/admin/utils/csvExport'
 import type { TrafficEntry } from '@/lib/admin/types/dataManagement'
+import { Button, DataTable, type DataTableColumn } from '@/components/humi'
 
 const TRAFFIC_CSV_COLUMNS: CsvColumn<TrafficEntry>[] = [
   { header: 'รหัสพนักงาน',     accessor: 'employeeId' },
@@ -56,10 +57,69 @@ export default function TrafficPage() {
 
   const failedCount = filtered.filter((e) => !e.isSuccess).length
 
+  const columns: DataTableColumn<TrafficEntry>[] = useMemo(() => [
+    {
+      id: 'employeeId',
+      header: 'รหัส',
+      sortAccessor: (r) => r.employeeId,
+      cell: (r) => <span className="font-mono text-sm text-ink-muted">{r.employeeId}</span>,
+    },
+    {
+      id: 'employeeName',
+      header: 'ชื่อ',
+      sortAccessor: (r) => r.employeeName,
+      cell: (r) => <span className="text-sm text-ink">{r.employeeName}</span>,
+    },
+    {
+      id: 'ipAddress',
+      header: 'IP',
+      sortAccessor: (r) => r.ipAddress,
+      cell: (r) => <span className="font-mono text-sm text-ink-muted">{r.ipAddress}</span>,
+    },
+    {
+      id: 'loginAt',
+      header: 'เวลาเข้า',
+      sortAccessor: (r) => r.loginAt,
+      cell: (r) => (
+        <span className="text-sm text-ink-muted whitespace-nowrap">
+          {new Date(r.loginAt).toLocaleString('th-TH')}
+        </span>
+      ),
+    },
+    {
+      id: 'isSuccess',
+      header: 'สถานะ',
+      sortAccessor: (r) => (r.isSuccess ? '1' : '0'),
+      cell: (r) =>
+        r.isSuccess ? (
+          <span className="inline-flex px-2 py-0.5 rounded-[var(--radius-sm)] text-[11px] font-semibold uppercase tracking-[0.08em] bg-success-soft text-success whitespace-nowrap">
+            สำเร็จ
+          </span>
+        ) : (
+          <span
+            className="inline-flex px-2 py-0.5 rounded-[var(--radius-sm)] text-[11px] font-semibold uppercase tracking-[0.08em] bg-danger-soft text-danger-ink whitespace-nowrap"
+            title={r.failureReason ?? undefined}
+          >
+            ล้มเหลว
+          </span>
+        ),
+    },
+    {
+      id: 'location',
+      header: 'สถานที่',
+      sortAccessor: (r) => r.location ?? '',
+      cell: (r) => (
+        <span className="text-sm text-ink-muted">
+          {r.location ?? <span className="text-ink-muted/50">—</span>}
+        </span>
+      ),
+    },
+  ], [])
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-ink">Traffic Report</h1>
+        <h1 className="text-2xl font-semibold text-ink font-display">Traffic Report</h1>
         <p className="mt-1 text-sm text-ink-muted">
           รายงาน login activity — ดูและ export ข้อมูลการเข้าใช้งานระบบ
         </p>
@@ -75,7 +135,7 @@ export default function TrafficPage() {
             value={range.from}
             max={range.to}
             onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))}
-            className="text-sm border border-hairline rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            className="text-sm border border-hairline rounded-[var(--radius-md)] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent bg-surface text-ink"
             aria-label="วันที่เริ่มต้น"
           />
         </div>
@@ -87,7 +147,7 @@ export default function TrafficPage() {
             value={range.to}
             min={range.from}
             onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))}
-            className="text-sm border border-hairline rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            className="text-sm border border-hairline rounded-[var(--radius-md)] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent bg-surface text-ink"
             aria-label="วันที่สิ้นสุด"
           />
         </div>
@@ -96,81 +156,37 @@ export default function TrafficPage() {
             type="checkbox"
             checked={showFailed}
             onChange={(e) => setShowFailed(e.target.checked)}
-            className="w-4 h-4 rounded border-hairline text-danger focus:ring-[var(--color-danger)]"
+            className="w-4 h-4 rounded border-hairline text-danger focus:ring-accent"
           />
           เฉพาะ login ล้มเหลว
         </label>
         <div className="ml-auto flex items-center gap-2">
           {failedCount > 0 && (
-            <span className="text-xs text-danger font-medium bg-danger-soft px-2 py-1 rounded-full">
+            <span className="text-xs text-danger-ink font-medium bg-danger-soft px-2 py-1 rounded-full">
               {failedCount} ล้มเหลว
             </span>
           )}
-          <button
-            type="button"
+          <Button
+            variant="primary"
             onClick={handleExport}
             disabled={filtered.length === 0}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
             aria-label="Export CSV"
           >
             Export CSV ({filtered.length})
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Table */}
       <div className="bg-surface border border-hairline-soft rounded-xl shadow-[var(--shadow-sm)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200" role="table" aria-label="Login Activity">
-            <thead className="bg-canvas-soft">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">รหัส</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">ชื่อ</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">IP</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">เวลาเข้า</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">สถานะ</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">สถานที่</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-ink-faint">
-                    ไม่พบข้อมูลในช่วงวันที่เลือก
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((entry) => (
-                  <tr
-                    key={entry.id}
-                    className={`transition-colors ${!entry.isSuccess ? 'bg-danger-soft hover:bg-danger-soft' : 'hover:bg-canvas-soft'}`}
-                  >
-                    <td className="px-4 py-3 text-sm text-ink-muted font-mono">{entry.employeeId}</td>
-                    <td className="px-4 py-3 text-sm text-ink">{entry.employeeName}</td>
-                    <td className="px-4 py-3 text-sm text-ink-muted font-mono">{entry.ipAddress}</td>
-                    <td className="px-4 py-3 text-sm text-ink-muted whitespace-nowrap">
-                      {new Date(entry.loginAt).toLocaleString('th-TH')}
-                    </td>
-                    <td className="px-4 py-3">
-                      {entry.isSuccess ? (
-                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">
-                          สำเร็จ
-                        </span>
-                      ) : (
-                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-danger-soft text-danger-ink whitespace-nowrap" title={entry.failureReason ?? undefined}>
-                          ล้มเหลว
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-ink-muted">
-                      {entry.location ?? <span className="text-ink-faint">—</span>}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTable<TrafficEntry>
+          caption="Login Activity"
+          captionVisuallyHidden
+          columns={columns}
+          rows={filtered}
+          rowKey={(row) => row.id}
+          showAllRows
+        />
         <div className="px-4 py-2 border-t border-hairline-soft bg-canvas-soft text-xs text-ink-faint">
           แสดง {filtered.length} จาก {trafficLog.length} รายการ
         </div>

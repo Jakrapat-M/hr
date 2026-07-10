@@ -4,7 +4,7 @@
 // /me/documents — ESS document library  BRD #173
 // ════════════════════════════════════════════════════════════
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { Download, FileText, Filter, Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ import { DOCUMENT_STORYBOARD_BOUNDARY_TH } from '@/lib/document-boundary';
 import { useAuthStore } from '@/stores/auth-store';
 import { employeeForLogin, ALL_PORTED_EMPLOYEES } from '@/lib/all-ported-employees';
 import { LetterGeneratorModal } from '@/components/documents/LetterGeneratorModal';
+import { DataTable, type DataTableColumn } from '@/components/humi';
 
 type FilterValue = 'all' | HrDocType;
 
@@ -40,6 +41,44 @@ export default function MeDocumentsPage() {
   const filtered: HumiHrDoc[] = filter === 'all'
     ? HUMI_HR_DOCS
     : HUMI_HR_DOCS.filter((d) => d.type === filter);
+
+  const columns: DataTableColumn<HumiHrDoc>[] = useMemo(() => [
+    {
+      id: 'name',
+      header: 'ชื่อเอกสาร',
+      sortAccessor: (d) => d.name,
+      cell: (d) => <span className="text-sm">{d.name}</span>,
+    },
+    {
+      id: 'type',
+      header: 'ประเภท',
+      sortAccessor: (d) => d.type,
+      cell: (d) => <span className="text-xs text-ink-muted">{HR_DOC_TYPE_LABELS[d.type]}</span>,
+    },
+    {
+      id: 'issuedDate',
+      header: 'วันที่ออก',
+      sortAccessor: (d) => d.issuedDate,
+      cell: (d) => <span className="text-xs text-ink-muted">{formatDate(d.issuedDate, 'medium', 'th')}</span>,
+    },
+    {
+      id: 'download',
+      header: 'ดาวน์โหลด',
+      align: 'right',
+      cell: (d) => (
+        <a
+          href={d.downloadUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid={`doc-download-${d.id}`}
+          className="humi-row gap-1 text-xs text-accent justify-end no-underline"
+        >
+          <Download size={14} aria-hidden />
+          ดาวน์โหลด
+        </a>
+      ),
+    },
+  ], []);
 
   return (
     <div data-testid="me-documents-page">
@@ -107,45 +146,15 @@ export default function MeDocumentsPage() {
         </div>
       ) : (
         <div data-testid="docs-list" className="humi-card overflow-hidden p-0">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-surface-muted text-xs text-ink-muted">
-                <th className="px-3.5 py-2.5 text-left font-semibold">ชื่อเอกสาร</th>
-                <th className="px-3.5 py-2.5 text-left font-semibold">ประเภท</th>
-                <th className="px-3.5 py-2.5 text-left font-semibold">วันที่ออก</th>
-                <th className="px-3.5 py-2.5 text-right font-semibold">ดาวน์โหลด</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((doc) => (
-                <tr
-                  key={doc.id}
-                  data-testid={`doc-row-${doc.id}`}
-                  className="border-t border-ink-faint"
-                >
-                  <td className="px-3.5 py-3 text-sm">{doc.name}</td>
-                  <td className="px-3.5 py-3 text-xs text-ink-muted">
-                    {HR_DOC_TYPE_LABELS[doc.type]}
-                  </td>
-                  <td className="px-3.5 py-3 text-xs text-ink-muted">
-                    {formatDate(doc.issuedDate, 'medium', 'th')}
-                  </td>
-                  <td className="px-3.5 py-3 text-right">
-                    <a
-                      href={doc.downloadUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-testid={`doc-download-${doc.id}`}
-                      className="humi-row gap-1 text-xs text-accent justify-end no-underline"
-                    >
-                      <Download size={14} aria-hidden />
-                      ดาวน์โหลด
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable<HumiHrDoc>
+            caption="เอกสารส่วนบุคคล"
+            captionVisuallyHidden
+            columns={columns}
+            rows={filtered}
+            rowKey={(row) => row.id}
+            rowTestId={(row) => `doc-row-${row.id}`}
+            showAllRows
+          />
         </div>
       )}
 

@@ -2298,3 +2298,67 @@ html { font-size: 18px; }
 .sforg-carousel-btn.prev { left: -16px; }
 .sforg-carousel-btn.next { right: -16px; }
 /* hmr-touch */
+
+/* ════════════════════════════════════════════════════════════
+   Humi Global Design System Enforcement
+   Applies CPN, Anuphan, and Geist Mono fonts, correct ink/canvas,
+   card shadows, and table typography to all pages/paths automatically.
+   ════════════════════════════════════════════════════════════ */
+
+/* Page Headlines & Typography styling */
+h1 {
+  font-family: var(--font-display, 'CPN Condensed', 'CPN', 'Anuphan', system-ui);
+  color: var(--color-ink, #0E1B2C);
+  font-weight: 600;
+}
+
+h2, h3 {
+  font-family: var(--font-display, 'CPN Condensed', 'CPN', 'Anuphan', system-ui);
+  color: var(--color-ink, #0E1B2C);
+  font-weight: 600;
+}
+
+/* Card shadows & elevation transitions */
+.humi-card, .card {
+  box-shadow: var(--shadow-card, 0 4px 12px rgba(14,27,44,0.04));
+  transition: box-shadow var(--dur-base, 220ms) var(--ease-spring);
+}
+
+.humi-card:hover, .card:hover {
+  box-shadow: var(--shadow-md, 0 10px 20px rgba(14,27,44,0.08));
+}
+
+/* Table elements layout, border, padding, and hover styling */
+table:not([class*="DataTable"]) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem; /* text-body */
+  color: var(--color-ink, #0E1B2C);
+}
+
+table:not([class*="DataTable"]) thead {
+  background-color: var(--color-canvas-soft, #FCFAF5);
+}
+
+table:not([class*="DataTable"]) th {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-hairline, #E7DFD1);
+  font-family: var(--font-sans, 'CPN', 'Anuphan', system-ui);
+  font-size: 0.6875rem; /* text-eyebrow */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-ink-muted, #5A6A7E);
+}
+
+table:not([class*="DataTable"]) td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-hairline-soft, #EFE9DC);
+  color: var(--color-ink-soft, #243447);
+  vertical-align: middle;
+  transition: background-color var(--dur-fast, 120ms) ease;
+}
+
+table:not([class*="DataTable"]) tbody tr:hover {
+  background-color: color-mix(in srgb, var(--color-accent-soft, #D6EEEC) 40%, transparent);
+}

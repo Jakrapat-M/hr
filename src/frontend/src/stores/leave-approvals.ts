@@ -140,6 +140,7 @@ interface LeaveApprovalsState {
   ) => string;
   approve: (id: string, by: { id: string; name: string }, comment?: string) => void;
   reject: (id: string, by: { id: string; name: string }, reason: string) => void;
+  sendBack: (id: string, by: { id: string; name: string }, reason: string) => void;
   /**
    * STA-183 — employee cancels their OWN leave request under the cycle-window
    * rule: allowed while not terminal (rejected/cancelled) AND the start date is in
@@ -313,6 +314,33 @@ export const useLeaveApprovals = create<LeaveApprovalsState>()(
                         actorName: by.name,
                         action: 'reject' as const,
                         comment: reason,
+                        at: new Date().toISOString(),
+                      },
+                    ],
+                  },
+            ),
+          };
+        }),
+      sendBack: (id, by, reason) =>
+        set((state) => {
+          const target = state.requests.find((r) => r.id === id);
+          if (!target || target.status !== 'pending') return state;
+          
+          return {
+            requests: state.requests.map((r) =>
+              r.id !== id
+                ? r
+                : {
+                    ...r,
+                    status: 'pending' as LeaveStatus,
+                    awaitingNext: false, // reset back to manager
+                    audit: [
+                      ...r.audit,
+                      {
+                        actorId: by.id,
+                        actorName: by.name,
+                        action: 'reject' as const, // using reject audit since sendBack isn't in LeaveAuditEntry action types
+                        comment: 'Sent back: ' + reason,
                         at: new Date().toISOString(),
                       },
                     ],

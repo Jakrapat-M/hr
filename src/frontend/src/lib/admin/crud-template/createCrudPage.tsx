@@ -240,7 +240,7 @@ export function createCrudPage<TItem extends { id: string }>(
                   <button
                     type="button"
                     className="humi-btn"
-                    style={{ color: 'var(--color-danger-ink)' }}
+                    style={{ color: 'var(--color-danger-ink, #9A3412)' }}
                     onClick={() => {
                       if (editing.id) {
                         config.remove!(editing.id)

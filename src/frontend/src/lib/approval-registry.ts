@@ -99,6 +99,10 @@ export interface ApprovalAdapter<Record_ = unknown> {
    */
   cancel?: (id: string, actor: ApprovalActor) => void | Promise<void>;
   /**
+   * Send back to employee for modification.
+   */
+  sendBack?: (id: string, actor: ApprovalActor, reason: string) => void | Promise<void>;
+  /**
    * STA-175 — true when `record` is still at its first approval stage with no
    * approver acted (so the employee may self-cancel). Absent ⇒ not cancellable.
    */
@@ -478,6 +482,8 @@ export const APPROVAL_REGISTRY: Record<RequestType, ApprovalAdapter> = {
     labels: { th: 'ลา', en: 'Leave' },
     cancel: (id, actor) =>
       useLeaveApprovals.getState().cancel(id, { id: actor.id ?? '', name: actor.name }),
+    sendBack: (id, actor, reason) =>
+      useLeaveApprovals.getState().sendBack(id, { id: actor.id ?? '', name: actor.name }, reason),
     isCancellable: (record) => {
       const r = record as LeaveRequest;
       // STA-183 — cycle-window rule (supersedes STA-157 first-approval gate).

@@ -34,13 +34,16 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-// Mock lucide-react icons to avoid SVG rendering complexity in jsdom
-vi.mock('lucide-react', () => ({
-  Download: () => null,
-  FileText: () => null,
-  Filter: () => null,
-  Plus: () => null,
-}))
+// Mock lucide-react icons dynamically to avoid SVG complexity and support any icon imports
+vi.mock('lucide-react', () => {
+  return new Proxy({}, {
+    get: (target, prop) => {
+      const MockIcon = () => null;
+      MockIcon.displayName = String(prop);
+      return MockIcon;
+    }
+  });
+})
 
 import MeDocumentsPage from '@/app/[locale]/me/documents/page'
 import { HUMI_HR_DOCS, HR_DOC_TYPE_LABELS } from '@/lib/humi-mock-data'

@@ -39,9 +39,9 @@ import { cn } from '@/lib/utils';
 type TabKey ='overview' |'team' |'org-chart' |'positions' |'reports' |'approvals' |'calendar';
 
 const SEVERITY_STYLES: Record<string, string> = {
- critical:'border-l-4 border-l-red-500 bg-danger-tint',
- high:'border-l-4 border-l-yellow-500 bg-warning-tint',
- normal:'border-l-4 border-l-blue-500 bg-accent-tint',
+ critical: 'border-l-4 border-l-danger bg-danger-soft',
+ high: 'border-l-4 border-l-warning bg-warning-soft',
+ normal: 'border-l-4 border-l-accent bg-accent-soft',
 };
 
 const ALERT_ICONS: Record<string, React.ReactNode> = {

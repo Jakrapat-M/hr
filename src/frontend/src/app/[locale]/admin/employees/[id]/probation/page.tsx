@@ -112,24 +112,24 @@ function ProbationBanner({ daysRemaining }: ProbationBannerProps) {
   let text: string
 
   if (daysRemaining === 0) {
-    bg = 'var(--color-accent-soft, #E8F4FE)'
-    border = 'var(--color-accent, #3B82F6)'
-    color = 'var(--color-accent, #1D4ED8)'
+    bg = 'var(--color-accent-soft, #D6EEEC)'
+    border = 'var(--color-accent, #1FA8A0)'
+    color = 'var(--color-ink, #0E1B2C)'
     text = 'ครบกำหนดแล้ว — ระบบจะอนุมัติผ่านอัตโนมัติ'
   } else if (daysRemaining <= 14) {
-    bg = 'var(--color-danger-soft)'
-    border = 'var(--color-danger)'
-    color = 'var(--color-danger-ink)'
+    bg = 'var(--color-danger-soft, #FFEDD5)'
+    border = 'var(--color-danger, #FB923C)'
+    color = 'var(--color-danger-ink, #9A3412)'
     text = `ใกล้ครบกำหนด (${daysRemaining} วัน) — โปรดประเมิน`
   } else if (daysRemaining <= 29) {
-    bg = '#FFFBEB'
-    border = '#F59E0B'
+    bg = 'var(--color-warning-soft, #FEF3C7)'
+    border = 'var(--color-warning, #F59E0B)'
     color = '#92400E'
     text = `ใกล้ครบทดลองงาน: เหลือ ${daysRemaining} วัน`
   } else {
-    bg = 'var(--color-hairline-soft, #F3F4F6)'
-    border = 'var(--color-hairline, #D1D5DB)'
-    color = 'var(--color-ink-muted, #6B7280)'
+    bg = 'var(--color-canvas-soft, #FCFAF5)'
+    border = 'var(--color-hairline, #E7DFD1)'
+    color = 'var(--color-ink-muted, #5A6A7E)'
     text = `ช่วงทดลองงานเหลืออีก ${daysRemaining} วัน`
   }
 

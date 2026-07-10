@@ -43,6 +43,8 @@ export interface DataTableProps<Row> {
   rows: Row[];
   /** Stable row key. Falls back to index. */
   rowKey?: (row: Row, index: number) => string;
+  /** Optional custom test ID on the row element for testing. */
+  rowTestId?: (row: Row, index: number) => string;
   /** Compact row height (36px instead of 48px). */
   dense?: boolean;
   /** Caption for the table (required for a11y — visually hidden OK). */
@@ -73,6 +75,7 @@ export function DataTable<Row>({
   columns,
   rows,
   rowKey,
+  rowTestId,
   dense = false,
   caption,
   captionVisuallyHidden = true,
@@ -203,6 +206,7 @@ export function DataTable<Row>({
             return (
               <tr
                 key={key}
+                data-testid={rowTestId ? rowTestId(row, idx) : undefined}
                 onClick={interactive ? () => onRowClick!(row, idx) : undefined}
                 onKeyDown={
                   interactive

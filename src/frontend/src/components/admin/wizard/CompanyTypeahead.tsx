@@ -200,10 +200,10 @@ export default function CompanyTypeahead({
         }}
         className={[
           'w-full rounded-md border px-3 py-2 text-sm',
-          'focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]',
+          'focus:outline-none focus:ring-2',
           error
-            ? 'border-danger focus:ring-[var(--color-danger)]'
-            : 'border-hairline',
+            ? 'border-danger focus:ring-danger'
+            : 'border-hairline focus:ring-accent focus:border-accent',
           disabled ? 'bg-canvas-soft text-ink-faint cursor-not-allowed' : 'bg-surface text-ink',
         ].join(' ')}
       />

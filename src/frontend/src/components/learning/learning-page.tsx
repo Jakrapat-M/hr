@@ -23,22 +23,22 @@ function generateCertificateHtml(course: { nameEn: string; code: string; score?:
  <title>Certificate - ${course.nameEn}</title>
  <style>
  body { font-family: Georgia,'Times New Roman', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f0ede8; }
- .frame { border: 8px solid #C8102E; padding: 12px; background: white; box-shadow: 0 8px 40px rgba(0,0,0,0.15); }
+ .frame { border: 8px solid #1FA8A0; padding: 12px; background: white; box-shadow: 0 8px 40px rgba(0,0,0,0.15); }
  .inner-frame { border: 2px solid #d4af37; padding: 60px 80px; text-align: center; max-width: 800px; position: relative; }
  .corner { position: absolute; width: 40px; height: 40px; border-color: #d4af37; }
  .corner.tl { top: 8px; left: 8px; border-top: 3px solid; border-left: 3px solid; }
  .corner.tr { top: 8px; right: 8px; border-top: 3px solid; border-right: 3px solid; }
  .corner.bl { bottom: 8px; left: 8px; border-bottom: 3px solid; border-left: 3px solid; }
  .corner.br { bottom: 8px; right: 8px; border-bottom: 3px solid; border-right: 3px solid; }
- .company { font-size: 13px; color: #C8102E; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
- h1 { color: #C8102E; font-size: 36px; margin: 0 0 8px 0; font-weight: 400; }
+ .company { font-size: 13px; color: #1FA8A0; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+ h1 { color: #1FA8A0; font-size: 36px; margin: 0 0 8px 0; font-weight: 400; }
  .subtitle { color: #666; font-size: 16px; font-weight: normal; margin-bottom: 30px; }
  .employee-name { font-size: 32px; color: #1a1a1a; font-weight: 700; margin: 16px 0 8px; font-style: italic; }
- .divider { width: 200px; border-top: 2px solid #C8102E; margin: 24px auto; }
+ .divider { width: 200px; border-top: 2px solid #1FA8A0; margin: 24px auto; }
  .label { color: #888; font-size: 13px; margin-bottom: 4px; }
  .course-name { font-size: 24px; color: #1a1a1a; font-weight: bold; margin: 8px 0 20px; }
  .details { color: #666; font-size: 14px; margin-top: 8px; }
- .score { font-size: 20px; color: #C8102E; font-weight: bold; margin-top: 12px; }
+ .score { font-size: 20px; color: #1FA8A0; font-weight: bold; margin-top: 12px; }
  .date { color: #888; font-size: 13px; margin-top: 24px; }
  .signatures { display: flex; justify-content: space-around; margin-top: 48px; }
  .sig { text-align: center; }

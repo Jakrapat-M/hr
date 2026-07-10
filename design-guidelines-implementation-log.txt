@@ -1,0 +1,44 @@
+Humi Design Guidelines Implementation Log - 2026-07-09
+
+This document logs the changes made across the HRMS frontend codebase to implement and enforce compliance with the Humi Design & Component Guidelines (design-guidelines.md).
+
+================================================================================
+1. GLOBAL OVERRIDES & COMPLIANCE ENFORCEMENT
+================================================================================
+* File: src/frontend/src/app/globals.css
+* Action: Appended global design system overrides at the bottom of the stylesheet to ensure all pages and paths automatically adhere to the Humi guidelines:
+  - Headlines (h1, h2, h3): Enforced CPN Condensed / Anuphan font families and Navy ink colors (--color-ink) with standard weights.
+  - Card Elements (.humi-card, .card): Configured soft warm navy shadow elevations (--shadow-card) and transitions for hover states (--shadow-md).
+  - Tables (table:not([class*="DataTable"])): Configured correct border collapses, canvas-soft background headers, padding sizes, and custom row hover tint highlights to visually align legacy tables with Humi design tokens.
+
+================================================================================
+2. TIME MODULE LAYOUT & TITLE ALIGNMENT
+================================================================================
+* File: src/frontend/src/app/[locale]/time/page.tsx
+* Actions:
+  - Header Restructuring: Replaced the boxed hero card (bg-canvas-soft border p-6) with Humi's standard non-boxed page header. Used CPN Condensed font-display (text-3xl font-semibold text-ink) for the title and formatted the eyebrow and subtitle elements accordingly.
+  - Alignment Fix: Removed the local container padding class (p-6) from the page root wrapper. Standardized the class to "space-y-6 pb-8" to let the global AppShell margins style the page, matching the exact alignment of other pages in the application.
+
+================================================================================
+3. ME DOCUMENTS DATATABLE REFACTOR
+================================================================================
+* File: src/frontend/src/app/[locale]/me/documents/page.tsx
+* Action: Rebuilt the raw HTML <table> into the Humi design system's canonical <DataTable> component using a mapped columns configuration.
+* File: src/frontend/src/components/humi/DataTable.tsx
+* Action: Extended the DataTable primitive by adding the "rowTestId" optional prop. This forwards custom test IDs to individual <tr> rows, ensuring the existing Vitest and E2E regression suites (asserting on doc-row-{id} test IDs) remain fully protected and passing.
+* File: src/frontend/src/__tests__/me-documents.test.tsx
+* Action: Replaced the static lucide-react mock with a dynamic Proxy-based mock to resolve nested icon dependencies from imported Humi components, allowing the unit test suite to pass.
+
+================================================================================
+* BANNED RED COLORS & FOCUS RING CORRECTIONS
+================================================================================
+* File: src/frontend/src/app/[locale]/admin/employees/[id]/probation/page.tsx
+  - Action: Removed banned red colors (#FEF2F2, #EF4444, #B91C1C) from the probation days banner. Replaced with semantic danger variables (--color-danger-soft, --color-danger, --color-danger-ink) and warning/canvas soft variables.
+* File: src/frontend/src/components/admin/wizard/CompanyTypeahead.tsx
+  - Action: Swapped blue and banned red focus-ring colors (focus:ring-red-500) for Humi accent and danger tokens (focus:ring-accent / focus:ring-danger).
+* File: src/frontend/src/components/learning/learning-page.tsx
+  - Action: Replaced the banned Central Group retail red (#C8102E) in the certificate generation template with Humi's brand Teal (#1FA8A0).
+* File: src/frontend/src/lib/admin/crud-template/createCrudPage.tsx
+  - Action: Changed the banned fallback red color (#dc2626) to Humi's dark orange danger ink (#9A3412).
+* File: src/frontend/src/components/manager/manager-dashboard-page.tsx
+  - Action: Replaced border-l-red-500 and bg-danger-tint with border-l-danger and bg-danger-soft in critical alert severity styles.

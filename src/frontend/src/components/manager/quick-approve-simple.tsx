@@ -16,7 +16,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Card } from '@/components/humi';
 import { Button } from '@/components/humi';
 import { DataTable, type DataTableColumn } from '@/components/humi';
-import { isTerminationId, useSelectPendingApprovals, type QueueApproval } from '@/lib/approval-registry';
+import { isTerminationId, useSelectPendingApprovals, type QueueApproval, APPROVAL_REGISTRY } from '@/lib/approval-registry';
 import { moduleOf, type PendingRequest, type ClaimDetails, type WorkflowModule } from '@/lib/quick-approve-api';
 import { useAuthStore } from '@/stores/auth-store';
 import { useQuickApproveAssignments, type Assignee } from '@/stores/quick-approve-assignments';
@@ -163,6 +163,26 @@ export function QuickApproveSimple() {
     return seededStatus[req.id] ?? 'pending';
   }
 
+  // ── Multi-select State ────────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
+  function toggleSelection(id: string) {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  }
+
+  function toggleAll(visibleIds: string[]) {
+    if (visibleIds.every(id => selectedIds.has(id))) {
+      setSelectedIds(new Set());
+    } else {
+      const next = new Set(selectedIds);
+      visibleIds.forEach(id => next.add(id));
+      setSelectedIds(next);
+    }
+  }
+
   // Tab counts.
   const pendingCount  = rows.filter((r) => effectiveStatus(r) === 'pending').length;
   const approvedCount = rows.filter((r) => effectiveStatus(r) === 'approved').length;
@@ -182,6 +202,33 @@ export function QuickApproveSimple() {
   // ── Columns ──────────────────────────────────────────────
 
   const columns: DataTableColumn<PendingRequest>[] = [
+    {
+      id: 'selection',
+      header: (
+        <div className="flex justify-center items-center w-full">
+          <input
+            type="checkbox"
+            className="rounded border-hairline text-accent focus:ring-accent w-4 h-4 cursor-pointer m-0"
+            checked={visibleRows.length > 0 && visibleRows.every(r => selectedIds.has(r.id))}
+            onChange={() => toggleAll(visibleRows.map(r => r.id))}
+            aria-label="Select all"
+          />
+        </div>
+      ),
+      cell: (row) => (
+        <div className="flex justify-center items-center w-full" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            className="rounded border-hairline text-accent focus:ring-accent w-4 h-4 cursor-pointer m-0"
+            checked={selectedIds.has(row.id)}
+            onChange={() => toggleSelection(row.id)}
+            aria-label={`Select ${row.id}`}
+          />
+        </div>
+      ),
+      className: 'w-10',
+      align: 'center',
+    },
     {
       id: 'ref',
       header: t('columns.ref'),
@@ -387,12 +434,29 @@ export function QuickApproveSimple() {
       header: '',
       headerVisuallyHidden: true,
       cell: (row) => {
-        // The ROW is the affordance now (click → RequestDetailModal popup), so the
-        // old actions-column "View" link is gone. A still-pending row this persona
-        // CANNOT act on keeps the explicit "view only" badge so the read-only scope
-        // stays transparent.
         const status = effectiveStatus(row);
+        
+        // Show Cancel button if the request is approved and supports cancel
+        if (status === 'approved' && APPROVAL_REGISTRY[row.type]?.cancel) {
+          return (
+            <div className="flex justify-end w-full">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-danger hover:bg-danger-soft h-8 whitespace-nowrap"
+                onClick={async (e) => {
+                  e.stopPropagation(); // prevent row click
+                  await APPROVAL_REGISTRY[row.type].cancel!(row.id, { name: username ?? MANAGER_NAME });
+                }}
+              >
+                {locale === 'en' ? 'Cancel' : 'ยกเลิกสถานะ'}
+              </Button>
+            </div>
+          );
+        }
+
         if (status !== 'pending') return null;
+        
         const item = queueById[row.id];
         const actable = item ? canActOn(item, roles) : false;
         if (!actable) {
@@ -408,7 +472,8 @@ export function QuickApproveSimple() {
         }
         return null;
       },
-      className: 'w-32',
+      className: 'w-[140px] pr-4',
+      align: 'right',
     },
   ];
 
@@ -540,20 +605,93 @@ export function QuickApproveSimple() {
         ))}
       </div>
 
+      {/* Mass Actions Toolbar */}
+      <div className="bg-canvas-soft border border-hairline rounded-[var(--radius-lg)] p-3 mb-4 flex flex-wrap items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+        <div className="flex items-center gap-2 text-small font-medium text-ink-muted">
+          <span className="w-5 h-5 rounded-full bg-accent-soft text-accent flex items-center justify-center text-xs">{selectedIds.size}</span>
+          {locale === 'en' ? 'requests selected' : 'เลือกแล้ว'}
+          {selectedIds.size > 0 && (
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="ml-2 text-xs font-semibold text-accent hover:text-accent-hover transition-colors"
+            >
+              {locale === 'en' ? 'Unselect all' : 'ยกเลิกการเลือก'}
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {(() => {
+            const selectedRows = Array.from(selectedIds).map(id => queueById[id]?.row).filter(Boolean) as PendingRequest[];
+            const allPending = selectedRows.length > 0 && selectedRows.every(r => effectiveStatus(r) === 'pending');
+            const allApproved = selectedRows.length > 0 && selectedRows.every(r => effectiveStatus(r) === 'approved');
+            
+            const canApprove = allPending;
+            const canReject = allPending;
+            // Send back is only allowed for Pending Leave requests according to HRM_Approval_Flow.md
+            // It explicitly restricts OT and Time Corrections from having Send Back.
+            const canSendBack = allPending && selectedRows.every(r => r.type === 'leave' || (!['overtime', 'time_correction'].includes(r.type) && APPROVAL_REGISTRY[r.type]?.sendBack));
+
+            return (
+              <>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={!canApprove}
+                  onClick={async () => {
+                    for (const row of selectedRows) {
+                      await APPROVAL_REGISTRY[row.type].approve(row.id, { name: username ?? MANAGER_NAME });
+                    }
+                    setSelectedIds(new Set());
+                  }}
+                >
+                  {locale === 'en' ? 'Approve' : 'อนุมัติ'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={!canReject}
+                  onClick={async () => {
+                    for (const row of selectedRows) {
+                      await APPROVAL_REGISTRY[row.type].reject(row.id, { name: username ?? MANAGER_NAME }, 'Mass rejected');
+                    }
+                    setSelectedIds(new Set());
+                  }}
+                >
+                  {locale === 'en' ? 'Reject' : 'ไม่อนุมัติ'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={!canSendBack}
+                  onClick={async () => {
+                    for (const row of selectedRows) {
+                      if (APPROVAL_REGISTRY[row.type].sendBack) {
+                        await APPROVAL_REGISTRY[row.type].sendBack!(row.id, { name: username ?? MANAGER_NAME }, 'Mass sent back');
+                      }
+                    }
+                    setSelectedIds(new Set());
+                  }}
+                >
+                  {locale === 'en' ? 'Send back' : 'ส่งกลับ'}
+                </Button>
+              </>
+            );
+          })()}
+        </div>
+      </div>
+
       {/* Table */}
-      <Card>
-        <DataTable<PendingRequest>
-          caption={t('title')}
-          captionVisuallyHidden
-          columns={columns}
-          rows={visibleRows}
-          rowKey={(row) => row.id}
-          onRowClick={(row) =>
-            hasDedicatedPage(locale, row) ? router.push(detailHref(locale, row)) : setSelected(row)
-          }
-          dense
-        />
-      </Card>
+      <DataTable<PendingRequest>
+        caption={t('title')}
+        captionVisuallyHidden
+        columns={columns}
+        rows={visibleRows}
+        rowKey={(row) => row.id}
+        onRowClick={(row) =>
+          hasDedicatedPage(locale, row) ? router.push(detailHref(locale, row)) : setSelected(row)
+        }
+        dense
+      />
 
       {/* STA-172 — per-row detail POPUP (Approve / Cancel / Open full page). */}
       <RequestDetailModal
