@@ -31,11 +31,11 @@ export default async function TeamTimeManagementPage() {
       {/* 1 — approvals / to-review first (STA-255 layout order). */}
       <TeamApprovalsFirst />
 
-      {/* 2 — compact expandable KPI dashboard. */}
-      <TeamOverviewDashboard />
-
-      {/* 3 — shortcut tile groups (the /time-hub idiom; quick-jump row removed). */}
+      {/* 2 — shortcut tile groups (the /time-hub idiom; quick-jump row removed). */}
       <TeamOverviewShortcuts />
+
+      {/* 3 — compact expandable KPI dashboard. */}
+      <TeamOverviewDashboard />
     </div>
   );
 }

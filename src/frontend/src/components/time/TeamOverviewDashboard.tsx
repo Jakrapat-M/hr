@@ -265,8 +265,8 @@ export function TeamOverviewDashboard({
     [selected],
   );
 
-  // ── STA-255 isolated expansion — at most ONE card open at a time.
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  // ── STA-255 isolated expansion — multiple cards can be open simultaneously.
+  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
 
   // ── OT is store-backed (persisted); read it only after hydration so the SSR /
   //    first client paint (empty store) and the hydrated render agree.
@@ -279,10 +279,11 @@ export function TeamOverviewDashboard({
     [periodWindow, empIds, otRows],
   );
 
-  // Only compute the granular per-employee rows while a card is open.
+  // Only compute the granular per-employee rows while at least one card is open.
+  const anyExpanded = Object.values(expandedIds).some(Boolean);
   const detail = useMemo(
-    () => (expandedId ? teamDetail(periodWindow, empIds, otRows) : []),
-    [expandedId, periodWindow, empIds, otRows],
+    () => (anyExpanded ? teamDetail(periodWindow, empIds, otRows) : []),
+    [anyExpanded, periodWindow, empIds, otRows],
   );
 
   // Best-effort display name: employee registry first, then live OT rows (which
@@ -411,22 +412,27 @@ export function TeamOverviewDashboard({
         </span>
       </div>
 
-      {/* Summary cards — COMPACT initial state; clicking a card expands ONLY that
-          card in place (grid-rows transition pushes the layout down smoothly). */}
+      {/* Summary cards — COMPACT initial state; clicking a card expands it
+          (grid-rows transition pushes the layout down smoothly). */}
       <div className="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {cards.map((card) => {
           const ctx: TeamOverviewCardContext = { stats, isTh, rangeLabel };
           const c = TONE_CLASS[card.tone];
-          const isOpen = expandedId === card.id;
+          const isOpen = !!expandedIds[card.id];
           return (
-            <Card key={card.id} variant="raised" size="md">
-              <div data-testid={card.testid} className="flex flex-col">
+            <Card
+              key={card.id}
+              variant="raised"
+              size="md"
+              flush
+            >
+              <div data-testid={card.testid} className="flex flex-col p-5">
                 <button
                   type="button"
                   aria-expanded={isOpen}
                   aria-controls={`card-detail-${card.id}`}
-                  onClick={() => setExpandedId((cur) => (cur === card.id ? null : card.id))}
-                  className="flex w-full flex-col gap-2 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
+                  onClick={() => setExpandedIds((cur) => ({ ...cur, [card.id]: !cur[card.id] }))}
+                  className="flex w-full flex-col justify-between gap-2 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft h-24"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="text-small font-medium text-ink-muted">{card.label(ctx)}</div>
