@@ -284,20 +284,6 @@ const DEPARTMENT_FILTER_META: Record<string, Pick<RequestFilterMeta, 'company' |
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function deriveInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] ?? '') + (parts[1][0] ?? '');
-  return name.slice(0, 2);
-}
-
-const AVATAR_TONES = ['humi-avatar humi-avatar--teal', 'humi-avatar humi-avatar--sage', 'humi-avatar humi-avatar--butter', 'humi-avatar humi-avatar--ink'] as const;
-
-function pickTone(seed: string) {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
-  return AVATAR_TONES[Math.abs(h) % AVATAR_TONES.length];
-}
-
 // PR-1a (clickable-HRMS): the two bridge helpers probationToPendingRequest /
 // benefitClaimToPendingRequest were LIFTED into the canonical approval registry
 // (src/lib/approval-registry.ts) — imported above for local use by the useMemos
@@ -699,9 +685,6 @@ export function QuickApprovePage() {
       header: t('table.requester'),
       cell: (row) => (
         <div className="flex items-center gap-2.5">
-          <span className={pickTone(row.id)} aria-hidden style={{ width: 32, height: 32, fontSize: 11 }}>
-            {deriveInitials(row.requester.name)}
-          </span>
           <div className="min-w-0">
             <p className="text-sm font-medium text-ink truncate">{row.requester.name}</p>
             <p className="text-xs text-ink-muted truncate">{row.requester.department}</p>

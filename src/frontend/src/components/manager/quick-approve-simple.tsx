@@ -12,6 +12,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { X } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Card } from '@/components/humi';
 import { Button } from '@/components/humi';
@@ -260,13 +261,6 @@ export function QuickApproveSimple() {
       header: t('columns.employee'),
       cell: (row) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span
-            className="humi-avatar humi-avatar--teal"
-            style={{ width: 28, height: 28, fontSize: 11, flexShrink: 0 }}
-            aria-hidden
-          >
-            {row.requester.name.slice(0, 2)}
-          </span>
           <div>
             <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
               {row.requester.name}
@@ -277,27 +271,17 @@ export function QuickApproveSimple() {
           </div>
         </div>
       ),
+      className: 'w-56',
     },
     {
       id: 'type',
       header: t('columns.type'),
       cell: (row) => (
-        <span className="humi-tag" style={{ fontSize: 12 }}>
+        <span className="humi-tag" style={{ fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 110, display: 'inline-block' }}>
           {row.type === 'change_request' && isTerminationId(row.id) ? 'ลาออก' : typeLabel(row.type)}
         </span>
       ),
       className: 'w-32',
-    },
-    {
-      id: 'filed',
-      header: t('columns.filed'),
-      cell: (row) => (
-        <span style={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>
-          {formatDateTime(row.submittedAt)}
-        </span>
-      ),
-      className: 'w-36',
-      sortAccessor: (row) => row.submittedAt,
     },
     {
       id: 'submitDate',
@@ -314,10 +298,14 @@ export function QuickApproveSimple() {
       id: 'detail',
       header: t('columns.detail'),
       cell: (row) => (
-        <span style={{ fontSize: 13, color: 'var(--color-ink-soft)', maxWidth: 260, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span 
+          title={row.description}
+          style={{ fontSize: 13, color: 'var(--color-ink-soft)', maxWidth: 160, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+        >
           {row.description}
         </span>
       ),
+      className: 'w-48',
     },
     {
       id: 'status',
@@ -339,7 +327,7 @@ export function QuickApproveSimple() {
         if (status === 'pending' && awaitingNext[row.id]) {
           return (
             <div>
-              <span className="humi-tag humi-tag--butter" style={{ fontSize: 12 }}>
+              <span className="humi-tag humi-tag--butter" style={{ fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90, display: 'inline-block' }}>
                 {t('status.awaitingNext')}
               </span>
               {nextHint}
@@ -352,7 +340,7 @@ export function QuickApproveSimple() {
           'humi-tag humi-tag--butter';
         return (
           <div>
-            <span className={badgeClass} style={{ fontSize: 12 }}>{t(`status.${status}`)}</span>
+            <span className={badgeClass} style={{ fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90, display: 'inline-block' }}>{t(`status.${status}`)}</span>
             {nextHint}
           </div>
         );
@@ -443,13 +431,14 @@ export function QuickApproveSimple() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-danger hover:bg-danger-soft h-8 whitespace-nowrap"
+                className="text-danger hover:bg-danger-soft h-8 w-8 p-0"
+                title={locale === 'en' ? 'Cancel' : 'ยกเลิก'}
                 onClick={async (e) => {
                   e.stopPropagation(); // prevent row click
                   await APPROVAL_REGISTRY[row.type].cancel!(row.id, { name: username ?? MANAGER_NAME });
                 }}
               >
-                {locale === 'en' ? 'Cancel' : 'ยกเลิกสถานะ'}
+                <X className="w-4 h-4" />
               </Button>
             </div>
           );

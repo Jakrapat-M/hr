@@ -1294,6 +1294,10 @@ html { font-size: 18px; }
   background: var(--color-canvas);
   color: var(--color-ink-soft);
   border: 1px solid var(--color-hairline);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 .humi-tag--accent { background: var(--color-accent-soft); color: var(--color-ink); border-color: transparent; }
 .humi-tag--coral  { background: var(--color-warning-soft); color: #6B4E14; border-color: transparent; }
