@@ -30,6 +30,8 @@ export interface DataTableColumn<Row> {
   align?: 'left' | 'right' | 'center';
   /** Visually hide the header text (still in DOM for screen readers). */
   headerVisuallyHidden?: boolean;
+  /** Stop click events from bubbling up to the row (useful for action cells). */
+  stopRowClick?: boolean;
   /**
    * Pin this column to the left at the given px offset while the table scrolls
    * horizontally (STA-109). Omit for normal (non-frozen) columns. Give a frozen
@@ -240,6 +242,7 @@ export function DataTable<Row>({
                       col.className
                     )}
                     style={col.stickyLeft !== undefined ? { left: col.stickyLeft } : undefined}
+                    onClick={col.stopRowClick ? (e) => e.stopPropagation() : undefined}
                   >
                     {col.cell(row, idx)}
                   </td>

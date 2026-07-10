@@ -231,6 +231,7 @@ export function QuickApproveSimple() {
       ),
       className: 'w-10',
       align: 'center',
+      stopRowClick: true,
     },
     {
       id: 'ref',
@@ -369,6 +370,7 @@ export function QuickApproveSimple() {
         );
       },
       className: 'w-32',
+      stopRowClick: true,
     },
     {
       id: 'assignedPeople',
@@ -465,6 +467,7 @@ export function QuickApproveSimple() {
       },
       className: 'w-[140px] pr-4',
       align: 'right',
+      stopRowClick: true,
     },
   ];
 
